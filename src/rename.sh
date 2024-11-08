@@ -15,7 +15,7 @@ if [ ! -d "$DIRECTORY" ]; then
 fi
 
 # 遍历目录中的所有 .js 文件并重命名为 .ts
-for file in "$DIRECTORY"/*.js; do
+for file in *.js; do
   if [ -f "$file" ]; then
     mv "$file" "${file%.js}.ts"
     echo "已重命名: $file -> ${file%.js}.ts"
