@@ -22,9 +22,9 @@ import {
   stringToPDFString,
   Util,
   warn,
-} from "../shared/util.js";
-import { Dict, isName, Ref, RefSet } from "./primitives.js";
-import { BaseStream } from "./base_stream.js";
+} from "../shared/util";
+import { Dict, isName, Ref, RefSet } from "./primitives";
+import { BaseStream } from "./base_stream";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -41,7 +41,11 @@ function getLookupTableFactory(initializer) {
 }
 
 class MissingDataException extends BaseException {
-  constructor(begin, end) {
+
+  public begin: number;
+  public end: number;
+
+  constructor(begin: number, end: number) {
     super(`Missing data [${begin}, ${end})`, "MissingDataException");
     this.begin = begin;
     this.end = end;
@@ -566,8 +570,8 @@ function recoverJsURL(str) {
   const URL_OPEN_METHODS = ["app.launchURL", "window.open", "xfa.host.gotoURL"];
   const regex = new RegExp(
     "^\\s*(" +
-      URL_OPEN_METHODS.join("|").replaceAll(".", "\\.") +
-      ")\\((?:'|\")([^'\"]*)(?:'|\")(?:,\\s*(\\w+)\\)|\\))",
+    URL_OPEN_METHODS.join("|").replaceAll(".", "\\.") +
+    ")\\((?:'|\")([^'\"]*)(?:'|\")(?:,\\s*(\\w+)\\)|\\))",
     "i"
   );
 

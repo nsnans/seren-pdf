@@ -17,7 +17,10 @@ import { $buildXFAObject } from "./namespaces.js";
 import { XmlObject } from "./xfa_object.js";
 
 class UnknownNamespace {
-  constructor(nsId) {
+
+  namespaceId: number;
+
+  constructor(nsId: number) {
     this.namespaceId = nsId;
   }
 

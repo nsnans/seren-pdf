@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { Cmd, EOF, isCmd, Name } from "./primitives.js";
-import { FormatError, unreachable, warn } from "../shared/util.js";
-import { BaseStream } from "./base_stream.js";
-import { BinaryCMapReader } from "./binary_cmap.js";
-import { Lexer } from "./parser.js";
-import { MissingDataException } from "./core_utils.js";
-import { Stream } from "./stream.js";
+import { Cmd, EOF, isCmd, Name } from "./primitives";
+import { FormatError, unreachable, warn } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { BinaryCMapReader } from "./binary_cmap";
+import { Lexer } from "./parser";
+import { MissingDataException } from "./core_utils";
+import { Stream } from "./stream";
 
 const BUILT_IN_CMAPS = [
   // << Start unicode maps.
@@ -200,29 +200,35 @@ const MAX_MAP_RANGE = 2 ** 24 - 1; // = 0xFFFFFF
 
 // CMap, not to be confused with TrueType's cmap.
 class CMap {
+
+  protected numCodespaceRanges = 0;
+
+  protected name = "";
+
+  protected vertical = false;
+
+  protected builtInCMap: boolean;
+
   constructor(builtInCMap = false) {
     // Codespace ranges are stored as follows:
     // [[1BytePairs], [2BytePairs], [3BytePairs], [4BytePairs]]
     // where nBytePairs are ranges e.g. [low1, high1, low2, high2, ...]
     this.codespaceRanges = [[], [], [], []];
-    this.numCodespaceRanges = 0;
     // Map entries have one of two forms.
     // - cid chars are 16-bit unsigned integers, stored as integers.
     // - bf chars are variable-length byte sequences, stored as strings, with
     //   one byte per character.
     this._map = [];
-    this.name = "";
-    this.vertical = false;
     this.useCMap = null;
     this.builtInCMap = builtInCMap;
   }
 
-  addCodespaceRange(n, low, high) {
+  addCodespaceRange(n: number, low: number, high: number) {
     this.codespaceRanges[n - 1].push(low, high);
     this.numCodespaceRanges++;
   }
 
-  mapCidRange(low, high, dstLow) {
+  mapCidRange(low: number, high: number, dstLow: number) {
     if (high - low > MAX_MAP_RANGE) {
       throw new Error("mapCidRange - ignoring data above MAX_MAP_RANGE.");
     }
@@ -231,7 +237,7 @@ class CMap {
     }
   }
 
-  mapBfRange(low, high, dstLow) {
+  mapBfRange(low: number, high: number, dstLow: string) {
     if (high - low > MAX_MAP_RANGE) {
       throw new Error("mapBfRange - ignoring data above MAX_MAP_RANGE.");
     }
@@ -252,7 +258,7 @@ class CMap {
     }
   }
 
-  mapBfRangeToArray(low, high, array) {
+  mapBfRangeToArray(low: number, high: number, array) {
     if (high - low > MAX_MAP_RANGE) {
       throw new Error("mapBfRangeToArray - ignoring data above MAX_MAP_RANGE.");
     }
@@ -326,7 +332,7 @@ class CMap {
       c = ((c << 8) | str.charCodeAt(offset + n)) >>> 0;
       // Check each codespace range to see if it falls within.
       const codespaceRange = codespaceRanges[n];
-      for (let k = 0, kk = codespaceRange.length; k < kk; ) {
+      for (let k = 0, kk = codespaceRange.length; k < kk;) {
         const low = codespaceRange[k++];
         const high = codespaceRange[k++];
         if (c >= low && c <= high) {
@@ -345,7 +351,7 @@ class CMap {
     for (let n = 0, nn = codespaceRanges.length; n < nn; n++) {
       // Check each codespace range to see if it falls within.
       const codespaceRange = codespaceRanges[n];
-      for (let k = 0, kk = codespaceRange.length; k < kk; ) {
+      for (let k = 0, kk = codespaceRange.length; k < kk;) {
         const low = codespaceRange[k++];
         const high = codespaceRange[k++];
         if (charCode >= low && charCode <= high) {
@@ -439,7 +445,7 @@ class IdentityCMap extends CMap {
   }
 }
 
-function strToInt(str) {
+function strToInt(str: string) {
   let a = 0;
   for (let i = 0; i < str.length; i++) {
     a = (a << 8) | str.charCodeAt(i);
@@ -447,13 +453,13 @@ function strToInt(str) {
   return a >>> 0;
 }
 
-function expectString(obj) {
+function expectString(obj: unknown) {
   if (typeof obj !== "string") {
     throw new FormatError("Malformed CMap: expected string.");
   }
 }
 
-function expectInt(obj) {
+function expectInt(obj: unknown) {
   if (!Number.isInteger(obj)) {
     throw new FormatError("Malformed CMap: expected int.");
   }

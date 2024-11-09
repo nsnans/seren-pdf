@@ -19,20 +19,20 @@ import {
   getRotationMatrix,
   numberToString,
   stringToUTF16HexString,
-} from "./core_utils.js";
-import { Dict, Name } from "./primitives.js";
+} from "./core_utils";
+import { Dict, Name } from "./primitives";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
   OPS,
   shadow,
   warn,
-} from "../shared/util.js";
-import { ColorSpace } from "./colorspace.js";
-import { EvaluatorPreprocessor } from "./evaluator.js";
-import { LocalColorSpaceCache } from "./image_utils.js";
-import { PDFFunctionFactory } from "./function.js";
-import { StringStream } from "./stream.js";
+} from "../shared/util";
+import { ColorSpace } from "./colorspace";
+import { EvaluatorPreprocessor } from "./evaluator";
+import { LocalColorSpaceCache } from "./image_utils";
+import { PDFFunctionFactory } from "./function";
+import { StringStream } from "./stream";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str) {

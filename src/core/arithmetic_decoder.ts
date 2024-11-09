@@ -74,8 +74,16 @@ const QeTable = [
  * JPEG2000 and JBIG2 streams.
  */
 class ArithmeticDecoder {
+
+  public bp: number;
+  public dataEnd: number;
+  public chigh: number;
+  public clow: number;
+  public ct: number = 0;
+  public a: number;
+
   // C.3.5 Initialisation of the decoder (INITDEC)
-  constructor(data, start, end) {
+  constructor(data, start: number, end: number) {
     this.data = data;
     this.bp = start;
     this.dataEnd = end;
@@ -119,7 +127,7 @@ class ArithmeticDecoder {
   }
 
   // C.3.2 Decoding a decision (DECODE)
-  readBit(contexts, pos) {
+  readBit(contexts, pos: number) {
     // Contexts are packed into 1 byte:
     // highest 7 bits carry cx.index, lowest bit carries cx.mps
     let cx_index = contexts[pos] >> 1,

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { stringToUTF8String, warn } from "../shared/util.js";
-import { parseXFAPath } from "./core_utils.js";
-import { SimpleXMLParser } from "./xml_parser.js";
+import { stringToUTF8String, warn } from "../shared/util";
+import { parseXFAPath } from "./core_utils";
+import { SimpleXMLParser } from "./xml_parser";
 
-function decodeString(str) {
+function decodeString(str: string) {
   try {
     return stringToUTF8String(str);
   } catch (ex) {

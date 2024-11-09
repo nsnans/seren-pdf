@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { FormatError } from "../shared/util.js";
+import { FormatError } from "../shared/util";
 
-function hexToInt(a, size) {
+function hexToInt(a: Uint8Array, size: number) {
   let n = 0;
   for (let i = 0; i <= size; i++) {
     n = (n << 8) | a[i];
@@ -23,7 +23,7 @@ function hexToInt(a, size) {
   return n >>> 0;
 }
 
-function hexToStr(a, size) {
+function hexToStr(a: Uint8Array, size: number) {
   // This code is hot. Special-case some common values to avoid creating an
   // object with subarray().
   if (size === 1) {
@@ -35,7 +35,7 @@ function hexToStr(a, size) {
   return String.fromCharCode(...a.subarray(0, size + 1));
 }
 
-function addHex(a, b, size) {
+function addHex(a: Uint8Array, b: Uint8Array, size: number) {
   let c = 0;
   for (let i = size; i >= 0; i--) {
     c += a[i] + b[i];
@@ -44,7 +44,7 @@ function addHex(a, b, size) {
   }
 }
 
-function incHex(a, size) {
+function incHex(a: Uint8Array, size: number) {
   let c = 1;
   for (let i = size; i >= 0 && c > 0; i--) {
     c += a[i];
@@ -57,11 +57,14 @@ const MAX_NUM_SIZE = 16;
 const MAX_ENCODED_NUM_SIZE = 19; // ceil(MAX_NUM_SIZE * 7 / 8)
 
 class BinaryCMapStream {
+
+  protected pos: number = 0;
+  protected end: number;
+  protected tmpBuf = new Uint8Array(MAX_ENCODED_NUM_SIZE);
+
   constructor(data) {
     this.buffer = data;
-    this.pos = 0;
     this.end = data.length;
-    this.tmpBuf = new Uint8Array(MAX_ENCODED_NUM_SIZE);
   }
 
   readByte() {
@@ -90,12 +93,12 @@ class BinaryCMapStream {
     return n & 1 ? ~(n >>> 1) : n >>> 1;
   }
 
-  readHex(num, size) {
+  readHex(num: Uint8Array, size: number) {
     num.set(this.buffer.subarray(this.pos, this.pos + size + 1));
     this.pos += size + 1;
   }
 
-  readHexNumber(num, size) {
+  readHexNumber(num: Uint8Array, size: number) {
     let last;
     const stack = this.tmpBuf;
     let sp = 0;
@@ -122,7 +125,7 @@ class BinaryCMapStream {
     }
   }
 
-  readHexSigned(num, size) {
+  readHexSigned(num: Uint8Array, size: number) {
     this.readHexNumber(num, size);
     const sign = num[size] & 1 ? 255 : 0;
     let c = 0;

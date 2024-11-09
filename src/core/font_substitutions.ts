@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { normalizeFontName } from "./fonts_utils.js";
-import { validateFontName } from "./core_utils.js";
-import { warn } from "../shared/util.js";
+import { normalizeFontName } from "./fonts_utils";
+import { validateFontName } from "./core_utils";
+import { warn } from "../shared/util";
 
 const NORMAL = {
   style: "normal",

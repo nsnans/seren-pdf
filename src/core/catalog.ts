@@ -21,7 +21,7 @@ import {
   recoverJsURL,
   toRomanNumerals,
   XRefEntryException,
-} from "./core_utils.js";
+} from "./core_utils";
 import {
   createValidAbsoluteUrl,
   DocumentActionEventType,
@@ -33,7 +33,7 @@ import {
   stringToPDFString,
   stringToUTF8String,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   Dict,
   isDict,
@@ -43,15 +43,17 @@ import {
   Ref,
   RefSet,
   RefSetCache,
-} from "./primitives.js";
-import { NameTree, NumberTree } from "./name_number_tree.js";
-import { BaseStream } from "./base_stream.js";
-import { clearGlobalCaches } from "./cleanup_helper.js";
-import { ColorSpace } from "./colorspace.js";
-import { FileSpec } from "./file_spec.js";
-import { GlobalImageCache } from "./image_utils.js";
-import { MetadataParser } from "./metadata_parser.js";
-import { StructTreeRoot } from "./struct_tree.js";
+} from "./primitives";
+import { NameTree, NumberTree } from "./name_number_tree";
+import { BaseStream } from "./base_stream";
+import { clearGlobalCaches } from "./cleanup_helper";
+import { ColorSpace } from "./colorspace";
+import { FileSpec } from "./file_spec";
+import { GlobalImageCache } from "./image_utils";
+import { MetadataParser } from "./metadata_parser";
+import { StructTreeRoot } from "./struct_tree";
+import { PDFManager } from "./pdf_manager";
+import { XRef } from "./xref";
 
 function isValidExplicitDest(dest) {
   if (!Array.isArray(dest) || dest.length < 2) {
@@ -123,7 +125,30 @@ function fetchRemoteDest(action) {
 }
 
 class Catalog {
-  constructor(pdfManager, xref) {
+
+  protected pdfManager: PDFManager;
+
+  protected xref: XRef;
+
+  protected fontCache = new RefSetCache();
+
+  protected builtInCMapCache = new Map();
+
+  protected standardFontDataCache = new Map();
+
+  protected globalImageCache = new GlobalImageCache();
+
+  protected pageKidsCountCache = new RefSetCache();
+
+  protected pageIndexCache = new RefSetCache();
+
+  protected pageDictCache = new RefSetCache();
+
+  protected nonBlendModesSet = new RefSet();
+
+  protected systemFontCache = new Map();
+
+  constructor(pdfManager: PDFManager, xref: XRef) {
     this.pdfManager = pdfManager;
     this.xref = xref;
 
@@ -137,15 +162,7 @@ class Catalog {
 
     this._actualNumPages = null;
 
-    this.fontCache = new RefSetCache();
-    this.builtInCMapCache = new Map();
-    this.standardFontDataCache = new Map();
-    this.globalImageCache = new GlobalImageCache();
-    this.pageKidsCountCache = new RefSetCache();
-    this.pageIndexCache = new RefSetCache();
-    this.pageDictCache = new RefSetCache();
-    this.nonBlendModesSet = new RefSet();
-    this.systemFontCache = new Map();
+
   }
 
   cloneDict() {

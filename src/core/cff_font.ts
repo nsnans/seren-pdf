@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-import { CFFCompiler, CFFParser } from "./cff_parser.js";
-import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils.js";
-import { warn } from "../shared/util.js";
+import { CFF, CFFCompiler, CFFParser } from "./cff_parser";
+import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
+import { warn } from "../shared/util";
 
 class CFFFont {
+
+  protected cff: CFF;
+
   constructor(file, properties) {
     this.properties = properties;
 

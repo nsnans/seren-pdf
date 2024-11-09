@@ -21,13 +21,13 @@ import {
   stringToBytes,
   Util,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   ExpertCharset,
   ExpertSubsetCharset,
   ISOAdobeCharset,
-} from "./charsets.js";
-import { ExpertEncoding, StandardEncoding } from "./encodings.js";
+} from "./charsets";
+import { ExpertEncoding, StandardEncoding } from "./encodings";
 
 // Maximum subroutine call depth of type 2 charstrings. Matches OTS.
 const MAX_SUBR_NESTING = 10;
@@ -384,7 +384,7 @@ class CFFParser {
       const eof = 15;
       // prettier-ignore
       const lookup = ["0", "1", "2", "3", "4", "5", "6", "7", "8",
-                      "9", ".", "E", "E-", null, "-"];
+        "9", ".", "E", "E-", null, "-"];
       const length = dict.length;
       while (pos < length) {
         const b = dict[pos++];
@@ -491,7 +491,7 @@ class CFFParser {
 
     let length = data.length;
 
-    for (let j = 0; j < length; ) {
+    for (let j = 0; j < length;) {
       const value = data[j++];
       let validationCommand = null;
       if (value === 12) {
@@ -630,11 +630,11 @@ class CFFParser {
           if (!state.undefStack && stackSize < validationCommand.min) {
             warn(
               "Not enough parameters for " +
-                validationCommand.id +
-                "; actual: " +
-                stackSize +
-                ", expected: " +
-                validationCommand.min
+              validationCommand.id +
+              "; actual: " +
+              stackSize +
+              ", expected: " +
+              validationCommand.min
             );
 
             if (stackSize === 0) {
@@ -949,7 +949,7 @@ class CFFParser {
     return new CFFEncoding(predefined, format, encoding, raw);
   }
 
-  parseFDSelect(pos, length) {
+  parseFDSelect(pos: number, length: number) {
     const bytes = this.bytes;
     const format = bytes[pos++];
     const fdSelect = [];
@@ -969,7 +969,7 @@ class CFFParser {
           if (i === 0 && first !== 0) {
             warn(
               "parseFDSelect: The first range must have a first GID of 0" +
-                " -- trying to recover."
+              " -- trying to recover."
             );
             first = 0;
           }
@@ -995,11 +995,15 @@ class CFFParser {
 
 // Compact Font Format
 class CFF {
+
+  protected strings = new CFFStrings();
+
+  protected isCIDFont = false;
+
   constructor() {
     this.header = null;
     this.names = [];
     this.topDict = null;
-    this.strings = new CFFStrings();
     this.globalSubrIndex = null;
 
     // The following could really be per font, but since we only have one font
@@ -1010,7 +1014,6 @@ class CFF {
     this.fdArray = [];
     this.fdSelect = null;
 
-    this.isCIDFont = false;
   }
 
   duplicateFirstGlyph() {
@@ -1083,22 +1086,25 @@ class CFFStrings {
 }
 
 class CFFIndex {
+
+  protected length = 0;
+
   constructor() {
     this.objects = [];
     this.length = 0;
   }
 
-  add(data) {
+  add(data: Uint8Array) {
     this.length += data.length;
     this.objects.push(data);
   }
 
-  set(index, data) {
+  set(index: number, data) {
     this.length += data.length - this.objects[index].length;
     this.objects[index] = data;
   }
 
-  get(index) {
+  get(index: number) {
     return this.objects[index];
   }
 
@@ -1211,7 +1217,7 @@ const CFFTopDictLayout = [
   [[12, 6], "CharstringType", "num", 2],
   // prettier-ignore
   [[12, 7], "FontMatrix", ["num", "num", "num", "num", "num", "num"],
-                          [0.001, 0, 0, 0.001, 0, 0]],
+  [0.001, 0, 0, 0.001, 0, 0]],
   [13, "UniqueID", "num", null],
   [5, "FontBBox", ["num", "num", "num", "num"], [0, 0, 0, 0]],
   [[12, 8], "StrokeWidth", "num", 0],

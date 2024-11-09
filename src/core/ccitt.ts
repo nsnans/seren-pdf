@@ -19,7 +19,7 @@
  * license.
  */
 
-import { FormatError, info } from "../shared/util.js";
+import { FormatError, info } from "../shared/util";
 
 /**
  * @typedef {Object} CCITTFaxDecoderSource
@@ -465,6 +465,43 @@ const blackTable3 = [
  * @param {Object} [options] - Decoding options.
  */
 class CCITTFaxDecoder {
+
+  protected eof = false;
+
+  protected encoding = 0;
+
+  protected eoline = false;
+
+  protected byteAlign = false;
+
+  protected columns = 1728;
+
+  protected rows = 0;
+
+  protected eoblock = true;
+
+  protected black = false;
+
+  protected codingLine: Uint32Array;
+
+  protected refLine: Uint32Array;
+
+  protected codingPos = 0;
+
+  protected row = 0;
+
+  protected nextLine2D: boolean;
+
+  protected inputBits = 0;
+
+  protected inputBuf = 0;
+
+  protected outputBits = 0;
+
+  protected rowsDone = false;
+
+  protected err = false;
+
   constructor(source, options = {}) {
     if (!source || typeof source.next !== "function") {
       throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
@@ -484,14 +521,7 @@ class CCITTFaxDecoder {
     this.refLine = new Uint32Array(this.columns + 2);
 
     this.codingLine[0] = this.columns;
-    this.codingPos = 0;
-
-    this.row = 0;
     this.nextLine2D = this.encoding < 0;
-    this.inputBits = 0;
-    this.inputBuf = 0;
-    this.outputBits = 0;
-    this.rowsDone = false;
 
     let code1;
     while ((code1 = this._lookBits(12)) === 0) {
@@ -525,7 +555,7 @@ class CCITTFaxDecoder {
       }
       this.err = false;
 
-      let code1, code2, code3;
+      let code1: number, code2: number, code3: number;
       if (this.nextLine2D) {
         for (i = 0; codingLine[i] < columns; ++i) {
           refLine[i] = codingLine[i];
@@ -907,7 +937,7 @@ class CCITTFaxDecoder {
    * element indicates whether EOF was reached.
    * @private
    */
-  _findTableCode(start, end, table, limit) {
+  _findTableCode(start: number, end: number, table: number[][], limit?: number): [boolean, number, boolean] {
     const limitValue = limit || 0;
     for (let i = start; i <= end; ++i) {
       let code = this._lookBits(i);
@@ -931,7 +961,7 @@ class CCITTFaxDecoder {
   /**
    * @private
    */
-  _getTwoDimCode() {
+  _getTwoDimCode(): number {
     let code = 0;
     let p;
     if (this.eoblock) {
@@ -1031,7 +1061,7 @@ class CCITTFaxDecoder {
   /**
    * @private
    */
-  _lookBits(n) {
+  _lookBits(n: number) {
     let c;
     while (this.inputBits < n) {
       if ((c = this.source.next()) === -1) {
@@ -1049,7 +1079,7 @@ class CCITTFaxDecoder {
   /**
    * @private
    */
-  _eatBits(n) {
+  _eatBits(n: number) {
     if ((this.inputBits -= n) < 0) {
       this.inputBits = 0;
     }

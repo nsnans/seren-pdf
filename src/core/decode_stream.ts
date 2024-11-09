@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { BaseStream } from "./base_stream.js";
-import { Stream } from "./stream.js";
+import { BaseStream } from "./base_stream";
+import { Stream } from "./stream";
 
 // Lots of DecodeStreams are created whose buffers are never used.  For these
 // we share a single empty buffer. This is (a) space-efficient and (b) avoids
@@ -23,16 +23,23 @@ import { Stream } from "./stream.js";
 const emptyBuffer = new Uint8Array(0);
 
 // Super class for the decoding streams.
-class DecodeStream extends BaseStream {
+abstract class DecodeStream extends BaseStream {
+
+  protected bufferLength: number = 0;
+
+  protected eof: boolean = false;
+
+  protected minBufferLength: number = 512;
+
+  protected buffer = emptyBuffer;
+
+  protected _rawMinBufferLength: number;
+
   constructor(maybeMinBufferLength) {
     super();
     this._rawMinBufferLength = maybeMinBufferLength || 0;
 
-    this.pos = 0;
-    this.bufferLength = 0;
-    this.eof = false;
-    this.buffer = emptyBuffer;
-    this.minBufferLength = 512;
+    // 初始化的设置默认值的代码 已经放到私有变量里去了
     if (maybeMinBufferLength) {
       // Compute the first power of two that is as big as maybeMinBufferLength.
       while (this.minBufferLength < maybeMinBufferLength) {
@@ -41,7 +48,7 @@ class DecodeStream extends BaseStream {
     }
   }
 
-  get isEmpty() {
+  get isEmpty(): boolean {
     while (!this.eof && this.bufferLength === 0) {
       this.readBlock();
     }
@@ -73,7 +80,7 @@ class DecodeStream extends BaseStream {
     return this.buffer[this.pos++];
   }
 
-  getBytes(length, decoderOptions = null) {
+  getBytes(length: number, decoderOptions = null) {
     const pos = this.pos;
     let end;
 
@@ -99,7 +106,7 @@ class DecodeStream extends BaseStream {
     return this.buffer.subarray(pos, end);
   }
 
-  async getImageData(length, decoderOptions = null) {
+  async getImageData(length: number, decoderOptions = null) {
     if (!this.canAsyncDecodeImageFromBuffer) {
       return this.getBytes(length, decoderOptions);
     }
@@ -111,7 +118,7 @@ class DecodeStream extends BaseStream {
     this.pos = 0;
   }
 
-  makeSubStream(start, length, dict = null) {
+  makeSubStream(start: number, length: number, dict = null) {
     if (length === undefined) {
       while (!this.eof) {
         this.readBlock();
@@ -127,6 +134,10 @@ class DecodeStream extends BaseStream {
 
   getBaseStreams() {
     return this.str ? this.str.getBaseStreams() : null;
+  }
+
+  get length(): number {
+    throw new Error("Unsupport Mehthod get lenght()")
   }
 }
 

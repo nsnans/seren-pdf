@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-import { CCITTFaxDecoder } from "./ccitt.js";
-import { DecodeStream } from "./decode_stream.js";
-import { Dict } from "./primitives.js";
+import { CCITTFaxDecoder } from "./ccitt";
+import { DecodeStream } from "./decode_stream";
+import { Dict } from "./primitives";
 
 class CCITTFaxStream extends DecodeStream {
+
+  protected ccittFaxDecoder: CCITTFaxDecoder;
+
   constructor(str, maybeLength, params) {
     super(maybeLength);
 

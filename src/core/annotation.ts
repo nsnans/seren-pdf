@@ -37,7 +37,7 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   collectActions,
   escapeString,
@@ -50,29 +50,30 @@ import {
   numberToString,
   stringToAsciiOrUTF16BE,
   stringToUTF16String,
-} from "./core_utils.js";
+} from "./core_utils";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,
   getPdfColor,
   parseAppearanceStream,
   parseDefaultAppearance,
-} from "./default_appearance.js";
-import { Dict, isName, isRefsEqual, Name, Ref, RefSet } from "./primitives.js";
-import { Stream, StringStream } from "./stream.js";
-import { BaseStream } from "./base_stream.js";
-import { bidi } from "./bidi.js";
-import { Catalog } from "./catalog.js";
-import { ColorSpace } from "./colorspace.js";
-import { FileSpec } from "./file_spec.js";
-import { JpegStream } from "./jpeg_stream.js";
-import { ObjectLoader } from "./object_loader.js";
-import { OperatorList } from "./operator_list.js";
-import { writeObject } from "./writer.js";
-import { XFAFactory } from "./xfa/factory.js";
+} from "./default_appearance";
+import { Dict, isName, isRefsEqual, Name, Ref, RefSet } from "./primitives";
+import { Stream, StringStream } from "./stream";
+import { BaseStream } from "./base_stream";
+import { bidi } from "./bidi";
+import { Catalog } from "./catalog";
+import { ColorSpace } from "./colorspace";
+import { FileSpec } from "./file_spec";
+import { JpegStream } from "./jpeg_stream";
+import { ObjectLoader } from "./object_loader";
+import { OperatorList } from "./operator_list";
+import { writeObject } from "./writer";
+import { XFAFactory } from "./xfa/factory";
+import { PDFManager } from "./pdf_manager";
 
 class AnnotationFactory {
-  static createGlobals(pdfManager) {
+  static createGlobals(pdfManager: PDFManager) {
     return Promise.all([
       pdfManager.ensureCatalog("acroForm"),
       pdfManager.ensureDoc("xfaDatasets"),
@@ -208,7 +209,7 @@ class AnnotationFactory {
         }
         warn(
           `Unimplemented widget field type "${fieldType}", ` +
-            "falling back to base field type."
+          "falling back to base field type."
         );
         return new WidgetAnnotation(parameters);
 
@@ -264,7 +265,7 @@ class AnnotationFactory {
           } else {
             warn(
               `Unimplemented annotation type "${subtype}", ` +
-                "falling back to base annotation."
+              "falling back to base annotation."
             );
           }
         }
@@ -272,7 +273,7 @@ class AnnotationFactory {
     }
   }
 
-  static async _getPageIndex(xref, ref, pdfManager) {
+  static async _getPageIndex(xref, ref, pdfManager: PDFManager) {
     try {
       const annotDict = await xref.fetchIfRefAsync(ref);
       if (!(annotDict instanceof Dict)) {
@@ -550,7 +551,7 @@ function getRgbColor(color, defaultColor = new Uint8ClampedArray(3)) {
 }
 
 function getPdfColorArray(color) {
-  return Array.from(color, c => c / 255);
+  return Array.from(color, (c: number) => c / 255);
 }
 
 function getQuadPoints(dict, rect) {
@@ -823,7 +824,7 @@ class Annotation {
     return this.printable;
   }
 
-  mustBeViewedWhenEditing(isEditing, modifiedIds = null) {
+  mustBeViewedWhenEditing(isEditing: boolean, modifiedIds = null) {
     return isEditing ? !this.data.isEditable : !modifiedIds?.has(this.data.id);
   }
 
@@ -2110,7 +2111,7 @@ class WidgetAnnotation extends Annotation {
     return mk.size > 0 ? mk : null;
   }
 
-  amendSavedDict(annotationStorage, dict) {}
+  amendSavedDict(annotationStorage, dict) { }
 
   async save(evaluator, task, annotationStorage) {
     const storageEntry = annotationStorage?.get(this.data.id);
@@ -3690,8 +3691,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       for (const index of valueIndices) {
         if (firstIndex <= index && index < end) {
           buf.push(
-            `1 ${
-              totalHeight - (index - firstIndex + 1) * lineHeight
+            `1 ${totalHeight - (index - firstIndex + 1) * lineHeight
             } ${totalWidth} ${lineHeight} re f`
           );
         }
@@ -4879,9 +4879,9 @@ class StrikeOutAnnotation extends MarkupAnnotation {
           pointsCallback: (buffer, points) => {
             buffer.push(
               `${(points[0] + points[4]) / 2} ` +
-                `${(points[1] + points[5]) / 2} m`,
+              `${(points[1] + points[5]) / 2} m`,
               `${(points[2] + points[6]) / 2} ` +
-                `${(points[3] + points[7]) / 2} l`,
+              `${(points[3] + points[7]) / 2} l`,
               "S"
             );
             return [points[0], points[2], points[7], points[3]];

@@ -23,14 +23,19 @@ import {
   unreachable,
   utf8StringToString,
   warn,
-} from "../shared/util.js";
-import { Dict, isName, Name } from "./primitives.js";
-import { DecryptStream } from "./decrypt_stream.js";
+} from "../shared/util";
+import { Dict, isName, Name } from "./primitives";
+import { DecryptStream } from "./decrypt_stream";
 
 class ARCFourCipher {
+
+  protected a = 0;
+
+  protected b = 0;
+
+  protected s: Uint8Array;
+
   constructor(key) {
-    this.a = 0;
-    this.b = 0;
     const s = new Uint8Array(256);
     const keyLength = key.length;
 
@@ -97,7 +102,7 @@ const calculateMD5 = (function calculateMD5Closure() {
     -145523070, -1120210379, 718787259, -343485551,
   ]);
 
-  function hash(data, offset, length) {
+  function hash(data, offset: number, length: number) {
     let h0 = 1732584193,
       h1 = -271733879,
       h2 = -1732584194,
@@ -123,7 +128,7 @@ const calculateMD5 = (function calculateMD5Closure() {
     padded[i++] = 0;
     padded[i++] = 0;
     const w = new Int32Array(16);
-    for (i = 0; i < paddedLength; ) {
+    for (i = 0; i < paddedLength;) {
       for (j = 0; j < 16; ++j, i += 4) {
         w[j] =
           padded[i] |
@@ -177,22 +182,27 @@ const calculateMD5 = (function calculateMD5Closure() {
 })();
 
 class Word64 {
-  constructor(highInteger, lowInteger) {
+
+  protected high: number;
+
+  protected low: number;
+
+  constructor(highInteger: number, lowInteger: number) {
     this.high = highInteger | 0;
     this.low = lowInteger | 0;
   }
 
-  and(word) {
+  and(word: Word64) {
     this.high &= word.high;
     this.low &= word.low;
   }
 
-  xor(word) {
+  xor(word: Word64) {
     this.high ^= word.high;
     this.low ^= word.low;
   }
 
-  or(word) {
+  or(word: Word64) {
     this.high |= word.high;
     this.low |= word.low;
   }
@@ -236,7 +246,7 @@ class Word64 {
     this.low = ~this.low;
   }
 
-  add(word) {
+  add(word: Word64) {
     const lowAdd = (this.low >>> 0) + (word.low >>> 0);
     let highAdd = (this.high >>> 0) + (word.high >>> 0);
     if (lowAdd > 0xffffffff) {
@@ -246,7 +256,7 @@ class Word64 {
     this.high = highAdd | 0;
   }
 
-  copyTo(bytes, offset) {
+  copyTo(bytes: Uint8Array, offset: number) {
     bytes[offset] = (this.high >>> 24) & 0xff;
     bytes[offset + 1] = (this.high >> 16) & 0xff;
     bytes[offset + 2] = (this.high >> 8) & 0xff;
@@ -257,38 +267,38 @@ class Word64 {
     bytes[offset + 7] = this.low & 0xff;
   }
 
-  assign(word) {
+  assign(word: Word64) {
     this.high = word.high;
     this.low = word.low;
   }
 }
 
 const calculateSHA256 = (function calculateSHA256Closure() {
-  function rotr(x, n) {
+  function rotr(x: number, n: number) {
     return (x >>> n) | (x << (32 - n));
   }
 
-  function ch(x, y, z) {
+  function ch(x: number, y: number, z: number) {
     return (x & y) ^ (~x & z);
   }
 
-  function maj(x, y, z) {
+  function maj(x: number, y: number, z: number) {
     return (x & y) ^ (x & z) ^ (y & z);
   }
 
-  function sigma(x) {
+  function sigma(x: number) {
     return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22);
   }
 
-  function sigmaPrime(x) {
+  function sigmaPrime(x: number) {
     return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25);
   }
 
-  function littleSigma(x) {
+  function littleSigma(x: number) {
     return rotr(x, 7) ^ rotr(x, 18) ^ (x >>> 3);
   }
 
-  function littleSigmaPrime(x) {
+  function littleSigmaPrime(x: number) {
     return rotr(x, 17) ^ rotr(x, 19) ^ (x >>> 10);
   }
 
@@ -306,7 +316,7 @@ const calculateSHA256 = (function calculateSHA256Closure() {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
   ];
 
-  function hash(data, offset, length) {
+  function hash(data, offset: number, length: number) {
     // initial hash values
     let h0 = 0x6a09e667,
       h1 = 0xbb67ae85,
@@ -338,7 +348,7 @@ const calculateSHA256 = (function calculateSHA256Closure() {
     padded[i++] = (length << 3) & 0xff;
     const w = new Uint32Array(64);
     // for each 512 bit block
-    for (i = 0; i < paddedLength; ) {
+    for (i = 0; i < paddedLength;) {
       for (j = 0; j < 16; ++j) {
         w[j] =
           (padded[i] << 24) |
@@ -404,7 +414,7 @@ const calculateSHA256 = (function calculateSHA256Closure() {
 })();
 
 const calculateSHA512 = (function calculateSHA512Closure() {
-  function ch(result, x, y, z, tmp) {
+  function ch(result: Word64, x: Word64, y: Word64, z: Word64, tmp: Word64) {
     result.assign(x);
     result.and(y);
     tmp.assign(x);
@@ -413,7 +423,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     result.xor(tmp);
   }
 
-  function maj(result, x, y, z, tmp) {
+  function maj(result: Word64, x: Word64, y: Word64, z: Word64, tmp: Word64) {
     result.assign(x);
     result.and(y);
     tmp.assign(x);
@@ -424,7 +434,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     result.xor(tmp);
   }
 
-  function sigma(result, x, tmp) {
+  function sigma(result: Word64, x: Word64, tmp: Word64) {
     result.assign(x);
     result.rotateRight(28);
     tmp.assign(x);
@@ -435,7 +445,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     result.xor(tmp);
   }
 
-  function sigmaPrime(result, x, tmp) {
+  function sigmaPrime(result: Word64, x: Word64, tmp: Word64) {
     result.assign(x);
     result.rotateRight(14);
     tmp.assign(x);
@@ -446,7 +456,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     result.xor(tmp);
   }
 
-  function littleSigma(result, x, tmp) {
+  function littleSigma(result: Word64, x: Word64, tmp: Word64) {
     result.assign(x);
     result.rotateRight(1);
     tmp.assign(x);
@@ -457,7 +467,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     result.xor(tmp);
   }
 
-  function littleSigmaPrime(result, x, tmp) {
+  function littleSigmaPrime(result: Word64, x: Word64, tmp: Word64) {
     result.assign(x);
     result.rotateRight(19);
     tmp.assign(x);
@@ -511,7 +521,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     new Word64(0x4cc5d4be, 0xcb3e42b6), new Word64(0x597f299c, 0xfc657e2a),
     new Word64(0x5fcb6fab, 0x3ad6faec), new Word64(0x6c44198c, 0x4a475817)];
 
-  function hash(data, offset, length, mode384 = false) {
+  function hash(data, offset: number, length: number, mode384 = false) {
     // initial hash values
     let h0, h1, h2, h3, h4, h5, h6, h7;
     if (!mode384) {
@@ -584,7 +594,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     let tmp3;
 
     // for each 1024 bit block
-    for (i = 0; i < paddedLength; ) {
+    for (i = 0; i < paddedLength;) {
       for (j = 0; j < 16; ++j) {
         w[j].high =
           (padded[i] << 24) |
@@ -677,7 +687,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
   return hash;
 })();
 
-function calculateSHA384(data, offset, length) {
+function calculateSHA384(data, offset: number, length: number) {
   return calculateSHA512(data, offset, length, /* mode384 = */ true);
 }
 
@@ -692,6 +702,21 @@ class NullCipher {
 }
 
 class AESBaseCipher {
+
+  protected _s: Uint8Array;
+
+  protected _inv_s: Uint8Array;
+
+  protected _mix: Uint32Array;
+
+  protected _mixCol: Uint8Array;
+
+  protected buffer = new Uint8Array(16);
+
+  protected bufferPosition = 0;
+
+  protected bufferLength = 0;
+
   constructor() {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -801,8 +826,6 @@ class AESBaseCipher {
       this._mixCol[i] = i < 128 ? i << 1 : (i << 1) ^ 0x1b;
     }
 
-    this.buffer = new Uint8Array(16);
-    this.bufferPosition = 0;
   }
 
   _expandKey(cipherKey) {
@@ -1110,11 +1133,17 @@ class AESBaseCipher {
 }
 
 class AES128Cipher extends AESBaseCipher {
+
+  protected _cyclesOfRepetition = 10;
+
+  protected _keySize = 160; // bits
+
+  protected _rcon: Uint8Array;
+
+  protected _key: Uint8Array;
+
   constructor(key) {
     super();
-
-    this._cyclesOfRepetition = 10;
-    this._keySize = 160; // bits
 
     this._rcon = new Uint8Array([
       0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c,
@@ -1181,11 +1210,15 @@ class AES128Cipher extends AESBaseCipher {
 }
 
 class AES256Cipher extends AESBaseCipher {
+
+  protected _cyclesOfRepetition = 14;
+
+  protected _keySize = 224; // bits
+
+  protected _key: Uint8Array;
+
   constructor(key) {
     super();
-
-    this._cyclesOfRepetition = 14;
-    this._keySize = 224; // bits
 
     this._key = this._expandKey(key);
   }

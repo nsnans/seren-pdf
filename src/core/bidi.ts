@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { warn } from "../shared/util.js";
+import { warn } from "../shared/util";
 
 // Character types for symbols from 0000 to 00FF.
 // Source: ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt
@@ -73,15 +73,15 @@ const arabicTypes = [
   "EN", "EN", "EN", "EN", "EN", "EN", "AL", "AL", "AL", "AL", "AL", "AL"
 ];
 
-function isOdd(i) {
+function isOdd(i: number) {
   return (i & 1) !== 0;
 }
 
-function isEven(i) {
+function isEven(i: number) {
   return (i & 1) === 0;
 }
 
-function findUnequal(arr, start, value) {
+function findUnequal(arr: string[], start: number, value: string) {
   let j, jj;
   for (j = start, jj = arr.length; j < jj; ++j) {
     if (arr[j] !== value) {
@@ -91,13 +91,13 @@ function findUnequal(arr, start, value) {
   return j;
 }
 
-function setValues(arr, start, end, value) {
+function setValues(arr: string[], start: number, end: number, value: string) {
   for (let j = start; j < end; ++j) {
     arr[j] = value;
   }
 }
 
-function reverseValues(arr, start, end) {
+function reverseValues(arr: string[], start: number, end: number) {
   for (let i = start, j = end - 1; i < j; ++i, --j) {
     const temp = arr[i];
     arr[i] = arr[j];
@@ -105,7 +105,7 @@ function reverseValues(arr, start, end) {
   }
 }
 
-function createBidiText(str, isLTR, vertical = false) {
+function createBidiText(str: string, isLTR: boolean, vertical = false) {
   let dir = "ltr";
   if (vertical) {
     dir = "ttb";
@@ -117,10 +117,10 @@ function createBidiText(str, isLTR, vertical = false) {
 
 // These are used in bidi(), which is called frequently. We re-use them on
 // each call to avoid unnecessary allocations.
-const chars = [];
-const types = [];
+const chars: string[] = [];
+const types: string[] = [];
 
-function bidi(str, startLevel = -1, vertical = false) {
+function bidi(str: string, startLevel = -1, vertical = false) {
   let isLTR = true;
   const strLength = str.length;
   if (strLength === 0 || vertical) {

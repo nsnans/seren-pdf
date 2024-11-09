@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
+import { DecodeStream } from "./decode_stream";
 
 class AsciiHexStream extends DecodeStream {
-  constructor(str, maybeLength) {
+
+  protected firstDigit: number = -1;
+
+  constructor(str, maybeLength: number) {
     // Most streams increase in size when decoded, but AsciiHex streams shrink
     // by 50%.
     if (maybeLength) {
@@ -26,8 +29,6 @@ class AsciiHexStream extends DecodeStream {
 
     this.str = str;
     this.dict = str.dict;
-
-    this.firstDigit = -1;
   }
 
   readBlock() {
@@ -73,6 +74,10 @@ class AsciiHexStream extends DecodeStream {
     }
     this.firstDigit = firstDigit;
     this.bufferLength = bufferLength;
+  }
+
+  get length(): number {
+    throw new Error("Unsupoort Method length");
   }
 }
 

@@ -21,10 +21,10 @@ import {
   shadow,
   unreachable,
   warn,
-} from "../shared/util.js";
-import { Dict, Name, Ref } from "./primitives.js";
-import { BaseStream } from "./base_stream.js";
-import { MissingDataException } from "./core_utils.js";
+} from "../shared/util";
+import { Dict, Name, Ref } from "./primitives";
+import { BaseStream } from "./base_stream";
+import { MissingDataException } from "./core_utils";
 
 /**
  * Resizes an RGB image with 3 components.

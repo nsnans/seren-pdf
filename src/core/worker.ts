@@ -35,7 +35,7 @@ import {
   XRefParseException,
 } from "./core_utils.js";
 import { Dict, isDict, Ref } from "./primitives.js";
-import { LocalPdfManager, NetworkPdfManager } from "./pdf_manager.js";
+import { LocalPDFManager, NetworkPDFManager } from "./pdf_manager.js";
 import { AnnotationFactory } from "./annotation.js";
 import { clearGlobalCaches } from "./cleanup_helper.js";
 import { incrementalUpdate } from "./writer.js";
@@ -218,7 +218,7 @@ class WorkerMessageHandler {
         try {
           pdfManagerArgs.source = data;
 
-          newPdfManager = new LocalPdfManager(pdfManagerArgs);
+          newPdfManager = new LocalPDFManager(pdfManagerArgs);
           pdfManagerCapability.resolve(newPdfManager);
         } catch (ex) {
           pdfManagerCapability.reject(ex);
@@ -247,7 +247,7 @@ class WorkerMessageHandler {
           // We don't need auto-fetch when streaming is enabled.
           pdfManagerArgs.disableAutoFetch ||= fullRequest.isStreamingSupported;
 
-          newPdfManager = new NetworkPdfManager(pdfManagerArgs);
+          newPdfManager = new NetworkPDFManager(pdfManagerArgs);
           // There may be a chance that `newPdfManager` is not initialized for
           // the first few runs of `readchunk` block of code. Be sure to send
           // all cached chunks, if any, to chunked_stream via pdf_manager.
@@ -278,7 +278,7 @@ class WorkerMessageHandler {
                 }
                 pdfManagerArgs.source = pdfFile;
 
-                newPdfManager = new LocalPdfManager(pdfManagerArgs);
+                newPdfManager = new LocalPDFManager(pdfManagerArgs);
                 pdfManagerCapability.resolve(newPdfManager);
               }
               cancelXHRs = null;

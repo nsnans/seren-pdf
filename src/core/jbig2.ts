@@ -35,7 +35,9 @@ class ContextCache {
 }
 
 class DecodingContext {
-  constructor(data, start, end) {
+  public start: number;
+  public end: number;
+  constructor(data, start: number, end: number) {
     this.data = data;
     this.start = start;
     this.end = end;
@@ -61,7 +63,7 @@ function decodeInteger(contextCache, procedure, decoder) {
   const contexts = contextCache.getContexts(procedure);
   let prev = 1;
 
-  function readBits(length) {
+  function readBits(length: number) {
     let v = 0;
     for (let i = 0; i < length; i++) {
       const bit = decoder.readBit(contexts, prev);
@@ -75,22 +77,24 @@ function decodeInteger(contextCache, procedure, decoder) {
   // prettier-ignore
   /* eslint-disable no-nested-ternary */
   const value = readBits(1) ?
-                  (readBits(1) ?
-                    (readBits(1) ?
-                      (readBits(1) ?
-                        (readBits(1) ?
-                          (readBits(32) + 4436) :
-                        readBits(12) + 340) :
-                      readBits(8) + 84) :
-                    readBits(6) + 20) :
-                  readBits(4) + 4) :
-                readBits(2);
+    (readBits(1) ?
+      (readBits(1) ?
+        (readBits(1) ?
+          (readBits(1) ?
+            (readBits(32) + 4436) :
+            readBits(12) + 340) :
+          readBits(8) + 84) :
+        readBits(6) + 20) :
+      readBits(4) + 4) :
+    readBits(2);
   /* eslint-enable no-nested-ternary */
   let signedValue;
   if (sign === 0) {
     signedValue = value;
   } else if (value > 0) {
     signedValue = -value;
+  } else {
+    throw new Error("signed value不应当为负数，如果出现负数，则说明存在问题")
   }
   // Ensure that the integer value doesn't underflow or overflow.
   if (signedValue >= MIN_INT_32 && signedValue <= MAX_INT_32) {
@@ -100,7 +104,7 @@ function decodeInteger(contextCache, procedure, decoder) {
 }
 
 // A.3 The IAID decoding procedure
-function decodeIAID(contextCache, decoder, codeLength) {
+function decodeIAID(contextCache, decoder, codeLength: number) {
   const contexts = contextCache.getContexts("IAID");
 
   let prev = 1;
@@ -283,7 +287,7 @@ const RefinementReusedContexts = [
   0x0008, // '0000' + '001000'
 ];
 
-function decodeBitmapTemplate0(width, height, decodingContext) {
+function decodeBitmapTemplate0(width: number, height: number, decodingContext) {
   const decoder = decodingContext.decoder;
   const contexts = decodingContext.contextCache.getContexts("GB");
   const bitmap = [];
@@ -2335,7 +2339,7 @@ function getTextRegionHuffmanTables(
   // Read a Huffman code using the assignment above.
   // Interpret the RUNCODE codes and the additional bits (if any).
   codes.length = 0;
-  for (let i = 0; i < numberOfSymbols; ) {
+  for (let i = 0; i < numberOfSymbols;) {
     const codeLength = runCodesTable.decode(reader);
     if (codeLength >= 32) {
       let repeatedLength, numberOfRepeats, j;

@@ -16,15 +16,16 @@
 import { shadow } from "../../shared/util.js";
 
 const dimConverters = {
-  pt: x => x,
-  cm: x => (x / 2.54) * 72,
-  mm: x => (x / (10 * 2.54)) * 72,
-  in: x => x * 72,
-  px: x => x,
+  pt: (x: number) => x,
+  cm: (x: number) => (x / 2.54) * 72,
+  mm: (x: number) => (x / (10 * 2.54)) * 72,
+  in: (x: number) => x * 72,
+  px: (x: number) => x,
 };
+
 const measurementPattern = /([+-]?\d+\.?\d*)(.*)/;
 
-function stripQuotes(str) {
+function stripQuotes(str: string) {
   if (str.startsWith("'") || str.startsWith('"')) {
     return str.slice(1, -1);
   }
@@ -74,7 +75,7 @@ function getStringOption(data, options) {
   });
 }
 
-function getMeasurement(str, def = "0") {
+function getMeasurement(str: string, def = "0") {
   def ||= "0";
   if (!str) {
     return getMeasurement(def);
@@ -84,6 +85,7 @@ function getMeasurement(str, def = "0") {
     return getMeasurement(def);
   }
   const [, valueStr, unit] = match;
+  const matchUnit = unit as keyof typeof dimConverters
   const value = parseFloat(valueStr);
   if (isNaN(value)) {
     return getMeasurement(def);
@@ -93,7 +95,7 @@ function getMeasurement(str, def = "0") {
     return 0;
   }
 
-  const conv = dimConverters[unit];
+  const conv = dimConverters[matchUnit];
   if (conv) {
     return conv(value);
   }
@@ -101,7 +103,7 @@ function getMeasurement(str, def = "0") {
   return value;
 }
 
-function getRatio(data) {
+function getRatio(data: string) {
   if (!data) {
     return { num: 1, den: 1 };
   }
@@ -122,7 +124,7 @@ function getRatio(data) {
   return { num, den };
 }
 
-function getRelevant(data) {
+function getRelevant(data: string) {
   if (!data) {
     return [];
   }
@@ -135,7 +137,7 @@ function getRelevant(data) {
     }));
 }
 
-function getColor(data, def = [0, 0, 0]) {
+function getColor(data: string, def = [0, 0, 0]) {
   let [r, g, b] = def;
   if (!data) {
     return { r, g, b };
@@ -154,7 +156,7 @@ function getColor(data, def = [0, 0, 0]) {
   return { r, g, b };
 }
 
-function getBBox(data) {
+function getBBox(data: string) {
   const def = -1;
   if (!data) {
     return { x: def, y: def, width: def, height: def };

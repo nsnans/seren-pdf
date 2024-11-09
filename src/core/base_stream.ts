@@ -15,7 +15,10 @@
 
 import { bytesToString, shadow, unreachable } from "../shared/util.js";
 
-class BaseStream {
+abstract class BaseStream {
+
+  protected pos: number = 0;
+
   constructor() {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -26,24 +29,18 @@ class BaseStream {
   }
 
   // eslint-disable-next-line getter-return
-  get length() {
-    unreachable("Abstract getter `length` accessed");
-  }
+  abstract get length(): number;
 
   // eslint-disable-next-line getter-return
-  get isEmpty() {
-    unreachable("Abstract getter `isEmpty` accessed");
-  }
+  abstract get isEmpty(): boolean;
 
   get isDataLoaded() {
     return shadow(this, "isDataLoaded", true);
   }
 
-  getByte() {
-    unreachable("Abstract method `getByte` called");
-  }
+  abstract getByte(): number;
 
-  getBytes(length) {
+  getBytes(_length: number) {
     unreachable("Abstract method `getBytes` called");
   }
 
@@ -52,7 +49,7 @@ class BaseStream {
    *       to be fully loaded, since otherwise intermittent errors may occur;
    *       note the `ObjectLoader` class.
    */
-  async getImageData(length, decoderOptions) {
+  async getImageData(length: number, decoderOptions) {
     return this.getBytes(length, decoderOptions);
   }
 
@@ -80,7 +77,7 @@ class BaseStream {
     return peekedByte;
   }
 
-  peekBytes(length) {
+  peekBytes(length: number) {
     const bytes = this.getBytes(length);
     this.pos -= bytes.length;
     return bytes;
@@ -103,15 +100,15 @@ class BaseStream {
     return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
   }
 
-  getByteRange(begin, end) {
+  getByteRange(_begin: number, _end: number) {
     unreachable("Abstract method `getByteRange` called");
   }
 
-  getString(length) {
+  getString(length: number) {
     return bytesToString(this.getBytes(length));
   }
 
-  skip(n) {
+  skip(n: number) {
     this.pos += n || 1;
   }
 
@@ -123,7 +120,7 @@ class BaseStream {
     unreachable("Abstract method `moveStart` called");
   }
 
-  makeSubStream(start, length, dict = null) {
+  makeSubStream(_start: number, _length: number, _dict = null) {
     unreachable("Abstract method `makeSubStream` called");
   }
 

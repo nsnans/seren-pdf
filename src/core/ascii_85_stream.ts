@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
-import { isWhiteSpace } from "./core_utils.js";
+import { DecodeStream } from "./decode_stream";
+import { isWhiteSpace } from "./core_utils";
 
 class Ascii85Stream extends DecodeStream {
-  constructor(str, maybeLength) {
+  public eof: boolean = false;
+  public input: Uint8Array;
+
+  constructor(str, maybeLength: number) {
     // Most streams increase in size when decoded, but Ascii85 streams
     // typically shrink by ~20%.
     if (maybeLength) {
@@ -93,6 +96,11 @@ class Ascii85Stream extends DecodeStream {
       }
     }
   }
+
+  get length(): number {
+    throw new Error("Method not implemented.");
+  }
+
 }
 
 export { Ascii85Stream };

@@ -13,12 +13,24 @@
  * limitations under the License.
  */
 
-import { arrayBuffersToBytes, MissingDataException } from "./core_utils.js";
-import { assert } from "../shared/util.js";
-import { Stream } from "./stream.js";
+import { arrayBuffersToBytes, MissingDataException } from "./core_utils";
+import { assert } from "../shared/util";
+import { Stream } from "./stream";
 
 class ChunkedStream extends Stream {
-  constructor(length, chunkSize, manager) {
+
+  protected chunkSize: number;
+
+  protected numChunks: number;
+
+  protected _loadedChunks = new Set();
+
+  protected progressiveDataLength = 0;
+
+  // Single-entry cache
+  protected lastSuccessfulEnsureByteChunk = -1;
+
+  constructor(length: number, chunkSize: number, manager) {
     super(
       /* arrayBuffer = */ new Uint8Array(length),
       /* start = */ 0,
@@ -27,11 +39,8 @@ class ChunkedStream extends Stream {
     );
 
     this.chunkSize = chunkSize;
-    this._loadedChunks = new Set();
     this.numChunks = Math.ceil(length / chunkSize);
     this.manager = manager;
-    this.progressiveDataLength = 0;
-    this.lastSuccessfulEnsureByteChunk = -1; // Single-entry cache
   }
 
   // If a particular stream does not implement one or more of these methods,
@@ -54,7 +63,7 @@ class ChunkedStream extends Stream {
     return this.numChunksLoaded === this.numChunks;
   }
 
-  onReceiveData(begin, chunk) {
+  onReceiveData(begin: number, chunk) {
     const chunkSize = this.chunkSize;
     if (begin % chunkSize !== 0) {
       throw new Error(`Bad begin offset: ${begin}`);
@@ -97,7 +106,7 @@ class ChunkedStream extends Stream {
     }
   }
 
-  ensureByte(pos) {
+  ensureByte(pos: number) {
     if (pos < this.progressiveDataLength) {
       return;
     }
@@ -116,7 +125,7 @@ class ChunkedStream extends Stream {
     this.lastSuccessfulEnsureByteChunk = chunk;
   }
 
-  ensureRange(begin, end) {
+  ensureRange(begin: number, end: number) {
     if (begin >= end) {
       return;
     }
@@ -139,7 +148,7 @@ class ChunkedStream extends Stream {
     }
   }
 
-  nextEmptyChunk(beginChunk) {
+  nextEmptyChunk(beginChunk: number) {
     const numChunks = this.numChunks;
     for (let i = 0; i < numChunks; ++i) {
       const chunk = (beginChunk + i) % numChunks; // Wrap around to beginning.
@@ -165,7 +174,7 @@ class ChunkedStream extends Stream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length) {
+  getBytes(length: number) {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;
@@ -189,7 +198,7 @@ class ChunkedStream extends Stream {
     return bytes.subarray(pos, end);
   }
 
-  getByteRange(begin, end) {
+  getByteRange(begin: number, end: number) {
     if (begin < 0) {
       begin = 0;
     }
@@ -202,7 +211,7 @@ class ChunkedStream extends Stream {
     return this.bytes.subarray(begin, end);
   }
 
-  makeSubStream(start, length, dict = null) {
+  makeSubStream(start: number, length: number | null, dict = null) {
     if (length) {
       if (start + length > this.progressiveDataLength) {
         this.ensureRange(start, start + length);
@@ -220,7 +229,7 @@ class ChunkedStream extends Stream {
       this.ensureByte(start);
     }
 
-    function ChunkedStreamSubstream() {}
+    function ChunkedStreamSubstream() { }
     ChunkedStreamSubstream.prototype = Object.create(this);
     ChunkedStreamSubstream.prototype.getMissingChunks = function () {
       const chunkSize = this.chunkSize;
@@ -257,6 +266,31 @@ class ChunkedStream extends Stream {
 }
 
 class ChunkedStreamManager {
+
+  protected length: number;
+
+  protected chunkSize: number;
+
+  protected stream: ChunkedStream;
+
+  protected pdfNetworkStream;
+
+  protected disableAutoFetch: boolean;
+
+  protected currRequestId = 0;
+
+  protected _chunksNeededByRequest = new Map();
+
+  protected _requestsByChunk = new Map();
+
+  protected _promisesByRequest = new Map();
+
+  protected progressiveDataLength = 0;
+
+  protected aborted = false;
+
+  protected _loadedStreamCapability = Promise.withResolvers()
+
   constructor(pdfNetworkStream, args) {
     this.length = args.length;
     this.chunkSize = args.rangeChunkSize;
@@ -264,19 +298,9 @@ class ChunkedStreamManager {
     this.pdfNetworkStream = pdfNetworkStream;
     this.disableAutoFetch = args.disableAutoFetch;
     this.msgHandler = args.msgHandler;
-
-    this.currRequestId = 0;
-
-    this._chunksNeededByRequest = new Map();
-    this._requestsByChunk = new Map();
-    this._promisesByRequest = new Map();
-    this.progressiveDataLength = 0;
-    this.aborted = false;
-
-    this._loadedStreamCapability = Promise.withResolvers();
   }
 
-  sendRequest(begin, end) {
+  sendRequest(begin: number, end: number) {
     const rangeReader = this.pdfNetworkStream.getRangeReader(begin, end);
     if (!rangeReader.isStreamingSupported) {
       rangeReader.onProgress = this.onProgress.bind(this);
@@ -389,7 +413,7 @@ class ChunkedStreamManager {
   /**
    * Loads any chunks in the requested range that are not yet loaded.
    */
-  requestRange(begin, end) {
+  requestRange(begin: number, end: number) {
     end = Math.min(end, this.length);
 
     const beginChunk = this.getBeginChunk(begin);
@@ -536,11 +560,11 @@ class ChunkedStreamManager {
     this._loadedStreamCapability.reject(err);
   }
 
-  getBeginChunk(begin) {
+  getBeginChunk(begin: number) {
     return Math.floor(begin / this.chunkSize);
   }
 
-  getEndChunk(end) {
+  getEndChunk(end: number) {
     return Math.floor((end - 1) / this.chunkSize) + 1;
   }
 

@@ -3897,26 +3897,26 @@ class Occur extends XFAObject {
     this.initial =
       attributes.initial !== ""
         ? getInteger({
-            data: attributes.initial,
-            defaultValue: "",
-            validate: x => true,
-          })
+          data: attributes.initial,
+          defaultValue: "",
+          validate: x => true,
+        })
         : "";
     this.max =
       attributes.max !== ""
         ? getInteger({
-            data: attributes.max,
-            defaultValue: 1,
-            validate: x => true,
-          })
+          data: attributes.max,
+          defaultValue: 1,
+          validate: x => true,
+        })
         : "";
     this.min =
       attributes.min !== ""
         ? getInteger({
-            data: attributes.min,
-            defaultValue: 1,
-            validate: x => true,
-          })
+          data: attributes.min,
+          defaultValue: 1,
+          validate: x => true,
+        })
         : "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
@@ -4391,9 +4391,8 @@ class Pattern extends XFAObject {
     const endColor = this.color ? this.color[$toStyle]() : "#000000";
     const width = 5;
     const cmd = "repeating-linear-gradient";
-    const colors = `${startColor},${startColor} ${width}px,${endColor} ${width}px,${endColor} ${
-      2 * width
-    }px`;
+    const colors = `${startColor},${startColor} ${width}px,${endColor} ${width}px,${endColor} ${2 * width
+      }px`;
     switch (this.type) {
       case "crossHatch":
         return `${cmd}(to top,${colors}) ${cmd}(to right,${colors})`;
@@ -5677,6 +5676,14 @@ class Template extends XFAObject {
 }
 
 class Text extends ContentObject {
+  
+  public id: string;
+  public maxChars: number;
+  public name: string;
+  public rid: string;
+  public use: string;
+  public usehref: string;
+
   constructor(attributes) {
     super(TEMPLATE_NS_ID, "text");
     this.id = attributes.id || "";

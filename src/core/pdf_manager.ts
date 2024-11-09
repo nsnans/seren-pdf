@@ -18,13 +18,13 @@ import {
   FeatureTest,
   unreachable,
   warn,
-} from "../shared/util.js";
-import { ChunkedStreamManager } from "./chunked_stream.js";
-import { MissingDataException } from "./core_utils.js";
-import { PDFDocument } from "./document.js";
-import { Stream } from "./stream.js";
+} from "../shared/util";
+import { ChunkedStreamManager } from "./chunked_stream";
+import { MissingDataException } from "./core_utils";
+import { PDFDocument } from "./document";
+import { Stream } from "./stream";
 
-function parseDocBaseUrl(url) {
+function parseDocBaseUrl(url: string) {
   if (url) {
     const absoluteUrl = createValidAbsoluteUrl(url);
     if (absoluteUrl) {
@@ -35,11 +35,26 @@ function parseDocBaseUrl(url) {
   return null;
 }
 
-class BasePdfManager {
+interface PDFManager {
+
+  ensureDoc(prop: string, args?: any);
+
+  ensureXRef(prop: string, args?: any);
+
+  ensureCatalog(prop, args?: any);
+}
+
+abstract class BasePDFManager implements PDFManager {
+
+  protected _docId: string;
+  protected _docBaseUrl: string | null;
+  protected _password: string | null;
+  protected enableXfa: boolean;
+
   constructor(args) {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BasePdfManager
+      this.constructor === BasePDFManager
     ) {
       unreachable("Cannot initialize BasePdfManager.");
     }
@@ -68,71 +83,67 @@ class BasePdfManager {
   }
 
   get catalog() {
-    return this.pdfDocument.catalog;
+    return this.getPDFDocument().catalog;
   }
 
   ensureDoc(prop, args) {
-    return this.ensure(this.pdfDocument, prop, args);
+    return this.ensure(this.getPDFDocument(), prop, args);
   }
 
   ensureXRef(prop, args) {
-    return this.ensure(this.pdfDocument.xref, prop, args);
+    return this.ensure(this.getPDFDocument().xref, prop, args);
   }
 
   ensureCatalog(prop, args) {
-    return this.ensure(this.pdfDocument.catalog, prop, args);
+    return this.ensure(this.getPDFDocument().catalog, prop, args);
   }
 
-  getPage(pageIndex) {
-    return this.pdfDocument.getPage(pageIndex);
+  getPage(pageIndex: number) {
+    return this.getPDFDocument().getPage(pageIndex);
   }
 
   fontFallback(id, handler) {
-    return this.pdfDocument.fontFallback(id, handler);
+    return this.getPDFDocument().fontFallback(id, handler);
   }
 
   loadXfaFonts(handler, task) {
-    return this.pdfDocument.loadXfaFonts(handler, task);
+    return this.getPDFDocument().loadXfaFonts(handler, task);
   }
 
   loadXfaImages() {
-    return this.pdfDocument.loadXfaImages();
+    return this.getPDFDocument().loadXfaImages();
   }
 
   serializeXfaData(annotationStorage) {
-    return this.pdfDocument.serializeXfaData(annotationStorage);
+    return this.getPDFDocument().serializeXfaData(annotationStorage);
   }
 
   cleanup(manuallyTriggered = false) {
-    return this.pdfDocument.cleanup(manuallyTriggered);
+    return this.getPDFDocument().cleanup(manuallyTriggered);
   }
 
-  async ensure(obj, prop, args) {
-    unreachable("Abstract method `ensure` called");
-  }
+  abstract ensure(obj, prop, args);
 
-  requestRange(begin, end) {
-    unreachable("Abstract method `requestRange` called");
-  }
+  abstract requestRange(begin: number, end: number): Promise<void>;
 
-  requestLoadedStream(noFetch = false) {
-    unreachable("Abstract method `requestLoadedStream` called");
-  }
+  abstract requestLoadedStream(noFetch = false);
 
-  sendProgressiveData(chunk) {
-    unreachable("Abstract method `sendProgressiveData` called");
-  }
+  abstract sendProgressiveData(chunk);
 
-  updatePassword(password) {
+  updatePassword(password: string) {
     this._password = password;
   }
 
-  terminate(reason) {
-    unreachable("Abstract method `terminate` called");
-  }
+  abstract terminate(reason: string): void;
+
+  abstract getPDFDocument(): PDFDocument;
 }
 
-class LocalPdfManager extends BasePdfManager {
+class LocalPDFManager extends BasePDFManager {
+
+
+  public pdfDocument: PDFDocument;
+
   constructor(args) {
     super(args);
 
@@ -149,7 +160,7 @@ class LocalPdfManager extends BasePdfManager {
     return value;
   }
 
-  requestRange(begin, end) {
+  requestRange(_begin: number, _end: number) {
     return Promise.resolve();
   }
 
@@ -157,10 +168,23 @@ class LocalPdfManager extends BasePdfManager {
     return this._loadedStreamPromise;
   }
 
-  terminate(reason) {}
+  sendProgressiveData(_chunk: any) {
+    throw new Error("Method not implemented.");
+  }
+
+  terminate() { }
+
+  getPDFDocument(): PDFDocument {
+    return this.pdfDocument;
+  }
 }
 
-class NetworkPdfManager extends BasePdfManager {
+class NetworkPDFManager extends BasePDFManager {
+
+  public pdfDocument: PDFDocument;
+
+  public streamManager: ChunkedStreamManager;
+
   constructor(args) {
     super(args);
 
@@ -189,7 +213,7 @@ class NetworkPdfManager extends BasePdfManager {
     }
   }
 
-  requestRange(begin, end) {
+  requestRange(begin: number, end: number) {
     return this.streamManager.requestRange(begin, end);
   }
 
@@ -204,6 +228,12 @@ class NetworkPdfManager extends BasePdfManager {
   terminate(reason) {
     this.streamManager.abort(reason);
   }
+
+  getPDFDocument(): PDFDocument {
+    return this.pdfDocument;
+  }
 }
 
-export { LocalPdfManager, NetworkPdfManager };
+export { LocalPDFManager, NetworkPDFManager };
+export type { PDFManager };
+
