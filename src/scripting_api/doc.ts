@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { createActionsMap } from "./common.js";
-import { PDFObject } from "./pdf_object.js";
-import { PrintParams } from "./print_params.js";
-import { serializeError } from "./app_utils.js";
-import { ZoomType } from "./constants.js";
+import { createActionsMap } from "./common";
+import { PDFObject } from "./pdf_object";
+import { PrintParams } from "./print_params";
+import { serializeError } from "./app_utils";
+import { ZoomType } from "./constants";
 
 const DOC_EXTERNAL = false;
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { initSandbox } from "./scripting_api/initialization.js";
+import { initSandbox } from "./scripting_api/initialization";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =

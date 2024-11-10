@@ -19,14 +19,12 @@
  *
  * @interface
  */
-class IPDFStream {
+interface IPDFStream {
   /**
    * Gets a reader for the entire PDF data.
    * @returns {IPDFStreamReader}
    */
-  getFullReader() {
-    return null;
-  }
+  getFullReader(): IPDFStreamReader;
 
   /**
    * Gets a reader for the range of the PDF data.
@@ -34,15 +32,13 @@ class IPDFStream {
    * @param {number} end - the end offset of the data.
    * @returns {IPDFStreamRangeReader}
    */
-  getRangeReader(begin, end) {
-    return null;
-  }
+  getRangeReader(begin: number, end: number): IPDFStreamRangeReader;
 
   /**
    * Cancels all opened reader and closes all their opened requests.
    * @param {Object} reason - the reason for cancelling
    */
-  cancelAllRequests(reason) {}
+  cancelAllRequests(reason): void;
 }
 
 /**
@@ -116,13 +112,13 @@ class IPDFStreamReader {
    * set to true.
    * @returns {Promise}
    */
-  async read() {}
+  async read() { }
 
   /**
    * Cancels all pending read requests and closes the stream.
    * @param {Object} reason
    */
-  cancel(reason) {}
+  cancel(reason) { }
 }
 
 /**
@@ -157,13 +153,14 @@ class IPDFStreamRangeReader {
    * set to true.
    * @returns {Promise}
    */
-  async read() {}
+  async read() { }
 
   /**
    * Cancels all pending read requests and closes the stream.
    * @param {Object} reason
    */
-  cancel(reason) {}
+  cancel(reason) { }
 }
 
-export { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader };
+export { IPDFStreamRangeReader, IPDFStreamReader };  export type { IPDFStream };
+

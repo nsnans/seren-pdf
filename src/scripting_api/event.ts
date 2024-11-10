@@ -17,7 +17,7 @@ import {
   serializeError,
   USERACTIVATION_CALLBACKID,
   USERACTIVATION_MAXTIME_VALIDITY,
-} from "./app_utils.js";
+} from "./app_utils";
 
 class Event {
   constructor(data) {

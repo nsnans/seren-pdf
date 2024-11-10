@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { WorkerMessageHandler } from "./core/worker.js";
+import { WorkerMessageHandler } from "./core/worker";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =

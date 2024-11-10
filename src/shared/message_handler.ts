@@ -21,7 +21,7 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
-} from "./util.js";
+} from "./util";
 
 const CallbackKind = {
   UNKNOWN: 0,
@@ -69,7 +69,7 @@ function wrapReason(reason) {
 }
 
 class MessageHandler {
-  #messageAC = new AbortController();
+  #messageAC : AbortController | null = new AbortController();
 
   constructor(sourceName, targetName, comObj) {
     this.sourceName = sourceName;

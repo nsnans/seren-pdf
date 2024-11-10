@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { createActionsMap, FieldType, getFieldType } from "./common.js";
-import { Color } from "./color.js";
-import { PDFObject } from "./pdf_object.js";
+import { createActionsMap, FieldType, getFieldType } from "./common";
+import { Color } from "./color";
+import { PDFObject } from "./pdf_object";
 
 class Field extends PDFObject {
   constructor(data) {
@@ -351,7 +351,7 @@ class Field extends PDFObject {
     this._buttonIcon[nFace] = oIcon;
   }
 
-  checkThisBox(nWidget, bCheckIt = true) {}
+  checkThisBox(nWidget, bCheckIt = true) { }
 
   clearItems() {
     if (!this._isChoice) {
@@ -523,19 +523,19 @@ class Field extends PDFObject {
     this._send({ id: this._id, items: this._items });
   }
 
-  setLock() {}
+  setLock() { }
 
-  signatureGetModifications() {}
+  signatureGetModifications() { }
 
-  signatureGetSeedValue() {}
+  signatureGetSeedValue() { }
 
-  signatureInfo() {}
+  signatureInfo() { }
 
-  signatureSetSeedValue() {}
+  signatureSetSeedValue() { }
 
-  signatureSign() {}
+  signatureSign() { }
 
-  signatureValidate() {}
+  signatureValidate() { }
 
   _isButton() {
     return false;
@@ -591,7 +591,7 @@ class RadioButtonField extends Field {
     return this._radioIds.filter(id => id !== this._id);
   }
 
-  set _siblings(_) {}
+  set _siblings(_) { }
 
   get value() {
     return this._value;

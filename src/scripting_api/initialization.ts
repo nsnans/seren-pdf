@@ -26,16 +26,16 @@ import {
   Style,
   Trans,
   ZoomType,
-} from "./constants.js";
-import { CheckboxField, Field, RadioButtonField } from "./field.js";
-import { AForm } from "./aform.js";
-import { App } from "./app.js";
-import { Color } from "./color.js";
-import { Console } from "./console.js";
-import { Doc } from "./doc.js";
-import { ProxyHandler } from "./proxy.js";
-import { serializeError } from "./app_utils.js";
-import { Util } from "./util.js";
+} from "./constants";
+import { CheckboxField, Field, RadioButtonField } from "./field";
+import { AForm } from "./aform";
+import { App } from "./app";
+import { Color } from "./color";
+import { Console } from "./console";
+import { Doc } from "./doc";
+import { ProxyHandler } from "./proxy";
+import { serializeError } from "./app_utils";
+import { Util } from "./util";
 
 function initSandbox(params) {
   delete globalThis.pdfjsScripting;

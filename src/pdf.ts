@@ -40,14 +40,14 @@ import {
   UnexpectedResponseException,
   Util,
   VerbosityLevel,
-} from "./shared/util.js";
+} from "./shared/util";
 import {
   build,
   getDocument,
   PDFDataRangeTransport,
   PDFWorker,
   version,
-} from "./display/api.js";
+} from "./display/api";
 import {
   fetchData,
   getFilenameFromUrl,
@@ -61,17 +61,17 @@ import {
   PixelsPerInch,
   RenderingCancelledException,
   setLayerDimensions,
-} from "./display/display_utils.js";
-import { AnnotationEditorLayer } from "./display/editor/annotation_editor_layer.js";
-import { AnnotationEditorUIManager } from "./display/editor/tools.js";
-import { AnnotationLayer } from "./display/annotation_layer.js";
-import { ColorPicker } from "./display/editor/color_picker.js";
-import { DOMSVGFactory } from "./display/svg_factory.js";
-import { DrawLayer } from "./display/draw_layer.js";
-import { GlobalWorkerOptions } from "./display/worker_options.js";
-import { HighlightOutliner } from "./display/editor/drawers/highlight.js";
-import { TextLayer } from "./display/text_layer.js";
-import { XfaLayer } from "./display/xfa_layer.js";
+} from "./display/display_utils";
+import { AnnotationEditorLayer } from "./display/editor/annotation_editor_layer";
+import { AnnotationEditorUIManager } from "./display/editor/tools";
+import { AnnotationLayer } from "./display/annotation_layer";
+import { ColorPicker } from "./display/editor/color_picker";
+import { DOMSVGFactory } from "./display/svg_factory";
+import { DrawLayer } from "./display/draw_layer";
+import { GlobalWorkerOptions } from "./display/worker_options";
+import { HighlightOutliner } from "./display/editor/drawers/highlight";
+import { TextLayer } from "./display/text_layer";
+import { XfaLayer } from "./display/xfa_layer";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =

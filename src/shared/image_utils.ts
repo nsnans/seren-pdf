@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { FeatureTest, ImageKind } from "./util.js";
+import { FeatureTest, ImageKind } from "./util";
 
 function convertToRGBA(params) {
   switch (params.kind) {

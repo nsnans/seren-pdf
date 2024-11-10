@@ -19,12 +19,12 @@ import {
   VIEWER_TYPE,
   VIEWER_VARIATION,
   VIEWER_VERSION,
-} from "./app_utils.js";
-import { Color } from "./color.js";
-import { EventDispatcher } from "./event.js";
-import { FullScreen } from "./fullscreen.js";
-import { PDFObject } from "./pdf_object.js";
-import { Thermometer } from "./thermometer.js";
+} from "./app_utils";
+import { Color } from "./color";
+import { EventDispatcher } from "./event";
+import { FullScreen } from "./fullscreen";
+import { PDFObject } from "./pdf_object";
+import { Thermometer } from "./thermometer";
 
 class App extends PDFObject {
   constructor(data) {

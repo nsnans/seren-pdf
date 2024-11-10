@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { PDFObject } from "./pdf_object.js";
+import { PDFObject } from "./pdf_object";
 
 class Console extends PDFObject {
   clear() {

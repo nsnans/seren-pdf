@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { ColorConverters } from "../shared/scripting_utils.js";
-import { PDFObject } from "./pdf_object.js";
+import { ColorConverters } from "../shared/scripting_utils";
+import { PDFObject } from "./pdf_object";
 
 class Color extends PDFObject {
   constructor() {

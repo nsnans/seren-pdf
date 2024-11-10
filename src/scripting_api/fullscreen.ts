@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { Cursor } from "./constants.js";
-import { PDFObject } from "./pdf_object.js";
+import { Cursor } from "./constants";
+import { PDFObject } from "./pdf_object";
 
 class FullScreen extends PDFObject {
   constructor(data) {

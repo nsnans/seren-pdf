@@ -17,10 +17,10 @@ import {
   getVerbosityLevel,
   setVerbosityLevel,
   VerbosityLevel,
-} from "./shared/util.js";
-import { Jbig2Error, Jbig2Image } from "./core/jbig2.js";
-import { JpegError, JpegImage } from "./core/jpg.js";
-import { JpxError, JpxImage } from "./core/jpx.js";
+} from "./shared/util";
+import { Jbig2Error, Jbig2Image } from "./core/jbig2";
+import { JpegError, JpegImage } from "./core/jpg";
+import { JpxError, JpxImage } from "./core/jpx";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =

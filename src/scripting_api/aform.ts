@@ -13,39 +13,49 @@
  * limitations under the License.
  */
 
-import { GlobalConstants } from "./constants.js";
+import { GlobalConstants } from "./constants";
+
+const DATE_FORMATES = [
+  "m/d",
+  "m/d/yy",
+  "mm/dd/yy",
+  "mm/yy",
+  "d-mmm",
+  "d-mmm-yy",
+  "dd-mmm-yy",
+  "yy-mm-dd",
+  "mmm-yy",
+  "mmmm-yy",
+  "mmm d, yyyy",
+  "mmmm d, yyyy",
+  "m/d/yy h:MM tt",
+  "m/d/yy HH:MM",
+];;
+const TIME_FORMATS = ["HH:MM", "h:MM tt", "HH:MM:ss", "h:MM:ss tt"];
+
+const EMAIL_REGEX = new RegExp(
+  "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+" +
+  "@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?" +
+  "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+);
 
 class AForm {
+
+  protected _dateFormats = DATE_FORMATES;
+
+  protected _timeFormats = TIME_FORMATS;
+
+  protected _emailRegex = EMAIL_REGEX;
+
   constructor(document, app, util, color) {
     this._document = document;
     this._app = app;
     this._util = util;
     this._color = color;
-    this._dateFormats = [
-      "m/d",
-      "m/d/yy",
-      "mm/dd/yy",
-      "mm/yy",
-      "d-mmm",
-      "d-mmm-yy",
-      "dd-mmm-yy",
-      "yy-mm-dd",
-      "mmm-yy",
-      "mmmm-yy",
-      "mmm d, yyyy",
-      "mmmm d, yyyy",
-      "m/d/yy h:MM tt",
-      "m/d/yy HH:MM",
-    ];
-    this._timeFormats = ["HH:MM", "h:MM tt", "HH:MM:ss", "h:MM:ss tt"];
 
     // The e-mail address regex below originates from:
     // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
-    this._emailRegex = new RegExp(
-      "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+" +
-        "@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?" +
-        "(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
-    );
+
   }
 
   _mkTargetName(event) {
@@ -56,7 +66,7 @@ class AForm {
     let date = null;
     try {
       date = this._util._scand(cFormat, cDate, strict);
-    } catch {}
+    } catch { }
     if (date) {
       return date;
     }
