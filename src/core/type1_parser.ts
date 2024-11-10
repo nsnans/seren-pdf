@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { getEncoding } from "./encodings.js";
-import { isWhiteSpace } from "./core_utils.js";
-import { Stream } from "./stream.js";
-import { warn } from "../shared/util.js";
+import { getEncoding } from "./encodings";
+import { isWhiteSpace } from "./core_utils";
+import { Stream } from "./stream";
+import { warn } from "../shared/util";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -79,10 +79,14 @@ const COMMAND_MAP = {
  *  the charStrings.
  */
 class Type1CharString {
+
+  protected width = 0;
+
+  protected lsb = 0;
+
+  protected flexing = false;
+
   constructor() {
-    this.width = 0;
-    this.lsb = 0;
-    this.flexing = false;
     this.output = [];
     this.stack = [];
   }

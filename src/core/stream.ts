@@ -13,20 +13,29 @@
  * limitations under the License.
  */
 
-import { BaseStream } from "./base_stream.js";
-import { stringToBytes } from "../shared/util.js";
+import { BaseStream } from "./base_stream";
+import { stringToBytes } from "../shared/util";
+import { Dict } from "./primitives";
 
 class Stream extends BaseStream {
-  constructor(arrayBuffer, start, length, dict) {
-    super();
 
+  public start: number;
+
+  public end: number;
+
+  protected bytes: Uint8Array;
+
+  protected dict: Dict | null;
+
+  constructor(arrayBuffer: Uint8Array | ArrayBufferLike, start = 0, length?: number, dict: Dict | null = null) {
+    super();
     this.bytes =
       arrayBuffer instanceof Uint8Array
         ? arrayBuffer
         : new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
-    this.end = start + length || this.bytes.length;
+    this.end = length != undefined ? start + length : this.bytes.length;
     this.dict = dict;
   }
 
@@ -45,7 +54,7 @@ class Stream extends BaseStream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length) {
+  getBytes(length: number) {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;
@@ -61,7 +70,7 @@ class Stream extends BaseStream {
     return bytes.subarray(pos, end);
   }
 
-  getByteRange(begin, end) {
+  getByteRange(begin: number, end: number) {
     if (begin < 0) {
       begin = 0;
     }
@@ -79,13 +88,13 @@ class Stream extends BaseStream {
     this.start = this.pos;
   }
 
-  makeSubStream(start, length, dict = null) {
+  makeSubStream(start: number, length: number, dict: Dict | null = null) {
     return new Stream(this.bytes.buffer, start, length, dict);
   }
 }
 
 class StringStream extends Stream {
-  constructor(str) {
+  constructor(str: string) {
     super(stringToBytes(str));
   }
 }

@@ -13,18 +13,24 @@
  * limitations under the License.
  */
 
-import { BaseStream } from "./base_stream.js";
-import { DecodeStream } from "./decode_stream.js";
-import { Dict } from "./primitives.js";
-import { Jbig2Image } from "./jbig2.js";
-import { shadow } from "../shared/util.js";
+import { BaseStream } from "./base_stream";
+import { DecodeStream } from "./decode_stream";
+import { Dict } from "./primitives";
+import { Jbig2Image } from "./jbig2";
+import { shadow } from "../shared/util";
 
 /**
  * For JBIG2's we use a library to decode these images and
  * the stream behaves like all the other DecodeStreams.
  */
 class Jbig2Stream extends DecodeStream {
-  constructor(stream, maybeLength, params) {
+
+  protected stream;
+  protected dict;
+  protected maybeLength: number;
+  protected params;
+
+  constructor(stream, maybeLength: number, params) {
     super(maybeLength);
 
     this.stream = stream;

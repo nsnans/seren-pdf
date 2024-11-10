@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util.js";
-import { Dict, isName, Name, Ref, RefSetCache } from "./primitives.js";
-import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils.js";
-import { NumberTree } from "./name_number_tree.js";
-import { writeObject } from "./writer.js";
+import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
+import { Dict, isName, Name, Ref, RefSetCache } from "./primitives";
+import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
+import { NumberTree } from "./name_number_tree";
+import { writeObject } from "./writer";
 
 const MAX_DEPTH = 40;
 
@@ -30,6 +30,11 @@ const StructElementType = {
 };
 
 class StructTreeRoot {
+
+  protected roleMap = new Map();
+
+  protected ref: Ref | null;
+
   constructor(rootDict, rootRef) {
     this.dict = rootDict;
     this.ref = rootRef instanceof Ref ? rootRef : null;

@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
-import { JpxImage } from "./jpx.js";
-import { shadow } from "../shared/util.js";
+import { DecodeStream } from "./decode_stream";
+import { JpxImage } from "./jpx";
+import { shadow } from "../shared/util";
 
 /**
  * For JPEG 2000's we use a library to decode these images and
  * the stream behaves like all the other DecodeStreams.
  */
 class JpxStream extends DecodeStream {
+
+  protected maybeLength: number;
+
   constructor(stream, maybeLength, params) {
     super(maybeLength);
 

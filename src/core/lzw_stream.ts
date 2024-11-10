@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
+import { DecodeStream } from "./decode_stream";
 
 class LZWStream extends DecodeStream {
-  constructor(str, maybeLength, earlyChange) {
+
+  protected cachedData = 0;
+
+  protected bitsCached = 0;
+
+  constructor(str, maybeLength: number, earlyChange) {
     super(maybeLength);
 
     this.str = str;
@@ -86,7 +91,7 @@ class LZWStream extends DecodeStream {
     let buffer = this.ensureBuffer(this.bufferLength + estimatedDecodedSize);
 
     for (i = 0; i < blockSize; i++) {
-      const code = this.readBits(codeLength);
+      const code = this.readBits(codeLength)!;
       const hasPrev = currentSequenceLength > 0;
       if (code < 256) {
         currentSequence[0] = code;
@@ -121,9 +126,9 @@ class LZWStream extends DecodeStream {
           (nextCode + earlyChange) & (nextCode + earlyChange - 1)
             ? codeLength
             : Math.min(
-                Math.log(nextCode + earlyChange) / 0.6931471805599453 + 1,
-                12
-              ) | 0;
+              Math.log(nextCode + earlyChange) / 0.6931471805599453 + 1,
+              12
+            ) | 0;
       }
       prevCode = code;
 

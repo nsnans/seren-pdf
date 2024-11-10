@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { FormatError, shadow } from "../shared/util.js";
-import { EOF } from "./primitives.js";
-import { isWhiteSpace } from "./core_utils.js";
+import { FormatError, shadow } from "../shared/util";
+import { EOF } from "./primitives";
+import { isWhiteSpace } from "./core_utils";
 
 class PostScriptParser {
   constructor(lexer) {

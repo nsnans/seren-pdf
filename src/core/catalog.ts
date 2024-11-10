@@ -130,23 +130,23 @@ class Catalog {
 
   protected xref: XRef;
 
-  protected fontCache = new RefSetCache();
+  public fontCache = new RefSetCache();
 
-  protected builtInCMapCache = new Map();
+  public builtInCMapCache = new Map();
 
-  protected standardFontDataCache = new Map();
+  public standardFontDataCache = new Map();
 
-  protected globalImageCache = new GlobalImageCache();
+  public globalImageCache = new GlobalImageCache();
 
-  protected pageKidsCountCache = new RefSetCache();
+  public pageKidsCountCache = new RefSetCache();
 
-  protected pageIndexCache = new RefSetCache();
+  public pageIndexCache = new RefSetCache();
 
   protected pageDictCache = new RefSetCache();
 
-  protected nonBlendModesSet = new RefSet();
+  public nonBlendModesSet = new RefSet();
 
-  protected systemFontCache = new Map();
+  public systemFontCache = new Map();
 
   constructor(pdfManager: PDFManager, xref: XRef) {
     this.pdfManager = pdfManager;
@@ -704,7 +704,7 @@ class Catalog {
     };
   }
 
-  setActualNumPages(num = null) {
+  setActualNumPages(num: number | null = null) {
     this._actualNumPages = num;
   }
 

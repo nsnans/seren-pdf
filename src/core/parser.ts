@@ -19,24 +19,24 @@ import {
   FormatError,
   info,
   warn,
-} from "../shared/util.js";
-import { Cmd, Dict, EOF, isCmd, Name, Ref } from "./primitives.js";
+} from "../shared/util";
+import { Cmd, Dict, EOF, isCmd, Name, Ref } from "./primitives";
 import {
   isWhiteSpace,
   MissingDataException,
   ParserEOFException,
-} from "./core_utils.js";
-import { NullStream, Stream } from "./stream.js";
-import { Ascii85Stream } from "./ascii_85_stream.js";
-import { AsciiHexStream } from "./ascii_hex_stream.js";
-import { CCITTFaxStream } from "./ccitt_stream.js";
-import { FlateStream } from "./flate_stream.js";
-import { Jbig2Stream } from "./jbig2_stream.js";
-import { JpegStream } from "./jpeg_stream.js";
-import { JpxStream } from "./jpx_stream.js";
-import { LZWStream } from "./lzw_stream.js";
-import { PredictorStream } from "./predictor_stream.js";
-import { RunLengthStream } from "./run_length_stream.js";
+} from "./core_utils";
+import { NullStream, Stream } from "./stream";
+import { Ascii85Stream } from "./ascii_85_stream";
+import { AsciiHexStream } from "./ascii_hex_stream";
+import { CCITTFaxStream } from "./ccitt_stream";
+import { FlateStream } from "./flate_stream";
+import { Jbig2Stream } from "./jbig2_stream";
+import { JpegStream } from "./jpeg_stream";
+import { JpxStream } from "./jpx_stream";
+import { LZWStream } from "./lzw_stream";
+import { PredictorStream } from "./predictor_stream";
+import { RunLengthStream } from "./run_length_stream";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -253,7 +253,7 @@ class Parser {
             knownCommands
           );
           // Reduce the number of (potential) warning messages.
-          tmpLexer._hexStringWarn = () => {};
+          tmpLexer._hexStringWarn = () => { };
           let numArgs = 0;
 
           while (true) {
@@ -295,7 +295,7 @@ class Parser {
     if (ch === -1) {
       warn(
         "findDefaultInlineStreamEnd: " +
-          "Reached the end of the stream without finding a valid EI marker"
+        "Reached the end of the stream without finding a valid EI marker"
       );
       if (maybeEIPos) {
         warn('... trying to recover by using the last "EI" occurrence.');
@@ -409,7 +409,7 @@ class Parser {
     if (b === -1) {
       warn(
         "Inline DCTDecode image stream: " +
-          "EOI marker not found, searching for /EI/ instead."
+        "EOI marker not found, searching for /EI/ instead."
       );
       stream.skip(-length); // Reset the stream position.
       return this.findDefaultInlineStreamEnd(stream);
@@ -456,7 +456,7 @@ class Parser {
     if (ch === -1) {
       warn(
         "Inline ASCII85Decode image stream: " +
-          "EOD marker not found, searching for /EI/ instead."
+        "EOD marker not found, searching for /EI/ instead."
       );
       stream.skip(-length); // Reset the stream position.
       return this.findDefaultInlineStreamEnd(stream);
@@ -482,7 +482,7 @@ class Parser {
     if (ch === -1) {
       warn(
         "Inline ASCIIHexDecode image stream: " +
-          "EOD marker not found, searching for /EI/ instead."
+        "EOD marker not found, searching for /EI/ instead."
       );
       stream.skip(-length); // Reset the stream position.
       return this.findDefaultInlineStreamEnd(stream);
@@ -666,7 +666,7 @@ class Parser {
               if (isWhiteSpace(lastByte)) {
                 info(
                   `Found "${bytesToString([...END_SIGNATURE, ...part])}" when ` +
-                    "searching for endstream command."
+                  "searching for endstream command."
                 );
                 found = true;
               }
@@ -1104,7 +1104,7 @@ class Lexer {
         if (specialChars[ch]) {
           warn(
             "Lexer_getName: " +
-              "NUMBER SIGN (#) should be followed by a hexadecimal number."
+            "NUMBER SIGN (#) should be followed by a hexadecimal number."
           );
           strBuf.push("#");
           break;
@@ -1117,7 +1117,7 @@ class Lexer {
           if (x2 === -1) {
             warn(
               `Lexer_getName: Illegal digit (${String.fromCharCode(ch)}) ` +
-                "in hexadecimal number."
+              "in hexadecimal number."
             );
             strBuf.push("#", String.fromCharCode(previousCh));
             if (specialChars[ch]) {
@@ -1351,7 +1351,7 @@ class Linearization {
       }
       throw new Error(
         `The "${name}" parameter in the linearization ` +
-          "dictionary is invalid."
+        "dictionary is invalid."
       );
     }
 
@@ -1399,7 +1399,7 @@ class Linearization {
     } else if ((length = getInt(linDict, "L")) !== stream.length) {
       throw new Error(
         'The "L" parameter in the linearization dictionary ' +
-          "does not equal the stream length."
+        "does not equal the stream length."
       );
     }
     return {

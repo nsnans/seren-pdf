@@ -20,22 +20,40 @@ import {
   info,
   InvalidPDFException,
   warn,
-} from "../shared/util.js";
-import { CIRCULAR_REF, Cmd, Dict, isCmd, Ref, RefSet } from "./primitives.js";
-import { Lexer, Parser } from "./parser.js";
+} from "../shared/util";
+import { CIRCULAR_REF, Cmd, Dict, isCmd, Ref, RefSet } from "./primitives";
+import { Lexer, Parser } from "./parser";
 import {
   MissingDataException,
   ParserEOFException,
   XRefEntryException,
   XRefParseException,
-} from "./core_utils.js";
-import { BaseStream } from "./base_stream.js";
-import { CipherTransformFactory } from "./crypto.js";
+} from "./core_utils";
+import { BaseStream } from "./base_stream";
+import { CipherTransformFactory } from "./crypto";
+import { PDFManager } from "./pdf_manager";
+import { Stream } from "./stream";
 
 class XRef {
+
   #firstXRefStmPos = null;
 
-  constructor(stream, pdfManager) {
+  protected stream: Stream;
+
+  protected pdfManager: PDFManager;
+
+  protected _xrefStms = new Set();
+
+  protected _cacheMap = new Map();
+
+  protected _pendingRefs = new RefSet();
+
+  protected _newPersistentRefNum;
+  protected _newTemporaryRefNum;
+  protected _persistentRefsCache;
+
+
+  constructor(stream: Stream, pdfManager: PDFManager) {
     this.stream = stream;
     this.pdfManager = pdfManager;
     this.entries = [];
@@ -548,7 +566,7 @@ class XRef {
           if (match[1] !== "endobj") {
             warn(
               `indexObjects: Found "${match[1]}" inside of another "obj", ` +
-                'caused by missing "endobj" -- trying to recover.'
+              'caused by missing "endobj" -- trying to recover.'
             );
             contentLength -= match[1].length + 1;
           }
@@ -586,7 +604,7 @@ class XRef {
           if (match[1] !== "startxref") {
             warn(
               `indexObjects: Found "${match[1]}" after "trailer", ` +
-                'caused by missing "startxref" -- trying to recover.'
+              'caused by missing "startxref" -- trying to recover.'
             );
             contentLength -= match[1].length + 1;
           }
@@ -990,7 +1008,7 @@ class XRef {
     return obj;
   }
 
-  async fetchAsync(ref, suppressEncryption) {
+  async fetchAsync(ref, suppressEncryption?) {
     try {
       return this.fetch(ref, suppressEncryption);
     } catch (ex) {

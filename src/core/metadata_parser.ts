@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
-import { SimpleXMLParser } from "./xml_parser.js";
+import { SimpleXMLParser } from "./xml_parser";
 
 class MetadataParser {
+
+  protected _metadataMap = new Map();
+
   constructor(data) {
     // Ghostscript may produce invalid metadata, so try to repair that first.
     data = this._repair(data);
@@ -24,7 +27,6 @@ class MetadataParser {
     const parser = new SimpleXMLParser({ lowerCaseName: true });
     const xmlDocument = parser.parseFromString(data);
 
-    this._metadataMap = new Map();
     this._data = data;
 
     if (xmlDocument) {
@@ -32,11 +34,11 @@ class MetadataParser {
     }
   }
 
-  _repair(data) {
+  _repair(data: string) {
     // Start by removing any "junk" before the first tag (see issue 10395).
     return data
       .replace(/^[^<]+/, "")
-      .replaceAll(/>\\376\\377([^<]+)/g, function (all, codes) {
+      .replaceAll(/>\\376\\377([^<]+)/g, function (_all, codes) {
         const bytes = codes
           .replaceAll(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
             return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);

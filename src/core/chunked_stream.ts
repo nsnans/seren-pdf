@@ -30,7 +30,9 @@ class ChunkedStream extends Stream {
   // Single-entry cache
   protected lastSuccessfulEnsureByteChunk = -1;
 
-  constructor(length: number, chunkSize: number, manager) {
+  protected manager: ChunkedStreamManager;
+
+  constructor(length: number, chunkSize: number, manager: ChunkedStreamManager) {
     super(
       /* arrayBuffer = */ new Uint8Array(length),
       /* start = */ 0,

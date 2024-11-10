@@ -13,11 +13,16 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
-import { Dict } from "./primitives.js";
-import { FormatError } from "../shared/util.js";
+import { DecodeStream } from "./decode_stream";
+import { Dict } from "./primitives";
+import { FormatError } from "../shared/util";
 
 class PredictorStream extends DecodeStream {
+
+  protected pixBytes: number;
+
+  protected rowBytes: number;
+
   constructor(str, maybeLength, params) {
     super(maybeLength);
 

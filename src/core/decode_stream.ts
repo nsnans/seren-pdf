@@ -35,7 +35,7 @@ abstract class DecodeStream extends BaseStream {
 
   protected _rawMinBufferLength: number;
 
-  constructor(maybeMinBufferLength) {
+  constructor(maybeMinBufferLength: number) {
     super();
     this._rawMinBufferLength = maybeMinBufferLength || 0;
 

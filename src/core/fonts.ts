@@ -22,8 +22,8 @@ import {
   shadow,
   string32,
   warn,
-} from "../shared/util.js";
-import { CFFCompiler, CFFParser } from "./cff_parser.js";
+} from "../shared/util";
+import { CFFCompiler, CFFParser } from "./cff_parser";
 import {
   FontFlags,
   getVerticalPresentationForm,
@@ -31,14 +31,14 @@ import {
   normalizeFontName,
   recoverGlyphName,
   SEAC_ANALYSIS_ENABLED,
-} from "./fonts_utils.js";
+} from "./fonts_utils";
 import {
   getCharUnicodeCategory,
   getUnicodeForGlyph,
   getUnicodeRangeFor,
   mapSpecialUnicodeValues,
-} from "./unicode.js";
-import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "./glyphlist.js";
+} from "./unicode";
+import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "./glyphlist";
 import {
   getEncoding,
   MacRomanEncoding,
@@ -46,7 +46,7 @@ import {
   SymbolSetEncoding,
   WinAnsiEncoding,
   ZapfDingbatsEncoding,
-} from "./encodings.js";
+} from "./encodings";
 import {
   getGlyphMapForStandardFonts,
   getNonStdFontMap,
@@ -54,17 +54,17 @@ import {
   getStdFontMap,
   getSupplementalGlyphMapForArialBlack,
   getSupplementalGlyphMapForCalibri,
-} from "./standard_fonts.js";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map.js";
-import { CFFFont } from "./cff_font.js";
-import { FontRendererFactory } from "./font_renderer.js";
-import { getFontBasicMetrics } from "./metrics.js";
-import { GlyfTable } from "./glyf.js";
-import { IdentityCMap } from "./cmap.js";
-import { OpenTypeFileBuilder } from "./opentype_file_builder.js";
-import { readUint32 } from "./core_utils.js";
+} from "./standard_fonts";
+import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
+import { CFFFont } from "./cff_font";
+import { FontRendererFactory } from "./font_renderer";
+import { getFontBasicMetrics } from "./metrics";
+import { GlyfTable } from "./glyf";
+import { IdentityCMap } from "./cmap";
+import { OpenTypeFileBuilder } from "./opentype_file_builder";
+import { readUint32 } from "./core_utils";
 import { Stream } from "./stream.js";
-import { Type1Font } from "./type1_font.js";
+import { Type1Font } from "./type1_font";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -242,6 +242,25 @@ function amendFallbackToUnicode(properties) {
 }
 
 class Glyph {
+
+  protected originalCharCode;
+
+  protected fontChar;
+
+  protected unicode;
+
+  protected accent;
+
+  protected width;
+
+  protected vmetric;
+
+  protected operatorListId;
+
+  protected isSpace;
+
+  protected isInFont;
+
   constructor(
     originalCharCode,
     fontChar,
@@ -279,7 +298,7 @@ class Glyph {
   }
 }
 
-function int16(b0, b1) {
+function int16(b0: number, b1: number) {
   return (b0 << 8) + b1;
 }
 
@@ -288,7 +307,7 @@ function writeSignedInt16(bytes, index, value) {
   bytes[index] = value >>> 8;
 }
 
-function signedInt16(b0, b1) {
+function signedInt16(b0: number, b1: number) {
   const value = (b0 << 8) + b1;
   return value & (1 << 15) ? value - 0x10000 : value;
 }
@@ -300,7 +319,7 @@ function writeUint32(bytes, index, value) {
   bytes[index] = value >>> 24;
 }
 
-function int32(b0, b1, b2, b3) {
+function int32(b0: number, b1: number, b2: number, b3: number) {
   return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
 }
 
@@ -563,7 +582,7 @@ function getRanges(glyphs, toUnicodeExtraMap, numGlyphs) {
   // Split the sorted codes into ranges.
   const ranges = [];
   const length = codes.length;
-  for (let n = 0; n < length; ) {
+  for (let n = 0; n < length;) {
     const start = codes[n].fontCharCode;
     const codeIndices = [codes[n].glyphId];
     ++n;
@@ -1056,7 +1075,7 @@ class Font {
     if (type !== this.type || subtype !== this.subtype) {
       info(
         "Inconsistent font file Type/SubType, expected: " +
-          `${this.type}/${this.subtype} but found: ${type}/${subtype}.`
+        `${this.type}/${this.subtype} but found: ${type}/${subtype}.`
       );
     }
 
@@ -1452,7 +1471,7 @@ class Font {
       if (fallbackData) {
         warn(
           `TrueType Collection does not contain "${fontName}" font, ` +
-            `falling back to "${fallbackData.name}" font instead.`
+          `falling back to "${fallbackData.name}" font instead.`
         );
         return {
           header: fallbackData.header,
@@ -1818,7 +1837,7 @@ class Font {
       if (numOfMetrics > numGlyphs) {
         info(
           `The numOfMetrics (${numOfMetrics}) should not be ` +
-            `greater than the numGlyphs (${numGlyphs}).`
+          `greater than the numGlyphs (${numGlyphs}).`
         );
         // Reduce numOfMetrics if it is greater than numGlyphs
         numOfMetrics = numGlyphs;
@@ -1998,7 +2017,7 @@ class Font {
       if (indexToLocFormat < 0 || indexToLocFormat > 1) {
         info(
           "Attempting to fix invalid indexToLocFormat in head table: " +
-            indexToLocFormat
+          indexToLocFormat
         );
 
         // The value of indexToLocFormat should be 0 if the loca table
@@ -2344,7 +2363,7 @@ class Font {
       let inFDEF = false,
         ifLevel = 0,
         inELSE = 0;
-      for (let ii = data.length; i < ii; ) {
+      for (let ii = data.length; i < ii;) {
         const op = data[i++];
         // The TrueType instruction set docs can be found at
         // https://developer.apple.com/fonts/TTRefMan/RM05/Chap5.html
@@ -3217,44 +3236,44 @@ class Font {
     builder.addTable(
       "head",
       "\x00\x01\x00\x00" + // Version number
-        "\x00\x00\x10\x00" + // fontRevision
-        "\x00\x00\x00\x00" + // checksumAdjustement
-        "\x5F\x0F\x3C\xF5" + // magicNumber
-        "\x00\x00" + // Flags
-        safeString16(unitsPerEm) + // unitsPerEM
-        "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // creation date
-        "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // modifification date
-        "\x00\x00" + // xMin
-        safeString16(properties.descent) + // yMin
-        "\x0F\xFF" + // xMax
-        safeString16(properties.ascent) + // yMax
-        string16(properties.italicAngle ? 2 : 0) + // macStyle
-        "\x00\x11" + // lowestRecPPEM
-        "\x00\x00" + // fontDirectionHint
-        "\x00\x00" + // indexToLocFormat
-        "\x00\x00"
+      "\x00\x00\x10\x00" + // fontRevision
+      "\x00\x00\x00\x00" + // checksumAdjustement
+      "\x5F\x0F\x3C\xF5" + // magicNumber
+      "\x00\x00" + // Flags
+      safeString16(unitsPerEm) + // unitsPerEM
+      "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // creation date
+      "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // modifification date
+      "\x00\x00" + // xMin
+      safeString16(properties.descent) + // yMin
+      "\x0F\xFF" + // xMax
+      safeString16(properties.ascent) + // yMax
+      string16(properties.italicAngle ? 2 : 0) + // macStyle
+      "\x00\x11" + // lowestRecPPEM
+      "\x00\x00" + // fontDirectionHint
+      "\x00\x00" + // indexToLocFormat
+      "\x00\x00"
     ); // glyphDataFormat
 
     // Horizontal header
     builder.addTable(
       "hhea",
       "\x00\x01\x00\x00" + // Version number
-        safeString16(properties.ascent) + // Typographic Ascent
-        safeString16(properties.descent) + // Typographic Descent
-        "\x00\x00" + // Line Gap
-        "\xFF\xFF" + // advanceWidthMax
-        "\x00\x00" + // minLeftSidebearing
-        "\x00\x00" + // minRightSidebearing
-        "\x00\x00" + // xMaxExtent
-        safeString16(properties.capHeight) + // caretSlopeRise
-        safeString16(Math.tan(properties.italicAngle) * properties.xHeight) + // caretSlopeRun
-        "\x00\x00" + // caretOffset
-        "\x00\x00" + // -reserved-
-        "\x00\x00" + // -reserved-
-        "\x00\x00" + // -reserved-
-        "\x00\x00" + // -reserved-
-        "\x00\x00" + // metricDataFormat
-        string16(numGlyphs)
+      safeString16(properties.ascent) + // Typographic Ascent
+      safeString16(properties.descent) + // Typographic Descent
+      "\x00\x00" + // Line Gap
+      "\xFF\xFF" + // advanceWidthMax
+      "\x00\x00" + // minLeftSidebearing
+      "\x00\x00" + // minRightSidebearing
+      "\x00\x00" + // xMaxExtent
+      safeString16(properties.capHeight) + // caretSlopeRise
+      safeString16(Math.tan(properties.italicAngle) * properties.xHeight) + // caretSlopeRun
+      "\x00\x00" + // caretOffset
+      "\x00\x00" + // -reserved-
+      "\x00\x00" + // -reserved-
+      "\x00\x00" + // -reserved-
+      "\x00\x00" + // -reserved-
+      "\x00\x00" + // metricDataFormat
+      string16(numGlyphs)
     ); // Number of HMetrics
 
     // Horizontal metrics

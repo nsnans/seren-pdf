@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { DecodeStream } from "./decode_stream.js";
+import { DecodeStream } from "./decode_stream";
 
 class RunLengthStream extends DecodeStream {
-  constructor(str, maybeLength) {
+  constructor(str, maybeLength: number) {
     super(maybeLength);
 
     this.str = str;

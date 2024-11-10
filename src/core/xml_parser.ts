@@ -16,7 +16,7 @@
 // The code for XMLParserBase copied from
 // https://github.com/mozilla/shumway/blob/16451d8836fa85f4b16eeda8b4bda2fa9e2b22b0/src/avm2/natives/xml.ts
 
-import { encodeToXmlString } from "./core_utils.js";
+import { encodeToXmlString } from "./core_utils";
 
 const XMLParserErrorCode = {
   NoError: 0,
@@ -32,12 +32,12 @@ const XMLParserErrorCode = {
   ElementNeverBegun: -10,
 };
 
-function isWhitespace(s, index) {
+function isWhitespace(s: string, index: number) {
   const ch = s[index];
   return ch === " " || ch === "\n" || ch === "\r" || ch === "\t";
 }
 
-function isWhitespaceString(s) {
+function isWhitespaceString(s: string) {
   for (let i = 0, ii = s.length; i < ii; i++) {
     if (!isWhitespace(s, i)) {
       return false;
@@ -47,8 +47,8 @@ function isWhitespaceString(s) {
 }
 
 class XMLParserBase {
-  _resolveEntities(s) {
-    return s.replaceAll(/&([^;]+);/g, (all, entity) => {
+  _resolveEntities(s: string) {
+    return s.replaceAll(/&([^;]+);/g, (_all, entity) => {
       if (entity.substring(0, 2) === "#x") {
         return String.fromCodePoint(parseInt(entity.substring(2), 16));
       } else if (entity.substring(0, 1) === "#") {
@@ -70,7 +70,7 @@ class XMLParserBase {
     });
   }
 
-  _parseContent(s, start) {
+  _parseContent(s: string, start: number) {
     const attributes = [];
     let pos = start;
 
@@ -132,7 +132,7 @@ class XMLParserBase {
     };
   }
 
-  _parseProcessingInstruction(s, start) {
+  _parseProcessingInstruction(s: string, start: number) {
     let pos = start;
 
     function skipWs() {
@@ -164,7 +164,7 @@ class XMLParserBase {
     };
   }
 
-  parseXml(s) {
+  parseXml(s: string) {
     let i = 0;
     while (i < s.length) {
       const ch = s[i];
@@ -272,25 +272,25 @@ class XMLParserBase {
     }
   }
 
-  onResolveEntity(name) {
+  onResolveEntity(name: string) {
     return `&${name};`;
   }
 
-  onPi(name, value) {}
+  onPi(_name: unknown, _value: unknown) { }
 
-  onComment(text) {}
+  onComment(_text: unknown) { }
 
-  onCdata(text) {}
+  onCdata(_text: unknown) { }
 
-  onDoctype(doctypeContent) {}
+  onDoctype(_doctypeContent: unknown) { }
 
-  onText(text) {}
+  onText(_text: unknown) { }
 
-  onBeginElement(name, attributes, isEmpty) {}
+  onBeginElement(_name: unknown, _attributes: unknown, _isEmpty: unknown) { }
 
-  onEndElement(name) {}
+  onEndElement(_name: unknown) { }
 
-  onError(code) {}
+  onError(_code: unknown) { }
 }
 
 class SimpleDOMNode {
@@ -348,7 +348,7 @@ class SimpleDOMNode {
    * @returns {SimpleDOMNode} The node corresponding
    * to the path or null if not found.
    */
-  searchNode(paths, pos) {
+  searchNode(paths, pos: number) {
     if (pos >= paths.length) {
       return this;
     }

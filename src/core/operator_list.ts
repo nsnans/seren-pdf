@@ -585,7 +585,7 @@ class OperatorList {
   // Close to chunk size.
   static CHUNK_SIZE_ABOUT = this.CHUNK_SIZE - 5;
 
-  constructor(intent = 0, streamSink) {
+  constructor(intent = 0, streamSink?) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];

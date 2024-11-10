@@ -13,20 +13,23 @@
  * limitations under the License.
  */
 
-import { Dict, Ref } from "./primitives.js";
+import { Dict, Ref } from "./primitives";
 import {
   FeatureTest,
   FormatError,
   info,
   shadow,
   unreachable,
-} from "../shared/util.js";
-import { PostScriptLexer, PostScriptParser } from "./ps_parser.js";
-import { BaseStream } from "./base_stream.js";
-import { isNumberArray } from "./core_utils.js";
-import { LocalFunctionCache } from "./image_utils.js";
+} from "../shared/util";
+import { PostScriptLexer, PostScriptParser } from "./ps_parser";
+import { BaseStream } from "./base_stream";
+import { isNumberArray } from "./core_utils";
+import { LocalFunctionCache } from "./image_utils";
 
 class PDFFunctionFactory {
+  
+  protected isEvalSupported: boolean;
+
   constructor({ xref, isEvalSupported = true }) {
     this.xref = xref;
     this.isEvalSupported = isEvalSupported !== false;

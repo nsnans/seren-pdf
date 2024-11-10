@@ -269,7 +269,7 @@ const ZapfDingbatsEncoding = [
   "a199", "a181", "a200", "a182", "", "a201", "a183", "a184", "a197", "a185",
   "a194", "a198", "a186", "a195", "a187", "a188", "a189", "a190", "a191", ""];
 
-function getEncoding(encodingName) {
+function getEncoding(encodingName: string | null) {
   switch (encodingName) {
     case "WinAnsiEncoding":
       return WinAnsiEncoding;

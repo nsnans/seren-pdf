@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { Dict, RefSet } from "./primitives.js";
-import { FormatError, unreachable, warn } from "../shared/util.js";
+import { Dict, RefSet } from "./primitives";
+import { FormatError, unreachable, warn } from "../shared/util";
 
 /**
  * A NameTree/NumberTree is like a Dict but has some advantageous properties,

@@ -21,16 +21,16 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   isBooleanArray,
   isNumberArray,
   lookupMatrix,
   lookupNormalRect,
   MissingDataException,
-} from "./core_utils.js";
-import { BaseStream } from "./base_stream.js";
-import { ColorSpace } from "./colorspace.js";
+} from "./core_utils";
+import { BaseStream } from "./base_stream";
+import { ColorSpace } from "./colorspace";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -619,42 +619,42 @@ class MeshShading extends BaseShading {
       switch (f) {
         // prettier-ignore
         case 0:
-          ps[12] = pi + 3; ps[13] = pi + 4;  ps[14] = pi + 5;  ps[15] = pi + 6;
-          ps[ 8] = pi + 2; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 7;
-          ps[ 4] = pi + 1; /* calculated below              */ ps[ 7] = pi + 8;
-          ps[ 0] = pi;     ps[ 1] = pi + 11; ps[ 2] = pi + 10; ps[ 3] = pi + 9;
+          ps[12] = pi + 3; ps[13] = pi + 4; ps[14] = pi + 5; ps[15] = pi + 6;
+          ps[8] = pi + 2; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 7;
+          ps[4] = pi + 1; /* calculated below              */ ps[7] = pi + 8;
+          ps[0] = pi; ps[1] = pi + 11; ps[2] = pi + 10; ps[3] = pi + 9;
           cs[2] = ci + 1; cs[3] = ci + 2;
-          cs[0] = ci;     cs[1] = ci + 3;
+          cs[0] = ci; cs[1] = ci + 3;
           break;
         // prettier-ignore
         case 1:
           tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
-          ps[12] = tmp4; ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
-          ps[ 8] = tmp3; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
-          ps[ 4] = tmp2; /* calculated below              */ ps[ 7] = pi + 4;
-          ps[ 0] = tmp1; ps[ 1] = pi + 7;   ps[ 2] = pi + 6; ps[ 3] = pi + 5;
+          ps[12] = tmp4; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = tmp3; /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[4] = tmp2; /* calculated below              */ ps[7] = pi + 4;
+          ps[0] = tmp1; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           tmp1 = cs[2]; tmp2 = cs[3];
-          cs[2] = tmp2;   cs[3] = ci;
-          cs[0] = tmp1;   cs[1] = ci + 1;
+          cs[2] = tmp2; cs[3] = ci;
+          cs[0] = tmp1; cs[1] = ci + 1;
           break;
         // prettier-ignore
         case 2:
           tmp1 = ps[15];
           tmp2 = ps[11];
-          ps[12] = ps[3];  ps[13] = pi + 0; ps[14] = pi + 1;   ps[15] = pi + 2;
-          ps[ 8] = ps[7];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
-          ps[ 4] = tmp2;   /* calculated below              */ ps[ 7] = pi + 4;
-          ps[ 0] = tmp1;  ps[ 1] = pi + 7;   ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          ps[12] = ps[3]; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = ps[7];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[4] = tmp2;   /* calculated below              */ ps[7] = pi + 4;
+          ps[0] = tmp1; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           tmp1 = cs[3];
           cs[2] = cs[1]; cs[3] = ci;
-          cs[0] = tmp1;  cs[1] = ci + 1;
+          cs[0] = tmp1; cs[1] = ci + 1;
           break;
         // prettier-ignore
         case 3:
-          ps[12] = ps[0];  ps[13] = pi + 0;   ps[14] = pi + 1; ps[15] = pi + 2;
-          ps[ 8] = ps[1];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
-          ps[ 4] = ps[2];  /* calculated below              */ ps[ 7] = pi + 4;
-          ps[ 0] = ps[3];  ps[ 1] = pi + 7;   ps[ 2] = pi + 6; ps[ 3] = pi + 5;
+          ps[12] = ps[0]; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = ps[1];  /* values for 5, 6, 9, 10 are    */ ps[11] = pi + 3;
+          ps[4] = ps[2];  /* calculated below              */ ps[7] = pi + 4;
+          ps[0] = ps[3]; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           cs[2] = cs[0]; cs[3] = ci;
           cs[0] = cs[1]; cs[1] = ci + 1;
           break;
@@ -667,13 +667,13 @@ class MeshShading extends BaseShading {
           6 * (coords[ps[4]][0] + coords[ps[1]][0]) -
           2 * (coords[ps[12]][0] + coords[ps[3]][0]) +
           3 * (coords[ps[13]][0] + coords[ps[7]][0])) /
-          9,
+        9,
         (-4 * coords[ps[0]][1] -
           coords[ps[15]][1] +
           6 * (coords[ps[4]][1] + coords[ps[1]][1]) -
           2 * (coords[ps[12]][1] + coords[ps[3]][1]) +
           3 * (coords[ps[13]][1] + coords[ps[7]][1])) /
-          9,
+        9,
       ]);
       ps[6] = coords.length;
       coords.push([
@@ -682,13 +682,13 @@ class MeshShading extends BaseShading {
           6 * (coords[ps[2]][0] + coords[ps[7]][0]) -
           2 * (coords[ps[0]][0] + coords[ps[15]][0]) +
           3 * (coords[ps[4]][0] + coords[ps[14]][0])) /
-          9,
+        9,
         (-4 * coords[ps[3]][1] -
           coords[ps[12]][1] +
           6 * (coords[ps[2]][1] + coords[ps[7]][1]) -
           2 * (coords[ps[0]][1] + coords[ps[15]][1]) +
           3 * (coords[ps[4]][1] + coords[ps[14]][1])) /
-          9,
+        9,
       ]);
       ps[9] = coords.length;
       coords.push([
@@ -697,13 +697,13 @@ class MeshShading extends BaseShading {
           6 * (coords[ps[8]][0] + coords[ps[13]][0]) -
           2 * (coords[ps[0]][0] + coords[ps[15]][0]) +
           3 * (coords[ps[11]][0] + coords[ps[1]][0])) /
-          9,
+        9,
         (-4 * coords[ps[12]][1] -
           coords[ps[3]][1] +
           6 * (coords[ps[8]][1] + coords[ps[13]][1]) -
           2 * (coords[ps[0]][1] + coords[ps[15]][1]) +
           3 * (coords[ps[11]][1] + coords[ps[1]][1])) /
-          9,
+        9,
       ]);
       ps[10] = coords.length;
       coords.push([
@@ -712,13 +712,13 @@ class MeshShading extends BaseShading {
           6 * (coords[ps[11]][0] + coords[ps[14]][0]) -
           2 * (coords[ps[12]][0] + coords[ps[3]][0]) +
           3 * (coords[ps[2]][0] + coords[ps[8]][0])) /
-          9,
+        9,
         (-4 * coords[ps[15]][1] -
           coords[ps[0]][1] +
           6 * (coords[ps[11]][1] + coords[ps[14]][1]) -
           2 * (coords[ps[12]][1] + coords[ps[3]][1]) +
           3 * (coords[ps[2]][1] + coords[ps[8]][1])) /
-          9,
+        9,
       ]);
       this.figures.push({
         type: "patch",
@@ -750,42 +750,42 @@ class MeshShading extends BaseShading {
       switch (f) {
         // prettier-ignore
         case 0:
-          ps[12] = pi + 3; ps[13] = pi + 4;  ps[14] = pi + 5;  ps[15] = pi + 6;
-          ps[ 8] = pi + 2; ps[ 9] = pi + 13; ps[10] = pi + 14; ps[11] = pi + 7;
-          ps[ 4] = pi + 1; ps[ 5] = pi + 12; ps[ 6] = pi + 15; ps[ 7] = pi + 8;
-          ps[ 0] = pi;     ps[ 1] = pi + 11; ps[ 2] = pi + 10; ps[ 3] = pi + 9;
+          ps[12] = pi + 3; ps[13] = pi + 4; ps[14] = pi + 5; ps[15] = pi + 6;
+          ps[8] = pi + 2; ps[9] = pi + 13; ps[10] = pi + 14; ps[11] = pi + 7;
+          ps[4] = pi + 1; ps[5] = pi + 12; ps[6] = pi + 15; ps[7] = pi + 8;
+          ps[0] = pi; ps[1] = pi + 11; ps[2] = pi + 10; ps[3] = pi + 9;
           cs[2] = ci + 1; cs[3] = ci + 2;
-          cs[0] = ci;     cs[1] = ci + 3;
+          cs[0] = ci; cs[1] = ci + 3;
           break;
         // prettier-ignore
         case 1:
           tmp1 = ps[12]; tmp2 = ps[13]; tmp3 = ps[14]; tmp4 = ps[15];
-          ps[12] = tmp4;   ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
-          ps[ 8] = tmp3;   ps[ 9] = pi + 9;  ps[10] = pi + 10; ps[11] = pi + 3;
-          ps[ 4] = tmp2;   ps[ 5] = pi + 8;  ps[ 6] = pi + 11; ps[ 7] = pi + 4;
-          ps[ 0] = tmp1;   ps[ 1] = pi + 7;  ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          ps[12] = tmp4; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = tmp3; ps[9] = pi + 9; ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[4] = tmp2; ps[5] = pi + 8; ps[6] = pi + 11; ps[7] = pi + 4;
+          ps[0] = tmp1; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           tmp1 = cs[2]; tmp2 = cs[3];
-          cs[2] = tmp2;   cs[3] = ci;
-          cs[0] = tmp1;   cs[1] = ci + 1;
+          cs[2] = tmp2; cs[3] = ci;
+          cs[0] = tmp1; cs[1] = ci + 1;
           break;
         // prettier-ignore
         case 2:
           tmp1 = ps[15];
           tmp2 = ps[11];
-          ps[12] = ps[3]; ps[13] = pi + 0; ps[14] = pi + 1;  ps[15] = pi + 2;
-          ps[ 8] = ps[7]; ps[ 9] = pi + 9; ps[10] = pi + 10; ps[11] = pi + 3;
-          ps[ 4] = tmp2;  ps[ 5] = pi + 8; ps[ 6] = pi + 11; ps[ 7] = pi + 4;
-          ps[ 0] = tmp1;  ps[ 1] = pi + 7; ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          ps[12] = ps[3]; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = ps[7]; ps[9] = pi + 9; ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[4] = tmp2; ps[5] = pi + 8; ps[6] = pi + 11; ps[7] = pi + 4;
+          ps[0] = tmp1; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           tmp1 = cs[3];
           cs[2] = cs[1]; cs[3] = ci;
-          cs[0] = tmp1;  cs[1] = ci + 1;
+          cs[0] = tmp1; cs[1] = ci + 1;
           break;
         // prettier-ignore
         case 3:
-          ps[12] = ps[0];  ps[13] = pi + 0;  ps[14] = pi + 1;  ps[15] = pi + 2;
-          ps[ 8] = ps[1];  ps[ 9] = pi + 9;  ps[10] = pi + 10; ps[11] = pi + 3;
-          ps[ 4] = ps[2];  ps[ 5] = pi + 8;  ps[ 6] = pi + 11; ps[ 7] = pi + 4;
-          ps[ 0] = ps[3];  ps[ 1] = pi + 7;  ps[ 2] = pi + 6;  ps[ 3] = pi + 5;
+          ps[12] = ps[0]; ps[13] = pi + 0; ps[14] = pi + 1; ps[15] = pi + 2;
+          ps[8] = ps[1]; ps[9] = pi + 9; ps[10] = pi + 10; ps[11] = pi + 3;
+          ps[4] = ps[2]; ps[5] = pi + 8; ps[6] = pi + 11; ps[7] = pi + 4;
+          ps[0] = ps[3]; ps[1] = pi + 7; ps[2] = pi + 6; ps[3] = pi + 5;
           cs[2] = cs[0]; cs[3] = ci;
           cs[0] = cs[1]; cs[1] = ci + 1;
           break;
@@ -833,7 +833,7 @@ class MeshShading extends BaseShading {
     );
     let splitXBy = Math.ceil(
       ((figureMaxX - figureMinX) * MeshShading.TRIANGLE_DENSITY) /
-        (this.bounds[2] - this.bounds[0])
+      (this.bounds[2] - this.bounds[0])
     );
     splitXBy = Math.max(
       MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT,
@@ -841,7 +841,7 @@ class MeshShading extends BaseShading {
     );
     let splitYBy = Math.ceil(
       ((figureMaxY - figureMinY) * MeshShading.TRIANGLE_DENSITY) /
-        (this.bounds[3] - this.bounds[1])
+      (this.bounds[3] - this.bounds[1])
     );
     splitYBy = Math.max(
       MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT,

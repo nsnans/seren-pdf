@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { shadow, stringToPDFString, warn } from "../shared/util.js";
-import { BaseStream } from "./base_stream.js";
-import { Dict } from "./primitives.js";
+import { shadow, stringToPDFString, warn } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { Dict } from "./primitives";
 
 function pickPlatformItem(dict) {
   if (!(dict instanceof Dict)) {
@@ -49,7 +49,10 @@ function stripPath(str) {
  * collections attributes and related files (/RF)
  */
 class FileSpec {
+
   #contentAvailable = false;
+
+  protected root?: Dict;
 
   constructor(root, xref, skipContent = false) {
     if (!(root instanceof Dict)) {

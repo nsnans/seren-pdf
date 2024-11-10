@@ -37,6 +37,8 @@ function parseDocBaseUrl(url: string) {
 
 interface PDFManager {
 
+  enableXfa: boolean;
+
   ensureDoc(prop: string, args?: any);
 
   ensureXRef(prop: string, args?: any);
@@ -49,7 +51,6 @@ abstract class BasePDFManager implements PDFManager {
   protected _docId: string;
   protected _docBaseUrl: string | null;
   protected _password: string | null;
-  protected enableXfa: boolean;
 
   constructor(args) {
     if (

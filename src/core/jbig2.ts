@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { BaseException, shadow } from "../shared/util.js";
-import { log2, readInt8, readUint16, readUint32 } from "./core_utils.js";
-import { ArithmeticDecoder } from "./arithmetic_decoder.js";
-import { CCITTFaxDecoder } from "./ccitt.js";
+import { BaseException, shadow } from "../shared/util";
+import { log2, readInt8, readUint16, readUint32 } from "./core_utils";
+import { ArithmeticDecoder } from "./arithmetic_decoder";
+import { CCITTFaxDecoder } from "./ccitt";
 
 class Jbig2Error extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "Jbig2Error");
   }
 }
@@ -35,8 +35,11 @@ class ContextCache {
 }
 
 class DecodingContext {
+
   public start: number;
+  
   public end: number;
+
   constructor(data, start: number, end: number) {
     this.data = data;
     this.start = start;

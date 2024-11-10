@@ -19,18 +19,18 @@ import {
   FormatError,
   ImageKind,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   convertBlackAndWhiteToRGBA,
   convertToRGBA,
-} from "../shared/image_utils.js";
-import { BaseStream } from "./base_stream.js";
-import { ColorSpace } from "./colorspace.js";
-import { DecodeStream } from "./decode_stream.js";
-import { ImageResizer } from "./image_resizer.js";
-import { JpegStream } from "./jpeg_stream.js";
-import { JpxImage } from "./jpx.js";
-import { Name } from "./primitives.js";
+} from "../shared/image_utils";
+import { BaseStream } from "./base_stream";
+import { ColorSpace } from "./colorspace";
+import { DecodeStream } from "./decode_stream";
+import { ImageResizer } from "./image_resizer";
+import { JpegStream } from "./jpeg_stream";
+import { JpxImage } from "./jpx";
+import { Name } from "./primitives";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -148,7 +148,7 @@ class PDFImage {
     ) {
       warn(
         "PDFImage - using the Width/Height of the image data, " +
-          "rather than the image dictionary."
+        "rather than the image dictionary."
       );
       width = image.width;
       height = image.height;

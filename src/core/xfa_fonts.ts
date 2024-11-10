@@ -22,8 +22,8 @@ import {
   CalibriItalicMetrics,
   CalibriRegularFactors,
   CalibriRegularMetrics,
-} from "./calibri_factors.js";
-import { Dict, Name } from "./primitives.js";
+} from "./calibri_factors";
+import { Dict, Name } from "./primitives";
 import {
   HelveticaBoldFactors,
   HelveticaBoldItalicFactors,
@@ -33,7 +33,7 @@ import {
   HelveticaItalicMetrics,
   HelveticaRegularFactors,
   HelveticaRegularMetrics,
-} from "./helvetica_factors.js";
+} from "./helvetica_factors";
 import {
   LiberationSansBoldItalicMapping,
   LiberationSansBoldItalicWidths,
@@ -43,7 +43,7 @@ import {
   LiberationSansItalicWidths,
   LiberationSansRegularMapping,
   LiberationSansRegularWidths,
-} from "./liberationsans_widths.js";
+} from "./liberationsans_widths";
 import {
   MyriadProBoldFactors,
   MyriadProBoldItalicFactors,
@@ -53,7 +53,7 @@ import {
   MyriadProItalicMetrics,
   MyriadProRegularFactors,
   MyriadProRegularMetrics,
-} from "./myriadpro_factors.js";
+} from "./myriadpro_factors";
 import {
   SegoeuiBoldFactors,
   SegoeuiBoldItalicFactors,
@@ -63,9 +63,9 @@ import {
   SegoeuiItalicMetrics,
   SegoeuiRegularFactors,
   SegoeuiRegularMetrics,
-} from "./segoeui_factors.js";
-import { getLookupTableFactory } from "./core_utils.js";
-import { normalizeFontName } from "./fonts_utils.js";
+} from "./segoeui_factors";
+import { getLookupTableFactory } from "./core_utils";
+import { normalizeFontName } from "./fonts_utils";
 
 const getXFAFontMap = getLookupTableFactory(function (t) {
   t["MyriadPro-Regular"] = t["PdfJS-Fallback-Regular"] = {
@@ -85,31 +85,31 @@ const getXFAFontMap = getLookupTableFactory(function (t) {
   t["MyriadPro-It"] =
     t["MyriadPro-Italic"] =
     t["PdfJS-Fallback-Italic"] =
-      {
-        name: "LiberationSans-Italic",
-        factors: MyriadProItalicFactors,
-        baseWidths: LiberationSansItalicWidths,
-        baseMapping: LiberationSansItalicMapping,
-        metrics: MyriadProItalicMetrics,
-      };
+    {
+      name: "LiberationSans-Italic",
+      factors: MyriadProItalicFactors,
+      baseWidths: LiberationSansItalicWidths,
+      baseMapping: LiberationSansItalicMapping,
+      metrics: MyriadProItalicMetrics,
+    };
   t["MyriadPro-BoldIt"] =
     t["MyriadPro-BoldItalic"] =
     t["PdfJS-Fallback-BoldItalic"] =
-      {
-        name: "LiberationSans-BoldItalic",
-        factors: MyriadProBoldItalicFactors,
-        baseWidths: LiberationSansBoldItalicWidths,
-        baseMapping: LiberationSansBoldItalicMapping,
-        metrics: MyriadProBoldItalicMetrics,
-      };
+    {
+      name: "LiberationSans-BoldItalic",
+      factors: MyriadProBoldItalicFactors,
+      baseWidths: LiberationSansBoldItalicWidths,
+      baseMapping: LiberationSansBoldItalicMapping,
+      metrics: MyriadProBoldItalicMetrics,
+    };
   t.ArialMT =
     t.Arial =
     t["Arial-Regular"] =
-      {
-        name: "LiberationSans-Regular",
-        baseWidths: LiberationSansRegularWidths,
-        baseMapping: LiberationSansRegularMapping,
-      };
+    {
+      name: "LiberationSans-Regular",
+      baseWidths: LiberationSansRegularWidths,
+      baseMapping: LiberationSansRegularMapping,
+    };
   t["Arial-BoldMT"] = t["Arial-Bold"] = {
     name: "LiberationSans-Bold",
     baseWidths: LiberationSansBoldWidths,
@@ -211,13 +211,13 @@ const getXFAFontMap = getLookupTableFactory(function (t) {
   };
 });
 
-function getXfaFontName(name) {
+function getXfaFontName(name: string) {
   const fontName = normalizeFontName(name);
-  const fontMap = getXFAFontMap();
+  const fontMap = getXFAFontMap()!;
   return fontMap[fontName];
 }
 
-function getXfaFontWidths(name) {
+function getXfaFontWidths(name: string) {
   const info = getXfaFontName(name);
   if (!info) {
     return null;
@@ -271,7 +271,7 @@ function getXfaFontWidths(name) {
   return newWidths;
 }
 
-function getXfaFontDict(name) {
+function getXfaFontDict(name: string) {
   const widths = getXfaFontWidths(name);
   const dict = new Dict(null);
   dict.set("BaseFont", Name.get(name));

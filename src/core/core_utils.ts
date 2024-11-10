@@ -28,12 +28,15 @@ import { BaseStream } from "./base_stream";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
-function getLookupTableFactory(initializer) {
-  let lookup;
+type InitializerType = ((t: { [key: string]: any }) => void) | null;
+
+// 有待考量
+function getLookupTableFactory(initializer: InitializerType) {
+  let lookup: { [key: string]: number } | null = null;
   return function () {
     if (initializer) {
       lookup = Object.create(null);
-      initializer(lookup);
+      initializer(lookup!);
       initializer = null;
     }
     return lookup;
@@ -53,19 +56,19 @@ class MissingDataException extends BaseException {
 }
 
 class ParserEOFException extends BaseException {
-  constructor(msg) {
+  constructor(msg = "") {
     super(msg, "ParserEOFException");
   }
 }
 
 class XRefEntryException extends BaseException {
-  constructor(msg) {
+  constructor(msg = "") {
     super(msg, "XRefEntryException");
   }
 }
 
 class XRefParseException extends BaseException {
-  constructor(msg) {
+  constructor(msg = "") {
     super(msg, "XRefParseException");
   }
 }
@@ -194,22 +197,22 @@ function toRomanNumerals(number, lowerCase = false) {
 // Calculate the base 2 logarithm of the number `x`. This differs from the
 // native function in the sense that it returns the ceiling value and that it
 // returns 0 instead of `Infinity`/`NaN` for `x` values smaller than/equal to 0.
-function log2(x) {
+function log2(x: number) {
   if (x <= 0) {
     return 0;
   }
   return Math.ceil(Math.log2(x));
 }
 
-function readInt8(data, offset) {
+function readInt8(data, offset: number) {
   return (data[offset] << 24) >> 24;
 }
 
-function readUint16(data, offset) {
+function readUint16(data, offset: number) {
   return (data[offset] << 8) | data[offset + 1];
 }
 
-function readUint32(data, offset) {
+function readUint32(data, offset: number) {
   return (
     ((data[offset] << 24) |
       (data[offset + 1] << 16) |
@@ -220,7 +223,7 @@ function readUint32(data, offset) {
 }
 
 // Checks if ch is one of the following characters: SPACE, TAB, CR or LF.
-function isWhiteSpace(ch) {
+function isWhiteSpace(ch: number) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
 
@@ -246,7 +249,7 @@ function isBooleanArray(arr, len) {
  * @param {number | null} len
  * @returns {boolean}
  */
-function isNumberArray(arr, len) {
+function isNumberArray(arr, len: number | null) {
   if (Array.isArray(arr)) {
     return (
       (len === null || arr.length === len) &&
@@ -298,7 +301,7 @@ function parseXFAPath(path) {
   });
 }
 
-function escapePDFName(str) {
+function escapePDFName(str: string) {
   const buffer = [];
   let start = 0;
   for (let i = 0, ii = str.length; i < ii; i++) {
@@ -340,7 +343,7 @@ function escapePDFName(str) {
 
 // Replace "(", ")", "\n", "\r" and "\" by "\(", "\)", "\\n", "\\r" and "\\"
 // in order to write it in a PDF file.
-function escapeString(str) {
+function escapeString(str: string) {
   return str.replaceAll(/([()\\\n\r])/g, match => {
     if (match === "\n") {
       return "\\n";
@@ -446,9 +449,9 @@ const XMLEntities = {
   /* ' */ 0x27: "&apos;",
 };
 
-function* codePointIter(str) {
+function* codePointIter(str: string) {
   for (let i = 0, ii = str.length; i < ii; i++) {
-    const char = str.codePointAt(i);
+    const char = str.codePointAt(i)!;
     if (char > 0xd7ff && (char < 0xe000 || char > 0xfffd)) {
       // char is represented by two u16
       i++;
@@ -457,11 +460,11 @@ function* codePointIter(str) {
   }
 }
 
-function encodeToXmlString(str) {
+function encodeToXmlString(str: string) {
   const buffer = [];
   let start = 0;
   for (let i = 0, ii = str.length; i < ii; i++) {
-    const char = str.codePointAt(i);
+    const char = str.codePointAt(i)!;
     if (0x20 <= char && char <= 0x7e) {
       // ascii
       const entity = XMLEntities[char];
@@ -589,7 +592,7 @@ function recoverJsURL(str) {
   return null;
 }
 
-function numberToString(value) {
+function numberToString(value: number) {
   if (Number.isInteger(value)) {
     return value.toString();
   }
@@ -659,7 +662,7 @@ function stringToUTF16String(str, bigEndian = false) {
   return buf.join("");
 }
 
-function getRotationMatrix(rotation, width, height) {
+function getRotationMatrix(rotation: number, width: number, height: number) {
   switch (rotation) {
     case 90:
       return [0, 1, -1, 0, width, 0];

@@ -29,10 +29,10 @@ import {
   TextRenderingMode,
   Util,
   warn,
-} from "../shared/util.js";
-import { CMapFactory, IdentityCMap } from "./cmap.js";
-import { Cmd, Dict, EOF, isName, Name, Ref, RefSet } from "./primitives.js";
-import { ErrorFont, Font } from "./fonts.js";
+} from "../shared/util";
+import { CMapFactory, IdentityCMap } from "./cmap";
+import { Cmd, Dict, EOF, isName, Name, Ref, RefSet } from "./primitives";
+import { ErrorFont, Font } from "./fonts";
 import {
   getEncoding,
   MacRomanEncoding,
@@ -48,34 +48,34 @@ import {
   getStdFontMap,
   getSymbolsFonts,
   isKnownFontName,
-} from "./standard_fonts.js";
-import { getTilingPatternIR, Pattern } from "./pattern.js";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts.js";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map.js";
-import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils.js";
-import { isPDFFunction, PDFFunctionFactory } from "./function.js";
-import { Lexer, Parser } from "./parser.js";
+} from "./standard_fonts";
+import { getTilingPatternIR, Pattern } from "./pattern";
+import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
+import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
+import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
+import { isPDFFunction, PDFFunctionFactory } from "./function";
+import { Lexer, Parser } from "./parser";
 import {
   LocalColorSpaceCache,
   LocalGStateCache,
   LocalImageCache,
   LocalTilingPatternCache,
   RegionalImageCache,
-} from "./image_utils.js";
-import { BaseStream } from "./base_stream.js";
-import { bidi } from "./bidi.js";
-import { ColorSpace } from "./colorspace.js";
-import { DecodeStream } from "./decode_stream.js";
-import { FontFlags } from "./fonts_utils.js";
-import { getFontSubstitution } from "./font_substitutions.js";
-import { getGlyphsUnicode } from "./glyphlist.js";
-import { getMetrics } from "./metrics.js";
-import { getUnicodeForGlyph } from "./unicode.js";
-import { ImageResizer } from "./image_resizer.js";
-import { MurmurHash3_64 } from "../shared/murmurhash3.js";
-import { OperatorList } from "./operator_list.js";
-import { PDFImage } from "./image.js";
-import { Stream } from "./stream.js";
+} from "./image_utils";
+import { BaseStream } from "./base_stream";
+import { bidi } from "./bidi";
+import { ColorSpace } from "./colorspace";
+import { DecodeStream } from "./decode_stream";
+import { FontFlags } from "./fonts_utils";
+import { getFontSubstitution } from "./font_substitutions";
+import { getGlyphsUnicode } from "./glyphlist";
+import { getMetrics } from "./metrics";
+import { getUnicodeForGlyph } from "./unicode";
+import { ImageResizer } from "./image_resizer";
+import { MurmurHash3_64 } from "../shared/murmurhash3";
+import { OperatorList } from "./operator_list";
+import { PDFImage } from "./image";
+import { Stream } from "./stream";
 
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -188,6 +188,10 @@ class TimeSlotManager {
 
   static CHECK_TIME_EVERY = 100;
 
+  protected endTime = 0;
+
+  protected checked = 0;
+
   constructor() {
     this.reset();
   }
@@ -207,6 +211,26 @@ class TimeSlotManager {
 }
 
 class PartialEvaluator {
+  protected xref;
+
+  protected handler;
+
+  protected pageIndex;
+
+  protected idFactory;
+
+  protected fontCache;
+
+  protected builtInCMapCache;
+
+  protected standardFontDataCache;
+
+  protected globalImageCache;
+
+  protected systemFontCache;
+
+  protected _regionalImageCache = new RegionalImageCache();
+
   constructor({
     xref,
     handler,
@@ -2335,7 +2359,7 @@ class PartialEvaluator {
       if (this.options.ignoreErrors) {
         warn(
           `getOperatorList - ignoring errors during "${task.name}" ` +
-            `task: "${reason}".`
+          `task: "${reason}".`
         );
 
         closePendingRestoreOPS();
@@ -3502,7 +3526,7 @@ class PartialEvaluator {
         // Error(s) in the TextContent -- allow text-extraction to continue.
         warn(
           `getTextContent - ignoring errors during "${task.name}" ` +
-            `task: "${reason}".`
+          `task: "${reason}".`
         );
 
         flushTextContentItem();
@@ -4213,10 +4237,10 @@ class PartialEvaluator {
         const uint8array = stream.buffer
           ? new Uint8Array(stream.buffer.buffer, 0, stream.bufferLength)
           : new Uint8Array(
-              stream.bytes.buffer,
-              stream.start,
-              stream.end - stream.start
-            );
+            stream.bytes.buffer,
+            stream.start,
+            stream.end - stream.start
+          );
         hash.update(uint8array);
       } else if (toUnicode instanceof Name) {
         hash.update(toUnicode.name);
@@ -4405,7 +4429,7 @@ class PartialEvaluator {
     if (!isType3Font && fontNameStr !== baseFontStr) {
       info(
         `The FontDescriptor's FontName is "${fontNameStr}" but ` +
-          `should be the same as the Font's BaseFont "${baseFontStr}".`
+        `should be the same as the Font's BaseFont "${baseFontStr}".`
       );
       // - Workaround for cases where e.g. fontNameStr = 'Arial' and
       //   baseFontStr = 'Arial,Bold' (needed when no font file is embedded).
@@ -5166,7 +5190,7 @@ class EvaluatorPreprocessor {
             if (
               this._isPathOp &&
               ++this._numInvalidPathOPS >
-                EvaluatorPreprocessor.MAX_INVALID_PATH_OPS
+              EvaluatorPreprocessor.MAX_INVALID_PATH_OPS
             ) {
               throw new FormatError(`Invalid ${partialMsg}`);
             }
@@ -5181,7 +5205,7 @@ class EvaluatorPreprocessor {
         } else if (argsLength > numArgs) {
           info(
             `Command ${cmd}: expected [0, ${numArgs}] args, ` +
-              `but received ${argsLength} args.`
+            `but received ${argsLength} args.`
           );
         }
 

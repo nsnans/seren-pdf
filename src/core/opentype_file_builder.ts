@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-import { readUint32 } from "./core_utils.js";
-import { string32 } from "../shared/util.js";
+import { readUint32 } from "./core_utils";
+import { string32 } from "../shared/util";
 
-function writeInt16(dest, offset, num) {
+function writeInt16(dest, offset: number, num: number) {
   dest[offset] = (num >> 8) & 0xff;
   dest[offset + 1] = num & 0xff;
 }
 
-function writeInt32(dest, offset, num) {
+function writeInt32(dest, offset: number, num: number) {
   dest[offset] = (num >> 24) & 0xff;
   dest[offset + 1] = (num >> 16) & 0xff;
   dest[offset + 2] = (num >> 8) & 0xff;
   dest[offset + 3] = num & 0xff;
 }
 
-function writeData(dest, offset, data) {
+function writeData(dest, offset: number, data) {
   if (data instanceof Uint8Array) {
     dest.set(data, offset);
   } else if (typeof data === "string") {

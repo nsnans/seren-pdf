@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { getLookupTableFactory } from "./core_utils.js";
+import { getLookupTableFactory } from "./core_utils";
 
 const getGlyphsUnicode = getLookupTableFactory(function (t) {
   t.A = 0x0041;

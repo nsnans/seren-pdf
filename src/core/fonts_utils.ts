@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { getEncoding, StandardEncoding } from "./encodings.js";
-import { getGlyphsUnicode } from "./glyphlist.js";
-import { getLookupTableFactory } from "./core_utils.js";
-import { getUnicodeForGlyph } from "./unicode.js";
-import { info } from "../shared/util.js";
+import { getEncoding, StandardEncoding } from "./encodings";
+import { getGlyphsUnicode } from "./glyphlist";
+import { getLookupTableFactory } from "./core_utils";
+import { getUnicodeForGlyph } from "./unicode";
+import { info } from "../shared/util";
 
 // Accented characters have issues on Windows and Linux. When this flag is
 // enabled glyphs that use seac and seac style endchar operators are truncated
@@ -165,7 +165,7 @@ function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
   return charCodeToGlyphId;
 }
 
-function normalizeFontName(name) {
+function normalizeFontName(name: string) {
   return name.replaceAll(/[,_]/g, "-").replaceAll(/\s/g, "");
 }
 

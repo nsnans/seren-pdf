@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { FeatureTest, ImageKind, shadow, warn } from "../shared/util.js";
+import { FeatureTest, ImageKind, shadow, warn } from "../shared/util";
 
 const MIN_IMAGE_DIM = 2048;
 
@@ -36,7 +36,12 @@ class ImageResizer {
 
   static #isChrome = false;
 
-  constructor(imgData, isMask) {
+  static _hasMaxArea = false;
+
+  protected _imgData;
+  protected _isMask: boolean;
+
+  constructor(imgData, isMask: boolean) {
     this._imgData = imgData;
     this._isMask = isMask;
   }
@@ -52,11 +57,11 @@ class ImageResizer {
       this.#isChrome || typeof ImageDecoder === "undefined"
         ? Promise.resolve(false)
         : // eslint-disable-next-line no-undef
-          ImageDecoder.isTypeSupported("image/bmp")
+        ImageDecoder.isTypeSupported("image/bmp")
     );
   }
 
-  static needsToBeResized(width, height) {
+  static needsToBeResized(width: number, height: number) {
     if (width <= this.#goodSquareLength && height <= this.#goodSquareLength) {
       return false;
     }
@@ -138,7 +143,7 @@ class ImageResizer {
     this.#isChrome = opts.isChrome ?? false;
   }
 
-  static _areGoodDims(width, height) {
+  static _areGoodDims(width: number, height: number) {
     try {
       // This code is working in either Firefox or Chrome.
       // There is a faster solution using transferToImageBitmap which is faster
@@ -146,7 +151,7 @@ class ImageResizer {
       // dimensions equal to 1) but it doesn't find the correct values in
       // Chrome.
       const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d")!;
       ctx.fillRect(0, 0, 1, 1);
       const opacity = ctx.getImageData(0, 0, 1, 1).data[3];
       canvas.width = canvas.height = 1;
@@ -156,7 +161,7 @@ class ImageResizer {
     }
   }
 
-  static _guessMax(start, end, tolerance, defaultHeight) {
+  static _guessMax(start: number, end: number, tolerance: number, defaultHeight: number) {
     // We don't really need to have exact values.
     // When we're here then we're in a corner case: we've a very large image.
     // So we could potentially downscale an image which fits in the canvas,
@@ -252,7 +257,7 @@ class ImageResizer {
       newHeight = Math.floor(newHeight / step) - 1;
 
       const canvas = new OffscreenCanvas(newWidth, newHeight);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d")!;
       ctx.drawImage(
         bitmap,
         0,
@@ -346,10 +351,10 @@ class ImageResizer {
         compression = 3;
         maskTable = new Uint8Array(
           4 /* R mask */ +
-            4 /* G mask */ +
-            4 /* B mask */ +
-            4 /* A mask */ +
-            52 /* Windows color space stuff */
+          4 /* G mask */ +
+          4 /* B mask */ +
+          4 /* A mask */ +
+          52 /* Windows color space stuff */
         );
         const view = new DataView(maskTable.buffer);
         if (FeatureTest.isLittleEndian) {

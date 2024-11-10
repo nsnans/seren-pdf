@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
-import { unreachable } from "../shared/util.js";
+import { unreachable } from "../shared/util";
 
 class ToUnicodeMap {
-  constructor(cmap = []) {
+
+  protected _map: string[];
+
+  constructor(cmap: string[] = []) {
     // The elements of this._map can be integers or strings, depending on how
     // `cmap` was created.
     this._map = cmap;
@@ -26,20 +29,21 @@ class ToUnicodeMap {
     return this._map.length;
   }
 
-  forEach(callback) {
+  forEach(callback: (index: string, char: number) => void) {
     for (const charCode in this._map) {
       callback(charCode, this._map[charCode].charCodeAt(0));
     }
   }
 
-  has(i) {
+  has(i: number) {
     return this._map[i] !== undefined;
   }
 
-  get(i) {
+  get(i: number) {
     return this._map[i];
   }
 
+  // 究竟是数字还是字符串，需要再考虑一下
   charCodeOf(value) {
     // `Array.prototype.indexOf` is *extremely* inefficient for arrays which
     // are both very sparse and very large (see issue8372.pdf).
@@ -63,7 +67,12 @@ class ToUnicodeMap {
 }
 
 class IdentityToUnicodeMap {
-  constructor(firstChar, lastChar) {
+
+  protected firstChar: number;
+
+  protected lastChar: number;
+
+  constructor(firstChar: number, lastChar: number) {
     this.firstChar = firstChar;
     this.lastChar = lastChar;
   }
@@ -72,30 +81,30 @@ class IdentityToUnicodeMap {
     return this.lastChar + 1 - this.firstChar;
   }
 
-  forEach(callback) {
+  forEach(callback: (i1: number, i2: number) => void) {
     for (let i = this.firstChar, ii = this.lastChar; i <= ii; i++) {
       callback(i, i);
     }
   }
 
-  has(i) {
+  has(i: number) {
     return this.firstChar <= i && i <= this.lastChar;
   }
 
-  get(i) {
+  get(i: number) {
     if (this.firstChar <= i && i <= this.lastChar) {
       return String.fromCharCode(i);
     }
     return undefined;
   }
 
-  charCodeOf(v) {
+  charCodeOf(v: number) {
     return Number.isInteger(v) && v >= this.firstChar && v <= this.lastChar
       ? v
       : -1;
   }
 
-  amend(map) {
+  amend() {
     unreachable("Should not call amend()");
   }
 }

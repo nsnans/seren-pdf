@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { assert, shadow, unreachable } from "../shared/util.js";
+import { assert, shadow, unreachable } from "../shared/util";
 
 const CIRCULAR_REF = Symbol("CIRCULAR_REF");
 const EOF = Symbol("EOF");
@@ -29,7 +29,10 @@ function clearPrimitiveCaches() {
 }
 
 class Name {
-  constructor(name) {
+
+  public name: string;
+
+  constructor(name: string) {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
       typeof name !== "string"
@@ -39,14 +42,15 @@ class Name {
     this.name = name;
   }
 
-  static get(name) {
+  static get(name: string) {
     // eslint-disable-next-line no-restricted-syntax
     return (NameCache[name] ||= new Name(name));
   }
 }
 
 class Cmd {
-  constructor(cmd) {
+  public cmd: string;
+  constructor(cmd: string) {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
       typeof cmd !== "string"
@@ -56,7 +60,7 @@ class Cmd {
     this.cmd = cmd;
   }
 
-  static get(cmd) {
+  static get(cmd: string) {
     // eslint-disable-next-line no-restricted-syntax
     return (CmdCache[cmd] ||= new Cmd(cmd));
   }
@@ -67,12 +71,16 @@ const nonSerializable = function nonSerializableClosure() {
 };
 
 class Dict {
+
+  protected suppressEncryption = false;
+
+  protected _map: { [key: string]: any } = Object.create(null);
+
   constructor(xref = null) {
     // Map should only be used internally, use functions below to access.
     this._map = Object.create(null);
     this.xref = xref;
     this.objId = null;
-    this.suppressEncryption = false;
     this.__nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
   }
 
@@ -85,7 +93,7 @@ class Dict {
   }
 
   // Automatically dereferences Ref objects.
-  get(key1, key2, key3) {
+  get(key1: string, key2?: string, key3?: string) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
@@ -277,6 +285,9 @@ class Dict {
 }
 
 class Ref {
+
+  public num;
+  public gen;
   constructor(num, gen) {
     this.num = num;
     this.gen = gen;
@@ -351,9 +362,8 @@ class RefSet {
 }
 
 class RefSetCache {
-  constructor() {
-    this._map = new Map();
-  }
+
+  protected _map = new Map();
 
   get size() {
     return this._map.size;
@@ -390,11 +400,11 @@ class RefSetCache {
   }
 }
 
-function isName(v, name) {
+function isName(v: unknown, name: string) {
   return v instanceof Name && (name === undefined || v.name === name);
 }
 
-function isCmd(v, cmd) {
+function isCmd(v: unknown, cmd: string) {
   return v instanceof Cmd && (cmd === undefined || v.cmd === cmd);
 }
 
@@ -404,7 +414,7 @@ function isDict(v, type) {
   );
 }
 
-function isRefsEqual(v1, v2) {
+function isRefsEqual(v1: Ref, v2: Ref) {
   if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
     assert(
       v1 instanceof Ref && v2 instanceof Ref,

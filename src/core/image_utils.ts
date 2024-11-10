@@ -18,10 +18,14 @@ import {
   MAX_IMAGE_SIZE_TO_CACHE,
   unreachable,
   warn,
-} from "../shared/util.js";
-import { RefSet, RefSetCache } from "./primitives.js";
+} from "../shared/util";
+import { RefSet, RefSetCache } from "./primitives";
 
 class BaseLocalCache {
+  protected _onlyRefs: boolean;
+  protected _nameRefMap?: Map<any, any>;
+  protected _imageMap?: Map<any, any>;
+  protected _imageCache = new RefSetCache();
   constructor(options) {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -35,7 +39,6 @@ class BaseLocalCache {
       this._nameRefMap = new Map();
       this._imageMap = new Map();
     }
-    this._imageCache = new RefSetCache();
   }
 
   getByName(name) {
@@ -67,15 +70,15 @@ class LocalImageCache extends BaseLocalCache {
       if (this._imageCache.has(ref)) {
         return;
       }
-      this._nameRefMap.set(name, ref);
+      this._nameRefMap!.set(name, ref);
       this._imageCache.put(ref, data);
       return;
     }
     // name
-    if (this._imageMap.has(name)) {
+    if (this._imageMap!.has(name)) {
       return;
     }
-    this._imageMap.set(name, data);
+    this._imageMap!.set(name, data);
   }
 }
 
@@ -92,16 +95,16 @@ class LocalColorSpaceCache extends BaseLocalCache {
       }
       if (name !== null) {
         // Optional when `ref` is defined.
-        this._nameRefMap.set(name, ref);
+        this._nameRefMap!.set(name, ref);
       }
       this._imageCache.put(ref, data);
       return;
     }
     // name
-    if (this._imageMap.has(name)) {
+    if (this._imageMap!.has(name)) {
       return;
     }
-    this._imageMap.set(name, data);
+    this._imageMap!.set(name, data);
   }
 }
 
@@ -130,15 +133,15 @@ class LocalGStateCache extends BaseLocalCache {
       if (this._imageCache.has(ref)) {
         return;
       }
-      this._nameRefMap.set(name, ref);
+      this._nameRefMap!.set(name, ref);
       this._imageCache.put(ref, data);
       return;
     }
     // name
-    if (this._imageMap.has(name)) {
+    if (this._imageMap!.has(name)) {
       return;
     }
-    this._imageMap.set(name, data);
+    this._imageMap!.set(name, data);
   }
 }
 
@@ -159,7 +162,7 @@ class LocalTilingPatternCache extends BaseLocalCache {
 }
 
 class RegionalImageCache extends BaseLocalCache {
-  constructor(options) {
+  constructor() {
     super({ onlyRefs: true });
   }
 
@@ -183,6 +186,9 @@ class GlobalImageCache {
 
   #decodeFailedSet = new RefSet();
 
+  protected _refCache = new RefSetCache();
+  protected _imageCache = new RefSetCache();
+
   constructor() {
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
       assert(
@@ -190,8 +196,6 @@ class GlobalImageCache {
         "GlobalImageCache - invalid NUM_PAGES_THRESHOLD constant."
       );
     }
-    this._refCache = new RefSetCache();
-    this._imageCache = new RefSetCache();
   }
 
   get #byteSize() {

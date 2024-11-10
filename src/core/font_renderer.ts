@@ -20,16 +20,16 @@ import {
   FormatError,
   unreachable,
   warn,
-} from "../shared/util.js";
-import { CFFParser } from "./cff_parser.js";
-import { getGlyphsUnicode } from "./glyphlist.js";
-import { isNumberArray } from "./core_utils.js";
-import { StandardEncoding } from "./encodings.js";
-import { Stream } from "./stream.js";
+} from "../shared/util";
+import { CFFParser } from "./cff_parser";
+import { getGlyphsUnicode } from "./glyphlist";
+import { isNumberArray } from "./core_utils";
+import { StandardEncoding } from "./encodings";
+import { Stream } from "./stream";
 
 // TODO: use DataView and its methods.
 
-function getUint32(data, offset) {
+function getUint32(data: Uint8Array, offset: number) {
   return (
     ((data[offset] << 24) |
       (data[offset + 1] << 16) |
@@ -39,19 +39,19 @@ function getUint32(data, offset) {
   );
 }
 
-function getUint16(data, offset) {
+function getUint16(data: Uint8Array, offset: number) {
   return (data[offset] << 8) | data[offset + 1];
 }
 
-function getInt16(data, offset) {
+function getInt16(data: Uint8Array, offset: number) {
   return ((data[offset] << 24) | (data[offset + 1] << 16)) >> 16;
 }
 
-function getInt8(data, offset) {
+function getInt8(data: Uint8Array, offset: number) {
   return (data[offset] << 24) >> 24;
 }
 
-function getFloat214(data, offset) {
+function getFloat214(data: Uint8Array, offset: number) {
   return getInt16(data, offset) / 16384;
 }
 
@@ -66,7 +66,7 @@ function getSubroutineBias(subrs) {
   return bias;
 }
 
-function parseCmap(data, start, end) {
+function parseCmap(data: Uint8Array, start: number, _end: number) {
   const offset =
     getUint16(data, start + 2) === 1
       ? getUint32(data, start + 8)
@@ -118,7 +118,7 @@ function parseCmap(data, start, end) {
   throw new FormatError(`unsupported cmap: ${format}`);
 }
 
-function parseCff(data, start, end, seacAnalysisEnabled) {
+function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled) {
   const properties = {};
   const parser = new CFFParser(
     new Stream(data, start, end - start),
@@ -181,10 +181,10 @@ function lookupCmap(ranges, unicode) {
 }
 
 function compileGlyf(code, cmds, font) {
-  function moveTo(x, y) {
+  function moveTo(x: number, y: number) {
     cmds.add(FontRenderOps.MOVE_TO, [x, y]);
   }
-  function lineTo(x, y) {
+  function lineTo(x: number, y: number) {
     cmds.add(FontRenderOps.LINE_TO, [x, y]);
   }
   function quadraticCurveTo(xa, ya, x, y) {
@@ -368,13 +368,13 @@ function compileGlyf(code, cmds, font) {
 }
 
 function compileCharString(charStringCode, cmds, font, glyphId) {
-  function moveTo(x, y) {
+  function moveTo(x: number, y: number) {
     cmds.add(FontRenderOps.MOVE_TO, [x, y]);
   }
-  function lineTo(x, y) {
+  function lineTo(x: number, y: number) {
     cmds.add(FontRenderOps.LINE_TO, [x, y]);
   }
-  function bezierCurveTo(x1, y1, x2, y2, x, y) {
+  function bezierCurveTo(x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
     cmds.add(FontRenderOps.BEZIER_CURVE_TO, [x1, y1, x2, y2, x, y]);
   }
 
@@ -730,7 +730,7 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
                 (code[i + 1] << 16) |
                 (code[i + 2] << 8) |
                 code[i + 3]) /
-                65536
+              65536
             );
             i += 4;
           }
@@ -749,7 +749,7 @@ const NOOP = [];
 class Commands {
   cmds = [];
 
-  add(cmd, args) {
+  add(cmd, args?:any) {
     if (args) {
       if (!isNumberArray(args, null)) {
         warn(

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { bytesToString, shadow, unreachable } from "../shared/util.js";
+import { bytesToString, shadow, unreachable } from "../shared/util";
 
 abstract class BaseStream {
 
-  protected pos: number = 0;
+  public pos: number = 0;
 
   constructor() {
     if (

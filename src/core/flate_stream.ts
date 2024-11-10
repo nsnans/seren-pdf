@@ -19,9 +19,9 @@
  * license.
  */
 
-import { FormatError, info } from "../shared/util.js";
-import { DecodeStream } from "./decode_stream.js";
-import { Stream } from "./stream.js";
+import { FormatError, info } from "../shared/util";
+import { DecodeStream } from "./decode_stream";
+import { Stream } from "./stream";
 
 const codeLenCodeMap = new Int32Array([
   16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15,
@@ -122,7 +122,12 @@ const fixedDistCodeTab = [
 ];
 
 class FlateStream extends DecodeStream {
-  constructor(str, maybeLength) {
+
+  protected codeSize = 0;
+
+  protected codeBuf = 0;
+
+  constructor(str, maybeLength: number) {
     super(maybeLength);
 
     this.str = str;
@@ -149,7 +154,7 @@ class FlateStream extends DecodeStream {
     this.codeBuf = 0;
   }
 
-  async getImageData(length, _decoderOptions) {
+  async getImageData(length: number) {
     const data = await this.asyncGetBytes();
     return data?.subarray(0, length) || this.getBytes(length);
   }
@@ -171,7 +176,7 @@ class FlateStream extends DecodeStream {
           await writer.ready;
           await writer.close();
         })
-        .catch(() => {});
+        .catch(() => { });
 
       const chunks = [];
       let totalLength = 0;
@@ -209,7 +214,7 @@ class FlateStream extends DecodeStream {
     return true;
   }
 
-  getBits(bits) {
+  getBits(bits: number) {
     const str = this.str;
     let codeSize = this.codeSize;
     let codeBuf = this.codeBuf;

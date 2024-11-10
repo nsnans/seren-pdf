@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { assert } from "../shared/util.js";
+import { assert } from "../shared/util";
 
 /** @implements {IPDFStream} */
 class PDFWorkerStream {

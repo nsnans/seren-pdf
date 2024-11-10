@@ -16,6 +16,7 @@
 import {
   AnnotationEditorPrefix,
   assert,
+  BaseException,
   FormatError,
   info,
   InvalidPDFException,
@@ -30,12 +31,12 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   AnnotationFactory,
   PopupAnnotation,
   WidgetAnnotation,
-} from "./annotation.js";
+} from "./annotation";
 import {
   collectActions,
   getInheritableProperty,
@@ -47,7 +48,7 @@ import {
   validateCSSFont,
   XRefEntryException,
   XRefParseException,
-} from "./core_utils.js";
+} from "./core_utils";
 import {
   Dict,
   isName,
@@ -56,23 +57,24 @@ import {
   Ref,
   RefSet,
   RefSetCache,
-} from "./primitives.js";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts.js";
-import { BaseStream } from "./base_stream.js";
-import { calculateMD5 } from "./crypto.js";
-import { Catalog } from "./catalog.js";
-import { clearGlobalCaches } from "./cleanup_helper.js";
-import { DatasetReader } from "./dataset_reader.js";
-import { Linearization } from "./parser.js";
-import { NullStream } from "./stream.js";
-import { ObjectLoader } from "./object_loader.js";
-import { OperatorList } from "./operator_list.js";
-import { PartialEvaluator } from "./evaluator.js";
-import { StreamsSequenceStream } from "./decode_stream.js";
-import { StructTreePage } from "./struct_tree.js";
-import { writeObject } from "./writer.js";
-import { XFAFactory } from "./xfa/factory.js";
-import { XRef } from "./xref.js";
+} from "./primitives";
+import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
+import { BaseStream } from "./base_stream";
+import { calculateMD5 } from "./crypto";
+import { Catalog } from "./catalog";
+import { clearGlobalCaches } from "./cleanup_helper";
+import { DatasetReader } from "./dataset_reader";
+import { Linearization } from "./parser";
+import { NullStream, Stream } from "./stream";
+import { ObjectLoader } from "./object_loader";
+import { OperatorList } from "./operator_list";
+import { PartialEvaluator } from "./evaluator";
+import { StreamsSequenceStream } from "./decode_stream";
+import { StructTreePage } from "./struct_tree";
+import { writeObject } from "./writer";
+import { XFAFactory } from "./xfa/factory";
+import { XRef } from "./xref";
+import { PDFManager } from "./pdf_manager";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -403,7 +405,7 @@ class Page {
             .catch(function (reason) {
               warn(
                 "save - ignoring annotation data during " +
-                  `"${task.name}" task: "${reason}".`
+                `"${task.name}" task: "${reason}".`
               );
               return null;
             })
@@ -618,7 +620,7 @@ class Page {
               .catch(function (reason) {
                 warn(
                   "getOperatorList - ignoring annotation data during " +
-                    `"${task.name}" task: "${reason}".`
+                  `"${task.name}" task: "${reason}".`
                 );
                 return {
                   opList: null,
@@ -917,7 +919,23 @@ function find(stream, signature, limit = 1024, backwards = false) {
  * The `PDFDocument` class holds all the (worker-thread) data of the PDF file.
  */
 class PDFDocument {
-  constructor(pdfManager, stream) {
+
+  protected pdfManager: PDFManager;
+
+  protected stream: Stream;
+
+  protected xref: XRef;
+
+  protected _pagePromises: Map<any, any>;
+
+  protected catalog: Catalog | null = null;
+
+  protected _version: string | null;
+
+  protected _globalIdFactory;
+
+  constructor(pdfManager: PDFManager, stream: Stream) {
+
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
       assert(
         stream instanceof BaseStream,
@@ -1067,15 +1085,15 @@ class PDFDocument {
 
   get numPages() {
     let num = 0;
-    if (this.catalog.hasActualNumPages) {
-      num = this.catalog.numPages;
+    if (this.catalog!.hasActualNumPages) {
+      num = this.catalog!.numPages;
     } else if (this.xfaFactory) {
       // num is a Promise.
       num = this.xfaFactory.getNumPages();
     } else if (this.linearization) {
       num = this.linearization.numPages;
     } else {
-      num = this.catalog.numPages;
+      num = this.catalog!.numPages;
     }
     return shadow(this, "numPages", num);
   }
@@ -1113,7 +1131,7 @@ class PDFDocument {
   }
 
   get _xfaStreams() {
-    const acroForm = this.catalog.acroForm;
+    const acroForm = this.catalog!.acroForm;
     if (!acroForm) {
       return null;
     }
@@ -1206,7 +1224,7 @@ class PDFDocument {
     let data;
     if (
       this.pdfManager.enableXfa &&
-      this.catalog.needsRendering &&
+      this.catalog!.needsRendering &&
       this.formInfo.hasXfa &&
       !this.formInfo.hasAcroForm
     ) {
@@ -1410,7 +1428,7 @@ class PDFDocument {
    * the catalog, if present, should overwrite the version from the header.
    */
   get version() {
-    return this.catalog.version || this._version;
+    return this.catalog!.version || this._version;
   }
 
   get formInfo() {
@@ -1420,7 +1438,7 @@ class PDFDocument {
       hasXfa: false,
       hasSignatures: false,
     };
-    const acroForm = this.catalog.acroForm;
+    const acroForm = this.catalog!.acroForm;
     if (!acroForm) {
       return shadow(this, "formInfo", formInfo);
     }
@@ -1462,14 +1480,14 @@ class PDFDocument {
   get documentInfo() {
     const docInfo = {
       PDFFormatVersion: this.version,
-      Language: this.catalog.lang,
+      Language: this.catalog!.lang,
       EncryptFilterName: this.xref.encrypt
         ? this.xref.encrypt.filterName
         : null,
       IsLinearized: !!this.linearization,
       IsAcroFormPresent: this.formInfo.hasAcroForm,
       IsXFAPresent: this.formInfo.hasXfa,
-      IsCollectionPresent: !!this.catalog.collection,
+      IsCollectionPresent: !!this.catalog!.collection,
       IsSignaturesPresent: this.formInfo.hasSignatures,
     };
 
@@ -1579,7 +1597,8 @@ class PDFDocument {
   }
 
   async _getLinearizationPage(pageIndex) {
-    const { catalog, linearization, xref } = this;
+    const { linearization, xref } = this;
+    const catalog = this.catalog!;
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
       assert(
         linearization?.pageFirst === pageIndex,
@@ -1614,8 +1633,10 @@ class PDFDocument {
       throw new FormatError(
         "The Linearization dictionary doesn't point to a valid Page dictionary."
       );
-    } catch (reason) {
-      warn(`_getLinearizationPage: "${reason.message}".`);
+    } catch (reason: unknown) {
+      if (reason instanceof BaseException) {
+        warn(`_getLinearizationPage: "${reason.message}".`);
+      }
       return catalog.getPageDict(pageIndex);
     }
   }
@@ -1625,7 +1646,8 @@ class PDFDocument {
     if (cachedPromise) {
       return cachedPromise;
     }
-    const { catalog, linearization, xfaFactory } = this;
+    const { linearization, xfaFactory } = this;
+    const catalog = this.catalog!;
 
     let promise;
     if (xfaFactory) {
@@ -1678,7 +1700,8 @@ class PDFDocument {
   }
 
   async checkLastPage(recoveryMode = false) {
-    const { catalog, pdfManager } = this;
+    const { pdfManager } = this;
+    const catalog = this.catalog!;
 
     catalog.setActualNumPages(); // Ensure that it's always reset.
     let numPages;
@@ -1733,7 +1756,7 @@ class PDFDocument {
           promise = Promise.reject(pageDict);
 
           // Prevent "uncaught exception: Object"-messages in the console.
-          promise.catch(() => {});
+          promise.catch(() => { });
         } else {
           promise = Promise.resolve(
             new Page({
@@ -1938,7 +1961,7 @@ class PDFDocument {
   }
 
   get calculationOrderIds() {
-    const calculationOrder = this.catalog.acroForm?.get("CO");
+    const calculationOrder = this.catalog!.acroForm?.get("CO");
     if (!Array.isArray(calculationOrder) || calculationOrder.length === 0) {
       return shadow(this, "calculationOrderIds", null);
     }

@@ -427,7 +427,7 @@ function createValidAbsoluteUrl(url, baseUrl = null, options = null) {
       if (options.tryConvertEncoding) {
         try {
           url = stringToUTF8String(url);
-        } catch {}
+        } catch { }
       }
     }
 
@@ -460,26 +460,18 @@ function shadow(obj, prop, value, nonSerializable = false) {
 /**
  * @type {any}
  */
-const BaseException = (function BaseExceptionClosure() {
-  // eslint-disable-next-line no-shadow
-  function BaseException(message, name) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseException
-    ) {
-      unreachable("Cannot initialize BaseException.");
-    }
-    this.message = message;
+
+class BaseException extends Error {
+  constructor(message: string, name: string) {
+    super(message);
     this.name = name;
   }
-  BaseException.prototype = new Error();
-  BaseException.constructor = BaseException;
+}
 
-  return BaseException;
-})();
 
 class PasswordException extends BaseException {
-  constructor(msg, code) {
+  protected code;
+  constructor(msg: string, code) {
     super(msg, "PasswordException");
     this.code = code;
   }
@@ -515,7 +507,7 @@ class UnexpectedResponseException extends BaseException {
  * Error caused during parsing PDF data.
  */
 class FormatError extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "FormatError");
   }
 }
@@ -524,7 +516,7 @@ class FormatError extends BaseException {
  * Error used to indicate task cancellation.
  */
 class AbortException extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "AbortException");
   }
 }
@@ -547,7 +539,7 @@ function bytesToString(bytes) {
   return strBuf.join("");
 }
 
-function stringToBytes(str) {
+function stringToBytes(str: string) {
   if (typeof str !== "string") {
     unreachable("Invalid argument for stringToBytes");
   }
@@ -1001,7 +993,7 @@ function stringToPDFString(str) {
     const charCode = str.charCodeAt(i);
     if (charCode === 0x1b) {
       // eslint-disable-next-line no-empty
-      while (++i < ii && str.charCodeAt(i) !== 0x1b) {}
+      while (++i < ii && str.charCodeAt(i) !== 0x1b) { }
       continue;
     }
     const code = PDFStringTranslateTable[charCode];

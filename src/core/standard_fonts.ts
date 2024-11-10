@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { getLookupTableFactory } from "./core_utils.js";
-import { normalizeFontName } from "./fonts_utils.js";
+import { getLookupTableFactory } from "./core_utils";
+import { normalizeFontName } from "./fonts_utils";
 
 /**
  * Hold a map of decoded fonts and of the standard fourteen Type1

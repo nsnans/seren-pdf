@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-import { bytesToString, info, warn } from "../shared/util.js";
-import { Dict, isName, Name, Ref } from "./primitives.js";
+import { bytesToString, info, warn } from "../shared/util";
+import { Dict, isName, Name, Ref } from "./primitives";
 import {
   escapePDFName,
   escapeString,
   getSizeInBytes,
   numberToString,
   parseXFAPath,
-} from "./core_utils.js";
-import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser.js";
-import { BaseStream } from "./base_stream.js";
-import { calculateMD5 } from "./crypto.js";
-import { Stream } from "./stream.js";
+} from "./core_utils";
+import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
+import { BaseStream } from "./base_stream";
+import { calculateMD5 } from "./crypto";
+import { Stream } from "./stream";
 
 async function writeObject(ref, obj, buffer, { encrypt = null }) {
   const transform = encrypt?.createCipherTransform(ref.num, ref.gen);
@@ -78,7 +78,7 @@ async function writeStream(stream, buffer, transform) {
           await writer.ready;
           await writer.close();
         })
-        .catch(() => {});
+        .catch(() => { });
 
       // Response::text doesn't return the correct data.
       const buf = await new Response(cs.readable).arrayBuffer();
@@ -159,7 +159,7 @@ async function writeValue(value, buffer, transform) {
   }
 }
 
-function writeInt(number, size, offset, buffer) {
+function writeInt(number: number, size: number, offset: number, buffer) {
   for (let i = size + offset - 1; i > offset - 1; i--) {
     buffer[i] = number & 0xff;
     number >>= 8;
@@ -167,7 +167,7 @@ function writeInt(number, size, offset, buffer) {
   return offset + size;
 }
 
-function writeString(string, offset, buffer) {
+function writeString(string, offset: number, buffer) {
   for (let i = 0, len = string.length; i < len; i++) {
     buffer[offset + i] = string.charCodeAt(i) & 0xff;
   }

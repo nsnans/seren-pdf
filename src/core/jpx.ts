@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-import { BaseException, warn } from "../shared/util.js";
-import OpenJPEG from "../../external/openjpeg/openjpeg.js";
+import { BaseException, warn } from "../shared/util";
+// 这里仔细研究一下，如何引入外部的部件
+import OpenJPEG from "../external/openjpeg/openjpeg";
 import { Stream } from "./stream.js";
 
 class JpxError extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "JpxError");
   }
 }
@@ -29,7 +30,7 @@ class JpxImage {
   static decode(data, decoderOptions) {
     decoderOptions ||= {};
     this.#module ||= OpenJPEG({ warn });
-    const imageData = this.#module.decode(data, decoderOptions);
+    const imageData = this.#module!.decode(data, decoderOptions);
     if (typeof imageData === "string") {
       throw new JpxError(imageData);
     }

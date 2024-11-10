@@ -13,17 +13,20 @@
  * limitations under the License.
  */
 
-import { shadow, warn } from "../shared/util.js";
-import { DecodeStream } from "./decode_stream.js";
-import { Dict } from "./primitives.js";
-import { JpegImage } from "./jpg.js";
+import { shadow, warn } from "../shared/util";
+import { DecodeStream } from "./decode_stream";
+import { Dict } from "./primitives";
+import { JpegImage } from "./jpg";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves
  * like all the other DecodeStreams.
  */
 class JpegStream extends DecodeStream {
-  constructor(stream, maybeLength, params) {
+
+  protected maybeLength: number;
+
+  constructor(stream, maybeLength: number, params) {
     super(maybeLength);
 
     this.stream = stream;
@@ -40,7 +43,7 @@ class JpegStream extends DecodeStream {
       typeof ImageDecoder === "undefined"
         ? Promise.resolve(false)
         : // eslint-disable-next-line no-undef
-          ImageDecoder.isTypeSupported("image/jpeg")
+        ImageDecoder.isTypeSupported("image/jpeg")
     );
   }
 
@@ -49,7 +52,7 @@ class JpegStream extends DecodeStream {
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
 
-  ensureBuffer(requested) {
+  ensureBuffer() {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
   }

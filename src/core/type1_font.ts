@@ -23,12 +23,12 @@ import {
   CFFStandardStrings,
   CFFStrings,
   CFFTopDict,
-} from "./cff_parser.js";
-import { FormatError, warn } from "../shared/util.js";
-import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils.js";
-import { isWhiteSpace } from "./core_utils.js";
-import { Stream } from "./stream.js";
-import { Type1Parser } from "./type1_parser.js";
+} from "./cff_parser";
+import { FormatError, warn } from "../shared/util";
+import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
+import { isWhiteSpace } from "./core_utils";
+import { Stream } from "./stream";
+import { Type1Parser } from "./type1_parser";
 
 function findBlock(streamBytes, signature, startIndex) {
   const streamBytesLength = streamBytes.length;

@@ -28,26 +28,31 @@ import {
   UnknownErrorException,
   VerbosityLevel,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
   XRefParseException,
-} from "./core_utils.js";
-import { Dict, isDict, Ref } from "./primitives.js";
-import { LocalPDFManager, NetworkPDFManager } from "./pdf_manager.js";
-import { AnnotationFactory } from "./annotation.js";
-import { clearGlobalCaches } from "./cleanup_helper.js";
-import { incrementalUpdate } from "./writer.js";
-import { MessageHandler } from "../shared/message_handler.js";
-import { PDFWorkerStream } from "./worker_stream.js";
-import { StructTreeRoot } from "./struct_tree.js";
+} from "./core_utils";
+import { Dict, isDict, Ref } from "./primitives";
+import { LocalPDFManager, NetworkPDFManager } from "./pdf_manager";
+import { AnnotationFactory } from "./annotation";
+import { clearGlobalCaches } from "./cleanup_helper";
+import { incrementalUpdate } from "./writer";
+import { MessageHandler } from "../shared/message_handler";
+import { PDFWorkerStream } from "./worker_stream";
+import { StructTreeRoot } from "./struct_tree";
 
 class WorkerTask {
-  constructor(name) {
+
+  protected _capability = Promise.withResolvers();
+
+  protected terminated = false;
+
+  protected name: string;
+
+  constructor(name: string) {
     this.name = name;
-    this.terminated = false;
-    this._capability = Promise.withResolvers();
   }
 
   get finished() {
@@ -55,7 +60,7 @@ class WorkerTask {
   }
 
   finish() {
-    this._capability.resolve();
+    this._capability.resolve(null);
   }
 
   terminate() {
@@ -108,7 +113,7 @@ class WorkerMessageHandler {
     if (apiVersion !== workerVersion) {
       throw new Error(
         `The API version "${apiVersion}" does not match ` +
-          `the Worker version "${workerVersion}".`
+        `the Worker version "${workerVersion}".`
       );
     }
 
@@ -126,8 +131,8 @@ class WorkerMessageHandler {
       if (enumerableProperties.length) {
         throw new Error(
           "The `Array.prototype` contains unexpected enumerable properties: " +
-            enumerableProperties.join(", ") +
-            "; thus breaking e.g. `for...in` iteration of `Array`s."
+          enumerableProperties.join(", ") +
+          "; thus breaking e.g. `for...in` iteration of `Array`s."
         );
       }
     }
@@ -756,7 +761,7 @@ class WorkerMessageHandler {
               if (start) {
                 info(
                   `page=${pageIndex + 1} - getOperatorList: time=` +
-                    `${Date.now() - start}ms, len=${operatorListInfo.length}`
+                  `${Date.now() - start}ms, len=${operatorListInfo.length}`
                 );
               }
               sink.close();
@@ -800,7 +805,7 @@ class WorkerMessageHandler {
               if (start) {
                 info(
                   `page=${pageIndex + 1} - getTextContent: time=` +
-                    `${Date.now() - start}ms`
+                  `${Date.now() - start}ms`
                 );
               }
               sink.close();
