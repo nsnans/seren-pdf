@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { shadow } from "../../shared/util.js";
+import { shadow } from "../../shared/util";
 
 const dimConverters = {
   pt: (x: number) => x,

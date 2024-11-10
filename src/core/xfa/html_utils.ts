@@ -24,12 +24,12 @@ import {
   $pushGlyphs,
   $text,
   $toStyle,
-} from "./symbol_utils.js";
-import { createValidAbsoluteUrl, warn } from "../../shared/util.js";
-import { getMeasurement, stripQuotes } from "./utils.js";
-import { selectFont } from "./fonts.js";
-import { TextMeasure } from "./text.js";
-import { XFAObject } from "./xfa_object.js";
+} from "./symbol_utils";
+import { createValidAbsoluteUrl, warn } from "../../shared/util";
+import { getMeasurement, stripQuotes } from "./utils";
+import { selectFont } from "./fonts";
+import { TextMeasure } from "./text";
+import { XFAObject } from "./xfa_object";
 
 function measureToString(m) {
   if (typeof m === "string") {

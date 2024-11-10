@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Lexer, TOKEN } from "./formcalc_lexer.js";
+import { Lexer, TOKEN } from "./formcalc_lexer";
 
 const Errors = {
   assignment: "Invalid token in assignment.",

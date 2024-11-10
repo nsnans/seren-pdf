@@ -20,7 +20,7 @@ import {
   $setValue,
   $toString,
   $uid,
-} from "./symbol_utils.js";
+} from "./symbol_utils";
 
 class DataHandler {
   constructor(root, data) {

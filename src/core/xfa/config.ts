@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
-import { $content, $finalize } from "./symbol_utils.js";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { $content, $finalize } from "./symbol_utils";
 import {
   ContentObject,
   IntegerObject,

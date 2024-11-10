@@ -72,12 +72,12 @@ import {
   $toString,
   $toStyle,
   $uid,
-} from "./symbol_utils.js";
-import { getInteger, getKeyword, HTMLResult } from "./utils.js";
-import { shadow, utf8StringToString, warn } from "../../shared/util.js";
-import { encodeToXmlString } from "../core_utils.js";
-import { NamespaceIds } from "./namespaces.js";
-import { searchNode } from "./som.js";
+} from "./symbol_utils";
+import { getInteger, getKeyword, HTMLResult } from "./utils";
+import { shadow, utf8StringToString, warn } from "../../shared/util";
+import { encodeToXmlString } from "../core_utils";
+import { NamespaceIds } from "./namespaces";
+import { searchNode } from "./som";
 
 const _applyPrototype = Symbol();
 const _attributes = Symbol();
@@ -243,11 +243,11 @@ class XFAObject {
     return this.hasOwnProperty("value");
   }
 
-  [$setValue](_) {}
+  [$setValue](_) { }
 
-  [$onText](_) {}
+  [$onText](_) { }
 
-  [$finalize]() {}
+  [$finalize]() { }
 
   [$clean](builder) {
     delete this[_hasChildren];
@@ -397,7 +397,7 @@ class XFAObject {
     this[$extra].children.push(html);
   }
 
-  [$getAvailableSpace]() {}
+  [$getAvailableSpace]() { }
 
   [$childrenToHTML]({ filter = null, include = true }) {
     if (!this[$extra].generator) {
@@ -1032,7 +1032,7 @@ class ContentObject extends XFAObject {
     this[$content] += text;
   }
 
-  [$finalize]() {}
+  [$finalize]() { }
 }
 
 class OptionObject extends ContentObject {

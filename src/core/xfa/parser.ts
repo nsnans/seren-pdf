@@ -24,10 +24,10 @@ import {
   $onChild,
   $onText,
   $setId,
-} from "./symbol_utils.js";
-import { XMLParserBase, XMLParserErrorCode } from "../xml_parser.js";
-import { Builder } from "./builder.js";
-import { warn } from "../../shared/util.js";
+} from "./symbol_utils";
+import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
+import { Builder } from "./builder";
+import { warn } from "../../shared/util";
 
 class XFAParser extends XMLParserBase {
   constructor(rootNameSpace = null, richText = false) {

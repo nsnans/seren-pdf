@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import {
   ContentObject,
   StringObject,
   XFAObject,
   XFAObjectArray,
-} from "./xfa_object.js";
-import { getInteger, getStringOption } from "./utils.js";
+} from "./xfa_object";
+import { getInteger, getStringOption } from "./utils";
 
 const LOCALE_SET_NS_ID = NamespaceIds.localeSet.id;
 

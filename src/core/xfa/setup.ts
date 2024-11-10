@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-import { ConfigNamespace } from "./config.js";
-import { ConnectionSetNamespace } from "./connection_set.js";
-import { DatasetsNamespace } from "./datasets.js";
-import { LocaleSetNamespace } from "./locale_set.js";
-import { SignatureNamespace } from "./signature.js";
-import { StylesheetNamespace } from "./stylesheet.js";
-import { TemplateNamespace } from "./template.js";
-import { XdpNamespace } from "./xdp.js";
-import { XhtmlNamespace } from "./xhtml.js";
+import { ConfigNamespace } from "./config";
+import { ConnectionSetNamespace } from "./connection_set";
+import { DatasetsNamespace } from "./datasets";
+import { LocaleSetNamespace } from "./locale_set";
+import { SignatureNamespace } from "./signature";
+import { StylesheetNamespace } from "./stylesheet";
+import { TemplateNamespace } from "./template";
+import { XdpNamespace } from "./xdp";
+import { XhtmlNamespace } from "./xhtml";
 
 const NamespaceSetUp = {
   config: ConfigNamespace,

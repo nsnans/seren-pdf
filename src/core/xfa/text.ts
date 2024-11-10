@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { selectFont } from "./fonts.js";
+import { selectFont } from "./fonts";
 
 const WIDTH_FACTOR = 1.02;
 

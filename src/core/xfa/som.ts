@@ -18,8 +18,8 @@ import {
   $getChildrenByClass,
   $getChildrenByName,
   $getParent,
-} from "./symbol_utils.js";
-import { warn } from "../../shared/util.js";
+} from "./symbol_utils";
+import { warn } from "../../shared/util";
 
 const namePattern = /^[^.[]+/;
 const indexPattern = /^[^\]]+/;

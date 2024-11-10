@@ -27,16 +27,16 @@ import {
   $pushGlyphs,
   $text,
   $toHTML,
-} from "./symbol_utils.js";
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
+} from "./symbol_utils";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import {
   fixTextIndent,
   fixURL,
   measureToString,
   setFontFamily,
-} from "./html_utils.js";
-import { getMeasurement, HTMLResult, stripQuotes } from "./utils.js";
-import { XmlObject } from "./xfa_object.js";
+} from "./html_utils";
+import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
+import { XmlObject } from "./xfa_object";
 
 const XHTML_NS_ID = NamespaceIds.xhtml.id;
 const $richText = Symbol();

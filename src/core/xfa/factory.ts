@@ -20,14 +20,14 @@ import {
   $text,
   $toHTML,
   $toPages,
-} from "./symbol_utils.js";
-import { Binder } from "./bind.js";
-import { DataHandler } from "./data.js";
-import { FontFinder } from "./fonts.js";
-import { stripQuotes } from "./utils.js";
-import { warn } from "../../shared/util.js";
-import { XFAParser } from "./parser.js";
-import { XhtmlNamespace } from "./xhtml.js";
+} from "./symbol_utils";
+import { Binder } from "./bind";
+import { DataHandler } from "./data";
+import { FontFinder } from "./fonts";
+import { stripQuotes } from "./utils";
+import { warn } from "../../shared/util";
+import { XFAParser } from "./parser";
+import { XhtmlNamespace } from "./xhtml";
 
 class XFAFactory {
   constructor(data) {

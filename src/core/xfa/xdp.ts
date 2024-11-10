@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
-import { $namespaceId, $nodeName, $onChildCheck } from "./symbol_utils.js";
-import { XFAObject, XFAObjectArray } from "./xfa_object.js";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { $namespaceId, $nodeName, $onChildCheck } from "./symbol_utils";
+import { XFAObject, XFAObjectArray } from "./xfa_object";
 
 const XDP_NS_ID = NamespaceIds.xdp.id;
 

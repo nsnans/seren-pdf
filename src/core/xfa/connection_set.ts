@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
-import { StringObject, XFAObject, XFAObjectArray } from "./xfa_object.js";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { StringObject, XFAObject, XFAObjectArray } from "./xfa_object";
 
 const CONNECTION_SET_NS_ID = NamespaceIds.connectionSet.id;
 

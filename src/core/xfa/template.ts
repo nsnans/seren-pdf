@@ -58,14 +58,14 @@ import {
   $toPages,
   $toStyle,
   $uid,
-} from "./symbol_utils.js";
+} from "./symbol_utils";
 import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
 import {
   addHTML,
   checkDimensions,
   flushHTML,
   getAvailableSpace,
-} from "./layout.js";
+} from "./layout";
 import {
   computeBbox,
   createWrapper,
@@ -81,7 +81,7 @@ import {
   setMinMaxDimensions,
   setPara,
   toStyle,
-} from "./html_utils.js";
+} from "./html_utils";
 import {
   ContentObject,
   Option01,
@@ -89,8 +89,8 @@ import {
   StringObject,
   XFAObject,
   XFAObjectArray,
-} from "./xfa_object.js";
-import { fromBase64Util, Util, warn } from "../../shared/util.js";
+} from "./xfa_object";
+import { fromBase64Util, Util, warn } from "../../shared/util";
 import {
   getBBox,
   getColor,
@@ -102,10 +102,10 @@ import {
   getRelevant,
   getStringOption,
   HTMLResult,
-} from "./utils.js";
-import { getMetrics } from "./fonts.js";
-import { recoverJsURL } from "../core_utils.js";
-import { searchNode } from "./som.js";
+} from "./utils";
+import { getMetrics } from "./fonts";
+import { recoverJsURL } from "../core_utils";
+import { searchNode } from "./som";
 
 const TEMPLATE_NS_ID = NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";

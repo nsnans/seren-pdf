@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject } from "./namespaces.js";
-import { XmlObject } from "./xfa_object.js";
+import { $buildXFAObject } from "./namespaces";
+import { XmlObject } from "./xfa_object";
 
 class UnknownNamespace {
 

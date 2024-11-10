@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
-import { XFAObject } from "./xfa_object.js";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { XFAObject } from "./xfa_object";
 
 const STYLESHEET_NS_ID = NamespaceIds.stylesheet.id;
 
