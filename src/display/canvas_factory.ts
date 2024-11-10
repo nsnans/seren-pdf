@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-import { unreachable } from "../shared/util.js";
+import { unreachable } from "../shared/util";
 
-class BaseCanvasFactory {
+abstract class BaseCanvasFactory {
+  // 硬件加速 hardware accelerate
   #enableHWA = false;
 
   constructor({ enableHWA = false }) {
@@ -28,7 +29,7 @@ class BaseCanvasFactory {
     this.#enableHWA = enableHWA;
   }
 
-  create(width, height) {
+  create(width: number, height: number) {
     if (width <= 0 || height <= 0) {
       throw new Error("Invalid canvas size");
     }
@@ -41,7 +42,7 @@ class BaseCanvasFactory {
     };
   }
 
-  reset(canvasAndContext, width, height) {
+  reset(canvasAndContext, width: number, height: number) {
     if (!canvasAndContext.canvas) {
       throw new Error("Canvas is not specified");
     }
@@ -67,9 +68,7 @@ class BaseCanvasFactory {
   /**
    * @ignore
    */
-  _createCanvas(width, height) {
-    unreachable("Abstract method `_createCanvas` called.");
-  }
+  abstract _createCanvas(width: number, height: number): HTMLCanvasElement;
 }
 
 class DOMCanvasFactory extends BaseCanvasFactory {
@@ -81,7 +80,7 @@ class DOMCanvasFactory extends BaseCanvasFactory {
   /**
    * @ignore
    */
-  _createCanvas(width, height) {
+  _createCanvas(width: number, height: number) {
     const canvas = this._document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;

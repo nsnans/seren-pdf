@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { unreachable } from "../../../shared/util.js";
+import { unreachable } from "../../../shared/util";
 
 class Outline {
   /**

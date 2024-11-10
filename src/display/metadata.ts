@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { objectFromMap } from "../shared/util.js";
+import { objectFromMap } from "../shared/util";
 
 class Metadata {
   #metadataMap;

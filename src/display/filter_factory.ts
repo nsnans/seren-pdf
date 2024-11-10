@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { getRGB, isDataScheme, SVG_NS } from "./display_utils.js";
-import { unreachable, Util, warn } from "../shared/util.js";
+import { getRGB, isDataScheme, SVG_NS } from "./display_utils";
+import { unreachable, Util, warn } from "../shared/util";
 
 class BaseFilterFactory {
   constructor() {
@@ -46,7 +46,7 @@ class BaseFilterFactory {
     return "none";
   }
 
-  destroy(keepHCM = false) {}
+  destroy(keepHCM = false) { }
 }
 
 /**

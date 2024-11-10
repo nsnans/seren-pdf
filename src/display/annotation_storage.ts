@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { objectFromMap, shadow, unreachable } from "../shared/util.js";
-import { AnnotationEditor } from "./editor/editor.js";
-import { MurmurHash3_64 } from "../shared/murmurhash3.js";
+import { objectFromMap, shadow, unreachable } from "../shared/util";
+import { AnnotationEditor } from "./editor/editor";
+import { MurmurHash3_64 } from "../shared/murmurhash3";
 
 const SerializableEmpty = Object.freeze({
   map: null,

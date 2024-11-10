@@ -22,7 +22,7 @@ import {
   toBase64Util,
   unreachable,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 
 class FontLoader {
   #systemFonts = new Set();

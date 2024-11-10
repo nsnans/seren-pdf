@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { assert, stringToBytes } from "../shared/util.js";
+import { assert, stringToBytes } from "../shared/util";
 import {
   createHeaders,
   createResponseStatusError,

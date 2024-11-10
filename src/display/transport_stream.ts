@@ -18,8 +18,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../interfaces").IPDFStreamRangeReader} IPDFStreamRangeReader */
 
-import { assert } from "../shared/util.js";
-import { isPdfFile } from "./display_utils.js";
+import { assert } from "../shared/util";
+import { isPdfFile } from "./display_utils";
 
 /** @implements {IPDFStream} */
 class PDFDataTransportStream {
@@ -43,7 +43,7 @@ class PDFDataTransportStream {
       // completely "utilizes" its underlying ArrayBuffer.
       const buffer =
         initialData instanceof Uint8Array &&
-        initialData.byteLength === initialData.buffer.byteLength
+          initialData.byteLength === initialData.buffer.byteLength
           ? initialData.buffer
           : new Uint8Array(initialData).buffer;
       this._queuedChunks.push(buffer);
@@ -81,7 +81,7 @@ class PDFDataTransportStream {
     // completely "utilizes" its underlying ArrayBuffer.
     const buffer =
       chunk instanceof Uint8Array &&
-      chunk.byteLength === chunk.buffer.byteLength
+        chunk.byteLength === chunk.buffer.byteLength
         ? chunk.buffer
         : new Uint8Array(chunk).buffer;
 

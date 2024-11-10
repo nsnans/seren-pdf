@@ -37,12 +37,12 @@ import {
   UnknownErrorException,
   unreachable,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   AnnotationStorage,
   PrintAnnotationStorage,
   SerializableEmpty,
-} from "./annotation_storage.js";
+} from "./annotation_storage";
 import {
   deprecated,
   isDataScheme,
@@ -50,30 +50,30 @@ import {
   PageViewport,
   RenderingCancelledException,
   StatTimer,
-} from "./display_utils.js";
-import { FontFaceObject, FontLoader } from "./font_loader.js";
+} from "./display_utils";
+import { FontFaceObject, FontLoader } from "./font_loader";
 import {
   NodeCanvasFactory,
   NodeCMapReaderFactory,
   NodeFilterFactory,
   NodePackages,
   NodeStandardFontDataFactory,
-} from "display-node_utils";
-import { CanvasGraphics } from "./canvas.js";
-import { DOMCanvasFactory } from "./canvas_factory.js";
-import { DOMCMapReaderFactory } from "display-cmap_reader_factory";
-import { DOMFilterFactory } from "./filter_factory.js";
-import { DOMStandardFontDataFactory } from "display-standard_fontdata_factory";
-import { GlobalWorkerOptions } from "./worker_options.js";
-import { MessageHandler } from "../shared/message_handler.js";
-import { Metadata } from "./metadata.js";
-import { OptionalContentConfig } from "./optional_content_config.js";
-import { PDFDataTransportStream } from "./transport_stream.js";
-import { PDFFetchStream } from "display-fetch_stream";
-import { PDFNetworkStream } from "display-network";
-import { PDFNodeStream } from "display-node_stream";
-import { TextLayer } from "./text_layer.js";
-import { XfaText } from "./xfa_text.js";
+} from "../display/stubs";
+import { CanvasGraphics } from "./canvas";
+import { DOMCanvasFactory } from "./canvas_factory";
+import { DOMCMapReaderFactory } from "../display/cmap_reader_factory";
+import { DOMFilterFactory } from "./filter_factory";
+import { DOMStandardFontDataFactory } from "../display/standard_fontdata_factory";
+import { GlobalWorkerOptions } from "./worker_options";
+import { MessageHandler } from "../shared/message_handler";
+import { Metadata } from "./metadata";
+import { OptionalContentConfig } from "./optional_content_config";
+import { PDFDataTransportStream } from "./transport_stream";
+import { PDFFetchStream } from "../display/fetch_stream";
+import { PDFNetworkStream } from "../display/network";
+import { PDFNodeStream } from "../display/stubs";
+import { TextLayer } from "./text_layer";
+import { XfaText } from "./xfa_text";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -289,9 +289,9 @@ function getDocument(src = {}) {
     typeof src.isChrome === "boolean"
       ? src.isChrome
       : (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) &&
-        !FeatureTest.platform.isFirefox &&
-        typeof window !== "undefined" &&
-        !!window?.chrome;
+      !FeatureTest.platform.isFirefox &&
+      typeof window !== "undefined" &&
+      !!window?.chrome;
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes)
     ? src.canvasMaxAreaInBytes
     : -1;
@@ -318,12 +318,12 @@ function getDocument(src = {}) {
     typeof src.useWorkerFetch === "boolean"
       ? src.useWorkerFetch
       : (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-        (CMapReaderFactory === DOMCMapReaderFactory &&
-          StandardFontDataFactory === DOMStandardFontDataFactory &&
-          cMapUrl &&
-          standardFontDataUrl &&
-          isValidFetchUrl(cMapUrl, document.baseURI) &&
-          isValidFetchUrl(standardFontDataUrl, document.baseURI));
+      (CMapReaderFactory === DOMCMapReaderFactory &&
+        StandardFontDataFactory === DOMStandardFontDataFactory &&
+        cMapUrl &&
+        standardFontDataUrl &&
+        isValidFetchUrl(cMapUrl, document.baseURI) &&
+        isValidFetchUrl(standardFontDataUrl, document.baseURI));
 
   if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
     if (src.canvasFactory) {
@@ -354,12 +354,12 @@ function getDocument(src = {}) {
     filterFactory: new FilterFactory({ docId, ownerDocument }),
     cMapReaderFactory:
       (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-      useWorkerFetch
+        useWorkerFetch
         ? null
         : new CMapReaderFactory({ baseUrl: cMapUrl, isCompressed: cMapPacked }),
     standardFontDataFactory:
       (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-      useWorkerFetch
+        useWorkerFetch
         ? null
         : new StandardFontDataFactory({ baseUrl: standardFontDataUrl }),
   };
@@ -502,7 +502,7 @@ function getDocument(src = {}) {
   return task;
 }
 
-function getUrlProp(val) {
+function getUrlProp(val: URL | string) {
   if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
     return null; // The 'url' is unused with `PDFDataRangeTransport`.
   }
@@ -524,7 +524,7 @@ function getUrlProp(val) {
   }
   throw new Error(
     "Invalid PDF url data: " +
-      "either string or URL-object is expected in the url property."
+    "either string or URL-object is expected in the url property."
   );
 }
 
@@ -559,7 +559,7 @@ function getDataProp(val) {
   }
   throw new Error(
     "Invalid PDF binary data: either TypedArray, " +
-      "string, or array-like object is expected in the data property."
+    "string, or array-like object is expected in the data property."
   );
 }
 
@@ -769,7 +769,7 @@ class PDFDataRangeTransport {
     unreachable("Abstract method PDFDataRangeTransport.requestDataRange");
   }
 
-  abort() {}
+  abort() { }
 }
 
 /**
@@ -1573,7 +1573,7 @@ class PDFPageProxy {
         if (!(optionalContentConfig.renderingIntent & renderingIntent)) {
           throw new Error(
             "Must use the same `intent`-argument when calling the `PDFPageProxy.render` " +
-              "and `PDFDocumentProxy.getOptionalContentConfig` methods."
+            "and `PDFDocumentProxy.getOptionalContentConfig` methods."
           );
         }
         internalRenderTask.initializeGraphics({
@@ -2353,7 +2353,7 @@ class PDFWorker {
       if (cachedPort._pendingDestroy) {
         throw new Error(
           "PDFWorker.fromPort - the worker is being destroyed.\n" +
-            "Please remember to await `PDFDocumentLoadingTask.destroy()`-calls."
+          "Please remember to await `PDFDocumentLoadingTask.destroy()`-calls."
         );
       }
       return cachedPort;
@@ -2503,7 +2503,7 @@ class WorkerTransport {
 
     const annotationStorage =
       renderingIntent & RenderingIntentFlag.PRINT &&
-      printAnnotationStorage instanceof PrintAnnotationStorage
+        printAnnotationStorage instanceof PrintAnnotationStorage
         ? printAnnotationStorage
         : this.annotationStorage;
 
@@ -2955,7 +2955,7 @@ class WorkerTransport {
     if (this.annotationStorage.size <= 0) {
       warn(
         "saveDocument called while `annotationStorage` is empty, " +
-          "please use the getData-method instead."
+        "please use the getData-method instead."
       );
     }
     const { map, transfer } = this.annotationStorage.serializable;
@@ -3389,8 +3389,8 @@ class InternalRenderTask {
       if (InternalRenderTask.#canvasInUse.has(this._canvas)) {
         throw new Error(
           "Cannot use the same canvas during multiple render() operations. " +
-            "Use different canvas or ensure previous operations were " +
-            "cancelled or completed."
+          "Use different canvas or ensure previous operations were " +
+          "cancelled or completed."
         );
       }
       InternalRenderTask.#canvasInUse.add(this._canvas);
@@ -3436,10 +3436,10 @@ class InternalRenderTask {
 
     this.callback(
       error ||
-        new RenderingCancelledException(
-          `Rendering cancelled, page ${this._pageIndex + 1}`,
-          extraDelay
-        )
+      new RenderingCancelledException(
+        `Rendering cancelled, page ${this._pageIndex + 1}`,
+        extraDelay
+      )
     );
   }
 

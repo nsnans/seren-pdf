@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { FormatError, info, unreachable, Util } from "../shared/util.js";
-import { getCurrentTransform } from "./display_utils.js";
+import { FormatError, info, unreachable, Util } from "../shared/util";
+import { getCurrentTransform } from "./display_utils";
 
 const PathType = {
   FILL: "Fill",

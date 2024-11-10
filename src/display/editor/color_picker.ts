@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorParamsType, shadow } from "../../shared/util.js";
-import { KeyboardManager } from "./tools.js";
-import { noContextMenu } from "../display_utils.js";
+import { AnnotationEditorParamsType, shadow } from "../../shared/util";
+import { KeyboardManager } from "./tools";
+import { noContextMenu } from "../display_utils";
 
 class ColorPicker {
   #button = null;

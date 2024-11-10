@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-import { noContextMenu } from "../display_utils.js";
+import { noContextMenu } from "../display_utils";
 
 class AltText {
+  
   #altText = null;
 
   #altTextDecorative = false;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { noContextMenu } from "../display_utils.js";
+import { noContextMenu } from "../display_utils";
 
 class EditorToolbar {
   #toolbar = null;
@@ -61,9 +61,8 @@ class EditorToolbar {
           ? 1 - position[0]
           : position[0];
       style.insetInlineEnd = `${100 * x}%`;
-      style.top = `calc(${
-        100 * position[1]
-      }% + var(--editor-toolbar-vert-offset))`;
+      style.top = `calc(${100 * position[1]
+        }% + var(--editor-toolbar-vert-offset))`;
     }
 
     this.#addDeleteButton();

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { stringToBytes, unreachable } from "../shared/util.js";
-import { fetchData } from "./display_utils.js";
+import { stringToBytes, unreachable } from "../shared/util";
+import { fetchData } from "./display_utils";
 
-class BaseCMapReaderFactory {
+abstract class BaseCMapReaderFactory {
   constructor({ baseUrl = null, isCompressed = true }) {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -52,9 +52,7 @@ class BaseCMapReaderFactory {
    * @ignore
    * @returns {Promise<Uint8Array>}
    */
-  async _fetch(url) {
-    unreachable("Abstract method `_fetch` called.");
-  }
+  abstract _fetch(url): Promise<void>;
 }
 
 class DOMCMapReaderFactory extends BaseCMapReaderFactory {

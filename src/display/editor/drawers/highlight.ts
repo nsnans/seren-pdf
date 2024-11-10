@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { FreeDrawOutline, FreeDrawOutliner } from "./freedraw.js";
-import { Outline } from "./outline.js";
+import { FreeDrawOutline, FreeDrawOutliner } from "./freedraw";
+import { Outline } from "./outline";
 
 class HighlightOutliner {
   #box;
 
-  #verticalEdges = [];
+  #verticalEdges: [number, number, number, boolean][] = [];
 
   #intervals = [];
 
@@ -52,8 +52,8 @@ class HighlightOutliner {
       const x2 = Math.ceil((x + width + borderWidth) / EPSILON) * EPSILON;
       const y1 = Math.floor((y - borderWidth) / EPSILON) * EPSILON;
       const y2 = Math.ceil((y + height + borderWidth) / EPSILON) * EPSILON;
-      const left = [x1, y1, y2, true];
-      const right = [x2, y1, y2, false];
+      const left: [number, number, number, boolean] = [x1, y1, y2, true];
+      const right: [number, number, number, boolean] = [x2, y1, y2, false];
       this.#verticalEdges.push(left, right);
 
       minX = Math.min(minX, x1);
@@ -66,7 +66,7 @@ class HighlightOutliner {
     const bboxHeight = maxY - minY + 2 * innerMargin;
     const shiftedMinX = minX - innerMargin;
     const shiftedMinY = minY - innerMargin;
-    const lastEdge = this.#verticalEdges.at(isLTR ? -1 : -2);
+    const lastEdge = this.#verticalEdges.at(isLTR ? -1 : -2)!;
     const lastPoint = [lastEdge[0], lastEdge[2]];
 
     // Convert the coordinates of the edges into box coordinates.
@@ -106,10 +106,10 @@ class HighlightOutliner {
       if (edge[3]) {
         // Left edge.
         outlineVerticalEdges.push(...this.#breakEdge(edge));
-        this.#insert(edge);
+        this.#insert(edge[1], edge[2]);
       } else {
         // Right edge.
-        this.#remove(edge);
+        this.#remove(edge[1], edge[2]);
         outlineVerticalEdges.push(...this.#breakEdge(edge));
       }
     }
@@ -196,12 +196,12 @@ class HighlightOutliner {
     return end + 1;
   }
 
-  #insert([, y1, y2]) {
+  #insert(y1: number, y2: number) {
     const index = this.#binarySearch(y1);
     this.#intervals.splice(index, 0, [y1, y2]);
   }
 
-  #remove([, y1, y2]) {
+  #remove(y1: number, y2: number) {
     const index = this.#binarySearch(y1);
     for (let i = index; i < this.#intervals.length; i++) {
       const [start, end] = this.#intervals[i];
@@ -356,7 +356,8 @@ class FreeHighlightOutline extends FreeDrawOutline {
 
   newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
     return new FreeHighlightOutliner(
-      point,
+      point.x,
+      point.y,
       box,
       scaleFactor,
       thickness,

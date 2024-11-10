@@ -26,14 +26,14 @@ import {
   shadow,
   Util,
   warn,
-} from "../../shared/util.js";
+} from "../../shared/util";
 import {
   fetchData,
   getColorValues,
   getRGB,
   PixelsPerInch,
-} from "../display_utils.js";
-import { HighlightToolbar } from "./toolbar.js";
+} from "../display_utils";
+import { HighlightToolbar } from "./toolbar";
 
 function bindEvents(obj, element, names) {
   for (const name of names) {
@@ -913,9 +913,9 @@ class AnnotationEditorUIManager {
       "hcmFilter",
       this.#pageColors
         ? this.#filterFactory.addHCMFilter(
-            this.#pageColors.foreground,
-            this.#pageColors.background
-          )
+          this.#pageColors.foreground,
+          this.#pageColors.background
+        )
         : "none"
     );
   }
@@ -934,10 +934,10 @@ class AnnotationEditorUIManager {
       "highlightColors",
       this.#highlightColors
         ? new Map(
-            this.#highlightColors
-              .split(",")
-              .map(pair => pair.split("=").map(x => x.trim()))
-          )
+          this.#highlightColors
+            .split(",")
+            .map(pair => pair.split("=").map(x => x.trim()))
+        )
         : null
     );
   }

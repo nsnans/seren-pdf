@@ -22,8 +22,8 @@ import {
   shadow,
   Util,
   warn,
-} from "../shared/util.js";
-import { setLayerDimensions } from "./display_utils.js";
+} from "../shared/util";
+import { setLayerDimensions } from "./display_utils";
 
 /**
  * @typedef {Object} TextLayerParameters

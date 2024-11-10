@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { stringToBytes } from "../shared/util.js";
+import { stringToBytes } from "../shared/util";
 
 // This getFilenameFromContentDispositionHeader function is adapted from
 // https://github.com/Rob--W/open-in-browser/blob/7e2e35a38b8b4e981b11da7b2f01df0149049e92/extension/content-disposition.js

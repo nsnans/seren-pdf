@@ -19,8 +19,8 @@ import {
   RenderingIntentFlag,
   unreachable,
   warn,
-} from "../shared/util.js";
-import { MurmurHash3_64 } from "../shared/murmurhash3.js";
+} from "../shared/util";
+import { MurmurHash3_64 } from "../shared/murmurhash3";
 
 const INTERNAL = Symbol("INTERNAL");
 

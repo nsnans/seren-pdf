@@ -18,11 +18,11 @@ import {
   AnnotationEditorType,
   assert,
   Util,
-} from "../../shared/util.js";
-import { AnnotationEditor } from "./editor.js";
-import { InkAnnotationElement } from "../annotation_layer.js";
-import { noContextMenu } from "../display_utils.js";
-import { opacityToHex } from "./tools.js";
+} from "../../shared/util";
+import { AnnotationEditor } from "./editor";
+import { InkAnnotationElement } from "../annotation_layer";
+import { noContextMenu } from "../display_utils";
+import { opacityToHex } from "./tools";
 
 /**
  * Basic draw editor in order to generate an Ink annotation.
@@ -140,8 +140,8 @@ class InkEditor extends AnnotationEditor {
       [
         AnnotationEditorParamsType.INK_COLOR,
         this.color ||
-          InkEditor._defaultColor ||
-          AnnotationEditor._defaultLineColor,
+        InkEditor._defaultColor ||
+        AnnotationEditor._defaultLineColor,
       ],
       [
         AnnotationEditorParamsType.INK_OPACITY,

@@ -36,18 +36,18 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util.js";
-import { PDFDateString, setLayerDimensions } from "./display_utils.js";
-import { AnnotationStorage } from "./annotation_storage.js";
-import { ColorConverters } from "../shared/scripting_utils.js";
-import { DOMSVGFactory } from "./svg_factory.js";
-import { XfaLayer } from "./xfa_layer.js";
+} from "../shared/util";
+import { PDFDateString, setLayerDimensions } from "./display_utils";
+import { AnnotationStorage } from "./annotation_storage";
+import { ColorConverters } from "../shared/scripting_utils";
+import { DOMSVGFactory } from "./svg_factory";
+import { XfaLayer } from "./xfa_layer";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
 const GetElementsByNameSet = new WeakSet();
 
-function getRectDims(rect) {
+function getRectDims(rect: number[]) {
   return {
     width: rect[2] - rect[0],
     height: rect[3] - rect[1],

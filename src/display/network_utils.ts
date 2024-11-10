@@ -17,9 +17,9 @@ import {
   assert,
   MissingPDFException,
   UnexpectedResponseException,
-} from "../shared/util.js";
-import { getFilenameFromContentDispositionHeader } from "./content_disposition.js";
-import { isPdfFile } from "./display_utils.js";
+} from "../shared/util";
+import { getFilenameFromContentDispositionHeader } from "./content_disposition";
+import { isPdfFile } from "./display_utils";
 
 function createHeaders(isHttp, httpHeaders) {
   const headers = new Headers();
@@ -89,7 +89,7 @@ function extractFilenameFromHeader(responseHeaders) {
     if (filename.includes("%")) {
       try {
         filename = decodeURIComponent(filename);
-      } catch {}
+      } catch { }
     }
     if (isPdfFile(filename)) {
       return filename;

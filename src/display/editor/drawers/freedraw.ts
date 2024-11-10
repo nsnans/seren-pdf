@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-import { Outline } from "./outline.js";
-import { Util } from "../../../shared/util.js";
+import { Outline } from "./outline";
+import { Util } from "../../../shared/util";
 
 class FreeDrawOutliner {
   #box;
 
-  #bottom = [];
+  #bottom: number[] = [];
 
-  #innerMargin;
+  #innerMargin: number;
 
-  #isLTR;
+  #isLTR: boolean;
 
-  #top = [];
+  #top: number[] = [];
 
   // The first 6 elements are the last 3 points of the top part of the outline.
   // The next 6 elements are the last 3 points of the line.
@@ -48,7 +48,7 @@ class FreeDrawOutliner {
 
   #thickness;
 
-  #points = [];
+  #points: number[] = [];
 
   static #MIN_DIST = 8;
 
@@ -56,7 +56,7 @@ class FreeDrawOutliner {
 
   static #MIN = FreeDrawOutliner.#MIN_DIST + FreeDrawOutliner.#MIN_DIFF;
 
-  constructor({ x, y }, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+  constructor(x: number, y: number, box, scaleFactor: number, thickness: number, isLTR: boolean, innerMargin = 0) {
     this.#box = box;
     this.#thickness = thickness * scaleFactor;
     this.#isLTR = isLTR;
@@ -88,7 +88,7 @@ class FreeDrawOutliner {
     ];
   }
 
-  add({ x, y }) {
+  add(x: number, y: number) {
     this.#lastX = x;
     this.#lastY = y;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
@@ -219,15 +219,14 @@ class FreeDrawOutliner {
       return this.#toSVGPathTwoPoints();
     }
 
-    const buffer = [];
+    const buffer: string[] = [];
     buffer.push(`M${top[4]} ${top[5]}`);
     for (let i = 6; i < top.length; i += 6) {
       if (isNaN(top[i])) {
         buffer.push(`L${top[i + 4]} ${top[i + 5]}`);
       } else {
         buffer.push(
-          `C${top[i]} ${top[i + 1]} ${top[i + 2]} ${top[i + 3]} ${top[i + 4]} ${
-            top[i + 5]
+          `C${top[i]} ${top[i + 1]} ${top[i + 2]} ${top[i + 3]} ${top[i + 4]} ${top[i + 5]
           }`
         );
       }
@@ -240,8 +239,7 @@ class FreeDrawOutliner {
         buffer.push(`L${bottom[i + 4]} ${bottom[i + 5]}`);
       } else {
         buffer.push(
-          `C${bottom[i]} ${bottom[i + 1]} ${bottom[i + 2]} ${bottom[i + 3]} ${
-            bottom[i + 4]
+          `C${bottom[i]} ${bottom[i + 1]} ${bottom[i + 2]} ${bottom[i + 3]} ${bottom[i + 4]
           } ${bottom[i + 5]}`
         );
       }
@@ -257,21 +255,18 @@ class FreeDrawOutliner {
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] =
       this.#getLastCoords();
 
-    return `M${(this.#last[2] - x) / width} ${
-      (this.#last[3] - y) / height
-    } L${(this.#last[4] - x) / width} ${(this.#last[5] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${
-      (this.#last[16] - x) / width
-    } ${(this.#last[17] - y) / height} L${(this.#last[14] - x) / width} ${
-      (this.#last[15] - y) / height
-    } Z`;
+    return `M${(this.#last[2] - x) / width} ${(this.#last[3] - y) / height
+      } L${(this.#last[4] - x) / width} ${(this.#last[5] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${(this.#last[16] - x) / width
+      } ${(this.#last[17] - y) / height} L${(this.#last[14] - x) / width} ${(this.#last[15] - y) / height
+      } Z`;
   }
 
-  #toSVGPathStart(buffer) {
+  #toSVGPathStart(buffer: string[]) {
     const bottom = this.#bottom;
     buffer.push(`L${bottom[4]} ${bottom[5]} Z`);
   }
 
-  #toSVGPathEnd(buffer) {
+  #toSVGPathEnd(buffer: string[]) {
     const [x, y, width, height] = this.#box;
     const lastTop = this.#last.subarray(4, 6);
     const lastBottom = this.#last.subarray(16, 18);
@@ -279,13 +274,12 @@ class FreeDrawOutliner {
       this.#getLastCoords();
 
     buffer.push(
-      `L${(lastTop[0] - x) / width} ${(lastTop[1] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${
-        (lastBottom[0] - x) / width
+      `L${(lastTop[0] - x) / width} ${(lastTop[1] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${(lastBottom[0] - x) / width
       } ${(lastBottom[1] - y) / height}`
     );
   }
 
-  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
+  newFreeDrawOutline(outline, points, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
     return new FreeDrawOutline(
       outline,
       points,
@@ -501,8 +495,7 @@ class FreeDrawOutline extends Outline {
         continue;
       }
       buffer.push(
-        `C${this.#outline[i]} ${this.#outline[i + 1]} ${this.#outline[i + 2]} ${
-          this.#outline[i + 3]
+        `C${this.#outline[i]} ${this.#outline[i + 1]} ${this.#outline[i + 2]} ${this.#outline[i + 3]
         } ${this.#outline[i + 4]} ${this.#outline[i + 5]}`
       );
     }
@@ -618,7 +611,8 @@ class FreeDrawOutline extends Outline {
 
   newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
     return new FreeDrawOutliner(
-      point,
+      point.x,
+      point.y,
       box,
       scaleFactor,
       thickness,
@@ -647,10 +641,10 @@ class FreeDrawOutline extends Outline {
       innerMargin ?? this.#innerMargin
     );
     for (let i = 2; i < this.#points.length; i += 2) {
-      outliner.add({
-        x: this.#points[i] * sx + tx,
-        y: this.#points[i + 1] * sy + ty,
-      });
+      outliner.add(
+        this.#points[i] * sx + tx,
+        this.#points[i + 1] * sy + ty
+      );
     }
     return outliner.getOutlines();
   }

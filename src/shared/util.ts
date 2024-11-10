@@ -374,7 +374,7 @@ function warn(msg) {
   }
 }
 
-function unreachable(msg) {
+function unreachable(msg: string): never {
   throw new Error(msg);
 }
 

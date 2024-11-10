@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { fetchData } from "./display_utils.js";
-import { unreachable } from "../shared/util.js";
+import { fetchData } from "./display_utils";
+import { unreachable } from "../shared/util";
 
 class BaseStandardFontDataFactory {
   constructor({ baseUrl = null }) {

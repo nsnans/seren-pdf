@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { DOMSVGFactory } from "./svg_factory.js";
-import { shadow } from "../shared/util.js";
+import { DOMSVGFactory } from "./svg_factory";
+import { shadow } from "../shared/util";
 
 /**
  * Manage the SVGs drawn on top of the page canvas.
@@ -55,7 +55,7 @@ class DrawLayer {
     return shadow(this, "_svgFactory", new DOMSVGFactory());
   }
 
-  static #setBox(element, { x = 0, y = 0, width = 1, height = 1 } = {}) {
+  static #setBox(element: HTMLElement, { x = 0, y = 0, width = 1, height = 1 } = {}) {
     const { style } = element;
     style.top = `${100 * y}%`;
     style.left = `${100 * x}%`;

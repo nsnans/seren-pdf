@@ -23,14 +23,14 @@ import {
   LINE_FACTOR,
   shadow,
   Util,
-} from "../../shared/util.js";
+} from "../../shared/util";
 import {
   AnnotationEditorUIManager,
   bindEvents,
   KeyboardManager,
-} from "./tools.js";
-import { AnnotationEditor } from "./editor.js";
-import { FreeTextAnnotationElement } from "../annotation_layer.js";
+} from "./tools";
+import { AnnotationEditor } from "./editor";
+import { FreeTextAnnotationElement } from "../annotation_layer";
 
 const EOL_PATTERN = /\r\n?|\n/g;
 

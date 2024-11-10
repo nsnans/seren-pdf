@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { SVG_NS } from "./display_utils.js";
-import { unreachable } from "../shared/util.js";
+import { SVG_NS } from "./display_utils";
+import { unreachable } from "../shared/util";
 
 class BaseSVGFactory {
   constructor() {
@@ -26,7 +26,7 @@ class BaseSVGFactory {
     }
   }
 
-  create(width, height, skipDimensions = false) {
+  create(width: number, height: number, skipDimensions = false) {
     if (width <= 0 || height <= 0) {
       throw new Error("Invalid SVG dimensions");
     }

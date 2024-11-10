@@ -18,19 +18,19 @@ import {
   AnnotationEditorType,
   shadow,
   Util,
-} from "../../shared/util.js";
-import { bindEvents, KeyboardManager } from "./tools.js";
+} from "../../shared/util";
+import { bindEvents, KeyboardManager } from "./tools";
 import {
   FreeHighlightOutliner,
   HighlightOutliner,
-} from "./drawers/highlight.js";
+} from "./drawers/highlight";
 import {
   HighlightAnnotationElement,
   InkAnnotationElement,
-} from "../annotation_layer.js";
-import { AnnotationEditor } from "./editor.js";
-import { ColorPicker } from "./color_picker.js";
-import { noContextMenu } from "../display_utils.js";
+} from "../annotation_layer";
+import { AnnotationEditor } from "./editor";
+import { ColorPicker } from "./color_picker";
+import { noContextMenu } from "../display_utils";
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
@@ -270,7 +270,7 @@ class HighlightEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  translateInPage(x, y) {}
+  translateInPage(x, y) { }
 
   /** @inheritdoc */
   get toolbarPosition() {

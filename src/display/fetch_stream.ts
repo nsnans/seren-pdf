@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { AbortException, assert, warn } from "../shared/util.js";
+import { AbortException, assert, warn } from "../shared/util";
 import {
   createHeaders,
   createResponseStatusError,
   extractFilenameFromHeader,
   validateRangeRequestCapabilities,
   validateResponseStatus,
-} from "./network_utils.js";
+} from "./network_utils";
 
 if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
   throw new Error(

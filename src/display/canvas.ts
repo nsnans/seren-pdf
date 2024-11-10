@@ -26,18 +26,19 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util.js";
+} from "../shared/util";
 import {
   getCurrentTransform,
   getCurrentTransformInverse,
   PixelsPerInch,
-} from "./display_utils.js";
+} from "./display_utils";
 import {
   getShadingPattern,
   PathType,
   TilingPattern,
-} from "./pattern_helper.js";
-import { convertBlackAndWhiteToRGBA } from "../shared/image_utils.js";
+} from "./pattern_helper";
+import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
+import { BaseCanvasFactory } from "./canvas_factory";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -188,12 +189,12 @@ function mirrorContextOperations(ctx, destCtx) {
 }
 
 class CachedCanvases {
-  constructor(canvasFactory) {
+  constructor(canvasFactory: BaseCanvasFactory) {
     this.canvasFactory = canvasFactory;
     this.cache = Object.create(null);
   }
 
-  getCanvas(id, width, height) {
+  getCanvas(id, width: number, height: number) {
     let canvasEntry;
     if (this.cache[id] !== undefined) {
       canvasEntry = this.cache[id];
@@ -692,7 +693,7 @@ function putBinaryImageData(ctx, imgData) {
       }
 
       destPos = 0;
-      for (j = elemsInThisChunk; j--; ) {
+      for (j = elemsInThisChunk; j--;) {
         dest[destPos++] = src[srcPos++];
         dest[destPos++] = src[srcPos++];
         dest[destPos++] = src[srcPos++];
@@ -1161,11 +1162,11 @@ class CanvasGraphics {
       if (cachedImage && !isPatternFill) {
         const offsetX = Math.round(
           Math.min(currentTransform[0], currentTransform[2]) +
-            currentTransform[4]
+          currentTransform[4]
         );
         const offsetY = Math.round(
           Math.min(currentTransform[1], currentTransform[3]) +
-            currentTransform[5]
+          currentTransform[5]
         );
         return {
           canvas: cachedImage,
@@ -2836,11 +2837,11 @@ class CanvasGraphics {
 
       maskCtx.fillStyle = isPatternFill
         ? fillColor.getPattern(
-            maskCtx,
-            this,
-            getCurrentTransformInverse(ctx),
-            PathType.FILL
-          )
+          maskCtx,
+          this,
+          getCurrentTransformInverse(ctx),
+          PathType.FILL
+        )
         : fillColor;
       maskCtx.fillRect(0, 0, width, height);
 

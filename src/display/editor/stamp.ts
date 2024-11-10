@@ -17,10 +17,10 @@ import {
   AnnotationEditorType,
   AnnotationPrefix,
   shadow,
-} from "../../shared/util.js";
-import { OutputScale, PixelsPerInch } from "../display_utils.js";
+} from "../../shared/util";
+import { OutputScale, PixelsPerInch } from "../display_utils";
 import { AnnotationEditor } from "./editor.js";
-import { StampAnnotationElement } from "../annotation_layer.js";
+import { StampAnnotationElement } from "../annotation_layer";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
@@ -169,7 +169,7 @@ class StampEditor extends AnnotationEditor {
         // The alt-text dialog isn't opened but we still want to guess the alt
         // text.
         this.mlGuessAltText();
-      } catch {}
+      } catch { }
     }
 
     this.div.focus();
@@ -899,7 +899,7 @@ class StampEditor extends AnnotationEditor {
     context.stamps ||= new Map();
     const area = this.#isSvg
       ? (serialized.rect[2] - serialized.rect[0]) *
-        (serialized.rect[3] - serialized.rect[1])
+      (serialized.rect[3] - serialized.rect[1])
       : null;
     if (!context.stamps.has(this.#bitmapId)) {
       // We don't want to have multiple copies of the same bitmap in the

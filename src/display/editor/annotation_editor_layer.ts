@@ -25,13 +25,13 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../src/display/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
-import { AnnotationEditorType, FeatureTest } from "../../shared/util.js";
-import { AnnotationEditor } from "./editor.js";
-import { FreeTextEditor } from "./freetext.js";
-import { HighlightEditor } from "./highlight.js";
-import { InkEditor } from "./ink.js";
-import { setLayerDimensions } from "../display_utils.js";
-import { StampEditor } from "./stamp.js";
+import { AnnotationEditorType, FeatureTest } from "../../shared/util";
+import { AnnotationEditor } from "./editor";
+import { FreeTextEditor } from "./freetext";
+import { HighlightEditor } from "./highlight";
+import { InkEditor } from "./ink";
+import { setLayerDimensions } from "../display_utils";
+import { StampEditor } from "./stamp";
 
 /**
  * @typedef {Object} AnnotationEditorLayerOptions
