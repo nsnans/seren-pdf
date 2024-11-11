@@ -13,17 +13,30 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import { unreachable } from "../shared/util";
 
-abstract class BaseCanvasFactory {
+type CanvasAndContext = { canvas: HTMLCanvasElement | null, context: CanvasRenderingContext2D | null };
+
+interface CanvasFactory {
+
+  create(width: number, height: number): CanvasAndContext;
+
+  reset(canvasAndContext: CanvasAndContext, width: number, height: number): void;
+
+  destroy(canvasAndContext: CanvasAndContext): void;
+
+  _createCanvas(width: number, height: number): HTMLCanvasElement;
+
+}
+
+abstract class BaseCanvasFactory implements CanvasFactory {
+
   // 硬件加速 hardware accelerate
   #enableHWA = false;
 
   constructor({ enableHWA = false }) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseCanvasFactory
-    ) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseCanvasFactory) {
       unreachable("Cannot initialize BaseCanvasFactory.");
     }
     this.#enableHWA = enableHWA;
@@ -38,11 +51,11 @@ abstract class BaseCanvasFactory {
       canvas,
       context: canvas.getContext("2d", {
         willReadFrequently: !this.#enableHWA,
-      }),
+      })!,
     };
   }
 
-  reset(canvasAndContext, width: number, height: number) {
+  reset(canvasAndContext: CanvasAndContext, width: number, height: number) {
     if (!canvasAndContext.canvas) {
       throw new Error("Canvas is not specified");
     }
@@ -53,7 +66,7 @@ abstract class BaseCanvasFactory {
     canvasAndContext.canvas.height = height;
   }
 
-  destroy(canvasAndContext) {
+  destroy(canvasAndContext: CanvasAndContext) {
     if (!canvasAndContext.canvas) {
       throw new Error("Canvas is not specified");
     }
@@ -72,6 +85,9 @@ abstract class BaseCanvasFactory {
 }
 
 class DOMCanvasFactory extends BaseCanvasFactory {
+
+  protected _document: Document;
+
   constructor({ ownerDocument = globalThis.document, enableHWA = false }) {
     super({ enableHWA });
     this._document = ownerDocument;
@@ -89,3 +105,4 @@ class DOMCanvasFactory extends BaseCanvasFactory {
 }
 
 export { BaseCanvasFactory, DOMCanvasFactory };
+export type { CanvasFactory };

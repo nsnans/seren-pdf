@@ -391,7 +391,7 @@ class StatTimer {
   }
 }
 
-function isValidFetchUrl(url, baseUrl) {
+function isValidFetchUrl(url: string, baseUrl?: string) {
   if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
     throw new Error("Not implemented: isValidFetchUrl");
   }

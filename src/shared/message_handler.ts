@@ -69,7 +69,7 @@ function wrapReason(reason) {
 }
 
 class MessageHandler {
-  #messageAC : AbortController | null = new AbortController();
+  #messageAC: AbortController | null = new AbortController();
 
   constructor(sourceName, targetName, comObj) {
     this.sourceName = sourceName;
@@ -172,7 +172,7 @@ class MessageHandler {
    * @param {JSON} data - JSON data to send.
    * @param {Array} [transfers] - List of transfers/ArrayBuffers.
    */
-  send(actionName, data, transfers) {
+  send(actionName, data, transfers?) {
     this.comObj.postMessage(
       {
         sourceName: this.sourceName,
@@ -192,7 +192,7 @@ class MessageHandler {
    * @param {Array} [transfers] - List of transfers/ArrayBuffers.
    * @returns {Promise} Promise to be resolved with response data.
    */
-  sendWithPromise(actionName, data, transfers) {
+  sendWithPromise(actionName, data, transfers?) {
     const callbackId = this.callbackId++;
     const capability = Promise.withResolvers();
     this.callbackCapabilities[callbackId] = capability;

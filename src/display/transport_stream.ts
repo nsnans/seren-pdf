@@ -18,13 +18,15 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../interfaces").IPDFStreamRangeReader} IPDFStreamRangeReader */
 
+import { IPDFStream, IPDFStreamReader } from "../interfaces";
 import { assert } from "../shared/util";
+import { PDFDataRangeTransport } from "./api";
 import { isPdfFile } from "./display_utils";
 
 /** @implements {IPDFStream} */
-class PDFDataTransportStream {
+class PDFDataTransportStream implements IPDFStream {
   constructor(
-    pdfDataRangeTransport,
+    pdfDataRangeTransport: PDFDataRangeTransport,
     { disableRange = false, disableStream = false }
   ) {
     assert(
@@ -170,7 +172,7 @@ class PDFDataTransportStream {
 }
 
 /** @implements {IPDFStreamReader} */
-class PDFDataTransportStreamReader {
+class PDFDataTransportStreamReader implements IPDFStreamReader {
   constructor(
     stream,
     queuedChunks,

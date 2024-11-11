@@ -60,10 +60,10 @@ import {
   NodeStandardFontDataFactory,
 } from "../display/stubs";
 import { CanvasGraphics } from "./canvas";
-import { DOMCanvasFactory } from "./canvas_factory";
-import { DOMCMapReaderFactory } from "../display/cmap_reader_factory";
-import { DOMFilterFactory } from "./filter_factory";
-import { DOMStandardFontDataFactory } from "../display/standard_fontdata_factory";
+import { DOMCanvasFactory, CanvasFactory as CanvasFactory } from "./canvas_factory";
+import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
+import { DOMFilterFactory, FilterFactory } from "./filter_factory";
+import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
 import { GlobalWorkerOptions } from "./worker_options";
 import { MessageHandler } from "../shared/message_handler";
 import { Metadata } from "./metadata";
@@ -74,154 +74,224 @@ import { PDFNetworkStream } from "../display/network";
 import { PDFNodeStream } from "../display/stubs";
 import { TextLayer } from "./text_layer";
 import { XfaText } from "./xfa_text";
+import { PlatformHelper } from "../platform/platform_helper";
+import { IPDFStream } from "../interfaces";
+import { CMapFactory } from "../core/cmap";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
 const DELAYED_CLEANUP_TIMEOUT = 5000; // ms
 
-const DefaultCanvasFactory =
-  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC") && isNodeJS
-    ? NodeCanvasFactory
-    : DOMCanvasFactory;
-const DefaultCMapReaderFactory =
-  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC") && isNodeJS
-    ? NodeCMapReaderFactory
-    : DOMCMapReaderFactory;
-const DefaultFilterFactory =
-  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC") && isNodeJS
-    ? NodeFilterFactory
-    : DOMFilterFactory;
-const DefaultStandardFontDataFactory =
-  typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC") && isNodeJS
-    ? NodeStandardFontDataFactory
-    : DOMStandardFontDataFactory;
+const isGenericAndNode = PlatformHelper.isGeneric() && isNodeJS;
 
-/**
- * @typedef { Int8Array | Uint8Array | Uint8ClampedArray |
- *            Int16Array | Uint16Array |
- *            Int32Array | Uint32Array | Float32Array |
- *            Float64Array
- * } TypedArray
- */
+const DefaultCanvasFactory = isGenericAndNode ? NodeCanvasFactory : DOMCanvasFactory;
+const DefaultCMapReaderFactory = isGenericAndNode ? NodeCMapReaderFactory : DOMCMapReaderFactory;
+const DefaultFilterFactory = isGenericAndNode ? NodeFilterFactory : DOMFilterFactory;
+const DefaultStandardFontDataFactory = isGenericAndNode ? NodeStandardFontDataFactory : DOMStandardFontDataFactory;
 
-/**
- * @typedef {Object} RefProxy
- * @property {number} num
- * @property {number} gen
- */
+type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array |
+  Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
 
-/**
- * Document initialization / loading parameters object.
- *
- * @typedef {Object} DocumentInitParameters
- * @property {string | URL} [url] - The URL of the PDF.
- * @property {TypedArray | ArrayBuffer | Array<number> | string} [data] -
- *   Binary PDF data.
- *   Use TypedArrays (Uint8Array) to improve the memory usage. If PDF data is
- *   BASE64-encoded, use `atob()` to convert it to a binary string first.
- *
- *   NOTE: If TypedArrays are used they will generally be transferred to the
- *   worker-thread. This will help reduce main-thread memory usage, however
- *   it will take ownership of the TypedArrays.
- * @property {Object} [httpHeaders] - Basic authentication headers.
- * @property {boolean} [withCredentials] - Indicates whether or not
- *   cross-site Access-Control requests should be made using credentials such
- *   as cookies or authorization headers. The default is `false`.
- * @property {string} [password] - For decrypting password-protected PDFs.
- * @property {number} [length] - The PDF file length. It's used for progress
- *   reports and range requests operations.
- * @property {PDFDataRangeTransport} [range] - Allows for using a custom range
- *   transport implementation.
- * @property {number} [rangeChunkSize] - Specify maximum number of bytes fetched
- *   per range request. The default value is {@link DEFAULT_RANGE_CHUNK_SIZE}.
- * @property {PDFWorker} [worker] - The worker that will be used for loading and
- *   parsing the PDF data.
- * @property {number} [verbosity] - Controls the logging level; the constants
- *   from {@link VerbosityLevel} should be used.
- * @property {string} [docBaseUrl] - The base URL of the document, used when
- *   attempting to recover valid absolute URLs for annotations, and outline
- *   items, that (incorrectly) only specify relative URLs.
- * @property {string} [cMapUrl] - The URL where the predefined Adobe CMaps are
- *   located. Include the trailing slash.
- * @property {boolean} [cMapPacked] - Specifies if the Adobe CMaps are binary
- *   packed or not. The default value is `true`.
- * @property {Object} [CMapReaderFactory] - The factory that will be used when
- *   reading built-in CMap files. Providing a custom factory is useful for
- *   environments without Fetch API or `XMLHttpRequest` support, such as
- *   Node.js. The default value is {DOMCMapReaderFactory}.
- * @property {boolean} [useSystemFonts] - When `true`, fonts that aren't
- *   embedded in the PDF document will fallback to a system font.
- *   The default value is `true` in web environments and `false` in Node.js;
- *   unless `disableFontFace === true` in which case this defaults to `false`
- *   regardless of the environment (to prevent completely broken fonts).
- * @property {string} [standardFontDataUrl] - The URL where the standard font
- *   files are located. Include the trailing slash.
- * @property {Object} [StandardFontDataFactory] - The factory that will be used
- *   when reading the standard font files. Providing a custom factory is useful
- *   for environments without Fetch API or `XMLHttpRequest` support, such as
- *   Node.js. The default value is {DOMStandardFontDataFactory}.
- * @property {boolean} [useWorkerFetch] - Enable using the Fetch API in the
- *   worker-thread when reading CMap and standard font files. When `true`,
- *   the `CMapReaderFactory` and `StandardFontDataFactory` options are ignored.
- *   The default value is `true` in web environments and `false` in Node.js.
- * @property {boolean} [stopAtErrors] - Reject certain promises, e.g.
- *   `getOperatorList`, `getTextContent`, and `RenderTask`, when the associated
- *   PDF data cannot be successfully parsed, instead of attempting to recover
- *   whatever possible of the data. The default value is `false`.
- * @property {number} [maxImageSize] - The maximum allowed image size in total
- *   pixels, i.e. width * height. Images above this value will not be rendered.
- *   Use -1 for no limit, which is also the default value.
- * @property {boolean} [isEvalSupported] - Determines if we can evaluate strings
- *   as JavaScript. Primarily used to improve performance of PDF functions.
- *   The default value is `true`.
- * @property {boolean} [isOffscreenCanvasSupported] - Determines if we can use
- *   `OffscreenCanvas` in the worker. Primarily used to improve performance of
- *   image conversion/rendering.
- *   The default value is `true` in web environments and `false` in Node.js.
- * @property {boolean} [isChrome] - Determines if we can use bmp ImageDecoder.
- *   NOTE: Temporary option until [https://issues.chromium.org/issues/374807001]
- *   is fixed.
- * @property {number} [canvasMaxAreaInBytes] - The integer value is used to
- *   know when an image must be resized (uses `OffscreenCanvas` in the worker).
- *   If it's -1 then a possibly slow algorithm is used to guess the max value.
- * @property {boolean} [disableFontFace] - By default fonts are converted to
- *   OpenType fonts and loaded via the Font Loading API or `@font-face` rules.
- *   If disabled, fonts will be rendered using a built-in font renderer that
- *   constructs the glyphs with primitive path commands.
- *   The default value is `false` in web environments and `true` in Node.js.
- * @property {boolean} [fontExtraProperties] - Include additional properties,
- *   which are unused during rendering of PDF documents, when exporting the
- *   parsed font data from the worker-thread. This may be useful for debugging
- *   purposes (and backwards compatibility), but note that it will lead to
- *   increased memory usage. The default value is `false`.
- * @property {boolean} [enableXfa] - Render Xfa forms if any.
- *   The default value is `false`.
- * @property {HTMLDocument} [ownerDocument] - Specify an explicit document
- *   context to create elements with and to load resources, such as fonts,
- *   into. Defaults to the current document.
- * @property {boolean} [disableRange] - Disable range request loading of PDF
- *   files. When enabled, and if the server supports partial content requests,
- *   then the PDF will be fetched in chunks. The default value is `false`.
- * @property {boolean} [disableStream] - Disable streaming of PDF file data.
- *   By default PDF.js attempts to load PDF files in chunks. The default value
- *   is `false`.
- * @property {boolean} [disableAutoFetch] - Disable pre-fetching of PDF file
- *   data. When range requests are enabled PDF.js will automatically keep
- *   fetching more data even if it isn't needed to display the current page.
- *   The default value is `false`.
- *
- *   NOTE: It is also necessary to disable streaming, see above, in order for
- *   disabling of pre-fetching to work correctly.
- * @property {boolean} [pdfBug] - Enables special hooks for debugging PDF.js
- *   (see `web/debugger.js`). The default value is `false`.
- * @property {Object} [CanvasFactory] - The factory that will be used when
- *    creating canvases. The default value is {DOMCanvasFactory}.
- * @property {Object} [FilterFactory] - The factory that will be used to
- *    create SVG filters when rendering some images on the main canvas.
- *    The default value is {DOMFilterFactory}.
- * @property {boolean} [enableHWA] - Enables hardware acceleration for
- *   rendering. The default value is `false`.
- */
+type RefProxy = {
+  num: number;
+  gen: number;
+}
+
+class DocumentInitParameters {
+
+  /* The URL of the PDF */
+  url?: string | URL;
+
+  /**
+   * Binary PDF data.
+   * Use TypedArrays (Uint8Array) to improve the memory usage. If PDF data is
+   * BASE64-encoded, use `atob()` to convert it to a binary string first.
+   */
+  data?: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView;
+
+  /* Basic authentication headers */
+  httpHeaders?: object;
+
+  /** Indicates whether or not
+   * cross-site Access-Control requests should be made using credentials such
+   * as cookies or authorization headers. The default is `false`.
+   * */
+  withCredentials?: boolean;
+
+  /* For decrypting password-protected PDFs. */
+  password?: string;
+
+  /* The PDF file length. It's used for progress reports and range requests operations. */
+  length?: number;
+
+  /* Allows for using a custom range transport implementation. */
+  range?: PDFDataRangeTransport;
+
+  /** 
+   * Specify maximum number of bytes fetched per range request.
+   * The default value is {@link DEFAULT_RANGE_CHUNK_SIZE}.
+   * */
+  rangeChunkSize = DEFAULT_RANGE_CHUNK_SIZE;
+
+  /* The worker that will be used for loading and parsing the PDF data. */
+  worker?: PDFWorker;
+
+  /* Controls the logging level; the constants from {@link VerbosityLevel} should be used. */
+  verbosity?: number;
+
+  /**
+   * The base URL of the document, used when attempting to recover valid absolute URLs for annotations,
+   * and outline items, that (incorrectly) only specify relative URLs.
+   * */
+  docBaseUrl?: string;
+
+  /* The URL where the predefined Adobe CMaps are located. Include the trailing slash.*/
+  cMapUrl?: string;
+
+  /* Specifies if the Adobe CMaps are binary packed or not. The default value is `true`. */
+  cMapPacked?: boolean;
+
+  /**
+   * The factory that will be used when reading built-in CMap files. 
+   * Providing a custom factory is useful for environments without Fetch API or `XMLHttpRequest` support, 
+   * such as Node.js. The default value is {DOMCMapReaderFactory}.
+   * */
+  CMapReaderFactory: new (...args: any[]) => CMapReaderFactory = DOMCMapReaderFactory;
+
+  /** 
+   * When `true`, fonts that aren't embedded in the PDF document will fallback to a system font.
+   * The default value is `true` in web environments and `false` in Node.js;
+   * unless `disableFontFace === true` in which case this defaults to `false` 
+   * regardless of the environment (to prevent completely broken fonts).
+   * */
+  useSystemFonts?: boolean;
+
+  /* The URL where the standard font files are located. Include the trailing slash.*/
+  standardFontDataUrl?: string;
+
+  /**
+   * The factory that will be used   when reading the standard font files. 
+   * Providing a custom factory is useful for environments without Fetch API or `XMLHttpRequest` support, such as Node.js.
+   * The default value is {DOMStandardFontDataFactory}
+   * */
+  StandardFontDataFactory: new (...args: any[]) => StandardFontDataFactory = DOMStandardFontDataFactory;
+
+  /**
+   * Enable using the Fetch API in the worker-thread when reading CMap and standard font files. 
+   * When `true`,the `CMapReaderFactory` and `StandardFontDataFactory` options are ignored.
+   * The default value is `true` in web environments and `false` in Node.js.
+   * */
+  useWorkerFetch?: boolean;
+
+  /**
+   * Reject certain promises, e.g. `getOperatorList`, `getTextContent`, and `RenderTask`, 
+   * when the associated PDF data cannot be successfully parsed, instead of attempting to recover whatever possible of the data. 
+   * The default value is `false`.
+   * */
+  stopAtErrors?: boolean;
+
+  /** 
+   * The maximum allowed image size in total pixels, i.e. width * height. 
+   * Images above this value will not be rendered. Use -1 for no limit, 
+   * which is also the default value.
+   *  */
+  maxImageSize = -1;
+
+  /**
+   * Determines if we can evaluate strings
+   * as JavaScript. Primarily used to improve performance of PDF functions.
+   * The default value is `true`.
+   * */
+  isEvalSupported?: boolean;
+
+  /**
+   * Determines if we can use `OffscreenCanvas` in the worker. Primarily used to 
+   * improve performance of image conversion/rendering.
+   * The default value is `true` in web environments and `false` in Node.js.
+   * */
+  isOffscreenCanvasSupported?: boolean;
+
+  /**
+   * Determines if we can use bmp ImageDecoder.
+   * NOTE: Temporary option until [https://issues.chromium.org/issues/374807001] is fixed.
+   * */
+  isChrome?: boolean;
+
+  /**
+   * The integer value is used to know when an image must be resized (uses `OffscreenCanvas` in the worker).
+   * If it's -1 then a possibly slow algorithm is used to guess the max value.
+   * */
+  canvasMaxAreaInBytes?: number;
+
+  /** 
+   * By default fonts are converted to OpenType fonts and loaded via the Font Loading API or `@font-face` rules.
+   * If disabled, fonts will be rendered using a built-in font renderer that constructs the glyphs with primitive path commands. 
+   * The default value is `false` in web environments and `true` in Node.js.
+   * */
+  disableFontFace?: boolean;
+
+  /**
+   * Include additional properties,which are unused during rendering of PDF documents,
+   * when exporting the parsed font data from the worker-thread.
+   * This may be useful for debugging purposes (and backwards compatibility), 
+   * but note that it will lead to increased memory usage. 
+   * The default value is `false`.
+   * */
+  fontExtraProperties?: boolean;
+
+  /* Render Xfa forms if any. */
+  enableXfa?: boolean;
+
+  /**
+   * Specify an explicit document context to create elements with and to load resources, such as fonts, into.
+   * Defaults to the current document.
+   * */
+  ownerDocument?: HTMLDocument;
+
+  /**
+   * Disable range request loading of PDF files. 
+   * When enabled, and if the server supports partial content requests, then the PDF will be fetched in chunks. 
+   * The default value is `false`. 
+   * */
+  disableRange?: boolean;
+
+  /**
+   * Disable streaming of PDF file data.
+   * By default PDF.js attempts to load PDF files in chunks.
+   * The default value is `false`*/
+  disableStream?: boolean;
+
+  /** Disable pre-fetching of PDF file data.
+   * When range requests are enabled PDF.js will automatically keep fetching more data even if it isn't needed to display the current page.
+   * The default value is `false`.
+   * NOTE: It is also necessary to disable streaming, see above, in order for disabling of pre-fetching to work correctly.
+   * */
+  disableAutoFetch?: boolean;
+
+  /* Enables special hooks for debugging PDF.js (see `web/debugger.js`). The default value is `false`. */
+  pdfBug?: boolean;
+
+  /* The factory that will be used when creating canvases. The default value is {DOMCanvasFactory}.*/
+  CanvasFactory: new (...args: any[]) => CanvasFactory = DOMCanvasFactory;
+
+  @deprecated
+  canvasFactory?: Object;
+
+  /** 
+   * The factory that will be used to create SVG filters when rendering some images on the main canvas.
+   * The default value is {DOMFilterFactory}.
+   * */
+  FilterFactory: new (...args: any[]) => FilterFactory = DOMFilterFactory;
+
+  @deprecated
+  filterFactory?: Object;
+
+  /* Enables hardware acceleration for rendering. The default value is `false`.*/
+  enableHWA?: boolean;
+
+  /* Parameters only intended for development/testing purposes.*/
+  styleElement?: object;
+}
 
 /**
  * This is the main entry point for loading a PDF and interacting with it.
@@ -235,14 +305,21 @@ const DefaultStandardFontDataFactory =
  *         already populated with data, or a parameter object.
  * @returns {PDFDocumentLoadingTask}
  */
-function getDocument(src = {}) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-    if (typeof src === "string" || src instanceof URL) {
-      src = { url: src };
-    } else if (src instanceof ArrayBuffer || ArrayBuffer.isView(src)) {
-      src = { data: src };
+
+type DocumentSrcType = string | URL | Uint8Array | ArrayBuffer | DocumentInitParameters;
+
+function getDocument(options: DocumentSrcType) {
+
+  let src = new DocumentInitParameters();
+
+  if (PlatformHelper.isGeneric()) {
+    if (typeof options === "string" || options instanceof URL) {
+      src.url = options;
+    } else if (options instanceof ArrayBuffer || ArrayBuffer.isView(options)) {
+      src.data = options;
     }
   }
+
   const task = new PDFDocumentLoadingTask();
   const { docId } = task;
 
@@ -273,13 +350,14 @@ function getDocument(src = {}) {
     typeof src.standardFontDataUrl === "string"
       ? src.standardFontDataUrl
       : null;
-  const StandardFontDataFactory =
-    src.StandardFontDataFactory || DefaultStandardFontDataFactory;
+  const StandardFontDataFactory = src.StandardFontDataFactory || DefaultStandardFontDataFactory;
   const ignoreErrors = src.stopAtErrors !== true;
+
   const maxImageSize =
     Number.isInteger(src.maxImageSize) && src.maxImageSize > -1
       ? src.maxImageSize
       : -1;
+
   const isEvalSupported = src.isEvalSupported !== false;
   const isOffscreenCanvasSupported =
     typeof src.isOffscreenCanvasSupported === "boolean"
@@ -288,10 +366,10 @@ function getDocument(src = {}) {
   const isChrome =
     typeof src.isChrome === "boolean"
       ? src.isChrome
-      : (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) &&
+      : PlatformHelper.isMozCental() &&
       !FeatureTest.platform.isFirefox &&
       typeof window !== "undefined" &&
-      !!window?.chrome;
+      !!(window as any)?.chrome;
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes)
     ? src.canvasMaxAreaInBytes
     : -1;
@@ -317,7 +395,7 @@ function getDocument(src = {}) {
   const useWorkerFetch =
     typeof src.useWorkerFetch === "boolean"
       ? src.useWorkerFetch
-      : (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
+      : (PlatformHelper.isMozCental()) ||
       (CMapReaderFactory === DOMCMapReaderFactory &&
         StandardFontDataFactory === DOMStandardFontDataFactory &&
         cMapUrl &&
@@ -325,7 +403,7 @@ function getDocument(src = {}) {
         isValidFetchUrl(cMapUrl, document.baseURI) &&
         isValidFetchUrl(standardFontDataUrl, document.baseURI));
 
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
+  if (PlatformHelper.isGeneric()) {
     if (src.canvasFactory) {
       deprecated(
         "`canvasFactory`-instance option, please use `CanvasFactory` instead."
@@ -339,30 +417,22 @@ function getDocument(src = {}) {
   }
 
   // Parameters only intended for development/testing purposes.
-  const styleElement =
-    typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")
-      ? src.styleElement
-      : null;
+  const styleElement = PlatformHelper.isGeneric() ? src.styleElement : null;
 
   // Set the main-thread verbosity level.
   setVerbosityLevel(verbosity);
 
+  // 因为工厂的类型可能是多种多样的，
   // Ensure that the various factories can be initialized, when necessary,
   // since the user may provide *custom* ones.
-  const transportFactory = {
-    canvasFactory: new CanvasFactory({ ownerDocument, enableHWA }),
-    filterFactory: new FilterFactory({ docId, ownerDocument }),
-    cMapReaderFactory:
-      (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-        useWorkerFetch
-        ? null
-        : new CMapReaderFactory({ baseUrl: cMapUrl, isCompressed: cMapPacked }),
-    standardFontDataFactory:
-      (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-        useWorkerFetch
-        ? null
-        : new StandardFontDataFactory({ baseUrl: standardFontDataUrl }),
-  };
+  const transportFactory = new TransportFactory(
+    new CanvasFactory({ ownerDocument, enableHWA }),
+    new FilterFactory({ docId, ownerDocument }),
+    PlatformHelper.isMozCental() || useWorkerFetch ?
+      null : new CMapReaderFactory({ baseUrl: cMapUrl, isCompressed: cMapPacked }),
+    PlatformHelper.isMozCental() || useWorkerFetch ?
+      null : new StandardFontDataFactory({ baseUrl: standardFontDataUrl }),
+  );
 
   if (!worker) {
     const workerParams = {
@@ -379,10 +449,7 @@ function getDocument(src = {}) {
 
   const docParams = {
     docId,
-    apiVersion:
-      typeof PDFJSDev !== "undefined" && !PDFJSDev.test("TESTING")
-        ? PDFJSDev.eval("BUNDLE_VERSION")
-        : null,
+    apiVersion: PlatformHelper.isTesting() ? PlatformHelper.bundleVersion() : null,
     data,
     password,
     disableAutoFetch,
@@ -416,29 +483,29 @@ function getDocument(src = {}) {
     },
   };
 
-  worker.promise
+  worker!.promise
     .then(function () {
       if (task.destroyed) {
         throw new Error("Loading aborted");
       }
-      if (worker.destroyed) {
+      if (worker!.destroyed) {
         throw new Error("Worker was destroyed");
       }
 
-      const workerIdPromise = worker.messageHandler.sendWithPromise(
+      const workerIdPromise = worker!.messageHandler.sendWithPromise(
         "GetDocRequest",
         docParams,
         data ? [data.buffer] : null
       );
 
-      let networkStream;
+      let networkStream: IPDFStream;
       if (rangeTransport) {
         networkStream = new PDFDataTransportStream(rangeTransport, {
           disableRange,
           disableStream,
         });
       } else if (!data) {
-        if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
+        if (PlatformHelper.isMozCental()) {
           throw new Error("Not implemented: NetworkStream");
         }
         if (!url) {
@@ -446,11 +513,7 @@ function getDocument(src = {}) {
         }
         let NetworkStream;
 
-        if (
-          typeof PDFJSDev !== "undefined" &&
-          PDFJSDev.test("GENERIC") &&
-          isNodeJS
-        ) {
+        if (PlatformHelper.isGeneric() && isNodeJS) {
           const isFetchSupported =
             typeof fetch !== "undefined" &&
             typeof Response !== "undefined" &&
@@ -466,7 +529,7 @@ function getDocument(src = {}) {
             : PDFNetworkStream;
         }
 
-        networkStream = new NetworkStream({
+        networkStream = new NetworkStream!({
           url,
           length,
           httpHeaders,
@@ -481,11 +544,11 @@ function getDocument(src = {}) {
         if (task.destroyed) {
           throw new Error("Loading aborted");
         }
-        if (worker.destroyed) {
+        if (worker!.destroyed) {
           throw new Error("Worker was destroyed");
         }
 
-        const messageHandler = new MessageHandler(docId, workerId, worker.port);
+        const messageHandler = new MessageHandler(docId, workerId, worker!.port);
         const transport = new WorkerTransport(
           messageHandler,
           task,
@@ -502,8 +565,8 @@ function getDocument(src = {}) {
   return task;
 }
 
-function getUrlProp(val: URL | string) {
-  if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
+function getUrlProp(val: URL | string): string | null {
+  if (PlatformHelper.isMozCental()) {
     return null; // The 'url' is unused with `PDFDataRangeTransport`.
   }
   if (val instanceof URL) {
@@ -511,14 +574,9 @@ function getUrlProp(val: URL | string) {
   }
   try {
     // The full path is required in the 'url' field.
-    return new URL(val, window.location).href;
+    return new URL(val, window.location.href).href;
   } catch {
-    if (
-      typeof PDFJSDev !== "undefined" &&
-      PDFJSDev.test("GENERIC") &&
-      isNodeJS &&
-      typeof val === "string"
-    ) {
+    if (PlatformHelper.isGeneric() && isNodeJS && typeof val === "string") {
       return val; // Use the url as-is in Node.js environments.
     }
   }
@@ -528,13 +586,10 @@ function getUrlProp(val: URL | string) {
   );
 }
 
-function getDataProp(val) {
+function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView | Buffer) {
   // Converting string or array-like data to Uint8Array.
   if (
-    typeof PDFJSDev !== "undefined" &&
-    PDFJSDev.test("GENERIC") &&
-    isNodeJS &&
-    typeof Buffer !== "undefined" && // eslint-disable-line no-undef
+    PlatformHelper.isGeneric() && isNodeJS && typeof Buffer !== "undefined" && // eslint-disable-line no-undef
     val instanceof Buffer // eslint-disable-line no-undef
   ) {
     throw new Error(
@@ -550,12 +605,9 @@ function getDataProp(val) {
   if (typeof val === "string") {
     return stringToBytes(val);
   }
-  if (
-    val instanceof ArrayBuffer ||
-    ArrayBuffer.isView(val) ||
-    (typeof val === "object" && !isNaN(val?.length))
+  if (val instanceof ArrayBuffer || ArrayBuffer.isView(val) || (typeof val === "object" && !isNaN(val?.length))
   ) {
-    return new Uint8Array(val);
+    return new Uint8Array(val as ArrayBuffer);
   }
   throw new Error(
     "Invalid PDF binary data: either TypedArray, " +
@@ -563,7 +615,7 @@ function getDataProp(val) {
   );
 }
 
-function isRefProxy(ref) {
+function isRefProxy(ref: RefProxy) {
   return (
     typeof ref === "object" &&
     Number.isInteger(ref?.num) &&
@@ -585,10 +637,20 @@ function isRefProxy(ref) {
  * after which individual pages can be rendered.
  */
 class PDFDocumentLoadingTask {
+
   static #docId = 0;
 
+  public docId: string;
+
+  public _worker: PDFWorker | null = null;
+
+  public _capability = Promise.withResolvers();
+
+  public destroyed = false;
+
+  public _transport: WorkerTransport | null;
+
   constructor() {
-    this._capability = Promise.withResolvers();
     this._transport = null;
     this._worker = null;
 
@@ -634,7 +696,7 @@ class PDFDocumentLoadingTask {
    * @returns {Promise<void>} A promise that is resolved when destruction is
    *   completed.
    */
-  async destroy() {
+  async destroy(): Promise<void> {
     this.destroyed = true;
     try {
       if (this._worker?.port) {
@@ -663,56 +725,54 @@ class PDFDocumentLoadingTask {
  * will generally be transferred to the worker-thread. This will help reduce
  * main-thread memory usage, however it will take ownership of the TypedArrays.
  */
-class PDFDataRangeTransport {
-  /**
-   * @param {number} length
-   * @param {Uint8Array|null} initialData
-   * @param {boolean} [progressiveDone]
-   * @param {string} [contentDispositionFilename]
-   */
+abstract class PDFDataRangeTransport {
+
+  public length: number;
+
+  protected initialData: Uint8Array | null;
+
+  protected progressiveDone: boolean;
+
+  protected contentDispositionFilename: string | null;
+
+  protected _readyCapability = Promise.withResolvers();
+
+  protected _progressListeners = [] as ((loaded: number, total?: number) => void)[]
+
+  protected _rangeListeners = [] as ((begin: number, chunk: Uint8Array | null) => void)[]
+
+  protected _progressiveReadListeners = [] as ((chunk: Uint8Array | null) => void)[]
+
+  protected _progressiveDoneListeners = [] as (() => void)[];
+
   constructor(
-    length,
-    initialData,
+    length: number,
+    initialData: Uint8Array | null,
     progressiveDone = false,
-    contentDispositionFilename = null
+    contentDispositionFilename: string | null = null
   ) {
     this.length = length;
     this.initialData = initialData;
     this.progressiveDone = progressiveDone;
     this.contentDispositionFilename = contentDispositionFilename;
-
-    this._rangeListeners = [];
-    this._progressListeners = [];
-    this._progressiveReadListeners = [];
-    this._progressiveDoneListeners = [];
-    this._readyCapability = Promise.withResolvers();
   }
 
-  /**
-   * @param {function} listener
-   */
-  addRangeListener(listener) {
+  addRangeListener(listener: (begin: number, chunk: Uint8Array | null) => void) {
     this._rangeListeners.push(listener);
   }
 
-  /**
-   * @param {function} listener
-   */
-  addProgressListener(listener) {
+  addProgressListener(listener: (loaded: number, total?: number) => void) {
     this._progressListeners.push(listener);
   }
 
-  /**
-   * @param {function} listener
-   */
-  addProgressiveReadListener(listener) {
+  addProgressiveReadListener(listener: (chunk: Uint8Array | null) => void) {
     this._progressiveReadListeners.push(listener);
   }
 
   /**
    * @param {function} listener
    */
-  addProgressiveDoneListener(listener) {
+  addProgressiveDoneListener(listener: () => void) {
     this._progressiveDoneListeners.push(listener);
   }
 
@@ -720,7 +780,7 @@ class PDFDataRangeTransport {
    * @param {number} begin
    * @param {Uint8Array|null} chunk
    */
-  onDataRange(begin, chunk) {
+  onDataRange(begin: number, chunk: Uint8Array | null) {
     for (const listener of this._rangeListeners) {
       listener(begin, chunk);
     }
@@ -730,7 +790,7 @@ class PDFDataRangeTransport {
    * @param {number} loaded
    * @param {number|undefined} total
    */
-  onDataProgress(loaded, total) {
+  onDataProgress(loaded: number, total: number | undefined) {
     this._readyCapability.promise.then(() => {
       for (const listener of this._progressListeners) {
         listener(loaded, total);
@@ -741,7 +801,7 @@ class PDFDataRangeTransport {
   /**
    * @param {Uint8Array|null} chunk
    */
-  onDataProgressiveRead(chunk) {
+  onDataProgressiveRead(chunk: Uint8Array | null) {
     this._readyCapability.promise.then(() => {
       for (const listener of this._progressiveReadListeners) {
         listener(chunk);
@@ -758,16 +818,10 @@ class PDFDataRangeTransport {
   }
 
   transportReady() {
-    this._readyCapability.resolve();
+    this._readyCapability.resolve(null);
   }
 
-  /**
-   * @param {number} begin
-   * @param {number} end
-   */
-  requestDataRange(begin, end) {
-    unreachable("Abstract method PDFDataRangeTransport.requestDataRange");
-  }
+  abstract requestDataRange(_begin: number, _end: number): void;
 
   abort() { }
 }
@@ -776,28 +830,52 @@ class PDFDataRangeTransport {
  * Proxy to a `PDFDocument` in the worker thread.
  */
 class PDFDocumentProxy {
-  constructor(pdfInfo, transport) {
+
+  protected _transport: WorkerTransport;
+
+  constructor(pdfInfo, transport: WorkerTransport) {
     this._pdfInfo = pdfInfo;
     this._transport = transport;
+  }
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
-      // For testing purposes.
-      Object.defineProperty(this, "getNetworkStreamName", {
-        value: () => this._transport.getNetworkStreamName(),
-      });
-      Object.defineProperty(this, "getXFADatasets", {
-        value: () => this._transport.getXFADatasets(),
-      });
-      Object.defineProperty(this, "getXRefPrevValue", {
-        value: () => this._transport.getXRefPrevValue(),
-      });
-      Object.defineProperty(this, "getStartXRefPos", {
-        value: () => this._transport.getStartXRefPos(),
-      });
-      Object.defineProperty(this, "getAnnotArray", {
-        value: pageIndex => this._transport.getAnnotArray(pageIndex),
-      });
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getNetworkStreamName() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
     }
+    return this._transport.getNetworkStreamName();
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getXFADatasets() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this._transport.getXFADatasets();
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getXRefPrevValue() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this._transport.getXRefPrevValue();
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getStartXRefPos() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this._transport.getStartXRefPos();
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getAnnotArray(pageIndex: number) {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this._transport.getAnnotArray(pageIndex);
   }
 
   /**
@@ -860,7 +938,7 @@ class PDFDocumentProxy {
    * @returns {Promise<PDFPageProxy>} A promise that is resolved with
    *   a {@link PDFPageProxy} object.
    */
-  getPage(pageNumber) {
+  getPage(pageNumber: number): Promise<PDFPageProxy> {
     return this._transport.getPage(pageNumber);
   }
 
@@ -869,7 +947,7 @@ class PDFDocumentProxy {
    * @returns {Promise<number>} A promise that is resolved with the page index,
    *   starting from zero, that is associated with the reference.
    */
-  getPageIndex(ref) {
+  getPageIndex(ref: RefProxy) {
     return this._transport.getPageIndex(ref);
   }
 
@@ -889,7 +967,7 @@ class PDFDocumentProxy {
    *   information of the given named destination, or `null` when the named
    *   destination is not present in the PDF file.
    */
-  getDestination(id) {
+  getDestination(id: string) {
     return this._transport.getDestination(id);
   }
 
@@ -1090,7 +1168,7 @@ class PDFDocumentProxy {
    * @param {RefProxy} ref - The page reference.
    * @returns {number | null} The page number, if it's cached.
    */
-  cachedPageNumber(ref) {
+  cachedPageNumber(ref: RefProxy) {
     return this._transport.cachedPageNumber(ref);
   }
 
@@ -2079,6 +2157,10 @@ class PDFWorker {
 
   static #workerPorts;
 
+  public destroyed = false;
+
+  public _pendingDestroy?: boolean;
+
   static {
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
       if (isNodeJS) {
@@ -2125,7 +2207,7 @@ class PDFWorker {
     verbosity = getVerbosityLevel(),
   } = {}) {
     this.name = name;
-    this.destroyed = false;
+
     this.verbosity = verbosity;
 
     this._readyCapability = Promise.withResolvers();
@@ -2413,11 +2495,32 @@ class PDFWorker {
   }
 }
 
+class TransportFactory {
+
+  canvasFactory: CanvasFactory;
+
+  filterFactory: FilterFactory;
+
+  cMapReaderFactory: CMapReaderFactory | null;
+
+  standardFontDataFactory: StandardFontDataFactory | null;
+
+  constructor(canvasFactory: CanvasFactory, filterFactory: FilterFactory,
+    cMapReaderFactory: CMapReaderFactory | null,
+    standardFontDataFactory: StandardFontDataFactory | null) {
+    this.canvasFactory = canvasFactory;
+    this.filterFactory = filterFactory;
+    this.cMapReaderFactory = cMapReaderFactory;
+    this.standardFontDataFactory = standardFontDataFactory;
+  }
+}
+
 /**
  * For internal use only.
  * @ignore
  */
 class WorkerTransport {
+
   #methodPromises = new Map();
 
   #pageCache = new Map();
@@ -2434,9 +2537,24 @@ class WorkerTransport {
 
   protected fontLoader: FontLoader;
 
-  protected downloadInfoCapability = Promise.withResolvers();
+  public downloadInfoCapability = Promise.withResolvers();
 
-  constructor(messageHandler: MessageHandler, loadingTask, networkStream, params, factory) {
+  protected _networkStream: IPDFStream;
+
+  protected loadingTask: PDFDocumentLoadingTask;
+
+  public canvasFactory: CanvasFactory;
+
+  public filterFactory: FilterFactory;
+
+  protected cMapReaderFactory: CMapReaderFactory | null;
+
+  protected standardFontDataFactory: StandardFontDataFactory | null;
+
+  protected destroyed: boolean;
+
+  constructor(messageHandler: MessageHandler, loadingTask: PDFDocumentLoadingTask,
+    networkStream: IPDFStream, params, factory: TransportFactory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.fontLoader = new FontLoader({
@@ -2459,29 +2577,43 @@ class WorkerTransport {
     this._lastProgress = null;
 
     this.setupMessageHandler();
+  }
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
-      // For testing purposes.
-      Object.defineProperty(this, "getNetworkStreamName", {
-        value: () => networkStream?.constructor?.name || null,
-      });
-      Object.defineProperty(this, "getXFADatasets", {
-        value: () =>
-          this.messageHandler.sendWithPromise("GetXFADatasets", null),
-      });
-      Object.defineProperty(this, "getXRefPrevValue", {
-        value: () =>
-          this.messageHandler.sendWithPromise("GetXRefPrevValue", null),
-      });
-      Object.defineProperty(this, "getStartXRefPos", {
-        value: () =>
-          this.messageHandler.sendWithPromise("GetStartXRefPos", null),
-      });
-      Object.defineProperty(this, "getAnnotArray", {
-        value: pageIndex =>
-          this.messageHandler.sendWithPromise("GetAnnotArray", { pageIndex }),
-      });
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getNetworkStreamName() {
+    return this._networkStream?.constructor?.name || null;
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getXFADatasets() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
     }
+    return this.messageHandler.sendWithPromise("GetXFADatasets", null);
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getXRefPrevValue() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this.messageHandler.sendWithPromise("GetXRefPrevValue", null)
+  }
+
+  /* 为测试环境添加的方法，正式环境中不应当调用 */
+  getStartXRefPos() {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this.messageHandler.sendWithPromise("GetStartXRefPos", null);
+  }
+
+  getAnnotArray(pageIndex: number) {
+    if (!PlatformHelper.isTesting()) {
+      throw new Error("该方法只有在测试环境下可以调用");
+    }
+    return this.messageHandler.sendWithPromise("GetAnnotArray", { pageIndex });
   }
 
   #cacheSimpleMethod(name, data = null) {
@@ -3036,7 +3168,7 @@ class WorkerTransport {
     return promise;
   }
 
-  getPageIndex(ref) {
+  getPageIndex(ref: RefProxy) {
     if (!isRefProxy(ref)) {
       return Promise.reject(new Error("Invalid pageIndex request."));
     }
@@ -3178,7 +3310,7 @@ class WorkerTransport {
     TextLayer.cleanup();
   }
 
-  cachedPageNumber(ref) {
+  cachedPageNumber(ref: RefProxy) {
     if (!isRefProxy(ref)) {
       return null;
     }

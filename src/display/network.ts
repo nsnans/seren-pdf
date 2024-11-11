@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { IPDFStream } from "../interfaces.js";
 import { assert, stringToBytes } from "../shared/util";
 import {
   createHeaders,
@@ -188,7 +189,7 @@ class NetworkManager {
 }
 
 /** @implements {IPDFStream} */
-class PDFNetworkStream {
+class PDFNetworkStream implements IPDFStream {
   constructor(source) {
     this._source = source;
     this._manager = new NetworkManager(source);

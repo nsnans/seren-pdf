@@ -15,13 +15,27 @@
 
 import { getRGB, isDataScheme, SVG_NS } from "./display_utils";
 import { unreachable, Util, warn } from "../shared/util";
+import { PlatformHelper } from "../platform/platform_helper";
 
-class BaseFilterFactory {
+interface FilterFactory {
+
+  addFilter(maps): string;
+
+  addHCMFilter(fgColor, bgColor): string;
+
+  addAlphaFilter(map): string;
+
+  addLuminosityFilter(map): string;
+
+  addHighlightHCMFilter(filterName, fgColor, bgColor, newFgColor, newBgColor): string;
+
+  destroy(keepHCM: boolean): void
+}
+
+class BaseFilterFactory implements FilterFactory {
+
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseFilterFactory
-    ) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseFilterFactory) {
       unreachable("Cannot initialize BaseFilterFactory.");
     }
   }
@@ -506,3 +520,5 @@ class DOMFilterFactory extends BaseFilterFactory {
 }
 
 export { BaseFilterFactory, DOMFilterFactory };
+
+export type { FilterFactory }

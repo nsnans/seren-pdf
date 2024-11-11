@@ -13,15 +13,27 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import { stringToBytes, unreachable } from "../shared/util";
 import { fetchData } from "./display_utils";
 
-abstract class BaseCMapReaderFactory {
-  constructor({ baseUrl = null, isCompressed = true }) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseCMapReaderFactory
-    ) {
+type BaseCMapReaderFactoryOption = {
+  baseUrl: string | null,
+  isCompressed: boolean
+}
+
+interface CMapReaderFactory {
+
+}
+
+abstract class BaseCMapReaderFactory implements CMapReaderFactory {
+
+  protected baseUrl: string | null;
+
+  protected isCompressed: boolean;
+
+  constructor({ baseUrl = null, isCompressed = true }: BaseCMapReaderFactoryOption) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseCMapReaderFactory) {
       unreachable("Cannot initialize BaseCMapReaderFactory.");
     }
     this.baseUrl = baseUrl;
@@ -71,3 +83,4 @@ class DOMCMapReaderFactory extends BaseCMapReaderFactory {
 }
 
 export { BaseCMapReaderFactory, DOMCMapReaderFactory };
+export type { CMapReaderFactory }

@@ -15,13 +15,18 @@
 
 import { fetchData } from "./display_utils";
 import { unreachable } from "../shared/util";
+import { PlatformHelper } from "../platform/platform_helper";
 
-class BaseStandardFontDataFactory {
-  constructor({ baseUrl = null }) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseStandardFontDataFactory
-    ) {
+interface StandardFontDataFactory {
+
+}
+
+class BaseStandardFontDataFactory implements StandardFontDataFactory {
+
+  protected baseUrl: string | null;
+
+  constructor({ baseUrl = null }: { baseUrl: string | null }) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseStandardFontDataFactory) {
       unreachable("Cannot initialize BaseStandardFontDataFactory.");
     }
     this.baseUrl = baseUrl;
@@ -63,3 +68,4 @@ class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
 }
 
 export { BaseStandardFontDataFactory, DOMStandardFontDataFactory };
+export type { StandardFontDataFactory }
