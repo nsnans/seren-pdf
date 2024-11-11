@@ -19,7 +19,7 @@ import { XFAObject } from "./xfa_object";
 const SIGNATURE_NS_ID = NamespaceIds.signature.id;
 
 class Signature extends XFAObject {
-  constructor(attributes) {
+  constructor() {
     super(SIGNATURE_NS_ID, "signature", /* hasChildren = */ true);
   }
 }

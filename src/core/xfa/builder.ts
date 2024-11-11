@@ -23,12 +23,12 @@ import {
   $onChild,
   $resolvePrototypes,
   $root,
-} from "./symbol_utils.js";
-import { NamespaceSetUp } from "./setup.js";
-import { Template } from "./template.js";
-import { UnknownNamespace } from "./unknown.js";
-import { warn } from "../../shared/util.js";
-import { XFAObject } from "./xfa_object.js";
+} from "./symbol_utils";
+import { NamespaceSetUp } from "./setup";
+import { Template } from "./template";
+import { UnknownNamespace } from "./unknown";
+import { warn } from "../../shared/util";
+import { XFAObject } from "./xfa_object";
 
 class Root extends XFAObject {
   constructor(ids) {

@@ -150,6 +150,9 @@ const Singletons = (function () {
 })();
 
 class Lexer {
+
+  protected pos = 0;
+
   constructor(data) {
     this.data = data;
     this.pos = 0;

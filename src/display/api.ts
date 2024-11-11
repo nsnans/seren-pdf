@@ -1321,7 +1321,25 @@ class PDFPageProxy {
 
   #pendingCleanup = false;
 
-  constructor(pageIndex, pageInfo, transport, pdfBug = false) {
+  protected _pageIndex: number;
+
+  protected _pdfBug: boolean;
+
+  protected _stats: StatTimer | null;
+
+  protected objs: PDFObjects = new PDFObjects();
+
+  protected _maybeCleanupAfterRender: boolean = false;
+
+  protected _intentStates = new Map();
+
+  protected destroyed = false;
+
+  protected _transport: WorkerTransport;
+
+  protected commonObjs: PDFObjects;
+
+  constructor(pageIndex: number, pageInfo, transport: WorkerTransport, pdfBug = false) {
     this._pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
@@ -1331,9 +1349,6 @@ class PDFPageProxy {
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
 
-    this._maybeCleanupAfterRender = false;
-    this._intentStates = new Map();
-    this.destroyed = false;
   }
 
   /**
@@ -2413,10 +2428,17 @@ class WorkerTransport {
 
   #passwordCapability = null;
 
-  constructor(messageHandler, loadingTask, networkStream, params, factory) {
+  protected messageHandler: MessageHandler;
+
+  public commonObjs = new PDFObjects();
+
+  protected fontLoader: FontLoader;
+
+  protected downloadInfoCapability = Promise.withResolvers();
+
+  constructor(messageHandler: MessageHandler, loadingTask, networkStream, params, factory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
-    this.commonObjs = new PDFObjects();
     this.fontLoader = new FontLoader({
       ownerDocument: params.ownerDocument,
       styleElement: params.styleElement,
@@ -2435,7 +2457,6 @@ class WorkerTransport {
     this._networkStream = networkStream;
     this._fullReader = null;
     this._lastProgress = null;
-    this.downloadInfoCapability = Promise.withResolvers();
 
     this.setupMessageHandler();
 

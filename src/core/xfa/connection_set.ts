@@ -19,11 +19,15 @@ import { StringObject, XFAObject, XFAObjectArray } from "./xfa_object";
 const CONNECTION_SET_NS_ID = NamespaceIds.connectionSet.id;
 
 class ConnectionSet extends XFAObject {
-  constructor(attributes) {
+
+  protected wsdlConnection = new XFAObjectArray();
+  
+  protected xmlConnection = new XFAObjectArray();
+
+  protected xsdConnection = new XFAObjectArray();
+
+  constructor() {
     super(CONNECTION_SET_NS_ID, "connectionSet", /* hasChildren = */ true);
-    this.wsdlConnection = new XFAObjectArray();
-    this.xmlConnection = new XFAObjectArray();
-    this.xsdConnection = new XFAObjectArray();
   }
 }
 

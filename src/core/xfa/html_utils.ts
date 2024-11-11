@@ -31,7 +31,7 @@ import { selectFont } from "./fonts";
 import { TextMeasure } from "./text";
 import { XFAObject } from "./xfa_object";
 
-function measureToString(m) {
+function measureToString(m: number | string) {
   if (typeof m === "string") {
     return "0px";
   }

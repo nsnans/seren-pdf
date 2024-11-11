@@ -25,13 +25,17 @@ import { getInteger, getStringOption } from "./utils";
 const LOCALE_SET_NS_ID = NamespaceIds.localeSet.id;
 
 class CalendarSymbols extends XFAObject {
+
+  protected dayNames = new XFAObjectArray(2);
+
+  protected monthNames = new XFAObjectArray(2);
+
+  protected name = "gregorian";
+
   constructor(attributes) {
     super(LOCALE_SET_NS_ID, "calendarSymbols", /* hasChildren = */ true);
-    this.name = "gregorian";
-    this.dayNames = new XFAObjectArray(2);
     this.eraNames = null;
     this.meridiemNames = null;
-    this.monthNames = new XFAObjectArray(2);
   }
 }
 

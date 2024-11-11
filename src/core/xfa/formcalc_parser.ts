@@ -137,20 +137,20 @@ const Operators = {
     prec: 2,
     assoc: RTL,
     repr: "!",
-    op: x => (!x ? 1 : 0),
+    op: (x: number) => (!x ? 1 : 0),
   },
 
-  mul: { id: 7, nargs: 2, prec: 3, assoc: LTR, repr: "*", op: (x, y) => x * y },
-  div: { id: 8, nargs: 2, prec: 3, assoc: LTR, repr: "/", op: (x, y) => x / y },
+  mul: { id: 7, nargs: 2, prec: 3, assoc: LTR, repr: "*", op: (x: number, y: number) => x * y },
+  div: { id: 8, nargs: 2, prec: 3, assoc: LTR, repr: "/", op: (x: number, y: number) => x / y },
 
-  add: { id: 9, nargs: 2, prec: 4, assoc: LTR, repr: "+", op: (x, y) => x + y },
+  add: { id: 9, nargs: 2, prec: 4, assoc: LTR, repr: "+", op: (x: number, y: number) => x + y },
   sub: {
     id: 10,
     nargs: 2,
     prec: 4,
     assoc: LTR,
     repr: "-",
-    op: (x, y) => x - y,
+    op: (x: number, y: number) => x - y,
   },
 
   lt: {
@@ -159,7 +159,7 @@ const Operators = {
     prec: 5,
     assoc: LTR,
     repr: "<",
-    op: (x, y) => (x < y ? 1 : 0),
+    op: (x: number, y: number) => (x < y ? 1 : 0),
   },
   le: {
     id: 12,
@@ -167,7 +167,7 @@ const Operators = {
     prec: 5,
     assoc: LTR,
     repr: "<=",
-    op: (x, y) => (x <= y ? 1 : 0),
+    op: (x: number, y: number) => (x <= y ? 1 : 0),
   },
   gt: {
     id: 13,
@@ -175,7 +175,7 @@ const Operators = {
     prec: 5,
     assoc: LTR,
     repr: ">",
-    op: (x, y) => (x > y ? 1 : 0),
+    op: (x: number, y: number) => (x > y ? 1 : 0),
   },
   ge: {
     id: 14,
@@ -183,7 +183,7 @@ const Operators = {
     prec: 5,
     assoc: LTR,
     repr: ">=",
-    op: (x, y) => (x >= y ? 1 : 0),
+    op: (x: number, y: number) => (x >= y ? 1 : 0),
   },
 
   eq: {
@@ -192,7 +192,7 @@ const Operators = {
     prec: 6,
     assoc: LTR,
     repr: "===",
-    op: (x, y) => (x === y ? 1 : 0),
+    op: (x: number, y: number) => (x === y ? 1 : 0),
   },
   ne: {
     id: 16,
@@ -200,7 +200,7 @@ const Operators = {
     prec: 6,
     assoc: LTR,
     repr: "!==",
-    op: (x, y) => (x !== y ? 1 : 0),
+    op: (x: number, y: number) => (x !== y ? 1 : 0),
   },
 
   and: {
@@ -209,7 +209,7 @@ const Operators = {
     prec: 7,
     assoc: LTR,
     repr: "&&",
-    op: (x, y) => (x && y ? 1 : 0),
+    op: (x: number, y: number) => (x && y ? 1 : 0),
   },
 
   or: {
@@ -218,7 +218,7 @@ const Operators = {
     prec: 8,
     assoc: LTR,
     repr: "||",
-    op: (x, y) => (x || y ? 1 : 0),
+    op: (x: number, y: number) => (x || y ? 1 : 0),
   },
 
   // Not real operators.

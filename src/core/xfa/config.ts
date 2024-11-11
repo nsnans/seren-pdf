@@ -24,9 +24,9 @@ import {
   StringObject,
   XFAObject,
   XFAObjectArray,
-} from "./xfa_object.js";
-import { getInteger, getStringOption } from "./utils.js";
-import { shadow, warn } from "../../shared/util.js";
+} from "./xfa_object";
+import { getInteger, getStringOption } from "./utils";
+import { shadow, warn } from "../../shared/util";
 
 const CONFIG_NS_ID = NamespaceIds.config.id;
 

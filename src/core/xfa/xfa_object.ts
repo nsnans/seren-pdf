@@ -102,7 +102,7 @@ let uid = 0;
 const NS_DATASETS = NamespaceIds.datasets.id;
 
 class XFAObject {
-  constructor(nsId, name, hasChildren = false) {
+  constructor(nsId: number, name: string, hasChildren = false) {
     this[$namespaceId] = nsId;
     this[$nodeName] = name;
     this[_hasChildren] = hasChildren;

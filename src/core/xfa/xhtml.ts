@@ -194,7 +194,7 @@ function checkStyle(node) {
   return node.style
     .trim()
     .split(/\s*;\s*/)
-    .filter(s => !!s)
+    .filter((s:string) => !!s)
     .map(s => s.split(/\s*:\s*/, 2))
     .filter(([key, value]) => {
       if (key === "font-family") {
