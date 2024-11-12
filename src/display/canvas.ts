@@ -38,7 +38,7 @@ import {
   TilingPattern,
 } from "./pattern_helper";
 import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
-import { BaseCanvasFactory } from "./canvas_factory";
+import { BaseCanvasFactory, CanvasFactory } from "./canvas_factory";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -189,6 +189,11 @@ function mirrorContextOperations(ctx, destCtx) {
 }
 
 class CachedCanvases {
+
+  protected canvasFactory: CanvasFactory;
+
+  protected cache: Record<string, any>;
+
   constructor(canvasFactory: BaseCanvasFactory) {
     this.canvasFactory = canvasFactory;
     this.cache = Object.create(null);

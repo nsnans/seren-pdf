@@ -71,6 +71,7 @@ import { OperatorList } from "./operator_list";
 import { writeObject } from "./writer";
 import { XFAFactory } from "./xfa/factory";
 import { PDFManager } from "./pdf_manager";
+import { XRef } from "./xref";
 
 class AnnotationFactory {
   static createGlobals(pdfManager: PDFManager) {
@@ -119,11 +120,11 @@ class AnnotationFactory {
    *   instance.
    */
   static async create(
-    xref,
+    xref: XRef,
     ref,
     annotationGlobals,
     idFactory,
-    collectFields,
+    collectFields : boolean,
     orphanFields,
     pageRef
   ) {

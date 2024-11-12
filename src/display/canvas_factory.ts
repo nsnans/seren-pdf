@@ -18,7 +18,7 @@ import { unreachable } from "../shared/util";
 
 type CanvasAndContext = { canvas: HTMLCanvasElement | null, context: CanvasRenderingContext2D | null };
 
-interface CanvasFactory {
+export interface CanvasFactory {
 
   create(width: number, height: number): CanvasAndContext;
 
@@ -30,7 +30,7 @@ interface CanvasFactory {
 
 }
 
-abstract class BaseCanvasFactory implements CanvasFactory {
+export abstract class BaseCanvasFactory implements CanvasFactory {
 
   // 硬件加速 hardware accelerate
   #enableHWA = false;
@@ -84,7 +84,7 @@ abstract class BaseCanvasFactory implements CanvasFactory {
   abstract _createCanvas(width: number, height: number): HTMLCanvasElement;
 }
 
-class DOMCanvasFactory extends BaseCanvasFactory {
+export class DOMCanvasFactory extends BaseCanvasFactory {
 
   protected _document: Document;
 
@@ -104,5 +104,3 @@ class DOMCanvasFactory extends BaseCanvasFactory {
   }
 }
 
-export { BaseCanvasFactory, DOMCanvasFactory };
-export type { CanvasFactory };

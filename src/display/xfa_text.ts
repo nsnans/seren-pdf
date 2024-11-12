@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { TextContent, TextItem, TextMarkedContent } from "./api";
+
 /** @typedef {import("./api").TextContent} TextContent */
 
 class XfaText {
@@ -26,11 +28,12 @@ class XfaText {
    * @returns {TextContent}
    */
   static textContent(xfa) {
-    const items = [];
+    const items = new Array<TextItem | TextMarkedContent>();
     const output = {
       items,
       styles: Object.create(null),
-    };
+    } as TextContent;
+    
     function walk(node) {
       if (!node) {
         return;

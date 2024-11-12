@@ -22,11 +22,12 @@ type BaseCMapReaderFactoryOption = {
   isCompressed: boolean
 }
 
-interface CMapReaderFactory {
+export interface CMapReaderFactory {
 
+  _fetch(url: string): Promise<Uint8Array>;
 }
 
-abstract class BaseCMapReaderFactory implements CMapReaderFactory {
+export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
 
   protected baseUrl: string | null;
 
@@ -39,6 +40,7 @@ abstract class BaseCMapReaderFactory implements CMapReaderFactory {
     this.baseUrl = baseUrl;
     this.isCompressed = isCompressed;
   }
+
 
   async fetch({ name }) {
     if (!this.baseUrl) {
@@ -60,14 +62,10 @@ abstract class BaseCMapReaderFactory implements CMapReaderFactory {
       });
   }
 
-  /**
-   * @ignore
-   * @returns {Promise<Uint8Array>}
-   */
-  abstract _fetch(url): Promise<void>;
+  abstract _fetch(url: any): Promise<Uint8Array>;
 }
 
-class DOMCMapReaderFactory extends BaseCMapReaderFactory {
+export class DOMCMapReaderFactory extends BaseCMapReaderFactory {
   /**
    * @ignore
    */
@@ -82,5 +80,3 @@ class DOMCMapReaderFactory extends BaseCMapReaderFactory {
   }
 }
 
-export { BaseCMapReaderFactory, DOMCMapReaderFactory };
-export type { CMapReaderFactory }

@@ -14,6 +14,7 @@
  */
 
 import { IPDFStream } from "../interfaces.js";
+import { PlatformHelper } from "../platform/platform_helper.js";
 import { assert, stringToBytes } from "../shared/util";
 import {
   createHeaders,
@@ -22,7 +23,7 @@ import {
   validateRangeRequestCapabilities,
 } from "./network_utils.js";
 
-if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
+if (PlatformHelper.isMozCental()) {
   throw new Error(
     'Module "./network.js" shall not be used with MOZCENTRAL builds.'
   );

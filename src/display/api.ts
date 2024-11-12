@@ -622,7 +622,7 @@ function isRefProxy(ref: RefProxy) {
  * @property {number} loaded - Currently loaded number of bytes.
  * @property {number} total - Total number of bytes in the PDF file.
  */
-interface OnProgressParameters {
+export interface OnProgressParameters {
   loaded: number;
   total?: number;
 }
@@ -1250,7 +1250,7 @@ interface GetTextContentParameters {
 /**
  * Page text content part.
  */
-interface TextItem {
+export interface TextItem {
 
   /** Text content.*/
   str: string;
@@ -1277,7 +1277,7 @@ interface TextItem {
 /**
  * Page text marked content part.
  */
-interface TextMarkedContent {
+export interface TextMarkedContent {
 
   /** Either 'beginMarkedContent', 'beginMarkedContentProps', or 'endMarkedContent'. */
   type: string;
@@ -1290,7 +1290,7 @@ interface TextMarkedContent {
 /**
  * Text style.
  */
-interface TextStyle {
+export interface TextStyle {
 
   /** Font ascent.*/
   ascent: number;
@@ -1309,7 +1309,7 @@ interface TextStyle {
 /**
  * Page text content.
  */
-interface TextContent {
+export interface TextContent {
   /**
    * Array of {@link TextItem} and {@link TextMarkedContent} objects. 
    * TextMarkedContent items are included when includeMarkedContent is true.
@@ -3875,12 +3875,11 @@ class InternalRenderTask {
   }
 }
 
-const version: string = PlatformHelper.bundleVersion();
+export const version: string = PlatformHelper.bundleVersion();
 
-const build: string = PlatformHelper.bundleBuild();
+export const build: string = PlatformHelper.bundleBuild();
 
 export {
-  build,
   DefaultCanvasFactory,
   DefaultCMapReaderFactory,
   DefaultFilterFactory,
@@ -3893,9 +3892,4 @@ export {
   PDFPageProxy,
   PDFWorker,
   RenderTask,
-  version,
 };
-
-export type {
-  OnProgressParameters
-}

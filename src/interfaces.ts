@@ -21,7 +21,7 @@ import { OnProgressParameters } from "./display/api";
  *
  * @interface
  */
-interface IPDFStream {
+export interface IPDFStream {
   /**
    * Gets a reader for the entire PDF data.
    * @returns {IPDFStreamReader}
@@ -34,13 +34,13 @@ interface IPDFStream {
    * @param {number} end - the end offset of the data.
    * @returns {IPDFStreamRangeReader}
    */
-  getRangeReader(begin: number, end: number): IPDFStreamRangeReader;
+  getRangeReader(begin: number, end: number): IPDFStreamRangeReader | null;
 
   /**
    * Cancels all opened reader and closes all their opened requests.
    * @param {Object} reason - the reason for cancelling
    */
-  cancelAllRequests(reason): void;
+  cancelAllRequests(reason: Error): void;
 }
 
 /**
@@ -48,7 +48,7 @@ interface IPDFStream {
  *
  * @interface
  */
-interface IPDFStreamReader {
+export interface IPDFStreamReader {
 
   /**
      * Sets or gets the progress callback. The callback can be useful when the
@@ -56,7 +56,7 @@ interface IPDFStreamReader {
      * The callback is called with one parameter: an object with the loaded and
      * total properties.
      */
-  onProgress: (evt: OnProgressParameters) => void | null;
+  onProgress: ((evt: OnProgressParameters) => void) | null;
 
   /**
    * Gets a promise that is resolved when the headers and other metadata of
@@ -117,24 +117,20 @@ interface IPDFStreamReader {
  *
  * @interface
  */
-class IPDFStreamRangeReader {
-  constructor() {
-    /**
-     * Sets or gets the progress callback. The callback can be useful when the
-     * isStreamingSupported property of the object is defined as false.
-     * The callback is called with one parameter: an object with the loaded
-     * property.
-     */
-    this.onProgress = null;
-  }
+export interface IPDFStreamRangeReader {
+  /**
+   * Sets or gets the progress callback. The callback can be useful when the
+   * isStreamingSupported property of the object is defined as false.
+   * The callback is called with one parameter: an object with the loaded
+   * property.
+   */
+  onProgress: ((evt: OnProgressParameters) => void) | null;
 
   /**
    * Gets ability of the stream to progressively load binary data.
    * @type {boolean}
    */
-  get isStreamingSupported() {
-    return false;
-  }
+  get isStreamingSupported(): boolean;
 
   /**
    * Requests a chunk of the binary data. The method returns the promise, which
@@ -144,14 +140,12 @@ class IPDFStreamRangeReader {
    * set to true.
    * @returns {Promise}
    */
-  async read() { }
+  read(): Promise<unknown>;
 
   /**
    * Cancels all pending read requests and closes the stream.
    * @param {Object} reason
    */
-  cancel(reason) { }
+  cancel(reason: Error): void;
 }
-
-export { IPDFStreamRangeReader, IPDFStreamReader }; export type { IPDFStream };
 

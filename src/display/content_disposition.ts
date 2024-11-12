@@ -28,11 +28,11 @@ import { stringToBytes } from "../shared/util";
  * @param {string} contentDisposition
  * @returns {string} Filename, if found in the Content-Disposition header.
  */
-function getFilenameFromContentDispositionHeader(contentDisposition) {
+function getFilenameFromContentDispositionHeader(contentDisposition: string): string {
   let needsEncodingFixup = true;
 
   // filename*=ext-value ("ext-value" from RFC 5987, referenced by RFC 6266).
-  let tmp = toParamRegExp("filename\\*", "i").exec(contentDisposition);
+  let tmp: RegExpExecArray | string | null = toParamRegExp("filename\\*", "i").exec(contentDisposition);
   if (tmp) {
     tmp = tmp[1];
     let filename = rfc2616unquote(tmp);
@@ -64,18 +64,18 @@ function getFilenameFromContentDispositionHeader(contentDisposition) {
   // After this line there are only function declarations. We cannot put
   // "return" here for readability because babel would then drop the function
   // declarations...
-  function toParamRegExp(attributePattern, flags) {
+  function toParamRegExp(attributePattern: string, flags: string) {
     return new RegExp(
       "(?:^|;)\\s*" +
-        attributePattern +
-        "\\s*=\\s*" +
-        // Captures: value = token | quoted-string
-        // (RFC 2616, section 3.6 and referenced by RFC 6266 4.1)
-        "(" +
-        '[^";\\s][^;\\s]*' +
-        "|" +
-        '"(?:[^"\\\\]|\\\\"?)+"?' +
-        ")",
+      attributePattern +
+      "\\s*=\\s*" +
+      // Captures: value = token | quoted-string
+      // (RFC 2616, section 3.6 and referenced by RFC 6266 4.1)
+      "(" +
+      '[^";\\s][^;\\s]*' +
+      "|" +
+      '"(?:[^"\\\\]|\\\\"?)+"?' +
+      ")",
       flags
     );
   }
@@ -207,7 +207,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition) {
         } // else encoding is b or B - base64 (RFC 2047 section 4.1)
         try {
           text = atob(text);
-        } catch {}
+        } catch { }
         return textdecode(charset, text);
       }
     );

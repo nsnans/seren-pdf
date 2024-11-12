@@ -350,7 +350,7 @@ const PasswordResponses = {
 
 let verbosity = VerbosityLevel.WARNINGS;
 
-function setVerbosityLevel(level) {
+function setVerbosityLevel(level: number) {
   if (Number.isInteger(level)) {
     verbosity = level;
   }
@@ -363,14 +363,14 @@ function getVerbosityLevel() {
 // A notice for devs. These are good for things that are helpful to devs, such
 // as warning that Workers were disabled, which is important to devs but not
 // end users.
-function info(msg) {
+function info(msg: string) {
   if (verbosity >= VerbosityLevel.INFOS) {
     console.log(`Info: ${msg}`);
   }
 }
 
 // Non-fatal warnings.
-function warn(msg) {
+function warn(msg: string) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log(`Warning: ${msg}`);
   }
@@ -380,14 +380,14 @@ function unreachable(msg: string): never {
   throw new Error(msg);
 }
 
-function assert(cond, msg) {
+function assert(cond: boolean, msg: string) {
   if (!cond) {
     unreachable(msg);
   }
 }
 
 // Checks if URLs use one of the allowed protocols, e.g. to avoid XSS.
-function _isValidProtocol(url) {
+function _isValidProtocol(url: URL) {
   switch (url?.protocol) {
     case "http:":
     case "https:":
@@ -400,6 +400,7 @@ function _isValidProtocol(url) {
   }
 }
 
+
 /**
  * Attempts to create a valid absolute URL.
  *
@@ -408,7 +409,7 @@ function _isValidProtocol(url) {
  * @param {Object} [options]
  * @returns Either a valid {URL}, or `null` otherwise.
  */
-function createValidAbsoluteUrl(url, baseUrl = null, options = null) {
+function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null = null, options = null): URL | null {
   if (!url) {
     return null;
   }
@@ -444,7 +445,7 @@ function createValidAbsoluteUrl(url, baseUrl = null, options = null) {
 }
 
 function shadow(obj, prop, value, nonSerializable = false) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  if (PlatformHelper.isTesting()) {
     assert(
       prop in obj,
       `shadow: Property "${prop && prop.toString()}" not found in object.`
@@ -459,9 +460,6 @@ function shadow(obj, prop, value, nonSerializable = false) {
   return value;
 }
 
-/**
- * @type {any}
- */
 
 class BaseException extends Error {
   constructor(message: string, name: string) {
@@ -472,8 +470,10 @@ class BaseException extends Error {
 
 
 class PasswordException extends BaseException {
-  readonly code: string;
-  constructor(msg: string, code) {
+
+  readonly code: number;
+
+  constructor(msg: string, code: number) {
     super(msg, "PasswordException");
     this.code = code;
   }
@@ -490,22 +490,22 @@ class UnknownErrorException extends BaseException {
 }
 
 class InvalidPDFException extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "InvalidPDFException");
   }
 }
 
 class MissingPDFException extends BaseException {
-  constructor(msg) {
+  constructor(msg: string) {
     super(msg, "MissingPDFException");
   }
 }
 
 class UnexpectedResponseException extends BaseException {
 
-  readonly status;
+  readonly status: number;
 
-  constructor(msg, status) {
+  constructor(msg: string, status: number) {
     super(msg, "UnexpectedResponseException");
     this.status = status;
   }
