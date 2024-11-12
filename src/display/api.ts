@@ -727,11 +727,11 @@ abstract class PDFDataRangeTransport {
 
   public length: number;
 
-  protected initialData: Uint8Array | null;
+  public initialData: Uint8Array | null;
 
-  protected progressiveDone: boolean;
+  public progressiveDone: boolean;
 
-  protected contentDispositionFilename: string | null;
+  public contentDispositionFilename: string | null;
 
   protected _readyCapability = Promise.withResolvers();
 

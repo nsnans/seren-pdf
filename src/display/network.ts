@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-import { IPDFStream } from "../interfaces.js";
+import { IPDFStream, IPDFStreamRangeReader } from "../interfaces.js";
 import { PlatformHelper } from "../platform/platform_helper.js";
 import { assert, stringToBytes } from "../shared/util";
+import { OnProgressParameters } from "./api.js";
 import {
   createHeaders,
   createResponseStatusError,
@@ -400,8 +401,11 @@ class PDFNetworkStreamFullRequestReader {
 }
 
 /** @implements {IPDFStreamRangeReader} */
-class PDFNetworkStreamRangeRequestReader {
-  constructor(manager, begin, end) {
+class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
+  
+  onProgress: ((evt: OnProgressParameters) => void) | null;
+
+  constructor(manager, begin: number, end: number) {
     this._manager = manager;
 
     const args = {

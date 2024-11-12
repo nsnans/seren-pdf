@@ -96,7 +96,7 @@ if (isNodeJS) {
       warn(`loadPackages: ${reason}`);
 
       packageMap = new Map();
-      packageCapability.resolve();
+      packageCapability.resolve(undefined);
     }
   );
 }

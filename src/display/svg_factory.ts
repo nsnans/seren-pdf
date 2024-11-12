@@ -15,13 +15,12 @@
 
 import { SVG_NS } from "./display_utils";
 import { unreachable } from "../shared/util";
+import { PlatformHelper } from "../platform/platform_helper";
 
-class BaseSVGFactory {
+abstract class BaseSVGFactory {
+
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseSVGFactory
-    ) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseSVGFactory) {
       unreachable("Cannot initialize BaseSVGFactory.");
     }
   }
@@ -44,26 +43,21 @@ class BaseSVGFactory {
     return svg;
   }
 
-  createElement(type) {
+  createElement(type: string) {
     if (typeof type !== "string") {
       throw new Error("Invalid SVG element type");
     }
     return this._createSVG(type);
   }
 
-  /**
-   * @ignore
-   */
-  _createSVG(type) {
-    unreachable("Abstract method `_createSVG` called.");
-  }
+  abstract _createSVG(type: string) : SVGElement;
 }
 
 class DOMSVGFactory extends BaseSVGFactory {
   /**
    * @ignore
    */
-  _createSVG(type) {
+  _createSVG(type: string): SVGElement {
     return document.createElementNS(SVG_NS, type);
   }
 }

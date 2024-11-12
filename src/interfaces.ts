@@ -109,7 +109,7 @@ export interface IPDFStreamReader {
    * Cancels all pending read requests and closes the stream.
    * @param {Object} reason
    */
-  cancel(reason: Object): void;
+  cancel(reason?: Error): void;
 }
 
 /**

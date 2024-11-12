@@ -13,26 +13,38 @@
  * limitations under the License.
  */
 
-/** @typedef {import("../interfaces").IPDFStream} IPDFStream */
-/** @typedef {import("../interfaces").IPDFStreamReader} IPDFStreamReader */
-// eslint-disable-next-line max-len
-/** @typedef {import("../interfaces").IPDFStreamRangeReader} IPDFStreamRangeReader */
-
-import { IPDFStream, IPDFStreamReader } from "../interfaces";
+import { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader } from "../interfaces";
 import { assert } from "../shared/util";
-import { PDFDataRangeTransport } from "./api";
+import { OnProgressParameters, PDFDataRangeTransport } from "./api";
 import { isPdfFile } from "./display_utils";
 
-/** @implements {IPDFStream} */
 class PDFDataTransportStream implements IPDFStream {
-  constructor(
-    pdfDataRangeTransport: PDFDataRangeTransport,
-    { disableRange = false, disableStream = false }
-  ) {
+
+  protected _queuedChunks: ArrayBufferLike[] | null;
+
+  public _fullRequestReader: PDFDataTransportStreamReader | null;
+
+  protected _rangeReaders: PDFDataTransportStreamRangeReader[];
+
+  protected _progressiveDone: boolean;
+
+  protected _contentDispositionFilename: string | null;
+
+  protected _pdfDataRangeTransport: PDFDataRangeTransport;
+
+  public _isStreamingSupported: boolean;
+
+  public _isRangeSupported: boolean;
+
+  public _contentLength: number;
+
+  constructor(pdfDataRangeTransport: PDFDataRangeTransport, { disableRange = false, disableStream = false }) {
+
     assert(
-      pdfDataRangeTransport,
+      !!pdfDataRangeTransport,
       'PDFDataTransportStream - missing required "pdfDataRangeTransport" argument.'
     );
+
     const { length, initialData, progressiveDone, contentDispositionFilename } =
       pdfDataRangeTransport;
 
@@ -40,14 +52,12 @@ class PDFDataTransportStream implements IPDFStream {
     this._progressiveDone = progressiveDone;
     this._contentDispositionFilename = contentDispositionFilename;
 
-    if (initialData?.length > 0) {
+    if (initialData!.length > 0) {
       // Prevent any possible issues by only transferring a Uint8Array that
       // completely "utilizes" its underlying ArrayBuffer.
-      const buffer =
-        initialData instanceof Uint8Array &&
-          initialData.byteLength === initialData.buffer.byteLength
-          ? initialData.buffer
-          : new Uint8Array(initialData).buffer;
+      const buffer = initialData instanceof Uint8Array &&
+        initialData.byteLength === initialData.buffer.byteLength
+        ? initialData.buffer : new Uint8Array(initialData!).buffer;
       this._queuedChunks.push(buffer);
     }
 
@@ -57,9 +67,10 @@ class PDFDataTransportStream implements IPDFStream {
     this._contentLength = length;
 
     this._fullRequestReader = null;
+
     this._rangeReaders = [];
 
-    pdfDataRangeTransport.addRangeListener((begin, chunk) => {
+    pdfDataRangeTransport.addRangeListener((begin: number, chunk: Uint8Array | null) => {
       this._onReceiveData({ begin, chunk });
     });
 
@@ -67,7 +78,7 @@ class PDFDataTransportStream implements IPDFStream {
       this._onProgress({ loaded, total });
     });
 
-    pdfDataRangeTransport.addProgressiveReadListener(chunk => {
+    pdfDataRangeTransport.addProgressiveReadListener((chunk: Uint8Array | null) => {
       this._onReceiveData({ chunk });
     });
 
@@ -78,20 +89,20 @@ class PDFDataTransportStream implements IPDFStream {
     pdfDataRangeTransport.transportReady();
   }
 
-  _onReceiveData({ begin, chunk }) {
+  _onReceiveData({ begin, chunk }: { begin?: number, chunk: Uint8Array | null }) {
     // Prevent any possible issues by only transferring a Uint8Array that
     // completely "utilizes" its underlying ArrayBuffer.
     const buffer =
       chunk instanceof Uint8Array &&
         chunk.byteLength === chunk.buffer.byteLength
         ? chunk.buffer
-        : new Uint8Array(chunk).buffer;
+        : new Uint8Array(chunk!).buffer;
 
     if (begin === undefined) {
       if (this._fullRequestReader) {
         this._fullRequestReader._enqueue(buffer);
       } else {
-        this._queuedChunks.push(buffer);
+        this._queuedChunks!.push(buffer);
       }
     } else {
       const found = this._rangeReaders.some(function (rangeReader) {
@@ -112,7 +123,7 @@ class PDFDataTransportStream implements IPDFStream {
     return this._fullRequestReader?._loaded ?? 0;
   }
 
-  _onProgress(evt) {
+  _onProgress(evt: OnProgressParameters) {
     if (evt.total === undefined) {
       // Reporting to first range reader, if it exists.
       this._rangeReaders[0]?.onProgress?.({ loaded: evt.loaded });
@@ -129,7 +140,7 @@ class PDFDataTransportStream implements IPDFStream {
     this._progressiveDone = true;
   }
 
-  _removeRangeReader(reader) {
+  _removeRangeReader(reader: PDFDataTransportStreamRangeReader) {
     const i = this._rangeReaders.indexOf(reader);
     if (i >= 0) {
       this._rangeReaders.splice(i, 1);
@@ -151,7 +162,7 @@ class PDFDataTransportStream implements IPDFStream {
     );
   }
 
-  getRangeReader(begin, end) {
+  getRangeReader(begin: number, end: number) {
     if (end <= this._progressiveDataLength) {
       return null;
     }
@@ -161,7 +172,7 @@ class PDFDataTransportStream implements IPDFStream {
     return reader;
   }
 
-  cancelAllRequests(reason) {
+  cancelAllRequests(reason?: Error) {
     this._fullRequestReader?.cancel(reason);
 
     for (const reader of this._rangeReaders.slice(0)) {
@@ -173,11 +184,28 @@ class PDFDataTransportStream implements IPDFStream {
 
 /** @implements {IPDFStreamReader} */
 class PDFDataTransportStreamReader implements IPDFStreamReader {
+
+  public _loaded = 0;
+
+  onProgress: ((evt: OnProgressParameters) => void) | null;
+
+  protected _stream;
+
+  protected _done: boolean;
+
+  protected _filename: string | null;
+
+  protected _headersReady = Promise.resolve();
+
+  protected _queuedChunks: ArrayBufferLike[] | null;
+
+  protected _requests: PromiseWithResolvers<unknown>[];
+
   constructor(
-    stream,
-    queuedChunks,
+    stream: PDFDataTransportStream,
+    queuedChunks: ArrayBufferLike[] | null,
     progressiveDone = false,
-    contentDispositionFilename = null
+    contentDispositionFilename: string | null = null
   ) {
     this._stream = stream;
     this._done = progressiveDone || false;
@@ -185,26 +213,23 @@ class PDFDataTransportStreamReader implements IPDFStreamReader {
       ? contentDispositionFilename
       : null;
     this._queuedChunks = queuedChunks || [];
-    this._loaded = 0;
     for (const chunk of this._queuedChunks) {
       this._loaded += chunk.byteLength;
     }
     this._requests = [];
-    this._headersReady = Promise.resolve();
     stream._fullRequestReader = this;
-
     this.onProgress = null;
   }
 
-  _enqueue(chunk) {
+  _enqueue(chunk: ArrayBufferLike) {
     if (this._done) {
       return; // Ignore new data.
     }
     if (this._requests.length > 0) {
       const requestCapability = this._requests.shift();
-      requestCapability.resolve({ value: chunk, done: false });
+      requestCapability!.resolve({ value: chunk, done: false });
     } else {
-      this._queuedChunks.push(chunk);
+      this._queuedChunks!.push(chunk);
     }
     this._loaded += chunk.byteLength;
   }
@@ -230,8 +255,8 @@ class PDFDataTransportStreamReader implements IPDFStreamReader {
   }
 
   async read() {
-    if (this._queuedChunks.length > 0) {
-      const chunk = this._queuedChunks.shift();
+    if (this._queuedChunks!.length > 0) {
+      const chunk = this._queuedChunks!.shift();
       return { value: chunk, done: false };
     }
     if (this._done) {
@@ -242,7 +267,7 @@ class PDFDataTransportStreamReader implements IPDFStreamReader {
     return requestCapability.promise;
   }
 
-  cancel(reason) {
+  cancel(_reason?: Error) {
     this._done = true;
     for (const requestCapability of this._requests) {
       requestCapability.resolve({ value: undefined, done: true });
@@ -258,20 +283,33 @@ class PDFDataTransportStreamReader implements IPDFStreamReader {
   }
 }
 
-/** @implements {IPDFStreamRangeReader} */
-class PDFDataTransportStreamRangeReader {
-  constructor(stream, begin, end) {
+class PDFDataTransportStreamRangeReader implements IPDFStreamRangeReader {
+
+  public _begin: number;
+
+  public _end: number;
+
+  onProgress: ((evt: OnProgressParameters) => void) | null;
+
+  protected _stream: PDFDataTransportStream;
+
+  protected _queuedChunk: ArrayBufferLike | null;
+
+  protected _done = false;
+
+  protected _requests: PromiseWithResolvers<unknown>[];
+
+  constructor(stream: PDFDataTransportStream, begin: number, end: number) {
     this._stream = stream;
     this._begin = begin;
     this._end = end;
     this._queuedChunk = null;
     this._requests = [];
-    this._done = false;
 
     this.onProgress = null;
   }
 
-  _enqueue(chunk) {
+  _enqueue(chunk: ArrayBufferLike) {
     if (this._done) {
       return; // ignore new data
     }
@@ -279,7 +317,7 @@ class PDFDataTransportStreamRangeReader {
       this._queuedChunk = chunk;
     } else {
       const requestsCapability = this._requests.shift();
-      requestsCapability.resolve({ value: chunk, done: false });
+      requestsCapability!.resolve({ value: chunk, done: false });
       for (const requestCapability of this._requests) {
         requestCapability.resolve({ value: undefined, done: true });
       }
@@ -307,7 +345,7 @@ class PDFDataTransportStreamRangeReader {
     return requestCapability.promise;
   }
 
-  cancel(reason) {
+  cancel(_reason?: Error) {
     this._done = true;
     for (const requestCapability of this._requests) {
       requestCapability.resolve({ value: undefined, done: true });
