@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { OnProgressParameters } from "./display/api";
+
 /**
  * Interface that represents PDF data transport. If possible, it allows
  * progressively load entire or fragment of the PDF binary data.
@@ -46,25 +48,22 @@ interface IPDFStream {
  *
  * @interface
  */
-class IPDFStreamReader {
-  constructor() {
-    /**
+interface IPDFStreamReader {
+
+  /**
      * Sets or gets the progress callback. The callback can be useful when the
      * isStreamingSupported property of the object is defined as false.
      * The callback is called with one parameter: an object with the loaded and
      * total properties.
      */
-    this.onProgress = null;
-  }
+  onProgress: (evt: OnProgressParameters) => void | null;
 
   /**
    * Gets a promise that is resolved when the headers and other metadata of
    * the PDF data stream are available.
    * @type {Promise}
    */
-  get headersReady() {
-    return Promise.resolve();
-  }
+  get headersReady(): Promise<unknown>;
 
   /**
    * Gets the Content-Disposition filename. It is defined after the headersReady
@@ -72,18 +71,14 @@ class IPDFStreamReader {
    * @type {string|null} The filename, or `null` if the Content-Disposition
    *                     header is missing/invalid.
    */
-  get filename() {
-    return null;
-  }
+  get filename(): string | null;
 
   /**
    * Gets PDF binary data length. It is defined after the headersReady promise
    * is resolved.
    * @type {number} The data length (or 0 if unknown).
    */
-  get contentLength() {
-    return 0;
-  }
+  get contentLength(): number;
 
   /**
    * Gets ability of the stream to handle range requests. It is defined after
@@ -91,18 +86,14 @@ class IPDFStreamReader {
    * or an error occurs.
    * @type {boolean}
    */
-  get isRangeSupported() {
-    return false;
-  }
+  get isRangeSupported(): boolean;
 
   /**
    * Gets ability of the stream to progressively load binary data. It is defined
    * after the headersReady promise is resolved.
    * @type {boolean}
    */
-  get isStreamingSupported() {
-    return false;
-  }
+  get isStreamingSupported(): boolean;
 
   /**
    * Requests a chunk of the binary data. The method returns the promise, which
@@ -112,13 +103,13 @@ class IPDFStreamReader {
    * set to true.
    * @returns {Promise}
    */
-  async read() { }
+  read(): Promise<unknown>;
 
   /**
    * Cancels all pending read requests and closes the stream.
    * @param {Object} reason
    */
-  cancel(reason) { }
+  cancel(reason: Object): void;
 }
 
 /**

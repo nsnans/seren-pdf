@@ -22,8 +22,16 @@ class PlatformHelper {
     return false;
   }
 
+  static testLib() {
+    return false;
+  }
+
   static bundleVersion() {
-    return 0;
+    return "unkown";
+  }
+
+  static bundleBuild() {
+    return "unknown";
   }
 }
 

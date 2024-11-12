@@ -152,7 +152,7 @@ class MessageHandler {
     action(data.data);
   }
 
-  on(actionName, handler) {
+  on(actionName: string, handler: (...args: any[]) => unknown) {
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
       assert(
         typeof handler === "function",

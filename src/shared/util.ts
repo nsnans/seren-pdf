@@ -14,16 +14,18 @@
  */
 /* globals process */
 
+import { PlatformHelper } from "../platform/platform_helper";
+
 // NW.js / Electron is a browser context, but copies some Node.js objects; see
 // http://docs.nwjs.io/en/latest/For%20Users/Advanced/JavaScript%20Contexts%20in%20NW.js/#access-nodejs-and-nwjs-api-in-browser-context
 // https://www.electronjs.org/docs/api/process#processversionselectron-readonly
 // https://www.electronjs.org/docs/api/process#processtype-readonly
 const isNodeJS =
-  (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
+  (PlatformHelper.isGeneric()) &&
   typeof process === "object" &&
   process + "" === "[object process]" &&
   !process.versions.nw &&
-  !(process.versions.electron && process.type && process.type !== "browser");
+  !(process.versions.electron && (process as any).type && (process as any).type !== "browser");
 
 const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
@@ -470,7 +472,7 @@ class BaseException extends Error {
 
 
 class PasswordException extends BaseException {
-  protected code;
+  readonly code: string;
   constructor(msg: string, code) {
     super(msg, "PasswordException");
     this.code = code;
@@ -478,7 +480,10 @@ class PasswordException extends BaseException {
 }
 
 class UnknownErrorException extends BaseException {
-  constructor(msg, details) {
+
+  readonly details: unknown;
+
+  constructor(msg: string, details: unknown) {
     super(msg, "UnknownErrorException");
     this.details = details;
   }
@@ -497,6 +502,9 @@ class MissingPDFException extends BaseException {
 }
 
 class UnexpectedResponseException extends BaseException {
+
+  readonly status;
+
   constructor(msg, status) {
     super(msg, "UnexpectedResponseException");
     this.status = status;
