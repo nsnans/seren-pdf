@@ -123,8 +123,8 @@ class AnnotationFactory {
     xref: XRef,
     ref,
     annotationGlobals,
-    idFactory,
-    collectFields : boolean,
+    idFactory: globalIdFactory,
+    collectFields: boolean,
     orphanFields,
     pageRef
   ) {
@@ -148,7 +148,7 @@ class AnnotationFactory {
    * @private
    */
   static _create(
-    xref,
+    xref: XRef,
     ref,
     annotationGlobals,
     idFactory,

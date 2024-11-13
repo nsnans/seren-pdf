@@ -1024,7 +1024,7 @@ class PDFDocument {
     };
   }
 
-  parse(recoveryMode) {
+  parse(recoveryMode: boolean) {
     this.xref.parse(recoveryMode);
     this.catalog = new Catalog(this.pdfManager, this.xref);
   }

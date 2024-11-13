@@ -363,7 +363,7 @@ function getVerbosityLevel() {
 // A notice for devs. These are good for things that are helpful to devs, such
 // as warning that Workers were disabled, which is important to devs but not
 // end users.
-function info(msg: string) {
+function info(msg: string | Error) {
   if (verbosity >= VerbosityLevel.INFOS) {
     console.log(`Info: ${msg}`);
   }
