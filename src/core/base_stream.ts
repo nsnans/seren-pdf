@@ -14,10 +14,15 @@
  */
 
 import { bytesToString, shadow, unreachable } from "../shared/util";
+import { Dict } from "./primitives";
 
 abstract class BaseStream {
 
   public pos: number = 0;
+
+  public dict: Dict | null = null;
+
+  public start: number | null = null;
 
   constructor() {
     if (
@@ -120,9 +125,7 @@ abstract class BaseStream {
     unreachable("Abstract method `moveStart` called");
   }
 
-  makeSubStream(_start: number, _length: number, _dict = null) {
-    unreachable("Abstract method `makeSubStream` called");
-  }
+  abstract makeSubStream(_start: number, _length: number, _dict: Dict | null): BaseStream;
 
   /**
    * @returns {Array | null}

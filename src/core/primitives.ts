@@ -68,7 +68,7 @@ const nonSerializable = function nonSerializableClosure() {
 
 export class Dict {
 
-  protected suppressEncryption = false;
+  public suppressEncryption = false;
 
   protected _map: Record<string, any> = Object.create(null);
 
@@ -76,6 +76,7 @@ export class Dict {
 
   protected __nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
 
+  public objId: string | null;
 
   constructor(xref: XRef | null = null) {
     // Map should only be used internally, use functions below to access.

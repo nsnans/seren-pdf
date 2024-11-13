@@ -43,7 +43,7 @@ class MurmurHash3_64 {
         }
       }
     } else if (ArrayBuffer.isView(input)) {
-      data = input.slice();
+      data = (input as ArrayBufferView).slice();
       length = data.byteLength;
     } else {
       throw new Error("Invalid data format, must be a string or TypedArray.");

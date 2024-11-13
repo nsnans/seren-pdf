@@ -124,7 +124,7 @@ function fetchRemoteDest(action) {
   return null;
 }
 
-class Catalog {
+export class Catalog {
 
   protected pdfManager: PDFManager;
 
@@ -1813,5 +1813,3 @@ class Catalog {
     }
   }
 }
-
-export { Catalog };

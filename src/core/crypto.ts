@@ -1391,7 +1391,7 @@ class PDF20 {
   }
 }
 
-class CipherTransform {
+export class CipherTransform {
   constructor(stringCipherConstructor, streamCipherConstructor) {
     this.StringCipherConstructor = stringCipherConstructor;
     this.StreamCipherConstructor = streamCipherConstructor;
@@ -1455,11 +1455,24 @@ class CipherTransform {
 }
 
 class CipherTransformFactory {
+
   static #defaultPasswordBytes = new Uint8Array([
     0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56,
     0xff, 0xfa, 0x01, 0x08, 0x2e, 0x2e, 0x00, 0xb6, 0xd0, 0x68, 0x3e, 0x80,
     0x2f, 0x0c, 0xa9, 0xfe, 0x64, 0x53, 0x69, 0x7a,
   ]);
+
+  protected algorithm: number | null;
+
+  protected cf;
+
+  protected strf;
+
+  protected stmf;
+
+  protected eff;
+
+  protected encryptionKey;
 
   #createEncryptionKey20(
     revision,
@@ -1690,7 +1703,7 @@ class CipherTransformFactory {
     throw new FormatError("Unknown crypto method");
   }
 
-  constructor(dict, fileId, password) {
+  constructor(dict:Dict, fileId, password) {
     const filter = dict.get("Filter");
     if (!isName(filter, "Standard")) {
       throw new FormatError("unknown encryption method");
@@ -1846,7 +1859,7 @@ class CipherTransformFactory {
     }
   }
 
-  createCipherTransform(num, gen) {
+  createCipherTransform(num: number, gen: number) {
     if (this.algorithm === 4 || this.algorithm === 5) {
       return new CipherTransform(
         this.#buildCipherConstructor(

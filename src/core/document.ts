@@ -80,7 +80,54 @@ import { PlatformHelper } from "../platform/platform_helper";
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
 
+interface PageConstructOptions {
+  pdfManager: PDFManager
+  xref : XRef,
+  pageIndex : number,
+  pageDict,
+  ref,
+  globalIdFactory,
+  fontCache,
+  builtInCMapCache,
+  standardFontDataCache,
+  globalImageCache,
+  systemFontCache,
+  nonBlendModesSet,
+  xfaFactory,
+}
+
 class Page {
+
+  protected pdfManager: PDFManager;
+
+  protected pageIndex;
+
+  protected pageDict;
+
+  protected ref;
+
+  protected fontCache;
+
+  protected builtInCMapCache;
+
+  protected standardFontDataCache;
+
+  protected globalImageCache;
+
+  protected xref: XRef;
+
+  protected systemFontCache;
+
+  protected nonBlendModesSet;
+
+  protected evaluatorOptions;
+
+  protected resourcesPromise;
+
+  protected _localIdFactory;
+
+  protected xfaFactory;
+
   constructor({
     pdfManager,
     xref,
@@ -114,11 +161,11 @@ class Page {
     const idCounters = {
       obj: 0,
     };
+    // 匿名类
     this._localIdFactory = class extends globalIdFactory {
       static createObjId() {
         return `p${pageIndex}_${++idCounters.obj}`;
       }
-
       static getPageObjId() {
         return `p${ref.toString()}`;
       }
@@ -920,7 +967,6 @@ function find(stream, signature, limit = 1024, backwards = false) {
  * The `PDFDocument` class holds all the (worker-thread) data of the PDF file.
  */
 class PDFDocument {
-
 
   protected pdfManager: PDFManager;
 

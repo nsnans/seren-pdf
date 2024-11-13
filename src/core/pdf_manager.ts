@@ -42,11 +42,15 @@ interface PDFManager {
 
   enableXfa: boolean;
 
+  password: string;
+
   ensureDoc(prop: string, args?: any);
 
   ensureXRef(prop: string, args?: any);
 
   ensureCatalog(prop, args?: any);
+
+  requestRange(_begin: number, _end: number): Promise<unknown>;
 }
 
 abstract class BasePDFManager implements PDFManager {
@@ -146,6 +150,7 @@ abstract class BasePDFManager implements PDFManager {
   abstract terminate(reason: string): void;
 
   abstract getPDFDocument(): PDFDocument;
+  
 }
 
 class LocalPDFManager extends BasePDFManager {

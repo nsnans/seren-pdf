@@ -37,6 +37,8 @@ import { JpxStream } from "./jpx_stream";
 import { LZWStream } from "./lzw_stream";
 import { PredictorStream } from "./predictor_stream";
 import { RunLengthStream } from "./run_length_stream";
+import { XRef } from "./xref";
+import { CipherTransform } from "./crypto";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -58,15 +60,34 @@ function getInlineImageCacheKey(bytes) {
   return ii + "_" + String.fromCharCode.apply(null, strBuf);
 }
 
+
+interface ParserOptions {
+
+  lexer: Lexer;
+
+  xref?: XRef;
+
+  allowStreams?: boolean;
+
+  recoveryMode?: boolean;
+}
+
 class Parser {
-  constructor({ lexer, xref, allowStreams = false, recoveryMode = false }) {
+  public lexer: Lexer;
+  protected xref;
+  protected allowStreams;
+  protected recoveryMode: boolean;
+  protected imageCache: Record<string, any>;
+  protected _imageId = 0;
+  public buf1;
+  public buf2;
+  constructor({ lexer, xref, allowStreams = false, recoveryMode = false }: ParserOptions) {
     this.lexer = lexer;
     this.xref = xref;
     this.allowStreams = allowStreams;
     this.recoveryMode = recoveryMode;
 
     this.imageCache = Object.create(null);
-    this._imageId = 0;
     this.refill();
   }
 
@@ -99,7 +120,7 @@ class Parser {
     }
   }
 
-  getObj(cipherTransform = null) {
+  getObj(cipherTransform: CipherTransform | null = null) {
     const buf1 = this.buf1;
     this.shift();
 
@@ -867,8 +888,25 @@ function toHexDigit(ch) {
 }
 
 class Lexer {
-  constructor(stream, knownCommands = null) {
+
+  public stream: Stream;
+
+  protected strBuf;
+
+  protected currentChar: number;
+
+  protected knownCommands;
+
+  protected _hexStringNumWarn = 0;
+
+  protected beginInlineImagePos = -1;
+
+  constructor(stream: Stream, knownCommands = null) {
+
     this.stream = stream;
+
+    this.currentChar = -1;
+
     this.nextChar();
 
     // While lexing, we build up many strings one char at a time. Using += for
@@ -886,9 +924,6 @@ class Lexer {
     // 'fa', 'fal', 'fals'. The prefixes are not needed, if the command has no
     // other commands or literals as a prefix. The knowCommands is optional.
     this.knownCommands = knownCommands;
-
-    this._hexStringNumWarn = 0;
-    this.beginInlineImagePos = -1;
   }
 
   nextChar() {

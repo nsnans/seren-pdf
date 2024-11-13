@@ -25,7 +25,7 @@ class Stream extends BaseStream {
 
   protected bytes: Uint8Array;
 
-  protected dict: Dict | null;
+  public dict: Dict | null;
 
   constructor(arrayBuffer: Uint8Array | ArrayBufferLike, start = 0, length?: number, dict: Dict | null = null) {
     super();
@@ -54,7 +54,7 @@ class Stream extends BaseStream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length: number) {
+  getBytes(length?: number) {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;
@@ -88,7 +88,7 @@ class Stream extends BaseStream {
     this.start = this.pos;
   }
 
-  makeSubStream(start: number, length: number, dict: Dict | null = null) {
+  makeSubStream(start: number, length?: number, dict: Dict | null = null) {
     return new Stream(this.bytes.buffer, start, length, dict);
   }
 }

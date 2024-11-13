@@ -2028,6 +2028,8 @@ export class PDFPageProxy {
     }
     const { map, transfer } = annotationStorageSerializable;
 
+    // 起初怀疑这里有问题，但是随着调查annotationStorageSerializable的值是SerializableEmpty后
+    // 就感觉这里应该没有问题了
     const readableStream = this._transport.messageHandler!.sendWithStream(
       "GetOperatorList",
       {

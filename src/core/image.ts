@@ -32,12 +32,13 @@ import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
 import { Name } from "./primitives";
 import { TypedArray } from "../types";
+import { XRef } from "./xref";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
  * don't decode to float range [0,1], we decode it in the [0,max] range.
  */
-function decodeAndClamp(value, addend, coefficient, max) {
+function decodeAndClamp(value: number, addend: number, coefficient: number, max: number) {
   value = addend + value * coefficient;
   // Clamp the value to the range
   if (value < 0) {
@@ -95,9 +96,9 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
 
 class PDFImage {
 
-  protected xref;
+  protected xref: XRef;
   protected image;
-  
+
   constructor({
     xref,
     res,
@@ -999,7 +1000,8 @@ class PDFImage {
     }
   }
 
-  createBitmap(kind, width: number, height: number, src) {
+
+  createBitmap(kind: number, width: number, height: number, src) {
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d")!;
     let imgData;
@@ -1028,7 +1030,7 @@ class PDFImage {
     };
   }
 
-  async #getImage(width, height) {
+  async #getImage(width: number, height: num) {
     const bitmap = await this.image.getTransferableImage();
     if (!bitmap) {
       return null;
@@ -1043,7 +1045,7 @@ class PDFImage {
   }
 
   async getImageBytes(
-    length,
+    length: number,
     {
       drawWidth,
       drawHeight,

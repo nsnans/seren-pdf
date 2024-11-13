@@ -246,7 +246,7 @@ class MessageHandler {
    * @returns {ReadableStream} ReadableStream to read data in chunks.
    */
   sendWithStream(actionName: string, data: Record<string, any> | null
-    , queueingStrategy, transfers?: Transferable[] | null): ReadableStream {
+    , queueingStrategy?: Record<string, any> & { highWaterMark?: number | undefined }, transfers?: Transferable[] | null): ReadableStream {
     const streamId = this.streamId++,
       sourceName = this.sourceName,
       targetName = this.targetName,
@@ -263,17 +263,19 @@ class MessageHandler {
             cancelCall: null,
             isClosed: false,
           };
-          comObj.postMessage(
-            {
-              sourceName,
-              targetName,
-              action: actionName,
-              streamId,
-              data,
-              desiredSize: controller.desiredSize,
-            },
-            transfers
-          );
+          const message = {
+            sourceName,
+            targetName,
+            action: actionName,
+            streamId,
+            data,
+            desiredSize: controller.desiredSize,
+          };
+          if (!!transfers) {
+            comObj.postMessage(message, transfers);
+          } else {
+            comObj.postMessage(message);
+          }
           // Return Promise for Async process, to signal success/failure.
           return startCapability.promise;
         },
@@ -290,7 +292,7 @@ class MessageHandler {
           });
           // Returning Promise will not call "pull"
           // again until current pull is resolved.
-          return pullCapability.promise;
+          return <Promise<void>>pullCapability.promise;
         },
 
         cancel: reason => {
@@ -306,8 +308,10 @@ class MessageHandler {
             reason: wrapReason(reason),
           });
           // Return Promise to signal success or failure.
-          return cancelCapability.promise;
+          return <Promise<void>>cancelCapability.promise;
         },
+
+        type: "bytes"
       },
       queueingStrategy
     );
@@ -361,7 +365,7 @@ class MessageHandler {
         delete self.streamSinks[streamId];
       },
 
-      error(reason) {
+      error(reason: Error) {
         assert(reason instanceof Error, "error must have a valid reason");
         if (this.isCancelled) {
           return;
@@ -384,7 +388,7 @@ class MessageHandler {
       ready: null,
     };
 
-    streamSink.sinkCapability.resolve();
+    streamSink.sinkCapability.resolve(undefined);
     streamSink.ready = streamSink.sinkCapability.promise;
     this.streamSinks[streamId] = streamSink;
 
