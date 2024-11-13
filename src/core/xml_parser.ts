@@ -46,7 +46,7 @@ function isWhitespaceString(s: string) {
   return true;
 }
 
-class XMLParserBase {
+abstract class XMLParserBase {
   _resolveEntities(s: string) {
     return s.replaceAll(/&([^;]+);/g, (_all, entity) => {
       if (entity.substring(0, 2) === "#x") {
@@ -276,29 +276,47 @@ class XMLParserBase {
     return `&${name};`;
   }
 
-  onPi(_name: unknown, _value: unknown) { }
+  abstract onPi(_name: unknown, _value: unknown): void;
 
-  onComment(_text: unknown) { }
+  abstract onComment(_text: unknown): void;
 
-  onCdata(_text: unknown) { }
+  abstract onCdata(_text: string): void;
 
-  onDoctype(_doctypeContent: unknown) { }
+  abstract onDoctype(_doctypeContent: unknown): void
 
-  onText(_text: unknown) { }
+  abstract onText(_text: string): void;
 
-  onBeginElement(_name: unknown, _attributes: unknown, _isEmpty: unknown) { }
+  abstract onBeginElement(_name: string, _attributes: unknown, _isEmpty: unknown): void;
 
-  onEndElement(_name: unknown) { }
+  abstract onEndElement(_name: string): void;
 
-  onError(_code: unknown) { }
+  abstract onError(_code: number): void;
+}
+
+interface ParentNode {
+  value: null;
+  writable: boolean;
+  childNodes: SimpleDOMNode[];
 }
 
 class SimpleDOMNode {
-  constructor(nodeName, nodeValue) {
+
+  protected nodeName: string;
+
+  protected nodeValue?: string;
+
+  protected parentNode: ParentNode;
+
+  public childNodes = [];
+
+  constructor(nodeName: string, nodeValue?: string) {
     this.nodeName = nodeName;
     this.nodeValue = nodeValue;
-
-    Object.defineProperty(this, "parentNode", { value: null, writable: true });
+    this.parentNode = {
+      value: null,
+      writable: true,
+      childNodes: []
+    };
   }
 
   get firstChild() {
@@ -348,7 +366,7 @@ class SimpleDOMNode {
    * @returns {SimpleDOMNode} The node corresponding
    * to the path or null if not found.
    */
-  searchNode(paths, pos: number) {
+  searchNode(paths, pos: number): SimpleDOMNode | null {
     if (pos >= paths.length) {
       return this;
     }
@@ -439,16 +457,26 @@ class SimpleDOMNode {
 }
 
 class SimpleXMLParser extends XMLParserBase {
+
+  protected _stack: SimpleDOMNode[][] | null;
+
+  protected _currentFragment: SimpleDOMNode[] | null;
+
+  protected _errorCode = XMLParserErrorCode.NoError;
+
+  protected _hasAttributes: boolean;
+
+  protected _lowerCaseName: boolean;
+
   constructor({ hasAttributes = false, lowerCaseName = false }) {
     super();
     this._currentFragment = null;
     this._stack = null;
-    this._errorCode = XMLParserErrorCode.NoError;
     this._hasAttributes = hasAttributes;
     this._lowerCaseName = lowerCaseName;
   }
 
-  parseFromString(data) {
+  parseFromString(data: string) {
     this._currentFragment = [];
     this._stack = [];
     this._errorCode = XMLParserErrorCode.NoError;
@@ -467,20 +495,20 @@ class SimpleXMLParser extends XMLParserBase {
     return { documentElement };
   }
 
-  onText(text) {
+  onText(text: string) {
     if (isWhitespaceString(text)) {
       return;
     }
     const node = new SimpleDOMNode("#text", text);
-    this._currentFragment.push(node);
+    this._currentFragment!.push(node);
   }
 
-  onCdata(text) {
+  onCdata(text: string) {
     const node = new SimpleDOMNode("#text", text);
-    this._currentFragment.push(node);
+    this._currentFragment!.push(node);
   }
 
-  onBeginElement(name, attributes, isEmpty) {
+  onBeginElement(name: string, attributes, isEmpty) {
     if (this._lowerCaseName) {
       name = name.toLowerCase();
     }
@@ -489,17 +517,17 @@ class SimpleXMLParser extends XMLParserBase {
     if (this._hasAttributes) {
       node.attributes = attributes;
     }
-    this._currentFragment.push(node);
+    this._currentFragment!.push(node);
     if (isEmpty) {
       return;
     }
-    this._stack.push(this._currentFragment);
+    this._stack!.push(this._currentFragment!);
     this._currentFragment = node.childNodes;
   }
 
-  onEndElement(name) {
-    this._currentFragment = this._stack.pop() || [];
-    const lastElement = this._currentFragment.at(-1);
+  onEndElement(_name: string): SimpleDOMNode | null {
+    this._currentFragment = this._stack!.pop() || [];
+    const lastElement = this._currentFragment!.at(-1);
     if (!lastElement) {
       return null;
     }
@@ -509,8 +537,18 @@ class SimpleXMLParser extends XMLParserBase {
     return lastElement;
   }
 
-  onError(code) {
+  onError(code: number) {
     this._errorCode = code;
+  }
+
+  onPi(_name: unknown, _value: unknown): void {
+    throw new Error("Unsupported Operation!");
+  }
+  onComment(_text: unknown): void {
+    throw new Error("Unsupported Operation!");
+  }
+  onDoctype(_doctypeContent: unknown): void {
+    throw new Error("Unsupported Operation!");
   }
 }
 

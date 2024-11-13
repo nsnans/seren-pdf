@@ -27,6 +27,11 @@ import { FormatError, info } from "../shared/util";
  *   or -1 when EOF is reached.
  */
 
+interface CCITTFaxDecoderSource {
+  // TODO 这个返回值可能有多种，或许都是number类型？
+  next: () => number;
+}
+
 const ccittEOL = -2;
 const ccittEOF = -1;
 const twoDimPass = 0;
@@ -466,6 +471,8 @@ const blackTable3 = [
  */
 class CCITTFaxDecoder {
 
+  protected source: CCITTFaxDecoderSource;
+
   protected eof = false;
 
   protected encoding = 0;
@@ -502,7 +509,7 @@ class CCITTFaxDecoder {
 
   protected err = false;
 
-  constructor(source, options = {}) {
+  constructor(source: CCITTFaxDecoderSource, options = {}) {
     if (!source || typeof source.next !== "function") {
       throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
     }
@@ -873,10 +880,7 @@ class CCITTFaxDecoder {
     return c;
   }
 
-  /**
-   * @private
-   */
-  _addPixels(a1, blackPixels) {
+  private _addPixels(a1: number, blackPixels: number) {
     const codingLine = this.codingLine;
     let codingPos = this.codingPos;
 
@@ -895,10 +899,7 @@ class CCITTFaxDecoder {
     this.codingPos = codingPos;
   }
 
-  /**
-   * @private
-   */
-  _addPixelsNeg(a1, blackPixels) {
+  private _addPixelsNeg(a1: number, blackPixels: number) {
     const codingLine = this.codingLine;
     let codingPos = this.codingPos;
 

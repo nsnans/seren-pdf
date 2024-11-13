@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   createValidAbsoluteUrl,
   FeatureTest,
@@ -37,6 +38,8 @@ function parseDocBaseUrl(url: string) {
 
 interface PDFManager {
 
+  _docId: string;
+
   enableXfa: boolean;
 
   ensureDoc(prop: string, args?: any);
@@ -48,13 +51,18 @@ interface PDFManager {
 
 abstract class BasePDFManager implements PDFManager {
 
-  protected _docId: string;
+  _docId: string;
+
   protected _docBaseUrl: string | null;
+
   protected _password: string | null;
+
+  protected enableXfa: boolean;
+
 
   constructor(args) {
     if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       this.constructor === BasePDFManager
     ) {
       unreachable("Cannot initialize BasePdfManager.");
@@ -87,7 +95,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().catalog;
   }
 
-  ensureDoc(prop, args) {
+  ensureDoc(prop: string, ...args: any[]) {
     return this.ensure(this.getPDFDocument(), prop, args);
   }
 

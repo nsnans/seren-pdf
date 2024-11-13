@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   AbortException,
   assert,
@@ -69,21 +70,38 @@ function wrapReason(reason) {
 }
 
 class MessageHandler {
+
   #messageAC: AbortController | null = new AbortController();
 
-  constructor(sourceName, targetName, comObj) {
+  protected sourceName;
+
+  protected targetName;
+
+  protected comObj;
+
+  protected callbackId = 1;
+
+  protected streamId = 1;
+
+  protected streamSinks: Record<string, any>;
+
+  protected streamControllers: Record<string, any>;
+
+  protected callbackCapabilities: Record<string, any>;
+
+  protected actionHandler: Record<string, any>;
+
+  constructor(sourceName: string, targetName: string, comObj: Worker) {
     this.sourceName = sourceName;
     this.targetName = targetName;
     this.comObj = comObj;
-    this.callbackId = 1;
-    this.streamId = 1;
     this.streamSinks = Object.create(null);
     this.streamControllers = Object.create(null);
     this.callbackCapabilities = Object.create(null);
     this.actionHandler = Object.create(null);
 
     comObj.addEventListener("message", this.#onMessage.bind(this), {
-      signal: this.#messageAC.signal,
+      signal: this.#messageAC!.signal,
     });
   }
 
@@ -153,7 +171,7 @@ class MessageHandler {
   }
 
   on(actionName: string, handler: (...args: any[]) => unknown) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
       assert(
         typeof handler === "function",
         'MessageHandler.on: Expected "handler" to be a function.'
@@ -172,41 +190,45 @@ class MessageHandler {
    * @param {JSON} data - JSON data to send.
    * @param {Array} [transfers] - List of transfers/ArrayBuffers.
    */
-  send(actionName, data, transfers?) {
-    this.comObj.postMessage(
-      {
-        sourceName: this.sourceName,
-        targetName: this.targetName,
-        action: actionName,
-        data,
-      },
-      transfers
-    );
+  send(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null) {
+    const message = {
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      action: actionName,
+      data,
+    };
+    if (!!transfers) {
+      this.comObj.postMessage(message, transfers!);
+    } else {
+      this.comObj.postMessage(message);
+    }
   }
 
   /**
    * Sends a message to the comObj to invoke the action with the supplied data.
    * Expects that the other side will callback with the response.
-   * @param {string} actionName - Action to call.
-   * @param {JSON} data - JSON data to send.
-   * @param {Array} [transfers] - List of transfers/ArrayBuffers.
-   * @returns {Promise} Promise to be resolved with response data.
+   * @param actionName - Action to call.
+   * @param data - JSON data to send.
+   * @param transfers - List of transfers/ArrayBuffers.
+   * @returns Promise to be resolved with response data.
    */
-  sendWithPromise(actionName, data, transfers?) {
+  sendWithPromise(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null): Promise<unknown> {
     const callbackId = this.callbackId++;
     const capability = Promise.withResolvers();
     this.callbackCapabilities[callbackId] = capability;
+    const message = {
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      action: actionName,
+      callbackId,
+      data,
+    };
     try {
-      this.comObj.postMessage(
-        {
-          sourceName: this.sourceName,
-          targetName: this.targetName,
-          action: actionName,
-          callbackId,
-          data,
-        },
-        transfers
-      );
+      if (!!transfers) {
+        this.comObj.postMessage(message, transfers);
+      } else {
+        this.comObj.postMessage(message);
+      }
     } catch (ex) {
       capability.reject(ex);
     }
@@ -223,7 +245,8 @@ class MessageHandler {
    * @param {Array} [transfers] - List of transfers/ArrayBuffers.
    * @returns {ReadableStream} ReadableStream to read data in chunks.
    */
-  sendWithStream(actionName, data, queueingStrategy, transfers) {
+  sendWithStream(actionName: string, data: Record<string, any> | null
+    , queueingStrategy, transfers?: Transferable[] | null): ReadableStream {
     const streamId = this.streamId++,
       sourceName = this.sourceName,
       targetName = this.targetName,

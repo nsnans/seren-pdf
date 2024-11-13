@@ -48,10 +48,13 @@ class XRef {
 
   protected _pendingRefs = new RefSet();
 
-  protected _newPersistentRefNum;
-  protected _newTemporaryRefNum;
-  protected _persistentRefsCache;
+  protected _newPersistentRefNum: number | null;
 
+  protected _newTemporaryRefNum: number | null;
+
+  protected _persistentRefsCache: Map<string, any> | null;
+
+  protected entries;
 
   constructor(stream: Stream, pdfManager: PDFManager) {
     this.stream = stream;

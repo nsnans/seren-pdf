@@ -75,6 +75,7 @@ import { writeObject } from "./writer";
 import { XFAFactory } from "./xfa/factory";
 import { XRef } from "./xref";
 import { PDFManager } from "./pdf_manager";
+import { PlatformHelper } from "../platform/platform_helper";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -920,6 +921,7 @@ function find(stream, signature, limit = 1024, backwards = false) {
  */
 class PDFDocument {
 
+
   protected pdfManager: PDFManager;
 
   protected stream: Stream;
@@ -936,7 +938,7 @@ class PDFDocument {
 
   constructor(pdfManager: PDFManager, stream: Stream) {
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
       assert(
         stream instanceof BaseStream,
         'PDFDocument: Invalid "stream" argument.'

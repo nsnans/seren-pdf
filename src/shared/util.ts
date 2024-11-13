@@ -409,7 +409,14 @@ function _isValidProtocol(url: URL) {
  * @param {Object} [options]
  * @returns Either a valid {URL}, or `null` otherwise.
  */
-function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null = null, options = null): URL | null {
+
+interface CreateValidAbsoluteUrlOptions {
+  addDefaultProtocol: boolean,
+  tryConvertEncoding: boolean,
+}
+
+function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null = null
+  , options?: CreateValidAbsoluteUrlOptions): URL | null {
   if (!url) {
     return null;
   }
@@ -420,7 +427,7 @@ function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null 
         const dots = url.match(/\./g);
         // Avoid accidentally matching a *relative* URL pointing to a file named
         // e.g. "www.pdf" or similar.
-        if (dots?.length >= 2) {
+        if (dots && dots?.length >= 2) {
           url = `http://${url}`;
         }
       }
@@ -444,7 +451,7 @@ function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null 
   return null;
 }
 
-function shadow(obj, prop, value, nonSerializable = false) {
+function shadow(obj: object, prop: string, value: any, nonSerializable = false) {
   if (PlatformHelper.isTesting()) {
     assert(
       prop in obj,
@@ -529,20 +536,24 @@ class AbortException extends BaseException {
   }
 }
 
-function bytesToString(bytes) {
+// 调用的地方很多，可能参数不止Uint8Array类型
+// 目前看到的都是Uint8Array
+function bytesToString(bytes: Uint8Array) {
   if (typeof bytes !== "object" || bytes?.length === undefined) {
     unreachable("Invalid argument for bytesToString");
   }
   const length = bytes.length;
   const MAX_ARGUMENT_COUNT = 8192;
   if (length < MAX_ARGUMENT_COUNT) {
-    return String.fromCharCode.apply(null, bytes);
+    // TODO 使用Array转换，是否可能会出现问题
+    return String.fromCharCode.apply(null, Array.from(bytes));
   }
   const strBuf = [];
   for (let i = 0; i < length; i += MAX_ARGUMENT_COUNT) {
     const chunkEnd = Math.min(i + MAX_ARGUMENT_COUNT, length);
     const chunk = bytes.subarray(i, chunkEnd);
-    strBuf.push(String.fromCharCode.apply(null, chunk));
+    // TODO 使用Array转换，是否可能会出现问题
+    strBuf.push(String.fromCharCode.apply(null, Array.from(chunk)));
   }
   return strBuf.join("");
 }
@@ -559,8 +570,8 @@ function stringToBytes(str: string) {
   return bytes;
 }
 
-function string32(value) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+function string32(value: number) {
+  if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     assert(
       typeof value === "number" && Math.abs(value) < 2 ** 32,
       `string32: Unexpected input "${value}".`
@@ -574,13 +585,13 @@ function string32(value) {
   );
 }
 
-function objectSize(obj) {
+function objectSize(obj: Record<string, any>) {
   return Object.keys(obj).length;
 }
 
 // Ensure that the returned Object has a `null` prototype; hence why
 // `Object.fromEntries(...)` is not used.
-function objectFromMap(map) {
+function objectFromMap(map: Map) {
   const obj = Object.create(null);
   for (const [key, value] of map) {
     obj[key] = value;
@@ -624,16 +635,12 @@ class FeatureTest {
   }
 
   static get platform() {
-    if (
-      (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-      (typeof navigator !== "undefined" &&
-        typeof navigator?.platform === "string")
-    ) {
+    if ((PlatformHelper.isMozCental()) || (typeof navigator !== "undefined" && typeof navigator?.platform === "string")) {
       return shadow(this, "platform", {
         isMac: navigator.platform.includes("Mac"),
         isWindows: navigator.platform.includes("Win"),
         isFirefox:
-          (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
+          (PlatformHelper.isMozCental()) ||
           (typeof navigator?.userAgent === "string" &&
             navigator.userAgent.includes("Firefox")),
       });
@@ -659,7 +666,7 @@ const hexNumbers = Array.from(Array(256).keys(), n =>
 );
 
 class Util {
-  static makeHexColor(r, g, b) {
+  static makeHexColor(r: number, g: number, b: number) {
     return `#${hexNumbers[r]}${hexNumbers[g]}${hexNumbers[b]}`;
   }
 
@@ -961,7 +968,7 @@ const PDFStringTranslateTable = [
   0x131, 0x142, 0x153, 0x161, 0x17e, 0, 0x20ac,
 ];
 
-function stringToPDFString(str) {
+function stringToPDFString(str: string) {
   // See section 7.9.2.2 Text String Type.
   // The string can contain some language codes bracketed with 0x0b,
   // so we must remove them.
@@ -1010,7 +1017,7 @@ function stringToPDFString(str) {
   return strBuf.join("");
 }
 
-function stringToUTF8String(str) {
+function stringToUTF8String(str: string) {
   return decodeURIComponent(escape(str));
 }
 
@@ -1018,7 +1025,7 @@ function utf8StringToString(str) {
   return unescape(encodeURIComponent(str));
 }
 
-function isArrayEqual(arr1, arr2) {
+function isArrayEqual(arr1: object[], arr2: object[]) {
   if (arr1.length !== arr2.length) {
     return false;
   }
@@ -1043,9 +1050,9 @@ function getModificationDate(date = new Date()) {
   return buffer.join("");
 }
 
-let NormalizeRegex = null;
-let NormalizationMap = null;
-function normalizeUnicode(str) {
+let NormalizeRegex: RegExp | null = null;
+let NormalizationMap: Map<string, string> | null = null;
+function normalizeUnicode(str: string) {
   if (!NormalizeRegex) {
     // In order to generate the following regex:
     //  - create a PDF containing all the chars in the range 0000-FFFF with
@@ -1058,13 +1065,13 @@ function normalizeUnicode(str) {
     NormalizationMap = new Map([["ﬅ", "ſt"]]);
   }
   return str.replaceAll(NormalizeRegex, (_, p1, p2) =>
-    p1 ? p1.normalize("NFKC") : NormalizationMap.get(p2)
+    p1 ? p1.normalize("NFKC") : NormalizationMap!.get(p2)
   );
 }
 
 function getUuid() {
   if (
-    (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
+    (PlatformHelper.isMozCental()) ||
     (typeof crypto !== "undefined" && typeof crypto?.randomUUID === "function")
   ) {
     return crypto.randomUUID();
@@ -1098,26 +1105,25 @@ const FontRenderOps = {
 };
 
 // TODO: Remove this once `Uint8Array.prototype.toHex` is generally available.
-function toHexUtil(arr) {
-  if (Uint8Array.prototype.toHex) {
-    return arr.toHex();
+function toHexUtil(arr: Uint8Array) {
+  if ((Uint8Array as any).prototype.toHex) {
+    return (arr as any).toHex();
   }
   return Array.from(arr, num => hexNumbers[num]).join("");
 }
 
-// TODO: Remove this once `Uint8Array.prototype.toBase64` is generally
-//       available.
-function toBase64Util(arr) {
-  if (Uint8Array.prototype.toBase64) {
-    return arr.toBase64();
+// TODO: Remove this once `Uint8Array.prototype.toBase64` is generally available.
+function toBase64Util(arr: Uint8Array) {
+  if ((Uint8Array as any).prototype.toBase64) {
+    return (arr as any).toBase64();
   }
   return btoa(bytesToString(arr));
 }
 
 // TODO: Remove this once `Uint8Array.fromBase64` is generally available.
-function fromBase64Util(str) {
-  if (Uint8Array.fromBase64) {
-    return Uint8Array.fromBase64(str);
+function fromBase64Util(str: string) {
+  if ((Uint8Array as any).fromBase64) {
+    return (Uint8Array as any).fromBase64(str);
   }
   return stringToBytes(atob(str));
 }

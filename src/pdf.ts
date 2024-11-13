@@ -13,15 +13,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-/** @typedef {import("./display/api").OnProgressParameters} OnProgressParameters */
-// eslint-disable-next-line max-len
-/** @typedef {import("./display/api").PDFDocumentLoadingTask} PDFDocumentLoadingTask */
-/** @typedef {import("./display/api").PDFDocumentProxy} PDFDocumentProxy */
-/** @typedef {import("./display/api").PDFPageProxy} PDFPageProxy */
-/** @typedef {import("./display/api").RenderTask} RenderTask */
-/** @typedef {import("./display/display_utils").PageViewport} PageViewport */
-
 import {
   AbortException,
   AnnotationEditorParamsType,
@@ -72,15 +63,16 @@ import { GlobalWorkerOptions } from "./display/worker_options";
 import { HighlightOutliner } from "./display/editor/drawers/highlight";
 import { TextLayer } from "./display/text_layer";
 import { XfaLayer } from "./display/xfa_layer";
+import { PlatformHelper } from "./platform/platform_helper";
 
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsVersion =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : void 0;
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsBuild =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_BUILD") : void 0;
 
-if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
+//@ts-ignore
+const pdfjsVersion = PlatformHelper.hasDefined() ? PlatformHelper.bundleVersion() : void 0;
+
+//@ts-ignore
+const pdfjsBuild = PlatformHelper.hasDefined() ? PlatformHelper.bundleBuild() : void 0;
+
+if (PlatformHelper.isTesting()) {
   globalThis.pdfjsTestingUtils = {
     HighlightOutliner,
   };

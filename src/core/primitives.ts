@@ -13,30 +13,29 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import { assert, shadow, unreachable } from "../shared/util";
+import { XRef } from "./xref";
 
-const CIRCULAR_REF = Symbol("CIRCULAR_REF");
-const EOF = Symbol("EOF");
+export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
+export const EOF = Symbol("EOF");
 
-let CmdCache = Object.create(null);
-let NameCache = Object.create(null);
-let RefCache = Object.create(null);
+let CmdCache: Record<string, any> = Object.create(null);
+let NameCache: Record<string, any> = Object.create(null);
+let RefCache: Record<string, any> = Object.create(null);
 
-function clearPrimitiveCaches() {
+export function clearPrimitiveCaches() {
   CmdCache = Object.create(null);
   NameCache = Object.create(null);
   RefCache = Object.create(null);
 }
 
-class Name {
+export class Name {
 
   public name: string;
 
   constructor(name: string) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      typeof name !== "string"
-    ) {
+    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) && typeof name !== "string") {
       unreachable('Name: The "name" must be a string.');
     }
     this.name = name;
@@ -48,13 +47,10 @@ class Name {
   }
 }
 
-class Cmd {
+export class Cmd {
   public cmd: string;
   constructor(cmd: string) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      typeof cmd !== "string"
-    ) {
+    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) && typeof cmd !== "string") {
       unreachable('Cmd: The "cmd" must be a string.');
     }
     this.cmd = cmd;
@@ -70,21 +66,25 @@ const nonSerializable = function nonSerializableClosure() {
   return nonSerializable; // Creating closure on some variable.
 };
 
-class Dict {
+export class Dict {
 
   protected suppressEncryption = false;
 
-  protected _map: { [key: string]: any } = Object.create(null);
+  protected _map: Record<string, any> = Object.create(null);
 
-  constructor(xref = null) {
+  protected xref: XRef | null;
+
+  protected __nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
+
+
+  constructor(xref: XRef | null = null) {
     // Map should only be used internally, use functions below to access.
     this._map = Object.create(null);
     this.xref = xref;
     this.objId = null;
-    this.__nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
   }
 
-  assignXref(newXref) {
+  assignXref(newXref: XRef | null) {
     this.xref = newXref;
   }
 
@@ -97,7 +97,7 @@ class Dict {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
-        (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+        (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
       ) {
         unreachable("Dict.get: Expected keys to be ordered by length.");
@@ -105,7 +105,7 @@ class Dict {
       value = this._map[key2];
       if (value === undefined && key3 !== undefined) {
         if (
-          (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+          (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
         ) {
           unreachable("Dict.get: Expected keys to be ordered by length.");
@@ -120,11 +120,11 @@ class Dict {
   }
 
   // Same as get(), but returns a promise and uses fetchIfRefAsync().
-  async getAsync(key1, key2, key3) {
+  async getAsync(key1: string, key2?: string, key3?: string) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
-        (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+        (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
       ) {
         unreachable("Dict.getAsync: Expected keys to be ordered by length.");
@@ -132,7 +132,7 @@ class Dict {
       value = this._map[key2];
       if (value === undefined && key3 !== undefined) {
         if (
-          (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+          (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
         ) {
           unreachable("Dict.getAsync: Expected keys to be ordered by length.");
@@ -147,11 +147,11 @@ class Dict {
   }
 
   // Same as get(), but dereferences all elements if the result is an Array.
-  getArray(key1, key2, key3) {
+  getArray(key1: string, key2?: string, key3?: string) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
-        (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+        (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
       ) {
         unreachable("Dict.getArray: Expected keys to be ordered by length.");
@@ -159,7 +159,7 @@ class Dict {
       value = this._map[key2];
       if (value === undefined && key3 !== undefined) {
         if (
-          (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+          (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
         ) {
           unreachable("Dict.getArray: Expected keys to be ordered by length.");
@@ -183,7 +183,7 @@ class Dict {
   }
 
   // No dereferencing.
-  getRaw(key) {
+  getRaw(key: string) {
     return this._map[key];
   }
 
@@ -196,8 +196,8 @@ class Dict {
     return Object.values(this._map);
   }
 
-  set(key, value) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  set(key: string, value: any) {
+    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
       if (typeof key !== "string") {
         unreachable('Dict.set: The "key" must be a string.');
       } else if (value === undefined) {
@@ -207,11 +207,11 @@ class Dict {
     this._map[key] = value;
   }
 
-  has(key) {
+  has(key: string) {
     return this._map[key] !== undefined;
   }
 
-  forEach(callback) {
+  forEach(callback: (key: string, value: any) => void) {
     for (const key in this._map) {
       callback(key, this.get(key));
     }
@@ -220,7 +220,7 @@ class Dict {
   static get empty() {
     const emptyDict = new Dict(null);
 
-    emptyDict.set = (key, value) => {
+    emptyDict.set = (_key, _value) => {
       unreachable("Should not call `set` on the empty dictionary.");
     };
     return shadow(this, "empty", emptyDict);
@@ -279,16 +279,18 @@ class Dict {
     return dict;
   }
 
-  delete(key) {
+  delete(key: string) {
     delete this._map[key];
   }
 }
 
-class Ref {
+export class Ref {
 
-  public num;
-  public gen;
-  constructor(num, gen) {
+  public num: number;
+
+  public gen: number;
+
+  constructor(num: number, gen: number) {
     this.num = num;
     this.gen = gen;
   }
@@ -302,7 +304,7 @@ class Ref {
     return `${this.num}R${this.gen}`;
   }
 
-  static fromString(str) {
+  static fromString(str: string) {
     const ref = RefCache[str];
     if (ref) {
       return ref;
@@ -319,7 +321,7 @@ class Ref {
     ));
   }
 
-  static get(num, gen) {
+  static get(num: number, gen: number) {
     const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
     // eslint-disable-next-line no-restricted-syntax
     return (RefCache[key] ||= new Ref(num, gen));
@@ -328,10 +330,11 @@ class Ref {
 
 // The reference is identified by number and generation.
 // This structure stores only one instance of the reference.
-class RefSet {
+export class RefSet {
+  protected _set: Set<string>;
   constructor(parent = null) {
     if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       parent &&
       !(parent instanceof RefSet)
     ) {
@@ -340,15 +343,17 @@ class RefSet {
     this._set = new Set(parent?._set);
   }
 
-  has(ref) {
+  // TODO 这里到底是不是object，还是可以窄化为一个更精确地类型
+  // 需要研究一下
+  has(ref: object) {
     return this._set.has(ref.toString());
   }
 
-  put(ref) {
+  put(ref: object) {
     this._set.add(ref.toString());
   }
 
-  remove(ref) {
+  remove(ref: object) {
     this._set.delete(ref.toString());
   }
 
@@ -361,7 +366,7 @@ class RefSet {
   }
 }
 
-class RefSetCache {
+export class RefSetCache {
 
   protected _map = new Map();
 
@@ -369,11 +374,11 @@ class RefSetCache {
     return this._map.size;
   }
 
-  get(ref) {
+  get(ref: object) {
     return this._map.get(ref.toString());
   }
 
-  has(ref) {
+  has(ref: object) {
     return this._map.has(ref.toString());
   }
 
@@ -400,22 +405,22 @@ class RefSetCache {
   }
 }
 
-function isName(v: unknown, name: string) {
+export function isName(v: unknown, name: string) {
   return v instanceof Name && (name === undefined || v.name === name);
 }
 
-function isCmd(v: unknown, cmd: string) {
+export function isCmd(v: unknown, cmd: string) {
   return v instanceof Cmd && (cmd === undefined || v.cmd === cmd);
 }
 
-function isDict(v, type) {
+export function isDict(v, type) {
   return (
     v instanceof Dict && (type === undefined || isName(v.get("Type"), type))
   );
 }
 
-function isRefsEqual(v1: Ref, v2: Ref) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+export function isRefsEqual(v1: Ref, v2: Ref) {
+  if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     assert(
       v1 instanceof Ref && v2 instanceof Ref,
       "isRefsEqual: Both parameters should be `Ref`s."
@@ -423,19 +428,3 @@ function isRefsEqual(v1: Ref, v2: Ref) {
   }
   return v1.num === v2.num && v1.gen === v2.gen;
 }
-
-export {
-  CIRCULAR_REF,
-  clearPrimitiveCaches,
-  Cmd,
-  Dict,
-  EOF,
-  isCmd,
-  isDict,
-  isName,
-  isRefsEqual,
-  Name,
-  Ref,
-  RefSet,
-  RefSetCache,
-};

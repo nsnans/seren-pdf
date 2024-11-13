@@ -8,6 +8,10 @@
  */
 class PlatformHelper {
 
+  static hasDefined(){
+    return true;
+  }
+
   // 对应原来的 typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")
   static isMozCental() {
     return false;

@@ -31,6 +31,7 @@ import { ImageResizer } from "./image_resizer";
 import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
 import { Name } from "./primitives";
+import { TypedArray } from "../types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -57,7 +58,9 @@ function decodeAndClamp(value, addend, coefficient, max) {
  * @param {number} h2 - New height.
  * @returns {TypedArray} The resized image mask buffer.
  */
-function resizeImageMask(src, bpc, w1, h1, w2, h2) {
+function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
+  , w2: number, h2: number): Uint8Array | Uint16Array | Uint32Array {
+
   const length = w2 * h2;
   let dest;
   if (bpc <= 8) {
@@ -91,6 +94,10 @@ function resizeImageMask(src, bpc, w1, h1, w2, h2) {
 }
 
 class PDFImage {
+
+  protected xref;
+  protected image;
+  
   constructor({
     xref,
     res,
@@ -992,9 +999,9 @@ class PDFImage {
     }
   }
 
-  createBitmap(kind, width, height, src) {
+  createBitmap(kind, width: number, height: number, src) {
     const canvas = new OffscreenCanvas(width, height);
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d")!;
     let imgData;
     if (kind === ImageKind.RGBA_32BPP) {
       imgData = new ImageData(src, width, height);

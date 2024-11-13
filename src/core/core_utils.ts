@@ -396,7 +396,7 @@ function _collectJS(entry, xref, list, parents) {
 }
 
 function collectActions(xref, dict, eventType) {
-  const actions = Object.create(null);
+  const actions: Record<string, any> = Object.create(null);
   const additionalActionsDicts = getInheritableProperty({
     dict,
     key: "AA",

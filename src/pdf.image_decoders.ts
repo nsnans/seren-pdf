@@ -21,13 +21,15 @@ import {
 import { Jbig2Error, Jbig2Image } from "./core/jbig2";
 import { JpegError, JpegImage } from "./core/jpg";
 import { JpxError, JpxImage } from "./core/jpx";
+import { PlatformHelper } from "./platform/platform_helper";
 
-/* eslint-disable-next-line no-unused-vars */
+//@ts-ignore
 const pdfjsVersion =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : void 0;
-/* eslint-disable-next-line no-unused-vars */
+  typeof PlatformHelper.hasDefined() ? PlatformHelper.bundleVersion() : void 0;
+
+//@ts-ignore
 const pdfjsBuild =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_BUILD") : void 0;
+  typeof PlatformHelper.hasDefined() ? PlatformHelper.bundleBuild() : void 0;
 
 export {
   getVerbosityLevel,

@@ -32,7 +32,7 @@ class DatasetXMLParser extends SimpleXMLParser {
     this.node = null;
   }
 
-  onEndElement(name) {
+  onEndElement(name: string) {
     const node = super.onEndElement(name);
     if (node && name === "xfa:datasets") {
       this.node = node;
@@ -40,6 +40,7 @@ class DatasetXMLParser extends SimpleXMLParser {
       // We don't need anything else, so just kill the parser.
       throw new Error("Aborting DatasetXMLParser.");
     }
+    return null;
   }
 }
 
@@ -53,7 +54,7 @@ class DatasetReader {
       const parser = new DatasetXMLParser({ hasAttributes: true });
       try {
         parser.parseFromString(data["xdp:xdp"]);
-      } catch {}
+      } catch { }
       this.node = parser.node;
     }
   }

@@ -89,9 +89,6 @@ const DefaultCMapReaderFactory = isGenericAndNode ? NodeCMapReaderFactory : DOMC
 const DefaultFilterFactory = isGenericAndNode ? NodeFilterFactory : DOMFilterFactory;
 const DefaultStandardFontDataFactory = isGenericAndNode ? NodeStandardFontDataFactory : DOMStandardFontDataFactory;
 
-type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array |
-  Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
-
 type RefProxy = {
   num: number;
   gen: number;
@@ -484,7 +481,7 @@ function getDocument(options: DocumentSrcType) {
         throw new Error("Worker was destroyed");
       }
 
-      const workerIdPromise = worker!.messageHandler.sendWithPromise(
+      const workerIdPromise = worker!.messageHandler!.sendWithPromise(
         "GetDocRequest",
         docParams,
         data ? [data.buffer] : null
@@ -617,11 +614,6 @@ function isRefProxy(ref: RefProxy) {
   );
 }
 
-/**
- * @typedef {Object} OnProgressParameters
- * @property {number} loaded - Currently loaded number of bytes.
- * @property {number} total - Total number of bytes in the PDF file.
- */
 export interface OnProgressParameters {
   loaded: number;
   total?: number;
@@ -632,7 +624,7 @@ export interface OnProgressParameters {
  * (such as network requests) and provides a way to listen for completion,
  * after which individual pages can be rendered.
  */
-class PDFDocumentLoadingTask {
+export class PDFDocumentLoadingTask {
 
   static #docId = 0;
 
@@ -822,6 +814,39 @@ abstract class PDFDataRangeTransport {
   abstract requestDataRange(_begin: number, _end: number): void;
 
   abort() { }
+}
+
+interface OutlineNode {
+
+  title: string;
+
+  bold: boolean;
+
+  italic: boolean;
+
+  /** The color in RGB format to use for display purposes. */
+  colod: Uint8ClampedArray;
+
+  dest: string | Array<any> | null;
+
+  url: string | null;
+
+  unsafeUrl: string | undefined;
+
+  newWindow: boolean | undefined;
+
+  count: number | undefined;
+
+  items: Array<OutlineNode>;
+}
+
+/**
+ * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
+ */
+interface MarkInfo {
+  Marked: boolean;
+  UserProperties: boolean;
+  Suspects: boolean;
 }
 
 /**
@@ -1032,26 +1057,11 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @typedef {Object} OutlineNode
-   * @property {string} title
-   * @property {boolean} bold
-   * @property {boolean} italic
-   * @property {Uint8ClampedArray} color - The color in RGB format to use for
-   *   display purposes.
-   * @property {string | Array<any> | null} dest
-   * @property {string | null} url
-   * @property {string | undefined} unsafeUrl
-   * @property {boolean | undefined} newWindow
-   * @property {number | undefined} count
-   * @property {Array<OutlineNode>} items
-   */
-
-  /**
    * @returns {Promise<Array<OutlineNode>>} A promise that is resolved with an
    *   {Array} that is a tree outline (if it has one) of the PDF file.
    */
-  getOutline() {
-    return this._transport.getOutline();
+  getOutline(): Promise<Array<OutlineNode>> {
+    return <Promise<Array<OutlineNode>>>this._transport.getOutline();
   }
 
   /**
@@ -1098,20 +1108,12 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @typedef {Object} MarkInfo
-   * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
-   * @property {boolean} Marked
-   * @property {boolean} UserProperties
-   * @property {boolean} Suspects
-   */
-
-  /**
    * @returns {Promise<MarkInfo | null>} A promise that is resolved with
    *   a {MarkInfo} object that contains the MarkInfo flags for the PDF
    *   document, or `null` when no MarkInfo values are present in the PDF file.
    */
-  getMarkInfo() {
-    return this._transport.getMarkInfo();
+  getMarkInfo(): Promise<MarkInfo | null> {
+    return <Promise<MarkInfo | null>>this._transport.getMarkInfo();
   }
 
   /**
@@ -1466,7 +1468,7 @@ interface PDFOperatorList {
 /**
  * Proxy to a `PDFPage` in the worker thread.
  */
-class PDFPageProxy {
+export class PDFPageProxy {
 
   #delayedCleanupTimeout: NodeJS.Timeout | null = null;
 
@@ -3887,9 +3889,7 @@ export {
   getDocument,
   LoopbackPort,
   PDFDataRangeTransport,
-  PDFDocumentLoadingTask,
   PDFDocumentProxy,
-  PDFPageProxy,
   PDFWorker,
   RenderTask,
 };

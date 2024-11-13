@@ -38,7 +38,7 @@ class SandboxSupport extends SandboxSupportBase {
 }
 
 class Sandbox {
-  constructor(win, module) {
+  constructor(win: Window, module) {
     this.support = new SandboxSupport(win, this);
 
     // The "external" functions created in pdf.sandbox.external.js

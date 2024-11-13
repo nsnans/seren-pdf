@@ -15,12 +15,11 @@
 
 import { initSandbox } from "./scripting_api/initialization";
 
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsVersion =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : void 0;
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsBuild =
-  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_BUILD") : void 0;
+//@ts-ignore
+const pdfjsVersion = PlatformHelper.hasDefined() ? PlatformHelper.bundleVersion() : void 0;
+
+//@ts-ignore
+const pdfjsBuild = PlatformHelper.hasDefined() ? PlatformHelper.bundleBuild() : void 0;
 
 // To avoid problems with `export` statements in the QuickJS Javascript Engine,
 // we manually expose `pdfjsScripting` globally instead.

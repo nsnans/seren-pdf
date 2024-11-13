@@ -20,7 +20,7 @@ export class SandboxSupportBase {
   /**
    * @param {DOMWindow} - win
    */
-  constructor(win) {
+  constructor(win: Window) {
     this.win = win;
     this.timeoutIds = new Map();
 
