@@ -350,8 +350,8 @@ const PasswordResponses = {
 
 let verbosity = VerbosityLevel.WARNINGS;
 
-function setVerbosityLevel(level: number) {
-  if (Number.isInteger(level)) {
+function setVerbosityLevel(level?: number) {
+  if (level != undefined && Number.isInteger(level)) {
     verbosity = level;
   }
 }

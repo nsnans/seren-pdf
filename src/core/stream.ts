@@ -23,7 +23,7 @@ class Stream extends BaseStream {
 
   public end: number;
 
-  protected bytes: Uint8Array;
+  public bytes: Uint8Array;
 
   public dict: Dict | null;
 
@@ -90,6 +90,10 @@ class Stream extends BaseStream {
 
   makeSubStream(start: number, length?: number, dict: Dict | null = null) {
     return new Stream(this.bytes.buffer, start, length, dict);
+  }
+
+  getBaseStreams(): Array<BaseStream> | null {
+    return null;
   }
 }
 

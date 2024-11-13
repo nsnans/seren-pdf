@@ -79,7 +79,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
       flags
     );
   }
-  function textdecode(encoding, value) {
+  function textdecode(encoding: string | undefined, value: string) {
     if (encoding) {
       if (!/^[\x00-\xFF]+$/.test(value)) {
         return value;
@@ -95,7 +95,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     }
     return value;
   }
-  function fixupEncoding(value) {
+  function fixupEncoding(value: string) {
     if (needsEncodingFixup && /[\x80-\xff]/.test(value)) {
       // Maybe multi-byte UTF-8.
       value = textdecode("utf-8", value);
@@ -106,23 +106,23 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     }
     return value;
   }
-  function rfc2231getparam(contentDispositionStr) {
-    const matches = [];
+  function rfc2231getparam(contentDispositionStr: string) {
+    const matches: string[][] = [];
     let match;
     // Iterate over all filename*n= and filename*n*= with n being an integer
     // of at least zero. Any non-zero number must not start with '0'.
     const iter = toParamRegExp("filename\\*((?!0\\d)\\d+)(\\*?)", "ig");
     while ((match = iter.exec(contentDispositionStr)) !== null) {
       let [, n, quot, part] = match; // eslint-disable-line prefer-const
-      n = parseInt(n, 10);
+      let ni = parseInt(n, 10);
       if (n in matches) {
         // Ignore anything after the invalid second filename*0.
-        if (n === 0) {
+        if (ni === 0) {
           break;
         }
         continue;
       }
-      matches[n] = [quot, part];
+      matches[ni] = [quot, part];
     }
     const parts = [];
     for (let n = 0; n < matches.length; ++n) {
@@ -142,7 +142,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     }
     return parts.join("");
   }
-  function rfc2616unquote(value) {
+  function rfc2616unquote(value: string) {
     if (value.startsWith('"')) {
       const parts = value.slice(1).split('\\"');
       // Find the first unescaped " and terminate there.
@@ -158,7 +158,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     }
     return value;
   }
-  function rfc5987decode(extvalue) {
+  function rfc5987decode(extvalue: string) {
     // Decodes "ext-value" from RFC 5987.
     const encodingend = extvalue.indexOf("'");
     if (encodingend === -1) {
@@ -173,7 +173,7 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     const value = langvalue.replace(/^[^']*'/, "");
     return textdecode(encoding, value);
   }
-  function rfc2047decode(value) {
+  function rfc2047decode(value: string) {
     // RFC 2047-decode the result. Firefox tried to drop support for it, but
     // backed out because some servers use it - https://bugzil.la/875615
     // Firefox's condition for decoding is here: https://searchfox.org/mozilla-central/rev/4a590a5a15e35d88a3b23dd6ac3c471cf85b04a8/netwerk/mime/nsMIMEHeaderParamImpl.cpp#742-748
@@ -196,11 +196,11 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
     //        ... but Firefox permits ? and space.
     return value.replaceAll(
       /=\?([\w-]*)\?([QqBb])\?((?:[^?]|\?(?!=))*)\?=/g,
-      function (matches, charset, encoding, text) {
+      function (_matches, charset: string, encoding: string, text: string) {
         if (encoding === "q" || encoding === "Q") {
           // RFC 2047 section 4.2.
           text = text.replaceAll("_", " ");
-          text = text.replaceAll(/=([0-9a-fA-F]{2})/g, function (match, hex) {
+          text = text.replaceAll(/=([0-9a-fA-F]{2})/g, function (_match, hex) {
             return String.fromCharCode(parseInt(hex, 16));
           });
           return textdecode(charset, text);

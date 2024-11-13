@@ -875,6 +875,7 @@ export class XRef {
       }
       return cacheEntry;
     }
+    
     let xrefEntry = this.getEntry(num);
 
     if (xrefEntry === null) {

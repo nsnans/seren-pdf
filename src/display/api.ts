@@ -77,6 +77,7 @@ import { TextLayer } from "./text_layer";
 import { XfaText } from "./xfa_text";
 import { PlatformHelper } from "../platform/platform_helper";
 import { IPDFStream, IPDFStreamReader } from "../interfaces";
+import { TypedArray } from "../types";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -433,6 +434,7 @@ function getDocument(options: DocumentSrcType) {
 
   if (!worker) {
     const workerParams = {
+      name: null,
       verbosity,
       port: GlobalWorkerOptions.workerPort,
     };
@@ -481,7 +483,7 @@ function getDocument(options: DocumentSrcType) {
         throw new Error("Worker was destroyed");
       }
 
-      const workerIdPromise = worker!.messageHandler!.sendWithPromise(
+      const workerIdPromise = <Promise<string>>worker!.messageHandler!.sendWithPromise(
         "GetDocRequest",
         docParams,
         data ? [data.buffer] : null
@@ -537,7 +539,7 @@ function getDocument(options: DocumentSrcType) {
           throw new Error("Worker was destroyed");
         }
 
-        const messageHandler = new MessageHandler(docId, workerId, worker!.port);
+        const messageHandler = new MessageHandler(docId, workerId, worker!.port!);
         const transport = new WorkerTransport(
           messageHandler,
           task,
@@ -639,6 +641,8 @@ export class PDFDocumentLoadingTask {
   public _transport: WorkerTransport | null;
 
   public onProgress: ((param: OnProgressParameters | null) => void) | null = null
+
+  public onPassword: ((updateCallback: (password: string) => void, reason: number) => void) | null;
 
   constructor() {
     this._transport = null;
@@ -1819,7 +1823,7 @@ export class PDFPageProxy {
   streamTextContent({
     includeMarkedContent = false,
     disableNormalization = false,
-  }: GetTextContentParameters) {
+  }: GetTextContentParameters): ReadableStream {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
 
     return this._transport.messageHandler!.sendWithStream(
@@ -1831,7 +1835,7 @@ export class PDFPageProxy {
       },
       {
         highWaterMark: TEXT_CONTENT_CHUNK_SIZE,
-        size(textContent) {
+        size(textContent: TextContent) {
           return textContent.items.length;
         },
       }
@@ -1846,7 +1850,7 @@ export class PDFPageProxy {
    * @returns {Promise<TextContent>} A promise that is resolved with a
    *   {@link TextContent} object that represents the page's text content.
    */
-  getTextContent(params: GetTextContentParameters) {
+  getTextContent(params: GetTextContentParameters): Promise<TextContent> {
     if (this._transport._htmlForXfa) {
       // TODO: We need to revisit this once the XFA foreground patch lands and
       // only do this for non-foreground XFA.
@@ -2220,7 +2224,7 @@ class LoopbackPort {
 interface PDFWorkerParameters {
   name: string | null;
   port: LoopbackPort | null;
-  verbosity: number;
+  verbosity?: number;
 }
 /**
  * PDF.js web worker abstraction that controls the instantiation of PDF
@@ -2682,6 +2686,8 @@ class WorkerTransport {
   protected _lastProgress: OnProgressParameters | null = null;
 
   protected _numPages: number | null = null;
+
+  public _htmlForXfa;
 
   constructor(messageHandler: MessageHandler, loadingTask: PDFDocumentLoadingTask,
     networkStream: IPDFStream, params: WorkerTransportParameters, factory: TransportFactory) {

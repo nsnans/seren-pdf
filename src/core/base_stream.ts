@@ -13,30 +13,31 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import { bytesToString, shadow, unreachable } from "../shared/util";
 import { Dict } from "./primitives";
 
-abstract class BaseStream {
+export abstract class BaseStream {
 
   public pos: number = 0;
 
   public dict: Dict | null = null;
 
-  public start: number | null = null;
+  public start: number = 0;
+
+  public bytes = new Uint8Array(0);
 
   constructor() {
     if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       this.constructor === BaseStream
     ) {
       unreachable("Cannot initialize BaseStream.");
     }
   }
 
-  // eslint-disable-next-line getter-return
   abstract get length(): number;
 
-  // eslint-disable-next-line getter-return
   abstract get isEmpty(): boolean;
 
   get isDataLoaded() {
@@ -45,9 +46,7 @@ abstract class BaseStream {
 
   abstract getByte(): number;
 
-  getBytes(_length: number) {
-    unreachable("Abstract method `getBytes` called");
-  }
+  abstract getBytes(_length: number): Uint8Array;
 
   /**
    * NOTE: This method can only be used to get image-data that is guaranteed
@@ -130,9 +129,7 @@ abstract class BaseStream {
   /**
    * @returns {Array | null}
    */
-  getBaseStreams() {
-    return null;
-  }
+  abstract getBaseStreams(): Array<BaseStream> | null;
+
 }
 
-export { BaseStream };

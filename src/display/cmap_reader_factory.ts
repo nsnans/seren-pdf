@@ -23,7 +23,6 @@ type BaseCMapReaderFactoryOption = {
 }
 
 export interface CMapReaderFactory {
-
   _fetch(url: string): Promise<Uint8Array>;
 }
 

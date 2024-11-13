@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   BaseException,
   FeatureTest,
@@ -275,19 +276,20 @@ class PageViewport {
    *   point in the PDF coordinate space.
    * @see {@link convertToViewportPoint}
    */
-  convertToPdfPoint(x, y) {
+  convertToPdfPoint(x: number, y: number) {
     return Util.applyInverseTransform([x, y], this.transform);
   }
 }
 
 class RenderingCancelledException extends BaseException {
-  constructor(msg, extraDelay = 0) {
+  extraDelay: number;
+  constructor(msg: string, extraDelay = 0) {
     super(msg, "RenderingCancelledException");
     this.extraDelay = extraDelay;
   }
 }
 
-function isDataScheme(url) {
+function isDataScheme(url: string) {
   const ii = url.length;
   let i = 0;
   while (i < ii && url[i].trim() === "") {
@@ -296,7 +298,7 @@ function isDataScheme(url) {
   return url.substring(i, i + 5).toLowerCase() === "data:";
 }
 
-function isPdfFile(filename) {
+function isPdfFile(filename: string) {
   return typeof filename === "string" && /\.pdf$/i.test(filename);
 }
 
@@ -305,7 +307,7 @@ function isPdfFile(filename) {
  * @param {string} url
  * @returns {string}
  */
-function getFilenameFromUrl(url) {
+function getFilenameFromUrl(url: string): string {
   [url] = url.split(/[#?]/, 1);
   return url.substring(url.lastIndexOf("/") + 1);
 }
@@ -317,7 +319,7 @@ function getFilenameFromUrl(url) {
  *   unknown, or the protocol is unsupported.
  * @returns {string} Guessed PDF filename.
  */
-function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
+function getPdfFilenameFromUrl(url: string, defaultFilename = "document.pdf"): string {
   if (typeof url !== "string") {
     return defaultFilename;
   }
@@ -329,8 +331,8 @@ function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
   //              SCHEME        HOST        1.PATH  2.QUERY   3.REF
   // Pattern to get last matching NAME.pdf
   const reFilename = /[^/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
-  const splitURI = reURI.exec(url);
-  let suggestedFilename =
+  const splitURI = reURI.exec(url)!;
+  let suggestedFilename: RegExpExecArray | string | null =
     reFilename.exec(splitURI[1]) ||
     reFilename.exec(splitURI[2]) ||
     reFilename.exec(splitURI[3]);
@@ -340,8 +342,8 @@ function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
       // URL-encoded %2Fpath%2Fto%2Ffile.pdf should be file.pdf
       try {
         suggestedFilename = reFilename.exec(
-          decodeURIComponent(suggestedFilename)
-        )[0];
+          decodeURIComponent(<string>suggestedFilename)
+        )![0];
       } catch {
         // Possible (extremely rare) errors:
         // URIError "Malformed URI", e.g. for "%AA.pdf"
@@ -352,19 +354,26 @@ function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
   return suggestedFilename || defaultFilename;
 }
 
+interface TimeStat {
+  name: string;
+  start: number;
+  end: number;
+}
+
 class StatTimer {
-  started = Object.create(null);
 
-  times = [];
+  started: Record<string, any> = Object.create(null);
 
-  time(name) {
+  times: TimeStat[] = [];
+
+  time(name: string) {
     if (name in this.started) {
       warn(`Timer is already running for ${name}`);
     }
     this.started[name] = Date.now();
   }
 
-  timeEnd(name) {
+  timeEnd(name: string) {
     if (!(name in this.started)) {
       warn(`Timer has not been started for ${name}`);
     }
@@ -392,9 +401,10 @@ class StatTimer {
 }
 
 function isValidFetchUrl(url: string, baseUrl?: string) {
-  if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
+  if (PlatformHelper.isMozCental()) {
     throw new Error("Not implemented: isValidFetchUrl");
   }
+
   try {
     const { protocol } = baseUrl ? new URL(url, baseUrl) : new URL(url);
     // The Fetch API only supports the http/https protocols, and not file/ftp.
@@ -407,17 +417,18 @@ function isValidFetchUrl(url: string, baseUrl?: string) {
 /**
  * Event handler to suppress context menu.
  */
-function noContextMenu(e) {
+function noContextMenu(e: MouseEvent) {
   e.preventDefault();
 }
 
 // Deprecated API function -- display regardless of the `verbosity` setting.
-function deprecated(details) {
+function deprecated(details?: string) {
   console.log("Deprecated API usage: " + details);
 }
 
 class PDFDateString {
-  static #regex;
+
+  static #regex?: RegExp;
 
   /**
    * Convert a PDF date string to a JavaScript `Date` object.
@@ -435,7 +446,7 @@ class PDFDateString {
    * @param {string} input
    * @returns {Date|null}
    */
-  static toDateObject(input) {
+  static toDateObject(input: string): Date | null {
     if (!input || typeof input !== "string") {
       return null;
     }
@@ -513,7 +524,7 @@ function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
   });
 }
 
-function getRGB(color) {
+function getRGB(color: string) {
   if (color.startsWith("#")) {
     const colorRGB = parseInt(color.slice(1), 16);
     return [
@@ -555,12 +566,12 @@ function getColorValues(colors) {
   span.remove();
 }
 
-function getCurrentTransform(ctx) {
+function getCurrentTransform(ctx: CanvasRenderingContext2D) {
   const { a, b, c, d, e, f } = ctx.getTransform();
   return [a, b, c, d, e, f];
 }
 
-function getCurrentTransformInverse(ctx) {
+function getCurrentTransformInverse(ctx: CanvasRenderingContext2D) {
   const { a, b, c, d, e, f } = ctx.getTransform().invertSelf();
   return [a, b, c, d, e, f];
 }
@@ -572,8 +583,8 @@ function getCurrentTransformInverse(ctx) {
  * @param {boolean} mustRotate
  */
 function setLayerDimensions(
-  div,
-  viewport,
+  div: HTMLDivElement,
+  viewport: PageViewport,
   mustFlip = false,
   mustRotate = true
 ) {
@@ -609,6 +620,11 @@ function setLayerDimensions(
  * Scale factors for the canvas, necessary with HiDPI displays.
  */
 class OutputScale {
+
+  protected sx: number;
+
+  protected sy: number;
+
   constructor() {
     const pixelRatio = window.devicePixelRatio || 1;
 
