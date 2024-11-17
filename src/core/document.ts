@@ -76,41 +76,42 @@ import { XFAFactory } from "./xfa/factory";
 import { XRef } from "./xref";
 import { PDFManager } from "./pdf_manager";
 import { PlatformHelper } from "../platform/platform_helper";
+import { GlobalImageCache } from "./image_utils";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
 
 interface PageConstructOptions {
   pdfManager: PDFManager
-  xref : XRef,
-  pageIndex : number,
-  pageDict,
-  ref,
+  xref: XRef,
+  pageIndex: number,
+  pageDict: Dict,
+  ref: Ref | null,
   globalIdFactory,
-  fontCache,
-  builtInCMapCache,
-  standardFontDataCache,
-  globalImageCache,
-  systemFontCache,
-  nonBlendModesSet,
-  xfaFactory,
+  fontCache: RefSetCache,
+  builtInCMapCache: Map<string, any>,
+  standardFontDataCache: Map<string, any>,
+  globalImageCache: GlobalImageCache,
+  systemFontCache: Map<string, any>,
+  nonBlendModesSet: RefSet,
+  xfaFactory: XFAFactory | null,
 }
 
 class Page {
 
   protected pdfManager: PDFManager;
 
-  protected pageIndex;
+  protected pageIndex: number;
 
-  protected pageDict;
+  protected pageDict: Dict;
 
-  protected ref;
+  protected ref: Ref | null;
 
-  protected fontCache;
+  protected fontCache: RefSetCache;
 
-  protected builtInCMapCache;
+  protected builtInCMapCache: Map<string, any>;
 
-  protected standardFontDataCache;
+  protected standardFontDataCache: Map<string, any>;
 
   protected globalImageCache;
 
@@ -142,7 +143,7 @@ class Page {
     systemFontCache,
     nonBlendModesSet,
     xfaFactory,
-  }) {
+  }: PageConstructOptions) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
     this.pageDict = pageDict;
@@ -167,7 +168,7 @@ class Page {
         return `p${pageIndex}_${++idCounters.obj}`;
       }
       static getPageObjId() {
-        return `p${ref.toString()}`;
+        return `p${ref!.toString()}`;
       }
     };
   }
@@ -175,13 +176,12 @@ class Page {
   /**
    * @private
    */
-  _getInheritableProperty(key, getArray = false) {
-    const value = getInheritableProperty({
-      dict: this.pageDict,
+  _getInheritableProperty(key: string, getArray = false) {
+    const value = getInheritableProperty(
+      this.pageDict,
       key,
-      getArray,
-      stopWhenFound: false,
-    });
+      getArray, false,
+    );
     if (!Array.isArray(value)) {
       return value;
     }
@@ -208,7 +208,7 @@ class Page {
     );
   }
 
-  _getBoundingBox(name) {
+  _getBoundingBox(name: string) {
     if (this.xfaData) {
       return this.xfaData.bbox;
     }
@@ -288,7 +288,7 @@ class Page {
   /**
    * @private
    */
-  _onSubStreamError(reason, objId) {
+  _onSubStreamError(reason: unknown, objId: string | null) {
     if (this.evaluatorOptions.ignoreErrors) {
       warn(`getContentStream - ignoring sub-stream (${objId}): "${reason}".`);
       return;
@@ -299,8 +299,8 @@ class Page {
   /**
    * @returns {Promise<BaseStream>}
    */
-  getContentStream() {
-    return this.pdfManager.ensure(this, "content").then(content => {
+  getContentStream(): Promise<BaseStream> {
+    return this.pdfManager.ensure(this, "content").then((content: BaseStream | ArrayLike<unknown> | unknown) => {
       if (content instanceof BaseStream) {
         return content;
       }
@@ -325,7 +325,7 @@ class Page {
     );
   }
 
-  async #replaceIdByRef(annotations, deletedAnnotations, existingAnnotations) {
+  async #replaceIdByRef(annotations, deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet) {
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.id) {
@@ -450,7 +450,7 @@ class Page {
         newRefsPromises.push(
           annotation
             .save(partialEvaluator, task, annotationStorage)
-            .catch(function (reason) {
+            .catch(function (reason: unknown) {
               warn(
                 "save - ignoring annotation data during " +
                 `"${task.name}" task: "${reason}".`
@@ -616,7 +616,7 @@ class Page {
         // property). In this case, we replace the old annotation by the new
         // one.
         annotations = annotations.filter(
-          a => !(a.ref && deletedAnnotations.has(a.ref))
+          a => !(a.ref && deletedAnnotations!.has(a.ref))
         );
         for (let i = 0, ii = newAnnotations.length; i < ii; i++) {
           const newAnnotation = newAnnotations[i];
@@ -665,7 +665,7 @@ class Page {
                 intent,
                 annotationStorage
               )
-              .catch(function (reason) {
+              .catch(function (reason: unknown) {
                 warn(
                   "getOperatorList - ignoring annotation data during " +
                   `"${task.name}" task: "${reason}".`
@@ -806,18 +806,16 @@ class Page {
         });
 
         textContentPromises.push(
-          annotation
-            .extractTextContent(partialEvaluator, task, [
-              -Infinity,
-              -Infinity,
-              Infinity,
-              Infinity,
-            ])
-            .catch(function (reason) {
-              warn(
-                `getAnnotationsData - ignoring textContent during "${task.name}" task: "${reason}".`
-              );
-            })
+          annotation.extractTextContent(partialEvaluator, task, [
+            -Infinity,
+            -Infinity,
+            Infinity,
+            Infinity,
+          ]).catch(function (reason: unknown) {
+            warn(
+              `getAnnotationsData - ignoring textContent during "${task.name}" task: "${reason}".`
+            );
+          })
         );
       }
     }
@@ -914,7 +912,7 @@ const STARTXREF_SIGNATURE = new Uint8Array([
 const ENDOBJ_SIGNATURE = new Uint8Array([0x65, 0x6e, 0x64, 0x6f, 0x62, 0x6a]);
 
 function find(stream, signature, limit = 1024, backwards = false) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     assert(limit > 0, 'The "limit" must be a positive integer.');
   }
   const signatureLength = signature.length;
@@ -1033,7 +1031,7 @@ class PDFDocument {
     let linearization = null;
     try {
       linearization = Linearization.create(this.stream);
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof MissingDataException) {
         throw err;
       }
@@ -1185,7 +1183,7 @@ class PDFDocument {
     }
 
     const xfa = acroForm.get("XFA");
-    const entries = {
+    const entries: Record<string, any> = {
       "xdp:xdp": "",
       template: "",
       datasets: "",
@@ -1644,10 +1642,10 @@ class PDFDocument {
     ]);
   }
 
-  async _getLinearizationPage(pageIndex) {
+  async _getLinearizationPage(pageIndex: number) {
     const { linearization, xref } = this;
     const catalog = this.catalog!;
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
       assert(
         linearization?.pageFirst === pageIndex,
         "_getLinearizationPage - invalid pageIndex argument."
@@ -1689,7 +1687,7 @@ class PDFDocument {
     }
   }
 
-  getPage(pageIndex) {
+  getPage(pageIndex: number) {
     const cachedPromise = this._pagePromises.get(pageIndex);
     if (cachedPromise) {
       return cachedPromise;
@@ -1697,7 +1695,7 @@ class PDFDocument {
     const { linearization, xfaFactory } = this;
     const catalog = this.catalog!;
 
-    let promise;
+    let promise: Promise<any>;
     if (xfaFactory) {
       promise = Promise.resolve([Dict.empty, null]);
     } else if (linearization?.pageFirst === pageIndex) {
@@ -1705,8 +1703,9 @@ class PDFDocument {
     } else {
       promise = catalog.getPageDict(pageIndex);
     }
+    // 这种promise最好不要复用，因为类型都变了
     // eslint-disable-next-line arrow-body-style
-    promise = promise.then(([pageDict, ref]) => {
+    promise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
       return new Page({
         pdfManager: this.pdfManager,
         xref: this.xref,
@@ -1832,7 +1831,7 @@ class PDFDocument {
   }
 
   fontFallback(id, handler) {
-    return this.catalog.fontFallback(id, handler);
+    return this.catalog!.fontFallback(id, handler);
   }
 
   async cleanup(manuallyTriggered = false) {
@@ -1842,13 +1841,13 @@ class PDFDocument {
   }
 
   async #collectFieldObjects(
-    name,
+    name: string,
     parentRef,
     fieldRef,
     promises,
     annotationGlobals,
-    visitedRefs,
-    orphanFields
+    visitedRefs: RefSet,
+    orphanFields: RefSetCache
   ) {
     const { xref } = this;
 

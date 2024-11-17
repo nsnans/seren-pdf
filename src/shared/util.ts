@@ -363,7 +363,7 @@ function getVerbosityLevel() {
 // A notice for devs. These are good for things that are helpful to devs, such
 // as warning that Workers were disabled, which is important to devs but not
 // end users.
-function info(msg: string | Error) {
+function info(msg: unknown) {
   if (verbosity >= VerbosityLevel.INFOS) {
     console.log(`Info: ${msg}`);
   }
@@ -1025,7 +1025,7 @@ function utf8StringToString(str) {
   return unescape(encodeURIComponent(str));
 }
 
-function isArrayEqual(arr1: object[], arr2: object[]) {
+function isArrayEqual<T>(arr1: ArrayLike<T>, arr2: ArrayLike<T>) {
   if (arr1.length !== arr2.length) {
     return false;
   }

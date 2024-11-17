@@ -76,6 +76,7 @@ import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { OperatorList } from "./operator_list";
 import { PDFImage } from "./image";
 import { Stream } from "./stream";
+import { PlatformHelper } from "../platform/platform_helper.js";
 
 const DefaultPartialEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -221,7 +222,7 @@ class PartialEvaluator {
 
   protected fontCache;
 
-  protected builtInCMapCache;
+  protected builtInCMapCache: Map<string, any>;
 
   protected standardFontDataCache;
 
@@ -230,6 +231,8 @@ class PartialEvaluator {
   protected systemFontCache;
 
   protected _regionalImageCache = new RegionalImageCache();
+
+  protected _fetchBuiltInCMapBound;
 
   constructor({
     xref,
@@ -257,7 +260,7 @@ class PartialEvaluator {
 
     this._regionalImageCache = new RegionalImageCache();
     this._fetchBuiltInCMapBound = this.fetchBuiltInCMap.bind(this);
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
+    if (PlatformHelper.isMozCental()) {
       ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
     } else {
       ImageResizer.setOptions({
@@ -405,7 +408,7 @@ class PartialEvaluator {
     return false;
   }
 
-  async fetchBuiltInCMap(name) {
+  async fetchBuiltInCMap(name: string) {
     const cachedData = this.builtInCMapCache.get(name);
     if (cachedData) {
       return cachedData;
@@ -435,7 +438,7 @@ class PartialEvaluator {
     return data;
   }
 
-  async fetchStandardFontData(name) {
+  async fetchStandardFontData(name: string) {
     const cachedData = this.standardFontDataCache.get(name);
     if (cachedData) {
       return new Stream(cachedData);

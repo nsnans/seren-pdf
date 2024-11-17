@@ -132,9 +132,9 @@ export class Catalog {
 
   public fontCache = new RefSetCache();
 
-  public builtInCMapCache = new Map();
+  public builtInCMapCache = new Map<string, any>();
 
-  public standardFontDataCache = new Map();
+  public standardFontDataCache = new Map<string, any>();
 
   public globalImageCache = new GlobalImageCache();
 
@@ -146,16 +146,20 @@ export class Catalog {
 
   public nonBlendModesSet = new RefSet();
 
-  public systemFontCache = new Map();
+  // TODO 这里面参数可能是 substitution，可以在修复完毕的时候，改成substitution试试看
+  public systemFontCache = new Map<string, any>();
+
+  protected _catDict: Dict;
 
   constructor(pdfManager: PDFManager, xref: XRef) {
     this.pdfManager = pdfManager;
     this.xref = xref;
 
-    this._catDict = xref.getCatalogObj();
-    if (!(this._catDict instanceof Dict)) {
+    const _catDict = xref.getCatalogObj();
+    if (!(_catDict instanceof Dict)) {
       throw new FormatError("Catalog object is not a dictionary.");
     }
+    this._catDict = _catDict!;
     // Given that `XRef.parse` will both fetch *and* validate the /Pages-entry,
     // the following call must always succeed here:
     this.toplevelPagesDict; // eslint-disable-line no-unused-expressions
@@ -1218,7 +1222,7 @@ export class Catalog {
     this.systemFontCache.clear();
   }
 
-  async getPageDict(pageIndex) {
+  async getPageDict(pageIndex: number) {
     const nodesToVisit = [this.toplevelPagesDict];
     const visitedNodes = new RefSet();
 

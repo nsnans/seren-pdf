@@ -46,7 +46,7 @@ export abstract class BaseStream {
 
   abstract getByte(): number;
 
-  abstract getBytes(_length: number): Uint8Array;
+  abstract getBytes(_length?: number): Uint8Array;
 
   /**
    * NOTE: This method can only be used to get image-data that is guaranteed

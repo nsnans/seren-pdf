@@ -33,7 +33,7 @@ abstract class DecodeStream extends BaseStream {
 
   protected buffer = emptyBuffer;
 
-  protected _rawMinBufferLength: number;
+  public _rawMinBufferLength: number;
 
   constructor(maybeMinBufferLength: number) {
     super();
@@ -142,7 +142,12 @@ abstract class DecodeStream extends BaseStream {
 }
 
 class StreamsSequenceStream extends DecodeStream {
-  constructor(streams, onError = null) {
+
+  protected _onError: (reason: unknown, objId: string | null) => void;
+
+  protected streams;
+
+  constructor(streams, onError: (reason: unknown, objId: string | null) => void /*= null*/) {
     streams = streams.filter(s => s instanceof BaseStream);
 
     let maybeLength = 0;

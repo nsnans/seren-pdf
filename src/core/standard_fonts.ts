@@ -891,7 +891,7 @@ const getSupplementalGlyphMapForCalibri = getLookupTableFactory(function (t) {
 
 function getStandardFontName(name) {
   const fontName = normalizeFontName(name);
-  const stdFontMap = getStdFontMap();
+  const stdFontMap = getStdFontMap() as Record<string, string>;
   return stdFontMap[fontName];
 }
 

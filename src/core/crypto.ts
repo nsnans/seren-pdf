@@ -26,8 +26,10 @@ import {
 } from "../shared/util";
 import { Dict, isName, Name } from "./primitives";
 import { DecryptStream } from "./decrypt_stream";
+import { PlatformHelper } from "../platform/platform_helper";
+import { Stream } from "./stream";
 
-class ARCFourCipher {
+class ARCFourCipher implements StreamClipher, StringClipher {
 
   protected a = 0;
 
@@ -35,7 +37,7 @@ class ARCFourCipher {
 
   protected s: Uint8Array;
 
-  constructor(key) {
+  constructor(key: Uint8Array) {
     const s = new Uint8Array(256);
     const keyLength = key.length;
 
@@ -51,7 +53,7 @@ class ARCFourCipher {
     this.s = s;
   }
 
-  encryptBlock(data) {
+  encryptBlock(data: Uint8Array) {
     let a = this.a,
       b = this.b;
     const s = this.s;
@@ -71,11 +73,11 @@ class ARCFourCipher {
     return output;
   }
 
-  decryptBlock(data) {
+  decryptBlock(data: Uint8Array) {
     return this.encryptBlock(data);
   }
 
-  encrypt(data) {
+  encrypt(data: Uint8Array) {
     return this.encryptBlock(data);
   }
 }
@@ -102,7 +104,7 @@ const calculateMD5 = (function calculateMD5Closure() {
     -145523070, -1120210379, 718787259, -343485551,
   ]);
 
-  function hash(data, offset: number, length: number) {
+  function hash(data: Uint8Array, offset: number, length: number): Uint8Array {
     let h0 = 1732584193,
       h1 = -271733879,
       h2 = -1732584194,
@@ -207,7 +209,7 @@ class Word64 {
     this.low |= word.low;
   }
 
-  shiftRight(places) {
+  shiftRight(places: number) {
     if (places >= 32) {
       this.low = (this.high >>> (places - 32)) | 0;
       this.high = 0;
@@ -217,7 +219,7 @@ class Word64 {
     }
   }
 
-  shiftLeft(places) {
+  shiftLeft(places: number) {
     if (places >= 32) {
       this.high = this.low << (places - 32);
       this.low = 0;
@@ -227,7 +229,7 @@ class Word64 {
     }
   }
 
-  rotateRight(places) {
+  rotateRight(places: number) {
     let low, high;
     if (places & 32) {
       high = this.low;
@@ -316,7 +318,7 @@ const calculateSHA256 = (function calculateSHA256Closure() {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
   ];
 
-  function hash(data, offset: number, length: number) {
+  function hash(data: Uint8Array, offset: number, length: number) {
     // initial hash values
     let h0 = 0x6a09e667,
       h1 = 0xbb67ae85,
@@ -521,7 +523,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     new Word64(0x4cc5d4be, 0xcb3e42b6), new Word64(0x597f299c, 0xfc657e2a),
     new Word64(0x5fcb6fab, 0x3ad6faec), new Word64(0x6c44198c, 0x4a475817)];
 
-  function hash(data, offset: number, length: number, mode384 = false) {
+  function hash(data: Uint8Array, offset: number, length: number, mode384 = false) {
     // initial hash values
     let h0, h1, h2, h3, h4, h5, h6, h7;
     if (!mode384) {
@@ -687,21 +689,34 @@ const calculateSHA512 = (function calculateSHA512Closure() {
   return hash;
 })();
 
-function calculateSHA384(data, offset: number, length: number) {
+function calculateSHA384(data: Uint8Array, offset: number, length: number) {
   return calculateSHA512(data, offset, length, /* mode384 = */ true);
 }
 
-class NullCipher {
-  decryptBlock(data) {
+class NullCipher implements StreamClipher, StringClipher {
+
+  encryptBlock(data: Uint8Array) {
+    return data;
+  }
+  decryptBlock(data: Uint8Array) {
     return data;
   }
 
-  encrypt(data) {
+  encrypt(data: Uint8Array) {
     return data;
   }
 }
 
-class AESBaseCipher {
+interface StreamClipher {
+
+  encryptBlock(data: Uint8Array): Uint8Array;
+
+  decryptBlock(data: Uint8Array, finalize: boolean, iv?: Uint8Array): Uint8Array;
+
+  encrypt(data: Uint8Array, iv?: Uint8Array): Uint8Array;
+}
+
+abstract class AESBaseCipher implements StreamClipher {
 
   protected _s: Uint8Array;
 
@@ -717,9 +732,16 @@ class AESBaseCipher {
 
   protected bufferLength = 0;
 
+  protected _key?: Uint8Array;
+
+  protected _keySize?: number;
+
+  protected _cyclesOfRepetition?: number;
+
+  protected iv?: Uint8Array;
+
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       this.constructor === AESBaseCipher
     ) {
       unreachable("Cannot initialize AESBaseCipher.");
@@ -828,20 +850,22 @@ class AESBaseCipher {
 
   }
 
-  _expandKey(cipherKey) {
-    unreachable("Cannot call `_expandKey` on the base class");
+  encryptBlock(_data: Uint8Array): Uint8Array {
+    throw new Error("Unsupported Opertion");
   }
 
-  _decrypt(input, key) {
+  abstract _expandKey(cipherKey: Uint8Array): Uint8Array;
+
+  _decrypt(input: Uint8Array, key: Uint8Array) {
     let t, u, v;
     const state = new Uint8Array(16);
     state.set(input);
 
     // AddRoundKey
-    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
+    for (let j = 0, k = this._keySize!; j < 16; ++j, ++k) {
       state[j] ^= key[k];
     }
-    for (let i = this._cyclesOfRepetition - 1; i >= 1; --i) {
+    for (let i = this._cyclesOfRepetition! - 1; i >= 1; --i) {
       // InvShiftRows
       t = state[13];
       state[13] = state[9];
@@ -917,7 +941,7 @@ class AESBaseCipher {
     return state;
   }
 
-  _encrypt(input, key) {
+  _encrypt(input: Uint8Array, key: Uint8Array) {
     const s = this._s;
 
     let t, u, v;
@@ -929,7 +953,7 @@ class AESBaseCipher {
       state[j] ^= key[j];
     }
 
-    for (let i = 1; i < this._cyclesOfRepetition; i++) {
+    for (let i = 1; i < this._cyclesOfRepetition!; i++) {
       // SubBytes
       for (let j = 0; j < 16; ++j) {
         state[j] = s[state[j]];
@@ -995,18 +1019,18 @@ class AESBaseCipher {
     state[11] = u;
     state[15] = t;
     // AddRoundKey
-    for (let j = 0, k = this._keySize; j < 16; ++j, ++k) {
+    for (let j = 0, k = this._keySize!; j < 16; ++j, ++k) {
       state[j] ^= key[k];
     }
     return state;
   }
 
-  _decryptBlock2(data, finalize) {
+  _decryptBlock2(data: Uint8Array, finalize: boolean) {
     const sourceLength = data.length;
     let buffer = this.buffer,
       bufferLength = this.bufferPosition;
     const result = [];
-    let iv = this.iv;
+    let iv = this.iv!;
 
     for (let i = 0; i < sourceLength; ++i) {
       buffer[bufferLength] = data[i];
@@ -1015,7 +1039,7 @@ class AESBaseCipher {
         continue;
       }
       // buffer is full, decrypting
-      const plain = this._decrypt(buffer, this._key);
+      const plain = this._decrypt(buffer, this._key!);
       // xor-ing the IV vector to get plain text
       for (let j = 0; j < 16; ++j) {
         plain[j] ^= iv[j];
@@ -1036,7 +1060,7 @@ class AESBaseCipher {
     let outputLength = 16 * result.length;
     if (finalize) {
       // undo a padding that is described in RFC 2898
-      const lastBlock = result.at(-1);
+      const lastBlock = result.at(-1)!;
       let psLen = lastBlock[15];
       if (psLen <= 16) {
         for (let i = 15, ii = 16 - psLen; i >= ii; --i) {
@@ -1057,7 +1081,7 @@ class AESBaseCipher {
     return output;
   }
 
-  decryptBlock(data, finalize, iv = null) {
+  decryptBlock(data: Uint8Array, finalize: boolean, iv?: Uint8Array): Uint8Array {
     const sourceLength = data.length;
     const buffer = this.buffer;
     let bufferLength = this.bufferPosition;
@@ -1088,7 +1112,7 @@ class AESBaseCipher {
     return this.decryptBlock(data, finalize);
   }
 
-  encrypt(data, iv) {
+  encrypt(data: Uint8Array, iv?: Uint8Array) {
     const sourceLength = data.length;
     let buffer = this.buffer,
       bufferLength = this.bufferPosition;
@@ -1109,7 +1133,7 @@ class AESBaseCipher {
       }
 
       // buffer is full, encrypting
-      const cipher = this._encrypt(buffer, this._key);
+      const cipher = this._encrypt(buffer, this._key!);
       iv = cipher;
       result.push(cipher);
       buffer = new Uint8Array(16);
@@ -1142,7 +1166,7 @@ class AES128Cipher extends AESBaseCipher {
 
   protected _key: Uint8Array;
 
-  constructor(key) {
+  constructor(key: Uint8Array) {
     super();
 
     this._rcon = new Uint8Array([
@@ -1173,7 +1197,7 @@ class AES128Cipher extends AESBaseCipher {
     this._key = this._expandKey(key);
   }
 
-  _expandKey(cipherKey) {
+  _expandKey(cipherKey: Uint8Array) {
     const b = 176;
     const s = this._s;
     const rcon = this._rcon;
@@ -1217,13 +1241,13 @@ class AES256Cipher extends AESBaseCipher {
 
   protected _key: Uint8Array;
 
-  constructor(key) {
+  constructor(key: Uint8Array) {
     super();
 
     this._key = this._expandKey(key);
   }
 
-  _expandKey(cipherKey) {
+  _expandKey(cipherKey: Uint8Array) {
     const b = 240;
     const s = this._s;
 
@@ -1231,7 +1255,9 @@ class AES256Cipher extends AESBaseCipher {
     result.set(cipherKey);
 
     let r = 1;
-    let t1, t2, t3, t4;
+    // 这里初始化了一个赋值，其实这个赋值是没有意义的
+    // 但是为了防止报错，和写一大堆非空代码，需要加上这个判定
+    let t1 = NaN, t2 = NaN, t3 = NaN, t4 = NaN;
     for (let j = 32, i = 1; j < b; ++i) {
       if (j % 32 === 16) {
         t1 = s[t1];
@@ -1272,7 +1298,7 @@ class AES256Cipher extends AESBaseCipher {
 }
 
 class PDF17 {
-  checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
+  checkOwnerPassword(password: Uint8Array, ownerValidationSalt: Uint8Array, userBytes: Uint8Array, ownerPassword: Uint8Array) {
     const hashData = new Uint8Array(password.length + 56);
     hashData.set(password, 0);
     hashData.set(ownerValidationSalt, password.length);
@@ -1281,7 +1307,7 @@ class PDF17 {
     return isArrayEqual(result, ownerPassword);
   }
 
-  checkUserPassword(password, userValidationSalt, userPassword) {
+  checkUserPassword(password: Uint8Array, userValidationSalt: Uint8Array, userPassword: Uint8Array) {
     const hashData = new Uint8Array(password.length + 8);
     hashData.set(password, 0);
     hashData.set(userValidationSalt, password.length);
@@ -1289,7 +1315,8 @@ class PDF17 {
     return isArrayEqual(result, userPassword);
   }
 
-  getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
+  getOwnerKey(password: Uint8Array, ownerKeySalt: Uint8Array
+    , userBytes: Uint8Array, ownerEncryption: Uint8Array) {
     const hashData = new Uint8Array(password.length + 56);
     hashData.set(password, 0);
     hashData.set(ownerKeySalt, password.length);
@@ -1299,7 +1326,7 @@ class PDF17 {
     return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
   }
 
-  getUserKey(password, userKeySalt, userEncryption) {
+  getUserKey(password: Uint8Array, userKeySalt: Uint8Array, userEncryption: Uint8Array) {
     const hashData = new Uint8Array(password.length + 8);
     hashData.set(password, 0);
     hashData.set(userKeySalt, password.length);
@@ -1311,12 +1338,14 @@ class PDF17 {
 }
 
 class PDF20 {
-  _hash(password, input, userBytes) {
+  _hash(password: Uint8Array, input: Uint8Array, userBytes: Uint8Array) {
     // This refers to Algorithm 2.B as defined in ISO 32000-2.
     let k = calculateSHA256(input, 0, input.length).subarray(0, 32);
-    let e = [0];
+    // 这里做了一个等效替换
+    // 将原来的 [0] 改为了 new Uint8Array([0]) 
+    let e = new Uint8Array([0]);
     let i = 0;
-    while (i < 64 || e.at(-1) > i - 32) {
+    while (i < 64 || e.at(-1)! > i - 32) {
       const combinedLength = password.length + k.length + userBytes.length,
         combinedArray = new Uint8Array(combinedLength);
       let writeOffset = 0;
@@ -1353,7 +1382,8 @@ class PDF20 {
     return k.subarray(0, 32);
   }
 
-  checkOwnerPassword(password, ownerValidationSalt, userBytes, ownerPassword) {
+  checkOwnerPassword(password: Uint8Array, ownerValidationSalt: Uint8Array
+    , userBytes: Uint8Array, ownerPassword: Uint8Array) {
     const hashData = new Uint8Array(password.length + 56);
     hashData.set(password, 0);
     hashData.set(ownerValidationSalt, password.length);
@@ -1362,15 +1392,15 @@ class PDF20 {
     return isArrayEqual(result, ownerPassword);
   }
 
-  checkUserPassword(password, userValidationSalt, userPassword) {
+  checkUserPassword(password: Uint8Array, userValidationSalt: Uint8Array, userPassword: Uint8Array) {
     const hashData = new Uint8Array(password.length + 8);
     hashData.set(password, 0);
     hashData.set(userValidationSalt, password.length);
-    const result = this._hash(password, hashData, []);
+    const result = this._hash(password, hashData, new Uint8Array(0));
     return isArrayEqual(result, userPassword);
   }
 
-  getOwnerKey(password, ownerKeySalt, userBytes, ownerEncryption) {
+  getOwnerKey(password: Uint8Array, ownerKeySalt: Uint8Array, userBytes: Uint8Array, ownerEncryption: Uint8Array) {
     const hashData = new Uint8Array(password.length + 56);
     hashData.set(password, 0);
     hashData.set(ownerKeySalt, password.length);
@@ -1380,43 +1410,60 @@ class PDF20 {
     return cipher.decryptBlock(ownerEncryption, false, new Uint8Array(16));
   }
 
-  getUserKey(password, userKeySalt, userEncryption) {
+  getUserKey(password: Uint8Array, userKeySalt: Uint8Array, userEncryption: Uint8Array) {
     const hashData = new Uint8Array(password.length + 8);
     hashData.set(password, 0);
     hashData.set(userKeySalt, password.length);
     // `key` is the decryption key for the UE string.
-    const key = this._hash(password, hashData, []);
+    const key = this._hash(password, hashData, new Uint8Array(0));
     const cipher = new AES256Cipher(key);
     return cipher.decryptBlock(userEncryption, false, new Uint8Array(16));
   }
 }
 
+
+interface StringClipher {
+
+  encryptBlock(data: Uint8Array): Uint8Array;
+
+  decryptBlock(data: Uint8Array, finalize?: boolean): Uint8Array;
+
+  encrypt(data: Uint8Array): Uint8Array;
+}
+
 export class CipherTransform {
-  constructor(stringCipherConstructor, streamCipherConstructor) {
-    this.StringCipherConstructor = stringCipherConstructor;
-    this.StreamCipherConstructor = streamCipherConstructor;
+
+  protected StringCipherConstructor: () => StringClipher;
+
+  protected StreamCipherConstructor: () => StreamClipher;
+
+  constructor(StringCipherConstructor: () => StringClipher, StreamCipherConstructor: () => StreamClipher) {
+    this.StringCipherConstructor = StringCipherConstructor;
+    this.StreamCipherConstructor = StreamCipherConstructor;
   }
 
-  createStream(stream, length) {
-    const cipher = new this.StreamCipherConstructor();
+  createStream(stream: Stream, length: number) {
+    const cipher = this.StreamCipherConstructor();
     return new DecryptStream(
       stream,
       length,
-      function cipherTransformDecryptStream(data, finalize) {
+      function cipherTransformDecryptStream(data: Uint8Array, finalize: boolean) {
         return cipher.decryptBlock(data, finalize);
       }
     );
   }
 
-  decryptString(s) {
-    const cipher = new this.StringCipherConstructor();
+  decryptString(s: string) {
+    // TODO 这里原来是个new，但是实际上传进来的是一个函数，因此改成了函数，或许会导致问题？
+    const cipher = this.StringCipherConstructor();
     let data = stringToBytes(s);
     data = cipher.decryptBlock(data, true);
     return bytesToString(data);
   }
 
-  encryptString(s) {
-    const cipher = new this.StringCipherConstructor();
+  encryptString(s: string) {
+    // TODO 这里原来是个new，但是实际上传进来的是一个函数，因此改成了函数，或许会导致问题？
+    const cipher = this.StringCipherConstructor();
     if (cipher instanceof AESBaseCipher) {
       // Append some chars equal to "16 - (M mod 16)"
       // where M is the string length (see section 7.6.2 in PDF specification)
@@ -1466,33 +1513,39 @@ class CipherTransformFactory {
 
   protected cf;
 
-  protected strf;
+  protected strf?: Name;
 
-  protected stmf;
+  protected stmf?: Name;
 
   protected eff;
 
-  protected encryptionKey;
+  protected encryptionKey: Uint8Array;
+
+  protected encryptMetadata: boolean;
+
+  protected dict: Dict;
+
+  protected filterName;
 
   #createEncryptionKey20(
-    revision,
-    password,
-    ownerPassword,
-    ownerValidationSalt,
-    ownerKeySalt,
-    uBytes,
-    userPassword,
-    userValidationSalt,
-    userKeySalt,
-    ownerEncryption,
-    userEncryption,
-    perms
+    revision: number,
+    password: Uint8Array | undefined,
+    ownerPassword: Uint8Array,
+    ownerValidationSalt: Uint8Array,
+    ownerKeySalt: Uint8Array,
+    uBytes: Uint8Array,
+    userPassword: Uint8Array,
+    userValidationSalt: Uint8Array,
+    userKeySalt: Uint8Array,
+    ownerEncryption: Uint8Array,
+    userEncryption: Uint8Array,
+    _perms: Uint8Array
   ) {
     if (password) {
       const passwordLength = Math.min(127, password.length);
       password = password.subarray(0, passwordLength);
     } else {
-      password = [];
+      password = new Uint8Array(0);
     }
     const pdfAlgorithm = revision === 6 ? new PDF20() : new PDF17();
 
@@ -1521,14 +1574,14 @@ class CipherTransformFactory {
   }
 
   #prepareKeyData(
-    fileId,
-    password,
-    ownerPassword,
-    userPassword,
-    flags,
-    revision,
-    keyLength,
-    encryptMetadata
+    fileId: Uint8Array,
+    password: Uint8Array | undefined,
+    ownerPassword: Uint8Array,
+    userPassword: Uint8Array,
+    flags: number,
+    revision: number,
+    keyLength: number,
+    encryptMetadata: boolean
   ) {
     const hashDataSize = 40 + ownerPassword.length + fileId.length;
     const hashData = new Uint8Array(hashDataSize);
@@ -1609,7 +1662,8 @@ class CipherTransformFactory {
     return encryptionKey;
   }
 
-  #decodeUserPassword(password, ownerPassword, revision, keyLength) {
+  #decodeUserPassword(password: Uint8Array, ownerPassword: Uint8Array
+    , revision: number, keyLength: number) {
     const hashData = new Uint8Array(32);
     let i = 0;
     const n = Math.min(32, password.length);
@@ -1646,7 +1700,7 @@ class CipherTransformFactory {
     return userPassword;
   }
 
-  #buildObjectKey(num, gen, encryptionKey, isAes = false) {
+  #buildObjectKey(num: number, gen: number, encryptionKey: Uint8Array, isAes = false) {
     const key = new Uint8Array(encryptionKey.length + 9);
     const n = encryptionKey.length;
     let i;
@@ -1668,7 +1722,7 @@ class CipherTransformFactory {
     return hash.subarray(0, Math.min(encryptionKey.length + 5, 16));
   }
 
-  #buildCipherConstructor(cf, name, num, gen, key) {
+  #buildCipherConstructor(cf, name: Name, num: number, gen: number, key: Uint8Array) {
     if (!(name instanceof Name)) {
       throw new FormatError("Invalid crypt filter name.");
     }
@@ -1703,7 +1757,7 @@ class CipherTransformFactory {
     throw new FormatError("Unknown crypto method");
   }
 
-  constructor(dict:Dict, fileId, password) {
+  constructor(dict: Dict, fileId: string, password: string) {
     const filter = dict.get("Filter");
     if (!isName(filter, "Standard")) {
       throw new FormatError("unknown encryption method");
@@ -1817,7 +1871,7 @@ class CipherTransformFactory {
     } else if (!encryptionKey && password) {
       // Attempting use the password as an owner password
       const decodedPassword = this.#decodeUserPassword(
-        passwordBytes,
+        passwordBytes!,
         ownerPassword,
         revision,
         keyLength
@@ -1864,18 +1918,18 @@ class CipherTransformFactory {
       return new CipherTransform(
         this.#buildCipherConstructor(
           this.cf,
-          this.strf,
+          this.strf!,
           num,
           gen,
           this.encryptionKey
         ),
         this.#buildCipherConstructor(
           this.cf,
-          this.stmf,
+          this.stmf!,
           num,
           gen,
           this.encryptionKey
-        )
+        ) as () => StreamClipher
       );
     }
     // algorithms 1 and 2

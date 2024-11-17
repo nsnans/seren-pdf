@@ -20,9 +20,9 @@ import { XRef } from "./xref";
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
 export const EOF = Symbol("EOF");
 
-let CmdCache: Record<string, any> = Object.create(null);
-let NameCache: Record<string, any> = Object.create(null);
-let RefCache: Record<string, any> = Object.create(null);
+let CmdCache: Record<string, Cmd> = Object.create(null);
+let NameCache: Record<string, Name> = Object.create(null);
+let RefCache: Record<string, Ref> = Object.create(null);
 
 export function clearPrimitiveCaches() {
   CmdCache = Object.create(null);
@@ -218,7 +218,7 @@ export class Dict {
     }
   }
 
-  static get empty() {
+  static get empty(): Dict {
     const emptyDict = new Dict(null);
 
     emptyDict.set = (_key, _value) => {
@@ -322,7 +322,7 @@ export class Ref {
     ));
   }
 
-  static get(num: number, gen: number) {
+  static get(num: number, gen: number): Ref {
     const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
     // eslint-disable-next-line no-restricted-syntax
     return (RefCache[key] ||= new Ref(num, gen));
@@ -346,15 +346,15 @@ export class RefSet {
 
   // TODO 这里到底是不是object，还是可以窄化为一个更精确地类型
   // 需要研究一下
-  has(ref: object) {
+  has(ref: object | string) {
     return this._set.has(ref.toString());
   }
 
-  put(ref: object) {
+  put(ref: object | string) {
     this._set.add(ref.toString());
   }
 
-  remove(ref: object) {
+  remove(ref: object | string) {
     this._set.delete(ref.toString());
   }
 

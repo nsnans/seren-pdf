@@ -784,7 +784,7 @@ class Parser {
     return stream;
   }
 
-  makeFilter(stream, name, maybeLength, params) {
+  makeFilter(stream, name: string, maybeLength: number, params) {
     // Since the 'Length' entry in the stream dictionary can be completely
     // wrong, e.g. zero for non-empty streams, only skip parsing the stream
     // when we can be absolutely certain that it actually is empty.

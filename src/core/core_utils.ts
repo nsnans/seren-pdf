@@ -25,6 +25,7 @@ import {
 } from "../shared/util";
 import { Dict, isName, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
+import { PlatformHelper } from "../platform/platform_helper";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -32,7 +33,7 @@ type InitializerType = ((t: { [key: string]: any }) => void) | null;
 
 // 有待考量
 function getLookupTableFactory(initializer: InitializerType) {
-  let lookup: { [key: string]: number } | null = null;
+  let lookup: { [key: string]: any } | null = null;
   return function () {
     if (initializer) {
       lookup = Object.create(null);
@@ -78,8 +79,8 @@ class XRefParseException extends BaseException {
  * @param {Array<ArrayBuffer>} arr - An array of ArrayBuffers.
  * @returns {Uint8Array}
  */
-function arrayBuffersToBytes(arr) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+function arrayBuffersToBytes(arr: Array<ArrayBuffer>): Uint8Array {
+  if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     for (const item of arr) {
       assert(
         item instanceof ArrayBuffer,
@@ -128,12 +129,12 @@ function arrayBuffersToBytes(arr) {
  *   chain, for example to be able to find `\Resources` placed on multiple
  *   levels of the tree. The default value is `true`.
  */
-function getInheritableProperty({
-  dict,
-  key,
+function getInheritableProperty(
+  dict: Dict,
+  key: string,
   getArray = false,
-  stopWhenFound = true,
-}) {
+  stopWhenFound = true
+) {
   let values;
   const visited = new RefSet();
 
@@ -167,7 +168,7 @@ const ROMAN_NUMBER_MAP = [
  *   to lower case letters. The default value is `false`.
  * @returns {string} The resulting Roman number.
  */
-function toRomanNumerals(number, lowerCase = false) {
+function toRomanNumerals(number: number, lowerCase = false) {
   assert(
     Number.isInteger(number) && number > 0,
     "The number should be a positive integer."
@@ -397,11 +398,9 @@ function _collectJS(entry, xref, list, parents) {
 
 function collectActions(xref, dict, eventType) {
   const actions: Record<string, any> = Object.create(null);
-  const additionalActionsDicts = getInheritableProperty({
-    dict,
-    key: "AA",
-    stopWhenFound: false,
-  });
+  const additionalActionsDicts = getInheritableProperty(
+    dict, "AA", false, false,
+  );
   if (additionalActionsDicts) {
     // additionalActionsDicts contains dicts from ancestors
     // as they're found in the tree from bottom to top.

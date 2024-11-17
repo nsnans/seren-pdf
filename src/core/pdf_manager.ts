@@ -44,6 +44,8 @@ interface PDFManager {
 
   password: string;
 
+  evaluatorOptions;
+
   ensureDoc(prop: string, args?: any);
 
   ensureXRef(prop: string, args?: any);

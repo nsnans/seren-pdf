@@ -195,7 +195,7 @@ class AnnotationFactory {
         return new TextAnnotation(parameters);
 
       case "Widget":
-        let fieldType = getInheritableProperty({ dict, key: "FT" });
+        let fieldType = getInheritableProperty(dict, "FT");
         fieldType = fieldType instanceof Name ? fieldType.name : null;
 
         switch (fieldType) {
@@ -869,7 +869,7 @@ class Annotation {
     const { dict, annotationGlobals } = params;
 
     const defaultAppearance =
-      getInheritableProperty({ dict, key: "DA" }) ||
+      getInheritableProperty(dict, "DA") ||
       annotationGlobals.acroForm.get("DA");
     this._defaultAppearance =
       typeof defaultAppearance === "string" ? defaultAppearance : "";
@@ -1835,18 +1835,12 @@ class WidgetAnnotation extends Annotation {
       data.actions = collectActions(xref, dict, AnnotationActionEventType);
     }
 
-    let fieldValue = getInheritableProperty({
-      dict,
-      key: "V",
-      getArray: true,
-    });
+    let fieldValue = getInheritableProperty(dict, "V", true);
     data.fieldValue = this._decodeFormValue(fieldValue);
 
-    const defaultFieldValue = getInheritableProperty({
-      dict,
-      key: "DV",
-      getArray: true,
-    });
+    const defaultFieldValue = getInheritableProperty(
+      dict, "DV", true
+    );
     data.defaultFieldValue = this._decodeFormValue(defaultFieldValue);
 
     if (fieldValue === undefined && annotationGlobals.xfaDatasets) {
@@ -1874,10 +1868,10 @@ class WidgetAnnotation extends Annotation {
       data.fieldValue !== undefined &&
       data.fieldValue !== null;
 
-    const fieldType = getInheritableProperty({ dict, key: "FT" });
+    const fieldType = getInheritableProperty(dict, "FT");
     data.fieldType = fieldType instanceof Name ? fieldType.name : null;
 
-    const localResources = getInheritableProperty({ dict, key: "DR" });
+    const localResources = getInheritableProperty(dict, "DR");
     const acroFormResources = annotationGlobals.acroForm.get("DR");
     const appearanceResources = this.appearance?.dict.get("Resources");
 
@@ -1892,7 +1886,7 @@ class WidgetAnnotation extends Annotation {
       }),
     };
 
-    data.fieldFlags = getInheritableProperty({ dict, key: "Ff" });
+    data.fieldFlags = getInheritableProperty(dict, "Ff");
     if (!Number.isInteger(data.fieldFlags) || data.fieldFlags < 0) {
       data.fieldFlags = 0;
     }
@@ -2759,14 +2753,14 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     }
 
     // Determine the alignment of text in the field.
-    let alignment = getInheritableProperty({ dict, key: "Q" });
+    let alignment = getInheritableProperty(dict, "Q");
     if (!Number.isInteger(alignment) || alignment < 0 || alignment > 2) {
       alignment = null;
     }
     this.data.textAlignment = alignment;
 
     // Determine the maximum length of text in the field.
-    let maximumLength = getInheritableProperty({ dict, key: "MaxLen" });
+    let maximumLength = getInheritableProperty(dict, "MaxLen");
     if (!Number.isInteger(maximumLength) || maximumLength < 0) {
       maximumLength = 0;
     }
@@ -3486,7 +3480,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     // inherit the options from a parent annotation (issue 8094).
     this.data.options = [];
 
-    const options = getInheritableProperty({ dict, key: "Opt" });
+    const options = getInheritableProperty(dict, "Opt" );
     if (Array.isArray(options)) {
       for (let i = 0, ii = options.length; i < ii; i++) {
         const option = xref.fetchIfRef(options[i]);
