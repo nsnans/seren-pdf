@@ -31,6 +31,7 @@ import {
 } from "./tools";
 import { AnnotationEditor } from "./editor";
 import { FreeTextAnnotationElement } from "../annotation_layer";
+import { PlatformHelper } from "../../platform/platform_helper";
 
 const EOL_PATTERN = /\r\n?|\n/g;
 
@@ -138,11 +139,11 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n, uiManager) {
+  static initialize(l10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditor.initialize(l10n, uiManager);
     const style = getComputedStyle(document.documentElement);
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       const lineHeight = parseFloat(
         style.getPropertyValue("--freetext-line-height")
       );

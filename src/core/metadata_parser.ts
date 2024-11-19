@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
-import { SimpleXMLParser } from "./xml_parser";
+import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
 
 class MetadataParser {
 
   protected _metadataMap = new Map();
 
-  constructor(data) {
+  protected _data: string;
+
+  constructor(data: string) {
     // Ghostscript may produce invalid metadata, so try to repair that first.
     data = this._repair(data);
 
@@ -38,12 +40,13 @@ class MetadataParser {
     // Start by removing any "junk" before the first tag (see issue 10395).
     return data
       .replace(/^[^<]+/, "")
-      .replaceAll(/>\\376\\377([^<]+)/g, function (_all, codes) {
+      .replaceAll(/>\\376\\377([^<]+)/g, function (_all: string, codes: string) {
         const bytes = codes
-          .replaceAll(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
+          .replaceAll(/\\([0-3])([0-7])([0-7])/g, function (_code: string, d1: number, d2: number, d3: number) {
+            // d1 d2 d3 这里可能会触发强转
             return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
           })
-          .replaceAll(/&(amp|apos|gt|lt|quot);/g, function (str, name) {
+          .replaceAll(/&(amp|apos|gt|lt|quot);/g, function (_str: string, name: string) {
             switch (name) {
               case "amp":
                 return "&";
@@ -80,7 +83,7 @@ class MetadataParser {
       });
   }
 
-  _getSequence(entry) {
+  _getSequence(entry: SimpleDOMNode) {
     const name = entry.nodeName;
     if (name !== "rdf:bag" && name !== "rdf:seq" && name !== "rdf:alt") {
       return null;
@@ -88,7 +91,7 @@ class MetadataParser {
     return entry.childNodes.filter(node => node.nodeName === "rdf:li");
   }
 
-  _parseArray(entry) {
+  _parseArray(entry: SimpleDOMNode) {
     if (!entry.hasChildNodes()) {
       return;
     }
@@ -102,8 +105,8 @@ class MetadataParser {
     );
   }
 
-  _parse(xmlDocument) {
-    let rdf = xmlDocument.documentElement;
+  _parse(xmlDocument: { documentElement: SimpleDOMNode }) {
+    let rdf: SimpleDOMNode | undefined = xmlDocument.documentElement;
 
     if (rdf.nodeName !== "rdf:rdf") {
       // Wrapped in <xmpmeta>

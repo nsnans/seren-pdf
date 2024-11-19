@@ -57,7 +57,7 @@ export abstract class BaseStream {
     return this.getBytes(length, decoderOptions);
   }
 
-  async asyncGetBytes() {
+  async asyncGetBytes(): Promise<Uint8Array | null> {
     unreachable("Abstract method `asyncGetBytes` called");
   }
 
@@ -108,7 +108,7 @@ export abstract class BaseStream {
     unreachable("Abstract method `getByteRange` called");
   }
 
-  getString(length: number) {
+  getString(length?: number) {
     return bytesToString(this.getBytes(length));
   }
 

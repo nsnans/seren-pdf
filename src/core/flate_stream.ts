@@ -41,7 +41,7 @@ const distDecode = new Int32Array([
   0xb1001, 0xb1801, 0xc2001, 0xc3001, 0xd4001, 0xd6001,
 ]);
 
-const fixedLitCodeTab = [
+const fixedLitCodeTab: [Int32Array, number] = [
   new Int32Array([
     0x70100, 0x80050, 0x80010, 0x80118, 0x70110, 0x80070, 0x80030, 0x900c0,
     0x70108, 0x80060, 0x80020, 0x900a0, 0x80000, 0x80080, 0x80040, 0x900e0,
@@ -111,7 +111,7 @@ const fixedLitCodeTab = [
   9,
 ];
 
-const fixedDistCodeTab = [
+const fixedDistCodeTab: [Int32Array, number] = [
   new Int32Array([
     0x50000, 0x50010, 0x50008, 0x50018, 0x50004, 0x50014, 0x5000c, 0x5001c,
     0x50002, 0x50012, 0x5000a, 0x5001a, 0x50006, 0x50016, 0x5000e, 0x00000,
@@ -127,14 +127,16 @@ class FlateStream extends DecodeStream {
 
   protected codeBuf = 0;
 
-  constructor(str, maybeLength: number) {
+  protected str: Stream;
+
+  constructor(stream: Stream, maybeLength: number) {
     super(maybeLength);
 
-    this.str = str;
-    this.dict = str.dict;
+    this.str = stream;
+    this.dict = stream.dict;
 
-    const cmf = str.getByte();
-    const flg = str.getByte();
+    const cmf = stream.getByte();
+    const flg = stream.getByte();
     if (cmf === -1 || flg === -1) {
       throw new FormatError(`Invalid header in flate stream: ${cmf}, ${flg}`);
     }
@@ -170,8 +172,7 @@ class FlateStream extends DecodeStream {
 
       // We can't await writer.write() because it'll block until the reader
       // starts which happens few lines below.
-      writer
-        .write(bytes)
+      writer.write(bytes)
         .then(async () => {
           await writer.ready;
           await writer.close();
@@ -181,9 +182,22 @@ class FlateStream extends DecodeStream {
       const chunks = [];
       let totalLength = 0;
 
-      for await (const chunk of readable) {
-        chunks.push(chunk);
-        totalLength += chunk.byteLength;
+
+      // for await of 由于在浏览器和nodejs中，对象类型不一致，导致了一些问题
+      // 这里做个改写
+      // for await (const chunk of readable) {
+      //   chunks.push(chunk);
+      //   totalLength += chunk.byteLength;
+      // }
+
+      const reader = readable.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        chunks.push(value);
+        totalLength += value.byteLength;
       }
       const data = new Uint8Array(totalLength);
       let offset = 0;
@@ -234,7 +248,7 @@ class FlateStream extends DecodeStream {
     return b;
   }
 
-  getCode(table) {
+  getCode(table: [Int32Array, number]) {
     const str = this.str;
     const codes = table[0];
     const maxLen = table[1];
@@ -262,7 +276,7 @@ class FlateStream extends DecodeStream {
     return codeVal;
   }
 
-  generateHuffmanTable(lengths) {
+  generateHuffmanTable(lengths: Uint8Array): [Int32Array, number] {
     const n = lengths.length;
 
     // find max code length
@@ -304,7 +318,7 @@ class FlateStream extends DecodeStream {
     return [codes, maxLen];
   }
 
-  #endsStreamOnError(err) {
+  #endsStreamOnError(err: any) {
     info(err);
     this.eof = true;
   }
@@ -315,7 +329,7 @@ class FlateStream extends DecodeStream {
     // read block header
     try {
       hdr = this.getBits(3);
-    } catch (ex) {
+    } catch (ex: any) {
       this.#endsStreamOnError(ex.message);
       return;
     }

@@ -14,18 +14,19 @@
  */
 
 import { noContextMenu } from "../display_utils";
+import { AnnotationEditor } from "./editor";
 
 class AltText {
-  
+
   #altText = null;
 
   #altTextDecorative = false;
 
-  #altTextButton = null;
+  #altTextButton: HTMLButtonElement | null = null;
 
-  #altTextButtonLabel = null;
+  #altTextButtonLabel: HTMLSpanElement | null = null;
 
-  #altTextTooltip = null;
+  #altTextTooltip: HTMLSpanElement | null = null;
 
   #altTextTooltipTimeout = null;
 
@@ -33,7 +34,7 @@ class AltText {
 
   #badge = null;
 
-  #editor = null;
+  #editor: AnnotationEditor;
 
   #guessedText = null;
 
@@ -41,11 +42,11 @@ class AltText {
 
   #useNewAltTextFlow = false;
 
-  static #l10nNewButton = null;
+  static #l10nNewButton: Record<string, string> | null = null;
 
   static _l10n = null;
 
-  constructor(editor) {
+  constructor(editor: AnnotationEditor) {
     this.#editor = editor;
     this.#useNewAltTextFlow = editor._uiManager.useNewAltTextFlow;
 
@@ -66,17 +67,17 @@ class AltText {
   async render() {
     const altText = (this.#altTextButton = document.createElement("button"));
     altText.className = "altText";
-    altText.tabIndex = "0";
+    altText.tabIndex = 0;
 
     const label = (this.#altTextButtonLabel = document.createElement("span"));
     altText.append(label);
 
     if (this.#useNewAltTextFlow) {
       altText.classList.add("new");
-      altText.setAttribute("data-l10n-id", AltText.#l10nNewButton.missing);
+      altText.setAttribute("data-l10n-id", AltText.#l10nNewButton!.missing);
       label.setAttribute(
         "data-l10n-id",
-        AltText.#l10nNewButton["missing-label"]
+        AltText.#l10nNewButton!["missing-label"]
       );
     } else {
       altText.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-button");
@@ -89,7 +90,7 @@ class AltText {
       signal,
     });
 
-    const onClick = event => {
+    const onClick = (event: UIEvent) => {
       event.preventDefault();
       this.#editor._uiManager.editAltText(this.#editor);
       if (this.#useNewAltTextFlow) {
@@ -102,7 +103,7 @@ class AltText {
     altText.addEventListener("click", onClick, { capture: true, signal });
     altText.addEventListener(
       "keydown",
-      event => {
+      (event: KeyboardEvent) => {
         if (event.target === altText && event.key === "Enter") {
           this.#altTextWasFromKeyBoard = true;
           onClick(event);
@@ -176,7 +177,7 @@ class AltText {
     this.#badge.classList.toggle("hidden", !visibility);
   }
 
-  serialize(isForCopying) {
+  serialize(isForCopying: boolean) {
     let altText = this.#altText;
     if (!isForCopying && this.#guessedText === altText) {
       altText = this.#textWithDisclaimer;
@@ -255,11 +256,11 @@ class AltText {
 
     if (this.#useNewAltTextFlow) {
       button.classList.toggle("done", !!this.#altText);
-      button.setAttribute("data-l10n-id", AltText.#l10nNewButton[this.#label]);
+      button.setAttribute("data-l10n-id", AltText.#l10nNewButton![this.#label]);
 
       this.#altTextButtonLabel?.setAttribute(
         "data-l10n-id",
-        AltText.#l10nNewButton[`${this.#label}-label`]
+        AltText.#l10nNewButton![`${this.#label}-label`]
       );
       if (!this.#altText) {
         this.#altTextTooltip?.remove();
@@ -280,10 +281,10 @@ class AltText {
       this.#altTextTooltip = tooltip = document.createElement("span");
       tooltip.className = "tooltip";
       tooltip.setAttribute("role", "tooltip");
-      tooltip.id = `alt-text-tooltip-${this.#editor.id}`;
+      tooltip.id = `alt-text-tooltip-${this.#editor!.id}`;
 
       const DELAY_TO_SHOW_TOOLTIP = 100;
-      const signal = this.#editor._uiManager._signal;
+      const signal = this.#editor!._uiManager._signal;
       signal.addEventListener(
         "abort",
         () => {
@@ -297,8 +298,8 @@ class AltText {
         () => {
           this.#altTextTooltipTimeout = setTimeout(() => {
             this.#altTextTooltipTimeout = null;
-            this.#altTextTooltip.classList.add("show");
-            this.#editor._reportTelemetry({
+            this.#altTextTooltip!.classList.add("show");
+            this.#editor!._reportTelemetry({
               action: "alt_text_tooltip",
             });
           }, DELAY_TO_SHOW_TOOLTIP);

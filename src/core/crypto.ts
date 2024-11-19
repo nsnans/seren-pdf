@@ -1757,7 +1757,7 @@ class CipherTransformFactory {
     throw new FormatError("Unknown crypto method");
   }
 
-  constructor(dict: Dict, fileId: string, password: string) {
+  constructor(dict: Dict, fileId: string, password: string | null) {
     const filter = dict.get("Filter");
     if (!isName(filter, "Standard")) {
       throw new FormatError("unknown encryption method");

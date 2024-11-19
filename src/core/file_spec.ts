@@ -16,8 +16,9 @@
 import { shadow, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { Dict } from "./primitives";
+import { XRef } from "./xref";
 
-function pickPlatformItem(dict) {
+function pickPlatformItem(dict?: Dict) {
   if (!(dict instanceof Dict)) {
     return null;
   }
@@ -37,7 +38,7 @@ function pickPlatformItem(dict) {
   return null;
 }
 
-function stripPath(str) {
+function stripPath(str: string) {
   return str.substring(str.lastIndexOf("/") + 1);
 }
 
@@ -54,7 +55,13 @@ class FileSpec {
 
   protected root?: Dict;
 
-  constructor(root, xref, skipContent = false) {
+  protected xref?: XRef;
+
+  protected fs;
+
+  protected _contentRef: object | null = null;
+
+  constructor(root: Dict, xref: XRef, skipContent = false) {
     if (!(root instanceof Dict)) {
       return;
     }
@@ -96,7 +103,7 @@ class FileSpec {
 
     let content = null;
     if (this._contentRef) {
-      const fileObj = this.xref.fetchIfRef(this._contentRef);
+      const fileObj = this.xref!.fetchIfRef(this._contentRef);
       if (fileObj instanceof BaseStream) {
         content = fileObj.getBytes();
       } else {

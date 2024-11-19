@@ -363,7 +363,7 @@ function getVerbosityLevel() {
 // A notice for devs. These are good for things that are helpful to devs, such
 // as warning that Workers were disabled, which is important to devs but not
 // end users.
-function info(msg: unknown) {
+function info(msg: any) {
   if (verbosity >= VerbosityLevel.INFOS) {
     console.log(`Info: ${msg}`);
   }
@@ -451,7 +451,7 @@ function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null 
   return null;
 }
 
-function shadow(obj: object, prop: string, value: any, nonSerializable = false) {
+function shadow<T>(obj: object, prop: string, value: T, nonSerializable = false): T {
   if (PlatformHelper.isTesting()) {
     assert(
       prop in obj,
@@ -910,7 +910,7 @@ class Util {
   }
 
   // From https://github.com/adobe-webplatform/Snap.svg/blob/b365287722a72526000ac4bfcf0ce4cac2faa015/src/path.js#L852
-  static bezierBoundingBox(x0, y0, x1, y1, x2, y2, x3, y3, minMax) {
+  static bezierBoundingBox(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, ...minMax: number[]) {
     if (minMax) {
       minMax[0] = Math.min(minMax[0], x0, x3);
       minMax[1] = Math.min(minMax[1], y0, y3);

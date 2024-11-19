@@ -139,6 +139,8 @@ abstract class DecodeStream extends BaseStream {
   get length(): number {
     throw new Error("Unsupport Mehthod get lenght()")
   }
+
+  abstract readBlock(): void;
 }
 
 class StreamsSequenceStream extends DecodeStream {

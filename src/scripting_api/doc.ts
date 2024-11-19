@@ -32,6 +32,53 @@ class InfoProxyHandler {
 }
 
 class Doc extends PDFObject {
+
+  protected _calculate: boolean;
+
+  protected _delay: boolean;
+
+  protected _dirty: boolean;
+
+  protected _disclosed: boolean;
+
+  protected _baseURL: string;
+
+  protected _metadata: string;
+
+  protected _author: string;
+
+  protected _creator: string;
+
+  protected _docID: string[];
+
+  protected _documentFileName: string;
+
+  protected _filesize: number;
+
+  protected _keywords: string;
+
+  protected _layout: string;
+
+  protected _numFields: number;
+
+  protected _numPages: number;
+
+  protected _pageNum: number;
+
+  protected _producer: string;
+
+  protected _subject: string;
+
+  protected _zoomType: string;
+
+  protected _zoom: number;
+
+  protected _userActivation: boolean;
+
+  protected _disablePrinting: boolean;
+
+  protected _disableSaving: boolean;
+
   constructor(data) {
     super(data);
 
@@ -127,7 +174,7 @@ class Doc extends PDFObject {
     this._disableSaving = false;
   }
 
-  _dispatchDocEvent(name) {
+  _dispatchDocEvent(name: string) {
     switch (name) {
       case "Open":
         this._disableSaving = true;
@@ -154,7 +201,7 @@ class Doc extends PDFObject {
     }
   }
 
-  _dispatchPageEvent(name, actions, pageNumber) {
+  _dispatchPageEvent(name: string, actions, pageNumber) {
     if (name === "PageOpen") {
       this._pageActions ||= new Map();
       if (!this._pageActions.has(pageNumber)) {

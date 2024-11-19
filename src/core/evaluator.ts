@@ -1068,6 +1068,7 @@ class PartialEvaluator {
     const patternResources = Dict.merge({
       xref: this.xref,
       dictArray: [patternDict.get("Resources"), resources],
+      mergeSubDicts: false
     });
 
     return this.getOperatorList({
@@ -3735,7 +3736,7 @@ class PartialEvaluator {
   _simpleFontToUnicode(properties, forceGlyphs = false) {
     assert(!properties.composite, "Must be a simple font.");
 
-    const toUnicode = [];
+    const toUnicode = <string[]>[];
     const encoding = properties.defaultEncoding.slice();
     const baseEncodingName = properties.baseEncodingName;
     // Merge in the differences array.
@@ -4395,7 +4396,7 @@ class PartialEvaluator {
         const flags =
           (this.isSerifFont(fontNameWoStyle) ? FontFlags.Serif : 0) |
           (metrics.monospace ? FontFlags.FixedPitch : 0) |
-          (getSymbolsFonts()[fontNameWoStyle]
+          (getSymbolsFonts()![fontNameWoStyle]
             ? FontFlags.Symbolic
             : FontFlags.Nonsymbolic);
 

@@ -39,6 +39,7 @@ import { PredictorStream } from "./predictor_stream";
 import { RunLengthStream } from "./run_length_stream";
 import { XRef } from "./xref";
 import { CipherTransform } from "./crypto";
+import { BaseStream } from "./base_stream";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -65,7 +66,7 @@ interface ParserOptions {
 
   lexer: Lexer;
 
-  xref: XRef | null;
+  xref?: XRef | null;
 
   allowStreams?: boolean;
 
@@ -889,7 +890,7 @@ function toHexDigit(ch) {
 
 class Lexer {
 
-  public stream: Stream;
+  public stream: BaseStream;
 
   protected strBuf;
 
@@ -901,7 +902,7 @@ class Lexer {
 
   protected beginInlineImagePos = -1;
 
-  constructor(stream: Stream, knownCommands = null) {
+  constructor(stream: BaseStream, knownCommands = null) {
 
     this.stream = stream;
 

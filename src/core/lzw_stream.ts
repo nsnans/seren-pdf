@@ -14,6 +14,7 @@
  */
 
 import { DecodeStream } from "./decode_stream";
+import { Stream } from "./stream";
 
 class LZWStream extends DecodeStream {
 
@@ -21,7 +22,13 @@ class LZWStream extends DecodeStream {
 
   protected bitsCached = 0;
 
-  constructor(str, maybeLength: number, earlyChange) {
+  protected lzwState;
+
+  protected str;
+
+  protected lastCode = null;
+
+  constructor(str: Stream, maybeLength: number, earlyChange) {
     super(maybeLength);
 
     this.str = str;
@@ -47,7 +54,7 @@ class LZWStream extends DecodeStream {
     this.lzwState = lzwState;
   }
 
-  readBits(n) {
+  readBits(n: number) {
     let bitsCached = this.bitsCached;
     let cachedData = this.cachedData;
     while (bitsCached < n) {

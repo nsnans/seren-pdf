@@ -27,6 +27,27 @@ import { PDFObject } from "./pdf_object";
 import { Thermometer } from "./thermometer";
 
 class App extends PDFObject {
+
+  protected _focusRect: boolean;
+
+  protected _language: string;
+
+  protected _openInPlace: boolean;
+
+  protected _runtimeHighlight: boolean;
+
+  protected _platform: string;
+
+  protected _runtimeHighlightColor: string[];
+
+  protected _toolbar: boolean;
+
+  protected _eventDispatcher: EventDispatcher;
+
+  protected _timeoutCallbackId: number;
+
+  protected _timeoutCallbackIds: Map<number, string>;
+
   constructor(data) {
     super(data);
 
@@ -77,7 +98,7 @@ class App extends PDFObject {
     this._eventDispatcher.dispatch(pdfEvent);
   }
 
-  _registerTimeoutCallback(cExpr) {
+  _registerTimeoutCallback(cExpr: string) {
     const id = this._timeoutCallbackId++;
     this._timeoutCallbackIds.set(id, cExpr);
     return id;

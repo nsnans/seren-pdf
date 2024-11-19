@@ -189,7 +189,7 @@ class Page {
     if (value.length === 1 || !(value[0] instanceof Dict)) {
       return value[0];
     }
-    return Dict.merge({ xref: this.xref, dictArray: value });
+    return Dict.merge({ xref: this.xref, dictArray: value, mergeSubDicts: false });
   }
 
   get content() {

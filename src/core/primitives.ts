@@ -72,7 +72,7 @@ export class Dict {
 
   protected _map: Record<string, any> = Object.create(null);
 
-  protected xref: XRef | null;
+  public xref: XRef | null;
 
   protected __nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
 
@@ -227,7 +227,9 @@ export class Dict {
     return shadow(this, "empty", emptyDict);
   }
 
-  static merge({ xref, dictArray, mergeSubDicts = false }) {
+  static merge({ xref, dictArray, mergeSubDicts = false }:
+    { xref: XRef, dictArray: Dict[], mergeSubDicts: boolean }
+  ) {
     const mergedDict = new Dict(xref),
       properties = new Map();
 
@@ -333,11 +335,9 @@ export class Ref {
 // This structure stores only one instance of the reference.
 export class RefSet {
   protected _set: Set<string>;
-  constructor(parent = null) {
-    if (
-      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
-      parent &&
-      !(parent instanceof RefSet)
+  constructor(parent: RefSet | null = null) {
+    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
+      parent && !(parent instanceof RefSet)
     ) {
       unreachable('RefSet: Invalid "parent" value.');
     }
@@ -414,7 +414,7 @@ export function isCmd(v: unknown, cmd: string) {
   return v instanceof Cmd && (cmd === undefined || v.cmd === cmd);
 }
 
-export function isDict(v, type) {
+export function isDict(v: unknown, type: string) {
   return (
     v instanceof Dict && (type === undefined || isName(v.get("Type"), type))
   );

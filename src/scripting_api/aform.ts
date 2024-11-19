@@ -13,7 +13,11 @@
  * limitations under the License.
  */
 
+import { Util } from "../scripting_api/util";
+import { App } from "./app";
+import { Color } from "./color";
 import { GlobalConstants } from "./constants";
+import { Doc } from "./doc";
 
 const DATE_FORMATES = [
   "m/d",
@@ -47,7 +51,15 @@ class AForm {
 
   protected _emailRegex = EMAIL_REGEX;
 
-  constructor(document, app, util, color) {
+  protected _document: Doc;
+
+  protected _app: App;
+
+  protected _util: Util;
+
+  protected _color: Color;
+
+  constructor(document: Doc, app: App, util: Util, color: Color) {
     this._document = document;
     this._app = app;
     this._util = util;
@@ -58,7 +70,7 @@ class AForm {
 
   }
 
-  _mkTargetName(event) {
+  _mkTargetName(event: Event) {
     return event.target ? `[ ${event.target.name} ]` : "";
   }
 
@@ -79,8 +91,8 @@ class AForm {
   }
 
   AFMergeChange(event = globalThis.event) {
-    if (event.willCommit) {
-      return event.value.toString();
+    if (event!.willCommit) {
+      return event!.value.toString();
     }
 
     return this._app._eventDispatcher.mergeChange(event);
@@ -90,7 +102,7 @@ class AForm {
     return this._parseDate(cOrder, cString);
   }
 
-  AFExtractNums(str) {
+  AFExtractNums(str: string | number) {
     if (typeof str === "number") {
       return [str];
     }
@@ -103,7 +115,7 @@ class AForm {
       str = `0${str}`;
     }
 
-    const numbers = str.match(/(\d+)/g);
+    const numbers = str.match(/(\d+)/g)!;
     if (numbers.length === 0) {
       return null;
     }
@@ -111,7 +123,7 @@ class AForm {
     return numbers;
   }
 
-  AFMakeNumber(str) {
+  AFMakeNumber(str: number | string) {
     if (typeof str === "number") {
       return str;
     }

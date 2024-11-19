@@ -309,7 +309,7 @@ const substitutionMap = new Map([
 
 const fontAliases = new Map([["Arial-Black", "ArialBlack"]]);
 
-function getStyleToAppend(style) {
+function getStyleToAppend(style: { style: string, weight: string }) {
   switch (style) {
     case BOLD:
       return "Bold";
@@ -328,7 +328,7 @@ function getStyleToAppend(style) {
   return "";
 }
 
-function getFamilyName(str) {
+function getFamilyName(str: string) {
   // See https://gitlab.freedesktop.org/fontconfig/fontconfig/-/blob/14d466b30a8ab4a9d789977ed94f2c30e7209267/src/fcname.c#L137.
   const keywords = new Set([
     "thin",
@@ -463,10 +463,10 @@ function generateFont(
 function getFontSubstitution(
   systemFontCache,
   idFactory,
-  localFontPath,
-  baseFontName,
-  standardFontName,
-  type
+  localFontPath: string,
+  baseFontName: string,
+  standardFontName: string | undefined,
+  type: string
 ) {
   if (baseFontName.startsWith("InvalidPDFjsFont_")) {
     return null;
@@ -507,7 +507,7 @@ function getFontSubstitution(
   let mustAddBaseFont = false;
   if (!substitution) {
     // If not, check if we've a substitution for the standard font.
-    substitution = substitutionMap.get(standardFontName);
+    substitution = substitutionMap.get(standardFontName!);
     mustAddBaseFont = true;
   }
 

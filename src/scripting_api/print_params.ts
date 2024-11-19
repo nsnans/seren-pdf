@@ -14,6 +14,37 @@
  */
 
 class PrintParams {
+  protected binaryOk: boolean;
+  protected bitmapDPI: number;
+  protected colorOverride: number;
+  protected colorProfile: string;
+  protected downloadFarEastFonts = false;
+  protected fileName: string;
+  protected firstPage: number;
+  protected flags: number;
+  protected fontPolicy: number;
+  protected gradientDPI: number;
+  protected interactive: number;
+  protected npUpAutoRotate: boolean;
+  protected npUpNumPagesH: number;
+  protected npUpNumPagesV: number;
+  protected npUpPageBorder: boolean;
+  protected npUpPageOrder: number;
+  protected pageHandling: number;
+  protected pageSubset: number;
+  protected printAsImage: boolean;
+  protected printContent: number;
+  protected printerName: string;
+  protected psLevel: number;
+  protected rasterFlags: number;
+  protected reversePages: boolean;
+  protected tileLabel: boolean;
+  protected tileMark: number;
+  protected tileOverlap: number;
+  protected tileScale: number;
+  protected transparencyLevel: number;
+  protected usePrinterCRD: number;
+  protected useT1Conversion: number;
   constructor(data) {
     this.binaryOk = true;
     this.bitmapDPI = 150;

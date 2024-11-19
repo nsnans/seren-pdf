@@ -17,6 +17,19 @@ import { ColorConverters } from "../shared/scripting_utils";
 import { PDFObject } from "./pdf_object";
 
 class Color extends PDFObject {
+
+  public transparent;
+  public black;
+  public white;
+  public red;
+  public green;
+  public blue;
+  public cyan;
+  public magenta;
+  public yellow;
+  public dkGray;
+  public gray;
+  public ltGray;
   constructor() {
     super({});
 

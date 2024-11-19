@@ -14,9 +14,13 @@
  */
 
 import { DecodeStream } from "./decode_stream";
+import { Dict } from "./primitives";
+import { Stream } from "./stream";
 
 class RunLengthStream extends DecodeStream {
-  constructor(str, maybeLength: number) {
+  protected str: Stream;
+  public dict: Dict | null;
+  constructor(str: Stream, maybeLength: number) {
     super(maybeLength);
 
     this.str = str;

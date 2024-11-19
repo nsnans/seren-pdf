@@ -18,6 +18,14 @@ import { Color } from "./color";
 import { PDFObject } from "./pdf_object";
 
 class Field extends PDFObject {
+
+  protected alignment: string;
+  protected borderStyle: string;
+  protected buttonAlignX: number;
+  protected buttonAlignY: number;
+  protected _isChoice: boolean;
+  protected _currentValueIndices: number;
+  protected _rotation: number;
   constructor(data) {
     super(data);
     this.alignment = data.alignment || "left";

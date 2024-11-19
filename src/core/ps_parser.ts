@@ -18,7 +18,16 @@ import { EOF } from "./primitives";
 import { isWhiteSpace } from "./core_utils";
 
 class PostScriptParser {
-  constructor(lexer) {
+
+  protected lexer: PostScriptLexer;
+
+  protected operators: (string | null | number)[];
+
+  protected token: PostScriptToken | typeof EOF | null;
+
+  protected prev: PostScriptToken | typeof EOF | null;
+
+  constructor(lexer: PostScriptLexer) {
     this.lexer = lexer;
     this.operators = [];
     this.token = null;
@@ -30,20 +39,22 @@ class PostScriptParser {
     this.token = this.lexer.getToken();
   }
 
-  accept(type) {
-    if (this.token.type === type) {
+  accept(type: number) {
+    const token = <PostScriptToken>this.token;
+    if (token.type === type) {
       this.nextToken();
       return true;
     }
     return false;
   }
 
-  expect(type) {
+  expect(type: number) {
     if (this.accept(type)) {
       return true;
     }
+    const token = <PostScriptToken>this.token;
     throw new FormatError(
-      `Unexpected symbol: found ${this.token.type} expected ${type}.`
+      `Unexpected symbol: found ${token.type} expected ${type}.`
     );
   }
 
@@ -57,10 +68,11 @@ class PostScriptParser {
 
   parseBlock() {
     while (true) {
+      const prev = this.prev as PostScriptToken;
       if (this.accept(PostScriptTokenTypes.NUMBER)) {
-        this.operators.push(this.prev.value);
+        this.operators.push(prev.value);
       } else if (this.accept(PostScriptTokenTypes.OPERATOR)) {
-        this.operators.push(this.prev.value);
+        this.operators.push(prev.value);
       } else if (this.accept(PostScriptTokenTypes.LBRACE)) {
         this.parseCondition();
       } else {
@@ -110,16 +122,21 @@ const PostScriptTokenTypes = {
 };
 
 class PostScriptToken {
+
   static get opCache() {
     return shadow(this, "opCache", Object.create(null));
   }
 
-  constructor(type, value) {
+  public type: number;
+
+  public value: string | number;
+
+  constructor(type: number, value: string | number) {
     this.type = type;
     this.value = value;
   }
 
-  static getOperator(op) {
+  static getOperator(op: string) {
     return (PostScriptToken.opCache[op] ||= new PostScriptToken(
       PostScriptTokenTypes.OPERATOR,
       op
@@ -134,7 +151,7 @@ class PostScriptToken {
     );
   }
 
-  static get RBRACE() {
+  static get RBRACE(): PostScriptToken {
     return shadow(
       this,
       "RBRACE",
@@ -142,7 +159,7 @@ class PostScriptToken {
     );
   }
 
-  static get IF() {
+  static get IF(): PostScriptToken {
     return shadow(
       this,
       "IF",
@@ -150,7 +167,7 @@ class PostScriptToken {
     );
   }
 
-  static get IFELSE() {
+  static get IFELSE(): PostScriptToken {
     return shadow(
       this,
       "IFELSE",
@@ -160,6 +177,11 @@ class PostScriptToken {
 }
 
 class PostScriptLexer {
+
+  protected stream;
+  protected strBuf;
+  protected currentChar;
+
   constructor(stream) {
     this.stream = stream;
     this.nextChar();
@@ -171,7 +193,7 @@ class PostScriptLexer {
     return (this.currentChar = this.stream.getByte());
   }
 
-  getToken() {
+  getToken(): PostScriptToken | typeof EOF {
     let comment = false;
     let ch = this.currentChar;
 
@@ -240,7 +262,7 @@ class PostScriptLexer {
     }
   }
 
-  getNumber() {
+  getNumber() : number{
     let ch = this.currentChar;
     const strBuf = this.strBuf;
     strBuf.length = 0;

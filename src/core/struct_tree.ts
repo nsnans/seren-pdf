@@ -18,6 +18,7 @@ import { Dict, isName, Name, Ref, RefSetCache } from "./primitives";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { writeObject } from "./writer";
+import { PDFManager } from "./pdf_manager";
 
 const MAX_DEPTH = 40;
 
@@ -35,7 +36,11 @@ class StructTreeRoot {
 
   protected ref: Ref | null;
 
-  constructor(rootDict, rootRef) {
+  protected dict: Dict;
+
+  protected structParentIds: RefSetCache | null;
+
+  constructor(rootDict: Dict, rootRef: object) {
     this.dict = rootDict;
     this.ref = rootRef instanceof Ref ? rootRef : null;
     this.roleMap = new Map();
@@ -46,7 +51,7 @@ class StructTreeRoot {
     this.readRoleMap();
   }
 
-  #addIdToPage(pageRef, id, type) {
+  #addIdToPage(pageRef: Ref | object, id: number, type: number) {
     if (!(pageRef instanceof Ref) || id < 0) {
       return;
     }
@@ -59,7 +64,7 @@ class StructTreeRoot {
     ids.push([id, type]);
   }
 
-  addAnnotationIdToPage(pageRef, id) {
+  addAnnotationIdToPage(pageRef: Ref | object, id: number) {
     this.#addIdToPage(pageRef, id, StructElementType.ANNOTATION);
   }
 
@@ -80,6 +85,10 @@ class StructTreeRoot {
     catalogRef,
     pdfManager,
     newAnnotationsByPage,
+  }: {
+    catalogRef: Ref | object,
+    pdfManager: PDFManager,
+    
   }) {
     if (!(catalogRef instanceof Ref)) {
       warn("Cannot save the struct tree: no catalog reference.");
@@ -241,7 +250,7 @@ class StructTreeRoot {
   }
 
   async updateStructureTree({ newAnnotationsByPage, pdfManager, newRefs }) {
-    const xref = this.dict.xref;
+    const xref = this.dict.xref!;
     const structTreeRoot = this.dict.clone();
     const structTreeRootRef = this.ref;
     const cache = new RefSetCache();

@@ -24,7 +24,7 @@ class Console extends PDFObject {
     /* Not implemented */
   }
 
-  println(msg) {
+  println(msg: any) {
     if (typeof msg === "string") {
       this._send({ command: "println", value: "PDF.js Console:: " + msg });
     }

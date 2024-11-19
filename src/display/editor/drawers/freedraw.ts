@@ -36,9 +36,9 @@ class FreeDrawOutliner {
   //  - compute the control points of the quadratic Bézier curve.
   #last = new Float64Array(18);
 
-  #lastX;
+  #lastX: number | null = null;
 
-  #lastY;
+  #lastY: number | null = null;
 
   #min;
 
@@ -81,10 +81,10 @@ class FreeDrawOutliner {
     const [x, y, width, height] = this.#box;
 
     return [
-      (this.#lastX + (lastTop[0] - lastBottom[0]) / 2 - x) / width,
-      (this.#lastY + (lastTop[1] - lastBottom[1]) / 2 - y) / height,
-      (this.#lastX + (lastBottom[0] - lastTop[0]) / 2 - x) / width,
-      (this.#lastY + (lastBottom[1] - lastTop[1]) / 2 - y) / height,
+      (this.#lastX! + (lastTop[0] - lastBottom[0]) / 2 - x) / width,
+      (this.#lastY! + (lastTop[1] - lastBottom[1]) / 2 - y) / height,
+      (this.#lastX! + (lastBottom[0] - lastTop[0]) / 2 - x) / width,
+      (this.#lastY! + (lastBottom[1] - lastTop[1]) / 2 - y) / height,
     ];
   }
 
@@ -279,7 +279,7 @@ class FreeDrawOutliner {
     );
   }
 
-  newFreeDrawOutline(outline, points, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
+  newFreeDrawOutline(outline: Float64Array, points: Float64Array, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
     return new FreeDrawOutline(
       outline,
       points,
@@ -301,8 +301,8 @@ class FreeDrawOutliner {
       points[i] = (this.#points[i] - layerX) / layerWidth;
       points[i + 1] = (this.#points[i + 1] - layerY) / layerHeight;
     }
-    points[points.length - 2] = (this.#lastX - layerX) / layerWidth;
-    points[points.length - 1] = (this.#lastY - layerY) / layerHeight;
+    points[points.length - 2] = (this.#lastX! - layerX) / layerWidth;
+    points[points.length - 1] = (this.#lastY! - layerY) / layerHeight;
 
     if (isNaN(last[6]) && !this.isEmpty()) {
       // We've only two points.
@@ -406,13 +406,13 @@ class FreeDrawOutliner {
     );
   }
 
-  #getOutlineStart(outline, pos) {
+  #getOutlineStart(outline: Float64Array, pos: number) {
     const bottom = this.#bottom;
     outline.set([NaN, NaN, NaN, NaN, bottom[4], bottom[5]], pos);
     return (pos += 6);
   }
 
-  #getOutlineEnd(outline, pos) {
+  #getOutlineEnd(outline: Float64Array, pos: number) {
     const lastTop = this.#last.subarray(4, 6);
     const lastBottom = this.#last.subarray(16, 18);
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
@@ -451,22 +451,30 @@ class FreeDrawOutliner {
   }
 }
 
+interface BBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  lastPoint: number[];
+}
+
 class FreeDrawOutline extends Outline {
   #box;
 
-  #bbox = null;
+  #bbox: BBox | null = null;
 
-  #innerMargin;
+  #innerMargin: number;
 
-  #isLTR;
+  #isLTR: boolean;
 
-  #points;
+  #points: Float64Array | null = null;;
 
   #scaleFactor;
 
-  #outline;
+  #outline: Float64Array | null = null;;
 
-  constructor(outline, points, box, scaleFactor, innerMargin, isLTR) {
+  constructor(outline: Float64Array | null, points: Float64Array | null, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
     super();
     this.#outline = outline;
     this.#points = points;
@@ -476,66 +484,66 @@ class FreeDrawOutline extends Outline {
     this.#isLTR = isLTR;
     this.#computeMinMax(isLTR);
 
-    const { x, y, width, height } = this.#bbox;
-    for (let i = 0, ii = outline.length; i < ii; i += 2) {
-      outline[i] = (outline[i] - x) / width;
-      outline[i + 1] = (outline[i + 1] - y) / height;
+    const { x, y, width, height } = this.#bbox!;
+    for (let i = 0, ii = outline!.length; i < ii; i += 2) {
+      outline![i] = (outline![i] - x) / width;
+      outline![i + 1] = (outline![i + 1] - y) / height;
     }
-    for (let i = 0, ii = points.length; i < ii; i += 2) {
-      points[i] = (points[i] - x) / width;
-      points[i + 1] = (points[i + 1] - y) / height;
+    for (let i = 0, ii = points!.length; i < ii; i += 2) {
+      points![i] = (points![i] - x) / width;
+      points![i + 1] = (points![i + 1] - y) / height;
     }
   }
 
   toSVGPath() {
-    const buffer = [`M${this.#outline[4]} ${this.#outline[5]}`];
-    for (let i = 6, ii = this.#outline.length; i < ii; i += 6) {
-      if (isNaN(this.#outline[i])) {
-        buffer.push(`L${this.#outline[i + 4]} ${this.#outline[i + 5]}`);
+    const buffer = [`M${this.#outline![4]} ${this.#outline![5]}`];
+    for (let i = 6, ii = this.#outline!.length; i < ii; i += 6) {
+      if (isNaN(this.#outline![i])) {
+        buffer.push(`L${this.#outline![i + 4]} ${this.#outline![i + 5]}`);
         continue;
       }
       buffer.push(
-        `C${this.#outline[i]} ${this.#outline[i + 1]} ${this.#outline[i + 2]} ${this.#outline[i + 3]
-        } ${this.#outline[i + 4]} ${this.#outline[i + 5]}`
+        `C${this.#outline![i]} ${this.#outline![i + 1]} ${this.#outline![i + 2]} ${this.#outline![i + 3]
+        } ${this.#outline![i + 4]} ${this.#outline![i + 5]}`
       );
     }
     buffer.push("Z");
     return buffer.join(" ");
   }
 
-  serialize([blX, blY, trX, trY], rotation) {
+  serialize([blX, blY, trX, trY]: [number, number, number, number], rotation: number) {
     const width = trX - blX;
     const height = trY - blY;
-    let outline;
-    let points;
+    let outline: Float64Array | null = null;
+    let points: Float64Array | null = null;
     switch (rotation) {
       case 0:
-        outline = this.#rescale(this.#outline, blX, trY, width, -height);
-        points = this.#rescale(this.#points, blX, trY, width, -height);
+        outline = this.#rescale(this.#outline!, blX, trY, width, -height);
+        points = this.#rescale(this.#points!, blX, trY, width, -height);
         break;
       case 90:
-        outline = this.#rescaleAndSwap(this.#outline, blX, blY, width, height);
-        points = this.#rescaleAndSwap(this.#points, blX, blY, width, height);
+        outline = this.#rescaleAndSwap(this.#outline!, blX, blY, width, height);
+        points = this.#rescaleAndSwap(this.#points!, blX, blY, width, height);
         break;
       case 180:
-        outline = this.#rescale(this.#outline, trX, blY, -width, height);
-        points = this.#rescale(this.#points, trX, blY, -width, height);
+        outline = this.#rescale(this.#outline!, trX, blY, -width, height);
+        points = this.#rescale(this.#points!, trX, blY, -width, height);
         break;
       case 270:
         outline = this.#rescaleAndSwap(
-          this.#outline,
+          this.#outline!,
           trX,
           trY,
           -width,
           -height
         );
-        points = this.#rescaleAndSwap(this.#points, trX, trY, -width, -height);
+        points = this.#rescaleAndSwap(this.#points!, trX, trY, -width, -height);
         break;
     }
-    return { outline: Array.from(outline), points: [Array.from(points)] };
+    return { outline: Array.from(outline!), points: [Array.from(points!)] };
   }
 
-  #rescale(src, tx, ty, sx, sy) {
+  #rescale(src: Float64Array, tx: number, ty: number, sx: number, sy: number) {
     const dest = new Float64Array(src.length);
     for (let i = 0, ii = src.length; i < ii; i += 2) {
       dest[i] = tx + src[i] * sx;
@@ -544,7 +552,7 @@ class FreeDrawOutline extends Outline {
     return dest;
   }
 
-  #rescaleAndSwap(src, tx, ty, sx, sy) {
+  #rescaleAndSwap(src: Float64Array, tx: number, ty: number, sx: number, sy: number) {
     const dest = new Float64Array(src.length);
     for (let i = 0, ii = src.length; i < ii; i += 2) {
       dest[i] = tx + src[i + 1] * sx;
@@ -553,8 +561,8 @@ class FreeDrawOutline extends Outline {
     return dest;
   }
 
-  #computeMinMax(isLTR) {
-    const outline = this.#outline;
+  #computeMinMax(isLTR: boolean) {
+    const outline = this.#outline!;
     let lastX = outline[4];
     let lastY = outline[5];
     let minX = lastX;
@@ -609,7 +617,7 @@ class FreeDrawOutline extends Outline {
     return this.#bbox;
   }
 
-  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+  newOutliner(point, box, scaleFactor: number, thickness: number, isLTR: boolean, innerMargin = 0) {
     return new FreeDrawOutliner(
       point.x,
       point.y,
@@ -621,9 +629,9 @@ class FreeDrawOutline extends Outline {
     );
   }
 
-  getNewOutline(thickness, innerMargin) {
+  getNewOutline(thickness: number, innerMargin: number) {
     // Build the outline of the highlight to use as the focus outline.
-    const { x, y, width, height } = this.#bbox;
+    const { x, y, width, height } = this.#bbox!;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
     const sx = width * layerWidth;
     const sy = height * layerHeight;
@@ -631,8 +639,8 @@ class FreeDrawOutline extends Outline {
     const ty = y * layerHeight + layerY;
     const outliner = this.newOutliner(
       {
-        x: this.#points[0] * sx + tx,
-        y: this.#points[1] * sy + ty,
+        x: this.#points![0] * sx + tx,
+        y: this.#points![1] * sy + ty,
       },
       this.#box,
       this.#scaleFactor,
@@ -640,10 +648,10 @@ class FreeDrawOutline extends Outline {
       this.#isLTR,
       innerMargin ?? this.#innerMargin
     );
-    for (let i = 2; i < this.#points.length; i += 2) {
+    for (let i = 2; i < this.#points!.length; i += 2) {
       outliner.add(
-        this.#points[i] * sx + tx,
-        this.#points[i + 1] * sy + ty
+        this.#points![i] * sx + tx,
+        this.#points![i + 1] * sy + ty
       );
     }
     return outliner.getOutlines();

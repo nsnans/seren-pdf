@@ -17,6 +17,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
+import { PlatformHelper } from "../../platform/platform_helper";
 import {
   AnnotationEditorParamsType,
   AnnotationEditorPrefix,
@@ -33,9 +34,10 @@ import {
   getRGB,
   PixelsPerInch,
 } from "../display_utils";
+import { AnnotationEditor } from "./editor";
 import { HighlightToolbar } from "./toolbar";
 
-function bindEvents(obj, element, names) {
+function bindEvents(obj: AnnotationEditor, element: HTMLDivElement, names: string[]) {
   for (const name of names) {
     element.addEventListener(name, obj[name].bind(obj));
   }
@@ -46,7 +48,7 @@ function bindEvents(obj, element, names) {
  * @param {number} opacity
  * @return {string}
  */
-function opacityToHex(opacity) {
+function opacityToHex(opacity: number) {
   return Math.round(Math.min(255, Math.max(1, 255 * opacity)))
     .toString(16)
     .padStart(2, "0");
@@ -59,7 +61,7 @@ class IdManager {
   #id = 0;
 
   constructor() {
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       Object.defineProperty(this, "reset", {
         value: () => (this.#id = 0),
       });
@@ -70,7 +72,7 @@ class IdManager {
    * Get a unique id.
    * @returns {string}
    */
-  get id() {
+  get id(): string {
     return `${AnnotationEditorPrefix}${this.#id++}`;
   }
 }
@@ -98,7 +100,7 @@ class ImageManager {
     // behavior in Safari.
     const svg = `data:image/svg+xml;charset=UTF-8,<svg viewBox="0 0 1 1" width="1" height="1" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" style="fill:red;"/></svg>`;
     const canvas = new OffscreenCanvas(1, 3);
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
     const image = new Image();
     image.src = svg;
     const promise = image.decode().then(() => {
@@ -111,7 +113,7 @@ class ImageManager {
 
   async #get(key, rawData) {
     this.#cache ||= new Map();
-    let data = this.#cache.get(key);
+    let data = this.#cache!.get(key);
     if (data === null) {
       // We already tried to load the image but it failed.
       return null;
@@ -147,7 +149,7 @@ class ImageManager {
           imageElement.onload = () => {
             data.bitmap = imageElement;
             data.isSvg = true;
-            resolve();
+            resolve(undefined);
           };
           fileReader.onload = async () => {
             const url = (data.svgUrl = fileReader.result);
@@ -255,7 +257,7 @@ class ImageManager {
     if (!data.url && !data.file) {
       // The image has no way to be restored (ctrl+z) so we must fix that.
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-      const ctx = canvas.getContext("bitmaprenderer");
+      const ctx = canvas.getContext("bitmaprenderer")!;
       ctx.transferFromImageBitmap(bitmap);
       data.blobPromise = canvas.convertToBlob();
     }
@@ -421,6 +423,12 @@ class CommandManager {
  * non-mac OSes.
  */
 class KeyboardManager {
+
+  protected callbacks;
+
+  protected allKeys;
+
+  protected buffer: string[];
   /**
    * Create a new keyboard manager class.
    * @param {Array<Array>} callbacks - an array containing an array of shortcuts
@@ -453,7 +461,7 @@ class KeyboardManager {
    * @param {KeyboardEvent} event
    * @returns {string}
    */
-  #serialize(event) {
+  #serialize(event: KeyboardEvent) {
     if (event.altKey) {
       this.buffer.push("alt");
     }
@@ -480,7 +488,7 @@ class KeyboardManager {
    * @param {KeyboardEvent} event
    * @returns
    */
-  exec(self, event) {
+  exec(self, event: KeyboardEvent) {
     if (!this.allKeys.has(event.key)) {
       return;
     }
@@ -514,11 +522,7 @@ class ColorManager {
   ]);
 
   get _colors() {
-    if (
-      typeof PDFJSDev !== "undefined" &&
-      PDFJSDev.test("LIB") &&
-      typeof document === "undefined"
-    ) {
+    if (PlatformHelper.testLib() && typeof document === "undefined") {
       return shadow(this, "_colors", ColorManager._colorsMapping);
     }
 
@@ -538,15 +542,15 @@ class ColorManager {
    * @param {string} color
    * @returns {Array<number>}
    */
-  convert(color) {
+  convert(color: string): number[] {
     const rgb = getRGB(color);
     if (!window.matchMedia("(forced-colors: active)").matches) {
       return rgb;
     }
 
     for (const [name, RGB] of this._colors) {
-      if (RGB.every((x, i) => x === rgb[i])) {
-        return ColorManager._colorsMapping.get(name);
+      if (RGB!.every((x, i) => x === rgb[i])) {
+        return ColorManager._colorsMapping.get(name)!;
       }
     }
     return rgb;
@@ -559,7 +563,7 @@ class ColorManager {
    * @param {string} name
    * @returns {string}
    */
-  getHexCode(name) {
+  getHexCode(name: string) {
     const rgb = this._colors.get(name);
     if (!rgb) {
       return name;

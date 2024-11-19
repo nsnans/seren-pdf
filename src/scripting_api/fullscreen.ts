@@ -17,6 +17,25 @@ import { Cursor } from "./constants";
 import { PDFObject } from "./pdf_object";
 
 class FullScreen extends PDFObject {
+
+  protected _clickAdvances: boolean;
+
+  protected _cursor: number;
+
+  protected _defaultTransition: string;
+
+  protected _escapeExits: boolean;
+
+  protected _isFullScreen: boolean;
+
+  protected _loop: boolean;
+
+  protected _timeDelay: number;
+
+  protected _usePageTiming: boolean;
+
+  protected _useTimer: false;
+
   constructor(data) {
     super(data);
 

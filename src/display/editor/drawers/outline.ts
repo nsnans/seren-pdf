@@ -27,8 +27,8 @@ class Outline {
    * @type {Object|null} The bounding box of the outline.
    */
   // eslint-disable-next-line getter-return
-  get box() {
-    unreachable("Abstract getter `box` must be implemented.");
+  get box() : { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null {
+    throw new Error("抽象函数需要被继承者实现");
   }
 
   serialize(_bbox, _rotation) {

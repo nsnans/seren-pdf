@@ -301,9 +301,9 @@ interface ParentNode {
 
 class SimpleDOMNode {
 
-  protected nodeName: string;
+  public nodeName: string;
 
-  protected nodeValue?: string;
+  public nodeValue?: string;
 
   public parentNode: SimpleDOMNode | null;
 

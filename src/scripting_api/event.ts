@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   serializeError,
   USERACTIVATION_CALLBACKID,
@@ -20,6 +21,21 @@ import {
 } from "./app_utils";
 
 class Event {
+
+  public change: string;
+  protected commitKey: number;
+  protected fieldFull: boolean;
+  protected keyDown: boolean;
+  protected modifier: boolean;
+  protected rc: boolean;
+  public selEnd: number;
+  public selStart: number;
+  protected shift: boolean;
+  protected targetName: string;
+  protected type: string;
+  public value: string;
+  public willCommit: boolean;
+
   constructor(data) {
     this.change = data.change || "";
     this.changeEx = data.changeEx || null;
@@ -45,6 +61,8 @@ class Event {
 }
 
 class EventDispatcher {
+
+  protected _isCalculating: boolean;
   constructor(document, calculationOrder, objects, externalCall) {
     this._document = document;
     this._calculationOrder = calculationOrder;
@@ -82,10 +100,7 @@ class EventDispatcher {
   }
 
   dispatch(baseEvent) {
-    if (
-      typeof PDFJSDev !== "undefined" &&
-      PDFJSDev.test("TESTING") &&
-      baseEvent.name === "sandboxtripbegin"
+    if (PlatformHelper.isTesting() && baseEvent.name === "sandboxtripbegin"
     ) {
       this._externalCall("send", [{ command: "sandboxTripEnd" }]);
       return;
@@ -191,7 +206,7 @@ class EventDispatcher {
         this.runValidation(source, event);
       } else {
         if (source.obj._isChoice) {
-          source.obj.value = savedChange.changeEx;
+          source.obj.value = savedChange!.changeEx;
           source.obj._send({
             id: source.obj._id,
             siblings: source.obj._siblings,
@@ -203,14 +218,14 @@ class EventDispatcher {
         const value = (source.obj.value = this.mergeChange(event));
         let selStart, selEnd;
         if (
-          event.selStart !== savedChange.selStart ||
-          event.selEnd !== savedChange.selEnd
+          event.selStart !== savedChange!.selStart ||
+          event.selEnd !== savedChange!.selEnd
         ) {
           // Selection has been changed by the script so apply the changes.
           selStart = event.selStart;
           selEnd = event.selEnd;
         } else {
-          selEnd = selStart = savedChange.selStart + event.change.length;
+          selEnd = selStart = savedChange!.selStart + event.change.length;
         }
         source.obj._send({
           id: source.obj._id,
@@ -223,8 +238,8 @@ class EventDispatcher {
       source.obj._send({
         id: source.obj._id,
         siblings: source.obj._siblings,
-        value: savedChange.value,
-        selRange: [savedChange.selStart, savedChange.selEnd],
+        value: savedChange!.value,
+        selRange: [savedChange!.selStart, savedChange!.selEnd],
       });
     } else {
       // Entry is not valid (rc == false) and it's a commit

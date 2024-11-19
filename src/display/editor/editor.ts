@@ -1021,7 +1021,7 @@ class AnnotationEditor {
     await this.#altText?.setGuessedText(text);
   }
 
-  serializeAltText(isForCopying) {
+  serializeAltText(isForCopying: boolean) {
     return this.#altText?.serialize(isForCopying);
   }
 
