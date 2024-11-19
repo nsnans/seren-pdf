@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   MAX_IMAGE_SIZE_TO_CACHE,
@@ -22,15 +23,17 @@ import {
 import { RefSet, RefSetCache } from "./primitives";
 
 class BaseLocalCache {
+  
   protected _onlyRefs: boolean;
+
   protected _nameRefMap?: Map<any, any>;
+
   protected _imageMap?: Map<any, any>;
+
   protected _imageCache = new RefSetCache();
-  constructor(options) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseLocalCache
-    ) {
+
+  constructor(options = {}) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseLocalCache) {
       unreachable("Cannot initialize BaseLocalCache.");
     }
     this._onlyRefs = options?.onlyRefs === true;
@@ -146,7 +149,8 @@ class LocalGStateCache extends BaseLocalCache {
 }
 
 class LocalTilingPatternCache extends BaseLocalCache {
-  constructor(options) {
+  // options参数没有用上，直接删除了
+  constructor() {
     super({ onlyRefs: true });
   }
 

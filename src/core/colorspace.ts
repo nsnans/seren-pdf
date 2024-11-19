@@ -28,6 +28,8 @@ import { MissingDataException } from "./core_utils";
 import { TypedArray } from "../types";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
+import { PDFFunctionFactory } from "./function";
+import { LocalColorSpaceCache } from "./image_utils";
 
 /**
  * Resizes an RGB image with 3 components.
@@ -123,9 +125,11 @@ function copyRgbaImage(src: TypedArray, dest: TypedArray, alpha01: number) {
 
 class ColorSpace {
 
-  protected name: string;
+  readonly name: string;
 
   readonly numComps: number | null;
+
+  public base: ColorSpace | null = null;
 
   /** 
    * @param numComps - Number of components the color space has.
@@ -192,8 +196,8 @@ class ColorSpace {
    * Refer to the static `ColorSpace.isDefaultDecode` method below.
    * bpc: bitsPerComponent
    */
-  isDefaultDecode(decodeMap, _bpc) {
-    return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+  isDefaultDecode(decodeMap: TypedArray, _bpc: number) {
+    return ColorSpace.isDefaultDecode(decodeMap, this.numComps!);
   }
 
   /**
@@ -202,15 +206,15 @@ class ColorSpace {
    * 0 (RGB array) or 1 (RGBA array).
    */
   fillRgb(
-    dest,
-    originalWidth,
-    originalHeight,
-    width,
-    height,
-    actualHeight,
-    bpc,
+    dest: TypedArray,
+    originalWidth: number,
+    originalHeight: number,
+    width: number,
+    height: number,
+    actualHeight: number,
+    bpc: number,
     comps,
-    alpha01
+    alpha01: number
   ) {
     if (PlatformHelper.isTesting()) {
       assert(
@@ -322,7 +326,7 @@ class ColorSpace {
   /**
    * @private
    */
-  static _cache(cacheKey: Ref | Name | unknown, xref: XRef, localColorSpaceCache, parsedColorSpace: ColorSpace) {
+  static _cache(cacheKey: Ref | Name | unknown, xref: XRef, localColorSpaceCache: LocalColorSpaceCache, parsedColorSpace: ColorSpace) {
     if (!localColorSpaceCache) {
       throw new Error(
         'ColorSpace._cache - expected "localColorSpaceCache" argument.'
@@ -348,7 +352,7 @@ class ColorSpace {
     }
   }
 
-  static getCached(cacheKey, xref, localColorSpaceCache) {
+  static getCached(cacheKey: Ref | Name | unknown, xref: XRef, localColorSpaceCache: LocalColorSpaceCache) {
     if (!localColorSpaceCache) {
       throw new Error(
         'ColorSpace.getCached - expected "localColorSpaceCache" argument.'
@@ -384,6 +388,11 @@ class ColorSpace {
     resources = null,
     pdfFunctionFactory,
     localColorSpaceCache,
+  }: {
+    xref: XRef,
+    resources: Dict | null,
+    pdfFunctionFactory: PDFFunctionFactory,
+    localColorSpaceCache: LocalColorSpaceCache
   }) {
     if (PlatformHelper.isTesting()) {
       assert(
@@ -411,6 +420,11 @@ class ColorSpace {
     resources = null,
     pdfFunctionFactory,
     localColorSpaceCache,
+  }: {
+    xref: XRef,
+    resources: Dict | null,
+    pdfFunctionFactory: PDFFunctionFactory,
+    localColorSpaceCache: LocalColorSpaceCache
   }) {
     const cachedColorSpace = this.getCached(cs, xref, localColorSpaceCache);
     if (cachedColorSpace) {
@@ -432,7 +446,7 @@ class ColorSpace {
   /**
    * @private
    */
-  static _parse(cs, xref: XRef, resources = null, pdfFunctionFactory): ColorSpace {
+  static _parse(cs, xref: XRef, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
     cs = xref.fetchIfRef(cs);
     if (cs instanceof Name) {
       switch (cs.name) {
@@ -567,7 +581,7 @@ class ColorSpace {
    * @param {Array} decode - Decode map (usually from an image).
    * @param {number} numComps - Number of components the color space has.
    */
-  static isDefaultDecode(decode, numComps: number) {
+  static isDefaultDecode(decode: TypedArray, numComps: number) {
     if (!Array.isArray(decode)) {
       return true;
     }
@@ -611,9 +625,10 @@ class ColorSpace {
  */
 class AlternateCS extends ColorSpace {
 
-  protected base: ColorSpace;
-
   protected tmpBuf: Float32Array;
+
+  // 最后一个参数不知道是做什么用的
+  protected tintFn: (src: TypedArray, srcOffset: number, tmpBuf: Float32Array, _unknow: number) => void;
 
   constructor(numComps: number, base: ColorSpace, tintFn) {
     super("Alternate", numComps);
@@ -631,7 +646,7 @@ class AlternateCS extends ColorSpace {
     }
     const tmpBuf = this.tmpBuf;
     this.tintFn(src, srcOffset, tmpBuf, 0);
-    this.base.getRgbItem(tmpBuf, 0, dest, destOffset);
+    this.base!.getRgbItem(tmpBuf, 0, dest, destOffset);
   }
 
   getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
@@ -643,7 +658,7 @@ class AlternateCS extends ColorSpace {
       );
     }
     const tintFn = this.tintFn;
-    const base = this.base;
+    const base = this.base!;
     const scale = 1 / ((1 << bits) - 1);
     const baseNumComps = base.numComps!;
     const usesZeroToOneRange = base.usesZeroToOneRange;
@@ -680,8 +695,8 @@ class AlternateCS extends ColorSpace {
   }
 
   getOutputLength(inputLength: number, alpha01: number) {
-    return this.base.getOutputLength(
-      (inputLength * this.base.numComps!) / this.numComps!,
+    return this.base!.getOutputLength(
+      (inputLength * this.base!.numComps!) / this.numComps!,
       alpha01
     );
   }
@@ -689,14 +704,14 @@ class AlternateCS extends ColorSpace {
 
 class PatternCS extends ColorSpace {
 
-  readonly base?: ColorSpace;
+  readonly base: ColorSpace | null;
 
-  constructor(baseCS?: ColorSpace) {
+  constructor(baseCS: ColorSpace | null) {
     super("Pattern", null);
     this.base = baseCS;
   }
 
-  isDefaultDecode(decodeMap, bpc): boolean {
+  isDefaultDecode(_decodeMap: TypedArray, _bpc: number): boolean {
     unreachable("Should not call PatternCS.isDefaultDecode");
   }
 }
@@ -765,7 +780,7 @@ class IndexedCS extends ColorSpace {
     return this.base.getOutputLength(inputLength * this.base.numComps!, alpha01);
   }
 
-  isDefaultDecode(decodeMap, bpc) {
+  isDefaultDecode(decodeMap: TypedArray, bpc: number) {
     if (!Array.isArray(decodeMap)) {
       return true;
     }
@@ -785,6 +800,9 @@ class IndexedCS extends ColorSpace {
  * The default color is `new Float32Array([0])`.
  */
 class DeviceGrayCS extends ColorSpace {
+
+  readonly base: ColorSpace | null = null;
+
   constructor() {
     super("DeviceGray", 1);
   }
@@ -829,6 +847,7 @@ class DeviceGrayCS extends ColorSpace {
  * The default color is `new Float32Array([0, 0, 0])`.
  */
 class DeviceRgbCS extends ColorSpace {
+  readonly base: ColorSpace | null = null;
 
   constructor() {
     super("DeviceRGB", 3);
@@ -882,6 +901,8 @@ class DeviceRgbCS extends ColorSpace {
  * The default color is `new Float32Array([0, 0, 0, 1])`.
  */
 class DeviceRgbaCS extends ColorSpace {
+  readonly base: ColorSpace | null = null;
+
   constructor() {
     super("DeviceRGBA", 4);
   }
@@ -895,15 +916,15 @@ class DeviceRgbaCS extends ColorSpace {
   }
 
   fillRgb(
-    dest,
-    originalWidth,
-    originalHeight,
-    width,
-    height,
-    actualHeight,
-    bpc,
-    comps,
-    alpha01
+    dest: TypedArray,
+    originalWidth: number,
+    originalHeight: number,
+    width: number,
+    height: number,
+    _actualHeight: number,
+    _bpc: number,
+    comps: TypedArray,
+    alpha01: number
   ) {
     if (PlatformHelper.isTesting()) {
       assert(
@@ -931,6 +952,8 @@ class DeviceRgbaCS extends ColorSpace {
  * The default color is `new Float32Array([0, 0, 0, 1])`.
  */
 class DeviceCmykCS extends ColorSpace {
+  readonly base: ColorSpace | null = null;
+
   constructor() {
     super("DeviceCMYK", 4);
   }
@@ -1617,7 +1640,7 @@ class LabCS extends ColorSpace {
     return ((inputLength * (3 + alpha01)) / 3) | 0;
   }
 
-  isDefaultDecode(decodeMap, bpc) {
+  isDefaultDecode(_decodeMap: TypedArray, _bpc: number) {
     // XXX: Decoding is handled with the lab conversion because of the strange
     // ranges that are used.
     return true;

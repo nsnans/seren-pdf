@@ -20,7 +20,7 @@ import {
   numberToString,
   stringToUTF16HexString,
 } from "./core_utils";
-import { Dict, Name } from "./primitives";
+import { Dict, Name, Ref } from "./primitives";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
@@ -32,17 +32,18 @@ import { ColorSpace } from "./colorspace";
 import { EvaluatorPreprocessor } from "./evaluator";
 import { LocalColorSpaceCache } from "./image_utils";
 import { PDFFunctionFactory } from "./function";
-import { StringStream } from "./stream";
+import { Stream, StringStream } from "./stream";
+import { XRef } from "./xref";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
-  constructor(str) {
+  constructor(str: string) {
     super(new StringStream(str));
   }
 
   parse() {
     const operation = {
       fn: 0,
-      args: [],
+      args: [] as any[],
     };
     const result = {
       fontSize: 0,
@@ -92,12 +93,19 @@ class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
 }
 
 // Parse DA to extract font and color information.
-function parseDefaultAppearance(str) {
+function parseDefaultAppearance(str: string) {
   return new DefaultAppearanceEvaluator(str).parse();
 }
 
 class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
-  constructor(stream, evaluatorOptions, xref) {
+
+  protected xref: XRef;
+
+  protected stream: Stream;
+
+  protected resources: Dict | null;
+
+  constructor(stream: Stream, evaluatorOptions, xref: XRef) {
     super(stream);
     this.stream = stream;
     this.evaluatorOptions = evaluatorOptions;
@@ -109,7 +117,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
   parse() {
     const operation = {
       fn: 0,
-      args: [],
+      args: [] as any[],
     };
     let result = {
       scaleFactor: 1,
@@ -117,7 +125,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
       fontName: "",
       fontColor: /* black = */ new Uint8ClampedArray(3),
       fillColorSpace: ColorSpace.singletons.gray,
-    };
+    } as Record<string, any>;
     let breakLoop = false;
     const stack = [];
 
@@ -188,7 +196,9 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
     } catch (reason) {
       warn(`parseAppearanceStream - ignoring errors: "${reason}".`);
     }
+
     this.stream.reset();
+
     delete result.scaleFactor;
     delete result.fillColorSpace;
 
@@ -210,11 +220,11 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
 // Parse appearance stream to extract font and color information.
 // It returns the font properties used to render the first text object.
-function parseAppearanceStream(stream, evaluatorOptions, xref) {
+function parseAppearanceStream(stream: Stream, evaluatorOptions, xref: XRef) {
   return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 
-function getPdfColor(color, isFill) {
+function getPdfColor(color: Uint8ClampedArray, isFill: boolean) {
   if (color[0] === color[1] && color[1] === color[2]) {
     const gray = color[0] / 255;
     return `${numberToString(gray)} ${isFill ? "g" : "G"}`;
@@ -226,7 +236,7 @@ function getPdfColor(color, isFill) {
 }
 
 // Create default appearance string from some information.
-function createDefaultAppearance({ fontSize, fontName, fontColor }) {
+function createDefaultAppearance({ fontSize, fontName, fontColor }: { fontSize: number, fontName: string, fontColor: Uint8ClampedArray }) {
   return `/${escapePDFName(fontName)} ${fontSize} Tf ${getPdfColor(
     fontColor,
     /* isFill */ true
@@ -234,7 +244,26 @@ function createDefaultAppearance({ fontSize, fontName, fontColor }) {
 }
 
 class FakeUnicodeFont {
-  constructor(xref, fontFamily) {
+
+  public static _fontNameId = 1;
+
+  public static _fontDescriptorRef: Ref | null;
+
+  protected firstChar: number;
+
+  protected lastChar: number;
+
+  protected xref: XRef;
+
+  protected ctxMeasure: OffscreenCanvasRenderingContext2D;
+
+  protected fontName: Name;
+
+  protected widths: Map<number, number> | null;
+
+  protected fontFamily: string;
+
+  constructor(xref: XRef, fontFamily: string) {
     this.xref = xref;
     this.widths = null;
     this.firstChar = Infinity;
@@ -242,11 +271,8 @@ class FakeUnicodeFont {
     this.fontFamily = fontFamily;
 
     const canvas = new OffscreenCanvas(1, 1);
-    this.ctxMeasure = canvas.getContext("2d", { willReadFrequently: true });
+    this.ctxMeasure = canvas.getContext("2d", { willReadFrequently: true })!;
 
-    if (!FakeUnicodeFont._fontNameId) {
-      FakeUnicodeFont._fontNameId = 1;
-    }
     this.fontName = Name.get(
       `InvalidPDFjsFont_${fontFamily}_${FakeUnicodeFont._fontNameId++}`
     );
@@ -282,7 +308,7 @@ class FakeUnicodeFont {
     descendantFont.set("DW", 1000);
 
     const widths = [];
-    const chars = [...this.widths.entries()].sort();
+    const chars = [...this.widths!.entries()].sort();
     let currentChar = null;
     let currentWidths = null;
     for (const [char, width] of chars) {
@@ -291,8 +317,8 @@ class FakeUnicodeFont {
         currentWidths = [width];
         continue;
       }
-      if (char === currentChar + currentWidths.length) {
-        currentWidths.push(width);
+      if (char === currentChar + currentWidths!.length) {
+        currentWidths!.push(width);
       } else {
         widths.push(currentChar, currentWidths);
         currentChar = char;
@@ -343,17 +369,17 @@ class FakeUnicodeFont {
     return this.ctxMeasure;
   }
 
-  createFontResources(text) {
+  createFontResources(text: string) {
     const ctx = this._createContext();
     for (const line of text.split(/\r\n?|\n/)) {
       for (const char of line.split("")) {
         const code = char.charCodeAt(0);
-        if (this.widths.has(code)) {
+        if (this.widths!.has(code)) {
           continue;
         }
         const metrics = ctx.measureText(char);
         const width = Math.ceil(metrics.width);
-        this.widths.set(code, width);
+        this.widths!.set(code, width);
         this.firstChar = Math.min(code, this.firstChar);
         this.lastChar = Math.max(code, this.lastChar);
       }
@@ -362,7 +388,8 @@ class FakeUnicodeFont {
     return this.resources;
   }
 
-  static getFirstPositionInfo(rect, rotation, fontSize) {
+  // TODO rect的类型先写作这样，后续有别的可以调
+  static getFirstPositionInfo(rect: [number, number, number, number], rotation: number, fontSize: number) {
     // Get the position of the first char in the rect.
     const [x1, y1, x2, y2] = rect;
     let w = x2 - x1;
@@ -382,7 +409,8 @@ class FakeUnicodeFont {
     };
   }
 
-  createAppearance(text, rect, rotation, fontSize, bgColor, strokeAlpha) {
+  createAppearance(text: string, rect: [number, number, number, number], rotation: number,
+    fontSize: number, bgColor: Uint8ClampedArray, strokeAlpha: number) {
     const ctx = this._createContext();
     const lines = [];
     let maxWidth = -Infinity;
@@ -394,11 +422,11 @@ class FakeUnicodeFont {
       maxWidth = Math.max(maxWidth, lineWidth);
       for (const code of codePointIter(line)) {
         const char = String.fromCodePoint(code);
-        let width = this.widths.get(code);
+        let width = this.widths!.get(code);
         if (width === undefined) {
           const metrics = ctx.measureText(char);
           width = Math.ceil(metrics.width);
-          this.widths.set(code, width);
+          this.widths!.set(code, width);
           this.firstChar = Math.min(code, this.firstChar);
           this.lastChar = Math.max(code, this.lastChar);
         }

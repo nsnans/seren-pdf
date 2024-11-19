@@ -77,6 +77,7 @@ import { XRef } from "./xref";
 import { PDFManager } from "./pdf_manager";
 import { PlatformHelper } from "../platform/platform_helper";
 import { GlobalImageCache } from "./image_utils";
+import { MessageHandler } from "../shared/message_handler";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -364,7 +365,7 @@ class Page {
     await Promise.all(promises);
   }
 
-  async saveNewAnnotations(handler, task, annotations, imagePromises) {
+  async saveNewAnnotations(handler: MessageHandler, task, annotations, imagePromises) {
     if (this.xfaFactory) {
       throw new Error("XFA: Cannot save new annotations.");
     }
