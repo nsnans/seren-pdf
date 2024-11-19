@@ -14,12 +14,15 @@
  */
 
 import { DecodeStream } from "./decode_stream";
+import { Stream } from "./stream";
 
 class AsciiHexStream extends DecodeStream {
 
   protected firstDigit: number = -1;
 
-  constructor(str, maybeLength: number) {
+  protected str: Stream;
+
+  constructor(str: Stream, maybeLength: number) {
     // Most streams increase in size when decoded, but AsciiHex streams shrink
     // by 50%.
     if (maybeLength) {

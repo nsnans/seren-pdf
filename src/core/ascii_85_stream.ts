@@ -15,12 +15,14 @@
 
 import { DecodeStream } from "./decode_stream";
 import { isWhiteSpace } from "./core_utils";
+import { Stream } from "./stream";
 
 class Ascii85Stream extends DecodeStream {
   public eof: boolean = false;
   public input: Uint8Array;
+  protected str: Stream;
 
-  constructor(str, maybeLength: number) {
+  constructor(str: Stream, maybeLength: number) {
     // Most streams increase in size when decoded, but Ascii85 streams
     // typically shrink by ~20%.
     if (maybeLength) {

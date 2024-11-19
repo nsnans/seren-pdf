@@ -27,7 +27,7 @@ import { BaseStream } from "./base_stream";
 import { calculateMD5 } from "./crypto";
 import { Stream } from "./stream";
 
-async function writeObject(ref, obj, buffer, { encrypt = null }) {
+async function writeObject(ref: Ref, obj: unknown, buffer, { encrypt = null }) {
   const transform = encrypt?.createCipherTransform(ref.num, ref.gen);
   buffer.push(`${ref.num} ${ref.gen} obj\n`);
   if (obj instanceof Dict) {
@@ -40,7 +40,7 @@ async function writeObject(ref, obj, buffer, { encrypt = null }) {
   buffer.push("\nendobj\n");
 }
 
-async function writeDict(dict, buffer, transform) {
+async function writeDict(dict: Dict, buffer, transform) {
   buffer.push("<<");
   for (const key of dict.getKeys()) {
     buffer.push(` /${escapePDFName(key)} `);
@@ -192,8 +192,8 @@ function computeMD5(filesize, xrefInfo) {
   return bytesToString(calculateMD5(array));
 }
 
-function writeXFADataForAcroform(str, newRefs) {
-  const xml = new SimpleXMLParser({ hasAttributes: true }).parseFromString(str);
+function writeXFADataForAcroform(str: string, newRefs) {
+  const xml = new SimpleXMLParser({ hasAttributes: true }).parseFromString(str)!;
 
   for (const { xfa } of newRefs) {
     if (!xfa) {
@@ -207,7 +207,7 @@ function writeXFADataForAcroform(str, newRefs) {
     let node = xml.documentElement.searchNode(nodePath, 0);
     if (!node && nodePath.length > 1) {
       // If we're lucky the last element in the path will identify the node.
-      node = xml.documentElement.searchNode([nodePath.at(-1)], 0);
+      node = xml.documentElement.searchNode([nodePath.at(-1)!], 0);
     }
     if (node) {
       node.childNodes = Array.isArray(value)
@@ -217,7 +217,7 @@ function writeXFADataForAcroform(str, newRefs) {
       warn(`Node not found for path: ${path}`);
     }
   }
-  const buffer = [];
+  const buffer = [] as string[];
   xml.documentElement.dump(buffer);
   return buffer.join("");
 }

@@ -291,7 +291,7 @@ function lookupNormalRect(arr, fallback) {
  * @returns {Array} - Array of Objects with the name and pos of
  * each part of the path.
  */
-function parseXFAPath(path) {
+function parseXFAPath(path: string): { name: string, pos: number }[] {
   const positionPattern = /(.+)\[(\d+)\]$/;
   return path.split(".").map(component => {
     const m = component.match(positionPattern);

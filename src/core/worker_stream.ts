@@ -13,11 +13,22 @@
  * limitations under the License.
  */
 
+import { MessageHandler } from "../shared/message_handler";
+import { ReaderHeadersReadyResult } from "../shared/message_handler_result_type";
 import { assert } from "../shared/util";
 
 /** @implements {IPDFStream} */
 class PDFWorkerStream {
-  constructor(msgHandler) {
+
+  protected _msgHandler: MessageHandler;
+
+  protected _contentLength: null;
+
+  protected _fullRequestReader: PDFWorkerStreamReader | null;
+
+  protected _rangeRequestReaders: PDFWorkerStreamRangeReader[];
+
+  constructor(msgHandler: MessageHandler) {
     this._msgHandler = msgHandler;
     this._contentLength = null;
     this._fullRequestReader = null;
@@ -33,13 +44,13 @@ class PDFWorkerStream {
     return this._fullRequestReader;
   }
 
-  getRangeReader(begin, end) {
+  getRangeReader(begin: number, end: number) {
     const reader = new PDFWorkerStreamRangeReader(begin, end, this._msgHandler);
     this._rangeRequestReaders.push(reader);
     return reader;
   }
 
-  cancelAllRequests(reason) {
+  cancelAllRequests(reason: any) {
     this._fullRequestReader?.cancel(reason);
 
     for (const reader of this._rangeRequestReaders.slice(0)) {
@@ -50,7 +61,22 @@ class PDFWorkerStream {
 
 /** @implements {IPDFStreamReader} */
 class PDFWorkerStreamReader {
-  constructor(msgHandler) {
+
+  protected _msgHandler: MessageHandler;
+
+  protected onProgress: null;
+
+  protected _contentLength: number | null;
+
+  protected _isRangeSupported: boolean;
+
+  protected _isStreamingSupported: boolean;
+
+  protected _reader: ReadableStreamDefaultReader;
+
+  protected _headersReady: Promise<void>;
+
+  constructor(msgHandler: MessageHandler) {
     this._msgHandler = msgHandler;
     this.onProgress = null;
 
@@ -58,16 +84,16 @@ class PDFWorkerStreamReader {
     this._isRangeSupported = false;
     this._isStreamingSupported = false;
 
-    const readableStream = this._msgHandler.sendWithStream("GetReader");
+    const readableStream = this._msgHandler.sendWithStream("GetReader", null);
     this._reader = readableStream.getReader();
 
-    this._headersReady = this._msgHandler
-      .sendWithPromise("ReaderHeadersReady")
-      .then(data => {
-        this._isStreamingSupported = data.isStreamingSupported;
-        this._isRangeSupported = data.isRangeSupported;
-        this._contentLength = data.contentLength;
-      });
+    const sendWithPromise = this._msgHandler.sendWithPromise("ReaderHeadersReady", null);
+    const promise = <Promise<ReaderHeadersReadyResult>>sendWithPromise;
+    this._headersReady = promise.then((data: ReaderHeadersReadyResult) => {
+      this._isStreamingSupported = data.isStreamingSupported;
+      this._isRangeSupported = data.isRangeSupported;
+      this._contentLength = data.contentLength;
+    });
   }
 
   get headersReady() {
@@ -96,14 +122,21 @@ class PDFWorkerStreamReader {
     return { value: value.buffer, done: false };
   }
 
-  cancel(reason) {
+  cancel(reason: any) {
     this._reader.cancel(reason);
   }
 }
 
 /** @implements {IPDFStreamRangeReader} */
 class PDFWorkerStreamRangeReader {
-  constructor(begin, end, msgHandler) {
+
+  protected _msgHandler: MessageHandler;
+
+  protected _reader: ReadableStreamDefaultReader;
+
+  protected onProgress: null;
+
+  constructor(begin: number, end: number, msgHandler: MessageHandler) {
     this._msgHandler = msgHandler;
     this.onProgress = null;
 
@@ -126,7 +159,7 @@ class PDFWorkerStreamRangeReader {
     return { value: value.buffer, done: false };
   }
 
-  cancel(reason) {
+  cancel(reason: any) {
     this._reader.cancel(reason);
   }
 }

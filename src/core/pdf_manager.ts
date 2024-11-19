@@ -42,7 +42,7 @@ interface PDFManager {
 
   enableXfa: boolean;
 
-  password: string;
+  password: string | null;
 
   evaluatorOptions;
 

@@ -65,7 +65,7 @@ interface ParserOptions {
 
   lexer: Lexer;
 
-  xref?: XRef;
+  xref: XRef | null;
 
   allowStreams?: boolean;
 
@@ -74,14 +74,14 @@ interface ParserOptions {
 
 class Parser {
   public lexer: Lexer;
-  protected xref;
+  protected xref: XRef | null;
   protected allowStreams;
   protected recoveryMode: boolean;
   protected imageCache: Record<string, any>;
   protected _imageId = 0;
   public buf1;
   public buf2;
-  constructor({ lexer, xref, allowStreams = false, recoveryMode = false }: ParserOptions) {
+  constructor({ lexer, xref = null, allowStreams = false, recoveryMode = false }: ParserOptions) {
     this.lexer = lexer;
     this.xref = xref;
     this.allowStreams = allowStreams;
@@ -751,7 +751,7 @@ class Parser {
     return stream;
   }
 
-  filter(stream, dict, length) {
+  filter(stream: Stream, dict: Dict, length) {
     let filter = dict.get("F", "Filter");
     let params = dict.get("DP", "DecodeParms");
 
@@ -767,14 +767,14 @@ class Parser {
       const filterArray = filter;
       const paramsArray = params;
       for (let i = 0, ii = filterArray.length; i < ii; ++i) {
-        filter = this.xref.fetchIfRef(filterArray[i]);
+        filter = this.xref!.fetchIfRef(filterArray[i]);
         if (!(filter instanceof Name)) {
           throw new FormatError(`Bad filter name "${filter}"`);
         }
 
         params = null;
         if (Array.isArray(paramsArray) && i in paramsArray) {
-          params = this.xref.fetchIfRef(paramsArray[i]);
+          params = this.xref!.fetchIfRef(paramsArray[i]);
         }
         stream = this.makeFilter(stream, filter.name, maybeLength, params);
         // After the first stream the `length` variable is invalid.
@@ -784,7 +784,7 @@ class Parser {
     return stream;
   }
 
-  makeFilter(stream, name: string, maybeLength: number, params) {
+  makeFilter(stream: Stream, name: string, maybeLength: number, params) {
     // Since the 'Length' entry in the stream dictionary can be completely
     // wrong, e.g. zero for non-empty streams, only skip parsing the stream
     // when we can be absolutely certain that it actually is empty.
@@ -1178,7 +1178,7 @@ class Lexer {
   /**
    * @private
    */
-  _hexStringWarn(ch) {
+  _hexStringWarn(ch: number) {
     const MAX_HEX_STRING_NUM_WARN = 5;
 
     if (this._hexStringNumWarn++ === MAX_HEX_STRING_NUM_WARN) {

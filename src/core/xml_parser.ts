@@ -305,26 +305,25 @@ class SimpleDOMNode {
 
   protected nodeValue?: string;
 
-  protected parentNode: ParentNode;
+  public parentNode: SimpleDOMNode | null;
 
-  public childNodes = [];
+  public childNodes = [] as SimpleDOMNode[];
+
+  public attributes: { name: string, value: string }[] = [];
 
   constructor(nodeName: string, nodeValue?: string) {
     this.nodeName = nodeName;
     this.nodeValue = nodeValue;
-    this.parentNode = {
-      value: null,
-      writable: true,
-      childNodes: []
-    };
+    // 原来的代码里是null，我想应该也是null，或者是要
+    this.parentNode = null;
   }
 
   get firstChild() {
     return this.childNodes?.[0];
   }
 
-  get nextSibling() {
-    const childNodes = this.parentNode.childNodes;
+  get nextSibling(): SimpleDOMNode | undefined {
+    const childNodes = this.parentNode!.childNodes;
     if (!childNodes) {
       return undefined;
     }
@@ -335,7 +334,7 @@ class SimpleDOMNode {
     return childNodes[index + 1];
   }
 
-  get textContent() {
+  get textContent(): string {
     if (!this.childNodes) {
       return this.nodeValue || "";
     }
@@ -366,7 +365,7 @@ class SimpleDOMNode {
    * @returns {SimpleDOMNode} The node corresponding
    * to the path or null if not found.
    */
-  searchNode(paths, pos: number): SimpleDOMNode | null {
+  searchNode(paths: { name: string, pos: number }[], pos: number): SimpleDOMNode | null {
     if (pos >= paths.length) {
       return this;
     }
@@ -377,8 +376,8 @@ class SimpleDOMNode {
       // datasets elements (https://www.pdfa.org/norm-refs/XFA-3_3.pdf#page=96).
       return this.searchNode(paths, pos + 1);
     }
-    const stack = [];
-    let node = this;
+    const stack = [] as [SimpleDOMNode, number | null][];
+    let node: SimpleDOMNode = this;
 
     while (true) {
       if (component.name === node.nodeName) {
@@ -390,7 +389,7 @@ class SimpleDOMNode {
         } else if (stack.length === 0) {
           return null;
         } else {
-          const [parent] = stack.pop();
+          const [parent] = stack.pop()!;
           let siblingPos = 0;
           for (const child of parent.childNodes) {
             if (component.name === child.nodeName) {
@@ -413,8 +412,8 @@ class SimpleDOMNode {
         return null;
       } else {
         while (stack.length !== 0) {
-          const [parent, currentPos] = stack.pop();
-          const newPos = currentPos + 1;
+          const [parent, currentPos] = stack.pop()!;
+          const newPos = currentPos! + 1;
           if (newPos < parent.childNodes.length) {
             stack.push([parent, newPos]);
             node = parent.childNodes[newPos];
@@ -428,9 +427,9 @@ class SimpleDOMNode {
     }
   }
 
-  dump(buffer) {
+  dump(buffer: string[]) {
     if (this.nodeName === "#text") {
-      buffer.push(encodeToXmlString(this.nodeValue));
+      buffer.push(encodeToXmlString(this.nodeValue!));
       return;
     }
 
@@ -508,7 +507,7 @@ class SimpleXMLParser extends XMLParserBase {
     this._currentFragment!.push(node);
   }
 
-  onBeginElement(name: string, attributes, isEmpty) {
+  onBeginElement(name: string, attributes: { name: string, value: string }[], isEmpty: boolean) {
     if (this._lowerCaseName) {
       name = name.toLowerCase();
     }
