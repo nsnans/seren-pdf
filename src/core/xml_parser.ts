@@ -293,12 +293,6 @@ abstract class XMLParserBase {
   abstract onError(_code: number): void;
 }
 
-interface ParentNode {
-  value: null;
-  writable: boolean;
-  childNodes: SimpleDOMNode[];
-}
-
 class SimpleDOMNode {
 
   public nodeName: string;

@@ -26,6 +26,8 @@ import { FeatureTest, shadow, unreachable } from "../../shared/util";
 import { AltText } from "./alt_text";
 import { EditorToolbar } from "./toolbar";
 import { noContextMenu } from "../display_utils";
+import { PlatformHelper } from "../../platform/platform_helper";
+import { AnnotationEditorLayer } from "./annotation_editor_layer";
 
 /**
  * @typedef {Object} AnnotationEditorParameters
@@ -35,66 +37,21 @@ import { noContextMenu } from "../display_utils";
  * @property {number} x - x-coordinate
  * @property {number} y - y-coordinate
  */
-
+interface AnnotationEditorParameters {
+  uiManager: AnnotationEditorUIManager;
+  parent: AnnotationEditorLayer;
+  id: string;
+  x: number;
+  y: number;
+}
 /**
  * Base class for editors.
  */
 class AnnotationEditor {
-  #accessibilityData = null;
-
-  #allResizerDivs = null;
-
-  #altText = null;
-
-  #disabled = false;
-
-  #keepAspectRatio = false;
-
-  #resizersDiv = null;
-
-  #savedDimensions = null;
-
-  #focusAC = null;
-
-  #focusedResizerName = "";
-
-  #hasBeenClicked = false;
-
-  #initialPosition = null;
-
-  #isEditing = false;
-
-  #isInEditMode = false;
-
-  #isResizerEnabledForKeyboard = false;
-
-  #moveInDOMTimeout = null;
-
-  #prevDragX = 0;
-
-  #prevDragY = 0;
-
-  #telemetryTimeouts = null;
-
-  _editToolbar = null;
-
-  _initialOptions = Object.create(null);
-
-  _initialData = null;
-
-  _isVisible = true;
-
-  _uiManager = null;
-
-  _focusEventsAllowed = true;
 
   static _l10n = null;
 
   static _l10nResizer = null;
-
-  #isDraggable = false;
-
-  #zIndex = AnnotationEditor._zIndex++;
 
   static _borderLineWidth = -1;
 
@@ -140,14 +97,79 @@ class AnnotationEditor {
     );
   }
 
+  #accessibilityData = null;
+
+  #allResizerDivs = null;
+
+  #altText = null;
+
+  #disabled = false;
+
+  #keepAspectRatio = false;
+
+  #resizersDiv = null;
+
+  #savedDimensions = null;
+
+  #focusAC = null;
+
+  #focusedResizerName = "";
+
+  #hasBeenClicked = false;
+
+  #initialPosition = null;
+
+  #isEditing = false;
+
+  #isInEditMode = false;
+
+  #isResizerEnabledForKeyboard = false;
+
+  #moveInDOMTimeout = null;
+
+  #prevDragX = 0;
+
+  #prevDragY = 0;
+
+  #telemetryTimeouts = null;
+
+
+
+  #isDraggable = false;
+
+  #zIndex = AnnotationEditor._zIndex++;
+
+  _editToolbar = null;
+
+  _initialOptions = Object.create(null);
+
+  _initialData = null;
+
+  protected _isVisible = true;
+
+  protected _focusEventsAllowed = true;
+
+  protected parent: AnnotationEditorLayer;
+
+  protected id: string;
+
+  protected x: number;
+
+  protected y: number;
+
+  protected _willKeepAspectRatio: boolean;
+
+  protected _uiManager: AnnotationEditorUIManager;
+
+  protected deleted: boolean;
+
+  protected isAttachedToDOM: boolean;
+
   /**
    * @param {AnnotationEditorParameters} parameters
    */
-  constructor(parameters) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === AnnotationEditor
-    ) {
+  constructor(parameters: AnnotationEditorParameters) {
+    if (PlatformHelper.isTesting() && this.constructor === AnnotationEditor) {
       unreachable("Cannot initialize AnnotationEditor.");
     }
 

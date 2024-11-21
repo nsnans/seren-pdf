@@ -33,7 +33,7 @@ class XfaText {
       items,
       styles: Object.create(null),
     } as TextContent;
-    
+
     function walk(node) {
       if (!node) {
         return;
@@ -71,7 +71,7 @@ class XfaText {
    * @returns {boolean} true if the DOM node should have a corresponding text
    * node.
    */
-  static shouldBuildText(name) {
+  static shouldBuildText(name: string) {
     return !(
       name === "textarea" ||
       name === "input" ||

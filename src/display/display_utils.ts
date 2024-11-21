@@ -324,7 +324,7 @@ function isDataScheme(url: string) {
   return url.substring(i, i + 5).toLowerCase() === "data:";
 }
 
-function isPdfFile(filename: string) {
+function isPdfFile(filename: string | null) {
   return typeof filename === "string" && /\.pdf$/i.test(filename);
 }
 

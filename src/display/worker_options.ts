@@ -14,7 +14,8 @@
  */
 
 class GlobalWorkerOptions {
-  static #port = null;
+
+  static #port: Worker | null = null;
 
   static #src = "";
 
@@ -29,7 +30,7 @@ class GlobalWorkerOptions {
    * @param {Worker | null} workerPort - Defines global port for worker process.
    *   Overrides the `workerSrc` option.
    */
-  static set workerPort(val) {
+  static set workerPort(val: Worker | null) {
     if (
       !(typeof Worker !== "undefined" && val instanceof Worker) &&
       val !== null

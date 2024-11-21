@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   BaseException,
@@ -22,7 +23,7 @@ import {
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
 
-function createHeaders(isHttp, httpHeaders) {
+function createHeaders(isHttp: boolean, httpHeaders) {
   const headers = new Headers();
 
   if (!isHttp || !httpHeaders || typeof httpHeaders !== "object") {
@@ -42,8 +43,13 @@ function validateRangeRequestCapabilities({
   isHttp,
   rangeChunkSize,
   disableRange,
+}: {
+  responseHeaders: Headers,
+  isHttp: boolean,
+  rangeChunkSize: number,
+  disableRange: boolean
 }) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  if (PlatformHelper.isTesting()) {
     assert(
       Number.isInteger(rangeChunkSize) && rangeChunkSize > 0,
       "rangeChunkSize must be an integer larger than zero."
@@ -52,9 +58,12 @@ function validateRangeRequestCapabilities({
   const returnValues = {
     allowRangeRequests: false,
     suggestedLength: undefined,
+  } as {
+    allowRangeRequests: boolean,
+    suggestedLength: number | undefined;
   };
 
-  const length = parseInt(responseHeaders.get("Content-Length"), 10);
+  const length = parseInt(responseHeaders.get("Content-Length")!, 10);
   if (!Number.isInteger(length)) {
     return returnValues;
   }
@@ -109,7 +118,7 @@ function createResponseStatusError(status: number, url: string): BaseException {
   );
 }
 
-function validateResponseStatus(status) {
+function validateResponseStatus(status: number) {
   return status === 200 || status === 206;
 }
 

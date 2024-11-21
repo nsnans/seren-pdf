@@ -18,13 +18,14 @@ import { KeyboardManager } from "./tools";
 import { noContextMenu } from "../display_utils";
 
 class ColorPicker {
-  #button = null;
 
-  #buttonSwatch = null;
+  #button: HTMLButtonElement | null = null;
+
+  #buttonSwatch: HTMLSpanElement | null = null;
 
   #defaultColor;
 
-  #dropdown = null;
+  #dropdown: HTMLDivElement | null = null;
 
   #dropdownWasFromKeyboard = false;
 
@@ -94,15 +95,15 @@ class ColorPicker {
   renderButton() {
     const button = (this.#button = document.createElement("button"));
     button.className = "colorPicker";
-    button.tabIndex = "0";
+    button.tabIndex = 0;
     button.setAttribute("data-l10n-id", "pdfjs-editor-colorpicker-button");
-    button.setAttribute("aria-haspopup", true);
+    button.setAttribute("aria-haspopup", "true");
     const signal = this.#uiManager._signal;
     button.addEventListener("click", this.#openDropdown.bind(this), { signal });
     button.addEventListener("keydown", this.#keyDown.bind(this), { signal });
     const swatch = (this.#buttonSwatch = document.createElement("span"));
     swatch.className = "swatch";
-    swatch.setAttribute("aria-hidden", true);
+    swatch.setAttribute("aria-hidden", "true");
     swatch.style.backgroundColor = this.#defaultColor;
     button.append(swatch);
     return button;
@@ -202,7 +203,7 @@ class ColorPicker {
       this.#openDropdown(event);
       return;
     }
-    this.#dropdown.firstChild?.focus();
+    this.#dropdown!.firstChild?.focus();
   }
 
   _moveToEnd(event) {
@@ -210,7 +211,7 @@ class ColorPicker {
       this.#openDropdown(event);
       return;
     }
-    this.#dropdown.lastChild?.focus();
+    this.#dropdown!.lastChild?.focus();
   }
 
   #keyDown(event) {
@@ -236,7 +237,7 @@ class ColorPicker {
       return;
     }
     const root = (this.#dropdown = this.#getDropdownRoot());
-    this.#button.append(root);
+    this.#button!.append(root);
   }
 
   #pointerDown(event) {
@@ -267,7 +268,7 @@ class ColorPicker {
       return;
     }
     this.hideDropdown();
-    this.#button.focus({
+    this.#button!.focus({
       preventScroll: true,
       focusVisible: this.#dropdownWasFromKeyboard,
     });
