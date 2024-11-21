@@ -42,7 +42,7 @@ const StreamKind = {
   START_COMPLETE: 8,
 };
 
-function wrapReason(reason) {
+function wrapReason(reason: any) {
   if (
     !(
       reason instanceof Error ||
@@ -89,7 +89,7 @@ class MessageHandler {
 
   protected callbackCapabilities: Record<string, any>;
 
-  protected actionHandler: Record<string, any>;
+  protected actionHandler: Record<string, (...arg: any[]) => unknown>;
 
   constructor(sourceName: string, targetName: string, comObj: Worker) {
     this.sourceName = sourceName;
@@ -105,7 +105,7 @@ class MessageHandler {
     });
   }
 
-  #onMessage({ data }) {
+  #onMessage({ data }: MessageEvent) {
     if (data.targetName !== this.sourceName) {
       return;
     }

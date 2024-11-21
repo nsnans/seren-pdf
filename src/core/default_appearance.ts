@@ -257,7 +257,7 @@ class FakeUnicodeFont {
 
   protected ctxMeasure: OffscreenCanvasRenderingContext2D;
 
-  protected fontName: Name;
+  readonly fontName: Name;
 
   protected widths: Map<number, number> | null;
 

@@ -50,7 +50,7 @@ class WorkerTask {
 
   protected terminated = false;
 
-  protected name: string;
+  public name: string;
 
   constructor(name: string) {
     this.name = name;
@@ -592,7 +592,7 @@ class WorkerMessageHandler {
               pdfManager!.getPage(pageIndex).then(page => {
                 const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
                 return page
-                  .saveNewAnnotations(handler, task, annotations, imagePromises)
+                  .saveNewAnnotations(handler!, task, annotations, imagePromises)
                   .finally(function () {
                     finishWorkerTask(task);
                   });
@@ -741,39 +741,37 @@ class WorkerMessageHandler {
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
         // Pre compile the pdf page and fetch the fonts/images.
-        page
-          .getOperatorList({
-            handler,
-            sink,
-            task,
-            intent: data.intent,
-            cacheKey: data.cacheKey,
-            annotationStorage: data.annotationStorage,
-            modifiedIds: data.modifiedIds,
-          })
-          .then(
-            function (operatorListInfo) {
-              finishWorkerTask(task);
+        page.getOperatorList({
+          handler: handler!,
+          sink,
+          task,
+          intent: data.intent,
+          cacheKey: data.cacheKey,
+          annotationStorage: data.annotationStorage,
+          modifiedIds: data.modifiedIds,
+        }).then(
+          function (operatorListInfo) {
+            finishWorkerTask(task);
 
-              if (start) {
-                info(
-                  `page=${pageIndex + 1} - getOperatorList: time=` +
-                  `${Date.now() - start}ms, len=${operatorListInfo.length}`
-                );
-              }
-              sink.close();
-            },
-            function (reason) {
-              finishWorkerTask(task);
-              if (task.terminated) {
-                return; // ignoring errors from the terminated thread
-              }
-              sink.error(reason);
-
-              // TODO: Should `reason` be re-thrown here (currently that casues
-              //       "Uncaught exception: ..." messages in the console)?
+            if (start) {
+              info(
+                `page=${pageIndex + 1} - getOperatorList: time=` +
+                `${Date.now() - start}ms, len=${operatorListInfo.length}`
+              );
             }
-          );
+            sink.close();
+          },
+          function (reason) {
+            finishWorkerTask(task);
+            if (task.terminated) {
+              return; // ignoring errors from the terminated thread
+            }
+            sink.error(reason);
+
+            // TODO: Should `reason` be re-thrown here (currently that casues
+            //       "Uncaught exception: ..." messages in the console)?
+          }
+        );
       });
     });
 
@@ -787,37 +785,35 @@ class WorkerMessageHandler {
         // NOTE: Keep this condition in sync with the `info` helper function.
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
-        page
-          .extractTextContent({
-            handler,
-            task,
-            sink,
-            includeMarkedContent,
-            disableNormalization,
-          })
-          .then(
-            function () {
-              finishWorkerTask(task);
+        page.extractTextContent({
+          handler: handler!,
+          task,
+          sink,
+          includeMarkedContent,
+          disableNormalization,
+        }).then(
+          function () {
+            finishWorkerTask(task);
 
-              if (start) {
-                info(
-                  `page=${pageIndex + 1} - getTextContent: time=` +
-                  `${Date.now() - start}ms`
-                );
-              }
-              sink.close();
-            },
-            function (reason) {
-              finishWorkerTask(task);
-              if (task.terminated) {
-                return; // ignoring errors from the terminated thread
-              }
-              sink.error(reason);
-
-              // TODO: Should `reason` be re-thrown here (currently that casues
-              //       "Uncaught exception: ..." messages in the console)?
+            if (start) {
+              info(
+                `page=${pageIndex + 1} - getTextContent: time=` +
+                `${Date.now() - start}ms`
+              );
             }
-          );
+            sink.close();
+          },
+          function (reason) {
+            finishWorkerTask(task);
+            if (task.terminated) {
+              return; // ignoring errors from the terminated thread
+            }
+            sink.error(reason);
+
+            // TODO: Should `reason` be re-thrown here (currently that casues
+            //       "Uncaught exception: ..." messages in the console)?
+          }
+        );
       });
     });
 

@@ -24,10 +24,11 @@ import {
 } from "./core_utils";
 import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
 import { BaseStream } from "./base_stream";
-import { calculateMD5 } from "./crypto";
+import { calculateMD5, CipherTransform } from "./crypto";
 import { Stream } from "./stream";
+import { XRef } from "./xref";
 
-async function writeObject(ref: Ref, obj: unknown, buffer, { encrypt = null }) {
+async function writeObject(ref: Ref, obj: unknown, buffer: string[], { encrypt = null }: XRef) {
   const transform = encrypt?.createCipherTransform(ref.num, ref.gen);
   buffer.push(`${ref.num} ${ref.gen} obj\n`);
   if (obj instanceof Dict) {
@@ -35,12 +36,12 @@ async function writeObject(ref: Ref, obj: unknown, buffer, { encrypt = null }) {
   } else if (obj instanceof BaseStream) {
     await writeStream(obj, buffer, transform);
   } else if (Array.isArray(obj) || ArrayBuffer.isView(obj)) {
-    await writeArray(obj, buffer, transform);
+    await writeArray(obj as any[], buffer, transform);
   }
   buffer.push("\nendobj\n");
 }
 
-async function writeDict(dict: Dict, buffer, transform) {
+async function writeDict(dict: Dict, buffer: string[], transform?: CipherTransform) {
   buffer.push("<<");
   for (const key of dict.getKeys()) {
     buffer.push(` /${escapePDFName(key)} `);
@@ -49,9 +50,9 @@ async function writeDict(dict: Dict, buffer, transform) {
   buffer.push(">>");
 }
 
-async function writeStream(stream, buffer, transform) {
+async function writeStream(stream: BaseStream, buffer: string[], transform?: CipherTransform) {
   let bytes = stream.getBytes();
-  const { dict } = stream;
+  const dict = stream.dict!;
 
   const [filter, params] = await Promise.all([
     dict.getAsync("Filter"),
@@ -59,7 +60,7 @@ async function writeStream(stream, buffer, transform) {
   ]);
 
   const filterZero = Array.isArray(filter)
-    ? await dict.xref.fetchIfRefAsync(filter[0])
+    ? await dict.xref!.fetchIfRefAsync(filter[0])
     : filter;
   const isFilterZeroFlateDecode = isName(filterZero, "FlateDecode");
 
@@ -118,7 +119,7 @@ async function writeStream(stream, buffer, transform) {
   buffer.push(" stream\n", string, "\nendstream");
 }
 
-async function writeArray(array, buffer, transform) {
+async function writeArray(array: Array<unknown>, buffer: string[], transform?: CipherTransform) {
   buffer.push("[");
   let first = true;
   for (const val of array) {
@@ -132,13 +133,13 @@ async function writeArray(array, buffer, transform) {
   buffer.push("]");
 }
 
-async function writeValue(value, buffer, transform) {
+async function writeValue(value: any, buffer: string[], transform?: CipherTransform) {
   if (value instanceof Name) {
     buffer.push(`/${escapePDFName(value.name)}`);
   } else if (value instanceof Ref) {
     buffer.push(`${value.num} ${value.gen} R`);
   } else if (Array.isArray(value) || ArrayBuffer.isView(value)) {
-    await writeArray(value, buffer, transform);
+    await writeArray(value as any[], buffer, transform);
   } else if (typeof value === "string") {
     if (transform) {
       value = transform.encryptString(value);
@@ -167,7 +168,7 @@ function writeInt(number: number, size: number, offset: number, buffer) {
   return offset + size;
 }
 
-function writeString(string, offset: number, buffer) {
+function writeString(string: string, offset: number, buffer: number[]) {
   for (let i = 0, len = string.length; i < len; i++) {
     buffer[offset + i] = string.charCodeAt(i) & 0xff;
   }

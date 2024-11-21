@@ -475,7 +475,7 @@ class NullOptimizer {
     this.queue = queue;
   }
 
-  _optimize() {}
+  _optimize() { }
 
   push(fn, args) {
     this.queue.fnArray.push(fn);
@@ -483,9 +483,9 @@ class NullOptimizer {
     this._optimize();
   }
 
-  flush() {}
+  flush() { }
 
-  reset() {}
+  reset() { }
 }
 
 class QueueOptimizer extends NullOptimizer {
@@ -580,10 +580,23 @@ class QueueOptimizer extends NullOptimizer {
 }
 
 class OperatorList {
+
   static CHUNK_SIZE = 1000;
 
   // Close to chunk size.
   static CHUNK_SIZE_ABOUT = this.CHUNK_SIZE - 5;
+
+  protected weight;
+
+  protected _totalLength;
+
+  // TODO NullOptimizer应该抽象出来的，但是此处没做抽象，后续需要补一下
+  protected optimizer: NullOptimizer;
+
+  protected _streamSink;
+
+  // TODO dependencies理论上来说应该是Set<string>，但是会不会有其他类型，值得商榷
+  protected dependencies: Set<string>;
 
   constructor(intent = 0, streamSink?) {
     this._streamSink = streamSink;
@@ -620,7 +633,7 @@ class OperatorList {
     return this._totalLength + this.length;
   }
 
-  addOp(fn, args) {
+  addOp(fn: number, args?: any) {
     this.optimizer.push(fn, args);
     this.weight++;
     if (this._streamSink) {
@@ -636,7 +649,7 @@ class OperatorList {
     }
   }
 
-  addImageOps(fn, args, optionalContent) {
+  addImageOps(fn: number, args, optionalContent) {
     if (optionalContent !== undefined) {
       this.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }

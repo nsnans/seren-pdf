@@ -17,6 +17,7 @@ import { Dict, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { warn } from "../shared/util";
+import { XRef } from "./xref";
 
 function mayHaveChildren(value) {
   return (
@@ -54,7 +55,16 @@ function addChildren(node, nodesToVisit) {
  * entire PDF document object graph to be traversed.
  */
 class ObjectLoader {
-  constructor(dict, keys, xref) {
+
+  protected dict: Dict;
+
+  protected keys: string[]
+
+  protected xref: XRef;
+
+  protected refSet: RefSet | null;
+
+  constructor(dict: Dict, keys: string[], xref: XRef) {
     this.dict = dict;
     this.keys = keys;
     this.xref = xref;
@@ -91,11 +101,11 @@ class ObjectLoader {
       // Only references or chunked streams can cause missing data exceptions.
       if (currentNode instanceof Ref) {
         // Skip nodes that have already been visited.
-        if (this.refSet.has(currentNode)) {
+        if (this.refSet!.has(currentNode)) {
           continue;
         }
         try {
-          this.refSet.put(currentNode);
+          this.refSet!.put(currentNode);
           currentNode = this.xref.fetch(currentNode);
         } catch (ex) {
           if (!(ex instanceof MissingDataException)) {

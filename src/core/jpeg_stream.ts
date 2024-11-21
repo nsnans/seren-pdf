@@ -26,7 +26,7 @@ class JpegStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  constructor(stream, maybeLength: number, params) {
+  constructor(stream, maybeLength: number, params?) {
     super(maybeLength);
 
     this.stream = stream;

@@ -26,6 +26,7 @@ import {
 import { Dict, isName, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
+import { XRef } from "./xref";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -355,7 +356,7 @@ function escapeString(str: string) {
   });
 }
 
-function _collectJS(entry, xref, list, parents) {
+function _collectJS(entry, xref: XRef, list: string[], parents: RefSet) {
   if (!entry) {
     return;
   }
@@ -396,8 +397,8 @@ function _collectJS(entry, xref, list, parents) {
   }
 }
 
-function collectActions(xref, dict, eventType) {
-  const actions: Record<string, any> = Object.create(null);
+function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string>) {
+  const actions: Record<string, string[]> = Object.create(null);
   const additionalActionsDicts = getInheritableProperty(
     dict, "AA", false, false,
   );
@@ -419,7 +420,7 @@ function collectActions(xref, dict, eventType) {
         }
         const actionDict = additionalActions.getRaw(key);
         const parents = new RefSet();
-        const list = [];
+        const list = <string[]>[];
         _collectJS(actionDict, xref, list, parents);
         if (list.length > 0) {
           actions[action] = list;
@@ -431,7 +432,7 @@ function collectActions(xref, dict, eventType) {
   if (dict.has("A")) {
     const actionDict = dict.get("A");
     const parents = new RefSet();
-    const list = [];
+    const list = <string[]>[];
     _collectJS(actionDict, xref, list, parents);
     if (list.length > 0) {
       actions.Action = list;

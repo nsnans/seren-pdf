@@ -50,7 +50,7 @@ export class XRef {
 
   #firstXRefStmPos = null;
 
-  protected stream: Stream;
+  public stream: Stream;
 
   protected pdfManager: PDFManager;
 
@@ -78,7 +78,7 @@ export class XRef {
 
   protected _generationFallback: boolean | null;
 
-  protected encrypt: CipherTransformFactory | null;
+  public encrypt: CipherTransformFactory | null;
 
   protected streamState?: StreamState;
 
@@ -875,7 +875,7 @@ export class XRef {
       }
       return cacheEntry;
     }
-    
+
     let xrefEntry = this.getEntry(num);
 
     if (xrefEntry === null) {

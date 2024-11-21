@@ -15,6 +15,7 @@
 /* globals process */
 
 import { PlatformHelper } from "../platform/platform_helper";
+import { TypedArray } from "../types";
 
 // NW.js / Electron is a browser context, but copies some Node.js objects; see
 // http://docs.nwjs.io/en/latest/For%20Users/Advanced/JavaScript%20Contexts%20in%20NW.js/#access-nodejs-and-nwjs-api-in-browser-context
@@ -722,7 +723,7 @@ class Util {
   }
 
   // Concatenates two transformation matrices together and returns the result.
-  static transform(m1, m2) {
+  static transform(m1: TypedArray | number[], m2: TypedArray | number[]): number[] {
     return [
       m1[0] * m2[0] + m1[2] * m2[1],
       m1[1] * m2[0] + m1[3] * m2[1],
@@ -734,13 +735,13 @@ class Util {
   }
 
   // For 2d affine transforms
-  static applyTransform(p, m) {
+  static applyTransform(p: number[], m: number[]) {
     const xt = p[0] * m[0] + p[1] * m[2] + m[4];
     const yt = p[0] * m[1] + p[1] * m[3] + m[5];
     return [xt, yt];
   }
 
-  static applyInverseTransform(p, m) {
+  static applyInverseTransform(p: number[], m: number[]) {
     const d = m[0] * m[3] - m[1] * m[2];
     const xt = (p[0] * m[3] - p[1] * m[2] + m[2] * m[5] - m[4] * m[3]) / d;
     const yt = (-p[0] * m[1] + p[1] * m[0] + m[4] * m[1] - m[5] * m[0]) / d;
@@ -749,7 +750,7 @@ class Util {
 
   // Applies the transform to the rectangle and finds the minimum axially
   // aligned bounding box.
-  static getAxialAlignedBoundingBox(r, m) {
+  static getAxialAlignedBoundingBox(r: number[], m: number[]) {
     const p1 = this.applyTransform(r, m);
     const p2 = this.applyTransform(r.slice(2, 4), m);
     const p3 = this.applyTransform([r[0], r[3]], m);
@@ -816,7 +817,7 @@ class Util {
   // Returns a rectangle [x1, y1, x2, y2] corresponding to the
   // intersection of rect1 and rect2. If no intersection, returns 'null'
   // The rectangle coordinates of rect1, rect2 should be [x1, y1, x2, y2]
-  static intersect(rect1, rect2) {
+  static intersect(rect1: number[], rect2: number[]) {
     const xLow = Math.max(
       Math.min(rect1[0], rect1[2]),
       Math.min(rect2[0], rect2[2])

@@ -14,7 +14,7 @@
  */
 
 import { MessageHandler } from "../shared/message_handler";
-import { ReaderHeadersReadyResult } from "../shared/message_handler_result_type";
+import { ReaderHeadersReadyResult } from "../shared/message_handler_types";
 import { assert } from "../shared/util";
 
 /** @implements {IPDFStream} */

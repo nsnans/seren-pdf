@@ -22,7 +22,7 @@ import {
 } from "../shared/util";
 import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";
-import { PDFDocument } from "./document";
+import { Page, PDFDocument } from "./document";
 import { Stream } from "./stream";
 
 function parseDocBaseUrl(url: string) {
@@ -45,6 +45,10 @@ interface PDFManager {
   password: string | null;
 
   evaluatorOptions;
+
+  getPage(pageIndex: number): Promise<Page>;
+
+  ensure(page:Page, prop: string);
 
   ensureDoc(prop: string, args?: any);
 
@@ -152,7 +156,7 @@ abstract class BasePDFManager implements PDFManager {
   abstract terminate(reason: string): void;
 
   abstract getPDFDocument(): PDFDocument;
-  
+
 }
 
 class LocalPDFManager extends BasePDFManager {

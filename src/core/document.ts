@@ -78,6 +78,7 @@ import { PDFManager } from "./pdf_manager";
 import { PlatformHelper } from "../platform/platform_helper";
 import { GlobalImageCache } from "./image_utils";
 import { MessageHandler } from "../shared/message_handler";
+import { WorkerTask } from "./worker";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -209,7 +210,7 @@ class Page {
     );
   }
 
-  _getBoundingBox(name: string) {
+  _getBoundingBox(name: string): number[] | null {
     if (this.xfaData) {
       return this.xfaData.bbox;
     }
@@ -227,7 +228,7 @@ class Page {
     return null;
   }
 
-  get mediaBox() {
+  get mediaBox(): number[] {
     // Reset invalid media box to letter size.
     return shadow(
       this,
@@ -326,7 +327,7 @@ class Page {
     );
   }
 
-  async #replaceIdByRef(annotations, deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet) {
+  async #replaceIdByRef(annotations, deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet | null) {
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.id) {
@@ -365,7 +366,7 @@ class Page {
     await Promise.all(promises);
   }
 
-  async saveNewAnnotations(handler: MessageHandler, task, annotations, imagePromises) {
+  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations, imagePromises) {
     if (this.xfaFactory) {
       throw new Error("XFA: Cannot save new annotations.");
     }
@@ -485,6 +486,9 @@ class Page {
     cacheKey,
     annotationStorage = null,
     modifiedIds = null,
+  }: {
+    handler: MessageHandler,
+    task: WorkerTask,
   }) {
     const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources([
@@ -706,6 +710,11 @@ class Page {
     includeMarkedContent,
     disableNormalization,
     sink,
+  }: {
+    handler: MessageHandler,
+    task: WorkerTask,
+    includeMarkedContent: boolean,
+    disableNormalization: boolean,
   }) {
     const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources([
@@ -971,11 +980,11 @@ class PDFDocument {
 
   protected stream: Stream;
 
-  protected xref: XRef;
+  public xref: XRef;
 
-  protected _pagePromises: Map<any, any>;
+  protected _pagePromises: Map<number, Promise<Page>>;
 
-  protected catalog: Catalog | null = null;
+  public catalog: Catalog | null = null;
 
   protected _version: string | null;
 
@@ -1706,7 +1715,7 @@ class PDFDocument {
     }
     // 这种promise最好不要复用，因为类型都变了
     // eslint-disable-next-line arrow-body-style
-    promise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
+    const pagePromise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
       return new Page({
         pdfManager: this.pdfManager,
         xref: this.xref,
@@ -1724,8 +1733,8 @@ class PDFDocument {
       });
     });
 
-    this._pagePromises.set(pageIndex, promise);
-    return promise;
+    this._pagePromises.set(pageIndex, pagePromise);
+    return pagePromise;
   }
 
   async checkFirstPage(recoveryMode = false) {

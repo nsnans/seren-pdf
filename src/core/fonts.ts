@@ -3494,7 +3494,7 @@ class Font {
 
   /**
    * Chars can have different sizes (depends on the encoding).
-   * @param {String} a string encoded with font encoding.
+   * @param {String} chars string encoded with font encoding.
    * @returns {Array<Array<number>>} the positions of each char in the string.
    */
   getCharPositions(chars) {

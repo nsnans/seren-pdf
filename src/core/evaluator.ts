@@ -80,6 +80,7 @@ import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper.js";
 import { XRef } from "./xref.js";
 import { MessageHandler } from "../shared/message_handler.js";
+import { WorkerTask } from "./worker.js";
 
 export interface PartialEvaluatorOptions {
   maxImageSize: number,
@@ -189,7 +190,7 @@ function normalizeBlendMode(value, parsingArray = false) {
   return "source-over";
 }
 
-function addLocallyCachedImageOps(opList, data) {
+function addLocallyCachedImageOps(opList: OperatorList, data) {
   if (data.objId) {
     opList.addDependency(data.objId);
   }
@@ -229,7 +230,8 @@ class TimeSlotManager {
 }
 
 class PartialEvaluator {
-  protected xref;
+
+  readonly xref;
 
   protected handler;
 
@@ -251,7 +253,7 @@ class PartialEvaluator {
 
   protected _fetchBuiltInCMapBound;
 
-  protected options: PartialEvaluatorOptions;
+  public options: PartialEvaluatorOptions;
 
   protected type3FontRefs: RefSet | null;
 
@@ -527,8 +529,8 @@ class PartialEvaluator {
     resources: Dict,
     xobj: BaseStream,
     smask,
-    operatorList,
-    task,
+    operatorList: OperatorList,
+    task: WorkerTask,
     initialState,
     localColorSpaceCache: LocalColorSpaceCache
   ) {
@@ -645,6 +647,7 @@ class PartialEvaluator {
     resources: Dict,
     image: BaseStream,
     isInline: boolean,
+    operatorList: OperatorList,
     localImageCache: LocalImageCache,
     localColorSpaceCache: LocalColorSpaceCache
   }) {
@@ -969,8 +972,8 @@ class PartialEvaluator {
   handleSMask(
     smask: Dict,
     resources: Dict,
-    operatorList,
-    task,
+    operatorList: OperatorList,
+    task: WorkerTask,
     stateManager: StateManager,
     localColorSpaceCache: LocalColorSpaceCache
   ) {
@@ -1109,12 +1112,12 @@ class PartialEvaluator {
   }
 
   async handleSetFont(
-    resources,
+    resources: Dict,
     fontArgs,
     fontRef,
-    operatorList,
-    task,
-    state,
+    operatorList: OperatorList,
+    task: WorkerTask,
+    state: State,
     fallbackFontDict = null,
     cssFontInfo = null
   ) {
@@ -1159,7 +1162,7 @@ class PartialEvaluator {
       );
       if (
         isAddToPathSet ||
-        state.fillColorSpace.name === "Pattern" ||
+        state.fillColorSpace!.name === "Pattern" ||
         font.disableFontFace ||
         this.options.disableFontFace
       ) {
@@ -1174,7 +1177,7 @@ class PartialEvaluator {
     return glyphs;
   }
 
-  ensureStateFont(state) {
+  ensureStateFont(state: State) {
     if (state.font) {
       return;
     }
@@ -1200,6 +1203,10 @@ class PartialEvaluator {
     localColorSpaceCache,
   }: {
     resources: Dict,
+    gState: Dict,
+    operatorList: OperatorList,
+    cacheKey: string | null,
+    task: WorkerTask,
     stateManager: StateManager,
     localGStateCache: LocalGStateCache,
     localColorSpaceCache: LocalColorSpaceCache
@@ -1469,7 +1476,7 @@ class PartialEvaluator {
     return promise;
   }
 
-  buildPath(operatorList, fn, args: number[], parsingText = false) {
+  buildPath(operatorList: OperatorList, fn, args: number[], parsingText = false) {
     const lastIndex = operatorList.length - 1;
     if (!args) {
       args = [];
@@ -1620,13 +1627,13 @@ class PartialEvaluator {
   }
 
   handleColorN(
-    operatorList,
+    operatorList: OperatorList,
     fn: number,
     args,
     cs: ColorSpace,
     patterns: Dict,
     resources: Dict,
-    task,
+    task: WorkerTask,
     localColorSpaceCache: LocalColorSpaceCache,
     localTilingPatternCache: LocalTilingPatternCache,
     localShadingPatternCache
@@ -1729,7 +1736,7 @@ class PartialEvaluator {
     }
   }
 
-  async parseMarkedContentProps(contentProperties, resources) {
+  async parseMarkedContentProps(contentProperties: Name | Dict, resources) {
     let optionalContent;
     if (contentProperties instanceof Name) {
       const properties = resources.get("Properties");
@@ -1801,9 +1808,11 @@ class PartialEvaluator {
     initialState = null,
     fallbackFontDict = null,
   }: {
-    resources: Dict | null
+    resources: Dict
     stream: BaseStream,
     initialState: State | null
+    task: WorkerTask,
+    operatorList: OperatorList
   }) {
     // Ensure that `resources`/`initialState` is correctly initialized,
     // even if the provided parameter is e.g. `null`.
@@ -2430,8 +2439,10 @@ class PartialEvaluator {
     keepWhiteSpace = false,
   }: {
     stream: BaseStream,
+    task: WorkerTask,
     resources: Dict | null,
     stateManager: StateManager | null,
+    viewBox: number[],
     includeMarkedContent: boolean,
     disableNormalization: boolean,
     keepWhiteSpace: boolean
@@ -2727,7 +2738,7 @@ class PartialEvaluator {
       textState!.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
     }
 
-    function applyInverseRotation(x, y, matrix) {
+    function applyInverseRotation(x: number, y: number, matrix) {
       const scale = Math.hypot(matrix[0], matrix[1]);
       return [
         (matrix[0] * x + matrix[1] * y) / scale,
@@ -2735,7 +2746,7 @@ class PartialEvaluator {
       ];
     }
 
-    function compareWithLastPosition(glyphWidth) {
+    function compareWithLastPosition(glyphWidth: number) {
       const currentTransform = getCurrentTextTransform();
       let posX = currentTransform[4];
       let posY = currentTransform[5];
@@ -4697,6 +4708,17 @@ class PartialEvaluator {
 }
 
 class TranslatedFont {
+
+  protected sent = false;
+
+  protected loadedName;
+
+  protected font;
+  protected dict;
+  protected _evaluatorOptions;
+  protected type3Loaded;
+  protected type3Dependencies;
+
   constructor({ loadedName, font, dict, evaluatorOptions }) {
     this.loadedName = loadedName;
     this.font = font;
@@ -4704,7 +4726,6 @@ class TranslatedFont {
     this._evaluatorOptions = evaluatorOptions || DefaultPartialEvaluatorOptions;
     this.type3Loaded = null;
     this.type3Dependencies = font.isType3Font ? new Set() : null;
-    this.sent = false;
   }
 
   send(handler) {
@@ -4905,7 +4926,7 @@ class StateManager {
 
   public state: State;
 
-  protected stateStack: State[];
+  public stateStack: State[];
 
   constructor(initialState: State = new EvalState()) {
     this.state = initialState;
@@ -5017,7 +5038,7 @@ class TextState implements State {
 }
 interface State {
   font: null;
-  ctm: Float32Array;
+  ctm: Float32Array | number[];
   textRenderingMode: number | null;
   fillColorSpace: ColorSpace | null;
   strokeColorSpace: ColorSpace | null;
@@ -5204,7 +5225,15 @@ class EvaluatorPreprocessor {
 
   static MAX_INVALID_PATH_OPS = 10;
 
-  constructor(stream, xref: XRef | null = null, stateManager = new StateManager()) {
+  protected stateManager: StateManager;
+
+  protected parser: Parser;
+
+  protected _isPathOp = false;
+
+  protected _numInvalidPathOPS = 0;
+
+  constructor(stream: BaseStream, xref: XRef | null = null, stateManager = new StateManager()) {
     // TODO(mduan): pass array of knownCommands rather than this.opMap
     // dictionary
     this.parser = new Parser({
@@ -5213,8 +5242,6 @@ class EvaluatorPreprocessor {
     });
     this.stateManager = stateManager;
     this.nonProcessedArgs = [];
-    this._isPathOp = false;
-    this._numInvalidPathOPS = 0;
   }
 
   get savedStatesDepth() {
