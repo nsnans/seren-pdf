@@ -58,7 +58,7 @@ import {
   parseAppearanceStream,
   parseDefaultAppearance,
 } from "./default_appearance";
-import { Dict, isName, isRefsEqual, Name, Ref, RefSet } from "./primitives";
+import { Dict, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "./primitives";
 import { Stream, StringStream } from "./stream";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
@@ -77,6 +77,25 @@ import { PartialEvaluator } from "./evaluator";
 import { TypedArray } from "../types";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Font } from "./fonts";
+
+interface AnnotationParameters {
+  xref: XRef;
+  // TODO 这里需要再次验证
+  ref: unknown;
+  dict: Dict;
+  subtype: string | null;
+  id: string;
+  // TODO 这里需要再次验证
+  annotationGlobals: unknown,
+  collectFields: boolean;
+  orphanFields: RefSetCache | null;
+  needAppearances: boolean;
+  pageIndex: number | null;
+  // TODO 这里需要再次验证
+  evaluatorOptions: unknown;
+  // TODO 这里需要再次验证
+  pageRef: Ref | null;
+}
 
 class AnnotationFactory {
   static createGlobals(pdfManager: PDFManager) {
@@ -131,7 +150,7 @@ class AnnotationFactory {
     idFactory: globalIdFactory,
     collectFields: boolean,
     orphanFields,
-    pageRef
+    pageRef: Ref | null
   ) {
     const pageIndex = collectFields
       ? await this._getPageIndex(xref, ref, annotationGlobals.pdfManager)
@@ -176,7 +195,7 @@ class AnnotationFactory {
     subtype = subtype instanceof Name ? subtype.name : null;
 
     // Return the right annotation object based on the subtype and field type.
-    const parameters = {
+    const parameters: AnnotationParameters = {
       xref,
       ref,
       dict,
@@ -673,7 +692,7 @@ interface AnnotationData {
   popupRef?: string | null;
   annotationType?: number;
   // TODO 要再推断一下
-  richText?:unknown;
+  richText?: unknown;
   actions?: Record<string, string[]> | null;
   fieldValue?: string | string[] | null;
   defaultFieldValue?: string | string[] | null;
@@ -740,7 +759,7 @@ class Annotation {
 
   protected _streams: BaseStream[];
 
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     const { dict, xref, annotationGlobals, ref, orphanFields } = params;
     const parentRef = orphanFields?.get(ref);
     if (parentRef) {
@@ -1943,7 +1962,7 @@ class WidgetAnnotation extends Annotation {
   protected _hasValueFromXFA: boolean = false;
   protected _hasText: boolean = false;
 
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref, annotationGlobals } = params;
@@ -2859,7 +2878,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
 
   protected _hasText: boolean;
 
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict } = params;
@@ -3109,7 +3128,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   protected uncheckedAppearance: BaseStream | null;
   protected _fallbackFontDict: Dict | null = null;
   protected parent: Ref | Dict | unknown;
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     this.checkedAppearance = null;
@@ -3599,7 +3618,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
   // TODO 要再推断推断
   indices: unknown;
 
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -3857,7 +3876,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
 }
 
 class SignatureWidgetAnnotation extends WidgetAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     // Unset the fieldValue since it's (most likely) a `Dict` which is
@@ -3879,7 +3898,7 @@ class SignatureWidgetAnnotation extends WidgetAnnotation {
 }
 
 class TextAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     const DEFAULT_ICON_SIZE = 22; // px
 
     super(params);
@@ -3911,7 +3930,7 @@ class TextAnnotation extends MarkupAnnotation {
 }
 
 class LinkAnnotation extends Annotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, annotationGlobals } = params;
@@ -3939,7 +3958,7 @@ class LinkAnnotation extends Annotation {
 }
 
 class PopupAnnotation extends Annotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict } = params;
@@ -4011,7 +4030,7 @@ class PopupAnnotation extends Annotation {
 
 class FreeTextAnnotation extends MarkupAnnotation {
   protected _hasAppearance: boolean;
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     // It uses its own canvas in order to be hidden if edited.
@@ -4243,7 +4262,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
 }
 
 class LineAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4311,7 +4330,7 @@ class LineAnnotation extends MarkupAnnotation {
 }
 
 class SquareAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4360,7 +4379,7 @@ class SquareAnnotation extends MarkupAnnotation {
 }
 
 class CircleAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4424,7 +4443,7 @@ class CircleAnnotation extends MarkupAnnotation {
 }
 
 class PolylineAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4492,7 +4511,7 @@ class PolylineAnnotation extends MarkupAnnotation {
 }
 
 class PolygonAnnotation extends PolylineAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     // Polygons are specific forms of polylines, so reuse their logic.
     super(params);
 
@@ -4501,7 +4520,7 @@ class PolygonAnnotation extends PolylineAnnotation {
 }
 
 class CaretAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     this.data.annotationType = AnnotationType.CARET;
@@ -4509,7 +4528,7 @@ class CaretAnnotation extends MarkupAnnotation {
 }
 
 class InkAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     this.data.hasOwnCanvas = this.data.noRotate;
@@ -4768,7 +4787,7 @@ class InkAnnotation extends MarkupAnnotation {
 }
 
 class HighlightAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4908,7 +4927,7 @@ class HighlightAnnotation extends MarkupAnnotation {
 }
 
 class UnderlineAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4946,7 +4965,7 @@ class UnderlineAnnotation extends MarkupAnnotation {
 }
 
 class SquigglyAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -4990,7 +5009,7 @@ class SquigglyAnnotation extends MarkupAnnotation {
 }
 
 class StrikeOutAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
@@ -5031,7 +5050,7 @@ class StrikeOutAnnotation extends MarkupAnnotation {
 class StampAnnotation extends MarkupAnnotation {
   #savedHasOwnCanvas;
 
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     this.data.annotationType = AnnotationType.STAMP;
@@ -5200,7 +5219,7 @@ class StampAnnotation extends MarkupAnnotation {
 }
 
 class FileAttachmentAnnotation extends MarkupAnnotation {
-  constructor(params) {
+  constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;

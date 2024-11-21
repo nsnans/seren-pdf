@@ -15,6 +15,7 @@
 
 import {
   assert,
+  BaseException,
   MissingPDFException,
   UnexpectedResponseException,
 } from "../shared/util";
@@ -82,7 +83,7 @@ function validateRangeRequestCapabilities({
   return returnValues;
 }
 
-function extractFilenameFromHeader(responseHeaders) {
+function extractFilenameFromHeader(responseHeaders: Headers) {
   const contentDisposition = responseHeaders.get("Content-Disposition");
   if (contentDisposition) {
     let filename = getFilenameFromContentDispositionHeader(contentDisposition);
@@ -98,7 +99,7 @@ function extractFilenameFromHeader(responseHeaders) {
   return null;
 }
 
-function createResponseStatusError(status, url) {
+function createResponseStatusError(status: number, url: string): BaseException {
   if (status === 404 || (status === 0 && url.startsWith("file:"))) {
     return new MissingPDFException('Missing PDF "' + url + '".');
   }

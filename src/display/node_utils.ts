@@ -43,10 +43,10 @@ if (isNodeJS) {
     if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("SKIP_BABEL")) {
       try {
         canvas = await __non_webpack_import__("canvas");
-      } catch {}
+      } catch { }
       try {
         path2d = await __non_webpack_import__("path2d");
-      } catch {}
+      } catch { }
     }
 
     return new Map(Object.entries({ fs, http, https, url, canvas, path2d }));
@@ -117,13 +117,13 @@ async function fetchData(url) {
   return new Uint8Array(data);
 }
 
-class NodeFilterFactory extends BaseFilterFactory {}
+class NodeFilterFactory extends BaseFilterFactory { }
 
 class NodeCanvasFactory extends BaseCanvasFactory {
   /**
    * @ignore
    */
-  _createCanvas(width, height) {
+  _createCanvas(width: number, height: number) {
     const canvas = NodePackages.get("canvas");
     return canvas.createCanvas(width, height);
   }
@@ -133,7 +133,7 @@ class NodeCMapReaderFactory extends BaseCMapReaderFactory {
   /**
    * @ignore
    */
-  async _fetch(url) {
+  async _fetch(url: string) {
     return fetchData(url);
   }
 }
@@ -142,7 +142,7 @@ class NodeStandardFontDataFactory extends BaseStandardFontDataFactory {
   /**
    * @ignore
    */
-  async _fetch(url) {
+  async _fetch(url: string) {
     return fetchData(url);
   }
 }

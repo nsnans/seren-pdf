@@ -20,10 +20,10 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { RefSet, RefSetCache } from "./primitives";
+import { Ref, RefSet, RefSetCache } from "./primitives";
 
 class BaseLocalCache {
-  
+
   protected _onlyRefs: boolean;
 
   protected _nameRefMap?: Map<any, any>;
@@ -65,12 +65,12 @@ class BaseLocalCache {
 }
 
 class LocalImageCache extends BaseLocalCache {
-  set(name, ref = null, data) {
+  set(name: string, ref: string | Ref | null | undefined = null, data) {
     if (typeof name !== "string") {
       throw new Error('LocalImageCache.set - expected "name" argument.');
     }
     if (ref) {
-      if (this._imageCache.has(ref)) {
+      if (this._imageCache.has(ref!)) {
         return;
       }
       this._nameRefMap!.set(name, ref);

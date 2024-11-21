@@ -80,7 +80,7 @@ class OptionalContentConfig {
 
   #groups = new Map();
 
-  #initialHash = null;
+  #initialHash: string | null = null;
 
   #order = null;
 

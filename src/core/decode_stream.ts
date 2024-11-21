@@ -55,7 +55,7 @@ abstract class DecodeStream extends BaseStream {
     return this.bufferLength === 0;
   }
 
-  ensureBuffer(requested) {
+  ensureBuffer(requested: number) {
     const buffer = this.buffer;
     if (requested <= buffer.byteLength) {
       return buffer;
@@ -147,13 +147,13 @@ class StreamsSequenceStream extends DecodeStream {
 
   protected _onError: (reason: unknown, objId: string | null) => void;
 
-  protected streams;
+  protected streams: BaseStream[];
 
   constructor(streams, onError: (reason: unknown, objId: string | null) => void /*= null*/) {
-    streams = streams.filter(s => s instanceof BaseStream);
+    const baseStreams = streams.filter(s => s instanceof BaseStream);
 
     let maybeLength = 0;
-    for (const stream of streams) {
+    for (const stream of baseStreams) {
       maybeLength +=
         stream instanceof DecodeStream
           ? stream._rawMinBufferLength
@@ -161,7 +161,7 @@ class StreamsSequenceStream extends DecodeStream {
     }
     super(maybeLength);
 
-    this.streams = streams;
+    this.streams = baseStreams;
     this._onError = onError;
   }
 
@@ -171,7 +171,7 @@ class StreamsSequenceStream extends DecodeStream {
       this.eof = true;
       return;
     }
-    const stream = streams.shift();
+    const stream = streams.shift()!;
     let chunk;
     try {
       chunk = stream.getBytes();

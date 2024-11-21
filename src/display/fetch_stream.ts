@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader } from "../interfaces";
+import { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { AbortException, assert, warn } from "../shared/util";
 import { OnProgressParameters } from "./api";
@@ -57,7 +57,7 @@ function getArrayBuffer(val: Uint8Array): ArrayBufferLike {
 
 export class PDFFetchStream implements IPDFStream {
 
-  public source;
+  public source: PDFStreamSource;
 
   public isHttp: boolean;
 
@@ -67,7 +67,7 @@ export class PDFFetchStream implements IPDFStream {
 
   protected _rangeRequestReaders: PDFFetchStreamRangeReader[];
 
-  constructor(source) {
+  constructor(source: PDFStreamSource) {
     this.source = source;
     this.isHttp = /^https?:/i.test(source.url);
     this.headers = createHeaders(this.isHttp, source.httpHeaders);

@@ -263,14 +263,14 @@ class Glyph {
 
   constructor(
     originalCharCode,
-    fontChar,
+    fontChar: string,
     unicode,
     accent,
     width,
     vmetric,
     operatorListId,
-    isSpace,
-    isInFont
+    isSpace: boolean,
+    isInFont: boolean
   ) {
     this.originalCharCode = originalCharCode;
     this.fontChar = fontChar;
@@ -3497,7 +3497,7 @@ class Font {
    * @param {String} chars string encoded with font encoding.
    * @returns {Array<Array<number>>} the positions of each char in the string.
    */
-  getCharPositions(chars) {
+  getCharPositions(chars: string) {
     // This function doesn't use a cache because
     // it's called only when saving or printing.
     const positions = [];

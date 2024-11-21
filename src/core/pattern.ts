@@ -31,6 +31,9 @@ import {
 } from "./core_utils";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
+import { XRef } from "./xref";
+import { PDFFunctionFactory } from "./function";
+import { PlatformHelper } from "../platform/platform_helper";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -49,9 +52,9 @@ class Pattern {
 
   static parseShading(
     shading,
-    xref,
+    xref: XRef,
     res,
-    pdfFunctionFactory,
+    pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache
   ) {
     const dict = shading instanceof BaseStream ? shading.dict : shading;
@@ -98,8 +101,7 @@ class BaseShading {
   static SMALL_NUMBER = 1e-6;
 
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+    if (PlatformHelper.isTesting() &&
       this.constructor === BaseShading
     ) {
       unreachable("Cannot initialize BaseShading.");
@@ -114,7 +116,9 @@ class BaseShading {
 // Radial and axial shading have very similar implementations
 // If needed, the implementations can be broken into two classes.
 class RadialAxialShading extends BaseShading {
-  constructor(dict, xref, resources, pdfFunctionFactory, localColorSpaceCache) {
+  protected extendStart: boolean;
+  protected extendEnd: boolean;
+  constructor(dict, xref, resources, pdfFunctionFactory: PDFFunctionFactory, localColorSpaceCache) {
     super();
     this.shadingType = dict.get("ShadingType");
     let coordsLen = 0;
@@ -309,7 +313,18 @@ class RadialAxialShading extends BaseShading {
 // All mesh shadings. For now, they will be presented as set of the triangles
 // to be drawn on the canvas and rgb color for each vertex.
 class MeshStreamReader {
-  constructor(stream, context) {
+
+  protected buffer: number;
+
+  protected bufferLength: number;
+
+  protected tmpCompsBuf: Float32Array;
+
+  protected tmpCsCompsBuf: Float32Array;
+
+  protected stream: BaseStream;
+
+  constructor(stream: BaseStream, context) {
     this.stream = stream;
     this.context = context;
     this.buffer = 0;
@@ -454,9 +469,9 @@ class MeshShading extends BaseShading {
 
   constructor(
     stream,
-    xref,
+    xref: XRef,
     resources,
-    pdfFunctionFactory,
+    pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache
   ) {
     super();

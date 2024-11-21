@@ -3462,7 +3462,7 @@ const INITIAL_DATA = Symbol("INITIAL_DATA");
  * fonts, images, rendering code, etc. These objects may get processed inside of
  * a worker. This class implements some basic methods to manage these objects.
  */
-class PDFObjects {
+export class PDFObjects {
   #objs = Object.create(null);
 
   /**

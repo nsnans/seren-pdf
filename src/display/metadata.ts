@@ -29,7 +29,7 @@ class Metadata {
     return this.#data;
   }
 
-  get(name) {
+  get(name: string) {
     return this.#metadataMap.get(name) ?? null;
   }
 
@@ -37,7 +37,7 @@ class Metadata {
     return objectFromMap(this.#metadataMap);
   }
 
-  has(name) {
+  has(name: string) {
     return this.#metadataMap.has(name);
   }
 }

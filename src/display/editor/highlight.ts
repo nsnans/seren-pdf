@@ -56,7 +56,7 @@ class HighlightEditor extends AnnotationEditor {
 
   #highlightOutlines = null;
 
-  #id = null;
+  #id: string | null = null;
 
   #isFreeHighlight = false;
 

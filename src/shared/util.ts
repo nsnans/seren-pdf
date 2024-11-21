@@ -14,6 +14,7 @@
  */
 /* globals process */
 
+import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { TypedArray } from "../types";
 
@@ -371,7 +372,7 @@ function info(msg: any) {
 }
 
 // Non-fatal warnings.
-function warn(msg: string) {
+function warn(msg: any) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log(`Warning: ${msg}`);
   }
@@ -723,7 +724,7 @@ class Util {
   }
 
   // Concatenates two transformation matrices together and returns the result.
-  static transform(m1: TypedArray | number[], m2: TypedArray | number[]): number[] {
+  static transform(m1: TypedArray | number[], m2: TypedArray | number[]): TransformType {
     return [
       m1[0] * m2[0] + m1[2] * m2[1],
       m1[1] * m2[0] + m1[3] * m2[1],
@@ -735,7 +736,7 @@ class Util {
   }
 
   // For 2d affine transforms
-  static applyTransform(p: number[], m: number[]) {
+  static applyTransform(p: number[], m: number[]): [number, number] {
     const xt = p[0] * m[0] + p[1] * m[2] + m[4];
     const yt = p[0] * m[1] + p[1] * m[3] + m[5];
     return [xt, yt];
@@ -750,7 +751,7 @@ class Util {
 
   // Applies the transform to the rectangle and finds the minimum axially
   // aligned bounding box.
-  static getAxialAlignedBoundingBox(r: number[], m: number[]) {
+  static getAxialAlignedBoundingBox(r: number[], m: number[]): RectType {
     const p1 = this.applyTransform(r, m);
     const p2 = this.applyTransform(r.slice(2, 4), m);
     const p3 = this.applyTransform([r[0], r[3]], m);
@@ -817,7 +818,7 @@ class Util {
   // Returns a rectangle [x1, y1, x2, y2] corresponding to the
   // intersection of rect1 and rect2. If no intersection, returns 'null'
   // The rectangle coordinates of rect1, rect2 should be [x1, y1, x2, y2]
-  static intersect(rect1: number[], rect2: number[]) {
+  static intersect(rect1: number[], rect2: number[]): [number, number, number, number] | null {
     const xLow = Math.max(
       Math.min(rect1[0], rect1[2]),
       Math.min(rect2[0], rect2[2])
@@ -844,7 +845,7 @@ class Util {
     return [xLow, yLow, xHigh, yHigh];
   }
 
-  static #getExtremumOnCurve(x0, x1, x2, x3, y0, y1, y2, y3, t, minMax) {
+  static #getExtremumOnCurve(x0: number, x1: number, x2: number, x3: number, y0: number, y1: number, y2: number, y3: number, t: number, minMax: number[]) {
     if (t <= 0 || t >= 1) {
       return;
     }
@@ -859,7 +860,7 @@ class Util {
     minMax[3] = Math.max(minMax[3], y);
   }
 
-  static #getExtremum(x0, x1, x2, x3, y0, y1, y2, y3, a, b, c, minMax) {
+  static #getExtremum(x0: number, x1: number, x2: number, x3: number, y0: number, y1: number, y2: number, y3: number, a: number, b: number, c: number, minMax: number[]) {
     if (Math.abs(a) < 1e-12) {
       if (Math.abs(b) >= 1e-12) {
         this.#getExtremumOnCurve(
@@ -911,7 +912,7 @@ class Util {
   }
 
   // From https://github.com/adobe-webplatform/Snap.svg/blob/b365287722a72526000ac4bfcf0ce4cac2faa015/src/path.js#L852
-  static bezierBoundingBox(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, ...minMax: number[]) {
+  static bezierBoundingBox(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, minMax: number[]): number[] {
     if (minMax) {
       minMax[0] = Math.min(minMax[0], x0, x3);
       minMax[1] = Math.min(minMax[1], y0, y3);

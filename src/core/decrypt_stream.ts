@@ -14,11 +14,16 @@
  */
 
 import { DecodeStream } from "./decode_stream";
+import { Stream } from "./stream";
 
 const chunkSize = 512;
 
 class DecryptStream extends DecodeStream {
-  constructor(str, maybeLength, decrypt) {
+  protected str: Stream;
+  protected initialized: boolean;
+  protected nextChunk: Uint8Array | null;
+  protected decrypt: (data: Uint8Array, finalize: boolean) => Uint8Array;
+  constructor(str: Stream, maybeLength: number, decrypt: (data: Uint8Array, finalize: boolean) => Uint8Array) {
     super(maybeLength);
 
     this.str = str;

@@ -41,7 +41,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
   }
 
 
-  async fetch({ name }) {
+  async fetch({ name }: { name: string }) {
     if (!this.baseUrl) {
       throw new Error(
         "Ensure that the `cMapUrl` and `cMapPacked` API parameters are provided."
@@ -54,7 +54,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
 
     return this._fetch(url)
       .then(cMapData => ({ cMapData, isCompressed: this.isCompressed }))
-      .catch(reason => {
+      .catch(_reason => {
         throw new Error(
           `Unable to load ${this.isCompressed ? "binary " : ""}CMap at: ${url}`
         );
@@ -68,7 +68,7 @@ export class DOMCMapReaderFactory extends BaseCMapReaderFactory {
   /**
    * @ignore
    */
-  async _fetch(url) {
+  async _fetch(url: string) {
     const data = await fetchData(
       url,
       /* type = */ this.isCompressed ? "arraybuffer" : "text"

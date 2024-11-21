@@ -236,7 +236,7 @@ function isWhiteSpace(ch: number) {
  * @param {number | null} len
  * @returns {boolean}
  */
-function isBooleanArray(arr, len) {
+function isBooleanArray(arr: unknown, len: number | null): boolean {
   return (
     Array.isArray(arr) &&
     (len === null || arr.length === len) &&
@@ -251,7 +251,7 @@ function isBooleanArray(arr, len) {
  * @param {number | null} len
  * @returns {boolean}
  */
-function isNumberArray(arr, len: number | null) {
+function isNumberArray(arr: unknown, len: number | null) {
   if (Array.isArray(arr)) {
     return (
       (len === null || arr.length === len) &&
@@ -261,25 +261,28 @@ function isNumberArray(arr, len: number | null) {
 
   // This check allows us to have typed arrays but not the
   // BigInt64Array/BigUint64Array types (their elements aren't "number").
-  return (
-    ArrayBuffer.isView(arr) &&
-    (arr.length === 0 || typeof arr[0] === "number") &&
-    (len === null || arr.length === len)
-  );
+
+  if (ArrayBuffer.isView(arr)) {
+    const arrView = arr as unknown as Array<any>;
+    return (arrView.length === 0 || typeof arrView[0] === "number") &&
+      (len === null || arrView.length === len)
+  } else {
+    return !ArrayBuffer.isView(arr);
+  }
 }
 
 // Returns the matrix, or the fallback value if it's invalid.
-function lookupMatrix(arr, fallback) {
+function lookupMatrix(arr: unknown, fallback: number[]) {
   return isNumberArray(arr, 6) ? arr : fallback;
 }
 
 // Returns the rectangle, or the fallback value if it's invalid.
-function lookupRect(arr, fallback) {
+function lookupRect(arr: unknown, fallback: number[]) {
   return isNumberArray(arr, 4) ? arr : fallback;
 }
 
 // Returns the normalized rectangle, or the fallback value if it's invalid.
-function lookupNormalRect(arr, fallback) {
+function lookupNormalRect(arr: unknown, fallback: number[]) {
   return isNumberArray(arr, 4) ? Util.normalizeRect(arr) : fallback;
 }
 
@@ -356,7 +359,7 @@ function escapeString(str: string) {
   });
 }
 
-function _collectJS(entry, xref: XRef, list: string[], parents: RefSet) {
+function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: string[], parents: RefSet) {
   if (!entry) {
     return;
   }
@@ -441,7 +444,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
   return objectSize(actions) > 0 ? actions : null;
 }
 
-const XMLEntities = {
+const XMLEntities: Record<number, string> = {
   /* < */ 0x3c: "&lt;",
   /* > */ 0x3e: "&gt;",
   /* & */ 0x26: "&amp;",
@@ -497,7 +500,7 @@ function encodeToXmlString(str: string) {
   return buffer.join("");
 }
 
-function validateFontName(fontFamily, mustWarn = false) {
+function validateFontName(fontFamily: string, mustWarn = false) {
   // See https://developer.mozilla.org/en-US/docs/Web/CSS/string.
   const m = /^("|').*("|')$/.exec(fontFamily);
   if (m && m[1] === m[2]) {
@@ -564,7 +567,7 @@ function validateCSSFont(cssFontInfo) {
   return true;
 }
 
-function recoverJsURL(str) {
+function recoverJsURL(str: string) {
   // Attempt to recover valid URLs from `JS` entries with certain
   // white-listed formats:
   //  - window.open('http://example.com')
@@ -630,15 +633,15 @@ function getNewAnnotationsMap(annotationStorage) {
   return newAnnotationsByPage.size > 0 ? newAnnotationsByPage : null;
 }
 
-function stringToAsciiOrUTF16BE(str) {
+function stringToAsciiOrUTF16BE(str: string) {
   return isAscii(str) ? str : stringToUTF16String(str, /* bigEndian = */ true);
 }
 
-function isAscii(str) {
+function isAscii(str: string) {
   return /^[\x00-\x7F]*$/.test(str);
 }
 
-function stringToUTF16HexString(str) {
+function stringToUTF16HexString(str: string) {
   const buf = [];
   for (let i = 0, ii = str.length; i < ii; i++) {
     const char = str.charCodeAt(i);
@@ -647,7 +650,7 @@ function stringToUTF16HexString(str) {
   return buf.join("");
 }
 
-function stringToUTF16String(str, bigEndian = false) {
+function stringToUTF16String(str: string, bigEndian = false) {
   const buf = [];
   if (bigEndian) {
     buf.push("\xFE\xFF");
@@ -682,7 +685,7 @@ function getRotationMatrix(rotation: number, width: number, height: number) {
  * @param {number} x - a positive integer.
  * @returns {number}
  */
-function getSizeInBytes(x) {
+function getSizeInBytes(x: number) {
   // n bits are required for numbers up to 2^n - 1.
   // So for a number x, we need ceil(log2(1 + x)) bits.
   return Math.ceil(Math.ceil(Math.log2(1 + x)) / 8);

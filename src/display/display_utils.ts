@@ -24,6 +24,10 @@ import {
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+export type TransformType = [number, number, number, number, number, number];
+
+export type RectType = [number, number, number, number];
+
 class PixelsPerInch {
   static CSS = 96.0;
 
@@ -32,11 +36,8 @@ class PixelsPerInch {
   static PDF_TO_CSS_UNITS = this.CSS / this.PDF;
 }
 
-async function fetchData(url, type = "text") {
-  if (
-    (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-    isValidFetchUrl(url, document.baseURI)
-  ) {
+async function fetchData(url: string, type: XMLHttpRequestResponseType = "text") {
+  if (PlatformHelper.isMozCental() || isValidFetchUrl(url, document.baseURI)) {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(response.statusText);
@@ -94,6 +95,15 @@ async function fetchData(url, type = "text") {
  *   The default value is `false`.
  */
 
+export interface PageViewportParameters {
+  viewBox: RectType;
+  scale: number;
+  rotation: number;
+  offsetX: number;
+  offsetY: number;
+  dontFlip: boolean;
+}
+
 /**
  * @typedef {Object} PageViewportCloneParameters
  * @property {number} [scale] - The scale, overriding the one in the cloned
@@ -112,6 +122,22 @@ async function fetchData(url, type = "text") {
  * PDF page viewport created based on scale, rotation and offset.
  */
 class PageViewport {
+
+  protected viewBox: RectType;
+
+  protected scale: number;
+
+  public rotation: number;
+
+  protected offsetX: number;
+
+  protected offsetY: number;
+
+  protected transform: TransformType;
+
+  protected width: number;
+
+  protected height: number;
   /**
    * @param {PageViewportParameters}
    */
@@ -122,7 +148,7 @@ class PageViewport {
     offsetX = 0,
     offsetY = 0,
     dontFlip = false,
-  }) {
+  }: PageViewportParameters) {
     this.viewBox = viewBox;
     this.scale = scale;
     this.rotation = rotation;
@@ -231,7 +257,7 @@ class PageViewport {
     dontFlip = false,
   } = {}) {
     return new PageViewport({
-      viewBox: this.viewBox.slice(),
+      viewBox: this.viewBox.slice() as RectType,
       scale,
       rotation,
       offsetX,
@@ -250,7 +276,7 @@ class PageViewport {
    * @see {@link convertToPdfPoint}
    * @see {@link convertToViewportRectangle}
    */
-  convertToViewportPoint(x, y) {
+  convertToViewportPoint(x: number, y: number): [number, number] {
     return Util.applyTransform([x, y], this.transform);
   }
 
@@ -261,7 +287,7 @@ class PageViewport {
    *   rectangle in the viewport coordinate space.
    * @see {@link convertToViewportPoint}
    */
-  convertToViewportRectangle(rect) {
+  convertToViewportRectangle(rect: RectType): RectType {
     const topLeft = Util.applyTransform([rect[0], rect[1]], this.transform);
     const bottomRight = Util.applyTransform([rect[2], rect[3]], this.transform);
     return [topLeft[0], topLeft[1], bottomRight[0], bottomRight[1]];
@@ -515,12 +541,15 @@ class PDFDateString {
  */
 function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
   const { width, height } = xfaPage.attributes.style;
-  const viewBox = [0, 0, parseInt(width), parseInt(height)];
+  const viewBox: RectType = [0, 0, parseInt(width), parseInt(height)];
 
   return new PageViewport({
     viewBox,
     scale,
     rotation,
+    offsetX: 0,
+    offsetY: 0,
+    dontFlip: false
   });
 }
 
@@ -566,12 +595,12 @@ function getColorValues(colors) {
   span.remove();
 }
 
-function getCurrentTransform(ctx: CanvasRenderingContext2D) {
+function getCurrentTransform(ctx: CanvasRenderingContext2D): TransformType {
   const { a, b, c, d, e, f } = ctx.getTransform();
   return [a, b, c, d, e, f];
 }
 
-function getCurrentTransformInverse(ctx: CanvasRenderingContext2D) {
+function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): TransformType {
   const { a, b, c, d, e, f } = ctx.getTransform().invertSelf();
   return [a, b, c, d, e, f];
 }
@@ -612,7 +641,7 @@ function setLayerDimensions(
   }
 
   if (mustRotate) {
-    div.setAttribute("data-main-rotation", viewport.rotation);
+    div.setAttribute("data-main-rotation", viewport.rotation.toString());
   }
 }
 
@@ -672,5 +701,6 @@ export {
   RenderingCancelledException,
   setLayerDimensions,
   StatTimer,
-  SVG_NS,
+  SVG_NS
 };
+

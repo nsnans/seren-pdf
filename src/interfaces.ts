@@ -15,6 +15,18 @@
 
 import { OnProgressParameters } from "./display/api";
 
+
+export interface PDFStreamSource {
+  url: string;
+  length: number;
+  // TODO 此处需要再做检查
+  httpHeaders: unknown;
+  withCredentials: boolean,
+  rangeChunkSize: number,
+  disableRange: boolean,
+  disableStream: boolean,
+}
+
 /**
  * Interface that represents PDF data transport. If possible, it allows
  * progressively load entire or fragment of the PDF binary data.

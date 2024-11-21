@@ -33,7 +33,7 @@ function applyBoundingBox(ctx, bbox) {
   ctx.clip(region);
 }
 
-class BaseShadingPattern {
+export class BaseShadingPattern {
   constructor() {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -146,7 +146,8 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
   }
 }
 
-function drawTriangle(data, context, p1, p2, p3, c1, c2, c3) {
+function drawTriangle(data, context, p1: number, p2: number, p3: number
+  , c1: number, c2: number, c3: number) {
   // Very basic Gouraud-shaded triangle rasterization algorithm.
   const coords = context.coords,
     colors = context.colors;
@@ -433,7 +434,7 @@ class DummyShadingPattern extends BaseShadingPattern {
   }
 }
 
-function getShadingPattern(IR) {
+function getShadingPattern(IR): BaseShadingPattern {
   switch (IR[0]) {
     case "RadialAxial":
       return new RadialAxialShadingPattern(IR);

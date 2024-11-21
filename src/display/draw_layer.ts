@@ -30,7 +30,9 @@ class DrawLayer {
 
   #toUpdate = new Map();
 
-  constructor({ pageIndex }) {
+  protected pageIndex: number;
+
+  constructor({ pageIndex }: { pageIndex: number }) {
     this.pageIndex = pageIndex;
   }
 
@@ -66,7 +68,7 @@ class DrawLayer {
   #createSVG(box) {
     const svg = DrawLayer._svgFactory.create(1, 1, /* skipDimensions = */ true);
     this.#parent.append(svg);
-    svg.setAttribute("aria-hidden", true);
+    svg.setAttribute("aria-hidden", "true");
     DrawLayer.#setBox(svg, box);
 
     return svg;

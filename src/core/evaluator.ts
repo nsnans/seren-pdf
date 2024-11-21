@@ -1113,7 +1113,7 @@ class PartialEvaluator {
 
   async handleSetFont(
     resources: Dict,
-    fontArgs,
+    fontArgs: [Name, number] | null,
     fontRef,
     operatorList: OperatorList,
     task: WorkerTask,
@@ -1156,7 +1156,7 @@ class PartialEvaluator {
     const font = state.font;
     const glyphs = font.charsToGlyphs(chars);
 
-    if (font.data) {
+    if (font!.data) {
       const isAddToPathSet = !!(
         state.textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG
       );

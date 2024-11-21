@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { IPDFStream, IPDFStreamRangeReader } from "../interfaces.js";
-import { PlatformHelper } from "../platform/platform_helper.js";
-import { assert, stringToBytes } from "../shared/util";
-import { OnProgressParameters } from "./api.js";
+import { IPDFStream, IPDFStreamRangeReader, PDFStreamSource } from "../interfaces";
+import { PlatformHelper } from "../platform/platform_helper";
+import { assert, BaseException, stringToBytes } from "../shared/util";
+import { OnProgressParameters } from "./api";
 import {
   createHeaders,
   createResponseStatusError,
@@ -33,7 +33,7 @@ if (PlatformHelper.isMozCental()) {
 const OK_RESPONSE = 200;
 const PARTIAL_CONTENT_RESPONSE = 206;
 
-function getArrayBuffer(xhr) {
+function getArrayBuffer(xhr: XMLHttpRequest) {
   const data = xhr.response;
   if (typeof data !== "string") {
     return data;
@@ -42,7 +42,20 @@ function getArrayBuffer(xhr) {
 }
 
 class NetworkManager {
-  constructor({ url, httpHeaders, withCredentials }) {
+
+  readonly url: string;
+
+  readonly isHttp: boolean;
+
+  protected headers: Headers;
+
+  protected withCredentials: boolean;
+
+  protected currXhrId: number;
+
+  protected pendingRequests: Record<number, any>;
+
+  constructor({ url, httpHeaders, withCredentials }: PDFStreamSource) {
     this.url = url;
     this.isHttp = /^https?:/i.test(url);
     this.headers = createHeaders(this.isHttp, httpHeaders);
@@ -52,25 +65,27 @@ class NetworkManager {
     this.pendingRequests = Object.create(null);
   }
 
-  requestRange(begin, end, listeners) {
-    const args = {
+  requestRange(begin: number, end: number, listeners: PDFReaderListeners) {
+    const args: Record<string, any> = {
       begin,
       end,
     };
-    for (const prop in listeners) {
-      args[prop] = listeners[prop];
+
+    // TODO 这里做过改写，可能将来会出现问题
+    for (const prop in listeners as Record<string, any>) {
+      args[prop] = (listeners as Record<string, any>)[prop];
     }
     return this.request(args);
   }
 
-  requestFull(listeners) {
+  requestFull(listeners: PDFReaderListeners) {
     return this.request(listeners);
   }
 
-  request(args) {
+  request(args: Record<string, any> | PDFReaderListeners) {
     const xhr = new XMLHttpRequest();
     const xhrId = this.currXhrId++;
-    const pendingRequest = (this.pendingRequests[xhrId] = { xhr });
+    const pendingRequest: Record<string, any> = (this.pendingRequests[xhrId] = { xhr });
 
     xhr.open("GET", this.url);
     xhr.withCredentials = this.withCredentials;
@@ -86,7 +101,7 @@ class NetworkManager {
     xhr.responseType = "arraybuffer";
 
     if (args.onError) {
-      xhr.onerror = function (evt) {
+      xhr.onerror = function (_evt) {
         args.onError(xhr.status);
       };
     }
@@ -103,7 +118,7 @@ class NetworkManager {
     return xhrId;
   }
 
-  onProgress(xhrId, evt) {
+  onProgress(xhrId: number, evt: ProgressEvent) {
     const pendingRequest = this.pendingRequests[xhrId];
     if (!pendingRequest) {
       return; // Maybe abortRequest was called...
@@ -111,7 +126,7 @@ class NetworkManager {
     pendingRequest.onProgress?.(evt);
   }
 
-  onStateChange(xhrId, evt) {
+  onStateChange(xhrId: number, _evt: Event) {
     const pendingRequest = this.pendingRequests[xhrId];
     if (!pendingRequest) {
       return; // Maybe abortRequest was called...
@@ -160,7 +175,7 @@ class NetworkManager {
     const chunk = getArrayBuffer(xhr);
     if (xhrStatus === PARTIAL_CONTENT_RESPONSE) {
       const rangeHeader = xhr.getResponseHeader("Content-Range");
-      const matches = /bytes (\d+)-(\d+)\/(\d+)/.exec(rangeHeader);
+      const matches = /bytes (\d+)-(\d+)\/(\d+)/.exec(rangeHeader)!;
       pendingRequest.onDone({
         begin: parseInt(matches[1], 10),
         chunk,
@@ -175,15 +190,15 @@ class NetworkManager {
     }
   }
 
-  getRequestXhr(xhrId) {
+  getRequestXhr(xhrId: number): XMLHttpRequest {
     return this.pendingRequests[xhrId].xhr;
   }
 
-  isPendingRequest(xhrId) {
+  isPendingRequest(xhrId: number): boolean {
     return xhrId in this.pendingRequests;
   }
 
-  abortRequest(xhrId) {
+  abortRequest(xhrId: number) {
     const xhr = this.pendingRequests[xhrId].xhr;
     delete this.pendingRequests[xhrId];
     xhr.abort();
@@ -192,7 +207,17 @@ class NetworkManager {
 
 /** @implements {IPDFStream} */
 class PDFNetworkStream implements IPDFStream {
-  constructor(source) {
+
+  protected _source: PDFStreamSource;
+
+  protected _manager: NetworkManager;
+
+  protected _rangeChunkSize: number;
+
+  protected _rangeRequestReaders: PDFNetworkStreamRangeRequestReader[];
+
+  protected _fullRequestReader: PDFNetworkStreamFullRequestReader | null;
+  constructor(source: PDFStreamSource) {
     this._source = source;
     this._manager = new NetworkManager(source);
     this._rangeChunkSize = source.rangeChunkSize;
@@ -200,7 +225,7 @@ class PDFNetworkStream implements IPDFStream {
     this._rangeRequestReaders = [];
   }
 
-  _onRangeRequestReaderClosed(reader) {
+  _onRangeRequestReaderClosed(reader: PDFNetworkStreamRangeRequestReader) {
     const i = this._rangeRequestReaders.indexOf(reader);
     if (i >= 0) {
       this._rangeRequestReaders.splice(i, 1);
@@ -219,7 +244,7 @@ class PDFNetworkStream implements IPDFStream {
     return this._fullRequestReader;
   }
 
-  getRangeReader(begin, end) {
+  getRangeReader(begin: number, end: number) {
     const reader = new PDFNetworkStreamRangeRequestReader(
       this._manager,
       begin,
@@ -230,7 +255,7 @@ class PDFNetworkStream implements IPDFStream {
     return reader;
   }
 
-  cancelAllRequests(reason) {
+  cancelAllRequests(reason: any) {
     this._fullRequestReader?.cancel(reason);
 
     for (const reader of this._rangeRequestReaders.slice(0)) {
@@ -239,12 +264,50 @@ class PDFNetworkStream implements IPDFStream {
   }
 }
 
+interface PDFReaderListeners {
+  onHeadersReceived?: () => void;
+  onDone: (data: { begin: number, chunk: Uint8Array }) => void;
+  onError: (status: number) => void;
+  onProgress: (evt: ProgressEvent) => void;
+}
+
 /** @implements {IPDFStreamReader} */
 class PDFNetworkStreamFullRequestReader {
-  constructor(manager, source) {
+
+  protected _manager: NetworkManager;
+
+  protected _url: string;
+
+  protected _fullRequestId: number;
+
+  protected _headersCapability = <PromiseWithResolvers<void>>Promise.withResolvers();
+
+  protected _disableRange: boolean;
+
+  protected _contentLength: number;
+
+  protected _rangeChunkSize: number;
+
+  protected _isStreamingSupported: boolean;
+
+  protected _isRangeSupported: boolean;
+
+  protected _done: boolean;
+
+  protected _requests: PromiseWithResolvers<unknown>[];
+
+  protected _filename: string | null;
+
+  protected _cachedChunks: Uint8Array[];
+
+  protected _storedError: BaseException | undefined;
+
+  public onProgress: ((param: { loaded: number, total: number }) => void) | null;
+
+  constructor(manager: NetworkManager, source: PDFStreamSource) {
     this._manager = manager;
 
-    const args = {
+    const args: PDFReaderListeners = {
       onHeadersReceived: this._onHeadersReceived.bind(this),
       onDone: this._onDone.bind(this),
       onError: this._onError.bind(this),
@@ -252,7 +315,6 @@ class PDFNetworkStreamFullRequestReader {
     };
     this._url = source.url;
     this._fullRequestId = manager.requestFull(args);
-    this._headersCapability = Promise.withResolvers();
     this._disableRange = source.disableRange || false;
     this._contentLength = source.length; // Optional
     this._rangeChunkSize = source.rangeChunkSize;
@@ -277,14 +339,13 @@ class PDFNetworkStreamFullRequestReader {
     const fullRequestXhr = this._manager.getRequestXhr(fullRequestXhrId);
 
     const responseHeaders = new Headers(
-      fullRequestXhr
-        .getAllResponseHeaders()
+      fullRequestXhr.getAllResponseHeaders()
         .trim()
         .split(/[\r\n]+/)
         .map(x => {
           const [key, ...val] = x.split(": ");
           return [key, val.join(": ")];
-        })
+        }) as [string, string][]
     );
 
     const { allowRangeRequests, suggestedLength } =
@@ -314,10 +375,10 @@ class PDFNetworkStreamFullRequestReader {
     this._headersCapability.resolve();
   }
 
-  _onDone(data) {
+  _onDone(data: { begin: number, chunk: Uint8Array }) {
     if (data) {
       if (this._requests.length > 0) {
-        const requestCapability = this._requests.shift();
+        const requestCapability = this._requests.shift()!;
         requestCapability.resolve({ value: data.chunk, done: false });
       } else {
         this._cachedChunks.push(data.chunk);
@@ -333,7 +394,7 @@ class PDFNetworkStreamFullRequestReader {
     this._requests.length = 0;
   }
 
-  _onError(status) {
+  _onError(status: number) {
     this._storedError = createResponseStatusError(status, this._url);
     this._headersCapability.reject(this._storedError);
     for (const requestCapability of this._requests) {
@@ -343,7 +404,7 @@ class PDFNetworkStreamFullRequestReader {
     this._cachedChunks.length = 0;
   }
 
-  _onProgress(evt) {
+  _onProgress(evt: ProgressEvent) {
     this.onProgress?.({
       loaded: evt.loaded,
       total: evt.lengthComputable ? evt.total : this._contentLength,
@@ -386,9 +447,9 @@ class PDFNetworkStreamFullRequestReader {
     return requestCapability.promise;
   }
 
-  cancel(reason) {
+  cancel(_reason: any) {
     this._done = true;
-    this._headersCapability.reject(reason);
+    this._headersCapability.reject(_reason);
     for (const requestCapability of this._requests) {
       requestCapability.resolve({ value: undefined, done: true });
     }
@@ -396,19 +457,36 @@ class PDFNetworkStreamFullRequestReader {
     if (this._manager.isPendingRequest(this._fullRequestId)) {
       this._manager.abortRequest(this._fullRequestId);
     }
-    this._fullRequestReader = null;
+    // TODO ？？？？显示不存在这个变量？
+    // this._fullRequestReader = null;
   }
 }
 
 /** @implements {IPDFStreamRangeReader} */
 class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
-  
+
   onProgress: ((evt: OnProgressParameters) => void) | null;
 
-  constructor(manager, begin: number, end: number) {
+  protected _manager: NetworkManager;
+
+  protected _url: string;
+
+  protected _requestId: number;
+
+  protected _done: boolean;
+
+  public onClosed: ((reader: PDFNetworkStreamRangeRequestReader) => void) | null;
+
+  protected _requests: PromiseWithResolvers<unknown>[];
+
+  protected _queuedChunk: Uint8Array | null;
+
+  protected _storedError: BaseException | undefined;
+
+  constructor(manager: NetworkManager, begin: number, end: number) {
     this._manager = manager;
 
-    const args = {
+    const args: PDFReaderListeners = {
       onDone: this._onDone.bind(this),
       onError: this._onError.bind(this),
       onProgress: this._onProgress.bind(this),
@@ -428,10 +506,10 @@ class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
     this.onClosed?.(this);
   }
 
-  _onDone(data) {
+  _onDone(data: { begin: number, chunk: Uint8Array }) {
     const chunk = data.chunk;
     if (this._requests.length > 0) {
-      const requestCapability = this._requests.shift();
+      const requestCapability = this._requests.shift()!;
       requestCapability.resolve({ value: chunk, done: false });
     } else {
       this._queuedChunk = chunk;
@@ -444,7 +522,7 @@ class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
     this._close();
   }
 
-  _onError(status) {
+  _onError(status: number) {
     this._storedError = createResponseStatusError(status, this._url);
     for (const requestCapability of this._requests) {
       requestCapability.reject(this._storedError);
@@ -453,7 +531,7 @@ class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
     this._queuedChunk = null;
   }
 
-  _onProgress(evt) {
+  _onProgress(evt: ProgressEvent) {
     if (!this.isStreamingSupported) {
       this.onProgress?.({ loaded: evt.loaded });
     }
@@ -480,7 +558,7 @@ class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
     return requestCapability.promise;
   }
 
-  cancel(reason) {
+  cancel(_reason: any) {
     this._done = true;
     for (const requestCapability of this._requests) {
       requestCapability.resolve({ value: undefined, done: true });

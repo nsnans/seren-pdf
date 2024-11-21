@@ -25,12 +25,13 @@ import { PostScriptLexer, PostScriptParser } from "./ps_parser";
 import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
+import { XRef } from "./xref";
 
 class PDFFunctionFactory {
-  
+
   protected isEvalSupported: boolean;
 
-  constructor({ xref, isEvalSupported = true }) {
+  constructor({ xref, isEvalSupported = true }: { xref: XRef, isEvalSupported: boolean }) {
     this.xref = xref;
     this.isEvalSupported = isEvalSupported !== false;
   }

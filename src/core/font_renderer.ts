@@ -26,6 +26,7 @@ import { getGlyphsUnicode } from "./glyphlist";
 import { isNumberArray } from "./core_utils";
 import { StandardEncoding } from "./encodings";
 import { Stream } from "./stream";
+import { PlatformHelper } from "../platform/platform_helper";
 
 // TODO: use DataView and its methods.
 
@@ -749,7 +750,7 @@ const NOOP = [];
 class Commands {
   cmds = [];
 
-  add(cmd, args?:any) {
+  add(cmd, args?: any) {
     if (args) {
       if (!isNumberArray(args, null)) {
         warn(
@@ -769,9 +770,7 @@ class Commands {
 
 class CompiledFont {
   constructor(fontMatrix) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === CompiledFont
+    if (PlatformHelper.isTesting() && this.constructor === CompiledFont
     ) {
       unreachable("Cannot initialize CompiledFont.");
     }
