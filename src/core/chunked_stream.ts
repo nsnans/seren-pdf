@@ -14,8 +14,10 @@
  */
 
 import { arrayBuffersToBytes, MissingDataException } from "./core_utils";
-import { assert } from "../shared/util";
+import { AbortException, assert } from "../shared/util";
 import { Stream } from "./stream";
+import { BaseStream } from "./base_stream";
+import { PlatformHelper } from "../platform/platform_helper";
 
 class ChunkedStream extends Stream {
 
@@ -161,7 +163,7 @@ class ChunkedStream extends Stream {
     return null;
   }
 
-  hasChunk(chunk) {
+  hasChunk(chunk: number) {
     return this._loadedChunks.has(chunk);
   }
 
@@ -262,7 +264,7 @@ class ChunkedStream extends Stream {
     return subStream;
   }
 
-  getBaseStreams() {
+  getBaseStreams(): BaseStream[] {
     return [this];
   }
 }
@@ -291,7 +293,7 @@ class ChunkedStreamManager {
 
   protected aborted = false;
 
-  protected _loadedStreamCapability = Promise.withResolvers()
+  protected _loadedStreamCapability = <PromiseWithResolvers<ChunkedStream>>Promise.withResolvers()
 
   constructor(pdfNetworkStream, args) {
     this.length = args.length;
@@ -308,8 +310,7 @@ class ChunkedStreamManager {
       rangeReader.onProgress = this.onProgress.bind(this);
     }
 
-    let chunks = [],
-      loaded = 0;
+    let chunks = [], loaded = 0;
     return new Promise((resolve, reject) => {
       const readChunk = ({ value, done }) => {
         try {
@@ -319,7 +320,7 @@ class ChunkedStreamManager {
             resolve(chunkData);
             return;
           }
-          if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+          if (PlatformHelper.isTesting()) {
             assert(
               value instanceof ArrayBuffer,
               "readChunk (sendRequest) - expected an ArrayBuffer."
@@ -358,7 +359,7 @@ class ChunkedStreamManager {
     return this._loadedStreamCapability.promise;
   }
 
-  _requestChunks(chunks) {
+  _requestChunks(chunks: number[]) {
     const requestId = this.currRequestId++;
 
     const chunksNeeded = new Set();
@@ -421,7 +422,7 @@ class ChunkedStreamManager {
     const beginChunk = this.getBeginChunk(begin);
     const endChunk = this.getEndChunk(end);
 
-    const chunks = [];
+    const chunks = <number[]>[];
     for (let chunk = beginChunk; chunk < endChunk; ++chunk) {
       chunks.push(chunk);
     }
@@ -570,7 +571,7 @@ class ChunkedStreamManager {
     return Math.floor((end - 1) / this.chunkSize) + 1;
   }
 
-  abort(reason) {
+  abort(reason: AbortException) {
     this.aborted = true;
     this.pdfNetworkStream?.cancelAllRequests(reason);
 

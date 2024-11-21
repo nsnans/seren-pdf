@@ -246,7 +246,7 @@ class MessageHandler {
    * @returns {ReadableStream} ReadableStream to read data in chunks.
    */
   sendWithStream(actionName: string, data: Record<string, any> | null
-    , queueingStrategy?: Record<string, any> & { highWaterMark?: number | undefined }, transfers?: Transferable[] | null): ReadableStream {
+    , queueingStrategy?: Record<string, any> & { highWaterMark?: number | undefined }, transfers?: Transferable[] | null): ReadableStream<Uint8Array> {
     const streamId = this.streamId++,
       sourceName = this.sourceName,
       targetName = this.targetName,

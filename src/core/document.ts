@@ -1844,7 +1844,7 @@ class PDFDocument {
     return this.catalog!.fontFallback(id, handler);
   }
 
-  async cleanup(manuallyTriggered = false) {
+  async cleanup(manuallyTriggered = false): Promise<void> {
     return this.catalog
       ? this.catalog.cleanup(manuallyTriggered)
       : clearGlobalCaches();

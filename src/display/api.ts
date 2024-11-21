@@ -305,6 +305,31 @@ class DocumentInitParameters {
  */
 
 type DocumentSrcType = string | URL | TypedArray | ArrayBuffer | DocumentInitParameters;
+export interface DocParamEvaluatorOptions {
+  maxImageSize: number;
+  disableFontFace: boolean;
+  ignoreErrors: boolean;
+  isEvalSupported: boolean;
+  isOffscreenCanvasSupported: boolean;
+  isChrome: boolean;
+  canvasMaxAreaInBytes: number | undefined;
+  fontExtraProperties: boolean;
+  useSystemFonts: boolean;
+  cMapUrl: string | null;
+  standardFontDataUrl: string | null;
+}
+export interface DocParams {
+  docId: string;
+  apiVersion: string | null;
+  data: Uint8Array | null;
+  password: string | null;
+  disableAutoFetch: boolean;
+  rangeChunkSize: number;
+  length: number;
+  docBaseUrl: string | null;
+  enableXfa: boolean;
+  evaluatorOptions: DocParamEvaluatorOptions;
+}
 
 function getDocument(options: DocumentSrcType) {
 
@@ -446,7 +471,7 @@ function getDocument(options: DocumentSrcType) {
     task._worker = worker;
   }
 
-  const docParams = {
+  const docParams: DocParams = {
     docId,
     apiVersion: PlatformHelper.isTesting() ? PlatformHelper.bundleVersion() : null,
     data,
@@ -577,7 +602,7 @@ function getUrlProp(val: URL | string): string | null {
   );
 }
 
-function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView | Buffer) {
+function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView | Buffer): Uint8Array {
   // Converting string or array-like data to Uint8Array.
   if (
     PlatformHelper.isGeneric() && isNodeJS && typeof Buffer !== "undefined" && // eslint-disable-line no-undef
@@ -642,7 +667,7 @@ export class PDFDocumentLoadingTask {
 
   public onProgress: ((param: OnProgressParameters | null) => void) | null = null
 
-  public onPassword: ((updateCallback: (password: string) => void, reason: number) => void) | null;
+  public onPassword: ((updateCallback: (password: string | Error) => void, reason: number) => void) | null;
 
   constructor() {
     this._transport = null;
@@ -2679,7 +2704,7 @@ class WorkerTransport {
 
   protected destroyCapability: PromiseWithResolvers<unknown> | null = null;
 
-  #passwordCapability: PromiseWithResolvers<unknown> | null = null;
+  #passwordCapability: PromiseWithResolvers<{ password: string | Error }> | null = null;
 
   protected _fullReader: IPDFStreamReader | null = null;
 
@@ -3051,7 +3076,7 @@ class WorkerTransport {
       this.#passwordCapability = Promise.withResolvers();
 
       if (loadingTask.onPassword) {
-        const updatePassword = password => {
+        const updatePassword = (password: string | Error) => {
           if (password instanceof Error) {
             this.#passwordCapability!.reject(password);
           } else {

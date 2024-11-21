@@ -72,7 +72,7 @@ class PDFWorkerStreamReader {
 
   protected _isStreamingSupported: boolean;
 
-  protected _reader: ReadableStreamDefaultReader;
+  protected _reader: ReadableStreamDefaultReader<Uint8Array>;
 
   protected _headersReady: Promise<void>;
 

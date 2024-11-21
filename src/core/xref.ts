@@ -70,7 +70,7 @@ export class XRef {
 
   protected root: Dict | null;
 
-  protected trailer: Dict | null
+  public trailer: Dict | null
 
   protected topDict: Dict | null;
 

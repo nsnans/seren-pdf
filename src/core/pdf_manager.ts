@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
+import { DocParamEvaluatorOptions } from "../display/api";
 import { PlatformHelper } from "../platform/platform_helper";
+import { MessageHandler } from "../shared/message_handler";
 import {
+  AbortException,
   createValidAbsoluteUrl,
   FeatureTest,
   unreachable,
@@ -24,8 +27,9 @@ import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";
 import { Page, PDFDocument } from "./document";
 import { Stream } from "./stream";
+import { PDFWorkerStream } from "./worker_stream";
 
-function parseDocBaseUrl(url: string) {
+function parseDocBaseUrl(url: string | null) {
   if (url) {
     const absoluteUrl = createValidAbsoluteUrl(url);
     if (absoluteUrl) {
@@ -36,7 +40,22 @@ function parseDocBaseUrl(url: string) {
   return null;
 }
 
+export interface PDFManagerArgs {
+  source: PDFWorkerStream | Uint8Array | null;
+  disableAutoFetch: boolean;
+  docBaseUrl: string | null;
+  docId: string;
+  enableXfa: boolean;
+  evaluatorOptions: DocParamEvaluatorOptions;
+  handler: MessageHandler;
+  length: number;
+  password: string | null;
+  rangeChunkSize: number;
+}
+
 interface PDFManager {
+
+  cleanup(manuallyTriggered?: boolean): Promise<void>;
 
   _docId: string;
 
@@ -44,33 +63,43 @@ interface PDFManager {
 
   password: string | null;
 
-  evaluatorOptions;
+  evaluatorOptions: DocParamEvaluatorOptions;
 
   getPage(pageIndex: number): Promise<Page>;
 
-  ensure(page:Page, prop: string);
+  updatePassword(password: string): void;
 
-  ensureDoc(prop: string, args?: any);
+  ensure(obj: unknown, prop: string, ...args: any[]): Promise<unknown>;
 
-  ensureXRef(prop: string, args?: any);
+  ensureDoc(prop: string, ...args: any[]): Promise<unknown>;
 
-  ensureCatalog(prop, args?: any);
+  ensureXRef(prop: string, ...args: any[]): Promise<unknown>;
+
+  ensureCatalog(prop: string, ...args: any[]): Promise<unknown>;
 
   requestRange(_begin: number, _end: number): Promise<unknown>;
+
+  requestLoadedStream(noFetch?: boolean): Promise<Stream>;
+
+  sendProgressiveData(chunk: ArrayBufferLike): void;
+
+  terminate(ex: AbortException): void;
+
 }
 
 abstract class BasePDFManager implements PDFManager {
 
-  _docId: string;
+  readonly _docId: string;
 
   protected _docBaseUrl: string | null;
 
   protected _password: string | null;
 
-  protected enableXfa: boolean;
+  readonly enableXfa: boolean;
 
+  evaluatorOptions: DocParamEvaluatorOptions;
 
-  constructor(args) {
+  constructor(args: PDFManagerArgs) {
     if (
       (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       this.constructor === BasePDFManager
@@ -97,6 +126,10 @@ abstract class BasePDFManager implements PDFManager {
     return this._password;
   }
 
+  updatePassword(password: string) {
+    this._password = password;
+  };
+
   get docBaseUrl() {
     return this._docBaseUrl;
   }
@@ -109,11 +142,11 @@ abstract class BasePDFManager implements PDFManager {
     return this.ensure(this.getPDFDocument(), prop, args);
   }
 
-  ensureXRef(prop, args) {
+  ensureXRef(prop: string, ...args: any[]) {
     return this.ensure(this.getPDFDocument().xref, prop, args);
   }
 
-  ensureCatalog(prop, args) {
+  ensureCatalog(prop: string, ...args: any[]) {
     return this.ensure(this.getPDFDocument().catalog, prop, args);
   }
 
@@ -137,23 +170,19 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().serializeXfaData(annotationStorage);
   }
 
-  cleanup(manuallyTriggered = false) {
+  cleanup(manuallyTriggered = false): Promise<void> {
     return this.getPDFDocument().cleanup(manuallyTriggered);
   }
 
-  abstract ensure(obj, prop, args);
+  abstract ensure(obj: unknown, prop: string, ...args: any[]): Promise<unknown>;
 
   abstract requestRange(begin: number, end: number): Promise<void>;
 
-  abstract requestLoadedStream(noFetch = false);
+  abstract requestLoadedStream(noFetch?: boolean): Promise<Stream>;
 
-  abstract sendProgressiveData(chunk);
+  abstract sendProgressiveData(chunk: ArrayBufferLike): void;
 
-  updatePassword(password: string) {
-    this._password = password;
-  }
-
-  abstract terminate(reason: string): void;
+  abstract terminate(reason: AbortException): void;
 
   abstract getPDFDocument(): PDFDocument;
 
@@ -161,13 +190,14 @@ abstract class BasePDFManager implements PDFManager {
 
 class LocalPDFManager extends BasePDFManager {
 
-
   public pdfDocument: PDFDocument;
 
-  constructor(args) {
+  _loadedStreamPromise: Promise<Stream>;
+
+  constructor(args: PDFManagerArgs) {
     super(args);
 
-    const stream = new Stream(args.source);
+    const stream = new Stream(<Uint8Array>args.source);
     this.pdfDocument = new PDFDocument(this, stream);
     this._loadedStreamPromise = Promise.resolve(stream);
   }
@@ -184,15 +214,15 @@ class LocalPDFManager extends BasePDFManager {
     return Promise.resolve();
   }
 
-  requestLoadedStream(noFetch = false) {
+  requestLoadedStream(_noFetch = false) {
     return this._loadedStreamPromise;
   }
 
-  sendProgressiveData(_chunk: any) {
+  sendProgressiveData(_chunk: ArrayBufferLike) {
     throw new Error("Method not implemented.");
   }
 
-  terminate() { }
+  terminate(_ex: AbortException) { }
 
   getPDFDocument(): PDFDocument {
     return this.pdfDocument;
@@ -205,7 +235,7 @@ class NetworkPDFManager extends BasePDFManager {
 
   public streamManager: ChunkedStreamManager;
 
-  constructor(args) {
+  constructor(args: PDFManagerArgs) {
     super(args);
 
     this.streamManager = new ChunkedStreamManager(args.source, {
@@ -217,7 +247,7 @@ class NetworkPDFManager extends BasePDFManager {
     this.pdfDocument = new PDFDocument(this, this.streamManager.getStream());
   }
 
-  async ensure(obj, prop, args) {
+  async ensure(obj: unknown, prop: string, ...args: any[]): Promise<unknown> {
     try {
       const value = obj[prop];
       if (typeof value === "function") {
@@ -237,15 +267,15 @@ class NetworkPDFManager extends BasePDFManager {
     return this.streamManager.requestRange(begin, end);
   }
 
-  requestLoadedStream(noFetch = false) {
-    return this.streamManager.requestAllChunks(noFetch);
+  requestLoadedStream(noFetch = false): Promise<Stream> {
+    return <Promise<Stream>>this.streamManager.requestAllChunks(noFetch);
   }
 
-  sendProgressiveData(chunk) {
+  sendProgressiveData(chunk: ArrayBufferLike) {
     this.streamManager.onReceiveData({ chunk });
   }
 
-  terminate(reason) {
+  terminate(reason: AbortException) {
     this.streamManager.abort(reason);
   }
 

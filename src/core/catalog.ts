@@ -151,6 +151,8 @@ export class Catalog {
 
   protected _catDict: Dict;
 
+  protected _actualNumPages: number | null;
+
   constructor(pdfManager: PDFManager, xref: XRef) {
     this.pdfManager = pdfManager;
     this.xref = xref;
@@ -388,7 +390,7 @@ export class Catalog {
       blackColor = new Uint8ClampedArray(3);
 
     while (queue.length > 0) {
-      const i = queue.shift();
+      const i = queue.shift()!;
       const outlineDict = xref.fetchIfRef(i.obj);
       if (outlineDict === null) {
         continue;
@@ -466,7 +468,7 @@ export class Catalog {
    * @private
    */
   _readPermissions() {
-    const encrypt = this.xref.trailer.get("Encrypt");
+    const encrypt = this.xref.trailer!.get("Encrypt");
     if (!(encrypt instanceof Dict)) {
       return null;
     }
