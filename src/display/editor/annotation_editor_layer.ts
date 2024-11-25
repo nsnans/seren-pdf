@@ -32,6 +32,7 @@ import { HighlightEditor } from "./highlight";
 import { InkEditor } from "./ink";
 import { setLayerDimensions } from "../display_utils";
 import { StampEditor } from "./stamp";
+import { DrawLayer } from "../draw_layer";
 
 /**
  * @typedef {Object} AnnotationEditorLayerOptions
@@ -90,6 +91,11 @@ class AnnotationEditorLayer {
       type,
     ])
   );
+  pageIndex: any;
+  viewport: { rotation: any; rawDims: { pageWidth: any; pageHeight: any; pageX: any; pageY: any; }; };
+  isMultipleSelection: any;
+  div: any;
+  drawLayer: DrawLayer;
 
   /**
    * @param {AnnotationEditorLayerOptions} options
@@ -593,7 +599,7 @@ class AnnotationEditorLayer {
    * Add a new editor and make this addition undoable.
    * @param {AnnotationEditor} editor
    */
-  addUndoableEditor(editor) {
+  addUndoableEditor(editor: AnnotationEditor) {
     const cmd = () => editor._uiManager.rebuild(editor);
     const undo = () => {
       editor.remove();
@@ -606,7 +612,7 @@ class AnnotationEditorLayer {
    * Get an id for an editor.
    * @returns {string}
    */
-  getNextId() {
+  getNextId(): string {
     return this.#uiManager.getId();
   }
 
@@ -910,7 +916,7 @@ class AnnotationEditorLayer {
    * Get page dimensions.
    * @returns {Object} dimensions.
    */
-  get pageDimensions() {
+  get pageDimensions(): [number, number] {
     const { pageWidth, pageHeight } = this.viewport.rawDims;
     return [pageWidth, pageHeight];
   }

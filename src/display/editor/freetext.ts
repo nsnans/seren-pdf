@@ -16,6 +16,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
+import { PlatformHelper } from "../../platform/platform_helper";
 import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
@@ -24,14 +25,14 @@ import {
   shadow,
   Util,
 } from "../../shared/util";
+import { IL10n } from "../../viewer/common/component_interface";
+import { FreeTextAnnotationElement } from "../annotation_layer";
+import { AnnotationEditor } from "./editor";
 import {
   AnnotationEditorUIManager,
   bindEvents,
   KeyboardManager,
 } from "./tools";
-import { AnnotationEditor } from "./editor";
-import { FreeTextAnnotationElement } from "../annotation_layer";
-import { PlatformHelper } from "../../platform/platform_helper";
 
 const EOL_PATTERN = /\r\n?|\n/g;
 
@@ -39,15 +40,6 @@ const EOL_PATTERN = /\r\n?|\n/g;
  * Basic text editor in order to create a FreeTex annotation.
  */
 class FreeTextEditor extends AnnotationEditor {
-  #color;
-
-  #content = "";
-
-  #editorDivId = `${this.id}-editor`;
-
-  #editModeAC = null;
-
-  #fontSize;
 
   static _freeTextDefaultContent = "";
 
@@ -56,6 +48,7 @@ class FreeTextEditor extends AnnotationEditor {
   static _defaultColor = null;
 
   static _defaultFontSize = 10;
+
 
   static get _keyboardManager() {
     const proto = FreeTextEditor.prototype;
@@ -129,6 +122,20 @@ class FreeTextEditor extends AnnotationEditor {
 
   static _editorType = AnnotationEditorType.FREETEXT;
 
+  #color: string;
+
+  #content = "";
+
+  #editorDivId = `${this.id}-editor`;
+
+  #editModeAC: AbortController | null = null;
+
+  #fontSize: number;
+
+  protected editorDiv: HTMLDivElement | null = null;
+
+  protected overlayDiv: HTMLDivElement | null = null;
+
   constructor(params) {
     super({ ...params, name: "freeTextEditor" });
     this.#color =
@@ -139,7 +146,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n, uiManager: AnnotationEditorUIManager) {
+  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditor.initialize(l10n, uiManager);
     const style = getComputedStyle(document.documentElement);
 
@@ -159,7 +166,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static updateDefaultParams(type, value) {
+  static updateDefaultParams(type: number, value: any) {
     switch (type) {
       case AnnotationEditorParamsType.FREETEXT_SIZE:
         FreeTextEditor._defaultFontSize = value;
@@ -171,7 +178,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  updateParams(type, value) {
+  updateParams(type: number, value: any) {
     switch (type) {
       case AnnotationEditorParamsType.FREETEXT_SIZE:
         this.#updateFontSize(value);
@@ -197,7 +204,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  get propertiesToUpdate() {
+  get propertiesToUpdate(): [[number, number], [number, string]] {
     return [
       [AnnotationEditorParamsType.FREETEXT_SIZE, this.#fontSize],
       [AnnotationEditorParamsType.FREETEXT_COLOR, this.#color],
@@ -208,9 +215,9 @@ class FreeTextEditor extends AnnotationEditor {
    * Update the font size and make this action as undoable.
    * @param {number} fontSize
    */
-  #updateFontSize(fontSize) {
-    const setFontsize = size => {
-      this.editorDiv.style.fontSize = `calc(${size}px * var(--scale-factor))`;
+  #updateFontSize(fontSize: number) {
+    const setFontsize = (size: number) => {
+      this.editorDiv!.style.fontSize = `calc(${size}px * var(--scale-factor))`;
       this.translate(0, -(size - this.#fontSize) * this.parentScale);
       this.#fontSize = size;
       this.#setEditorDimensions();
@@ -231,9 +238,9 @@ class FreeTextEditor extends AnnotationEditor {
    * Update the color and make this action undoable.
    * @param {string} color
    */
-  #updateColor(color) {
-    const setColor = col => {
-      this.#color = this.editorDiv.style.color = col;
+  #updateColor(color: string) {
+    const setColor = (col: string) => {
+      this.#color = this.editorDiv!.style.color = col;
     };
     const savedColor = this.#color;
     this.addCommands({
@@ -252,7 +259,7 @@ class FreeTextEditor extends AnnotationEditor {
    * @param {number} x in page units.
    * @param {number} y in page units.
    */
-  _translateEmpty(x, y) {
+  _translateEmpty(x: number, y: number) {
     this._uiManager.translateSelectedEditors(x, y, /* noCommit = */ true);
   }
 
@@ -289,15 +296,15 @@ class FreeTextEditor extends AnnotationEditor {
       return;
     }
 
-    this.parent.setEditingState(false);
-    this.parent.updateToolbar(AnnotationEditorType.FREETEXT);
+    this.parent!.setEditingState(false);
+    this.parent!.updateToolbar(AnnotationEditorType.FREETEXT);
     super.enableEditMode();
-    this.overlayDiv.classList.remove("enabled");
-    this.editorDiv.contentEditable = true;
+    this.overlayDiv!.classList.remove("enabled");
+    this.editorDiv!.contentEditable = "true";
     this._isDraggable = false;
-    this.div.removeAttribute("aria-activedescendant");
+    this.div!.removeAttribute("aria-activedescendant");
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       assert(
         !this.#editModeAC,
         "No `this.#editModeAC` AbortController should exist."
@@ -306,23 +313,24 @@ class FreeTextEditor extends AnnotationEditor {
     this.#editModeAC = new AbortController();
     const signal = this._uiManager.combinedSignal(this.#editModeAC);
 
-    this.editorDiv.addEventListener(
+    this.editorDiv!.addEventListener(
       "keydown",
       this.editorDivKeydown.bind(this),
       { signal }
     );
-    this.editorDiv.addEventListener("focus", this.editorDivFocus.bind(this), {
+    this.editorDiv!.addEventListener("focus", this.editorDivFocus.bind(this), {
       signal,
     });
-    this.editorDiv.addEventListener("blur", this.editorDivBlur.bind(this), {
+    this.editorDiv!.addEventListener("blur", this.editorDivBlur.bind(this), {
       signal,
     });
-    this.editorDiv.addEventListener("input", this.editorDivInput.bind(this), {
+    this.editorDiv!.addEventListener("input", this.editorDivInput.bind(this), {
       signal,
     });
-    this.editorDiv.addEventListener("paste", this.editorDivPaste.bind(this), {
+    this.editorDiv!.addEventListener("paste", this.editorDivPaste.bind(this), {
       signal,
     });
+
   }
 
   /** @inheritdoc */
@@ -331,11 +339,11 @@ class FreeTextEditor extends AnnotationEditor {
       return;
     }
 
-    this.parent.setEditingState(true);
+    this.parent!.setEditingState(true);
     super.disableEditMode();
-    this.overlayDiv.classList.add("enabled");
-    this.editorDiv.contentEditable = false;
-    this.div.setAttribute("aria-activedescendant", this.#editorDivId);
+    this.overlayDiv!.classList.add("enabled");
+    this.editorDiv!.contentEditable = "false";
+    this.div!.setAttribute("aria-activedescendant", this.#editorDivId);
     this._isDraggable = true;
 
     this.#editModeAC?.abort();
@@ -343,23 +351,23 @@ class FreeTextEditor extends AnnotationEditor {
 
     // On Chrome, the focus is given to <body> when contentEditable is set to
     // false, hence we focus the div.
-    this.div.focus({
+    this.div!.focus({
       preventScroll: true /* See issue #15744 */,
     });
 
     // In case the blur callback hasn't been called.
     this.isEditing = false;
-    this.parent.div.classList.add("freetextEditing");
+    this.parent!.div.classList.add("freetextEditing");
   }
 
   /** @inheritdoc */
-  focusin(event) {
+  focusin(event: FocusEvent) {
     if (!this._focusEventsAllowed) {
       return;
     }
     super.focusin(event);
     if (event.target !== this.editorDiv) {
-      this.editorDiv.focus();
+      this.editorDiv!.focus();
     }
   }
 
@@ -370,7 +378,7 @@ class FreeTextEditor extends AnnotationEditor {
       return;
     }
     this.enableEditMode();
-    this.editorDiv.focus();
+    this.editorDiv!.focus();
     if (this._initialOptions?.isCentered) {
       this.center();
     }
@@ -399,9 +407,9 @@ class FreeTextEditor extends AnnotationEditor {
   #extractText() {
     // We don't use innerText because there are some bugs with line breaks.
     const buffer = [];
-    this.editorDiv.normalize();
+    this.editorDiv!.normalize();
     let prevChild = null;
-    for (const child of this.editorDiv.childNodes) {
+    for (const child of this.editorDiv!.childNodes) {
       if (prevChild?.nodeType === Node.TEXT_NODE && child.nodeName === "BR") {
         // It can happen if the user uses shift+enter to add a new line.
         // If we don't skip it, we'll end up with an extra line (one for the
@@ -419,20 +427,20 @@ class FreeTextEditor extends AnnotationEditor {
 
     let rect;
     if (this.isAttachedToDOM) {
-      rect = this.div.getBoundingClientRect();
+      rect = this.div!.getBoundingClientRect();
     } else {
       // This editor isn't on screen but we need to get its dimensions, so
       // we just insert it in the DOM, get its bounding box and then remove it.
       const { currentLayer, div } = this;
-      const savedDisplay = div.style.display;
-      const savedVisibility = div.classList.contains("hidden");
-      div.classList.remove("hidden");
-      div.style.display = "hidden";
+      const savedDisplay = div!.style.display;
+      const savedVisibility = div!.classList.contains("hidden");
+      div!.classList.remove("hidden");
+      div!.style.display = "hidden";
       currentLayer.div.append(this.div);
-      rect = div.getBoundingClientRect();
-      div.remove();
-      div.style.display = savedDisplay;
-      div.classList.toggle("hidden", savedVisibility);
+      rect = div!.getBoundingClientRect();
+      div!.remove();
+      div!.style.display = savedDisplay;
+      div!.classList.toggle("hidden", savedVisibility);
     }
 
     // The dimensions are relative to the rotation of the page, hence we need to
@@ -464,7 +472,7 @@ class FreeTextEditor extends AnnotationEditor {
       return;
     }
 
-    const setText = text => {
+    const setText = (text: string) => {
       this.#content = text;
       if (!text) {
         this.remove();
@@ -494,14 +502,14 @@ class FreeTextEditor extends AnnotationEditor {
   /** @inheritdoc */
   enterInEditMode() {
     this.enableEditMode();
-    this.editorDiv.focus();
+    this.editorDiv!.focus();
   }
 
   /**
    * ondblclick callback.
    * @param {MouseEvent} event
    */
-  dblclick(event) {
+  dblclick(_event: MouseEvent) {
     this.enterInEditMode();
   }
 
@@ -509,7 +517,7 @@ class FreeTextEditor extends AnnotationEditor {
    * onkeydown callback.
    * @param {KeyboardEvent} event
    */
-  keydown(event) {
+  keydown(event: KeyboardEvent) {
     if (event.target === this.div && event.key === "Enter") {
       this.enterInEditMode();
       // Avoid to add an unwanted new line.
@@ -517,32 +525,32 @@ class FreeTextEditor extends AnnotationEditor {
     }
   }
 
-  editorDivKeydown(event) {
+  editorDivKeydown(event: KeyboardEvent) {
     FreeTextEditor._keyboardManager.exec(this, event);
   }
 
-  editorDivFocus(event) {
+  editorDivFocus(_event: FocusEvent) {
     this.isEditing = true;
   }
 
-  editorDivBlur(event) {
+  editorDivBlur(_event: FocusEvent) {
     this.isEditing = false;
   }
 
-  editorDivInput(event) {
-    this.parent.div.classList.toggle("freetextEditing", this.isEmpty());
+  editorDivInput(_event: Event) {
+    this.parent!.div.classList.toggle("freetextEditing", this.isEmpty());
   }
 
   /** @inheritdoc */
   disableEditing() {
-    this.editorDiv.setAttribute("role", "comment");
-    this.editorDiv.removeAttribute("aria-multiline");
+    this.editorDiv!.setAttribute("role", "comment");
+    this.editorDiv!.removeAttribute("aria-multiline");
   }
 
   /** @inheritdoc */
   enableEditing() {
-    this.editorDiv.setAttribute("role", "textbox");
-    this.editorDiv.setAttribute("aria-multiline", true);
+    this.editorDiv!.setAttribute("role", "textbox");
+    this.editorDiv!.setAttribute("aria-multiline", "true");
   }
 
   /** @inheritdoc */
@@ -566,17 +574,17 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv.setAttribute("data-l10n-attrs", "default-content");
     this.enableEditing();
 
-    this.editorDiv.contentEditable = true;
+    this.editorDiv.contentEditable = "true";
 
     const { style } = this.editorDiv;
     style.fontSize = `calc(${this.#fontSize}px * var(--scale-factor))`;
     style.color = this.#color;
 
-    this.div.append(this.editorDiv);
+    this.div!.append(this.editorDiv);
 
     this.overlayDiv = document.createElement("div");
     this.overlayDiv.classList.add("overlay", "enabled");
-    this.div.append(this.overlayDiv);
+    this.div!.append(this.overlayDiv);
 
     bindEvents(this, this.div, ["dblclick", "keydown"]);
 
@@ -601,34 +609,34 @@ class FreeTextEditor extends AnnotationEditor {
         let posX, posY;
         switch (this.rotation) {
           case 0:
-            posX = baseX + (position[0] - pageX) / pageWidth;
-            posY = baseY + this.height - (position[1] - pageY) / pageHeight;
+            posX = baseX! + (position[0] - pageX) / pageWidth;
+            posY = baseY! + this.height - (position[1] - pageY) / pageHeight;
             break;
           case 90:
-            posX = baseX + (position[0] - pageX) / pageWidth;
-            posY = baseY - (position[1] - pageY) / pageHeight;
+            posX = baseX! + (position[0] - pageX) / pageWidth;
+            posY = baseY! - (position[1] - pageY) / pageHeight;
             [tx, ty] = [ty, -tx];
             break;
           case 180:
-            posX = baseX - this.width + (position[0] - pageX) / pageWidth;
-            posY = baseY - (position[1] - pageY) / pageHeight;
+            posX = baseX! - this.width + (position[0] - pageX) / pageWidth;
+            posY = baseY! - (position[1] - pageY) / pageHeight;
             [tx, ty] = [-tx, -ty];
             break;
           case 270:
             posX =
-              baseX +
+              baseX! +
               (position[0] - pageX - this.height * pageHeight) / pageWidth;
             posY =
-              baseY +
+              baseY! +
               (position[1] - pageY - this.width * pageWidth) / pageHeight;
             [tx, ty] = [-ty, tx];
             break;
         }
-        this.setAt(posX * parentWidth, posY * parentHeight, tx, ty);
+        this.setAt(posX! * parentWidth, posY! * parentHeight, tx, ty);
       } else {
         this.setAt(
-          baseX * parentWidth,
-          baseY * parentHeight,
+          baseX! * parentWidth,
+          baseY! * parentHeight,
           this.width * parentWidth,
           this.height * parentHeight
         );
@@ -636,14 +644,14 @@ class FreeTextEditor extends AnnotationEditor {
 
       this.#setContent();
       this._isDraggable = true;
-      this.editorDiv.contentEditable = false;
+      this.editorDiv.contentEditable = "false";
     } else {
       this._isDraggable = false;
-      this.editorDiv.contentEditable = true;
+      this.editorDiv.contentEditable = "true";
     }
 
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
-      this.div.setAttribute("annotation-id", this.annotationElementId);
+    if (PlatformHelper.isTesting()) {
+      this.div!.setAttribute("annotation-id", this.annotationElementId!);
     }
 
     return this.div;
@@ -655,7 +663,7 @@ class FreeTextEditor extends AnnotationEditor {
     ).replaceAll(EOL_PATTERN, "");
   }
 
-  editorDivPaste(event) {
+  editorDivPaste(event: ClipboardEvent) {
     const clipboardData = event.clipboardData || window.clipboardData;
     const { types } = clipboardData;
     if (types.length === 1 && types[0] === "text/plain") {
@@ -669,32 +677,32 @@ class FreeTextEditor extends AnnotationEditor {
     if (!paste) {
       return;
     }
-    const selection = window.getSelection();
+    const selection = window.getSelection()!;
     if (!selection.rangeCount) {
       return;
     }
-    this.editorDiv.normalize();
+    this.editorDiv!.normalize();
     selection.deleteFromDocument();
     const range = selection.getRangeAt(0);
     if (!paste.includes("\n")) {
       range.insertNode(document.createTextNode(paste));
-      this.editorDiv.normalize();
+      this.editorDiv!.normalize();
       selection.collapseToStart();
       return;
     }
 
     // Collect the text before and after the caret.
     const { startContainer, startOffset } = range;
-    const bufferBefore = [];
-    const bufferAfter = [];
+    const bufferBefore = <string[]>[];
+    const bufferAfter = <string[]>[];
     if (startContainer.nodeType === Node.TEXT_NODE) {
       const parent = startContainer.parentElement;
       bufferAfter.push(
-        startContainer.nodeValue.slice(startOffset).replaceAll(EOL_PATTERN, "")
+        startContainer.nodeValue!.slice(startOffset).replaceAll(EOL_PATTERN, "")
       );
       if (parent !== this.editorDiv) {
         let buffer = bufferBefore;
-        for (const child of this.editorDiv.childNodes) {
+        for (const child of this.editorDiv!.childNodes) {
           if (child === parent) {
             buffer = bufferAfter;
             continue;
@@ -703,7 +711,7 @@ class FreeTextEditor extends AnnotationEditor {
         }
       }
       bufferBefore.push(
-        startContainer.nodeValue
+        startContainer.nodeValue!
           .slice(0, startOffset)
           .replaceAll(EOL_PATTERN, "")
       );
@@ -723,13 +731,13 @@ class FreeTextEditor extends AnnotationEditor {
     // Set the caret at the right position.
     const newRange = new Range();
     let beforeLength = bufferBefore.reduce((acc, line) => acc + line.length, 0);
-    for (const { firstChild } of this.editorDiv.childNodes) {
+    for (const { firstChild } of this.editorDiv!.childNodes) {
       // Each child is either a div with a text node or a br element.
-      if (firstChild.nodeType === Node.TEXT_NODE) {
-        const length = firstChild.nodeValue.length;
+      if (firstChild!.nodeType === Node.TEXT_NODE) {
+        const length = firstChild!.nodeValue!.length;
         if (beforeLength <= length) {
-          newRange.setStart(firstChild, beforeLength);
-          newRange.setEnd(firstChild, beforeLength);
+          newRange.setStart(firstChild!, beforeLength);
+          newRange.setEnd(firstChild!, beforeLength);
           break;
         }
         beforeLength -= length;
@@ -740,7 +748,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   #setContent() {
-    this.editorDiv.replaceChildren();
+    this.editorDiv!.replaceChildren();
     if (!this.#content) {
       return;
     }
@@ -749,7 +757,7 @@ class FreeTextEditor extends AnnotationEditor {
       div.append(
         line ? document.createTextNode(line) : document.createElement("br")
       );
-      this.editorDiv.append(div);
+      this.editorDiv!.append(div);
     }
   }
 
@@ -757,7 +765,7 @@ class FreeTextEditor extends AnnotationEditor {
     return this.#content.replaceAll("\xa0", " ");
   }
 
-  static #deserializeContent(content) {
+  static #deserializeContent(content: string) {
     return content.replaceAll(" ", "\xa0");
   }
 
@@ -767,7 +775,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static async deserialize(data, parent, uiManager) {
+  static async deserialize(data, parent, uiManager: AnnotationEditorUIManager) {
     let initialData = null;
     if (data instanceof FreeTextAnnotationElement) {
       const {
@@ -806,7 +814,7 @@ class FreeTextEditor extends AnnotationEditor {
     }
     const editor = await super.deserialize(data, parent, uiManager);
     editor.#fontSize = data.fontSize;
-    editor.#color = Util.makeHexColor(...data.color);
+    editor.#color = Util.makeHexColor(...data.color as [number, number, number]);
     editor.#content = FreeTextEditor.#deserializeContent(data.value);
     editor.annotationElementId = data.id || null;
     editor._initialData = initialData;
@@ -828,7 +836,7 @@ class FreeTextEditor extends AnnotationEditor {
     const rect = this.getRect(padding, padding);
     const color = AnnotationEditor._colorManager.convert(
       this.isAttachedToDOM
-        ? getComputedStyle(this.editorDiv).color
+        ? getComputedStyle(this.editorDiv!).color
         : this.#color
     );
 

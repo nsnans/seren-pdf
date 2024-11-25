@@ -971,7 +971,7 @@ function createNameTable(name, proto) {
  * decoding logics whatever type it is (assuming the font type is supported).
  */
 class Font {
-  cMap: CMap;
+  public cMap: CMap;
   protected name;
   protected psName;
   protected mimetype: string | null;

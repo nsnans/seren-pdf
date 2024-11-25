@@ -673,6 +673,9 @@ class AnnotationEditorUIManager {
   static TRANSLATE_SMALL = 1; // page units.
 
   static TRANSLATE_BIG = 10; // page units.
+  viewParameters: any;
+  _signal: any;
+  _eventBus: any;
 
   static get _keyboardManager() {
     const proto = AnnotationEditorUIManager.prototype;

@@ -42,6 +42,7 @@ import { ColorConverters } from "../shared/scripting_utils";
 import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { XfaLayer } from "./xfa_layer";
 import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_interface";
+import { PlatformHelper } from "../platform/platform_helper";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -3112,6 +3113,8 @@ class AnnotationLayer {
 
   #structTreeLayer = null;
 
+  protected _annotationEditorUIManager;
+
   constructor({
     div,
     accessibilityManager,
@@ -3130,7 +3133,7 @@ class AnnotationLayer {
     this.zIndex = 0;
     this._annotationEditorUIManager = annotationEditorUIManager;
 
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       // For testing purposes.
       Object.defineProperty(this, "showPopups", {
         value: async () => {

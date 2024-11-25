@@ -25,9 +25,10 @@ import {
 import { FeatureTest, shadow, unreachable } from "../../shared/util";
 import { AltText } from "./alt_text";
 import { EditorToolbar } from "./toolbar";
-import { noContextMenu } from "../display_utils";
+import { noContextMenu, RectType } from "../display_utils";
 import { PlatformHelper } from "../../platform/platform_helper";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { IL10n } from "../../viewer/common/component_interface";
 
 /**
  * @typedef {Object} AnnotationEditorParameters
@@ -43,15 +44,26 @@ interface AnnotationEditorParameters {
   id: string;
   x: number;
   y: number;
+  name: string;
+  isCentered: boolean;
 }
 /**
  * Base class for editors.
  */
 class AnnotationEditor {
 
-  static _l10n = null;
+  static _l10n: IL10n | null = null;
 
-  static _l10nResizer = null;
+  static _l10nResizer: {
+    topLeft: string,
+    topMiddle: string,
+    topRight: string,
+    middleRight: string,
+    bottomRight: string,
+    bottomMiddle: string,
+    bottomLeft: string,
+    middleLeft: string,
+  } | null = null;
 
   static _borderLineWidth = -1;
 
@@ -99,25 +111,25 @@ class AnnotationEditor {
 
   #accessibilityData = null;
 
-  #allResizerDivs = null;
+  #allResizerDivs: HTMLDivElement[] | null = null;
 
-  #altText = null;
+  #altText: AltText | null = null;
 
   #disabled = false;
 
   #keepAspectRatio = false;
 
-  #resizersDiv = null;
+  #resizersDiv: HTMLDivElement | null = null;
 
-  #savedDimensions = null;
+  #savedDimensions: { savedX: number; savedY: number; savedWidth: number; savedHeight: number; } | null = null;
 
-  #focusAC = null;
+  #focusAC: AbortController | null = null;
 
   #focusedResizerName = "";
 
   #hasBeenClicked = false;
 
-  #initialPosition = null;
+  #initialPosition: [number, number] | null = null;
 
   #isEditing = false;
 
@@ -125,21 +137,20 @@ class AnnotationEditor {
 
   #isResizerEnabledForKeyboard = false;
 
-  #moveInDOMTimeout = null;
+  #moveInDOMTimeout: number | null = null;
 
   #prevDragX = 0;
 
   #prevDragY = 0;
 
-  #telemetryTimeouts = null;
-
-
+  // TODO 这里需要再分析分析
+  #telemetryTimeouts: Map<unknown, number> | null = null;
 
   #isDraggable = false;
 
   #zIndex = AnnotationEditor._zIndex++;
 
-  _editToolbar = null;
+  _editToolbar: EditorToolbar | null = null;
 
   _initialOptions = Object.create(null);
 
@@ -149,7 +160,7 @@ class AnnotationEditor {
 
   protected _focusEventsAllowed = true;
 
-  protected parent: AnnotationEditorLayer;
+  protected parent: AnnotationEditorLayer | null;
 
   protected id: string;
 
@@ -159,11 +170,33 @@ class AnnotationEditor {
 
   protected _willKeepAspectRatio: boolean;
 
-  protected _uiManager: AnnotationEditorUIManager;
+  public _uiManager: AnnotationEditorUIManager;
 
   protected deleted: boolean;
 
   protected isAttachedToDOM: boolean;
+
+  protected width: number;
+
+  protected height: number;
+
+  protected pageIndex: number;
+
+  protected name: string;
+
+  protected div: HTMLDivElement | null;
+
+  protected annotationElementId: string | null;
+
+  protected _structTreeParentId: string | null;
+
+  protected rotation: number;
+
+  protected pageRotation: number;
+
+  protected pageDimensions: [number, number];
+
+  protected pageTranslation: [number, number];
 
   /**
    * @param {AnnotationEditorParameters} parameters
@@ -175,7 +208,7 @@ class AnnotationEditor {
 
     this.parent = parameters.parent;
     this.id = parameters.id;
-    this.width = this.height = null;
+    this.width = this.height = 0;
     this.pageIndex = parameters.parent.pageIndex;
     this.name = parameters.name;
     this.div = null;
@@ -216,7 +249,7 @@ class AnnotationEditor {
     );
   }
 
-  static deleteAnnotationElement(editor) {
+  static deleteAnnotationElement(editor: AnnotationEditor) {
     const fakeEditor = new FakeEditor({
       id: editor.parent.getNextId(),
       parent: editor.parent,
@@ -231,7 +264,7 @@ class AnnotationEditor {
    * Initialize the l10n stuff for this type of editor.
    * @param {Object} l10n
    */
-  static initialize(l10n, _uiManager) {
+  static initialize(l10n: IL10n, _uiManager: AnnotationEditorUIManager) {
     AnnotationEditor._l10n ??= l10n;
 
     AnnotationEditor._l10nResizer ||= Object.freeze({
@@ -258,7 +291,7 @@ class AnnotationEditor {
    * @param {number} _type
    * @param {*} _value
    */
-  static updateDefaultParams(_type, _value) { }
+  static updateDefaultParams(_type: number, _value: any) { }
 
   /**
    * Get the default properties to set in the UI for this type of editor.
@@ -274,7 +307,7 @@ class AnnotationEditor {
    * @param {string} mime
    * @returns {boolean}
    */
-  static isHandlingMimeForPasting(mime) {
+  static isHandlingMimeForPasting(_mime: string) {
     return false;
   }
 
@@ -284,7 +317,7 @@ class AnnotationEditor {
    * @param {DataTransferItem} item
    * @param {AnnotationEditorLayer} parent
    */
-  static paste(item, parent) {
+  static paste(_item, _parent: AnnotationEditorLayer) {
     unreachable("Not implemented");
   }
 
@@ -292,7 +325,7 @@ class AnnotationEditor {
    * Get the properties to update in the UI for this editor.
    * @returns {Array}
    */
-  get propertiesToUpdate() {
+  get propertiesToUpdate(): any[][] {
     return [];
   }
 
@@ -351,17 +384,17 @@ class AnnotationEditor {
    * This editor will be behind the others.
    */
   setInBackground() {
-    this.div.style.zIndex = 0;
+    this.div!.style.zIndex = "0";
   }
 
   /**
    * This editor will be in the foreground.
    */
   setInForeground() {
-    this.div.style.zIndex = this.#zIndex;
+    this.div!.style.zIndex = `${this.#zIndex}`;
   }
 
-  setParent(parent) {
+  setParent(parent: AnnotationEditorLayer) {
     if (parent !== null) {
       this.pageIndex = parent.pageIndex;
       this.pageDimensions = parent.pageDimensions;
@@ -375,7 +408,7 @@ class AnnotationEditor {
   /**
    * onfocus callback.
    */
-  focusin(event) {
+  focusin(_event: FocusEvent) {
     if (!this._focusEventsAllowed) {
       return;
     }
@@ -390,7 +423,7 @@ class AnnotationEditor {
    * onblur callback.
    * @param {FocusEvent} event
    */
-  focusout(event) {
+  focusout(event: FocusEvent) {
     if (!this._focusEventsAllowed) {
       return;
     }
@@ -441,7 +474,7 @@ class AnnotationEditor {
    * @param {number} tx - x-translation in screen coordinates.
    * @param {number} ty - y-translation in screen coordinates.
    */
-  setAt(x, y, tx, ty) {
+  setAt(x: number, y: number, tx: number, ty: number) {
     const [width, height] = this.parentDimensions;
     [tx, ty] = this.screenToPageTranslation(tx, ty);
 
@@ -451,7 +484,7 @@ class AnnotationEditor {
     this.fixAndSetPosition();
   }
 
-  #translate([width, height], x, y) {
+  #translate([width, height]: [number, number], x: number, y: number) {
     [x, y] = this.screenToPageTranslation(x, y);
 
     this.x += x / width;
@@ -465,7 +498,7 @@ class AnnotationEditor {
    * @param {number} x - x-translation in screen coordinates.
    * @param {number} y - y-translation in screen coordinates.
    */
-  translate(x, y) {
+  translate(x: number, y: number) {
     // We don't change the initial position because the move here hasn't been
     // done by the user.
     this.#translate(this.parentDimensions, x, y);
@@ -477,13 +510,13 @@ class AnnotationEditor {
    * @param {number} x - x-translation in page coordinates.
    * @param {number} y - y-translation in page coordinates.
    */
-  translateInPage(x, y) {
+  translateInPage(x: number, y: number) {
     this.#initialPosition ||= [this.x, this.y];
     this.#translate(this.pageDimensions, x, y);
-    this.div.scrollIntoView({ block: "nearest" });
+    this.div!.scrollIntoView({ block: "nearest" });
   }
 
-  drag(tx, ty) {
+  drag(tx: number, ty: number) {
     this.#initialPosition ||= [this.x, this.y];
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.x += tx / parentWidth;
@@ -497,7 +530,7 @@ class AnnotationEditor {
       // what the user is seeing, hence it depends on how pages are layed out.
 
       // The element will be outside of its parent so change the parent.
-      const { x, y } = this.div.getBoundingClientRect();
+      const { x, y } = this.div!.getBoundingClientRect();
       if (this.parent.findNewParent(this, x, y)) {
         this.x -= Math.floor(this.x);
         this.y -= Math.floor(this.y);
@@ -512,9 +545,9 @@ class AnnotationEditor {
     x += bx;
     y += by;
 
-    this.div.style.left = `${(100 * x).toFixed(2)}%`;
-    this.div.style.top = `${(100 * y).toFixed(2)}%`;
-    this.div.scrollIntoView({ block: "nearest" });
+    this.div!.style.left = `${(100 * x).toFixed(2)}%`;
+    this.div!.style.top = `${(100 * y).toFixed(2)}%`;
+    this.div!.scrollIntoView({ block: "nearest" });
   }
 
   get _hasBeenMoved() {
@@ -532,7 +565,7 @@ class AnnotationEditor {
    * position.
    * @returns {Array<number>}
    */
-  getBaseTranslation() {
+  getBaseTranslation(): [number, number] {
     const [parentWidth, parentHeight] = this.parentDimensions;
     const { _borderLineWidth } = AnnotationEditor;
     const x = _borderLineWidth / parentWidth;
@@ -553,7 +586,7 @@ class AnnotationEditor {
    * @returns {boolean} true if position must be fixed (i.e. make the x and y
    * living in the page).
    */
-  get _mustFixPosition() {
+  get _mustFixPosition(): boolean {
     return true;
   }
 
@@ -561,7 +594,7 @@ class AnnotationEditor {
    * Fix the position of the editor in order to keep it inside its parent page.
    * @param {number} [rotation] - the rotation of the page.
    */
-  fixAndSetPosition(rotation = this.rotation) {
+  fixAndSetPosition(rotation: number = this.rotation) {
     const [pageWidth, pageHeight] = this.pageDimensions;
     let { x, y, width, height } = this;
     width *= pageWidth;
@@ -597,14 +630,14 @@ class AnnotationEditor {
     x += bx;
     y += by;
 
-    const { style } = this.div;
+    const { style } = this.div!;
     style.left = `${(100 * x).toFixed(2)}%`;
     style.top = `${(100 * y).toFixed(2)}%`;
 
     this.moveInDOM();
   }
 
-  static #rotatePoint(x, y, angle) {
+  static #rotatePoint(x: number, y: number, angle: number) {
     switch (angle) {
       case 90:
         return [y, -x];
@@ -622,7 +655,7 @@ class AnnotationEditor {
    * @param {number} x
    * @param {number} y
    */
-  screenToPageTranslation(x, y) {
+  screenToPageTranslation(x: number, y: number) {
     return AnnotationEditor.#rotatePoint(x, y, this.parentRotation);
   }
 
@@ -631,11 +664,11 @@ class AnnotationEditor {
    * @param {number} x
    * @param {number} y
    */
-  pageTranslationToScreen(x, y) {
+  pageTranslationToScreen(x: number, y: number) {
     return AnnotationEditor.#rotatePoint(x, y, 360 - this.parentRotation);
   }
 
-  #getRotationMatrix(rotation) {
+  #getRotationMatrix(rotation: number) {
     switch (rotation) {
       case 90: {
         const [pageWidth, pageHeight] = this.pageDimensions;
@@ -660,7 +693,7 @@ class AnnotationEditor {
     return (this._uiManager.viewParameters.rotation + this.pageRotation) % 360;
   }
 
-  get parentDimensions() {
+  get parentDimensions(): [number, number] {
     const {
       parentScale,
       pageDimensions: [pageWidth, pageHeight],
@@ -673,16 +706,16 @@ class AnnotationEditor {
    * @param {number} width
    * @param {number} height
    */
-  setDims(width, height) {
+  setDims(width: number, height: number) {
     const [parentWidth, parentHeight] = this.parentDimensions;
-    this.div.style.width = `${((100 * width) / parentWidth).toFixed(2)}%`;
+    this.div!.style.width = `${((100 * width) / parentWidth).toFixed(2)}%`;
     if (!this.#keepAspectRatio) {
-      this.div.style.height = `${((100 * height) / parentHeight).toFixed(2)}%`;
+      this.div!.style.height = `${((100 * height) / parentHeight).toFixed(2)}%`;
     }
   }
 
   fixDims() {
-    const { style } = this.div;
+    const { style } = this.div!;
     const { height, width } = style;
     const widthPercent = width.endsWith("%");
     const heightPercent = !this.#keepAspectRatio && height.endsWith("%");
@@ -744,10 +777,10 @@ class AnnotationEditor {
       div.addEventListener("contextmenu", noContextMenu, { signal });
       div.tabIndex = -1;
     }
-    this.div.prepend(this.#resizersDiv);
+    this.div!.prepend(this.#resizersDiv);
   }
 
-  #resizerPointerdown(name, event) {
+  #resizerPointerdown(name: string, event: PointerEvent) {
     event.preventDefault();
     const { isMac } = FeatureTest.platform;
     if (event.button !== 0 || (event.ctrlKey && isMac)) {
@@ -774,8 +807,8 @@ class AnnotationEditor {
     const savedWidth = this.width;
     const savedHeight = this.height;
     const savedParentCursor = this.parent.div.style.cursor;
-    const savedCursor = this.div.style.cursor;
-    this.div.style.cursor = this.parent.div.style.cursor =
+    const savedCursor = this.div!.style.cursor;
+    this.div!.style.cursor = this.parent.div.style.cursor =
       window.getComputedStyle(event.target).cursor;
 
     const pointerUpCallback = () => {
@@ -784,7 +817,7 @@ class AnnotationEditor {
       this.#altText?.toggle(true);
       this._isDraggable = savedDraggable;
       this.parent.div.style.cursor = savedParentCursor;
-      this.div.style.cursor = savedCursor;
+      this.div!.style.cursor = savedCursor;
 
       this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
     };
@@ -794,7 +827,7 @@ class AnnotationEditor {
     window.addEventListener("blur", pointerUpCallback, { signal });
   }
 
-  #addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight) {
+  #addResizeToUndoStack(savedX: number, savedY: number, savedWidth: number, savedHeight: number) {
     const newX = this.x;
     const newY = this.y;
     const newWidth = this.width;
@@ -831,7 +864,7 @@ class AnnotationEditor {
     });
   }
 
-  #resizerPointermove(name, event) {
+  #resizerPointermove(name: string, event: PointerEvent) {
     const [parentWidth, parentHeight] = this.parentDimensions;
     const savedX = this.x;
     const savedY = this.y;
@@ -843,14 +876,14 @@ class AnnotationEditor {
     // 10000 because we multiply by 100 and use toFixed(2) in fixAndSetPosition.
     // Without rounding, the positions of the corners other than the top left
     // one can be slightly wrong.
-    const round = x => Math.round(x * 10000) / 10000;
+    const round = (x: number) => Math.round(x * 10000) / 10000;
     const rotationMatrix = this.#getRotationMatrix(this.rotation);
-    const transf = (x, y) => [
+    const transf = (x: number, y: number) => [
       rotationMatrix[0] * x + rotationMatrix[2] * y,
       rotationMatrix[1] * x + rotationMatrix[3] * y,
     ];
     const invRotationMatrix = this.#getRotationMatrix(360 - this.rotation);
-    const invTransf = (x, y) => [
+    const invTransf = (x: number, y: number) => [
       invRotationMatrix[0] * x + invRotationMatrix[2] * y,
       invRotationMatrix[1] * x + invRotationMatrix[3] * y,
     ];
@@ -862,47 +895,47 @@ class AnnotationEditor {
     switch (name) {
       case "topLeft":
         isDiagonal = true;
-        getPoint = (w, h) => [0, 0];
-        getOpposite = (w, h) => [w, h];
+        getPoint = (_w: number, _h: number) => [0, 0];
+        getOpposite = (w: number, h: number) => [w, h];
         break;
       case "topMiddle":
-        getPoint = (w, h) => [w / 2, 0];
-        getOpposite = (w, h) => [w / 2, h];
+        getPoint = (w: number, _h: number) => [w / 2, 0];
+        getOpposite = (w: number, h: number) => [w / 2, h];
         break;
       case "topRight":
         isDiagonal = true;
-        getPoint = (w, h) => [w, 0];
-        getOpposite = (w, h) => [0, h];
+        getPoint = (w: number, _h: number) => [w, 0];
+        getOpposite = (_w: number, h: number) => [0, h];
         break;
       case "middleRight":
         isHorizontal = true;
-        getPoint = (w, h) => [w, h / 2];
-        getOpposite = (w, h) => [0, h / 2];
+        getPoint = (w: number, h: number) => [w, h / 2];
+        getOpposite = (_w: number, h: number) => [0, h / 2];
         break;
       case "bottomRight":
         isDiagonal = true;
-        getPoint = (w, h) => [w, h];
-        getOpposite = (w, h) => [0, 0];
+        getPoint = (w: number, h: number) => [w, h];
+        getOpposite = (_w: number, _h: number) => [0, 0];
         break;
       case "bottomMiddle":
-        getPoint = (w, h) => [w / 2, h];
-        getOpposite = (w, h) => [w / 2, 0];
+        getPoint = (w: number, h: number) => [w / 2, h];
+        getOpposite = (w: number, _h: number) => [w / 2, 0];
         break;
       case "bottomLeft":
         isDiagonal = true;
-        getPoint = (w, h) => [0, h];
-        getOpposite = (w, h) => [w, 0];
+        getPoint = (_w: number, h: number) => [0, h];
+        getOpposite = (w: number, _h: number) => [w, 0];
         break;
       case "middleLeft":
         isHorizontal = true;
-        getPoint = (w, h) => [0, h / 2];
-        getOpposite = (w, h) => [w, h / 2];
+        getPoint = (_w: number, h: number) => [0, h / 2];
+        getOpposite = (w: number, h: number) => [w, h / 2];
         break;
     }
 
-    const point = getPoint(savedWidth, savedHeight);
-    const oppositePoint = getOpposite(savedWidth, savedHeight);
-    let transfOppositePoint = transf(...oppositePoint);
+    const point = getPoint!(savedWidth, savedHeight);
+    const oppositePoint = getOpposite!(savedWidth, savedHeight);
+    let transfOppositePoint = transf(...oppositePoint as [number, number]);
     const oppositeX = round(savedX + transfOppositePoint[0]);
     const oppositeY = round(savedY + transfOppositePoint[1]);
     let ratioX = 1;
@@ -946,7 +979,7 @@ class AnnotationEditor {
 
     const newWidth = round(savedWidth * ratioX);
     const newHeight = round(savedHeight * ratioY);
-    transfOppositePoint = transf(...getOpposite(newWidth, newHeight));
+    transfOppositePoint = transf(...getOpposite!(newWidth, newHeight) as [number, number]);
     const newX = oppositeX - transfOppositePoint[0];
     const newY = oppositeY - transfOppositePoint[1];
 
@@ -975,7 +1008,7 @@ class AnnotationEditor {
       return this._editToolbar;
     }
     this._editToolbar = new EditorToolbar(this);
-    this.div.append(this._editToolbar.render());
+    this.div!.append(this._editToolbar.render());
     if (this.#altText) {
       await this._editToolbar.addAltText(this.#altText);
     }
@@ -998,14 +1031,14 @@ class AnnotationEditor {
   addContainer(container) {
     const editToolbarDiv = this._editToolbar?.div;
     if (editToolbarDiv) {
-      editToolbarDiv.before(container);
+      editToolbarDiv!.before(container);
     } else {
-      this.div.append(container);
+      this.div!.append(container);
     }
   }
 
   getClientDimensions() {
-    return this.div.getBoundingClientRect();
+    return this.div!.getBoundingClientRect();
   }
 
   async addAltTextButton() {
@@ -1032,7 +1065,7 @@ class AnnotationEditor {
     if (!this.#altText) {
       return;
     }
-    this.#altText.data = data;
+    this.#altText!.data = data;
   }
 
   get guessedAltText() {
@@ -1061,7 +1094,7 @@ class AnnotationEditor {
    */
   render() {
     this.div = document.createElement("div");
-    this.div.setAttribute("data-editor-rotation", (360 - this.rotation) % 360);
+    this.div.setAttribute("data-editor-rotation", `${(360 - this.rotation) % 360}`);
     this.div.className = this.name;
     this.div.setAttribute("id", this.id);
     this.div.tabIndex = this.#disabled ? -1 : 0;
@@ -1095,7 +1128,7 @@ class AnnotationEditor {
    * Onpointerdown callback.
    * @param {PointerEvent} event
    */
-  pointerdown(event) {
+  pointerdown(event: PointerEvent) {
     const { isMac } = FeatureTest.platform;
     if (event.button !== 0 || (event.ctrlKey && isMac)) {
       // Avoid to focus this editor because of a non-left click.
@@ -1117,7 +1150,7 @@ class AnnotationEditor {
     return this._uiManager.isSelected(this);
   }
 
-  #selectOnPointerEvent(event) {
+  #selectOnPointerEvent(event: PointerEvent) {
     const { isMac } = FeatureTest.platform;
     if (
       (event.ctrlKey && !isMac) ||
@@ -1138,10 +1171,10 @@ class AnnotationEditor {
     const signal = this._uiManager.combinedSignal(ac);
 
     if (isSelected) {
-      this.div.classList.add("moving");
+      this.div!.classList.add("moving");
       this.#prevDragX = event.clientX;
       this.#prevDragY = event.clientY;
-      const pointerMoveCallback = e => {
+      const pointerMoveCallback = (e: PointerEvent) => {
         const { clientX: x, clientY: y } = e;
         const [tx, ty] = this.screenToPageTranslation(
           x - this.#prevDragX,
@@ -1161,7 +1194,7 @@ class AnnotationEditor {
     const pointerUpCallback = () => {
       ac.abort();
       if (isSelected) {
-        this.div.classList.remove("moving");
+        this.div!.classList.remove("moving");
       }
 
       this.#hasBeenClicked = false;
@@ -1189,7 +1222,7 @@ class AnnotationEditor {
     }, 0);
   }
 
-  _setParentAndPosition(parent, x, y) {
+  _setParentAndPosition(parent: AnnotationEditorLayer, x: number, y: number) {
     parent.changeParent(this);
     this.x = x;
     this.y = y;
@@ -1202,7 +1235,7 @@ class AnnotationEditor {
    * @param {number} ty - y-translation in screen coordinates.
    * @param {number} [rotation] - the rotation of the page.
    */
-  getRect(tx, ty, rotation = this.rotation) {
+  getRect(tx: number, ty: number, rotation: number = this.rotation) {
     const scale = this.parentScale;
     const [pageWidth, pageHeight] = this.pageDimensions;
     const [pageX, pageY] = this.pageTranslation;
@@ -1247,7 +1280,7 @@ class AnnotationEditor {
     }
   }
 
-  getRectInCurrentCoords(rect, pageHeight) {
+  getRectInCurrentCoords(rect: RectType, pageHeight: number) {
     const [x1, y1, x2, y2] = rect;
 
     const width = x2 - x1;
@@ -1276,7 +1309,7 @@ class AnnotationEditor {
    * Check if the editor contains something.
    * @returns {boolean}
    */
-  isEmpty() {
+  isEmpty(): boolean {
     return false;
   }
 
@@ -1343,7 +1376,7 @@ class AnnotationEditor {
    * Rotate the editor.
    * @param {number} angle
    */
-  rotate(_angle) { }
+  rotate(_angle: number) { }
 
   /**
    * Serialize the editor when it has been deleted.
@@ -1368,7 +1401,7 @@ class AnnotationEditor {
    * @param {Object | null} [context]
    * @returns {Object | null}
    */
-  serialize(isForCopying = false, context = null) {
+  serialize(_isForCopying = false, _context = null) {
     unreachable("An editor must be serializable");
   }
 
@@ -1381,7 +1414,7 @@ class AnnotationEditor {
    * @param {AnnotationEditorUIManager} uiManager
    * @returns {Promise<AnnotationEditor | null>}
    */
-  static async deserialize(data, parent, uiManager) {
+  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
     const editor = new this.prototype.constructor({
       parent,
       id: parent.getNextId(),
@@ -1409,7 +1442,7 @@ class AnnotationEditor {
    * modified.
    * @returns {boolean}
    */
-  get hasBeenModified() {
+  get hasBeenModified(): boolean {
     return (
       !!this.annotationElementId && (this.deleted || this.serialize() !== null)
     );
@@ -1462,20 +1495,21 @@ class AnnotationEditor {
   makeResizable() {
     if (this.isResizable) {
       this.#createResizers();
-      this.#resizersDiv.classList.remove("hidden");
-      bindEvents(this, this.div, ["keydown"]);
+      this.#resizersDiv!.classList.remove("hidden");
+      bindEvents(this, this.div!, ["keydown"]);
     }
   }
 
-  get toolbarPosition() {
-    return null;
+  get toolbarPosition(): [number, number] {
+    unreachable('未实现的方法')
+    return [0, 0];
   }
 
   /**
    * onkeydown callback.
    * @param {KeyboardEvent} event
    */
-  keydown(event) {
+  keydown(event: KeyboardEvent) {
     if (
       !this.isResizable ||
       event.target !== this.div ||
@@ -1490,21 +1524,21 @@ class AnnotationEditor {
       savedWidth: this.width,
       savedHeight: this.height,
     };
-    const children = this.#resizersDiv.children;
+    const children = this.#resizersDiv!.children;
     if (!this.#allResizerDivs) {
-      this.#allResizerDivs = Array.from(children);
+      this.#allResizerDivs = <HTMLDivElement[]>Array.from(children);
       const boundResizerKeydown = this.#resizerKeydown.bind(this);
       const boundResizerBlur = this.#resizerBlur.bind(this);
       const signal = this._uiManager._signal;
       for (const div of this.#allResizerDivs) {
-        const name = div.getAttribute("data-resizer-name");
+        const name = div.getAttribute("data-resizer-name")!;
         div.setAttribute("role", "spinbutton");
         div.addEventListener("keydown", boundResizerKeydown, { signal });
         div.addEventListener("blur", boundResizerBlur, { signal });
         div.addEventListener("focus", this.#resizerFocus.bind(this, name), {
           signal,
         });
-        div.setAttribute("data-l10n-id", AnnotationEditor._l10nResizer[name]);
+        div.setAttribute("data-l10n-id", AnnotationEditor._l10nResizer![name]);
       }
     }
 
@@ -1527,11 +1561,11 @@ class AnnotationEditor {
       // on the top-left one.
       if (nextFirstPosition < firstPosition) {
         for (let i = 0; i < firstPosition - nextFirstPosition; i++) {
-          this.#resizersDiv.append(this.#resizersDiv.firstChild);
+          this.#resizersDiv!.append(this.#resizersDiv!.firstChild!);
         }
       } else if (nextFirstPosition > firstPosition) {
         for (let i = 0; i < nextFirstPosition - firstPosition; i++) {
-          this.#resizersDiv.firstChild.before(this.#resizersDiv.lastChild);
+          this.#resizersDiv!.firstChild!.before(this.#resizersDiv!.lastChild!);
         }
       }
 
@@ -1545,16 +1579,16 @@ class AnnotationEditor {
 
     this.#setResizerTabIndex(0);
     this.#isResizerEnabledForKeyboard = true;
-    this.#resizersDiv.firstChild.focus({ focusVisible: true });
+    this.#resizersDiv!.firstChild!.focus({ focusVisible: true });
     event.preventDefault();
     event.stopImmediatePropagation();
   }
 
-  #resizerKeydown(event) {
+  #resizerKeydown(event: KeyboardEvent) {
     AnnotationEditor._resizerKeyboardManager.exec(this, event);
   }
 
-  #resizerBlur(event) {
+  #resizerBlur(event: FocusEvent) {
     if (
       this.#isResizerEnabledForKeyboard &&
       event.relatedTarget?.parentNode !== this.#resizersDiv
@@ -1563,11 +1597,11 @@ class AnnotationEditor {
     }
   }
 
-  #resizerFocus(name) {
+  #resizerFocus(name: string) {
     this.#focusedResizerName = this.#isResizerEnabledForKeyboard ? name : "";
   }
 
-  #setResizerTabIndex(value) {
+  #setResizerTabIndex(value: number) {
     if (!this.#allResizerDivs) {
       return;
     }
@@ -1576,7 +1610,7 @@ class AnnotationEditor {
     }
   }
 
-  _resizeWithKeyboard(x, y) {
+  _resizeWithKeyboard(x: number, y: number) {
     if (!this.#isResizerEnabledForKeyboard) {
       return;
     }
@@ -1598,7 +1632,7 @@ class AnnotationEditor {
 
   _stopResizingWithKeyboard() {
     this.#stopResizing();
-    this.div.focus();
+    this.div!.focus();
   }
 
   /**
@@ -1644,7 +1678,7 @@ class AnnotationEditor {
    * @param {number} type
    * @param {*} value
    */
-  updateParams(type, value) { }
+  updateParams(_type: number, _value: any) { }
 
   /**
    * When the user disables the editing mode some editors can change some of
@@ -1708,11 +1742,11 @@ class AnnotationEditor {
    * @param {number} width
    * @param {number} height
    */
-  setAspectRatio(width, height) {
+  setAspectRatio(width: number, height: number) {
     this.#keepAspectRatio = true;
     const aspectRatio = width / height;
-    const { style } = this.div;
-    style.aspectRatio = aspectRatio;
+    const { style } = this.div!;
+    style.aspectRatio = `${aspectRatio}`;
     style.height = "auto";
   }
 
@@ -1750,8 +1784,8 @@ class AnnotationEditor {
       }
       timeout = setTimeout(() => {
         this._reportTelemetry(data);
-        this.#telemetryTimeouts.delete(action);
-        if (this.#telemetryTimeouts.size === 0) {
+        this.#telemetryTimeouts!.delete(action);
+        if (this.#telemetryTimeouts!.size === 0) {
           this.#telemetryTimeouts = null;
         }
       }, AnnotationEditor._telemetryTimeout);
@@ -1773,7 +1807,7 @@ class AnnotationEditor {
    * @param {boolean|undefined} visible
    */
   show(visible = this._isVisible) {
-    this.div.classList.toggle("hidden", !visible);
+    this.div!.classList.toggle("hidden", !visible);
     this._isVisible = visible;
   }
 

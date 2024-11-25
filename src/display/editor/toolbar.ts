@@ -70,7 +70,7 @@ class EditorToolbar {
     return editToolbar;
   }
 
-  get div() {
+  get div(): HTMLDivElement {
     return this.#toolbar;
   }
 

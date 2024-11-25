@@ -14,8 +14,9 @@
  */
 
 import { AnnotationEditorParamsType, shadow } from "../../shared/util";
-import { KeyboardManager } from "./tools";
+import { AnnotationEditorUIManager, KeyboardManager } from "./tools";
 import { noContextMenu } from "../display_utils";
+import { AnnotationEditor } from "./editor";
 
 class ColorPicker {
 
@@ -67,7 +68,7 @@ class ColorPicker {
     );
   }
 
-  constructor({ editor = null, uiManager = null }) {
+  constructor({ editor = null, uiManager = null }: { editor: AnnotationEditor | null, uiManager: AnnotationEditorUIManager | null }) {
     if (editor) {
       this.#isMainColorPicker = false;
       this.#type = AnnotationEditorParamsType.HIGHLIGHT_COLOR;
