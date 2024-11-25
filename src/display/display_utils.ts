@@ -118,6 +118,19 @@ export interface PageViewportParameters {
  *   The default value is `false`.
  */
 
+export interface PageViewportCloneParameters {
+
+  scale: number;
+
+  rotation: number;
+
+  offsetX: number;
+
+  offsetY: number;
+
+  dontFlip: boolean;
+}
+
 /**
  * PDF page viewport created based on scale, rotation and offset.
  */
@@ -125,7 +138,7 @@ class PageViewport {
 
   protected viewBox: RectType;
 
-  protected scale: number;
+  public scale: number;
 
   public rotation: number;
 
@@ -255,7 +268,7 @@ class PageViewport {
     offsetX = this.offsetX,
     offsetY = this.offsetY,
     dontFlip = false,
-  } = {}) {
+  }: PageViewportCloneParameters): PageViewport {
     return new PageViewport({
       viewBox: this.viewBox.slice() as RectType,
       scale,

@@ -24,8 +24,70 @@ class Field extends PDFObject {
   protected buttonAlignX: number;
   protected buttonAlignY: number;
   protected _isChoice: boolean;
-  protected _currentValueIndices: number;
+  protected _currentValueIndices: number | number[];
   protected _rotation: number;
+
+  // TODO 下面的类型都没推断，都需要推断
+  protected buttonFitBounds;
+  protected buttonPosition;
+  protected buttonScaleHow;
+  protected ButtonScaleWhen;
+  protected calcOrderIndex;
+  protected comb;
+  protected commitOnSelChange;
+  protected defaultStyle;
+  protected defaultValue;
+  protected doNotScroll;
+  protected doNotSpellCheck;
+  protected delay;
+  protected display;
+  protected doc;
+  protected editable;
+  protected exportValues;
+  protected fileSelect;
+  protected hidden;
+  protected highlight;
+  protected lineWidth;
+  protected multiline;
+  protected multipleSelection;
+  protected name;
+  protected password;
+  protected print;
+  protected radiosInUnison;
+  protected readonly;
+  protected rect;
+  protected required;
+  protected richText;
+  protected richValue;
+  protected style;
+  protected submitName;
+  protected textFont;
+  protected textSize;
+  protected type;
+  protected userName;
+  protected _actions: Map<string, string[]>;
+  protected _browseForFileToSubmit;
+  protected _buttonCaption;
+  protected _buttonIcon;
+  protected _charLimit;
+  protected _children;
+  protected _document;
+  protected _fieldPath;
+  protected _fillColor;
+  protected _hasValue;
+  protected _page;
+  protected _strokeColor;
+  protected _textColor;
+  protected _value;
+  protected _kidIds;
+  protected _fieldType;
+  protected _siblings;
+  protected _globalEval;
+  protected _appObjects;
+  protected _items: { displayValue: string, exportValue: string }[] = [];
+  protected _id;
+  protected _originalValue;
+
   constructor(data) {
     super(data);
     this.alignment = data.alignment || "left";
@@ -83,7 +145,7 @@ class Field extends PDFObject {
     this._fieldPath = data.fieldPath;
     this._fillColor = data.fillColor || ["T"];
     this._isChoice = Array.isArray(data.items);
-    this._items = data.items || [];
+    this._fillColor = data.items || [];
     this._hasValue = data.hasOwnProperty("value");
     this._page = data.page || 0;
     this._strokeColor = data.strokeColor || ["G", 0];
@@ -108,7 +170,7 @@ class Field extends PDFObject {
     return this._currentValueIndices;
   }
 
-  set currentValueIndices(indices) {
+  set currentValueIndices(indices: number | number[]) {
     if (!this._isChoice) {
       return;
     }
@@ -266,7 +328,7 @@ class Field extends PDFObject {
 
     this._originalValue = value;
     const _value = value.trim().replace(",", ".");
-    this._value = !isNaN(_value) ? parseFloat(_value) : value;
+    this._value = !Number.isNaN(_value) ? parseFloat(_value) : value;
   }
 
   _getValue() {
@@ -288,7 +350,7 @@ class Field extends PDFObject {
       }
       this._items.forEach((item, i) => {
         if (values.has(item.exportValue)) {
-          this._currentValueIndices.push(i);
+          (<number[]>this._currentValueIndices).push(i);
           this._value.push(item.exportValue);
         }
       });
@@ -359,7 +421,7 @@ class Field extends PDFObject {
     this._buttonIcon[nFace] = oIcon;
   }
 
-  checkThisBox(nWidget, bCheckIt = true) { }
+  checkThisBox(_nWidget: unknown, _bCheckIt = true) { }
 
   clearItems() {
     if (!this._isChoice) {
@@ -369,7 +431,7 @@ class Field extends PDFObject {
     this._send({ id: this._id, clear: null });
   }
 
-  deleteItemAt(nIdx = null) {
+  deleteItemAt(nIdx: number | null = null) {
     if (!this._isChoice) {
       throw new Error("Not a choice widget");
     }
@@ -454,15 +516,15 @@ class Field extends PDFObject {
     return undefined;
   }
 
-  isBoxChecked(nWidget) {
+  isBoxChecked(_nWidget: unknown) {
     return false;
   }
 
-  isDefaultChecked(nWidget) {
+  isDefaultChecked(_nWidget: unknown) {
     return false;
   }
 
-  insertItemAt(cName, cExport = undefined, nIdx = 0) {
+  insertItemAt(cName: string, cExport: string | undefined = undefined, nIdx = 0) {
     if (!this._isChoice) {
       throw new Error("Not a choice widget");
     }
@@ -497,14 +559,14 @@ class Field extends PDFObject {
     this._send({ id: this._id, insert: { index: nIdx, ...data } });
   }
 
-  setAction(cTrigger, cScript) {
+  setAction(cTrigger: string | object, cScript: string | object) {
     if (typeof cTrigger !== "string" || typeof cScript !== "string") {
       return;
     }
     if (!(cTrigger in this._actions)) {
-      this._actions[cTrigger] = [];
+      this._actions.set(cTrigger, <string[]>[]);
     }
-    this._actions[cTrigger].push(cScript);
+    this._actions.get(cTrigger)!.push(cScript);
   }
 
   setFocus() {
@@ -561,7 +623,7 @@ class Field extends PDFObject {
 
     const actions = this._actions.get(eventName);
     try {
-      for (const action of actions) {
+      for (const action of actions!) {
         // Action evaluation must happen in the global scope
         this._globalEval(action);
       }
@@ -575,6 +637,9 @@ class Field extends PDFObject {
 }
 
 class RadioButtonField extends Field {
+  protected _radioIds;
+  protected _radioActions: Map<string, string[]>[];
+  protected _hasBeenInitialized: boolean;
   constructor(otherButtons, data) {
     super(data);
 
@@ -624,7 +689,7 @@ class RadioButtonField extends Field {
     }
   }
 
-  checkThisBox(nWidget, bCheckIt = true) {
+  checkThisBox(nWidget: number, bCheckIt = true) {
     if (nWidget < 0 || nWidget >= this._radioIds.length || !bCheckIt) {
       return;
     }
@@ -634,7 +699,7 @@ class RadioButtonField extends Field {
     this._send({ id: this._id, value: this._value });
   }
 
-  isBoxChecked(nWidget) {
+  isBoxChecked(nWidget: number) {
     return (
       nWidget >= 0 &&
       nWidget < this._radioIds.length &&
@@ -642,7 +707,7 @@ class RadioButtonField extends Field {
     );
   }
 
-  isDefaultChecked(nWidget) {
+  isDefaultChecked(nWidget: number) {
     return (
       nWidget >= 0 &&
       nWidget < this.exportValues.length &&
@@ -650,7 +715,7 @@ class RadioButtonField extends Field {
     );
   }
 
-  _getExportValue(state) {
+  _getExportValue(_state: unknown) {
     const i = this._radioIds.indexOf(this._id);
     return this.exportValues[i];
   }
@@ -679,25 +744,25 @@ class CheckboxField extends RadioButtonField {
     }
   }
 
-  _getExportValue(state) {
+  _getExportValue(state: boolean) {
     return state ? super._getExportValue(state) : "Off";
   }
 
-  isBoxChecked(nWidget) {
+  isBoxChecked(nWidget: number) {
     if (this._value === "Off") {
       return false;
     }
     return super.isBoxChecked(nWidget);
   }
 
-  isDefaultChecked(nWidget) {
+  isDefaultChecked(nWidget: number) {
     if (this.defaultValue === "Off") {
       return this._value === "Off";
     }
     return super.isDefaultChecked(nWidget);
   }
 
-  checkThisBox(nWidget, bCheckIt = true) {
+  checkThisBox(nWidget: number, bCheckIt = true) {
     if (nWidget < 0 || nWidget >= this._radioIds.length) {
       return;
     }

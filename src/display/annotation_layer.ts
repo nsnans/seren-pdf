@@ -39,8 +39,9 @@ import {
 import { PDFDateString, setLayerDimensions } from "./display_utils";
 import { AnnotationStorage } from "./annotation_storage";
 import { ColorConverters } from "../shared/scripting_utils";
-import { DOMSVGFactory } from "./svg_factory";
+import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { XfaLayer } from "./xfa_layer";
+import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_interface";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -69,12 +70,27 @@ function getRectDims(rect: number[]) {
  * @property {Object} [fieldObjects]
  */
 
+export interface AnnotationElementParameters {
+  data: object;
+  layer: HTMLDivElement;
+  linkService: IPDFLinkService;
+  downloadManager: IDownloadManager;
+  annotationStorage: AnnotationStorage;
+  imageResourcesPath: string;
+  renderForms: boolean;
+  // 姑且先按照注释里的来
+  svgFactory: BaseSVGFactory;
+  enableScripting: boolean;
+  hasJSActions: boolean;
+  fieldObjects: object;
+}
+
 class AnnotationElementFactory {
   /**
    * @param {AnnotationElementParameters} parameters
    * @returns {AnnotationElement}
    */
-  static create(parameters) {
+  static create(parameters: AnnotationElementParameters) {
     const subtype = parameters.data.annotationType;
 
     switch (subtype) {
@@ -162,13 +178,30 @@ class AnnotationElement {
 
   #popupElement = null;
 
+  protected isRenderable: boolean;
+
+  protected data: any;
+
+  protected layer: HTMLDivElement;
+  protected linkService: IPDFLinkService;
+  protected downloadManager: IDownloadManager;
+  protected imageResourcesPath: string;
+  protected renderForms: boolean;
+  protected svgFactory: BaseSVGFactory;
+  protected annotationStorage: AnnotationStorage;
+  protected enableScripting: boolean;
+  protected hasJSActions: boolean;
+  protected _fieldObjects: object;
+  protected parent;
+  protected container: HTMLElement | null = null;
+
   constructor(
-    parameters,
+    parameters: AnnotationElementParameters,
     {
       isRenderable = false,
       ignoreBorder = false,
       createQuadrilaterals = false,
-    } = {}
+    }
   ) {
     this.isRenderable = isRenderable;
     this.data = parameters.data;
@@ -261,7 +294,7 @@ class AnnotationElement {
    * @memberof AnnotationElement
    * @returns {HTMLElement} A section element.
    */
-  _createContainer(ignoreBorder) {
+  _createContainer(ignoreBorder: boolean) {
     const {
       data,
       parent: { page, viewport },
@@ -279,7 +312,7 @@ class AnnotationElement {
     // But if an annotation is above an other one, then we must draw it
     // after the other one whatever the order is in the DOM, hence the
     // use of the z-index.
-    style.zIndex = this.parent.zIndex++;
+    style.zIndex = `${this.parent.zIndex++}`;
 
     if (data.alternativeText) {
       container.title = data.alternativeText;
@@ -347,7 +380,7 @@ class AnnotationElement {
         );
       } else {
         // Transparent (invisible) border, so do not draw it at all.
-        style.borderWidth = 0;
+        style.borderWidth = "0";
       }
     }
 
@@ -375,7 +408,7 @@ class AnnotationElement {
     return container;
   }
 
-  setRotation(angle, container = this.container) {
+  setRotation(angle: number, container = this.container!) {
     if (!this.data.rect) {
       return;
     }
@@ -394,7 +427,7 @@ class AnnotationElement {
     container.style.width = `${elementWidth}%`;
     container.style.height = `${elementHeight}%`;
 
-    container.setAttribute("data-main-rotation", (360 - angle) % 360);
+    container.setAttribute("data-main-rotation", `${(360 - angle) % 360}`);
   }
 
   get _commonActions() {
@@ -415,7 +448,7 @@ class AnnotationElement {
         // See scripting/constants.js for the values of `Display`.
         // 0 = visible, 1 = hidden, 2 = noPrint and 3 = noView.
         const hidden = display % 2 === 1;
-        this.container.style.visibility = hidden ? "hidden" : "visible";
+        this.container!.style.visibility = hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
           noView: hidden,
           noPrint: display === 1 || display === 2,
@@ -750,7 +783,8 @@ class AnnotationElement {
 }
 
 class LinkAnnotationElement extends AnnotationElement {
-  constructor(parameters, options = null) {
+  protected isTooltipOnly: boolean;
+  constructor(parameters: AnnotationElementParameters, options = null) {
     super(parameters, {
       isRenderable: true,
       ignoreBorder: !!options?.ignoreBorder,
@@ -936,7 +970,7 @@ class LinkAnnotationElement extends AnnotationElement {
     if (!this._fieldObjects) {
       warn(
         `_bindResetFormAction - "resetForm" action not supported, ` +
-          "ensure that the `fieldObjects` parameter is provided."
+        "ensure that the `fieldObjects` parameter is provided."
       );
       if (!otherClickAction) {
         link.onclick = () => false;
@@ -2995,9 +3029,8 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
       //   least the following standard names: GraphPushPin, PaperclipTag.
       //   Additional names may be supported as well. Default value: PushPin.
       trigger = document.createElement("img");
-      trigger.src = `${this.imageResourcesPath}annotation-${
-        /paperclip/i.test(data.name) ? "paperclip" : "pushpin"
-      }.svg`;
+      trigger.src = `${this.imageResourcesPath}annotation-${/paperclip/i.test(data.name) ? "paperclip" : "pushpin"
+        }.svg`;
 
       if (data.fillAlpha && data.fillAlpha < 1) {
         trigger.style = `filter: opacity(${Math.round(

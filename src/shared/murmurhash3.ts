@@ -23,7 +23,12 @@ const MASK_HIGH = 0xffff0000;
 const MASK_LOW = 0xffff;
 
 class MurmurHash3_64 {
-  constructor(seed) {
+
+  protected h1: number;
+
+  protected h2: number;
+
+  constructor(seed: number | null = null) {
     this.h1 = seed ? seed & 0xffffffff : SEED;
     this.h2 = seed ? seed & 0xffffffff : SEED;
   }

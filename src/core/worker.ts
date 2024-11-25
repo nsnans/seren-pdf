@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+import { DocParams } from "../display/api";
+import { PlatformHelper } from "../platform/platform_helper";
+import { MessageHandler } from "../shared/message_handler";
+import { SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
   assert,
@@ -29,23 +33,21 @@ import {
   VerbosityLevel,
   warn,
 } from "../shared/util";
+import { AnnotationFactory } from "./annotation";
+import { clearGlobalCaches } from "./cleanup_helper";
 import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
   XRefParseException,
 } from "./core_utils";
-import { Dict, isDict, Ref } from "./primitives";
+import { LinearizationInterface } from "./parser";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
-import { AnnotationFactory } from "./annotation";
-import { clearGlobalCaches } from "./cleanup_helper";
-import { incrementalUpdate } from "./writer";
-import { MessageHandler } from "../shared/message_handler";
-import { PDFWorkerStream } from "./worker_stream";
-import { StructTreeRoot } from "./struct_tree";
-import { PlatformHelper } from "../platform/platform_helper";
-import { DocParams } from "../display/api";
-import { XRef } from "./xref";
+import { Dict, isDict, Ref } from "./primitives";
 import { Stream } from "./stream";
+import { StructTreeRoot } from "./struct_tree";
+import { PDFWorkerStream } from "./worker_stream";
+import { incrementalUpdate } from "./writer";
+import { XRef } from "./xref";
 
 class WorkerTask {
 
@@ -173,8 +175,8 @@ class WorkerMessageHandler {
         const task = new WorkerTask("loadXfaFonts");
         startWorkerTask(task);
         await Promise.all([
-          pdfManager!.loadXfaFonts(handler, task)
-            .catch((reason: any) => {
+          pdfManager!.loadXfaFonts(handler!, task)
+            .catch((_reason: any) => {
               // Ignore errors, to allow the document to load.
             })
             .then(() => finishWorkerTask(task)),
@@ -183,7 +185,7 @@ class WorkerMessageHandler {
       }
 
       const [numPages, fingerprints] = await Promise.all([
-        pdfManager!.ensureDoc("numPages"),
+        pdfManager!.ensureDoc("numPages") as Promise<number>,
         pdfManager!.ensureDoc("fingerprints"),
       ]);
 
@@ -339,7 +341,7 @@ class WorkerMessageHandler {
           const task = new WorkerTask(`PasswordException: response ${ex.code}`);
           startWorkerTask(task);
 
-          handler!.sendWithPromise("PasswordRequest", ex)
+          (handler!.sendWithPromise("PasswordRequest", ex) as Promise<{ password: string }>)
             .then(function ({ password }: { password: string }) {
               finishWorkerTask(task);
               pdfManager!.updatePassword(password);
@@ -532,18 +534,20 @@ class WorkerMessageHandler {
 
     handler.on(
       "SaveDocument",
-      async function ({ isPureXfa, numPages, annotationStorage, filename }) {
+      async function ({ isPureXfa, numPages, annotationStorage, filename }: SaveDocumentMessage) {
         const globalPromises = [
           pdfManager!.requestLoadedStream(),
-          pdfManager!.ensureCatalog("acroForm"),
-          pdfManager!.ensureCatalog("acroFormRef"),
-          pdfManager!.ensureDoc("startXRef"),
-          // TODO 应该要好好考虑 ensureDoc的返回值
-          <Promise<XRef>>pdfManager!.ensureDoc("xref"),
-          pdfManager!.ensureDoc("linearization"),
-          pdfManager!.ensureCatalog("structTreeRoot"),
-        ];
-        const promises = [];
+          pdfManager!.ensureCatalog("acroForm") as Promise<Dict>,
+          pdfManager!.ensureCatalog("acroFormRef") as Promise<Ref | null>,
+          pdfManager!.ensureDoc("startXRef") as Promise<number>,
+          pdfManager!.ensureDoc("xref") as Promise<XRef>,
+          pdfManager!.ensureDoc("linearization") as Promise<LinearizationInterface | null>,
+          pdfManager!.ensureCatalog("structTreeRoot") as Promise<StructTreeRoot | null>,
+        ] as [
+            Promise<Stream>, Promise<Dict>, Promise<Ref | null>, Promise<number>,
+            Promise<XRef>, Promise<LinearizationInterface | null>, Promise<StructTreeRoot | null>
+          ];
+        const promises = <Promise<any>[]>[];
 
         const newAnnotationsByPage = !isPureXfa
           ? getNewAnnotationsMap(annotationStorage)
@@ -560,7 +564,7 @@ class WorkerMessageHandler {
         const xref = <XRef>xrefResult;
         const stream = <Stream>streamResult;
         const catalogRef = xref.trailer!.getRaw("Root") || null;
-        let structTreeRoot;
+        let structTreeRoot: StructTreeRoot | null = null;
 
         if (newAnnotationsByPage) {
           if (!_structTreeRoot) {
@@ -584,7 +588,7 @@ class WorkerMessageHandler {
           }
 
           const imagePromises = AnnotationFactory.generateImages(
-            annotationStorage.values(),
+            annotationStorage!.values(),
             xref,
             pdfManager!.evaluatorOptions.isOffscreenCanvasSupported
           );
@@ -619,7 +623,7 @@ class WorkerMessageHandler {
           } else if (structTreeRoot) {
             promises.push(
               Promise.all(newAnnotationPromises).then(async newRefs => {
-                await structTreeRoot.updateStructureTree({
+                await structTreeRoot!.updateStructureTree({
                   newAnnotationsByPage,
                   pdfManager,
                   newRefs,
@@ -633,7 +637,7 @@ class WorkerMessageHandler {
         if (isPureXfa) {
           promises.push(pdfManager!.serializeXfaData(annotationStorage));
         } else {
-          for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
+          for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
             promises.push(
               pdfManager!.getPage(pageIndex).then(function (page) {
                 const task = new WorkerTask(`Save: page ${pageIndex}`);
@@ -664,9 +668,9 @@ class WorkerMessageHandler {
           }
         }
 
-        const needAppearances =
-          acroFormRef &&
-          acroForm instanceof Dict &&
+        // 这类加了 双感叹号，判断Ref状况
+        const needAppearances: boolean =
+          !!acroFormRef && acroForm instanceof Dict &&
           newRefs.some(ref => ref.needAppearances);
 
         const xfa = (acroForm instanceof Dict && acroForm.get("XFA")) || null;
@@ -690,7 +694,7 @@ class WorkerMessageHandler {
         let newXrefInfo = Object.create(null);
         if (xref.trailer) {
           // Get string info from Info in order to compute fileId.
-          const infoObj = Object.create(null);
+          const infoObj = Object.create(null) as Record<string, string>;
           const xrefInfo = xref.trailer.get("Info") || null;
           if (xrefInfo instanceof Dict) {
             xrefInfo.forEach((key, value) => {

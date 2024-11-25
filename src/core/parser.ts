@@ -1378,9 +1378,30 @@ class Lexer {
   }
 }
 
+
+// 为什么是LineariaztionInterface而不是LineariaztionInterface呢？
+// 因为不想影响到Linearization对象，这个对象
+export interface LinearizationInterface {
+
+  length: number;
+
+  hints: number[];
+
+  objectNumberFirst: number;
+
+  endFirst: number;
+
+  numPages: number;
+
+  mainXRefEntriesOffset: number;
+
+  pageFirst: number;
+
+}
+
 class Linearization {
-  static create(stream) {
-    function getInt(linDict, name, allowZeroValue = false) {
+  static create(stream: Stream): LinearizationInterface | null {
+    function getInt(linDict: Dict, name: string, allowZeroValue = false): number {
       const obj = linDict.get(name);
       if (Number.isInteger(obj) && (allowZeroValue ? obj >= 0 : obj > 0)) {
         return obj;
@@ -1391,7 +1412,7 @@ class Linearization {
       );
     }
 
-    function getHints(linDict) {
+    function getHints(linDict: Dict): number[] {
       const hints = linDict.get("H");
       let hintsLength;
 
@@ -1420,7 +1441,7 @@ class Linearization {
     const obj2 = parser.getObj();
     const obj3 = parser.getObj();
     const linDict = parser.getObj();
-    let obj, length;
+    let obj, length: number;
     if (
       !(
         Number.isInteger(obj1) &&

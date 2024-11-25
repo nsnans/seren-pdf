@@ -32,7 +32,7 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
     this.baseUrl = baseUrl;
   }
 
-  async fetch({ filename }) {
+  async fetch({ filename }: { filename: string }) {
     if (!this.baseUrl) {
       throw new Error(
         "Ensure that the `standardFontDataUrl` API parameter is provided."
@@ -43,7 +43,7 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
     }
     const url = `${this.baseUrl}${filename}`;
 
-    return this._fetch(url).catch(reason => {
+    return this._fetch(url).catch(_reason => {
       throw new Error(`Unable to load font data at: ${url}`);
     });
   }
@@ -52,7 +52,7 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
    * @ignore
    * @returns {Promise<Uint8Array>}
    */
-  async _fetch(url) {
+  async _fetch(_url: string): Promise<Uint8Array> {
     unreachable("Abstract method `_fetch` called.");
   }
 }
@@ -61,7 +61,7 @@ class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
   /**
    * @ignore
    */
-  async _fetch(url) {
+  async _fetch(url: string) {
     const data = await fetchData(url, /* type = */ "arraybuffer");
     return new Uint8Array(data);
   }

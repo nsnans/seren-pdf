@@ -168,7 +168,7 @@ function writeInt(number: number, size: number, offset: number, buffer) {
   return offset + size;
 }
 
-function writeString(string: string, offset: number, buffer: number[]) {
+function writeString(string: string, offset: number, buffer: Uint8Array) {
   for (let i = 0, len = string.length; i < len; i++) {
     buffer[offset + i] = string.charCodeAt(i) & 0xff;
   }
@@ -196,6 +196,7 @@ function computeMD5(filesize, xrefInfo) {
 function writeXFADataForAcroform(str: string, newRefs) {
   const xml = new SimpleXMLParser({ hasAttributes: true }).parseFromString(str)!;
 
+  // 这里似乎有点问题，好像属性对不上了，可能漏了几个属性？
   for (const { xfa } of newRefs) {
     if (!xfa) {
       continue;
@@ -223,6 +224,17 @@ function writeXFADataForAcroform(str: string, newRefs) {
   return buffer.join("");
 }
 
+interface UpdateAcroformParameter {
+  xref: XRef | null;
+  acroForm: Dict;
+  acroFormRef: Ref | null;
+  hasXfa: boolean;
+  hasXfaDatasetsEntry: boolean;
+  xfaDatasetsRef: Ref | null;
+  needAppearances: boolean;
+  newRefs: { ref: Ref, data: string }[];
+}
+
 async function updateAcroform({
   xref,
   acroForm,
@@ -232,7 +244,7 @@ async function updateAcroform({
   xfaDatasetsRef,
   needAppearances,
   newRefs,
-}) {
+}: UpdateAcroformParameter) {
   if (hasXfa && !hasXfaDatasetsEntry && !xfaDatasetsRef) {
     warn("XFA - Cannot save it");
   }
@@ -258,36 +270,47 @@ async function updateAcroform({
     dict.set("NeedAppearances", true);
   }
 
-  const buffer = [];
-  await writeObject(acroFormRef, dict, buffer, xref);
+  const buffer = <string[]>[];
+  await writeObject(acroFormRef!, dict, buffer, xref!);
 
-  newRefs.push({ ref: acroFormRef, data: buffer.join("") });
+  newRefs.push({ ref: acroFormRef!, data: buffer.join("") });
 }
 
-function updateXFA({ xfaData, xfaDatasetsRef, newRefs, xref }) {
+interface UpdateXFAParameters {
+  xfaData: string | null;
+  xfaDatasetsRef: Ref | null;
+  newRefs: {
+    ref: Ref;
+    data: string;
+  }[];
+  xref: XRef | null;
+}
+function updateXFA({ xfaData, xfaDatasetsRef, newRefs, xref }: UpdateXFAParameters) {
   if (xfaData === null) {
-    const datasets = xref.fetchIfRef(xfaDatasetsRef);
+    const datasets = xref!.fetchIfRef(xfaDatasetsRef!);
     xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
   }
 
-  const encrypt = xref.encrypt;
+  const encrypt = xref!.encrypt;
   if (encrypt) {
     const transform = encrypt.createCipherTransform(
-      xfaDatasetsRef.num,
-      xfaDatasetsRef.gen
+      xfaDatasetsRef!.num,
+      xfaDatasetsRef!.gen
     );
     xfaData = transform.encryptString(xfaData);
   }
   const data =
-    `${xfaDatasetsRef.num} ${xfaDatasetsRef.gen} obj\n` +
+    `${xfaDatasetsRef!.num} ${xfaDatasetsRef!.gen} obj\n` +
     `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` +
     xfaData +
     "\nendstream\nendobj\n";
 
-  newRefs.push({ ref: xfaDatasetsRef, data });
+  newRefs.push({ ref: xfaDatasetsRef!, data });
 }
 
-async function getXRefTable(xrefInfo, baseOffset, newRefs, newXref, buffer) {
+async function getXRefTable(xrefInfo: IncrementalXRefInfo, baseOffset: number,
+  newRefs: { ref: Ref, data: string }[],
+  newXref: Dict, buffer: string[]) {
   buffer.push("xref\n");
   const indexes = getIndexes(newRefs);
   let indexesPosition = 0;
@@ -319,10 +342,10 @@ async function getXRefTable(xrefInfo, baseOffset, newRefs, newXref, buffer) {
   buffer.push("\nstartxref\n", baseOffset.toString(), "\n%%EOF\n");
 }
 
-function getIndexes(newRefs) {
-  const indexes = [];
+function getIndexes(newRefs: { ref: Ref, data: string }[]) {
+  const indexes = <number[]>[];
   for (const { ref } of newRefs) {
-    if (ref.num === indexes.at(-2) + indexes.at(-1)) {
+    if (ref.num === indexes.at(-2)! + indexes.at(-1)!) {
       indexes[indexes.length - 1] += 1;
     } else {
       indexes.push(ref.num, 1);
@@ -332,11 +355,11 @@ function getIndexes(newRefs) {
 }
 
 async function getXRefStreamTable(
-  xrefInfo,
-  baseOffset,
-  newRefs,
-  newXref,
-  buffer
+  xrefInfo: IncrementalXRefInfo,
+  baseOffset: number,
+  newRefs: { ref: Ref; data: string; }[],
+  newXref: Dict,
+  buffer: string[]
 ) {
   const xrefTableData = [];
   let maxOffset = 0;
@@ -373,21 +396,23 @@ async function getXRefStreamTable(
     offset = writeInt(gen, sizes[2], offset, data);
   }
 
-  await writeObject(xrefInfo.newRef, stream, buffer, {});
+  await writeObject(xrefInfo.newRef!, stream, buffer, {});
   buffer.push("startxref\n", baseOffset.toString(), "\n%%EOF\n");
 }
 
-function computeIDs(baseOffset, xrefInfo, newXref) {
+function computeIDs(baseOffset: number, xrefInfo: IncrementalXRefInfo, newXref: Dict) {
   if (Array.isArray(xrefInfo.fileIds) && xrefInfo.fileIds.length > 0) {
     const md5 = computeMD5(baseOffset, xrefInfo);
     newXref.set("ID", [xrefInfo.fileIds[0], md5]);
   }
 }
 
-function getTrailerDict(xrefInfo, newRefs, useXrefStream) {
+function getTrailerDict(xrefInfo: IncrementalXRefInfo,
+  newRefs: { ref: Ref; data: string; }[], useXrefStream: boolean) {
+
   const newXref = new Dict(null);
   newXref.set("Prev", xrefInfo.startXRef);
-  const refForXrefTable = xrefInfo.newRef;
+  const refForXrefTable = xrefInfo.newRef!;
   if (useXrefStream) {
     newRefs.push({ ref: refForXrefTable, data: "" });
     newXref.set("Size", refForXrefTable.num + 1);
@@ -407,20 +432,48 @@ function getTrailerDict(xrefInfo, newRefs, useXrefStream) {
   return newXref;
 }
 
+export interface IncrementalUpdateParameter {
+  originalData: Uint8Array;
+  xrefInfo: IncrementalXRefInfo;
+  newRefs: { ref: Ref, data: string }[];
+  xref: XRef | null;
+  hasXfa: boolean;
+  xfaDatasetsRef: Ref | null;
+  hasXfaDatasetsEntry: boolean;
+  needAppearances: boolean;
+  acroFormRef: Ref | null;
+  acroForm: Dict;
+  // 应该是string类型，通过加密代码推断出来的
+  xfaData: string | null;
+  useXrefStream: boolean;
+}
+
+// 推断应该都是Ref类型，可能会有误；
+interface IncrementalXRefInfo {
+  rootRef: Ref,
+  encryptRef: Ref | null,
+  newRef: Ref | null,
+  infoRef: Ref | null,
+  info: Record<string, string>;
+  fileIds: string[] | null;
+  startXRef: number;
+  filename: string,
+}
+
 async function incrementalUpdate({
   originalData,
   xrefInfo,
   newRefs,
-  xref = null,
+  xref/* = null*/,
   hasXfa = false,
   xfaDatasetsRef = null,
   hasXfaDatasetsEntry = false,
   needAppearances,
   acroFormRef = null,
-  acroForm = null,
+  acroForm /* = null*/,
   xfaData = null,
   useXrefStream = false,
-}) {
+}: IncrementalUpdateParameter) {
   await updateAcroform({
     xref,
     acroForm,

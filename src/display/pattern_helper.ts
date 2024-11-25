@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import { FormatError, info, unreachable, Util } from "../shared/util";
 import { getCurrentTransform } from "./display_utils";
 
@@ -35,10 +36,7 @@ function applyBoundingBox(ctx, bbox) {
 
 export class BaseShadingPattern {
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseShadingPattern
-    ) {
+    if (PlatformHelper.isTesting() && this.constructor === BaseShadingPattern) {
       unreachable("Cannot initialize BaseShadingPattern.");
     }
   }

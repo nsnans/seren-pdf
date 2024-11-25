@@ -18,7 +18,6 @@
 /** @typedef {import("./display_utils").PageViewport} PageViewport */
 /** @typedef {import("../../web/interfaces").IPDFLinkService} IPDFLinkService */
 
-import { PageViewport } from "./display_utils";
 import { XfaText } from "./xfa_text";
 
 /**

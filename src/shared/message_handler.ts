@@ -190,7 +190,7 @@ class MessageHandler {
    * @param {JSON} data - JSON data to send.
    * @param {Array} [transfers] - List of transfers/ArrayBuffers.
    */
-  send(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null) {
+  send(actionName: string, data: Record<string, any> | unknown | null, transfers?: Transferable[] | null) {
     const message = {
       sourceName: this.sourceName,
       targetName: this.targetName,

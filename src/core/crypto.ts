@@ -1521,7 +1521,7 @@ class CipherTransformFactory {
 
   protected encryptionKey: Uint8Array;
 
-  protected encryptMetadata: boolean;
+  readonly encryptMetadata: boolean;
 
   protected dict: Dict;
 

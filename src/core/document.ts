@@ -34,6 +34,7 @@ import {
 } from "../shared/util";
 import {
   AnnotationFactory,
+  AnnotationGlobals,
   PopupAnnotation,
   WidgetAnnotation,
 } from "./annotation";
@@ -64,7 +65,7 @@ import { calculateMD5 } from "./crypto";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "./cleanup_helper";
 import { DatasetReader } from "./dataset_reader";
-import { Linearization } from "./parser";
+import { Linearization, LinearizationInterface } from "./parser";
 import { NullStream, Stream } from "./stream";
 import { ObjectLoader } from "./object_loader";
 import { OperatorList } from "./operator_list";
@@ -314,7 +315,7 @@ class Page {
       }
       // Replace non-existent page content with empty content.
       return new NullStream();
-    });
+    }) as Promise<BaseStream>;
   }
 
   get xfaData() {
@@ -412,15 +413,15 @@ class Page {
 
     const savedDict = pageDict.get("Annots");
     pageDict.set("Annots", annotationsArray);
-    const buffer = [];
-    await writeObject(this.ref, pageDict, buffer, this.xref);
+    const buffer = <string[]>[];
+    await writeObject(this.ref!, pageDict, buffer, this.xref);
     if (savedDict) {
       pageDict.set("Annots", savedDict);
     }
 
     const objects = newData.dependencies;
     objects.push(
-      { ref: this.ref, data: buffer.join("") },
+      { ref: this.ref!, data: buffer.join("") },
       ...newData.annotations
     );
     for (const deletedRef of deletedAnnotations) {
@@ -523,7 +524,7 @@ class Page {
 
     if (newAnnots) {
       const annotationGlobalsPromise =
-        this.pdfManager.ensureDoc("annotationGlobals");
+        this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>;
       let imagePromises;
 
       // An annotation can contain a reference to a bitmap, but this bitmap
@@ -848,7 +849,7 @@ class Page {
         }
 
         const [annotationGlobals, fieldObjects] = await Promise.all([
-          this.pdfManager.ensureDoc("annotationGlobals"),
+          this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>,
           this.pdfManager.ensureDoc("fieldObjects"),
         ]);
         if (!annotationGlobals) {
@@ -1037,7 +1038,7 @@ class PDFDocument {
     this.catalog = new Catalog(this.pdfManager, this.xref);
   }
 
-  get linearization() {
+  get linearization(): LinearizationInterface | null {
     let linearization = null;
     try {
       linearization = Linearization.create(this.stream);
@@ -1139,7 +1140,7 @@ class PDFDocument {
     this.xref.setStartXRef(this.startXRef);
   }
 
-  get numPages() {
+  get numPages(): number {
     let num = 0;
     if (this.catalog!.hasActualNumPages) {
       num = this.catalog!.numPages;
@@ -1470,10 +1471,10 @@ class PDFDocument {
     }
 
     await Promise.all(promises);
-    this.xfaFactory.appendFonts(pdfFonts, reallyMissingFonts);
+    this.xfaFactory!.appendFonts(pdfFonts, reallyMissingFonts);
   }
 
-  async serializeXfaData(annotationStorage) {
+  async serializeXfaData(annotationStorage: Map<string, object> | null) {
     return this.xfaFactory
       ? this.xfaFactory.serializeData(annotationStorage)
       : null;
@@ -1618,11 +1619,11 @@ class PDFDocument {
     return shadow(this, "documentInfo", docInfo);
   }
 
-  get fingerprints() {
+  get fingerprints(): [string, string | null] {
     const FINGERPRINT_FIRST_BYTES = 1024;
     const EMPTY_FINGERPRINT = "\x00".repeat(16);
 
-    function validate(data) {
+    function validate(data: unknown) {
       return (
         typeof data === "string" &&
         data.length === 16 &&
@@ -1630,7 +1631,7 @@ class PDFDocument {
       );
     }
 
-    const id = this.xref.trailer.get("ID");
+    const id = this.xref.trailer!.get("ID");
     let hashOriginal, hashModified;
     if (Array.isArray(id) && validate(id[0])) {
       hashOriginal = stringToBytes(id[0]);
@@ -1662,7 +1663,7 @@ class PDFDocument {
       );
     }
 
-    const ref = Ref.get(linearization.objectNumberFirst, 0);
+    const ref = Ref.get(linearization!.objectNumberFirst, 0);
     try {
       const obj = await xref.fetchAsync(ref);
       // Ensure that the object that was found is actually a Page dictionary.
@@ -1855,7 +1856,7 @@ class PDFDocument {
     parentRef,
     fieldRef,
     promises,
-    annotationGlobals,
+    annotationGlobals: AnnotationGlobals,
     visitedRefs: RefSet,
     orphanFields: RefSetCache
   ) {
@@ -1950,7 +1951,7 @@ class PDFDocument {
         }
 
         const [annotationGlobals, acroForm] = await Promise.all([
-          this.pdfManager.ensureDoc("annotationGlobals"),
+          this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>,
           this.pdfManager.ensureCatalog("acroForm"),
         ]);
         if (!annotationGlobals) {

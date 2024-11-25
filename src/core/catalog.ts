@@ -48,7 +48,7 @@ import { NameTree, NumberTree } from "./name_number_tree";
 import { BaseStream } from "./base_stream";
 import { clearGlobalCaches } from "./cleanup_helper";
 import { ColorSpace } from "./colorspace";
-import { FileSpec } from "./file_spec";
+import { FileSpec, FileSpecSerializable } from "./file_spec";
 import { GlobalImageCache } from "./image_utils";
 import { MetadataParser } from "./metadata_parser";
 import { StructTreeRoot } from "./struct_tree";
@@ -308,7 +308,7 @@ export class Catalog {
       Marked: false,
       UserProperties: false,
       Suspects: false,
-    };
+    } as Record<string, boolean>;
     for (const key in markInfo) {
       const value = obj.get(key);
       if (typeof value === "boolean") {
@@ -1099,9 +1099,10 @@ export class Catalog {
     );
   }
 
+  // 这应该是处理附件的？
   get attachments() {
     const obj = this._catDict.get("Names");
-    let attachments = null;
+    let attachments: Record<string, FileSpecSerializable> | null = null;
 
     if (obj instanceof Dict && obj.has("EmbeddedFiles")) {
       const nameTree = new NameTree(obj.getRaw("EmbeddedFiles"), this.xref);
@@ -1110,7 +1111,7 @@ export class Catalog {
         if (!attachments) {
           attachments = Object.create(null);
         }
-        attachments[stringToPDFString(key)] = fs.serializable;
+        attachments![stringToPDFString(key)] = fs.serializable;
       }
     }
     return shadow(this, "attachments", attachments);

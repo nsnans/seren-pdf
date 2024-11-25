@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+import { warn } from "../../shared/util";
+import { Binder } from "./bind";
+import { DataHandler } from "./data";
+import { FontFinder } from "./fonts";
+import { XFAParser } from "./parser";
 import {
   $appendChild,
   $globalData,
@@ -21,15 +26,17 @@ import {
   $toHTML,
   $toPages,
 } from "./symbol_utils";
-import { Binder } from "./bind";
-import { DataHandler } from "./data";
-import { FontFinder } from "./fonts";
 import { stripQuotes } from "./utils";
-import { warn } from "../../shared/util";
-import { XFAParser } from "./parser";
 import { XhtmlNamespace } from "./xhtml";
 
 class XFAFactory {
+
+  protected root?;
+
+  protected form?;
+
+  protected dataHandler?: DataHandler;
+
   constructor(data) {
     try {
       this.root = new XFAParser().parse(XFAFactory._createDocument(data));
@@ -127,8 +134,8 @@ class XFAFactory {
     return pages;
   }
 
-  serializeData(storage) {
-    return this.dataHandler.serialize(storage);
+  serializeData(storage: Map<string, object> | null) {
+    return this.dataHandler!.serialize(storage);
   }
 
   static _createDocument(data) {

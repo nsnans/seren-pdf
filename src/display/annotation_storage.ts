@@ -27,11 +27,18 @@ const SerializableEmpty = Object.freeze({
  * Key/value storage for annotation data in forms.
  */
 class AnnotationStorage {
+
   #modified = false;
 
   #modifiedIds = null;
 
-  #storage = new Map();
+  #storage = new Map<string, object>();
+
+  protected onSetModified: (() => void) | null;
+
+  protected onResetModified: (() => void) | null;
+
+  protected onAnnotationEditor: ((type: string) => void) | null;
 
   constructor() {
     // Callbacks to signal when the modification state is set or reset.
@@ -93,7 +100,7 @@ class AnnotationStorage {
    * @param {string} key
    * @param {Object} value
    */
-  setValue(key, value) {
+  setValue(key: string, value: object) {
     const obj = this.#storage.get(key);
     let modified = false;
     if (obj !== undefined) {
@@ -115,7 +122,10 @@ class AnnotationStorage {
       value instanceof AnnotationEditor &&
       typeof this.onAnnotationEditor === "function"
     ) {
-      this.onAnnotationEditor(value.constructor._type);
+      // 这里需要注意一下，做了一些改动
+      // 因为AnnotationEditor本身没有_type类型，但是它的子类有
+      // 这边我其实也没有特别好的想法，只能先将就一下，转成any然后读取_type
+      this.onAnnotationEditor((value.constructor as any)._type);
     }
   }
 
@@ -124,7 +134,7 @@ class AnnotationStorage {
    * @param {string} key
    * @returns {boolean}
    */
-  has(key) {
+  has(key: string) {
     return this.#storage.has(key);
   }
 
@@ -138,7 +148,7 @@ class AnnotationStorage {
   /**
    * @param {Object} obj
    */
-  setAll(obj) {
+  setAll(obj: object) {
     for (const [key, val] of Object.entries(obj)) {
       this.setValue(key, val);
     }
@@ -177,11 +187,15 @@ class AnnotationStorage {
    * PLEASE NOTE: Only intended for usage within the API itself.
    * @ignore
    */
-  get serializable() {
+  get serializable(): Readonly<{
+    map: Map<string, any> | null;
+    hash: string;
+    transfer: any[] | undefined;
+  }> {
     if (this.#storage.size === 0) {
       return SerializableEmpty;
     }
-    const map = new Map(),
+    const map = new Map<string, any>(),
       hash = new MurmurHash3_64(),
       transfer = [];
     const context = Object.create(null);

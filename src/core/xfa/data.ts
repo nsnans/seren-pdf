@@ -28,7 +28,7 @@ class DataHandler {
     this.dataset = root.datasets || null;
   }
 
-  serialize(storage) {
+  serialize(storage: Map<string, object> | null) {
     const stack = [[-1, this.data[$getChildren]()]];
 
     while (stack.length > 0) {

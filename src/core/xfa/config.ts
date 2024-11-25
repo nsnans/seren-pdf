@@ -31,7 +31,15 @@ import { shadow, warn } from "../../shared/util";
 const CONFIG_NS_ID = NamespaceIds.config.id;
 
 class Acrobat extends XFAObject {
-  constructor(attributes) {
+
+  protected acrobat7;
+  protected autoSave;
+  protected common;
+  protected validate;
+  protected validateApprovalSignatures;
+  protected submitUrl: XFAObjectArray;
+
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "acrobat", /* hasChildren = */ true);
     this.acrobat7 = null;
     this.autoSave = null;
@@ -43,44 +51,44 @@ class Acrobat extends XFAObject {
 }
 
 class Acrobat7 extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "acrobat7", /* hasChildren = */ true);
     this.dynamicRender = null;
   }
 }
 
 class ADBE_JSConsole extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "ADBE_JSConsole", ["delegate", "Enable", "Disable"]);
   }
 }
 
 class ADBE_JSDebugger extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "ADBE_JSDebugger", ["delegate", "Enable", "Disable"]);
   }
 }
 
 class AddSilentPrint extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "addSilentPrint");
   }
 }
 
 class AddViewerPreferences extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "addViewerPreferences");
   }
 }
 
 class AdjustData extends Option10 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "adjustData");
   }
 }
 
 class AdobeExtensionLevel extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "adobeExtensionLevel", 0, n => n >= 1 && n <= 8);
   }
 }
@@ -94,13 +102,13 @@ class Agent extends XFAObject {
 }
 
 class AlwaysEmbed extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "alwaysEmbed");
   }
 }
 
 class Amd extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "amd");
   }
 }

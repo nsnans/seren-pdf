@@ -28,3 +28,15 @@ export interface CallbackWorkerMessage<T> extends WorkerBaseMessage {
   data?: T;
   reason?: Error;
 }
+
+export interface SaveDocumentMessage {
+
+  isPureXfa: boolean;
+
+  numPages: number | null;
+
+  annotationStorage: Map<string, object> | null;
+
+  filename: string | null;
+
+}

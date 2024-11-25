@@ -1023,7 +1023,7 @@ function stringToUTF8String(str: string) {
   return decodeURIComponent(escape(str));
 }
 
-function utf8StringToString(str) {
+function utf8StringToString(str: string) {
   return unescape(encodeURIComponent(str));
 }
 
@@ -1107,7 +1107,7 @@ const FontRenderOps = {
 };
 
 // TODO: Remove this once `Uint8Array.prototype.toHex` is generally available.
-function toHexUtil(arr: Uint8Array) {
+function toHexUtil(arr: Uint8Array): string {
   if ((Uint8Array as any).prototype.toHex) {
     return (arr as any).toHex();
   }

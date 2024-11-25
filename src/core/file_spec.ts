@@ -42,6 +42,17 @@ function stripPath(str: string) {
   return str.substring(str.lastIndexOf("/") + 1);
 }
 
+export interface FileSpecSerializable {
+
+  rawFilename: string;
+
+  filename: string;
+
+  content: Uint8Array | null;
+
+  description: string;
+}
+
 /**
  * "A PDF file can refer to the contents of another file by using a File
  * Specification (PDF 1.1)", see the spec (7.11) for more details.
@@ -49,7 +60,7 @@ function stripPath(str: string) {
  * TODO: support the 'URL' file system (with caching if !/V), portable
  * collections attributes and related files (/RF)
  */
-class FileSpec {
+export class FileSpec {
 
   #contentAvailable = false;
 
@@ -127,7 +138,7 @@ class FileSpec {
     return shadow(this, "description", description);
   }
 
-  get serializable() {
+  get serializable(): FileSpecSerializable {
     return {
       rawFilename: this.filename,
       filename: stripPath(this.filename),
@@ -136,5 +147,3 @@ class FileSpec {
     };
   }
 }
-
-export { FileSpec };

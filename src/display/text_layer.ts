@@ -16,6 +16,7 @@
 /** @typedef {import("./display_utils").PageViewport} PageViewport */
 /** @typedef {import("./api").TextContent} TextContent */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   AbortException,
   FeatureTest,
@@ -23,7 +24,8 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { setLayerDimensions } from "./display_utils";
+import { TextContent } from "./api";
+import { PageViewport, setLayerDimensions, TransformType } from "./display_utils";
 
 /**
  * @typedef {Object} TextLayerParameters
@@ -35,6 +37,11 @@ import { setLayerDimensions } from "./display_utils";
  * @property {PageViewport} viewport - The target viewport to properly layout
  *   the text runs.
  */
+export interface TextLayerParameters {
+  textContentSource: ReadableStream | TextContent;
+  container: HTMLElement;
+  viewport: PageViewport;
+}
 
 /**
  * @typedef {Object} TextLayerUpdateParameters
@@ -43,15 +50,20 @@ import { setLayerDimensions } from "./display_utils";
  * @property {function} [onBefore] - Callback invoked before the textLayer is
  *   updated in the DOM.
  */
+export interface TextLayerUpdateParameters {
+  viewport: PageViewport;
+  onBefore: (() => {}) | null
+}
 
 const MAX_TEXT_DIVS_TO_RENDER = 100000;
 const DEFAULT_FONT_SIZE = 30;
 const DEFAULT_FONT_ASCENT = 0.8;
 
 class TextLayer {
+
   #capability = Promise.withResolvers();
 
-  #container = null;
+  #container: HTMLElement | null = null;
 
   #disableProcessItems = false;
 
@@ -65,9 +77,9 @@ class TextLayer {
 
   #pageWidth = 0;
 
-  #reader = null;
+  #reader: ReadableStreamDefaultReader<any> | null = null;
 
-  #rootContainer = null;
+  #rootContainer: HTMLElement | null = null;
 
   #rotation = 0;
 
@@ -77,13 +89,13 @@ class TextLayer {
 
   #textContentItemsStr = [];
 
-  #textContentSource = null;
+  #textContentSource: ReadableStream<any>;
 
   #textDivs = [];
 
   #textDivProperties = new WeakMap();
 
-  #transform = null;
+  #transform: TransformType | null = null;
 
   static #ascentCache = new Map();
 
@@ -98,11 +110,10 @@ class TextLayer {
   /**
    * @param {TextLayerParameters} options
    */
-  constructor({ textContentSource, container, viewport }) {
+  constructor({ textContentSource, container, viewport }: TextLayerParameters) {
     if (textContentSource instanceof ReadableStream) {
       this.#textContentSource = textContentSource;
-    } else if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
+    } else if (PlatformHelper.isGeneric() &&
       typeof textContentSource === "object"
     ) {
       this.#textContentSource = new ReadableStream({
@@ -130,7 +141,7 @@ class TextLayer {
 
     TextLayer.#ensureMinFontSizeComputed();
 
-    setLayerDimensions(container, viewport);
+    setLayerDimensions(container as HTMLDivElement, viewport);
 
     // Always clean-up the temporary canvas once rendering is no longer pending.
     this.#capability.promise
@@ -143,7 +154,7 @@ class TextLayer {
         // Avoid "Uncaught promise" messages in the console.
       });
 
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       // For testing purposes.
       Object.defineProperty(this, "pageWidth", {
         get() {
@@ -182,9 +193,9 @@ class TextLayer {
    */
   render() {
     const pump = () => {
-      this.#reader.read().then(({ value, done }) => {
+      this.#reader!.read().then(({ value, done }) => {
         if (done) {
-          this.#capability.resolve();
+          this.#capability.resolve(undefined);
           return;
         }
         this.#lang ??= value.lang;
@@ -205,14 +216,14 @@ class TextLayer {
    * @param {TextLayerUpdateParameters} options
    * @returns {undefined}
    */
-  update({ viewport, onBefore = null }) {
+  update({ viewport, onBefore = null }: TextLayerUpdateParameters) {
     const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
     const rotation = viewport.rotation;
 
     if (rotation !== this.#rotation) {
       onBefore?.();
       this.#rotation = rotation;
-      setLayerDimensions(this.#rootContainer, { rotation });
+      setLayerDimensions(this.#rootContainer! as HTMLDivElement, { rotation });
     }
 
     if (scale !== this.#scale) {
@@ -268,7 +279,7 @@ class TextLayer {
     if (this.#disableProcessItems) {
       return;
     }
-    this.#layoutTextParams.ctx ??= TextLayer.#getCtx(this.#lang);
+    this.#layoutTextParams!.ctx ??= TextLayer.#getCtx(this.#lang);
 
     const textDivs = this.#textDivs,
       textContentItemsStr = this.#textContentItemsStr;

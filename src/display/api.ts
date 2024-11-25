@@ -78,6 +78,7 @@ import { XfaText } from "./xfa_text";
 import { PlatformHelper } from "../platform/platform_helper";
 import { IPDFStream, IPDFStreamReader } from "../interfaces";
 import { TypedArray } from "../types";
+import { SaveDocumentMessage } from "../shared/message_handler_types";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -2788,7 +2789,7 @@ class WorkerTransport {
     return promise;
   }
 
-  get annotationStorage() {
+  get annotationStorage(): AnnotationStorage {
     return shadow(this, "annotationStorage", new AnnotationStorage());
   }
 
@@ -3284,7 +3285,7 @@ class WorkerTransport {
           numPages: this._numPages,
           annotationStorage: map,
           filename: this._fullReader?.filename ?? null,
-        },
+        } as SaveDocumentMessage,
         transfer
       )
       .finally(() => {

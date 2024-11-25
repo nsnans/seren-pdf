@@ -72,7 +72,7 @@ export class XRef {
 
   public trailer: Dict | null
 
-  protected topDict: Dict | null;
+  public topDict: Dict | null;
 
   protected startXRefQueue: number[] = [];
 

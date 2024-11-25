@@ -77,6 +77,9 @@ import { PartialEvaluator } from "./evaluator";
 import { TypedArray } from "../types";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Font } from "./fonts";
+import { DatasetReader } from "./dataset_reader";
+import { StructTreeRoot } from "./struct_tree";
+import { FileSpecSerializable } from "./file_spec"
 
 interface AnnotationParameters {
   xref: XRef;
@@ -86,7 +89,7 @@ interface AnnotationParameters {
   subtype: string | null;
   id: string;
   // TODO 这里需要再次验证
-  annotationGlobals: unknown,
+  annotationGlobals: AnnotationGlobals,
   collectFields: boolean;
   orphanFields: RefSetCache | null;
   needAppearances: boolean;
@@ -97,18 +100,28 @@ interface AnnotationParameters {
   pageRef: Ref | null;
 }
 
+export interface AnnotationGlobals {
+  pdfManager: PDFManager;
+  acroForm: Dict;
+  xfaDatasets: DatasetReader | null;
+  structTreeRoot: StructTreeRoot | null;
+  baseUrl: string;
+  attachments: Record<string, FileSpecSerializable> | null;
+}
+
 class AnnotationFactory {
-  static createGlobals(pdfManager: PDFManager) {
+
+  static createGlobals(pdfManager: PDFManager): Promise<AnnotationGlobals | null> {
     return Promise.all([
-      pdfManager.ensureCatalog("acroForm"),
-      pdfManager.ensureDoc("xfaDatasets"),
-      pdfManager.ensureCatalog("structTreeRoot"),
+      pdfManager.ensureCatalog("acroForm") as Promise<Dict>,
+      pdfManager.ensureDoc("xfaDatasets") as Promise<DatasetReader | null>,
+      pdfManager.ensureCatalog("structTreeRoot") as Promise<StructTreeRoot | null>,
       // Only necessary to prevent the `Catalog.baseUrl`-getter, used
       // with some Annotations, from throwing and thus breaking parsing:
-      pdfManager.ensureCatalog("baseUrl"),
+      pdfManager.ensureCatalog("baseUrl") as Promise<string>,
       // Only necessary to prevent the `Catalog.attachments`-getter, used
       // with "GoToE" actions, from throwing and thus breaking parsing:
-      pdfManager.ensureCatalog("attachments"),
+      pdfManager.ensureCatalog("attachments") as Promise<Record<string, FileSpecSerializable> | null>,
     ]).then(
       // eslint-disable-next-line arrow-body-style
       ([acroForm, xfaDatasets, structTreeRoot, baseUrl, attachments]) => {
@@ -146,10 +159,10 @@ class AnnotationFactory {
   static async create(
     xref: XRef,
     ref: Ref,
-    annotationGlobals,
+    annotationGlobals: AnnotationGlobals,
     idFactory: globalIdFactory,
     collectFields: boolean,
-    orphanFields,
+    orphanFields: RefSetCache,
     pageRef: Ref | null
   ) {
     const pageIndex = collectFields
@@ -173,11 +186,11 @@ class AnnotationFactory {
    */
   static _create(
     xref: XRef,
-    ref,
-    annotationGlobals,
+    ref: Ref,
+    annotationGlobals: AnnotationGlobals,
     idFactory,
     collectFields = false,
-    orphanFields = null,
+    orphanFields: RefSetCache | null = null,
     pageIndex = null,
     pageRef = null
   ) {
@@ -298,7 +311,7 @@ class AnnotationFactory {
     }
   }
 
-  static async _getPageIndex(xref: XRef, ref, pdfManager: PDFManager) {
+  static async _getPageIndex(xref: XRef, ref: Ref, pdfManager: PDFManager) {
     try {
       const annotDict = await xref.fetchIfRefAsync(ref);
       if (!(annotDict instanceof Dict)) {
@@ -321,7 +334,7 @@ class AnnotationFactory {
       // Fallback to, potentially, checking the annotations of all pages.
       // PLEASE NOTE: This could force the *entire* PDF document to load,
       //              hence it absolutely cannot be done unconditionally.
-      const numPages = await pdfManager.ensureDoc("numPages");
+      const numPages = await pdfManager.ensureDoc("numPages") as number;
 
       for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
         const page = await pdfManager.getPage(pageIndex);
@@ -449,7 +462,7 @@ class AnnotationFactory {
   }
 
   static async printNewAnnotations(
-    annotationGlobals,
+    annotationGlobals: AnnotationGlobals,
     evaluator: PartialEvaluator,
     task: WorkerTask,
     annotations,
@@ -995,7 +1008,7 @@ class Annotation {
     return { str, dir };
   }
 
-  setDefaultAppearance(params) {
+  setDefaultAppearance(params: AnnotationParameters) {
     const { dict, annotationGlobals } = params;
 
     const defaultAppearance =
@@ -1930,7 +1943,7 @@ class MarkupAnnotation extends Annotation {
   }
 
   static async createNewPrintAnnotation(
-    annotationGlobals,
+    annotationGlobals: AnnotationGlobals,
     xref: XRef,
     annotation,
     params
@@ -3434,7 +3447,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this._streams.push(this.checkedAppearance);
   }
 
-  _processCheckBox(params) {
+  _processCheckBox(params: AnnotationParameters) {
     const customAppearance = params.dict.get("AP");
     if (!(customAppearance instanceof Dict)) {
       return;
@@ -3504,7 +3517,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
   }
 
-  _processRadioButton(params) {
+  _processRadioButton(params: AnnotationParameters) {
     this.data.buttonValue = null;
 
     // The parent field's `V` entry holds a `Name` object with the appearance
@@ -3555,7 +3568,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
   }
 
-  _processPushButton(params) {
+  _processPushButton(params: AnnotationParameters) {
     const { dict, annotationGlobals } = params;
 
     if (!dict.has("A") && !dict.has("AA") && !this.data.alternativeText) {

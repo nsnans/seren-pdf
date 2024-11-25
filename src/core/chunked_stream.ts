@@ -559,7 +559,7 @@ class ChunkedStreamManager {
     });
   }
 
-  onError(err) {
+  onError(err: any) {
     this._loadedStreamCapability.reject(err);
   }
 

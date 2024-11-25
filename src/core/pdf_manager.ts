@@ -27,6 +27,7 @@ import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";
 import { Page, PDFDocument } from "./document";
 import { Stream } from "./stream";
+import { WorkerTask } from "./worker";
 import { PDFWorkerStream } from "./worker_stream";
 
 function parseDocBaseUrl(url: string | null) {
@@ -54,8 +55,6 @@ export interface PDFManagerArgs {
 }
 
 interface PDFManager {
-
-  cleanup(manuallyTriggered?: boolean): Promise<void>;
 
   _docId: string;
 
@@ -85,6 +84,13 @@ interface PDFManager {
 
   terminate(ex: AbortException): void;
 
+  loadXfaFonts(handler: MessageHandler, task: WorkerTask): Promise<void>;
+
+  loadXfaImages(): Promise<void>;
+
+  serializeXfaData(annotationStorage: Map<string, object> | null): Promise<string | null>;
+
+  cleanup(manuallyTriggered?: boolean): Promise<void>;
 }
 
 abstract class BasePDFManager implements PDFManager {
@@ -166,7 +172,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().loadXfaImages();
   }
 
-  serializeXfaData(annotationStorage) {
+  serializeXfaData(annotationStorage: Map<string, object> | null): Promise<string | null> {
     return this.getPDFDocument().serializeXfaData(annotationStorage);
   }
 
