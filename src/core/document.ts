@@ -431,7 +431,7 @@ class Page {
     return objects;
   }
 
-  save(handler, task, annotationStorage) {
+  save(handler: MessageHandler, task:  WorkerTask, annotationStorage: Map<string,object> | null) {
     const partialEvaluator = new PartialEvaluator({
       xref: this.xref,
       handler,

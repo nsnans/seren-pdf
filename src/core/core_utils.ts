@@ -612,7 +612,7 @@ function numberToString(value: number) {
   return value.toFixed(2);
 }
 
-function getNewAnnotationsMap(annotationStorage) {
+function getNewAnnotationsMap(annotationStorage: Map<string, any> | null) {
   if (!annotationStorage) {
     return null;
   }

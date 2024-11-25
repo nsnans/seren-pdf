@@ -60,7 +60,7 @@ import { CFFFont } from "./cff_font";
 import { FontRendererFactory } from "./font_renderer";
 import { getFontBasicMetrics } from "./metrics";
 import { GlyfTable } from "./glyf";
-import { IdentityCMap } from "./cmap";
+import { CMap, IdentityCMap } from "./cmap";
 import { OpenTypeFileBuilder } from "./opentype_file_builder";
 import { readUint32 } from "./core_utils";
 import { Stream } from "./stream.js";
@@ -429,7 +429,7 @@ function getFontFileType(file, { type, subtype, composite }) {
   return [fileType, fileSubtype];
 }
 
-function applyStandardFontGlyphMap(map, glyphMap) {
+function applyStandardFontGlyphMap(map: number[], glyphMap: Record<number, number>) {
   for (const charCode in glyphMap) {
     map[+charCode] = glyphMap[charCode];
   }
@@ -971,6 +971,50 @@ function createNameTable(name, proto) {
  * decoding logics whatever type it is (assuming the font type is supported).
  */
 class Font {
+  cMap: CMap;
+  protected name;
+  protected psName;
+  protected mimetype: string | null;
+  protected disableFontFace: boolean;
+  protected loadedName;
+  protected isType3Font;
+  protected missingFile: boolean;
+  protected cssFontInfo;
+  protected _charsCache;
+  protected _glyphCache;
+  protected isSerifFont: boolean;
+  protected isSymbolicFont: boolean;
+  protected isMonospace: boolean;
+  protected type;
+  protected subtype;
+  protected systemFontInfo;
+  protected isInvalidPDFjsFont: boolean;
+  protected fallbackName;
+  protected differences;
+  protected widths;
+  protected defaultWidth;
+  protected composite;
+  protected capHeight: number;
+  protected ascent: number;
+  protected descent: number;
+  protected lineHeight: number;
+  protected fontMatrix;
+  protected bbox;
+  protected defaultEncoding;
+  protected toUnicode;
+  protected toFontChar: number[];
+  protected cidEncoding;
+  protected vertical: boolean | null = null;
+  protected vmetrics;
+  protected defaultVMetrics;
+  protected isOpenType: boolean | null = null;
+  protected data: Uint8Array | null = null;
+  protected seacMap;
+  protected bold: boolean | null = null;
+  protected italic: boolean | null = null;
+  protected black: boolean | null = null;
+  protected remeasure: boolean | null = null;
+
   constructor(name, file, properties) {
     this.name = name;
     this.psName = null;
@@ -992,7 +1036,7 @@ class Font {
       const baseName = name.replaceAll(/[,_]/g, "-").split("-", 1)[0],
         serifFonts = getSerifFonts();
       for (const namePart of baseName.split("+")) {
-        if (serifFonts[namePart]) {
+        if (serifFonts![namePart]) {
           isSerifFont = true;
           break;
         }
@@ -1165,8 +1209,8 @@ class Font {
     // to be used with the canvas.font.
     const { name, type } = this;
     let fontName = normalizeFontName(name);
-    const stdFontMap = getStdFontMap(),
-      nonStdFontMap = getNonStdFontMap();
+    const stdFontMap = getStdFontMap()!,
+      nonStdFontMap = getNonStdFontMap()!;
     const isStandardFont = !!stdFontMap[fontName];
     const isMappedToStandardFont = !!(
       nonStdFontMap[fontName] && stdFontMap[nonStdFontMap[fontName]]
@@ -1174,7 +1218,7 @@ class Font {
 
     fontName = stdFontMap[fontName] || nonStdFontMap[fontName] || fontName;
 
-    const fontBasicMetricsMap = getFontBasicMetrics();
+    const fontBasicMetricsMap = getFontBasicMetrics()!;
     const metrics = fontBasicMetricsMap[fontName];
     if (metrics) {
       if (isNaN(this.ascent)) {
@@ -1210,13 +1254,13 @@ class Font {
       const cidToGidMap = properties.cidToGidMap;
       // Standard fonts might be embedded as CID font without glyph mapping.
       // Building one based on GlyphMapForStandardFonts.
-      const map = [];
-      applyStandardFontGlyphMap(map, getGlyphMapForStandardFonts());
+      const map = <number[]>[];
+      applyStandardFontGlyphMap(map, getGlyphMapForStandardFonts()!);
 
       if (/Arial-?Black/i.test(name)) {
-        applyStandardFontGlyphMap(map, getSupplementalGlyphMapForArialBlack());
+        applyStandardFontGlyphMap(map, getSupplementalGlyphMapForArialBlack()!);
       } else if (/Calibri/i.test(name)) {
-        applyStandardFontGlyphMap(map, getSupplementalGlyphMapForCalibri());
+        applyStandardFontGlyphMap(map, getSupplementalGlyphMapForCalibri()!);
       }
 
       // Always update the glyph mapping with the `cidToGidMap` when it exists
@@ -1281,9 +1325,9 @@ class Font {
       }
       this.toFontChar = map;
     } else {
-      const glyphsUnicodeMap = getGlyphsUnicode();
-      const map = [];
-      this.toUnicode.forEach((charCode, unicodeCharCode) => {
+      const glyphsUnicodeMap = getGlyphsUnicode()!;
+      const map = <number[]>[];
+      this.toUnicode.forEach((charCode: number, unicodeCharCode: number) => {
         if (!this.composite) {
           const glyphName =
             this.differences[charCode] || this.defaultEncoding[charCode];
@@ -1300,7 +1344,7 @@ class Font {
       if (this.composite && this.toUnicode instanceof IdentityToUnicodeMap) {
         if (/Tahoma|Verdana/i.test(name)) {
           // Fixes issue15719.pdf and issue11242_reduced.pdf.
-          applyStandardFontGlyphMap(map, getGlyphMapForStandardFonts());
+          applyStandardFontGlyphMap(map, getGlyphMapForStandardFonts()!);
         }
       }
       this.toFontChar = map;

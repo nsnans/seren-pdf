@@ -37,7 +37,7 @@ class ContextCache {
 class DecodingContext {
 
   public start: number;
-  
+
   public end: number;
 
   constructor(data, start: number, end: number) {
@@ -593,7 +593,7 @@ function decodeSymbolDictionary(
   at,
   refinementTemplateIndex,
   refinementAt,
-  decodingContext,
+  decodingContext: DecodingContext,
   huffmanInput
 ) {
   if (huffman && refinement) {
@@ -2524,7 +2524,7 @@ function getSymbolDictionaryHuffmanTables(
   };
 }
 
-function readUncompressedBitmap(reader, width, height) {
+function readUncompressedBitmap(reader, width: number, height: number) {
   const bitmap = [];
   for (let y = 0; y < height; y++) {
     const row = new Uint8Array(width);
@@ -2537,7 +2537,7 @@ function readUncompressedBitmap(reader, width, height) {
   return bitmap;
 }
 
-function decodeMMRBitmap(input, width, height, endOfBlock) {
+function decodeMMRBitmap(input, width: number, height: number, endOfBlock) {
   // MMR is the same compression algorithm as the PDF filter
   // CCITTFaxDecode with /K -1.
   const params = {
@@ -2566,7 +2566,7 @@ function decodeMMRBitmap(input, width, height, endOfBlock) {
         }
         shift = 7;
       }
-      row[x] = (currentByte >> shift) & 1;
+      row[x] = (currentByte! >> shift) & 1;
       shift--;
     }
   }

@@ -14,6 +14,7 @@
  */
 
 import { FormatError } from "../shared/util";
+import { CMap } from "./cmap";
 
 function hexToInt(a: Uint8Array, size: number) {
   let n = 0;
@@ -146,7 +147,7 @@ class BinaryCMapStream {
 }
 
 class BinaryCMapReader {
-  async process(data, cMap, extend) {
+  async process(data: Uint8Array, cMap: CMap, extend: (useCMap: string) => Promise<CMap>) {
     const stream = new BinaryCMapStream(data);
     const header = stream.readByte();
     cMap.vertical = !!(header & 1);

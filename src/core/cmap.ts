@@ -201,13 +201,19 @@ const MAX_MAP_RANGE = 2 ** 24 - 1; // = 0xFFFFFF
 // CMap, not to be confused with TrueType's cmap.
 class CMap {
 
-  protected numCodespaceRanges = 0;
+  public numCodespaceRanges = 0;
 
-  protected name = "";
+  public name = "";
 
-  protected vertical = false;
+  public vertical = false;
 
   protected builtInCMap: boolean;
+
+  protected _map: (number | string)[];
+
+  public codespaceRanges: number[][];
+
+  public useCMap: CMap | null;
 
   constructor(builtInCMap = false) {
     // Codespace ranges are stored as follows:
@@ -258,7 +264,7 @@ class CMap {
     }
   }
 
-  mapBfRangeToArray(low: number, high: number, array) {
+  mapBfRangeToArray(low: number, high: number, array: (string | number)[]) {
     if (high - low > MAX_MAP_RANGE) {
       throw new Error("mapBfRangeToArray - ignoring data above MAX_MAP_RANGE.");
     }
@@ -271,19 +277,19 @@ class CMap {
   }
 
   // This is used for both bf and cid chars.
-  mapOne(src, dst) {
+  mapOne(src: number, dst: number | string) {
     this._map[src] = dst;
   }
 
-  lookup(code) {
+  lookup(code: number): string | number | undefined {
     return this._map[code];
   }
 
-  contains(code) {
+  contains(code: number) {
     return this._map[code] !== undefined;
   }
 
-  forEach(callback) {
+  forEach(callback: (key: number, val: string | number) => void) {
     // Most maps have fewer than 65536 entries, and for those we use normal
     // array iteration. But really sparse tables are possible -- e.g. with
     // indices in the *billions*. For such tables we use for..in, which isn't
@@ -299,12 +305,12 @@ class CMap {
       }
     } else {
       for (const i in map) {
-        callback(i, map[i]);
+        callback(parseInt(i), map[i]);
       }
     }
   }
 
-  charCodeOf(value) {
+  charCodeOf(value: number) {
     // `Array.prototype.indexOf` is *extremely* inefficient for arrays which
     // are both very sparse and very large (see issue8372.pdf).
     const map = this._map;
@@ -313,7 +319,7 @@ class CMap {
     }
     for (const charCode in map) {
       if (map[charCode] === value) {
-        return charCode | 0;
+        return (charCode as unknown as number) | 0;
       }
     }
     return -1;
@@ -323,7 +329,7 @@ class CMap {
     return this._map;
   }
 
-  readCharCode(str, offset, out) {
+  readCharCode(str: string, offset: number, out: Record<string, number>) {
     let c = 0;
     const codespaceRanges = this.codespaceRanges;
     // 9.7.6.2 CMap Mapping
@@ -346,7 +352,7 @@ class CMap {
     out.length = 1;
   }
 
-  getCharCodeLength(charCode) {
+  getCharCodeLength(charCode: number) {
     const codespaceRanges = this.codespaceRanges;
     for (let n = 0, nn = codespaceRanges.length; n < nn; n++) {
       // Check each codespace range to see if it falls within.
@@ -385,44 +391,44 @@ class CMap {
 // A special case of CMap, where the _map array implicitly has a length of
 // 65536 and each element is equal to its index.
 class IdentityCMap extends CMap {
-  constructor(vertical, n) {
+  constructor(vertical: boolean, n: number) {
     super();
 
     this.vertical = vertical;
     this.addCodespaceRange(n, 0, 0xffff);
   }
 
-  mapCidRange(low, high, dstLow) {
+  mapCidRange(_low: number, _high: number, _dstLow: number) {
     unreachable("should not call mapCidRange");
   }
 
-  mapBfRange(low, high, dstLow) {
+  mapBfRange(_low: number, _high: number, _dstLow: string) {
     unreachable("should not call mapBfRange");
   }
 
-  mapBfRangeToArray(low, high, array) {
+  mapBfRangeToArray(_low: number, _high: number, _array: (string | number)[]) {
     unreachable("should not call mapBfRangeToArray");
   }
 
-  mapOne(src, dst) {
+  mapOne(_src: number, _dst: string | number) {
     unreachable("should not call mapCidOne");
   }
 
-  lookup(code) {
+  lookup(code: number) {
     return Number.isInteger(code) && code <= 0xffff ? code : undefined;
   }
 
-  contains(code) {
+  contains(code: number) {
     return Number.isInteger(code) && code <= 0xffff;
   }
 
-  forEach(callback) {
+  forEach(callback: (key: number, value: number) => void) {
     for (let i = 0; i <= 0xffff; i++) {
       callback(i, i);
     }
   }
 
-  charCodeOf(value) {
+  charCodeOf(value: number) {
     return Number.isInteger(value) && value <= 0xffff ? value : -1;
   }
 
@@ -440,7 +446,7 @@ class IdentityCMap extends CMap {
   }
 
   // eslint-disable-next-line getter-return
-  get isIdentityCMap() {
+  get isIdentityCMap(): never {
     unreachable("should not access .isIdentityCMap");
   }
 }
@@ -465,7 +471,7 @@ function expectInt(obj: unknown) {
   }
 }
 
-function parseBfChar(cMap, lexer) {
+function parseBfChar(cMap: CMap, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -475,16 +481,16 @@ function parseBfChar(cMap, lexer) {
       return;
     }
     expectString(obj);
-    const src = strToInt(obj);
+    const src = strToInt(<string>obj);
     obj = lexer.getObj();
     // TODO are /dstName used?
     expectString(obj);
-    const dst = obj;
+    const dst = <string>obj;
     cMap.mapOne(src, dst);
   }
 }
 
-function parseBfRange(cMap, lexer) {
+function parseBfRange(cMap: CMap, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -494,13 +500,13 @@ function parseBfRange(cMap, lexer) {
       return;
     }
     expectString(obj);
-    const low = strToInt(obj);
+    const low = strToInt(<string>obj);
     obj = lexer.getObj();
     expectString(obj);
-    const high = strToInt(obj);
+    const high = strToInt(<string>obj);
     obj = lexer.getObj();
     if (Number.isInteger(obj) || typeof obj === "string") {
-      const dstLow = Number.isInteger(obj) ? String.fromCharCode(obj) : obj;
+      const dstLow = Number.isInteger(obj) ? String.fromCharCode(<number>obj) : <string>obj;
       cMap.mapBfRange(low, high, dstLow);
     } else if (isCmd(obj, "[")) {
       obj = lexer.getObj();
@@ -509,7 +515,7 @@ function parseBfRange(cMap, lexer) {
         array.push(obj);
         obj = lexer.getObj();
       }
-      cMap.mapBfRangeToArray(low, high, array);
+      cMap.mapBfRangeToArray(low, high, array as (string | number)[]);
     } else {
       break;
     }
@@ -517,7 +523,7 @@ function parseBfRange(cMap, lexer) {
   throw new FormatError("Invalid bf range.");
 }
 
-function parseCidChar(cMap, lexer) {
+function parseCidChar(cMap: CMap, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -527,15 +533,15 @@ function parseCidChar(cMap, lexer) {
       return;
     }
     expectString(obj);
-    const src = strToInt(obj);
+    const src = strToInt(<string>obj);
     obj = lexer.getObj();
     expectInt(obj);
-    const dst = obj;
+    const dst = <number>obj;
     cMap.mapOne(src, dst);
   }
 }
 
-function parseCidRange(cMap, lexer) {
+function parseCidRange(cMap: CMap, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -545,18 +551,18 @@ function parseCidRange(cMap, lexer) {
       return;
     }
     expectString(obj);
-    const low = strToInt(obj);
+    const low = strToInt(<string>obj);
     obj = lexer.getObj();
     expectString(obj);
-    const high = strToInt(obj);
+    const high = strToInt(<string>obj);
     obj = lexer.getObj();
     expectInt(obj);
-    const dstLow = obj;
+    const dstLow = <number>obj;
     cMap.mapCidRange(low, high, dstLow);
   }
 }
 
-function parseCodespaceRange(cMap, lexer) {
+function parseCodespaceRange(cMap: CMap, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -579,21 +585,27 @@ function parseCodespaceRange(cMap, lexer) {
   throw new FormatError("Invalid codespace range.");
 }
 
-function parseWMode(cMap, lexer) {
+function parseWMode(cMap: CMap, lexer: Lexer) {
   const obj = lexer.getObj();
   if (Number.isInteger(obj)) {
     cMap.vertical = !!obj;
   }
 }
 
-function parseCMapName(cMap, lexer) {
+function parseCMapName(cMap: CMap, lexer: Lexer) {
   const obj = lexer.getObj();
   if (obj instanceof Name) {
     cMap.name = obj.name;
   }
 }
+type FetchBuiltInCMapType = (name: string) => Promise<{
+  cMapData: Uint8Array;
+  isCompressed: boolean;
+}>;
 
-async function parseCMap(cMap, lexer, fetchBuiltInCMap, useCMap) {
+async function parseCMap(cMap: CMap, lexer: Lexer, fetchBuiltInCMap: FetchBuiltInCMapType,
+  // 这里根本就不应该是string类型，为了兼容不良的代码做的
+  useCMap: CMap | string | null) {
   let previous, embeddedUseCMap;
   objLoop: while (true) {
     try {
@@ -648,34 +660,34 @@ async function parseCMap(cMap, lexer, fetchBuiltInCMap, useCMap) {
     useCMap = embeddedUseCMap;
   }
   if (useCMap) {
-    return extendCMap(cMap, fetchBuiltInCMap, useCMap);
+    return extendCMap(cMap, fetchBuiltInCMap, <string>useCMap);
   }
   return cMap;
 }
 
-async function extendCMap(cMap, fetchBuiltInCMap, useCMap) {
+async function extendCMap(cMap: CMap, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: string) {
   cMap.useCMap = await createBuiltInCMap(useCMap, fetchBuiltInCMap);
   // If there aren't any code space ranges defined clone all the parent ones
   // into this cMap.
   if (cMap.numCodespaceRanges === 0) {
-    const useCodespaceRanges = cMap.useCMap.codespaceRanges;
+    const useCodespaceRanges = cMap.useCMap!.codespaceRanges;
     for (let i = 0; i < useCodespaceRanges.length; i++) {
       cMap.codespaceRanges[i] = useCodespaceRanges[i].slice();
     }
-    cMap.numCodespaceRanges = cMap.useCMap.numCodespaceRanges;
+    cMap.numCodespaceRanges = cMap.useCMap!.numCodespaceRanges;
   }
   // Merge the map into the current one, making sure not to override
   // any previously defined entries.
-  cMap.useCMap.forEach(function (key, value) {
+  cMap.useCMap!.forEach(function (key: number, _value: string | number) {
     if (!cMap.contains(key)) {
-      cMap.mapOne(key, cMap.useCMap.lookup(key));
+      cMap.mapOne(key, cMap.useCMap!.lookup(key)!);
     }
   });
 
   return cMap;
 }
 
-async function createBuiltInCMap(name, fetchBuiltInCMap) {
+async function createBuiltInCMap(name: string, fetchBuiltInCMap: FetchBuiltInCMapType) {
   if (name === "Identity-H") {
     return new IdentityCMap(false, 2);
   } else if (name === "Identity-V") {
@@ -701,7 +713,12 @@ async function createBuiltInCMap(name, fetchBuiltInCMap) {
 }
 
 class CMapFactory {
-  static async create({ encoding, fetchBuiltInCMap, useCMap }) {
+  static async create({ encoding, fetchBuiltInCMap, useCMap }:
+    {
+      encoding: Name | BaseStream,
+      fetchBuiltInCMap: FetchBuiltInCMapType
+      useCMap: CMap | null
+    }) {
     if (encoding instanceof Name) {
       return createBuiltInCMap(encoding.name, fetchBuiltInCMap);
     } else if (encoding instanceof BaseStream) {

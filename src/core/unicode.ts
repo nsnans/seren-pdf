@@ -57,7 +57,7 @@ function mapSpecialUnicodeValues(code) {
   return code;
 }
 
-function getUnicodeForGlyph(name, glyphsUnicodeMap) {
+function getUnicodeForGlyph(name: string, glyphsUnicodeMap: Record<string, number>) {
   let unicode = glyphsUnicodeMap[name];
   if (unicode !== undefined) {
     return unicode;

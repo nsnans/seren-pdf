@@ -241,7 +241,7 @@ class PartialEvaluator {
 
   protected fontCache;
 
-  protected builtInCMapCache: Map<string, any>;
+  protected builtInCMapCache: Map<string, { cMapData: Uint8Array; isCompressed: boolean; }>;
 
   protected standardFontDataCache;
 
@@ -447,7 +447,10 @@ class PartialEvaluator {
     if (cachedData) {
       return cachedData;
     }
-    let data;
+    let data: {
+      cMapData: Uint8Array;
+      isCompressed: boolean;
+    };
 
     if (this.options.cMapUrl !== null) {
       // Only compressed CMaps are (currently) supported here.
@@ -464,7 +467,10 @@ class PartialEvaluator {
       };
     } else {
       // Get the data on the main-thread instead.
-      data = await this.handler.sendWithPromise("FetchBuiltInCMap", { name });
+      data = await this.handler.sendWithPromise("FetchBuiltInCMap", { name }) as {
+        cMapData: Uint8Array;
+        isCompressed: boolean;
+      };
     }
     // Cache the CMap data, to avoid fetching it repeatedly.
     this.builtInCMapCache.set(name, data);

@@ -642,7 +642,7 @@ class WorkerMessageHandler {
               pdfManager!.getPage(pageIndex).then(function (page) {
                 const task = new WorkerTask(`Save: page ${pageIndex}`);
                 return page
-                  .save(handler, task, annotationStorage)
+                  .save(handler!, task, annotationStorage)
                   .finally(function () {
                     finishWorkerTask(task);
                   });

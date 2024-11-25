@@ -23,7 +23,14 @@ type BaseCMapReaderFactoryOption = {
 }
 
 export interface CMapReaderFactory {
+
+  // 这个接口应该删掉
   _fetch(url: string): Promise<Uint8Array>;
+
+  fetch({ name }: { name: string; }): Promise<{
+    cMapData: Uint8Array;
+    isCompressed: boolean;
+  }>;
 }
 
 export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
