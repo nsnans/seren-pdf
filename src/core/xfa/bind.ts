@@ -17,15 +17,7 @@ import { warn } from "../../shared/util";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
 import {
-  $clone,
-  $consumed,
   $content,
-  $data,
-  $getAttributeIt,
-  $getChildren,
-  $getDataValue,
-  $getParent,
-  $getRealChildrenByNameIt,
   $hasSettableValue,
   $indexOf,
   $insertAt,
@@ -45,7 +37,7 @@ const NS_DATASETS = NamespaceIds.datasets.id;
 
 function createText(content) {
   const node = new Text({});
-  node[$content] = content;
+  node.content = content;
   return node;
 }
 
@@ -55,9 +47,9 @@ class Binder {
     this.datasets = root.datasets;
     this.data =
       root.datasets?.data || new XmlObject(NamespaceIds.datasets.id, "data");
-    this.emptyMerge = this.data[$getChildren]().length === 0;
+    this.emptyMerge = this.data.getChildren().length === 0;
 
-    this.root.form = this.form = root.template[$clone]();
+    this.root.form = this.form = root.template.clone();
   }
 
   _isConsumeData() {
@@ -83,18 +75,18 @@ class Binder {
     // data node (through $data property): we'll use it
     // to save form data.
 
-    formNode[$data] = data;
+    formNode.data = data;
     if (formNode[$hasSettableValue]()) {
       if (data[$isDataValue]()) {
-        const value = data[$getDataValue]();
+        const value = data.getDataValue();
         // TODO: use picture.
         formNode[$setValue](createText(value));
       } else if (
         formNode instanceof Field &&
         formNode.ui?.choiceList?.open === "multiSelect"
       ) {
-        const value = data[$getChildren]()
-          .map(child => child[$content].trim())
+        const value = data.getChildren()
+          .map(child => child.content.trim())
           .join("\n");
         formNode[$setValue](createText(value));
       } else if (this._isConsumeData()) {
@@ -118,7 +110,7 @@ class Binder {
     //  - and if not in found, then in grand-parent.
     let generator, match;
     for (let i = 0; i < 3; i++) {
-      generator = dataNode[$getRealChildrenByNameIt](
+      generator = dataNode.getRealChildrenByNameIt(
         name,
         /* allTransparent = */ false,
         /* skipConsumed = */ true
@@ -140,7 +132,7 @@ class Binder {
       ) {
         break;
       }
-      dataNode = dataNode[$getParent]();
+      dataNode = dataNode.getParent();
     }
 
     if (!global) {
@@ -149,7 +141,7 @@ class Binder {
 
     // Secondly, if global try to find it just under the root of datasets
     // (which is the location of global variables).
-    generator = this.data[$getRealChildrenByNameIt](
+    generator = this.data.getRealChildrenByNameIt(
       name,
       /* allTransparent = */ true,
       /* skipConsumed = */ false
@@ -161,7 +153,7 @@ class Binder {
     }
 
     // Thirdly, try to find it in attributes.
-    generator = this.data[$getAttributeIt](name, /* skipConsumed = */ true);
+    generator = this.data.getAttributeIt(name, /* skipConsumed = */ true);
     match = generator.next().value;
     if (match?.[$isDataValue]()) {
       return match;
@@ -228,7 +220,7 @@ class Binder {
         continue;
       }
 
-      const targetParent = targetNode[$getParent]();
+      const targetParent = targetNode.getParent();
       if (
         targetNode instanceof SetProperty ||
         targetParent instanceof SetProperty
@@ -263,13 +255,14 @@ class Binder {
         continue;
       }
 
+      // 这个地方要仔细研究一下，看看怎么弄
       if (!targetNode.hasOwnProperty($content)) {
         warn(`XFA - Invalid node to use in setProperty`);
         continue;
       }
 
-      targetNode[$data] = node;
-      targetNode[$content] = content;
+      targetNode.data = node;
+      targetNode.content = content;
       targetNode.finalize();
     }
   }
@@ -388,7 +381,7 @@ class Binder {
     let baseClone;
     if (matches.length > 1) {
       // Clone before binding to avoid bad state.
-      baseClone = formNode[$clone]();
+      baseClone = formNode.clone();
       baseClone[$removeChild](baseClone.occur);
       baseClone.occur = null;
     }
@@ -401,13 +394,13 @@ class Binder {
       return;
     }
 
-    const parent = formNode[$getParent]();
+    const parent = formNode.getParent();
     const name = formNode[$nodeName];
     const pos = parent[$indexOf](formNode);
 
     for (let i = 1, ii = matches.length; i < ii; i++) {
       const match = matches[i];
-      const clone = baseClone[$clone]();
+      const clone = baseClone.clone();
       parent[name].push(clone);
       parent[$insertAt](pos + i, clone);
 
@@ -427,7 +420,7 @@ class Binder {
       return;
     }
 
-    const parent = formNode[$getParent]();
+    const parent = formNode.getParent();
     const name = formNode[$nodeName];
 
     if (!(parent[name] instanceof XFAObjectArray)) {
@@ -446,14 +439,14 @@ class Binder {
     const pos = parent[$indexOf](formNode) + 1;
     const ii = occur.initial - currentNumber;
     if (ii) {
-      const nodeClone = formNode[$clone]();
+      const nodeClone = formNode.clone();
       nodeClone[$removeChild](nodeClone.occur);
       nodeClone.occur = null;
       parent[name].push(nodeClone);
       parent[$insertAt](pos, nodeClone);
 
       for (let i = 1; i < ii; i++) {
-        const clone = nodeClone[$clone]();
+        const clone = nodeClone.clone();
         parent[name].push(clone);
         parent[$insertAt](pos + i, clone);
       }
@@ -483,8 +476,8 @@ class Binder {
 
     this._createOccurrences(formNode);
 
-    for (const child of formNode[$getChildren]()) {
-      if (child[$data]) {
+    for (const child of formNode.getChildren()) {
+      if (child.data) {
         // Already bound.
         continue;
       }
@@ -496,7 +489,7 @@ class Binder {
         // The highest-level subform and the data node representing
         // the current record are special; they are always
         // bound even if their names don't match.
-        const dataChildren = dataNode[$getChildren]();
+        const dataChildren = dataNode.getChildren();
         if (dataChildren.length > 0) {
           this._bindOccurrences(child, [dataChildren[0]], null);
         } else if (this.emptyMerge) {
@@ -504,7 +497,7 @@ class Binder {
             dataNode[$namespaceId] === NS_DATASETS
               ? -1
               : dataNode[$namespaceId];
-          const dataChild = (child[$data] = new XmlObject(
+          const dataChild = (child.data = new XmlObject(
             nsId,
             child.name || "root"
           ));
@@ -544,7 +537,7 @@ class Binder {
             break;
         }
         if (child.bind.picture) {
-          picture = child.bind.picture[$content];
+          picture = child.bind.picture.content;
         }
       }
 
@@ -571,7 +564,7 @@ class Binder {
             continue;
           }
           if (this._isConsumeData()) {
-            match[$consumed] = true;
+            match.consumed = true;
           }
 
           // Don't bind the value in newly created node because it's empty.
@@ -580,7 +573,7 @@ class Binder {
         } else {
           if (this._isConsumeData()) {
             // Filter out consumed nodes.
-            match = match.filter(node => !node[$consumed]);
+            match = match.filter(node => !node.consumed);
           }
           if (match.length > max) {
             match = match.slice(0, max);
@@ -589,7 +582,7 @@ class Binder {
           }
           if (match && this._isConsumeData()) {
             match.forEach(node => {
-              node[$consumed] = true;
+              node.consumed = true;
             });
           }
         }
@@ -613,14 +606,14 @@ class Binder {
             if (!found) {
               break;
             }
-            found[$consumed] = true;
+            found.consumed = true;
             matches.push(found);
           }
           match = matches.length > 0 ? matches : null;
         } else {
           // If we've an empty merge, there are no reason
           // to make multiple bind so skip consumed nodes.
-          match = dataNode[$getRealChildrenByNameIt](
+          match = dataNode.getRealChildrenByNameIt(
             child.name,
             /* allTransparent = */ false,
             /* skipConsumed = */ this.emptyMerge
@@ -639,9 +632,9 @@ class Binder {
               dataNode[$namespaceId] === NS_DATASETS
                 ? -1
                 : dataNode[$namespaceId];
-            match = child[$data] = new XmlObject(nsId, child.name);
+            match = child.data = new XmlObject(nsId, child.name);
             if (this.emptyMerge) {
-              match[$consumed] = true;
+              match.consumed = true;
             }
             dataNode.appendChild(match);
 
@@ -650,7 +643,7 @@ class Binder {
             continue;
           }
           if (this.emptyMerge) {
-            match[$consumed] = true;
+            match.consumed = true;
           }
           match = [match];
         }
@@ -665,7 +658,7 @@ class Binder {
       }
     }
 
-    uselessNodes.forEach(node => node[$getParent]()[$removeChild](node));
+    uselessNodes.forEach(node => node.getParent()[$removeChild](node));
   }
 }
 

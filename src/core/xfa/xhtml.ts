@@ -21,13 +21,6 @@ import {
 } from "./html_utils";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import {
-  $childrenToHTML,
-  $clean,
-  $content,
-  $extra,
-  $getChildren,
-  $getParent,
-  $globalData,
   $nodeName,
   $onText,
   $pushGlyphs,
@@ -148,7 +141,7 @@ function mapStyle(styleStr, node, richText) {
         size: original.fontSize || 0,
       },
       node,
-      node[$globalData].fontFinder,
+      node.globalData.fontFinder,
       style
     );
   }
@@ -197,7 +190,7 @@ function checkStyle(node) {
     .map(s => s.split(/\s*:\s*/, 2))
     .filter(([key, value]) => {
       if (key === "font-family") {
-        node[$globalData].usedTypefaces.add(value);
+        node.globalData.usedTypefaces.add(value);
       }
       return VALID_STYLES.has(key);
     })
@@ -214,8 +207,8 @@ class XhtmlObject extends XmlObject {
     this.style = attributes.style || "";
   }
 
-  [$clean](builder) {
-    super[$clean](builder);
+  clean(builder) {
+    super.clean(builder);
     this.style = checkStyle(this);
   }
 
@@ -234,7 +227,7 @@ class XhtmlObject extends XmlObject {
     }
 
     if (str) {
-      this[$content] += str;
+      this.content += str;
     }
   }
 
@@ -313,12 +306,12 @@ class XhtmlObject extends XmlObject {
 
     measure.pushData(xfaFont, margin, lineHeight);
 
-    if (this[$content]) {
-      measure.addString(this[$content]);
+    if (this.content) {
+      measure.addString(this.content);
     } else {
-      for (const child of this[$getChildren]()) {
+      for (const child of this.getChildren()) {
         if (child[$nodeName] === "#text") {
-          measure.addString(child[$content]);
+          measure.addString(child.content);
           continue;
         }
         child[$pushGlyphs](measure);
@@ -332,23 +325,23 @@ class XhtmlObject extends XmlObject {
 
   [$toHTML](availableSpace) {
     const children = [];
-    this[$extra] = {
+    this.extra = {
       children,
     };
 
     this.childrenToHTML({});
 
-    if (children.length === 0 && !this[$content]) {
+    if (children.length === 0 && !this.content) {
       return HTMLResult.EMPTY;
     }
 
     let value;
     if (this[$richText]) {
-      value = this[$content]
-        ? this[$content].replaceAll(crlfForRichTextRegExp, "\n")
+      value = this.content
+        ? this.content.replaceAll(crlfForRichTextRegExp, "\n")
         : undefined;
     } else {
-      value = this[$content] || undefined;
+      value = this.content || undefined;
     }
 
     return HTMLResult.success({
@@ -426,7 +419,7 @@ class Html extends XhtmlObject {
 
   [$toHTML](availableSpace) {
     const children = [];
-    this[$extra] = {
+    this.extra = {
       children,
     };
 
@@ -438,7 +431,7 @@ class Html extends XhtmlObject {
           class: ["xfaRich"],
           style: {},
         },
-        value: this[$content] || "",
+        value: this.content || "",
       });
     }
 
@@ -497,7 +490,7 @@ class P extends XhtmlObject {
   }
 
   [$text]() {
-    const siblings = this[$getParent]()[$getChildren]();
+    const siblings = this.getParent().getChildren();
     if (siblings.at(-1) === this) {
       return super[$text]();
     }

@@ -14,12 +14,10 @@
  */
 
 import {
-  $getAttributes,
-  $getChildren,
   $nodeName,
   $setValue,
   $toString,
-  $uid,
+  $uid
 } from "./symbol_utils";
 
 class DataHandler {
@@ -29,7 +27,7 @@ class DataHandler {
   }
 
   serialize(storage: Map<string, object> | null) {
-    const stack = [[-1, this.data[$getChildren]()]];
+    const stack = [[-1, this.data.getChildren()]];
 
     while (stack.length > 0) {
       const last = stack.at(-1);
@@ -44,7 +42,7 @@ class DataHandler {
       if (storageEntry) {
         child[$setValue](storageEntry);
       } else {
-        const attributes = child[$getAttributes]();
+        const attributes = child.getAttributes();
         for (const value of attributes.values()) {
           const entry = storage.get(value[$uid]);
           if (entry) {
@@ -54,7 +52,7 @@ class DataHandler {
         }
       }
 
-      const nodes = child[$getChildren]();
+      const nodes = child.getChildren();
       if (nodes.length > 0) {
         stack.push([-1, nodes]);
       }
@@ -66,7 +64,7 @@ class DataHandler {
     if (this.dataset) {
       // Dump nodes other than data: they can contains for example
       // some data for choice lists.
-      for (const child of this.dataset[$getChildren]()) {
+      for (const child of this.dataset.getChildren()) {
         if (child[$nodeName] !== "data") {
           child[$toString](buf);
         }

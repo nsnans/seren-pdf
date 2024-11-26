@@ -13,12 +13,6 @@
  * limitations under the License.
  */
 
-import {
-  $getChildren,
-  $getChildrenByClass,
-  $getChildrenByName,
-  $getParent,
-} from "./symbol_utils";
 import { warn } from "../../shared/util";
 
 const namePattern = /^[^.[]+/;
@@ -36,7 +30,7 @@ const shortcuts = new Map([
   [
     "$record",
     (root, current) =>
-      (root.datasets ? root.datasets.data : root)[$getChildren]()[0],
+      (root.datasets ? root.datasets.data : root).getChildren()[0],
   ],
   ["$template", (root, current) => root.template],
   ["$connectionSet", (root, current) => root.connectionSet],
@@ -204,13 +198,13 @@ function searchNode(
       if (!children) {
         switch (operator) {
           case operators.dot:
-            children = node[$getChildrenByName](name, false);
+            children = node.getChildrenByName(name, false);
             break;
           case operators.dotDot:
-            children = node[$getChildrenByName](name, true);
+            children = node.getChildrenByName(name, true);
             break;
           case operators.dotHash:
-            children = node[$getChildrenByClass](name);
+            children = node.getChildrenByClass(name);
             children = children.isXFAObjectArray
               ? children.children
               : [children];
@@ -232,7 +226,7 @@ function searchNode(
       // We've an unqualified expression and we didn't find anything
       // so look at container and siblings of container and so on.
       // http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.364.2157&rep=rep1&type=pdf#page=114
-      const parent = container[$getParent]();
+      const parent = container.getParent();
       container = parent;
       if (!container) {
         return null;
@@ -283,13 +277,13 @@ function createDataNode(root, container, expr) {
     let children;
     switch (operator) {
       case operators.dot:
-        children = root[$getChildrenByName](name, false);
+        children = root.getChildrenByName(name, false);
         break;
       case operators.dotDot:
-        children = root[$getChildrenByName](name, true);
+        children = root.getChildrenByName(name, true);
         break;
       case operators.dotHash:
-        children = root[$getChildrenByClass](name);
+        children = root.getChildrenByClass(name);
         children = children.isXFAObjectArray ? children.children : [children];
         break;
       default:

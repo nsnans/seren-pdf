@@ -19,7 +19,6 @@ import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
 import {
-  $globalData,
   $nodeName,
   $text,
   $toHTML,
@@ -42,7 +41,7 @@ class XFAFactory {
       const binder = new Binder(this.root);
       this.form = binder.bind();
       this.dataHandler = new DataHandler(this.root, binder.getData());
-      this.form[$globalData].template = this.form;
+      this.form.globalData.template = this.form;
     } catch (e) {
       warn(`XFA - an error occurred during parsing and binding: ${e}`);
     }
@@ -99,15 +98,15 @@ class XFAFactory {
   }
 
   setImages(images) {
-    this.form[$globalData].images = images;
+    this.form.globalData.images = images;
   }
 
   setFonts(fonts) {
-    this.form[$globalData].fontFinder = new FontFinder(fonts);
+    this.form.globalData.fontFinder = new FontFinder(fonts);
     const missingFonts = [];
-    for (let typeface of this.form[$globalData].usedTypefaces) {
+    for (let typeface of this.form.globalData.usedTypefaces) {
       typeface = stripQuotes(typeface);
-      const font = this.form[$globalData].fontFinder.find(typeface);
+      const font = this.form.globalData.fontFinder.find(typeface);
       if (!font) {
         missingFonts.push(typeface);
       }
@@ -121,7 +120,7 @@ class XFAFactory {
   }
 
   appendFonts(fonts, reallyMissingFonts) {
-    this.form[$globalData].fontFinder.add(fonts, reallyMissingFonts);
+    this.form.globalData.fontFinder.add(fonts, reallyMissingFonts);
   }
 
   async getPages() {

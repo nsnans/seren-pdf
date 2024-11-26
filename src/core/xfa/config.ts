@@ -15,7 +15,6 @@
 
 import { shadow, warn } from "../../shared/util";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import { $content } from "./symbol_utils";
 import { getInteger, getStringOption } from "./utils";
 import {
   ContentObject,
@@ -174,8 +173,8 @@ class BehaviorOverride extends ContentObject {
   }
 
   finalize() {
-    this[$content] = new Map(
-      this[$content]
+    this.content = new Map(
+      this.content
         .trim()
         .split(/\s+/)
         .filter(x => x.includes(":"))
@@ -457,7 +456,7 @@ class Exclude extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content]
+    this.content = this.content
       .trim()
       .split(/\s+/)
       .filter(
@@ -712,10 +711,10 @@ class Packets extends StringObject {
   }
 
   finalize() {
-    if (this[$content] === "*") {
+    if (this.content === "*") {
       return;
     }
-    this[$content] = this[$content]
+    this.content = this.content
       .trim()
       .split(/\s+/)
       .filter(x =>
@@ -746,7 +745,7 @@ class PageRange extends StringObject {
   }
 
   finalize() {
-    const numbers = this[$content]
+    const numbers = this.content
       .trim()
       .split(/\s+/)
       .map(x => parseInt(x, 10));
@@ -754,7 +753,7 @@ class PageRange extends StringObject {
     for (let i = 0, ii = numbers.length; i < ii; i += 2) {
       ranges.push(numbers.slice(i, i + 2));
     }
-    this[$content] = ranges;
+    this.content = ranges;
   }
 }
 
@@ -963,7 +962,7 @@ class Range extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content]
+    this.content = this.content
       .trim()
       .split(/\s*,\s*/, 2)
       .map(range => range.split("-").map(x => parseInt(x.trim(), 10)))
@@ -983,10 +982,10 @@ class Record extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content].trim();
-    const n = parseInt(this[$content], 10);
+    this.content = this.content.trim();
+    const n = parseInt(this.content, 10);
     if (!isNaN(n) && n >= 0) {
-      this[$content] = n;
+      this.content = n;
     }
   }
 }
@@ -997,7 +996,7 @@ class Relevant extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content].trim().split(/\s+/);
+    this.content = this.content.trim().split(/\s+/);
   }
 }
 
@@ -1007,12 +1006,12 @@ class Rename extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content].trim();
+    this.content = this.content.trim();
     // String must be a XFA name: same as XML one except that there
     // is no colon.
     if (
-      this[$content].toLowerCase().startsWith("xml") ||
-      new RegExp("[\\p{L}_][\\p{L}\\d._\\p{M}-]*", "u").test(this[$content])
+      this.content.toLowerCase().startsWith("xml") ||
+      new RegExp("[\\p{L}_][\\p{L}\\d._\\p{M}-]*", "u").test(this.content)
     ) {
       warn("XFA - Rename: invalid XFA name");
     }
@@ -1231,7 +1230,7 @@ class ValidateApprovalSignatures extends ContentObject {
   }
 
   finalize() {
-    this[$content] = this[$content]
+    this.content = this.content
       .trim()
       .split(/\s+/)
       .filter(x => ["docReady", "postSign"].includes(x));
@@ -1316,18 +1315,18 @@ class Window extends ContentObject {
   }
 
   finalize() {
-    const pair = this[$content]
+    const pair = this.content
       .trim()
       .split(/\s*,\s*/, 2)
       .map(x => parseInt(x, 10));
     if (pair.some(x => isNaN(x))) {
-      this[$content] = [0, 0];
+      this.content = [0, 0];
       return;
     }
     if (pair.length === 1) {
       pair.push(pair[0]);
     }
-    this[$content] = pair;
+    this.content = pair;
   }
 }
 

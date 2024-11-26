@@ -17,7 +17,6 @@ import { warn } from "../../shared/util";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
 import {
-  $cleanup,
   $ids,
   $isNsAgnostic,
   $nsAttributes,
@@ -126,7 +125,7 @@ class Builder {
     // In case the node has some namespace things,
     // we must pop the different stacks.
     if (hasNamespaceDef || prefixes || node[$isNsAgnostic]()) {
-      node[$cleanup] = {
+      node.cleanup = {
         hasNamespace: hasNamespaceDef,
         prefixes,
         nsAgnostic: node[$isNsAgnostic](),

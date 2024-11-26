@@ -15,34 +15,7 @@
 
 // We use these symbols to avoid name conflict between tags
 // and properties/methods names.
-const $appendChild = Symbol();
-const $childrenToHTML = Symbol();
-const $clean = Symbol();
-const $cleanPage = Symbol();
-const $cleanup = Symbol();
-const $clone = Symbol();
-const $consumed = Symbol();
 const $content = Symbol("content");
-const $data = Symbol("data");
-const $dump = Symbol();
-const $extra = Symbol("extra");
-const $flushHTML = Symbol();
-const $getAttributeIt = Symbol();
-const $getAttributes = Symbol();
-const $getAvailableSpace = Symbol();
-const $getChildrenByClass = Symbol();
-const $getChildrenByName = Symbol();
-const $getChildrenByNameIt = Symbol();
-const $getDataValue = Symbol();
-const $getExtra = Symbol();
-const $getRealChildrenByNameIt = Symbol();
-const $getChildren = Symbol();
-const $getContainedChildren = Symbol();
-const $getNextPage = Symbol();
-const $getSubformParent = Symbol();
-const $getParent = Symbol();
-const $getTemplateRoot = Symbol();
-const $globalData = Symbol();
 const $hasSettableValue = Symbol();
 const $ids = Symbol();
 const $indexOf = Symbol();
@@ -82,34 +55,7 @@ const $toStyle = Symbol();
 const $uid = Symbol("uid");
 
 export {
-  $appendChild,
-  $childrenToHTML,
-  $clean,
-  $cleanPage,
-  $cleanup,
-  $clone,
-  $consumed,
   $content,
-  $data,
-  $dump,
-  $extra,
-  $flushHTML,
-  $getAttributeIt,
-  $getAttributes,
-  $getAvailableSpace,
-  $getChildren,
-  $getChildrenByClass,
-  $getChildrenByName,
-  $getChildrenByNameIt,
-  $getContainedChildren,
-  $getDataValue,
-  $getExtra,
-  $getNextPage,
-  $getParent,
-  $getRealChildrenByNameIt,
-  $getSubformParent,
-  $getTemplateRoot,
-  $globalData,
   $hasSettableValue,
   $ids,
   $indexOf,

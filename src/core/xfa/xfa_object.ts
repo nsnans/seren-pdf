@@ -18,28 +18,6 @@ import { encodeToXmlString } from "../core_utils";
 import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
-  $clean,
-  $cleanup,
-  $clone,
-  $consumed,
-  $content,
-  $dump,
-  $extra,
-  $flushHTML,
-  $getAttributeIt,
-  $getAttributes,
-  $getAvailableSpace,
-  $getChildren,
-  $getChildrenByClass,
-  $getChildrenByName,
-  $getChildrenByNameIt,
-  $getContainedChildren,
-  $getDataValue,
-  $getParent,
-  $getRealChildrenByNameIt,
-  $getSubformParent,
-  $getTemplateRoot,
-  $globalData,
   $hasSettableValue,
   $indexOf,
   $insertAt,
@@ -104,7 +82,7 @@ class XFAObject {
     this[_parent] = null;
     this[_children] = [];
     this[$uid] = `${name}${uid++}`;
-    this[$globalData] = null;
+    this.globalData = null;
   }
 
   get isXFAObject() {
@@ -189,12 +167,12 @@ class XFAObject {
 
   [$popPara]() {
     if (this.para) {
-      this[$getTemplateRoot]()[$extra].paraStack.pop();
+      this.getTemplateRoot().extra.paraStack.pop();
     }
   }
 
   [$pushPara]() {
-    this[$getTemplateRoot]()[$extra].paraStack.push(this.para);
+    this.getTemplateRoot().extra.paraStack.push(this.para);
   }
 
   [$setId](ids) {
@@ -203,8 +181,8 @@ class XFAObject {
     }
   }
 
-  [$getTemplateRoot]() {
-    return this[$globalData].template;
+  getTemplateRoot() {
+    return this.globalData.template;
   }
 
   [$isSplittable]() {
@@ -224,8 +202,8 @@ class XFAObject {
   appendChild(child) {
     child[_parent] = this;
     this[_children].push(child);
-    if (!child[$globalData] && this[$globalData]) {
-      child[$globalData] = this[$globalData];
+    if (!child.globalData && this.globalData) {
+      child.globalData = this.globalData;
     }
   }
 
@@ -244,11 +222,11 @@ class XFAObject {
 
   finalize() { }
 
-  [$clean](builder) {
+  clean(builder) {
     delete this[_hasChildren];
-    if (this[$cleanup]) {
-      builder.clean(this[$cleanup]);
-      delete this[$cleanup];
+    if (this.cleanup) {
+      builder.clean(this.cleanup);
+      delete this.cleanup;
     }
   }
 
@@ -259,8 +237,8 @@ class XFAObject {
   [$insertAt](i, child) {
     child[_parent] = this;
     this[_children].splice(i, 0, child);
-    if (!child[$globalData] && this[$globalData]) {
-      child[$globalData] = this[$globalData];
+    if (!child.globalData && this.globalData) {
+      child.globalData = this.globalData;
     }
   }
 
@@ -280,7 +258,7 @@ class XFAObject {
 
   [$text]() {
     if (this[_children].length === 0) {
-      return this[$content];
+      return this.content;
     }
     return this[_children].map(c => c[$text]()).join("");
   }
@@ -310,20 +288,20 @@ class XFAObject {
       if (node === parent) {
         return true;
       }
-      node = node[$getParent]();
+      node = node.getParent();
     }
     return false;
   }
 
-  [$getParent]() {
+  getParent() {
     return this[_parent];
   }
 
-  [$getSubformParent]() {
-    return this[$getParent]();
+  getSubformParent() {
+    return this.getParent();
   }
 
-  [$getChildren](name = null) {
+  getChildren(name = null) {
     if (!name) {
       return this[_children];
     }
@@ -331,10 +309,10 @@ class XFAObject {
     return this[name];
   }
 
-  [$dump]() {
+  dump() {
     const dumped = Object.create(null);
-    if (this[$content]) {
-      dumped.$content = this[$content];
+    if (this.content) {
+      dumped.$content = this.content;
     }
 
     for (const name of Object.getOwnPropertyNames(this)) {
@@ -343,7 +321,7 @@ class XFAObject {
         continue;
       }
       if (value instanceof XFAObject) {
-        dumped[name] = value[$dump]();
+        dumped[name] = value.dump();
       } else if (value instanceof XFAObjectArray) {
         if (!value.isEmpty()) {
           dumped[name] = value.dump();
@@ -364,56 +342,56 @@ class XFAObject {
     return HTMLResult.EMPTY;
   }
 
-  *[$getContainedChildren]() {
+  *getContainedChildren() {
     // This function is overriden in Subform and SubformSet.
-    for (const node of this[$getChildren]()) {
+    for (const node of this.getChildren()) {
       yield node;
     }
   }
 
   *[_filteredChildrenGenerator](filter, include) {
-    for (const node of this[$getContainedChildren]()) {
+    for (const node of this.getContainedChildren()) {
       if (!filter || include === filter.has(node[$nodeName])) {
-        const availableSpace = this[$getAvailableSpace]();
+        const availableSpace = this.getAvailableSpace();
         const res = node[$toHTML](availableSpace);
         if (!res.success) {
-          this[$extra].failingNode = node;
+          this.extra.failingNode = node;
         }
         yield res;
       }
     }
   }
 
-  [$flushHTML]() {
+  flushHTML() {
     return null;
   }
 
   addHTML(html, bbox) {
-    this[$extra].children.push(html);
+    this.extra.children.push(html);
   }
 
-  [$getAvailableSpace]() { }
+  getAvailableSpace() { }
 
   childrenToHTML({ filter = null, include = true }) {
-    if (!this[$extra].generator) {
-      this[$extra].generator = this[_filteredChildrenGenerator](
+    if (!this.extra.generator) {
+      this.extra.generator = this[_filteredChildrenGenerator](
         filter,
         include
       );
     } else {
-      const availableSpace = this[$getAvailableSpace]();
-      const res = this[$extra].failingNode[$toHTML](availableSpace);
+      const availableSpace = this.getAvailableSpace();
+      const res = this.extra.failingNode[$toHTML](availableSpace);
       if (!res.success) {
         return res;
       }
       if (res.html) {
         this.addHTML(res.html, res.bbox);
       }
-      delete this[$extra].failingNode;
+      delete this.extra.failingNode;
     }
 
     while (true) {
-      const gen = this[$extra].generator.next();
+      const gen = this.extra.generator.next();
       if (gen.done) {
         break;
       }
@@ -426,7 +404,7 @@ class XFAObject {
       }
     }
 
-    this[$extra].generator = null;
+    this.extra.generator = null;
 
     return HTMLResult.EMPTY;
   }
@@ -559,8 +537,8 @@ class XFAObject {
       return;
     }
 
-    if (!this[$content] && proto[$content]) {
-      this[$content] = proto[$content];
+    if (!this.content && proto.content) {
+      this.content = proto.content;
     }
 
     const newAncestors = new Set(ancestors);
@@ -592,7 +570,7 @@ class XFAObject {
           i < ii;
           i++
         ) {
-          const child = proto[_children][i][$clone]();
+          const child = proto[_children][i].clone();
           if (value.push(child)) {
             child[_parent] = this;
             this[_children].push(child);
@@ -615,7 +593,7 @@ class XFAObject {
       }
 
       if (protoValue !== null) {
-        const child = protoValue[$clone]();
+        const child = protoValue.clone();
         child[_parent] = this;
         this[name] = child;
         this[_children].push(child);
@@ -634,7 +612,7 @@ class XFAObject {
     return obj;
   }
 
-  [$clone]() {
+  clone() {
     const clone = Object.create(Object.getPrototypeOf(this));
     for (const $symbol of Object.getOwnPropertySymbols(this)) {
       try {
@@ -660,7 +638,7 @@ class XFAObject {
 
     for (const child of this[_children]) {
       const name = child[$nodeName];
-      const clonedChild = child[$clone]();
+      const clonedChild = child.clone();
       clone[_children].push(clonedChild);
       clonedChild[_parent] = clone;
       if (clone[name] === null) {
@@ -673,7 +651,7 @@ class XFAObject {
     return clone;
   }
 
-  [$getChildren](name = null) {
+  getChildren(name = null) {
     if (!name) {
       return this[_children];
     }
@@ -681,15 +659,15 @@ class XFAObject {
     return this[_children].filter(c => c[$nodeName] === name);
   }
 
-  [$getChildrenByClass](name) {
+  getChildrenByClass(name) {
     return this[name];
   }
 
-  [$getChildrenByName](name, allTransparent, first = true) {
-    return Array.from(this[$getChildrenByNameIt](name, allTransparent, first));
+  getChildrenByName(name, allTransparent, first = true) {
+    return Array.from(this.getChildrenByNameIt(name, allTransparent, first));
   }
 
-  *[$getChildrenByNameIt](name, allTransparent, first = true) {
+  *getChildrenByNameIt(name, allTransparent, first = true) {
     if (name === "parent") {
       yield this[_parent];
       return;
@@ -705,7 +683,7 @@ class XFAObject {
       }
 
       if (allTransparent || child[$isTransparent]()) {
-        yield* child[$getChildrenByNameIt](name, allTransparent, false);
+        yield* child.getChildrenByNameIt(name, allTransparent, false);
       }
     }
 
@@ -747,13 +725,13 @@ class XFAObjectArray {
 
   dump() {
     return this[_children].length === 1
-      ? this[_children][0][$dump]()
-      : this[_children].map(x => x[$dump]());
+      ? this[_children][0].dump()
+      : this[_children].map(x => x.dump());
   }
 
-  [$clone]() {
+  clone() {
     const clone = new XFAObjectArray(this[_max]);
-    clone[_children] = this[_children].map(c => c[$clone]());
+    clone[_children] = this[_children].map(c => c.clone());
     return clone;
   }
 
@@ -770,12 +748,12 @@ class XFAAttribute {
   constructor(node, name, value) {
     this[_parent] = node;
     this[$nodeName] = name;
-    this[$content] = value;
-    this[$consumed] = false;
+    this.content = value;
+    this.consumed = false;
     this[$uid] = `attribute${uid++}`;
   }
 
-  [$getParent]() {
+  getParent() {
     return this[_parent];
   }
 
@@ -783,17 +761,17 @@ class XFAAttribute {
     return true;
   }
 
-  [$getDataValue]() {
-    return this[$content].trim();
+  getDataValue() {
+    return this.content.trim();
   }
 
   [$setValue](value) {
     value = value.value || "";
-    this[$content] = value.toString();
+    this.content = value.toString();
   }
 
   [$text]() {
-    return this[$content];
+    return this.content;
   }
 
   [$isDescendent](parent) {
@@ -804,7 +782,7 @@ class XFAAttribute {
 class XmlObject extends XFAObject {
   constructor(nsId, name, attributes = {}) {
     super(nsId, name);
-    this[$content] = "";
+    this.content = "";
     this[_dataValue] = null;
     if (name !== "#text") {
       const map = new Map();
@@ -824,13 +802,13 @@ class XmlObject extends XFAObject {
         }
       }
     }
-    this[$consumed] = false;
+    this.consumed = false;
   }
 
   [$toString](buf) {
     const tagName = this[$nodeName];
     if (tagName === "#text") {
-      buf.push(encodeToXmlString(this[$content]));
+      buf.push(encodeToXmlString(this.content));
       return;
     }
     const utf8TagName = utf8StringToString(tagName);
@@ -838,7 +816,7 @@ class XmlObject extends XFAObject {
     buf.push(`<${prefix}${utf8TagName}`);
     for (const [name, value] of this[_attributes].entries()) {
       const utf8Name = utf8StringToString(name);
-      buf.push(` ${utf8Name}="${encodeToXmlString(value[$content])}"`);
+      buf.push(` ${utf8Name}="${encodeToXmlString(value.content)}"`);
     }
     if (this[_dataValue] !== null) {
       if (this[_dataValue]) {
@@ -847,17 +825,17 @@ class XmlObject extends XFAObject {
         buf.push(` xfa:dataNode="dataGroup"`);
       }
     }
-    if (!this[$content] && this[_children].length === 0) {
+    if (!this.content && this[_children].length === 0) {
       buf.push("/>");
       return;
     }
 
     buf.push(">");
-    if (this[$content]) {
-      if (typeof this[$content] === "string") {
-        buf.push(encodeToXmlString(this[$content]));
+    if (this.content) {
+      if (typeof this.content === "string") {
+        buf.push(encodeToXmlString(this.content));
       } else {
-        this[$content][$toString](buf);
+        this.content[$toString](buf);
       }
     } else {
       for (const child of this[_children]) {
@@ -868,26 +846,26 @@ class XmlObject extends XFAObject {
   }
 
   [$onChild](child) {
-    if (this[$content]) {
+    if (this.content) {
       const node = new XmlObject(this[$namespaceId], "#text");
       this.appendChild(node);
-      node[$content] = this[$content];
-      this[$content] = "";
+      node.content = this.content;
+      this.content = "";
     }
     this.appendChild(child);
     return true;
   }
 
   [$onText](str) {
-    this[$content] += str;
+    this.content += str;
   }
 
   finalize() {
-    if (this[$content] && this[_children].length > 0) {
+    if (this.content && this[_children].length > 0) {
       const node = new XmlObject(this[$namespaceId], "#text");
       this.appendChild(node);
-      node[$content] = this[$content];
-      delete this[$content];
+      node.content = this.content;
+      delete this.content;
     }
   }
 
@@ -895,14 +873,14 @@ class XmlObject extends XFAObject {
     if (this[$nodeName] === "#text") {
       return HTMLResult.success({
         name: "#text",
-        value: this[$content],
+        value: this.content,
       });
     }
 
     return HTMLResult.EMPTY;
   }
 
-  [$getChildren](name = null) {
+  getChildren(name = null) {
     if (!name) {
       return this[_children];
     }
@@ -910,19 +888,19 @@ class XmlObject extends XFAObject {
     return this[_children].filter(c => c[$nodeName] === name);
   }
 
-  [$getAttributes]() {
+  getAttributes() {
     return this[_attributes];
   }
 
-  [$getChildrenByClass](name) {
+  getChildrenByClass(name) {
     const value = this[_attributes].get(name);
     if (value !== undefined) {
       return value;
     }
-    return this[$getChildren](name);
+    return this.getChildren(name);
   }
 
-  *[$getChildrenByNameIt](name, allTransparent) {
+  *getChildrenByNameIt(name, allTransparent) {
     const value = this[_attributes].get(name);
     if (value) {
       yield value;
@@ -934,29 +912,29 @@ class XmlObject extends XFAObject {
       }
 
       if (allTransparent) {
-        yield* child[$getChildrenByNameIt](name, allTransparent);
+        yield* child.getChildrenByNameIt(name, allTransparent);
       }
     }
   }
 
-  *[$getAttributeIt](name, skipConsumed) {
+  *getAttributeIt(name, skipConsumed) {
     const value = this[_attributes].get(name);
-    if (value && (!skipConsumed || !value[$consumed])) {
+    if (value && (!skipConsumed || !value.consumed)) {
       yield value;
     }
     for (const child of this[_children]) {
-      yield* child[$getAttributeIt](name, skipConsumed);
+      yield* child.getAttributeIt(name, skipConsumed);
     }
   }
 
-  *[$getRealChildrenByNameIt](name, allTransparent, skipConsumed) {
+  *getRealChildrenByNameIt(name, allTransparent, skipConsumed) {
     for (const child of this[_children]) {
-      if (child[$nodeName] === name && (!skipConsumed || !child[$consumed])) {
+      if (child[$nodeName] === name && (!skipConsumed || !child.consumed)) {
         yield child;
       }
 
       if (allTransparent) {
-        yield* child[$getRealChildrenByNameIt](
+        yield* child.getRealChildrenByNameIt(
           name,
           allTransparent,
           skipConsumed
@@ -975,42 +953,42 @@ class XmlObject extends XFAObject {
     return this[_dataValue];
   }
 
-  [$getDataValue]() {
+  getDataValue() {
     if (this[_dataValue] === null) {
       if (this[_children].length === 0) {
-        return this[$content].trim();
+        return this.content.trim();
       }
       if (this[_children][0][$namespaceId] === NamespaceIds.xhtml.id) {
         return this[_children][0][$text]().trim();
       }
       return null;
     }
-    return this[$content].trim();
+    return this.content.trim();
   }
 
   [$setValue](value) {
     value = value.value || "";
-    this[$content] = value.toString();
+    this.content = value.toString();
   }
 
-  [$dump](hasNS = false) {
+  dump(hasNS = false) {
     const dumped = Object.create(null);
     if (hasNS) {
       dumped.$ns = this[$namespaceId];
     }
-    if (this[$content]) {
-      dumped.$content = this[$content];
+    if (this.content) {
+      dumped.$content = this.content;
     }
     dumped.$name = this[$nodeName];
 
     dumped.children = [];
     for (const child of this[_children]) {
-      dumped.children.push(child[$dump](hasNS));
+      dumped.children.push(child.dump(hasNS));
     }
 
     dumped.attributes = Object.create(null);
     for (const [name, value] of this[_attributes]) {
-      dumped.attributes[name] = value[$content];
+      dumped.attributes[name] = value.content;
     }
 
     return dumped;
@@ -1020,11 +998,11 @@ class XmlObject extends XFAObject {
 class ContentObject extends XFAObject {
   constructor(nsId, name) {
     super(nsId, name);
-    this[$content] = "";
+    this.content = "";
   }
 
   [$onText](text) {
-    this[$content] += text;
+    this.content += text;
   }
 
   finalize() { }
@@ -1037,22 +1015,22 @@ class OptionObject extends ContentObject {
   }
 
   finalize() {
-    this[$content] = getKeyword({
-      data: this[$content],
+    this.content = getKeyword({
+      data: this.content,
       defaultValue: this[_options][0],
       validate: k => this[_options].includes(k),
     });
   }
 
-  [$clean](builder) {
-    super[$clean](builder);
+  clean(builder) {
+    super.clean(builder);
     delete this[_options];
   }
 }
 
 class StringObject extends ContentObject {
   finalize() {
-    this[$content] = this[$content].trim();
+    this.content = this.content.trim();
   }
 }
 
@@ -1064,15 +1042,15 @@ class IntegerObject extends ContentObject {
   }
 
   finalize() {
-    this[$content] = getInteger({
-      data: this[$content],
+    this.content = getInteger({
+      data: this.content,
       defaultValue: this[_defaultValue],
       validate: this[_validator],
     });
   }
 
-  [$clean](builder) {
-    super[$clean](builder);
+  clean(builder) {
+    super.clean(builder);
     delete this[_defaultValue];
     delete this[_validator];
   }

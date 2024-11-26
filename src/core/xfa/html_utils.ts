@@ -13,22 +13,16 @@
  * limitations under the License.
  */
 
+import { createValidAbsoluteUrl, warn } from "../../shared/util";
+import { selectFont } from "./fonts";
 import {
-  $content,
-  $extra,
-  $getParent,
-  $getSubformParent,
-  $getTemplateRoot,
-  $globalData,
   $nodeName,
   $pushGlyphs,
   $text,
-  $toStyle,
+  $toStyle
 } from "./symbol_utils";
-import { createValidAbsoluteUrl, warn } from "../../shared/util";
-import { getMeasurement, stripQuotes } from "./utils";
-import { selectFont } from "./fonts";
 import { TextMeasure } from "./text";
+import { getMeasurement, stripQuotes } from "./utils";
 import { XFAObject } from "./xfa_object";
 
 function measureToString(m: number | string) {
@@ -41,7 +35,7 @@ function measureToString(m: number | string) {
 
 const converters = {
   anchorType(node, style) {
-    const parent = node[$getSubformParent]();
+    const parent = node.getSubformParent();
     if (!parent || (parent.layout && parent.layout !== "position")) {
       // anchorType is only used in a positioned layout.
       return;
@@ -78,11 +72,11 @@ const converters = {
     }
   },
   dimensions(node, style) {
-    const parent = node[$getSubformParent]();
+    const parent = node.getSubformParent();
     let width = node.w;
     const height = node.h;
     if (parent.layout?.includes("row")) {
-      const extra = parent[$extra];
+      const extra = parent.extra;
       const colSpan = node.colSpan;
       let w;
       if (colSpan === -1) {
@@ -108,7 +102,7 @@ const converters = {
     style.height = height !== "" ? measureToString(height) : "auto";
   },
   position(node, style) {
-    const parent = node[$getSubformParent]();
+    const parent = node.getSubformParent();
     if (parent?.layout && parent.layout !== "position") {
       // IRL, we've some x/y in tb layout.
       // Specs say x/y is only used in positioned layout.
@@ -174,7 +168,7 @@ const converters = {
 };
 
 function setMinMaxDimensions(node, style) {
-  const parent = node[$getSubformParent]();
+  const parent = node.getSubformParent();
   if (parent.layout === "position") {
     if (node.minW > 0) {
       style.minWidth = measureToString(node.minW);
@@ -228,26 +222,26 @@ function layoutNode(node, availableSpace) {
 
     let font = node.font;
     if (!font) {
-      const root = node[$getTemplateRoot]();
-      let parent = node[$getParent]();
+      const root = node.getTemplateRoot();
+      let parent = node.getParent();
       while (parent && parent !== root) {
         if (parent.font) {
           font = parent.font;
           break;
         }
-        parent = parent[$getParent]();
+        parent = parent.getParent();
       }
     }
 
     const maxWidth = (node.w || availableSpace.width) - marginH;
-    const fontFinder = node[$globalData].fontFinder;
+    const fontFinder = node.globalData.fontFinder;
     if (
       node.value.exData &&
-      node.value.exData[$content] &&
+      node.value.exData.content &&
       node.value.exData.contentType === "text/html"
     ) {
       const res = layoutText(
-        node.value.exData[$content],
+        node.value.exData.content,
         font,
         margin,
         lineHeight,
@@ -296,7 +290,7 @@ function computeBbox(node, html, availableSpace) {
     let width = node.w;
     if (width === "") {
       if (node.maxW === 0) {
-        const parent = node[$getSubformParent]();
+        const parent = node.getSubformParent();
         width = parent.layout === "position" && parent.w !== "" ? 0 : node.minW;
       } else {
         width = Math.min(node.maxW, availableSpace.width);
@@ -307,7 +301,7 @@ function computeBbox(node, html, availableSpace) {
     let height = node.h;
     if (height === "") {
       if (node.maxH === 0) {
-        const parent = node[$getSubformParent]();
+        const parent = node.getSubformParent();
         height =
           parent.layout === "position" && parent.h !== "" ? 0 : node.minH;
       } else {
@@ -322,9 +316,9 @@ function computeBbox(node, html, availableSpace) {
 }
 
 function fixDimensions(node) {
-  const parent = node[$getSubformParent]();
+  const parent = node.getSubformParent();
   if (parent.layout?.includes("row")) {
-    const extra = parent[$extra];
+    const extra = parent.extra;
     const colSpan = node.colSpan;
     let width;
     if (colSpan === -1) {
@@ -414,7 +408,7 @@ function createWrapper(node, html) {
   attributes.class.push("xfaWrapped");
 
   if (node.border) {
-    const { widths, insets } = node.border[$extra];
+    const { widths, insets } = node.border.extra;
     let width, height;
     let top = insets[0];
     let left = insets[3];
@@ -543,7 +537,7 @@ function isPrintOnly(node) {
 }
 
 function getCurrentPara(node) {
-  const stack = node[$getTemplateRoot]()[$extra].paraStack;
+  const stack = node.getTemplateRoot().extra.paraStack;
   return stack.length ? stack.at(-1) : null;
 }
 
@@ -643,5 +637,6 @@ export {
   setFontFamily,
   setMinMaxDimensions,
   setPara,
-  toStyle,
+  toStyle
 };
+

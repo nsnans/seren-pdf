@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { $globalData } from "./symbol_utils";
-import { stripQuotes } from "./utils";
 import { warn } from "../../shared/util";
+import { stripQuotes } from "./utils";
 
 class FontFinder {
   protected fonts = new Map();
@@ -183,7 +182,7 @@ function getMetrics(xfaFont, real = false) {
   let pdfFont = null;
   if (xfaFont) {
     const name = stripQuotes(xfaFont.typeface);
-    const typeface = xfaFont[$globalData].fontFinder.find(name);
+    const typeface = xfaFont.globalData.fontFinder.find(name);
     pdfFont = selectFont(xfaFont, typeface);
   }
 

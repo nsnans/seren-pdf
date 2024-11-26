@@ -18,8 +18,6 @@ import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
 import { Builder } from "./builder";
 import {
   $clean,
-  $content,
-  $globalData,
   $isCDATAXml,
   $nsAttributes,
   $onChild,
@@ -138,7 +136,7 @@ class XFAParser extends XMLParserBase {
       namespace,
       prefixes,
     });
-    node[$globalData] = this._globalData;
+    node.globalData = this._globalData;
 
     if (isEmpty) {
       // No children: just push the node into its parent.
@@ -156,11 +154,11 @@ class XFAParser extends XMLParserBase {
 
   onEndElement(name) {
     const node = this._current;
-    if (node[$isCDATAXml]() && typeof node[$content] === "string") {
+    if (node[$isCDATAXml]() && typeof node.content === "string") {
       const parser = new XFAParser();
       parser._globalData = this._globalData;
-      const root = parser.parse(node[$content]);
-      node[$content] = null;
+      const root = parser.parse(node.content);
+      node.content = null;
       node[$onChild](root);
     }
 
