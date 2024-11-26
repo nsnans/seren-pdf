@@ -16,7 +16,6 @@
 import { createValidAbsoluteUrl, warn } from "../../shared/util";
 import { selectFont } from "./fonts";
 import {
-  $text,
   $toStyle
 } from "./symbol_utils";
 import { TextMeasure } from "./text";
@@ -250,7 +249,7 @@ function layoutNode(node, availableSpace) {
       height = res.height;
       isBroken = res.isBroken;
     } else {
-      const text = node.value[$text]();
+      const text = node.value.text();
       if (text) {
         const res = layoutText(
           text,

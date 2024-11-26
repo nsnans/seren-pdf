@@ -20,10 +20,6 @@ import {
   setFontFamily,
 } from "./html_utils";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import {
-  $text,
-  $toHTML
-} from "./symbol_utils";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
 import { XmlObject } from "./xfa_object";
 
@@ -320,7 +316,7 @@ class XhtmlObject extends XmlObject {
     }
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     const children = [];
     this.extra = {
       children,
@@ -377,8 +373,8 @@ class Body extends XhtmlObject {
     super(attributes, "body");
   }
 
-  [$toHTML](availableSpace) {
-    const res = super[$toHTML](availableSpace);
+  toHTML(availableSpace) {
+    const res = super.toHTML(availableSpace);
     const { html } = res;
     if (!html) {
       return HTMLResult.EMPTY;
@@ -394,7 +390,7 @@ class Br extends XhtmlObject {
     super(attributes, "br");
   }
 
-  [$text]() {
+  text() {
     return "\n";
   }
 
@@ -402,7 +398,7 @@ class Br extends XhtmlObject {
     measure.addString("\n");
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return HTMLResult.success({
       name: "br",
     });
@@ -414,7 +410,7 @@ class Html extends XhtmlObject {
     super(attributes, "html");
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     const children = [];
     this.extra = {
       children,
@@ -486,12 +482,12 @@ class P extends XhtmlObject {
     measure.popFont();
   }
 
-  [$text]() {
+  text() {
     const siblings = this.getParent().getChildren();
     if (siblings.at(-1) === this) {
-      return super[$text]();
+      return super.text();
     }
-    return super[$text]() + "\n";
+    return super.text() + "\n";
   }
 }
 

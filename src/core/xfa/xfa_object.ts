@@ -19,14 +19,7 @@ import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
   $nsAttributes,
-  $pushPara,
-  $removeChild,
-  $resolvePrototypes,
   $root,
-  $setId,
-  $setSetAttributes,
-  $setValue,
-  $text,
   $toHTML,
   $toString,
   $toStyle,
@@ -107,7 +100,7 @@ class XFAObject {
       // IRL it's possible to already have a node.
       // So just replace it with the last version.
       if (node !== null) {
-        this[$removeChild](node);
+        this.removeChild(node);
       }
       this[name] = child;
       this.appendChild(child);
@@ -153,11 +146,11 @@ class XFAObject {
     }
   }
 
-  [$pushPara]() {
+  pushPara() {
     this.getTemplateRoot().extra.paraStack.push(this.para);
   }
 
-  [$setId](ids) {
+  setId(ids) {
     if (this.id && this.namespaceId === NamespaceIds.template.id) {
       ids.set(this.id, this);
     }
@@ -189,7 +182,7 @@ class XFAObject {
     }
   }
 
-  [$removeChild](child) {
+  removeChild(child) {
     const i = this[_children].indexOf(child);
     this[_children].splice(i, 1);
   }
@@ -198,7 +191,7 @@ class XFAObject {
     return this.hasOwnProperty("value");
   }
 
-  [$setValue](_) { }
+  setValue(_) { }
 
   onText(_) { }
 
@@ -238,11 +231,11 @@ class XFAObject {
     return "";
   }
 
-  [$text]() {
+  text() {
     if (this[_children].length === 0) {
       return this.content;
     }
-    return this[_children].map(c => c[$text]()).join("");
+    return this[_children].map(c => c.text()).join("");
   }
 
   get [_attributeNames]() {
@@ -391,7 +384,7 @@ class XFAObject {
     return HTMLResult.EMPTY;
   }
 
-  [$setSetAttributes](attributes) {
+  setSetAttributes(attributes) {
     // Just keep set attributes because it can be used in a proto.
     this[_setAttributes] = new Set(Object.keys(attributes));
   }
@@ -409,7 +402,7 @@ class XFAObject {
    * Update the node with properties coming from a prototype and apply
    * this function recursively to all children.
    */
-  [$resolvePrototypes](ids, ancestors = new Set()) {
+  resolvePrototypes(ids, ancestors = new Set()) {
     for (const child of this[_children]) {
       child[_resolvePrototypesHelper](ids, ancestors);
     }
@@ -422,7 +415,7 @@ class XFAObject {
       // to avoid infinite loop.
       this[_applyPrototype](proto, ids, ancestors);
     } else {
-      this[$resolvePrototypes](ids, ancestors);
+      this.resolvePrototypes(ids, ancestors);
     }
   }
 
@@ -505,7 +498,7 @@ class XFAObject {
     }
 
     // The prototype can have a child which itself has a "use" property.
-    proto[$resolvePrototypes](ids, ancestors);
+    proto.resolvePrototypes(ids, ancestors);
 
     ancestors.delete(proto);
 
@@ -566,7 +559,7 @@ class XFAObject {
       }
 
       if (value !== null) {
-        value[$resolvePrototypes](ids, ancestors);
+        value.resolvePrototypes(ids, ancestors);
         if (protoValue) {
           // protoValue must be treated as a prototype for value.
           value[_applyPrototype](protoValue, ids, ancestors);
@@ -747,12 +740,12 @@ class XFAAttribute {
     return this.content.trim();
   }
 
-  [$setValue](value) {
+  setValue(value) {
     value = value.value || "";
     this.content = value.toString();
   }
 
-  [$text]() {
+  text() {
     return this.content;
   }
 
@@ -941,14 +934,14 @@ class XmlObject extends XFAObject {
         return this.content.trim();
       }
       if (this[_children][0].namespaceId === NamespaceIds.xhtml.id) {
-        return this[_children][0][$text]().trim();
+        return this[_children][0].text().trim();
       }
       return null;
     }
     return this.content.trim();
   }
 
-  [$setValue](value) {
+  setValue(value) {
     value = value.value || "";
     this.content = value.toString();
   }

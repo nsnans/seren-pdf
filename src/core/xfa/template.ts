@@ -41,15 +41,7 @@ import {
 import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
 import { searchNode } from "./som";
 import {
-  $pushPara,
-  $removeChild,
-  $searchNode,
-  $setSetAttributes,
-  $setValue,
-  $tabIndex,
-  $text,
   $toHTML,
-  $toPages,
   $toStyle,
   $uid
 } from "./symbol_utils";
@@ -160,7 +152,7 @@ function _setValue(templateNode, value) {
     templateNode.appendChild(nodeValue);
     templateNode.value = nodeValue;
   }
-  templateNode.value[$setValue](value);
+  templateNode.value.setValue(value);
 }
 
 function* getContainedChildren(node) {
@@ -180,11 +172,11 @@ function isRequired(node) {
 function setTabIndex(node) {
   while (node) {
     if (!node.traversal) {
-      node[$tabIndex] = node.getParent()[$tabIndex];
+      node.tabIndex = node.getParent().tabIndex;
       return;
     }
 
-    if (node[$tabIndex]) {
+    if (node.tabIndex) {
       return;
     }
 
@@ -197,14 +189,14 @@ function setTabIndex(node) {
     }
 
     if (!next || !next.ref) {
-      node[$tabIndex] = node.getParent()[$tabIndex];
+      node.tabIndex = node.getParent().tabIndex;
       return;
     }
 
     const root = node.getTemplateRoot();
-    node[$tabIndex] = ++root[$tabIndex];
+    node.tabIndex = ++root.tabIndex;
 
-    const ref = root[$searchNode](next.ref, node);
+    const ref = root.searchNode(next.ref, node);
     if (!ref) {
       return;
     }
@@ -307,7 +299,7 @@ function handleBreak(node) {
   const root = node.getTemplateRoot();
   let target = null;
   if (node.target) {
-    target = root[$searchNode](node.target, node.getParent());
+    target = root.searchNode(node.target, node.getParent());
     if (!target) {
       return false;
     }
@@ -1136,7 +1128,7 @@ class Caption extends XFAObject {
     this.value = null;
   }
 
-  [$setValue](value) {
+  setValue(value) {
     _setValue(this, value);
   }
 
@@ -1166,7 +1158,7 @@ class Caption extends XFAObject {
       return HTMLResult.EMPTY;
     }
 
-    this[$pushPara]();
+    this.pushPara();
     const value = this.value[$toHTML](availableSpace).html;
 
     if (!value) {
@@ -1306,7 +1298,7 @@ class CheckButton extends XFAObject {
       off: (items[1] !== undefined ? items[1] : "off").toString(),
     };
 
-    const value = field.value?.[$text]() || "off";
+    const value = field.value?.text() || "off";
     const checked = value === exportedValue.on || undefined;
     const container = field.getSubformParent();
     const fieldId = field[$uid];
@@ -1404,7 +1396,7 @@ class ChoiceList extends XFAObject {
       const values = items.children[saveIndex][$toHTML]().html;
 
       let selected = false;
-      const value = field.value?.[$text]() || "";
+      const value = field.value?.text() || "";
       for (let i = 0, ii = displayed.length; i < ii; i++) {
         const option = {
           name: "option",
@@ -1855,7 +1847,7 @@ class Draw extends XFAObject {
     this.setProperty = new XFAObjectArray();
   }
 
-  [$setValue](value) {
+  setValue(value) {
     _setValue(this, value);
   }
 
@@ -1867,7 +1859,7 @@ class Draw extends XFAObject {
     }
 
     fixDimensions(this);
-    this[$pushPara]();
+    this.pushPara();
 
     // If at least one dimension is missing and we've a text
     // then we can guess it in laying out the text.
@@ -2349,7 +2341,7 @@ class ExclGroup extends XFAObject {
     return true;
   }
 
-  [$setValue](value) {
+  setValue(value) {
     for (const field of this.field.children) {
       if (!field.value) {
         const nodeValue = new Value({});
@@ -2357,7 +2349,7 @@ class ExclGroup extends XFAObject {
         field.value = nodeValue;
       }
 
-      field.value[$setValue](value);
+      field.value.setValue(value);
     }
   }
 
@@ -2494,7 +2486,7 @@ class ExclGroup extends XFAObject {
       attributes.xfaName = this.name;
     }
 
-    this[$pushPara]();
+    this.pushPara();
     const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
     const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
     for (; this.extra.attempt < maxRun; this.extra.attempt++) {
@@ -2704,7 +2696,7 @@ class Field extends XFAObject {
     return true;
   }
 
-  [$setValue](value) {
+  setValue(value) {
     _setValue(this, value);
   }
 
@@ -2759,7 +2751,7 @@ class Field extends XFAObject {
       delete this.caption.extra;
     }
 
-    this[$pushPara]();
+    this.pushPara();
 
     const caption = this.caption
       ? this.caption[$toHTML](availableSpace).html
@@ -2912,11 +2904,11 @@ class Field extends XFAObject {
       return HTMLResult.success(createWrapper(this, html), bbox);
     }
 
-    if (this[$tabIndex]) {
+    if (this.tabIndex) {
       if (ui.children?.[0]) {
-        ui.children[0].attributes.tabindex = this[$tabIndex];
+        ui.children[0].attributes.tabindex = this.tabIndex;
       } else {
-        ui.attributes.tabindex = this[$tabIndex];
+        ui.attributes.tabindex = this.tabIndex;
       }
     }
 
@@ -2943,7 +2935,7 @@ class Field extends XFAObject {
       } else if (!this.ui.button) {
         let value = "";
         if (this.value.exData) {
-          value = this.value.exData[$text]();
+          value = this.value.exData.text();
         } else if (this.value.text) {
           value = this.value.text.getExtra();
         } else {
@@ -3550,7 +3542,7 @@ class Items extends XFAObject {
   [$toHTML]() {
     const output = [];
     for (const child of this.getChildren()) {
-      output.push(child[$text]());
+      output.push(child.text());
     }
     return HTMLResult.success(output);
   }
@@ -3953,9 +3945,9 @@ class Overflow extends XFAObject {
     if (!this.extra) {
       const parent = this.getParent();
       const root = this.getTemplateRoot();
-      const target = root[$searchNode](this.target, parent);
-      const leader = root[$searchNode](this.leader, parent);
-      const trailer = root[$searchNode](this.trailer, parent);
+      const target = root.searchNode(this.target, parent);
+      const leader = root.searchNode(this.leader, parent);
+      const trailer = root.searchNode(this.trailer, parent);
       this.extra = {
         target: target?.[0] || null,
         leader: leader?.[0] || null,
@@ -4993,7 +4985,7 @@ class Subform extends XFAObject {
         this.overflow.push(node);
       }
 
-      this[$removeChild](this.break);
+      this.removeChild(this.break);
       this.break = null;
     }
 
@@ -5113,7 +5105,7 @@ class Subform extends XFAObject {
       }
     }
 
-    this[$pushPara]();
+    this.pushPara();
     const isLrTb = this.layout === "lr-tb" || this.layout === "rl-tb";
     const maxRun = isLrTb ? MAX_ATTEMPTS_FOR_LRTB_LAYOUT : 1;
     for (; this.extra.attempt < maxRun; this.extra.attempt++) {
@@ -5377,14 +5369,14 @@ class Template extends XFAObject {
     if (this.subform.children.length >= 2) {
       warn("XFA - Several subforms in template node: please file a bug.");
     }
-    this[$tabIndex] = DEFAULT_TAB_INDEX;
+    this.tabIndex = DEFAULT_TAB_INDEX;
   }
 
   isSplittable() {
     return true;
   }
 
-  [$searchNode](expr, container) {
+  searchNode(expr, container) {
     if (expr.startsWith("#")) {
       // This is an id.
       return [this.ids.get(expr.slice(1))];
@@ -5397,7 +5389,7 @@ class Template extends XFAObject {
    * pages is done asynchronously and we want to save the state
    * of the function where we were in the previous iteration.
    */
-  *[$toPages]() {
+  *toPages() {
     if (!this.subform.children.length) {
       return HTMLResult.success({
         name: "div",
@@ -5450,7 +5442,7 @@ class Template extends XFAObject {
     }
 
     if (breakBefore) {
-      const target = this[$searchNode](
+      const target = this.searchNode(
         breakBeforeTarget,
         breakBefore.getParent()
       );
@@ -5564,12 +5556,12 @@ class Template extends XFAObject {
           }
 
           if (node.leader) {
-            leader = this[$searchNode](node.leader, node.getParent());
+            leader = this.searchNode(node.leader, node.getParent());
             leader = leader ? leader[0] : null;
           }
 
           if (node.trailer) {
-            trailer = this[$searchNode](node.trailer, node.getParent());
+            trailer = this.searchNode(node.trailer, node.getParent());
             trailer = trailer ? trailer[0] : null;
           }
 
@@ -5703,7 +5695,7 @@ class Text extends ContentObject {
         }, [])
         .join("\n");
     }
-    return this.content[$text]();
+    return this.content.text();
   }
 
   [$toHTML](availableSpace) {
@@ -6039,7 +6031,7 @@ class Value extends XFAObject {
     this.time = null;
   }
 
-  [$setValue](value) {
+  setValue(value) {
     const parent = this.getParent();
     if (parent instanceof Field) {
       if (parent.ui?.imageEdit) {
@@ -6063,7 +6055,7 @@ class Value extends XFAObject {
       const obj = this[name];
       if (obj instanceof XFAObject) {
         this[name] = null;
-        this[$removeChild](obj);
+        this.removeChild(obj);
       }
     }
 
@@ -6071,12 +6063,12 @@ class Value extends XFAObject {
     this.appendChild(value);
   }
 
-  [$text]() {
+  text() {
     if (this.exData) {
       if (typeof this.exData.content === "string") {
         return this.exData.content.trim();
       }
-      return this.exData.content[$text]().trim();
+      return this.exData.content.text().trim();
     }
     for (const name of Object.getOwnPropertyNames(this)) {
       if (name === "image") {
@@ -6133,7 +6125,7 @@ class TemplateNamespace {
   static [$buildXFAObject](name, attributes) {
     if (TemplateNamespace.hasOwnProperty(name)) {
       const node = TemplateNamespace[name](attributes);
-      node[$setSetAttributes](attributes);
+      node.setSetAttributes(attributes);
       return node;
     }
     return undefined;

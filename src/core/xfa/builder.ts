@@ -18,7 +18,6 @@ import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
 import {
   $nsAttributes,
-  $resolvePrototypes,
   $root
 } from "./symbol_utils";
 import { Template } from "./template";
@@ -44,7 +43,7 @@ class Root extends XFAObject {
       // to avoid conflict with real IDs.
       this.ids.set($root, this.element);
 
-      this.element.template[$resolvePrototypes](this.ids);
+      this.element.template.resolvePrototypes(this.ids);
       this.element.template.ids = this.ids;
     }
   }

@@ -17,17 +17,7 @@
 // and properties/methods names.
 const $content = Symbol("content");
 const $nsAttributes = Symbol();
-const $pushPara = Symbol();
-const $removeChild = Symbol();
 const $root = Symbol("root");
-const $resolvePrototypes = Symbol();
-const $searchNode = Symbol();
-const $setId = Symbol();
-const $setSetAttributes = Symbol();
-const $setValue = Symbol();
-const $tabIndex = Symbol();
-const $text = Symbol();
-const $toPages = Symbol();
 const $toHTML = Symbol();
 const $toString = Symbol();
 const $toStyle = Symbol();
@@ -36,18 +26,8 @@ const $uid = Symbol("uid");
 export {
   $content,
   $nsAttributes,
-  $pushPara,
-  $removeChild,
-  $resolvePrototypes,
   $root,
-  $searchNode,
-  $setId,
-  $setSetAttributes,
-  $setValue,
-  $tabIndex,
-  $text,
   $toHTML,
-  $toPages,
   $toString,
   $toStyle,
   $uid

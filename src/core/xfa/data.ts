@@ -14,7 +14,6 @@
  */
 
 import {
-  $setValue,
   $toString,
   $uid
 } from "./symbol_utils";
@@ -39,13 +38,13 @@ class DataHandler {
       const child = children[++last[0]];
       const storageEntry = storage.get(child[$uid]);
       if (storageEntry) {
-        child[$setValue](storageEntry);
+        child.setValue(storageEntry);
       } else {
         const attributes = child.getAttributes();
         for (const value of attributes.values()) {
           const entry = storage.get(value[$uid]);
           if (entry) {
-            value[$setValue](entry);
+            value.setValue(entry);
             break;
           }
         }

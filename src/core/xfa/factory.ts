@@ -18,11 +18,6 @@ import { Binder } from "./bind";
 import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
-import {
-  $text,
-  $toHTML,
-  $toPages
-} from "./symbol_utils";
 import { stripQuotes } from "./utils";
 import { XhtmlNamespace } from "./xhtml";
 
@@ -55,7 +50,7 @@ class XFAFactory {
    * into pages is made asynchronously.
    */
   _createPagesHelper() {
-    const iterator = this.form[$toPages]();
+    const iterator = this.form.toPages();
     return new Promise((resolve, reject) => {
       const nextIteration = () => {
         try {
@@ -156,7 +151,7 @@ class XFAFactory {
         root = newRoot;
       }
 
-      const result = root[$toHTML]();
+      const result = root.toHTML();
       if (!result.success) {
         return null;
       }
@@ -172,7 +167,7 @@ class XFAFactory {
         attributes.dir = "auto";
       }
 
-      return { html, str: root[$text]() };
+      return { html, str: root.text() };
     } catch (e) {
       warn(`XFA - an error occurred during parsing of rich text: ${e}`);
     }

@@ -17,10 +17,7 @@ import { warn } from "../../shared/util";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
 import {
-  $content,
-  $removeChild,
-  $setValue,
-  $text
+  $content
 } from "./symbol_utils";
 import { BindItems, Field, Items, SetProperty, Text } from "./template";
 import { XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
@@ -72,7 +69,7 @@ class Binder {
       if (data.isDataValue()) {
         const value = data.getDataValue();
         // TODO: use picture.
-        formNode[$setValue](createText(value));
+        formNode.setValue(createText(value));
       } else if (
         formNode instanceof Field &&
         formNode.ui?.choiceList?.open === "multiSelect"
@@ -80,7 +77,7 @@ class Binder {
         const value = data.getChildren()
           .map(child => child.content.trim())
           .join("\n");
-        formNode[$setValue](createText(value));
+        formNode.setValue(createText(value));
       } else if (this._isConsumeData()) {
         warn(`XFA - Nodes haven't the same type.`);
       }
@@ -233,7 +230,7 @@ class Binder {
         continue;
       }
 
-      const content = node[$text]();
+      const content = node.text();
       const name = targetNode.nodeName;
 
       if (targetNode instanceof XFAAttribute) {
@@ -276,7 +273,7 @@ class Binder {
     }
 
     for (const item of formNode.items.children) {
-      formNode[$removeChild](item);
+      formNode.removeChild(item);
     }
 
     formNode.items.clear();
@@ -354,8 +351,8 @@ class Binder {
           continue;
         }
 
-        const label = createText(labelNode[$text]());
-        const value = createText(valueNode[$text]());
+        const label = createText(labelNode.text());
+        const value = createText(valueNode.text());
 
         labels.appendChild(label);
         labels.text.push(label);
@@ -374,7 +371,7 @@ class Binder {
     if (matches.length > 1) {
       // Clone before binding to avoid bad state.
       baseClone = formNode.clone();
-      baseClone[$removeChild](baseClone.occur);
+      baseClone.removeChild(baseClone.occur);
       baseClone.occur = null;
     }
 
@@ -432,7 +429,7 @@ class Binder {
     const ii = occur.initial - currentNumber;
     if (ii) {
       const nodeClone = formNode.clone();
-      nodeClone[$removeChild](nodeClone.occur);
+      nodeClone.removeChild(nodeClone.occur);
       nodeClone.occur = null;
       parent[name].push(nodeClone);
       parent.insertAt(pos, nodeClone);
@@ -650,7 +647,7 @@ class Binder {
       }
     }
 
-    uselessNodes.forEach(node => node.getParent()[$removeChild](node));
+    uselessNodes.forEach(node => node.getParent().removeChild(node));
   }
 }
 

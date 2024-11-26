@@ -16,9 +16,6 @@
 import { warn } from "../../shared/util";
 import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
 import { Builder } from "./builder";
-import {
-  $setId
-} from "./symbol_utils";
 
 class XFAParser extends XMLParserBase {
   constructor(rootNameSpace = null, richText = false) {
@@ -137,7 +134,7 @@ class XFAParser extends XMLParserBase {
       // No children: just push the node into its parent.
       node.finalize();
       if (this._current.onChild(node)) {
-        node[$setId](this._ids);
+        node.setId(this._ids);
       }
       node.clean(this._builder);
       return;
@@ -160,7 +157,7 @@ class XFAParser extends XMLParserBase {
     node.finalize();
     this._current = this._stack.pop();
     if (this._current.onChild(node)) {
-      node[$setId](this._ids);
+      node.setId(this._ids);
     }
     node.clean(this._builder);
   }
