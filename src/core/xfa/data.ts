@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 
-import {
-  $toString,
-  $uid
-} from "./symbol_utils";
 
 class DataHandler {
   constructor(root, data) {
@@ -36,13 +32,13 @@ class DataHandler {
       }
 
       const child = children[++last[0]];
-      const storageEntry = storage.get(child[$uid]);
+      const storageEntry = storage.get(child.uid);
       if (storageEntry) {
         child.setValue(storageEntry);
       } else {
         const attributes = child.getAttributes();
         for (const value of attributes.values()) {
-          const entry = storage.get(value[$uid]);
+          const entry = storage.get(value.uid);
           if (entry) {
             value.setValue(entry);
             break;
@@ -64,11 +60,11 @@ class DataHandler {
       // some data for choice lists.
       for (const child of this.dataset.getChildren()) {
         if (child.nodeName !== "data") {
-          child[$toString](buf);
+          child.ToString(buf);
         }
       }
     }
-    this.data[$toString](buf);
+    this.data.ToString(buf);
     buf.push("</xfa:datasets>");
 
     return buf.join("");

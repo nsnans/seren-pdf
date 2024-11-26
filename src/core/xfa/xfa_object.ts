@@ -19,11 +19,7 @@ import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
   $nsAttributes,
-  $root,
-  $toHTML,
-  $toString,
-  $toStyle,
-  $uid
+  $root
 } from "./symbol_utils";
 import { getInteger, getKeyword, HTMLResult } from "./utils";
 
@@ -56,7 +52,7 @@ class XFAObject {
     this[_hasChildren] = hasChildren;
     this[_parent] = null;
     this[_children] = [];
-    this[$uid] = `${name}${uid++}`;
+    this.uid = `${name}${uid++}`;
     this.globalData = null;
   }
 
@@ -309,11 +305,11 @@ class XFAObject {
     return dumped;
   }
 
-  [$toStyle]() {
+  toStyle() {
     return null;
   }
 
-  [$toHTML]() {
+  toHTML() {
     return HTMLResult.EMPTY;
   }
 
@@ -328,7 +324,7 @@ class XFAObject {
     for (const node of this.getContainedChildren()) {
       if (!filter || include === filter.has(node.nodeName)) {
         const availableSpace = this.getAvailableSpace();
-        const res = node[$toHTML](availableSpace);
+        const res = node.toHTML(availableSpace);
         if (!res.success) {
           this.extra.failingNode = node;
         }
@@ -355,7 +351,7 @@ class XFAObject {
       );
     } else {
       const availableSpace = this.getAvailableSpace();
-      const res = this.extra.failingNode[$toHTML](availableSpace);
+      const res = this.extra.failingNode.toHTML(availableSpace);
       if (!res.success) {
         return res;
       }
@@ -596,7 +592,7 @@ class XFAObject {
         shadow(clone, $symbol, this[$symbol]);
       }
     }
-    clone[$uid] = `${clone.nodeName}${uid++}`;
+    clone.uid = `${clone.nodeName}${uid++}`;
     clone[_children] = [];
 
     for (const name of Object.getOwnPropertyNames(this)) {
@@ -725,7 +721,7 @@ class XFAAttribute {
     this.nodeName = name;
     this.content = value;
     this.consumed = false;
-    this[$uid] = `attribute${uid++}`;
+    this.uid = `attribute${uid++}`;
   }
 
   getParent() {
@@ -780,7 +776,7 @@ class XmlObject extends XFAObject {
     this.consumed = false;
   }
 
-  [$toString](buf) {
+  ToString(buf) {
     const tagName = this.nodeName;
     if (tagName === "#text") {
       buf.push(encodeToXmlString(this.content));
@@ -810,11 +806,11 @@ class XmlObject extends XFAObject {
       if (typeof this.content === "string") {
         buf.push(encodeToXmlString(this.content));
       } else {
-        this.content[$toString](buf);
+        this.content.ToString(buf);
       }
     } else {
       for (const child of this[_children]) {
-        child[$toString](buf);
+        child.ToString(buf);
       }
     }
     buf.push(`</${prefix}${utf8TagName}>`);
@@ -844,7 +840,7 @@ class XmlObject extends XFAObject {
     }
   }
 
-  [$toHTML]() {
+  toHTML() {
     if (this.nodeName === "#text") {
       return HTMLResult.success({
         name: "#text",

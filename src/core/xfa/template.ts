@@ -41,11 +41,6 @@ import {
 import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
 import { searchNode } from "./som";
 import {
-  $toHTML,
-  $toStyle,
-  $uid
-} from "./symbol_utils";
-import {
   getBBox,
   getColor,
   getFloat,
@@ -208,7 +203,7 @@ function setTabIndex(node) {
 function applyAssist(obj, attributes) {
   const assist = obj.assist;
   if (assist) {
-    const assistTitle = assist[$toHTML]();
+    const assistTitle = assist.toHTML();
     if (assistTitle) {
       attributes.title = assistTitle;
     }
@@ -371,7 +366,7 @@ function handleOverflow(node, extraNode, space) {
   extraNode.getSubformParent = () => node;
 
   root.extra.noLayoutFailure = true;
-  const res = extraNode[$toHTML](space);
+  const res = extraNode.toHTML(space);
   node.addHTML(res.html, res.bbox);
   root.extra.noLayoutFailure = saved;
   extraNode.getSubformParent = savedMethod;
@@ -413,12 +408,12 @@ class Arc extends XFAObject {
     this.fill = null;
   }
 
-  [$toHTML]() {
+  toHTML() {
     const edge = this.edge || new Edge({});
-    const edgeStyle = edge[$toStyle]();
+    const edgeStyle = edge.toStyle();
     const style = Object.create(null);
     if (this.fill?.presence === "visible") {
-      Object.assign(style, this.fill[$toStyle]());
+      Object.assign(style, this.fill.toStyle());
     } else {
       style.fill = "transparent";
     }
@@ -553,12 +548,12 @@ class Area extends XFAObject {
     return this.extra.availableSpace;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     const style = toStyle(this, "position");
     const attributes = {
       style,
-      id: this[$uid],
+      id: this.uid,
       class: ["xfaArea"],
     };
 
@@ -627,7 +622,7 @@ class Assist extends XFAObject {
     this.toolTip = null;
   }
 
-  [$toHTML]() {
+  toHTML() {
     return this.toolTip?.content || null;
   }
 }
@@ -834,7 +829,7 @@ class BooleanElement extends Option01 {
     this.usehref = attributes.usehref || "";
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(this.content === 1 ? "1" : "0");
   }
 }
@@ -884,26 +879,26 @@ class Border extends XFAObject {
     return this.extra;
   }
 
-  [$toStyle]() {
+  toStyle() {
     // TODO: incomplete (hand).
     const { edges } = this.getExtra();
     const edgeStyles = edges.map(node => {
-      const style = node[$toStyle]();
+      const style = node.toStyle();
       style.color ||= "#000000";
       return style;
     });
 
     const style = Object.create(null);
     if (this.margin) {
-      Object.assign(style, this.margin[$toStyle]());
+      Object.assign(style, this.margin.toStyle());
     }
 
     if (this.fill?.presence === "visible") {
-      Object.assign(style, this.fill[$toStyle]());
+      Object.assign(style, this.fill.toStyle());
     }
 
     if (this.corner.children.some(node => node.radius !== 0)) {
-      const cornerStyles = this.corner.children.map(node => node[$toStyle]());
+      const cornerStyles = this.corner.children.map(node => node.toStyle());
       if (cornerStyles.length === 2 || cornerStyles.length === 3) {
         const last = cornerStyles.at(-1);
         for (let i = cornerStyles.length; i < 4; i++) {
@@ -1015,7 +1010,7 @@ class BreakBefore extends XFAObject {
     this.script = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     this.extra = {};
     return HTMLResult.FAILURE;
   }
@@ -1036,7 +1031,7 @@ class Button extends XFAObject {
     this.extras = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: highlight.
 
     const parent = this.getParent();
@@ -1044,7 +1039,7 @@ class Button extends XFAObject {
     const htmlButton = {
       name: "button",
       attributes: {
-        id: this[$uid],
+        id: this.uid,
         class: ["xfaButton"],
         style: {},
       },
@@ -1069,7 +1064,7 @@ class Button extends XFAObject {
       htmlButton.children.push({
         name: "a",
         attributes: {
-          id: "link" + this[$uid],
+          id: "link" + this.uid,
           href,
           newWindow: jsURL.newWindow,
           class: ["xfaLink"],
@@ -1152,14 +1147,14 @@ class Caption extends XFAObject {
     return this.extra;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     if (!this.value) {
       return HTMLResult.EMPTY;
     }
 
     this.pushPara();
-    const value = this.value[$toHTML](availableSpace).html;
+    const value = this.value.toHTML(availableSpace).html;
 
     if (!value) {
       this.popPara();
@@ -1277,7 +1272,7 @@ class CheckButton extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: border, shape and mark.
 
     const style = toStyle("margin");
@@ -1291,7 +1286,7 @@ class CheckButton extends XFAObject {
     const field = this.getParent().getParent();
     const items =
       (field.items.children.length &&
-        field.items.children[0][$toHTML]().html) ||
+        field.items.children[0].toHTML().html) ||
       [];
     const exportedValue = {
       on: (items[0] !== undefined ? items[0] : "on").toString(),
@@ -1301,18 +1296,18 @@ class CheckButton extends XFAObject {
     const value = field.value?.text() || "off";
     const checked = value === exportedValue.on || undefined;
     const container = field.getSubformParent();
-    const fieldId = field[$uid];
+    const fieldId = field.uid;
     let dataId;
 
     if (container instanceof ExclGroup) {
-      groupId = container[$uid];
+      groupId = container.uid;
       type = "radio";
       className = "xfaRadio";
-      dataId = container.data?.[$uid] || container[$uid];
+      dataId = container.data?.uid || container.uid;
     } else {
       type = "checkbox";
       className = "xfaCheckbox";
-      dataId = field.data?.[$uid] || field[$uid];
+      dataId = field.data?.uid || field.uid;
     }
 
     const input = {
@@ -1373,7 +1368,7 @@ class ChoiceList extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     const style = toStyle(this, "border", "margin");
     const ui = this.getParent();
@@ -1392,8 +1387,8 @@ class ChoiceList extends XFAObject {
         displayedIndex = items.children[0].save;
         saveIndex = 1 - displayedIndex;
       }
-      const displayed = items.children[displayedIndex][$toHTML]().html;
-      const values = items.children[saveIndex][$toHTML]().html;
+      const displayed = items.children[displayedIndex].toHTML().html;
+      const values = items.children[saveIndex].toHTML().html;
 
       let selected = false;
       const value = field.value?.text() || "";
@@ -1426,8 +1421,8 @@ class ChoiceList extends XFAObject {
 
     const selectAttributes = {
       class: ["xfaSelect"],
-      fieldId: field[$uid],
-      dataId: field.data?.[$uid] || field[$uid],
+      fieldId: field.uid,
+      dataId: field.data?.uid || field.uid,
       style,
       "aria-label": ariaLabel(field),
       "aria-required": false,
@@ -1473,7 +1468,7 @@ class Color extends XFAObject {
     return false;
   }
 
-  [$toStyle]() {
+  toStyle() {
     return this.value
       ? Util.makeHexColor(this.value.r, this.value.g, this.value.b)
       : null;
@@ -1527,7 +1522,7 @@ class ContentArea extends XFAObject {
     this.extras = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     const left = measureToString(this.x);
     const top = measureToString(this.y);
@@ -1551,7 +1546,7 @@ class ContentArea extends XFAObject {
       attributes: {
         style,
         class: classNames,
-        id: this[$uid],
+        id: this.uid,
       },
     });
   }
@@ -1592,7 +1587,7 @@ class Corner extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle]() {
+  toStyle() {
     // In using CSS it's only possible to handle radius
     // (at least with basic css).
     // Is there a real use (interest ?) of all these properties ?
@@ -1618,7 +1613,7 @@ class DateElement extends ContentObject {
     this.content = date ? new Date(date) : null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(this.content ? this.content.toString() : "");
   }
 }
@@ -1637,7 +1632,7 @@ class DateTime extends ContentObject {
     this.content = date ? new Date(date) : null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(this.content ? this.content.toString() : "");
   }
 }
@@ -1660,7 +1655,7 @@ class DateTimeEdit extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     // When the picker is host we should use type=date for the input
     // but we need to put the buttons outside the text-field.
@@ -1670,8 +1665,8 @@ class DateTimeEdit extends XFAObject {
       name: "input",
       attributes: {
         type: "text",
-        fieldId: field[$uid],
-        dataId: field.data?.[$uid] || field[$uid],
+        fieldId: field.uid,
+        dataId: field.data?.uid || field.uid,
         class: ["xfaTextfield"],
         style,
         "aria-label": ariaLabel(field),
@@ -1718,7 +1713,7 @@ class Decimal extends ContentObject {
     this.content = isNaN(number) ? null : number;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(
       this.content !== null ? this.content.toString() : ""
     );
@@ -1851,7 +1846,7 @@ class Draw extends XFAObject {
     _setValue(this, value);
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     setTabIndex(this);
 
     if (this.presence === "hidden" || this.presence === "inactive") {
@@ -1923,7 +1918,7 @@ class Draw extends XFAObject {
 
     const attributes = {
       style,
-      id: this[$uid],
+      id: this.uid,
       class: classNames,
     };
 
@@ -1941,7 +1936,7 @@ class Draw extends XFAObject {
 
     const bbox = computeBbox(this, html, availableSpace);
 
-    const value = this.value ? this.value[$toHTML](availableSpace).html : null;
+    const value = this.value ? this.value.toHTML(availableSpace).html : null;
     if (value === null) {
       this.w = savedW;
       this.h = savedH;
@@ -1989,13 +1984,13 @@ class Edge extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle]() {
+  toStyle() {
     // TODO: dashDot & dashDotDot.
     const style = toStyle(this, "visibility");
     Object.assign(style, {
       linecap: this.cap,
       width: measureToString(this.thickness),
-      color: this.color ? this.color[$toStyle]() : "#000000",
+      color: this.color ? this.color.toStyle() : "#000000",
       style: "",
     });
 
@@ -2218,13 +2213,13 @@ class ExData extends ContentObject {
     return false;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     if (this.contentType !== "text/html" || !this.content) {
       // TODO: fix other cases.
       return HTMLResult.EMPTY;
     }
 
-    return this.content[$toHTML](availableSpace);
+    return this.content.toHTML(availableSpace);
   }
 }
 
@@ -2400,7 +2395,7 @@ class ExclGroup extends XFAObject {
     return getAvailableSpace(this);
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     setTabIndex(this);
     if (
       this.presence === "hidden" ||
@@ -2415,7 +2410,7 @@ class ExclGroup extends XFAObject {
 
     const children = [];
     const attributes = {
-      id: this[$uid],
+      id: this.uid,
       class: [],
     };
 
@@ -2513,7 +2508,7 @@ class ExclGroup extends XFAObject {
         this.extra.numberInLine === 0 &&
         !this.getTemplateRoot().extra.noLayoutFailure
       ) {
-        // See comment in Subform::[$toHTML].
+        // See comment in Subform::toHTML.
         this.extra.attempt = maxRun;
         break;
       }
@@ -2700,7 +2695,7 @@ class Field extends XFAObject {
     _setValue(this, value);
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     setTabIndex(this);
 
     if (!this.ui) {
@@ -2754,7 +2749,7 @@ class Field extends XFAObject {
     this.pushPara();
 
     const caption = this.caption
-      ? this.caption[$toHTML](availableSpace).html
+      ? this.caption.toHTML(availableSpace).html
       : null;
     const savedW = this.w;
     const savedH = this.h;
@@ -2790,7 +2785,7 @@ class Field extends XFAObject {
 
       if (this.caption) {
         const { w, h, isBroken } = this.caption.getExtra(availableSpace);
-        // See comment in Draw::[$toHTML] to have an explanation
+        // See comment in Draw::.toHTML to have an explanation
         // about this line.
         if (isBroken && this.getSubformParent().isThereMoreWidth()) {
           this.popPara();
@@ -2872,7 +2867,7 @@ class Field extends XFAObject {
 
     const attributes = {
       style,
-      id: this[$uid],
+      id: this.uid,
       class: classNames,
     };
 
@@ -2896,9 +2891,9 @@ class Field extends XFAObject {
 
     applyAssist(this, attributes);
 
-    const borderStyle = this.border ? this.border[$toStyle]() : null;
+    const borderStyle = this.border ? this.border.toStyle() : null;
     const bbox = computeBbox(this, html, availableSpace);
-    const ui = this.ui[$toHTML]().html;
+    const ui = this.ui.toHTML().html;
     if (!ui) {
       Object.assign(style, borderStyle);
       return HTMLResult.success(createWrapper(this, html), bbox);
@@ -2931,7 +2926,7 @@ class Field extends XFAObject {
 
     if (this.value) {
       if (this.ui.imageEdit) {
-        ui.children.push(this.value[$toHTML]().html);
+        ui.children.push(this.value.toHTML().html);
       } else if (!this.ui.button) {
         let value = "";
         if (this.value.exData) {
@@ -2939,7 +2934,7 @@ class Field extends XFAObject {
         } else if (this.value.text) {
           value = this.value.text.getExtra();
         } else {
-          const htmlValue = this.value[$toHTML]().html;
+          const htmlValue = this.value.toHTML().html;
           if (htmlValue !== null) {
             value = htmlValue.children[0].value;
           }
@@ -3061,7 +3056,7 @@ class Fill extends XFAObject {
     this.stipple = null;
   }
 
-  [$toStyle]() {
+  toStyle() {
     const parent = this.getParent();
     const grandpa = parent.getParent();
     const ggrandpa = grandpa.getParent();
@@ -3095,7 +3090,7 @@ class Fill extends XFAObject {
         continue;
       }
 
-      const color = obj[$toStyle](this.color);
+      const color = obj.toStyle(this.color);
       if (color) {
         style[color.startsWith("#") ? propName : altPropName] = color;
       }
@@ -3103,7 +3098,7 @@ class Fill extends XFAObject {
     }
 
     if (this.color?.value) {
-      const color = this.color[$toStyle]();
+      const color = this.color.toStyle();
       style[color.startsWith("#") ? propName : altPropName] = color;
     }
 
@@ -3156,7 +3151,7 @@ class Float extends ContentObject {
     this.content = isNaN(number) ? null : number;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(
       this.content !== null ? this.content.toString() : ""
     );
@@ -3225,7 +3220,7 @@ class Font extends XFAObject {
     this.globalData.usedTypefaces.add(this.typeface);
   }
 
-  [$toStyle]() {
+  toStyle() {
     const style = toStyle(this, "fill");
     const color = style.color;
     if (color) {
@@ -3372,7 +3367,7 @@ class Image extends StringObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$toHTML]() {
+  toHTML() {
     if (this.contentType && !MIMES.has(this.contentType.toLowerCase())) {
       return HTMLResult.EMPTY;
     }
@@ -3463,7 +3458,7 @@ class ImageEdit extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     if (this.data === "embed") {
       return HTMLResult.success({
         name: "div",
@@ -3490,7 +3485,7 @@ class Integer extends ContentObject {
     this.content = isNaN(number) ? null : number;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(
       this.content !== null ? this.content.toString() : ""
     );
@@ -3539,7 +3534,7 @@ class Items extends XFAObject {
     this.time = new XFAObjectArray();
   }
 
-  [$toHTML]() {
+  toHTML() {
     const output = [];
     for (const child of this.getChildren()) {
       output.push(child.text());
@@ -3599,10 +3594,10 @@ class Line extends XFAObject {
     this.edge = null;
   }
 
-  [$toHTML]() {
+  toHTML() {
     const parent = this.getParent().getParent();
     const edge = this.edge || new Edge({});
-    const edgeStyle = edge[$toStyle]();
+    const edgeStyle = edge.toStyle();
     const style = Object.create(null);
     const thickness = edge.presence === "visible" ? edge.thickness : 0;
     style.strokeWidth = measureToString(thickness);
@@ -3683,10 +3678,10 @@ class Linear extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle](startColor) {
-    startColor = startColor ? startColor[$toStyle]() : "#FFFFFF";
+  toStyle(startColor) {
+    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
     const transf = this.type.replace(/([RBLT])/, " $1").toLowerCase();
-    const endColor = this.color ? this.color[$toStyle]() : "#000000";
+    const endColor = this.color ? this.color.toStyle() : "#000000";
     return `linear-gradient(${transf}, ${startColor}, ${endColor})`;
   }
 }
@@ -3735,7 +3730,7 @@ class Margin extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle]() {
+  toStyle() {
     return {
       margin:
         measureToString(this.topInset) +
@@ -3817,7 +3812,7 @@ class NumericEdit extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     const style = toStyle(this, "border", "font", "margin");
     const field = this.getParent().getParent();
@@ -3825,8 +3820,8 @@ class NumericEdit extends XFAObject {
       name: "input",
       attributes: {
         type: "text",
-        fieldId: field[$uid],
-        dataId: field.data?.[$uid] || field[$uid],
+        fieldId: field.uid,
+        dataId: field.data?.uid || field.uid,
         class: ["xfaTextfield"],
         style,
         "aria-label": ariaLabel(field),
@@ -4047,7 +4042,7 @@ class PageArea extends XFAObject {
     return this.extra.space || { width: 0, height: 0 };
   }
 
-  [$toHTML]() {
+  toHTML() {
     // TODO: incomplete.
     if (!this.extra) {
       this.extra = {
@@ -4096,7 +4091,7 @@ class PageArea extends XFAObject {
       children,
       attributes: {
         class: ["xfaPage"],
-        id: this[$uid],
+        id: this.uid,
         style,
         xfaName: this.name,
       },
@@ -4270,7 +4265,7 @@ class Para extends XFAObject {
     this.hyphenation = null;
   }
 
-  [$toStyle]() {
+  toStyle() {
     const style = toStyle(this, "hAlign");
     if (this.marginLeft !== "") {
       style.paddingLeft = measureToString(this.marginLeft);
@@ -4302,7 +4297,7 @@ class Para extends XFAObject {
     }
 
     if (this.hyphenatation) {
-      Object.assign(style, this.hyphenatation[$toStyle]());
+      Object.assign(style, this.hyphenatation.toStyle());
     }
 
     return style;
@@ -4345,9 +4340,9 @@ class Pattern extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle](startColor) {
-    startColor = startColor ? startColor[$toStyle]() : "#FFFFFF";
-    const endColor = this.color ? this.color[$toStyle]() : "#000000";
+  toStyle(startColor) {
+    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
+    const endColor = this.color ? this.color.toStyle() : "#000000";
     const width = 5;
     const cmd = "repeating-linear-gradient";
     const colors = `${startColor},${startColor} ${width}px,${endColor} ${width}px,${endColor} ${2 * width
@@ -4507,9 +4502,9 @@ class Radial extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle](startColor) {
-    startColor = startColor ? startColor[$toStyle]() : "#FFFFFF";
-    const endColor = this.color ? this.color[$toStyle]() : "#000000";
+  toStyle(startColor) {
+    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
+    const endColor = this.color ? this.color.toStyle() : "#000000";
     const colors =
       this.type === "toEdge"
         ? `${startColor},${endColor}`
@@ -4551,14 +4546,14 @@ class Rectangle extends XFAObject {
     this.fill = null;
   }
 
-  [$toHTML]() {
+  toHTML() {
     const edge = this.edge.children.length
       ? this.edge.children[0]
       : new Edge({});
-    const edgeStyle = edge[$toStyle]();
+    const edgeStyle = edge.toStyle();
     const style = Object.create(null);
     if (this.fill?.presence === "visible") {
-      Object.assign(style, this.fill[$toStyle]());
+      Object.assign(style, this.fill.toStyle());
     } else {
       style.fill = "transparent";
     }
@@ -4570,7 +4565,7 @@ class Rectangle extends XFAObject {
     const corner = this.corner.children.length
       ? this.corner.children[0]
       : new Corner({});
-    const cornerStyle = corner[$toStyle]();
+    const cornerStyle = corner.toStyle();
 
     const rect = {
       name: "rect",
@@ -4707,8 +4702,8 @@ class Solid extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle](startColor) {
-    return startColor ? startColor[$toStyle]() : "#FFFFFF";
+  toStyle(startColor) {
+    return startColor ? startColor.toStyle() : "#FFFFFF";
   }
 }
 
@@ -4748,7 +4743,7 @@ class Stipple extends XFAObject {
     this.extras = null;
   }
 
-  [$toStyle](bgColor) {
+  toStyle(bgColor) {
     const alpha = this.rate / 100;
     return Util.makeHexColor(
       Math.round(bgColor.value.r * (1 - alpha) + this.value.r * alpha),
@@ -4946,7 +4941,7 @@ class Subform extends XFAObject {
     return true;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     setTabIndex(this);
 
     if (this.break) {
@@ -5019,7 +5014,7 @@ class Subform extends XFAObject {
     fixDimensions(this);
     const children = [];
     const attributes = {
-      id: this[$uid],
+      id: this.uid,
       class: [],
     };
 
@@ -5489,18 +5484,18 @@ class Template extends XFAObject {
 
       targetPageArea = null;
       this.extra.currentPageArea = pageArea;
-      const page = pageArea[$toHTML]().html;
+      const page = pageArea.toHTML().html;
       mainHtml.children.push(page);
 
       if (leader) {
         this.extra.noLayoutFailure = true;
-        page.children.push(leader[$toHTML](pageArea.extra.space).html);
+        page.children.push(leader.toHTML(pageArea.extra.space).html);
         leader = null;
       }
 
       if (trailer) {
         this.extra.noLayoutFailure = true;
-        page.children.push(trailer[$toHTML](pageArea.extra.space).html);
+        page.children.push(trailer.toHTML(pageArea.extra.space).html);
         trailer = null;
       }
 
@@ -5527,16 +5522,16 @@ class Template extends XFAObject {
         startIndex = 0;
 
         if (leader) {
-          htmlContentAreas[i].children.push(leader[$toHTML](space).html);
+          htmlContentAreas[i].children.push(leader.toHTML(space).html);
           leader = null;
         }
 
         if (trailer) {
-          htmlContentAreas[i].children.push(trailer[$toHTML](space).html);
+          htmlContentAreas[i].children.push(trailer.toHTML(space).html);
           trailer = null;
         }
 
-        const html = root[$toHTML](space);
+        const html = root.toHTML(space);
         if (html.success) {
           if (html.html) {
             hasSomething ||= html.html.children?.length > 0;
@@ -5698,7 +5693,7 @@ class Text extends ContentObject {
     return this.content.text();
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     if (typeof this.content === "string") {
       // \u2028 is a line separator.
       // \u2029 is a paragraph separator.
@@ -5754,7 +5749,7 @@ class Text extends ContentObject {
       return HTMLResult.success(html);
     }
 
-    return this.content[$toHTML](availableSpace);
+    return this.content.toHTML(availableSpace);
   }
 }
 
@@ -5790,7 +5785,7 @@ class TextEdit extends XFAObject {
     this.margin = null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: incomplete.
     const style = toStyle(this, "border", "font", "margin");
     let html;
@@ -5802,8 +5797,8 @@ class TextEdit extends XFAObject {
       html = {
         name: "textarea",
         attributes: {
-          dataId: field.data?.[$uid] || field[$uid],
-          fieldId: field[$uid],
+          dataId: field.data?.uid || field.uid,
+          fieldId: field.uid,
           class: ["xfaTextfield"],
           style,
           "aria-label": ariaLabel(field),
@@ -5815,8 +5810,8 @@ class TextEdit extends XFAObject {
         name: "input",
         attributes: {
           type: "text",
-          dataId: field.data?.[$uid] || field[$uid],
-          fieldId: field[$uid],
+          dataId: field.data?.uid || field.uid,
+          fieldId: field.uid,
           class: ["xfaTextfield"],
           style,
           "aria-label": ariaLabel(field),
@@ -5855,7 +5850,7 @@ class Time extends StringObject {
     this.content = date ? new Date(date) : null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     return valueToHtml(this.content ? this.content.toString() : "");
   }
 }
@@ -5964,11 +5959,11 @@ class Ui extends XFAObject {
     return this.extra;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     // TODO: picture.
     const obj = this.getExtra();
     if (obj) {
-      return obj[$toHTML](availableSpace);
+      return obj.toHTML(availableSpace);
     }
     return HTMLResult.EMPTY;
   }
@@ -6082,14 +6077,14 @@ class Value extends XFAObject {
     return null;
   }
 
-  [$toHTML](availableSpace) {
+  toHTML(availableSpace) {
     for (const name of Object.getOwnPropertyNames(this)) {
       const obj = this[name];
       if (!(obj instanceof XFAObject)) {
         continue;
       }
 
-      return obj[$toHTML](availableSpace);
+      return obj.toHTML(availableSpace);
     }
 
     return HTMLResult.EMPTY;

@@ -18,18 +18,10 @@
 const $content = Symbol("content");
 const $nsAttributes = Symbol();
 const $root = Symbol("root");
-const $toHTML = Symbol();
-const $toString = Symbol();
-const $toStyle = Symbol();
-const $uid = Symbol("uid");
 
 export {
   $content,
   $nsAttributes,
   $root,
-  $toHTML,
-  $toString,
-  $toStyle,
-  $uid
 };
 

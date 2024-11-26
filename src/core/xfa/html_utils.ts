@@ -15,9 +15,6 @@
 
 import { createValidAbsoluteUrl, warn } from "../../shared/util";
 import { selectFont } from "./fonts";
-import {
-  $toStyle
-} from "./symbol_utils";
 import { TextMeasure } from "./text";
 import { getMeasurement, stripQuotes } from "./utils";
 import { XFAObject } from "./xfa_object";
@@ -159,7 +156,7 @@ const converters = {
   },
   margin(node, style) {
     if (node.margin) {
-      style.margin = node.margin[$toStyle]().margin;
+      style.margin = node.margin.toStyle().margin;
     }
   },
 };
@@ -378,7 +375,7 @@ function toStyle(node, ...names) {
     }
 
     if (value instanceof XFAObject) {
-      const newStyle = value[$toStyle]();
+      const newStyle = value.toStyle();
       if (newStyle) {
         Object.assign(style, newStyle);
       } else {
@@ -568,7 +565,7 @@ function setPara(node, nodeStyle, value) {
           break;
       }
 
-      const paraStyle = para[$toStyle]();
+      const paraStyle = para.toStyle();
       for (const [key, val] of Object.entries(paraStyle)) {
         if (!(key in valueStyle)) {
           valueStyle[key] = val;
