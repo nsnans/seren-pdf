@@ -14,12 +14,6 @@
  */
 
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import {
-  $isNsAgnostic,
-  $namespaceId,
-  $nodeName,
-  $onChild
-} from "./symbol_utils";
 import { XFAObject, XmlObject } from "./xfa_object";
 
 const DATASETS_NS_ID = NamespaceIds.datasets.id;
@@ -29,7 +23,7 @@ class Data extends XmlObject {
     super(DATASETS_NS_ID, "data", attributes);
   }
 
-  [$isNsAgnostic]() {
+  isNsAgnostic() {
     return true;
   }
 }
@@ -41,12 +35,12 @@ class Datasets extends XFAObject {
     this.Signature = null;
   }
 
-  [$onChild](child) {
-    const name = child[$nodeName];
+  onChild(child) {
+    const name = child.nodeName;
     if (
-      (name === "data" && child[$namespaceId] === DATASETS_NS_ID) ||
+      (name === "data" && child.namespaceId === DATASETS_NS_ID) ||
       (name === "Signature" &&
-        child[$namespaceId] === NamespaceIds.signature.id)
+        child.namespaceId === NamespaceIds.signature.id)
     ) {
       this[name] = child;
     }

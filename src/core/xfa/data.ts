@@ -14,7 +14,6 @@
  */
 
 import {
-  $nodeName,
   $setValue,
   $toString,
   $uid
@@ -65,7 +64,7 @@ class DataHandler {
       // Dump nodes other than data: they can contains for example
       // some data for choice lists.
       for (const child of this.dataset.getChildren()) {
-        if (child[$nodeName] !== "data") {
+        if (child.nodeName !== "data") {
           child[$toString](buf);
         }
       }

@@ -17,11 +17,6 @@ import { warn } from "../../shared/util";
 import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
 import { Builder } from "./builder";
 import {
-  $clean,
-  $isCDATAXml,
-  $nsAttributes,
-  $onChild,
-  $onText,
   $setId
 } from "./symbol_utils";
 
@@ -58,18 +53,18 @@ class XFAParser extends XMLParserBase {
     // but in real life Acrobat can break strings on &nbsp.
     text = text.replace(this._nbsps, match => match.slice(1) + " ");
     if (this._richText || this._current.acceptWhitespace()) {
-      this._current[$onText](text, this._richText);
+      this._current.onText(text, this._richText);
       return;
     }
 
     if (this._whiteRegex.test(text)) {
       return;
     }
-    this._current[$onText](text.trim());
+    this._current.onText(text.trim());
   }
 
   onCdata(text) {
-    this._current[$onText](text);
+    this._current.onText(text);
   }
 
   _mkAttributes(attributes, tagName) {
@@ -98,9 +93,9 @@ class XFAParser extends XMLParserBase {
         } else {
           // Attributes can have their own namespace.
           // For example in data, we can have <foo xfa:dataNode="dataGroup"/>
-          let nsAttrs = attributeObj[$nsAttributes];
+          let nsAttrs = attributeObj.nsAttributes;
           if (!nsAttrs) {
-            nsAttrs = attributeObj[$nsAttributes] = Object.create(null);
+            nsAttrs = attributeObj.nsAttributes = Object.create(null);
           }
           const [ns, attrName] = [name.slice(0, i), name.slice(i + 1)];
           const attrs = (nsAttrs[ns] ||= Object.create(null));
@@ -141,10 +136,10 @@ class XFAParser extends XMLParserBase {
     if (isEmpty) {
       // No children: just push the node into its parent.
       node.finalize();
-      if (this._current[$onChild](node)) {
+      if (this._current.onChild(node)) {
         node[$setId](this._ids);
       }
-      node[$clean](this._builder);
+      node.clean(this._builder);
       return;
     }
 
@@ -154,20 +149,20 @@ class XFAParser extends XMLParserBase {
 
   onEndElement(name) {
     const node = this._current;
-    if (node[$isCDATAXml]() && typeof node.content === "string") {
+    if (node.isCDATAXml() && typeof node.content === "string") {
       const parser = new XFAParser();
       parser._globalData = this._globalData;
       const root = parser.parse(node.content);
       node.content = null;
-      node[$onChild](root);
+      node.onChild(root);
     }
 
     node.finalize();
     this._current = this._stack.pop();
-    if (this._current[$onChild](node)) {
+    if (this._current.onChild(node)) {
       node[$setId](this._ids);
     }
-    node[$clean](this._builder);
+    node.clean(this._builder);
   }
 
   onError(code) {

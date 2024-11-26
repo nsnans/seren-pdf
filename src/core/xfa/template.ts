@@ -41,19 +41,6 @@ import {
 import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
 import { searchNode } from "./som";
 import {
-  $hasSettableValue,
-  $ids,
-  $isBindable,
-  $isCDATAXml,
-  $isSplittable,
-  $isThereMoreWidth,
-  $isTransparent,
-  $isUsable,
-  $namespaceId,
-  $nodeName,
-  $onChild,
-  $onText,
-  $popPara,
   $pushPara,
   $removeChild,
   $searchNode,
@@ -554,11 +541,11 @@ class Area extends XFAObject {
     yield* getContainedChildren(this);
   }
 
-  [$isTransparent]() {
+  isTransparent() {
     return true;
   }
 
-  [$isBindable]() {
+  isBindable() {
     return true;
   }
 
@@ -1183,7 +1170,7 @@ class Caption extends XFAObject {
     const value = this.value[$toHTML](availableSpace).html;
 
     if (!value) {
-      this[$popPara]();
+      this.popPara();
       return HTMLResult.EMPTY;
     }
 
@@ -1230,7 +1217,7 @@ class Caption extends XFAObject {
     }
 
     setPara(this, null, value);
-    this[$popPara]();
+    this.popPara();
 
     this.reserve = savedReserve;
 
@@ -1490,7 +1477,7 @@ class Color extends XFAObject {
     this.extras = null;
   }
 
-  [$hasSettableValue]() {
+  hasSettableValue() {
     return false;
   }
 
@@ -1894,8 +1881,8 @@ class Draw extends XFAObject {
       // splitted into almost 10 chunks: so it won't be nice.
       // So if we've potentially more width to provide in some parent containers
       // let's increase it to give a chance to have a better rendering.
-      if (isBroken && this.getSubformParent()[$isThereMoreWidth]()) {
-        this[$popPara]();
+      if (isBroken && this.getSubformParent().isThereMoreWidth()) {
+        this.popPara();
         return HTMLResult.FAILURE;
       }
 
@@ -1909,7 +1896,7 @@ class Draw extends XFAObject {
     if (!checkDimensions(this, availableSpace)) {
       this.w = savedW;
       this.h = savedH;
-      this[$popPara]();
+      this.popPara();
       return HTMLResult.FAILURE;
     }
     unsetFirstUnsplittable(this);
@@ -1966,7 +1953,7 @@ class Draw extends XFAObject {
     if (value === null) {
       this.w = savedW;
       this.h = savedH;
-      this[$popPara]();
+      this.popPara();
       return HTMLResult.success(createWrapper(this, html), bbox);
     }
 
@@ -1976,7 +1963,7 @@ class Draw extends XFAObject {
     this.w = savedW;
     this.h = savedH;
 
-    this[$popPara]();
+    this.popPara();
     return HTMLResult.success(createWrapper(this, html), bbox);
   }
 }
@@ -2218,14 +2205,14 @@ class ExData extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$isCDATAXml]() {
+  isCDATAXml() {
     return this.contentType === "text/html";
   }
 
-  [$onChild](child) {
+  onChild(child) {
     if (
       this.contentType === "text/html" &&
-      child[$namespaceId] === NamespaceIds.xhtml.id
+      child.namespaceId === NamespaceIds.xhtml.id
     ) {
       this.content = child;
       return true;
@@ -2354,11 +2341,11 @@ class ExclGroup extends XFAObject {
     this.setProperty = new XFAObjectArray();
   }
 
-  [$isBindable]() {
+  isBindable() {
     return true;
   }
 
-  [$hasSettableValue]() {
+  hasSettableValue() {
     return true;
   }
 
@@ -2374,20 +2361,20 @@ class ExclGroup extends XFAObject {
     }
   }
 
-  [$isThereMoreWidth]() {
+  isThereMoreWidth() {
     return (
       (this.layout.endsWith("-tb") &&
         this.extra.attempt === 0 &&
         this.extra.numberInLine > 0) ||
-      this.getParent()[$isThereMoreWidth]()
+      this.getParent().isThereMoreWidth()
     );
   }
 
-  [$isSplittable]() {
+  isSplittable() {
     // We cannot cache the result here because the contentArea
     // can change.
     const parent = this.getSubformParent();
-    if (!parent[$isSplittable]()) {
+    if (!parent.isSplittable()) {
       return false;
     }
 
@@ -2462,7 +2449,7 @@ class ExclGroup extends XFAObject {
       currentWidth: 0,
     });
 
-    const isSplittable = this[$isSplittable]();
+    const isSplittable = this.isSplittable();
     if (!isSplittable) {
       setFirstUnsplittable(this);
     }
@@ -2525,7 +2512,7 @@ class ExclGroup extends XFAObject {
         break;
       }
       if (result.isBreak()) {
-        this[$popPara]();
+        this.popPara();
         return result;
       }
       if (
@@ -2540,7 +2527,7 @@ class ExclGroup extends XFAObject {
       }
     }
 
-    this[$popPara]();
+    this.popPara();
 
     if (!isSplittable) {
       unsetFirstUnsplittable(this);
@@ -2713,7 +2700,7 @@ class Field extends XFAObject {
     this.setProperty = new XFAObjectArray();
   }
 
-  [$isBindable]() {
+  isBindable() {
     return true;
   }
 
@@ -2813,8 +2800,8 @@ class Field extends XFAObject {
         const { w, h, isBroken } = this.caption.getExtra(availableSpace);
         // See comment in Draw::[$toHTML] to have an explanation
         // about this line.
-        if (isBroken && this.getSubformParent()[$isThereMoreWidth]()) {
-          this[$popPara]();
+        if (isBroken && this.getSubformParent().isThereMoreWidth()) {
+          this.popPara();
           return HTMLResult.FAILURE;
         }
 
@@ -2854,7 +2841,7 @@ class Field extends XFAObject {
       }
     }
 
-    this[$popPara]();
+    this.popPara();
 
     fixDimensions(this);
 
@@ -2862,7 +2849,7 @@ class Field extends XFAObject {
     if (!checkDimensions(this, availableSpace)) {
       this.w = savedW;
       this.h = savedH;
-      this[$popPara]();
+      this.popPara();
       return HTMLResult.FAILURE;
     }
     unsetFirstUnsplittable(this);
@@ -4028,7 +4015,7 @@ class PageArea extends XFAObject {
     this.subform = new XFAObjectArray();
   }
 
-  [$isUsable]() {
+  isUsable() {
     if (!this.extra) {
       this.extra = {
         numberOfUse: 0,
@@ -4055,7 +4042,7 @@ class PageArea extends XFAObject {
 
     const parent = this.getParent();
     if (parent.relation === "orderedOccurrence") {
-      if (this[$isUsable]()) {
+      if (this.isUsable()) {
         this.extra.numberOfUse += 1;
         return this;
       }
@@ -4157,7 +4144,7 @@ class PageSet extends XFAObject {
     }
   }
 
-  [$isUsable]() {
+  isUsable() {
     return (
       !this.occur ||
       this.occur.max === -1 ||
@@ -4186,7 +4173,7 @@ class PageSet extends XFAObject {
         return this.pageSet.children[this.extra.pageSetIndex].getNextPage();
       }
 
-      if (this[$isUsable]()) {
+      if (this.isUsable()) {
         this.extra.numberOfUse += 1;
         this.extra.pageIndex = -1;
         this.extra.pageSetIndex = -1;
@@ -4899,16 +4886,16 @@ class Subform extends XFAObject {
     return parent;
   }
 
-  [$isBindable]() {
+  isBindable() {
     return true;
   }
 
-  [$isThereMoreWidth]() {
+  isThereMoreWidth() {
     return (
       (this.layout.endsWith("-tb") &&
         this.extra.attempt === 0 &&
         this.extra.numberInLine > 0) ||
-      this.getParent()[$isThereMoreWidth]()
+      this.getParent().isThereMoreWidth()
     );
   }
 
@@ -4930,11 +4917,11 @@ class Subform extends XFAObject {
     return getAvailableSpace(this);
   }
 
-  [$isSplittable]() {
+  isSplittable() {
     // We cannot cache the result here because the contentArea
     // can change.
     const parent = this.getSubformParent();
-    if (!parent[$isSplittable]()) {
+    if (!parent.isSplittable()) {
       return false;
     }
 
@@ -5069,7 +5056,7 @@ class Subform extends XFAObject {
     const root = this.getTemplateRoot();
     const savedNoLayoutFailure = root.extra.noLayoutFailure;
 
-    const isSplittable = this[$isSplittable]();
+    const isSplittable = this.isSplittable();
     if (!isSplittable) {
       setFirstUnsplittable(this);
     }
@@ -5144,7 +5131,7 @@ class Subform extends XFAObject {
         break;
       }
       if (result.isBreak()) {
-        this[$popPara]();
+        this.popPara();
         return result;
       }
       if (
@@ -5166,7 +5153,7 @@ class Subform extends XFAObject {
       }
     }
 
-    this[$popPara]();
+    this.popPara();
     if (!isSplittable) {
       unsetFirstUnsplittable(this);
     }
@@ -5283,7 +5270,7 @@ class SubformSet extends XFAObject {
     return parent;
   }
 
-  [$isBindable]() {
+  isBindable() {
     return true;
   }
 }
@@ -5393,14 +5380,14 @@ class Template extends XFAObject {
     this[$tabIndex] = DEFAULT_TAB_INDEX;
   }
 
-  [$isSplittable]() {
+  isSplittable() {
     return true;
   }
 
   [$searchNode](expr, container) {
     if (expr.startsWith("#")) {
       // This is an id.
-      return [this[$ids].get(expr.slice(1))];
+      return [this.ids.get(expr.slice(1))];
     }
     return searchNode(this, container, expr, true, true);
   }
@@ -5643,7 +5630,7 @@ class Template extends XFAObject {
 
       this.extra.pageNumber += 1;
       if (targetPageArea) {
-        if (targetPageArea[$isUsable]()) {
+        if (targetPageArea.isUsable()) {
           targetPageArea.extra.numberOfUse += 1;
         } else {
           targetPageArea = null;
@@ -5682,20 +5669,20 @@ class Text extends ContentObject {
     return true;
   }
 
-  [$onChild](child) {
-    if (child[$namespaceId] === NamespaceIds.xhtml.id) {
+  onChild(child) {
+    if (child.namespaceId === NamespaceIds.xhtml.id) {
       this.content = child;
       return true;
     }
-    warn(`XFA - Invalid content in Text: ${child[$nodeName]}.`);
+    warn(`XFA - Invalid content in Text: ${child.nodeName}.`);
     return false;
   }
 
-  [$onText](str) {
+  onText(str) {
     if (this.content instanceof XFAObject) {
       return;
     }
-    super[$onText](str);
+    super.onText(str);
   }
 
   finalize() {
@@ -5938,7 +5925,7 @@ class Traverse extends XFAObject {
     return this.operation;
   }
 
-  [$isTransparent]() {
+  isTransparent() {
     return false;
   }
 }
@@ -6065,7 +6052,7 @@ class Value extends XFAObject {
       }
     }
 
-    const valueName = value[$nodeName];
+    const valueName = value.nodeName;
     if (this[valueName] !== null) {
       this[valueName].content = value.content;
       return;
@@ -6080,7 +6067,7 @@ class Value extends XFAObject {
       }
     }
 
-    this[value[$nodeName]] = value;
+    this[value.nodeName] = value;
     this.appendChild(value);
   }
 
@@ -6137,7 +6124,7 @@ class Variables extends XFAObject {
     this.time = new XFAObjectArray();
   }
 
-  [$isTransparent]() {
+  isTransparent() {
     return true;
   }
 }

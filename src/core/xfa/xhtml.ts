@@ -21,9 +21,6 @@ import {
 } from "./html_utils";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import {
-  $nodeName,
-  $onText,
-  $pushGlyphs,
   $text,
   $toHTML
 } from "./symbol_utils";
@@ -213,10 +210,10 @@ class XhtmlObject extends XmlObject {
   }
 
   acceptWhitespace() {
-    return !NoWhites.has(this[$nodeName]);
+    return !NoWhites.has(this.nodeName);
   }
 
-  [$onText](str, richText = false) {
+  onText(str, richText = false) {
     if (!richText) {
       str = str.replaceAll(crlfRegExp, "");
       if (!this.style.includes("xfa-spacerun:yes")) {
@@ -231,7 +228,7 @@ class XhtmlObject extends XmlObject {
     }
   }
 
-  [$pushGlyphs](measure, mustPop = true) {
+  pushGlyphs(measure, mustPop = true) {
     const xfaFont = Object.create(null);
     const margin = {
       top: NaN,
@@ -310,11 +307,11 @@ class XhtmlObject extends XmlObject {
       measure.addString(this.content);
     } else {
       for (const child of this.getChildren()) {
-        if (child[$nodeName] === "#text") {
+        if (child.nodeName === "#text") {
           measure.addString(child.content);
           continue;
         }
-        child[$pushGlyphs](measure);
+        child.pushGlyphs(measure);
       }
     }
 
@@ -345,7 +342,7 @@ class XhtmlObject extends XmlObject {
     }
 
     return HTMLResult.success({
-      name: this[$nodeName],
+      name: this.nodeName,
       attributes: {
         href: this.href,
         style: mapStyle(this.style, this, this[$richText]),
@@ -368,9 +365,9 @@ class B extends XhtmlObject {
     super(attributes, "b");
   }
 
-  [$pushGlyphs](measure) {
+  pushGlyphs(measure) {
     measure.pushFont({ weight: "bold" });
-    super[$pushGlyphs](measure);
+    super.pushGlyphs(measure);
     measure.popFont();
   }
 }
@@ -401,7 +398,7 @@ class Br extends XhtmlObject {
     return "\n";
   }
 
-  [$pushGlyphs](measure) {
+  pushGlyphs(measure) {
     measure.addString("\n");
   }
 
@@ -458,9 +455,9 @@ class I extends XhtmlObject {
     super(attributes, "i");
   }
 
-  [$pushGlyphs](measure) {
+  pushGlyphs(measure) {
     measure.pushFont({ posture: "italic" });
-    super[$pushGlyphs](measure);
+    super.pushGlyphs(measure);
     measure.popFont();
   }
 }
@@ -482,8 +479,8 @@ class P extends XhtmlObject {
     super(attributes, "p");
   }
 
-  [$pushGlyphs](measure) {
-    super[$pushGlyphs](measure, /* mustPop = */ false);
+  pushGlyphs(measure) {
+    super.pushGlyphs(measure, /* mustPop = */ false);
     measure.addString("\n");
     measure.addPara();
     measure.popFont();

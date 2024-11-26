@@ -14,10 +14,6 @@
  */
 
 import { measureToString } from "./html_utils";
-import {
-  $isSplittable,
-  $isThereMoreWidth
-} from "./symbol_utils";
 
 // Subform and ExclGroup have a layout so they share these functions.
 
@@ -324,7 +320,7 @@ function checkDimensions(node, space) {
         return space.height > ERROR;
       }
 
-      if (parent[$isThereMoreWidth]()) {
+      if (parent.isThereMoreWidth()) {
         return false;
       }
 
@@ -337,7 +333,7 @@ function checkDimensions(node, space) {
 
       // If the node has a height then check if it's fine with available height.
       // If the node is breakable then we can return true.
-      if (node.h !== "" && !node[$isSplittable]()) {
+      if (node.h !== "" && !node.isSplittable()) {
         return Math.round(h - space.height) <= ERROR;
       }
       // Else wait and see: this node will be layed out itself
@@ -347,7 +343,7 @@ function checkDimensions(node, space) {
         return space.height > ERROR;
       }
 
-      if (parent[$isThereMoreWidth]()) {
+      if (parent.isThereMoreWidth()) {
         return false;
       }
 

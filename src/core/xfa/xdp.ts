@@ -14,7 +14,6 @@
  */
 
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import { $namespaceId, $nodeName, $onChildCheck } from "./symbol_utils";
 import { XFAObject, XFAObjectArray } from "./xfa_object";
 
 const XDP_NS_ID = NamespaceIds.xdp.id;
@@ -32,9 +31,9 @@ class Xdp extends XFAObject {
     this.template = null;
   }
 
-  [$onChildCheck](child) {
-    const ns = NamespaceIds[child[$nodeName]];
-    return ns && child[$namespaceId] === ns.id;
+  onChildCheck(child) {
+    const ns = NamespaceIds[child.nodeName];
+    return ns && child.namespaceId === ns.id;
   }
 }
 

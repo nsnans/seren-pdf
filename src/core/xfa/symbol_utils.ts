@@ -16,28 +16,7 @@
 // We use these symbols to avoid name conflict between tags
 // and properties/methods names.
 const $content = Symbol("content");
-const $hasSettableValue = Symbol();
-const $ids = Symbol();
-const $indexOf = Symbol();
-const $insertAt = Symbol();
-const $isCDATAXml = Symbol();
-const $isBindable = Symbol();
-const $isDataValue = Symbol();
-const $isDescendent = Symbol();
-const $isNsAgnostic = Symbol();
-const $isSplittable = Symbol();
-const $isThereMoreWidth = Symbol();
-const $isTransparent = Symbol();
-const $isUsable = Symbol();
-const $lastAttribute = Symbol();
-const $namespaceId = Symbol("namespaceId");
-const $nodeName = Symbol("nodeName");
 const $nsAttributes = Symbol();
-const $onChild = Symbol();
-const $onChildCheck = Symbol();
-const $onText = Symbol();
-const $pushGlyphs = Symbol();
-const $popPara = Symbol();
 const $pushPara = Symbol();
 const $removeChild = Symbol();
 const $root = Symbol("root");
@@ -56,28 +35,7 @@ const $uid = Symbol("uid");
 
 export {
   $content,
-  $hasSettableValue,
-  $ids,
-  $indexOf,
-  $insertAt,
-  $isBindable,
-  $isCDATAXml,
-  $isDataValue,
-  $isDescendent,
-  $isNsAgnostic,
-  $isSplittable,
-  $isThereMoreWidth,
-  $isTransparent,
-  $isUsable,
-  $lastAttribute,
-  $namespaceId,
-  $nodeName,
   $nsAttributes,
-  $onChild,
-  $onChildCheck,
-  $onText,
-  $popPara,
-  $pushGlyphs,
   $pushPara,
   $removeChild,
   $resolvePrototypes,

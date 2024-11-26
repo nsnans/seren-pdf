@@ -18,25 +18,7 @@ import { encodeToXmlString } from "../core_utils";
 import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
-  $hasSettableValue,
-  $indexOf,
-  $insertAt,
-  $isBindable,
-  $isCDATAXml,
-  $isDataValue,
-  $isDescendent,
-  $isNsAgnostic,
-  $isSplittable,
-  $isThereMoreWidth,
-  $isTransparent,
-  $lastAttribute,
-  $namespaceId,
-  $nodeName,
   $nsAttributes,
-  $onChild,
-  $onChildCheck,
-  $onText,
-  $popPara,
   $pushPara,
   $removeChild,
   $resolvePrototypes,
@@ -76,8 +58,8 @@ const NS_DATASETS = NamespaceIds.datasets.id;
 
 class XFAObject {
   constructor(nsId: number, name: string, hasChildren = false) {
-    this[$namespaceId] = nsId;
-    this[$nodeName] = name;
+    this.namespaceId = nsId;
+    this.nodeName = name;
     this[_hasChildren] = hasChildren;
     this[_parent] = null;
     this[_children] = [];
@@ -99,7 +81,7 @@ class XFAObject {
     for (const { name, index } of path) {
       for (let i = 0, ii = isFinite(index) ? index : 0; i <= ii; i++) {
         const nsId =
-          root[$namespaceId] === NS_DATASETS ? -1 : root[$namespaceId];
+          root.namespaceId === NS_DATASETS ? -1 : root.namespaceId;
         node = new XmlObject(nsId, name);
         root.appendChild(node);
       }
@@ -108,12 +90,12 @@ class XFAObject {
     return node;
   }
 
-  [$onChild](child) {
-    if (!this[_hasChildren] || !this[$onChildCheck](child)) {
+  onChild(child) {
+    if (!this[_hasChildren] || !this.onChildCheck(child)) {
       return false;
     }
 
-    const name = child[$nodeName];
+    const name = child.nodeName;
     const node = this[name];
 
     if (node instanceof XFAObjectArray) {
@@ -138,18 +120,18 @@ class XFAObject {
     } else if (this.name) {
       id = ` (name: ${this.name} ${this.h.value})`;
     }
-    warn(`XFA - node "${this[$nodeName]}"${id} has already enough "${name}"!`);
+    warn(`XFA - node "${this.nodeName}"${id} has already enough "${name}"!`);
     return false;
   }
 
-  [$onChildCheck](child) {
+  onChildCheck(child) {
     return (
-      this.hasOwnProperty(child[$nodeName]) &&
-      child[$namespaceId] === this[$namespaceId]
+      this.hasOwnProperty(child.nodeName) &&
+      child.namespaceId === this.namespaceId
     );
   }
 
-  [$isNsAgnostic]() {
+  isNsAgnostic() {
     return false;
   }
 
@@ -157,15 +139,15 @@ class XFAObject {
     return false;
   }
 
-  [$isCDATAXml]() {
+  isCDATAXml() {
     return false;
   }
 
-  [$isBindable]() {
+  isBindable() {
     return false;
   }
 
-  [$popPara]() {
+  popPara() {
     if (this.para) {
       this.getTemplateRoot().extra.paraStack.pop();
     }
@@ -176,7 +158,7 @@ class XFAObject {
   }
 
   [$setId](ids) {
-    if (this.id && this[$namespaceId] === NamespaceIds.template.id) {
+    if (this.id && this.namespaceId === NamespaceIds.template.id) {
       ids.set(this.id, this);
     }
   }
@@ -185,7 +167,7 @@ class XFAObject {
     return this.globalData.template;
   }
 
-  [$isSplittable]() {
+  isSplittable() {
     return false;
   }
 
@@ -195,7 +177,7 @@ class XFAObject {
      The goal is to help to know what a descendant must
      do in case of horizontal overflow.
    */
-  [$isThereMoreWidth]() {
+  isThereMoreWidth() {
     return false;
   }
 
@@ -212,13 +194,13 @@ class XFAObject {
     this[_children].splice(i, 1);
   }
 
-  [$hasSettableValue]() {
+  hasSettableValue() {
     return this.hasOwnProperty("value");
   }
 
   [$setValue](_) { }
 
-  [$onText](_) { }
+  onText(_) { }
 
   finalize() { }
 
@@ -230,11 +212,11 @@ class XFAObject {
     }
   }
 
-  [$indexOf](child) {
+  indexOf(child) {
     return this[_children].indexOf(child);
   }
 
-  [$insertAt](i, child) {
+  insertAt(i, child) {
     child[_parent] = this;
     this[_children].splice(i, 0, child);
     if (!child.globalData && this.globalData) {
@@ -248,11 +230,11 @@ class XFAObject {
    * <... name="foo"><toto><titi><... name="bar"></titi></toto>...
    * is fine because toto and titi are transparent.
    */
-  [$isTransparent]() {
+  isTransparent() {
     return !this.name;
   }
 
-  [$lastAttribute]() {
+  lastAttribute() {
     return "";
   }
 
@@ -282,7 +264,7 @@ class XFAObject {
     return shadow(this, _attributeNames, proto._attributes);
   }
 
-  [$isDescendent](parent) {
+  isDescendent(parent) {
     let node = this;
     while (node) {
       if (node === parent) {
@@ -351,7 +333,7 @@ class XFAObject {
 
   *[_filteredChildrenGenerator](filter, include) {
     for (const node of this.getContainedChildren()) {
-      if (!filter || include === filter.has(node[$nodeName])) {
+      if (!filter || include === filter.has(node.nodeName)) {
         const availableSpace = this.getAvailableSpace();
         const res = node[$toHTML](availableSpace);
         if (!res.success) {
@@ -501,9 +483,9 @@ class XFAObject {
       return null;
     }
 
-    if (proto[$nodeName] !== this[$nodeName]) {
+    if (proto.nodeName !== this.nodeName) {
       warn(
-        `XFA - Incompatible prototype: ${proto[$nodeName]} !== ${this[$nodeName]}.`
+        `XFA - Incompatible prototype: ${proto.nodeName} !== ${this.nodeName}.`
       );
       return null;
     }
@@ -621,7 +603,7 @@ class XFAObject {
         shadow(clone, $symbol, this[$symbol]);
       }
     }
-    clone[$uid] = `${clone[$nodeName]}${uid++}`;
+    clone[$uid] = `${clone.nodeName}${uid++}`;
     clone[_children] = [];
 
     for (const name of Object.getOwnPropertyNames(this)) {
@@ -637,7 +619,7 @@ class XFAObject {
     }
 
     for (const child of this[_children]) {
-      const name = child[$nodeName];
+      const name = child.nodeName;
       const clonedChild = child.clone();
       clone[_children].push(clonedChild);
       clonedChild[_parent] = clone;
@@ -656,7 +638,7 @@ class XFAObject {
       return this[_children];
     }
 
-    return this[_children].filter(c => c[$nodeName] === name);
+    return this[_children].filter(c => c.nodeName === name);
   }
 
   getChildrenByClass(name) {
@@ -674,7 +656,7 @@ class XFAObject {
     }
 
     for (const child of this[_children]) {
-      if (child[$nodeName] === name) {
+      if (child.nodeName === name) {
         yield child;
       }
 
@@ -682,7 +664,7 @@ class XFAObject {
         yield child;
       }
 
-      if (allTransparent || child[$isTransparent]()) {
+      if (allTransparent || child.isTransparent()) {
         yield* child.getChildrenByNameIt(name, allTransparent, false);
       }
     }
@@ -714,7 +696,7 @@ class XFAObjectArray {
       return true;
     }
     warn(
-      `XFA - node "${child[$nodeName]}" accepts no more than ${this[_max]} children`
+      `XFA - node "${child.nodeName}" accepts no more than ${this[_max]} children`
     );
     return false;
   }
@@ -747,7 +729,7 @@ class XFAObjectArray {
 class XFAAttribute {
   constructor(node, name, value) {
     this[_parent] = node;
-    this[$nodeName] = name;
+    this.nodeName = name;
     this.content = value;
     this.consumed = false;
     this[$uid] = `attribute${uid++}`;
@@ -757,7 +739,7 @@ class XFAAttribute {
     return this[_parent];
   }
 
-  [$isDataValue]() {
+  isDataValue() {
     return true;
   }
 
@@ -774,8 +756,8 @@ class XFAAttribute {
     return this.content;
   }
 
-  [$isDescendent](parent) {
-    return this[_parent] === parent || this[_parent][$isDescendent](parent);
+  isDescendent(parent) {
+    return this[_parent] === parent || this[_parent].isDescendent(parent);
   }
 }
 
@@ -792,7 +774,7 @@ class XmlObject extends XFAObject {
       }
       if (attributes.hasOwnProperty($nsAttributes)) {
         // XFA attributes.
-        const dataNode = attributes[$nsAttributes].xfa.dataNode;
+        const dataNode = attributes.nsAttributes.xfa.dataNode;
         if (dataNode !== undefined) {
           if (dataNode === "dataGroup") {
             this[_dataValue] = false;
@@ -806,13 +788,13 @@ class XmlObject extends XFAObject {
   }
 
   [$toString](buf) {
-    const tagName = this[$nodeName];
+    const tagName = this.nodeName;
     if (tagName === "#text") {
       buf.push(encodeToXmlString(this.content));
       return;
     }
     const utf8TagName = utf8StringToString(tagName);
-    const prefix = this[$namespaceId] === NS_DATASETS ? "xfa:" : "";
+    const prefix = this.namespaceId === NS_DATASETS ? "xfa:" : "";
     buf.push(`<${prefix}${utf8TagName}`);
     for (const [name, value] of this[_attributes].entries()) {
       const utf8Name = utf8StringToString(name);
@@ -845,9 +827,9 @@ class XmlObject extends XFAObject {
     buf.push(`</${prefix}${utf8TagName}>`);
   }
 
-  [$onChild](child) {
+  onChild(child) {
     if (this.content) {
-      const node = new XmlObject(this[$namespaceId], "#text");
+      const node = new XmlObject(this.namespaceId, "#text");
       this.appendChild(node);
       node.content = this.content;
       this.content = "";
@@ -856,13 +838,13 @@ class XmlObject extends XFAObject {
     return true;
   }
 
-  [$onText](str) {
+  onText(str) {
     this.content += str;
   }
 
   finalize() {
     if (this.content && this[_children].length > 0) {
-      const node = new XmlObject(this[$namespaceId], "#text");
+      const node = new XmlObject(this.namespaceId, "#text");
       this.appendChild(node);
       node.content = this.content;
       delete this.content;
@@ -870,7 +852,7 @@ class XmlObject extends XFAObject {
   }
 
   [$toHTML]() {
-    if (this[$nodeName] === "#text") {
+    if (this.nodeName === "#text") {
       return HTMLResult.success({
         name: "#text",
         value: this.content,
@@ -885,7 +867,7 @@ class XmlObject extends XFAObject {
       return this[_children];
     }
 
-    return this[_children].filter(c => c[$nodeName] === name);
+    return this[_children].filter(c => c.nodeName === name);
   }
 
   getAttributes() {
@@ -907,7 +889,7 @@ class XmlObject extends XFAObject {
     }
 
     for (const child of this[_children]) {
-      if (child[$nodeName] === name) {
+      if (child.nodeName === name) {
         yield child;
       }
 
@@ -929,7 +911,7 @@ class XmlObject extends XFAObject {
 
   *getRealChildrenByNameIt(name, allTransparent, skipConsumed) {
     for (const child of this[_children]) {
-      if (child[$nodeName] === name && (!skipConsumed || !child.consumed)) {
+      if (child.nodeName === name && (!skipConsumed || !child.consumed)) {
         yield child;
       }
 
@@ -943,11 +925,11 @@ class XmlObject extends XFAObject {
     }
   }
 
-  [$isDataValue]() {
+  isDataValue() {
     if (this[_dataValue] === null) {
       return (
         this[_children].length === 0 ||
-        this[_children][0][$namespaceId] === NamespaceIds.xhtml.id
+        this[_children][0].namespaceId === NamespaceIds.xhtml.id
       );
     }
     return this[_dataValue];
@@ -958,7 +940,7 @@ class XmlObject extends XFAObject {
       if (this[_children].length === 0) {
         return this.content.trim();
       }
-      if (this[_children][0][$namespaceId] === NamespaceIds.xhtml.id) {
+      if (this[_children][0].namespaceId === NamespaceIds.xhtml.id) {
         return this[_children][0][$text]().trim();
       }
       return null;
@@ -974,12 +956,12 @@ class XmlObject extends XFAObject {
   dump(hasNS = false) {
     const dumped = Object.create(null);
     if (hasNS) {
-      dumped.$ns = this[$namespaceId];
+      dumped.$ns = this.namespaceId;
     }
     if (this.content) {
       dumped.$content = this.content;
     }
-    dumped.$name = this[$nodeName];
+    dumped.$name = this.nodeName;
 
     dumped.children = [];
     for (const child of this[_children]) {
@@ -1001,7 +983,7 @@ class ContentObject extends XFAObject {
     this.content = "";
   }
 
-  [$onText](text) {
+  onText(text) {
     this.content += text;
   }
 

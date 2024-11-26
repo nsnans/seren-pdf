@@ -18,14 +18,6 @@ import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
 import {
   $content,
-  $hasSettableValue,
-  $indexOf,
-  $insertAt,
-  $isBindable,
-  $isDataValue,
-  $isDescendent,
-  $namespaceId,
-  $nodeName,
   $removeChild,
   $setValue,
   $text
@@ -76,8 +68,8 @@ class Binder {
     // to save form data.
 
     formNode.data = data;
-    if (formNode[$hasSettableValue]()) {
-      if (data[$isDataValue]()) {
+    if (formNode.hasSettableValue()) {
+      if (data.isDataValue()) {
         const value = data.getDataValue();
         // TODO: use picture.
         formNode[$setValue](createText(value));
@@ -92,7 +84,7 @@ class Binder {
       } else if (this._isConsumeData()) {
         warn(`XFA - Nodes haven't the same type.`);
       }
-    } else if (!data[$isDataValue]() || this._isMatchTemplate()) {
+    } else if (!data.isDataValue() || this._isMatchTemplate()) {
       this._bindElement(formNode, data);
     } else {
       warn(`XFA - Nodes haven't the same type.`);
@@ -122,13 +114,13 @@ class Binder {
           break;
         }
 
-        if (isValue === match[$isDataValue]()) {
+        if (isValue === match.isDataValue()) {
           return match;
         }
       }
       if (
-        dataNode[$namespaceId] === NamespaceIds.datasets.id &&
-        dataNode[$nodeName] === "data"
+        dataNode.namespaceId === NamespaceIds.datasets.id &&
+        dataNode.nodeName === "data"
       ) {
         break;
       }
@@ -155,7 +147,7 @@ class Binder {
     // Thirdly, try to find it in attributes.
     generator = this.data.getAttributeIt(name, /* skipConsumed = */ true);
     match = generator.next().value;
-    if (match?.[$isDataValue]()) {
+    if (match?.isDataValue()) {
       return match;
     }
 
@@ -197,7 +189,7 @@ class Binder {
       }
       const [node] = nodes;
 
-      if (!node[$isDescendent](this.data)) {
+      if (!node.isDescendent(this.data)) {
         warn(`XFA - Invalid node: must be a data node.`);
         continue;
       }
@@ -215,7 +207,7 @@ class Binder {
       }
       const [targetNode] = targetNodes;
 
-      if (!targetNode[$isDescendent](formNode)) {
+      if (!targetNode.isDescendent(formNode)) {
         warn(`XFA - Invalid target: must be a property or subproperty.`);
         continue;
       }
@@ -242,7 +234,7 @@ class Binder {
       }
 
       const content = node[$text]();
-      const name = targetNode[$nodeName];
+      const name = targetNode.nodeName;
 
       if (targetNode instanceof XFAAttribute) {
         const attrs = Object.create(null);
@@ -321,7 +313,7 @@ class Binder {
         continue;
       }
       for (const node of nodes) {
-        if (!node[$isDescendent](this.datasets)) {
+        if (!node.isDescendent(this.datasets)) {
           warn(`XFA - Invalid ref (${ref}): must be a datasets child.`);
           continue;
         }
@@ -339,7 +331,7 @@ class Binder {
         }
         const [labelNode] = labelNodes;
 
-        if (!labelNode[$isDescendent](this.datasets)) {
+        if (!labelNode.isDescendent(this.datasets)) {
           warn(`XFA - Invalid label: must be a datasets child.`);
           continue;
         }
@@ -357,7 +349,7 @@ class Binder {
         }
         const [valueNode] = valueNodes;
 
-        if (!valueNode[$isDescendent](this.datasets)) {
+        if (!valueNode.isDescendent(this.datasets)) {
           warn(`XFA - Invalid value: must be a datasets child.`);
           continue;
         }
@@ -395,14 +387,14 @@ class Binder {
     }
 
     const parent = formNode.getParent();
-    const name = formNode[$nodeName];
-    const pos = parent[$indexOf](formNode);
+    const name = formNode.nodeName;
+    const pos = parent.indexOf(formNode);
 
     for (let i = 1, ii = matches.length; i < ii; i++) {
       const match = matches[i];
       const clone = baseClone.clone();
       parent[name].push(clone);
-      parent[$insertAt](pos + i, clone);
+      parent.insertAt(pos + i, clone);
 
       this._bindValue(clone, match, picture);
       this._setProperties(clone, match);
@@ -421,7 +413,7 @@ class Binder {
     }
 
     const parent = formNode.getParent();
-    const name = formNode[$nodeName];
+    const name = formNode.nodeName;
 
     if (!(parent[name] instanceof XFAObjectArray)) {
       return;
@@ -436,19 +428,19 @@ class Binder {
       currentNumber = parent[name].children.length;
     }
 
-    const pos = parent[$indexOf](formNode) + 1;
+    const pos = parent.indexOf(formNode) + 1;
     const ii = occur.initial - currentNumber;
     if (ii) {
       const nodeClone = formNode.clone();
       nodeClone[$removeChild](nodeClone.occur);
       nodeClone.occur = null;
       parent[name].push(nodeClone);
-      parent[$insertAt](pos, nodeClone);
+      parent.insertAt(pos, nodeClone);
 
       for (let i = 1; i < ii; i++) {
         const clone = nodeClone.clone();
         parent[name].push(clone);
-        parent[$insertAt](pos + i, clone);
+        parent.insertAt(pos + i, clone);
       }
     }
   }
@@ -482,7 +474,7 @@ class Binder {
         continue;
       }
 
-      if (this._mergeMode === undefined && child[$nodeName] === "subform") {
+      if (this._mergeMode === undefined && child.nodeName === "subform") {
         this._mergeMode = child.mergeMode === "consumeData";
 
         // XFA specs p. 182:
@@ -494,9 +486,9 @@ class Binder {
           this._bindOccurrences(child, [dataChildren[0]], null);
         } else if (this.emptyMerge) {
           const nsId =
-            dataNode[$namespaceId] === NS_DATASETS
+            dataNode.namespaceId === NS_DATASETS
               ? -1
-              : dataNode[$namespaceId];
+              : dataNode.namespaceId;
           const dataChild = (child.data = new XmlObject(
             nsId,
             child.name || "root"
@@ -507,7 +499,7 @@ class Binder {
         continue;
       }
 
-      if (!child[$isBindable]()) {
+      if (!child.isBindable()) {
         // The node cannot contain some new data so there is nothing
         // to create in the data node.
         continue;
@@ -527,7 +519,7 @@ class Binder {
             break;
           case "dataRef":
             if (!child.bind.ref) {
-              warn(`XFA - ref is empty in node ${child[$nodeName]}.`);
+              warn(`XFA - ref is empty in node ${child.nodeName}.`);
               this._setAndBind(child, dataNode);
               continue;
             }
@@ -598,7 +590,7 @@ class Binder {
           while (matches.length < max) {
             const found = this._findDataByNameToConsume(
               child.name,
-              child[$hasSettableValue](),
+              child.hasSettableValue(),
               dataNode,
               global
             );
@@ -629,9 +621,9 @@ class Binder {
             // We're in matchTemplate mode so create a node in data to reflect
             // what we've in template.
             const nsId =
-              dataNode[$namespaceId] === NS_DATASETS
+              dataNode.namespaceId === NS_DATASETS
                 ? -1
-                : dataNode[$namespaceId];
+                : dataNode.namespaceId;
             match = child.data = new XmlObject(nsId, child.name);
             if (this.emptyMerge) {
               match.consumed = true;

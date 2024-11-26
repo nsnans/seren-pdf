@@ -19,7 +19,6 @@ import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
 import {
-  $nodeName,
   $text,
   $toHTML,
   $toPages
@@ -150,7 +149,7 @@ class XFAFactory {
 
     try {
       let root = new XFAParser(XhtmlNamespace, /* richText */ true).parse(rc);
-      if (!["body", "xhtml"].includes(root[$nodeName])) {
+      if (!["body", "xhtml"].includes(root.nodeName)) {
         // No body, so create one.
         const newRoot = XhtmlNamespace.body({});
         newRoot.appendChild(root);

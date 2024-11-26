@@ -17,10 +17,7 @@ import { warn } from "../../shared/util";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
 import {
-  $ids,
-  $isNsAgnostic,
   $nsAttributes,
-  $onChild,
   $resolvePrototypes,
   $root
 } from "./symbol_utils";
@@ -32,10 +29,10 @@ class Root extends XFAObject {
   constructor(ids) {
     super(-1, "root", Object.create(null));
     this.element = null;
-    this[$ids] = ids;
+    this.ids = ids;
   }
 
-  [$onChild](child) {
+  onChild(child) {
     this.element = child;
     return true;
   }
@@ -45,10 +42,10 @@ class Root extends XFAObject {
     if (this.element.template instanceof Template) {
       // Set the root element in $ids using a symbol in order
       // to avoid conflict with real IDs.
-      this[$ids].set($root, this.element);
+      this.ids.set($root, this.element);
 
-      this.element.template[$resolvePrototypes](this[$ids]);
-      this.element.template[$ids] = this[$ids];
+      this.element.template[$resolvePrototypes](this.ids);
+      this.element.template.ids = this.ids;
     }
   }
 }
@@ -58,7 +55,7 @@ class Empty extends XFAObject {
     super(-1, "", Object.create(null));
   }
 
-  [$onChild](_) {
+  onChild(_) {
     return false;
   }
 }
@@ -98,7 +95,7 @@ class Builder {
     if (attributes.hasOwnProperty($nsAttributes)) {
       // Only support xfa-data namespace.
       const dataTemplate = NamespaceSetUp.datasets;
-      const nsAttrs = attributes[$nsAttributes];
+      const nsAttrs = attributes.nsAttributes;
       let xfaAttrs = null;
       for (const [ns, attrs] of Object.entries(nsAttrs)) {
         const nsToUse = this._getNamespaceToUse(ns);
@@ -108,9 +105,9 @@ class Builder {
         }
       }
       if (xfaAttrs) {
-        attributes[$nsAttributes] = xfaAttrs;
+        attributes.nsAttributes = xfaAttrs;
       } else {
-        delete attributes[$nsAttributes];
+        delete attributes.nsAttributes;
       }
     }
 
@@ -118,17 +115,17 @@ class Builder {
     const node =
       namespaceToUse?.[$buildXFAObject](name, attributes) || new Empty();
 
-    if (node[$isNsAgnostic]()) {
+    if (node.isNsAgnostic()) {
       this._nsAgnosticLevel++;
     }
 
     // In case the node has some namespace things,
     // we must pop the different stacks.
-    if (hasNamespaceDef || prefixes || node[$isNsAgnostic]()) {
+    if (hasNamespaceDef || prefixes || node.isNsAgnostic()) {
       node.cleanup = {
         hasNamespace: hasNamespaceDef,
         prefixes,
-        nsAgnostic: node[$isNsAgnostic](),
+        nsAgnostic: node.isNsAgnostic(),
       };
     }
 

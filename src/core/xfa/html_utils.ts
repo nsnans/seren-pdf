@@ -16,8 +16,6 @@
 import { createValidAbsoluteUrl, warn } from "../../shared/util";
 import { selectFont } from "./fonts";
 import {
-  $nodeName,
-  $pushGlyphs,
   $text,
   $toStyle
 } from "./symbol_utils";
@@ -134,7 +132,7 @@ const converters = {
     }
   },
   hAlign(node, style) {
-    if (node[$nodeName] === "para") {
+    if (node.nodeName === "para") {
       switch (node.hAlign) {
         case "justifyAll":
           style.textAlign = "justify-all";
@@ -190,7 +188,7 @@ function layoutText(text, xfaFont, margin, lineHeight, fontFinder, width) {
   if (typeof text === "string") {
     measure.addString(text);
   } else {
-    text[$pushGlyphs](measure);
+    text.pushGlyphs(measure);
   }
 
   return measure.compute(width);
