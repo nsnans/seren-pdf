@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { XFAObject } from "./xfa_object";
 
 const SIGNATURE_NS_ID = NamespaceIds.signature.id;
@@ -25,7 +25,7 @@ class Signature extends XFAObject {
 }
 
 class SignatureNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (SignatureNamespace.hasOwnProperty(name)) {
       return SignatureNamespace[name](attributes);
     }

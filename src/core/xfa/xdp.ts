@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { XFAObject, XFAObjectArray } from "./xfa_object";
 
 const XDP_NS_ID = NamespaceIds.xdp.id;
@@ -38,7 +38,7 @@ class Xdp extends XFAObject {
 }
 
 class XdpNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (XdpNamespace.hasOwnProperty(name)) {
       return XdpNamespace[name](attributes);
     }

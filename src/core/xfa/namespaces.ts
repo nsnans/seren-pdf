@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-const $buildXFAObject = Symbol();
-
 const NamespaceIds = {
   config: {
     id: 0,
@@ -78,4 +76,4 @@ const NamespaceIds = {
   },
 };
 
-export { $buildXFAObject, NamespaceIds };
+export { NamespaceIds };

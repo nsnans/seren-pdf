@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { XFAObject } from "./xfa_object";
 
 const STYLESHEET_NS_ID = NamespaceIds.stylesheet.id;
@@ -25,7 +25,7 @@ class Stylesheet extends XFAObject {
 }
 
 class StylesheetNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (StylesheetNamespace.hasOwnProperty(name)) {
       return StylesheetNamespace[name](attributes);
     }

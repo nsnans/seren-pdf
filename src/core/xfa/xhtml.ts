@@ -19,12 +19,11 @@ import {
   measureToString,
   setFontFamily,
 } from "./html_utils";
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
 import { XmlObject } from "./xfa_object";
 
 const XHTML_NS_ID = NamespaceIds.xhtml.id;
-const $richText = Symbol();
 
 const VALID_STYLES = new Set([
   "color",
@@ -194,9 +193,14 @@ function checkStyle(node) {
 const NoWhites = new Set(["body", "html"]);
 
 class XhtmlObject extends XmlObject {
+
+  private richText: boolean;
+
+  protected style: string;
+
   constructor(attributes, name) {
     super(XHTML_NS_ID, name);
-    this[$richText] = false;
+    this.richText = false;
     this.style = attributes.style || "";
   }
 
@@ -209,14 +213,14 @@ class XhtmlObject extends XmlObject {
     return !NoWhites.has(this.nodeName);
   }
 
-  onText(str, richText = false) {
+  onText(str: string, richText = false) {
     if (!richText) {
       str = str.replaceAll(crlfRegExp, "");
       if (!this.style.includes("xfa-spacerun:yes")) {
         str = str.replaceAll(spacesRegExp, " ");
       }
     } else {
-      this[$richText] = true;
+      this.richText = true;
     }
 
     if (str) {
@@ -329,7 +333,7 @@ class XhtmlObject extends XmlObject {
     }
 
     let value;
-    if (this[$richText]) {
+    if (this.richText) {
       value = this.content
         ? this.content.replaceAll(crlfForRichTextRegExp, "\n")
         : undefined;
@@ -341,7 +345,7 @@ class XhtmlObject extends XmlObject {
       name: this.nodeName,
       attributes: {
         href: this.href,
-        style: mapStyle(this.style, this, this[$richText]),
+        style: mapStyle(this.style, this, this.richText),
       },
       children,
       value,
@@ -516,7 +520,7 @@ class Ul extends XhtmlObject {
 }
 
 class XhtmlNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (XhtmlNamespace.hasOwnProperty(name)) {
       return XhtmlNamespace[name](attributes);
     }

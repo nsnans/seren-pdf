@@ -38,7 +38,7 @@ import {
   flushHTML,
   getAvailableSpace,
 } from "./layout";
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
+import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
   getBBox,
@@ -6117,7 +6117,7 @@ class Variables extends XFAObject {
 }
 
 class TemplateNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (TemplateNamespace.hasOwnProperty(name)) {
       const node = TemplateNamespace[name](attributes);
       node.setSetAttributes(attributes);

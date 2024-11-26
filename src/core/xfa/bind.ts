@@ -16,9 +16,6 @@
 import { warn } from "../../shared/util";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
-import {
-  $content
-} from "./symbol_utils";
 import { BindItems, Field, Items, SetProperty, Text } from "./template";
 import { XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
 
@@ -245,7 +242,7 @@ class Binder {
       }
 
       // 这个地方要仔细研究一下，看看怎么弄
-      if (!targetNode.hasOwnProperty($content)) {
+      if (!targetNode.hasOwnProperty('content')) {
         warn(`XFA - Invalid node to use in setProperty`);
         continue;
       }

@@ -15,13 +15,11 @@
 
 // We use these symbols to avoid name conflict between tags
 // and properties/methods names.
-const $content = Symbol("content");
-const $nsAttributes = Symbol();
+
+// 这个用来get，set做key的
 const $root = Symbol("root");
 
 export {
-  $content,
-  $nsAttributes,
   $root,
 };
 

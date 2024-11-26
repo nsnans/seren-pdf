@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject } from "./namespaces";
 import { XmlObject } from "./xfa_object";
 
 class UnknownNamespace {
@@ -24,7 +23,7 @@ class UnknownNamespace {
     this.namespaceId = nsId;
   }
 
-  [$buildXFAObject](name, attributes) {
+  buildXFAObject(name, attributes) {
     return new XmlObject(this.namespaceId, name, attributes);
   }
 }

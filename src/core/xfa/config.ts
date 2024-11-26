@@ -14,7 +14,7 @@
  */
 
 import { shadow, warn } from "../../shared/util";
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { getInteger, getStringOption } from "./utils";
 import {
   ContentObject,
@@ -1365,7 +1365,7 @@ class Zpl extends XFAObject {
 }
 
 class ConfigNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (ConfigNamespace.hasOwnProperty(name)) {
       return ConfigNamespace[name](attributes);
     }

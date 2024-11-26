@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
+import { getInteger, getStringOption } from "./utils";
 import {
   ContentObject,
   StringObject,
   XFAObject,
   XFAObjectArray,
 } from "./xfa_object";
-import { getInteger, getStringOption } from "./utils";
 
 const LOCALE_SET_NS_ID = NamespaceIds.localeSet.id;
 
@@ -242,7 +242,7 @@ class TypeFaces extends XFAObject {
 }
 
 class LocaleSetNamespace {
-  static [$buildXFAObject](name, attributes) {
+  static buildXFAObject(name, attributes) {
     if (LocaleSetNamespace.hasOwnProperty(name)) {
       return LocaleSetNamespace[name](attributes);
     }

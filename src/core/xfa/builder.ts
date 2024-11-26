@@ -14,10 +14,9 @@
  */
 
 import { warn } from "../../shared/util";
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
 import {
-  $nsAttributes,
   $root
 } from "./symbol_utils";
 import { Template } from "./template";
@@ -91,7 +90,7 @@ class Builder {
       this._addNamespacePrefix(prefixes);
     }
 
-    if (attributes.hasOwnProperty($nsAttributes)) {
+    if (attributes.hasOwnProperty('nsAttributes')) {
       // Only support xfa-data namespace.
       const dataTemplate = NamespaceSetUp.datasets;
       const nsAttrs = attributes.nsAttributes;
@@ -112,7 +111,7 @@ class Builder {
 
     const namespaceToUse = this._getNamespaceToUse(nsPrefix);
     const node =
-      namespaceToUse?.[$buildXFAObject](name, attributes) || new Empty();
+      namespaceToUse?.buildXFAObject(name, attributes) || new Empty();
 
     if (node.isNsAgnostic()) {
       this._nsAgnosticLevel++;
