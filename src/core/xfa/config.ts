@@ -93,6 +93,7 @@ class AdobeExtensionLevel extends IntegerObject {
 }
 
 class Agent extends XFAObject {
+  protected common: XFAObjectArray;
   constructor(attributes) {
     super(CONFIG_NS_ID, "agent", /* hasChildren = */ true);
     this.name = attributes.name ? attributes.name.trim() : "";
@@ -113,12 +114,15 @@ class Amd extends StringObject {
 }
 
 class Area extends XFAObject {
+
+  protected level: number;
+
   constructor(attributes) {
     super(CONFIG_NS_ID, "area");
     this.level = getInteger({
       data: attributes.level,
       defaultValue: 0,
-      validate: n => n >= 1 && n <= 3,
+      validate: (n: number) => n >= 1 && n <= 3,
     });
     this.name = getStringOption(attributes.name, [
       "",
@@ -138,25 +142,28 @@ class Area extends XFAObject {
 }
 
 class Attributes extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "attributes", ["preserve", "delegate", "ignore"]);
   }
 }
 
 class AutoSave extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "autoSave", ["disabled", "enabled"]);
   }
 }
 
 class Base extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "base");
   }
 }
 
 class BatchOutput extends XFAObject {
-  constructor(attributes) {
+
+  protected format: string;
+
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "batchOutput");
     this.format = getStringOption(attributes.format, [
       "none",
@@ -168,7 +175,7 @@ class BatchOutput extends XFAObject {
 }
 
 class BehaviorOverride extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "behaviorOverride");
   }
 
@@ -184,20 +191,20 @@ class BehaviorOverride extends ContentObject {
 }
 
 class Cache extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "cache", /* hasChildren = */ true);
     this.templateCache = null;
   }
 }
 
 class Change extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "change");
   }
 }
 
 class Common extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "common", /* hasChildren = */ true);
     this.data = null;
     this.locale = null;
@@ -212,6 +219,7 @@ class Common extends XFAObject {
 }
 
 class Compress extends XFAObject {
+  protected scope: string;
   constructor(attributes) {
     super(CONFIG_NS_ID, "compress");
     this.scope = getStringOption(attributes.scope, ["imageOnly", "document"]);
@@ -219,19 +227,19 @@ class Compress extends XFAObject {
 }
 
 class CompressLogicalStructure extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "compressLogicalStructure");
   }
 }
 
 class CompressObjectStream extends Option10 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "compressObjectStream");
   }
 }
 
 class Compression extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "compression", /* hasChildren = */ true);
     this.compressLogicalStructure = null;
     this.compressObjectStream = null;
@@ -241,7 +249,7 @@ class Compression extends XFAObject {
 }
 
 class Config extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: any) {
     super(CONFIG_NS_ID, "config", /* hasChildren = */ true);
     this.acrobat = null;
     this.present = null;
@@ -251,37 +259,39 @@ class Config extends XFAObject {
 }
 
 class Conformance extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: any) {
     super(CONFIG_NS_ID, "conformance", ["A", "B"]);
   }
 }
 
 class ContentCopy extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "contentCopy");
   }
 }
 
 class Copies extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "copies", 1, n => n >= 1);
   }
 }
 
 class Creator extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "creator");
   }
 }
 
 class CurrentPage extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "currentPage", 0, n => n >= 0);
   }
 }
 
 class Data extends XFAObject {
-  constructor(attributes) {
+  protected excludeNS: XFAObjectArray;
+  protected transform: XFAObjectArray;
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "data", /* hasChildren = */ true);
     this.adjustData = null;
     this.attributes = null;
@@ -299,13 +309,16 @@ class Data extends XFAObject {
 }
 
 class Debug extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "debug", /* hasChildren = */ true);
     this.uri = null;
   }
 }
 
 class DefaultTypeface extends ContentObject {
+
+  protected writingScript: string;
+
   constructor(attributes) {
     super(CONFIG_NS_ID, "defaultTypeface");
     this.writingScript = getStringOption(attributes.writingScript, [
@@ -327,7 +340,7 @@ class DefaultTypeface extends ContentObject {
 }
 
 class Destination extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "destination", [
       "pdf",
       "pcl",
@@ -339,7 +352,7 @@ class Destination extends OptionObject {
 }
 
 class DocumentAssembly extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "documentAssembly");
   }
 }
@@ -354,7 +367,7 @@ class Driver extends XFAObject {
 }
 
 class DuplexOption extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "duplexOption", [
       "simplex",
       "duplexFlipLongEdge",
@@ -364,25 +377,25 @@ class DuplexOption extends OptionObject {
 }
 
 class DynamicRender extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "dynamicRender", ["forbidden", "required"]);
   }
 }
 
 class Embed extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "embed");
   }
 }
 
 class Encrypt extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "encrypt");
   }
 }
 
 class Encryption extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "encryption", /* hasChildren = */ true);
     this.encrypt = null;
     this.encryptionLevel = null;
@@ -391,13 +404,13 @@ class Encryption extends XFAObject {
 }
 
 class EncryptionLevel extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "encryptionLevel", ["40bit", "128bit"]);
   }
 }
 
 class Enforce extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "enforce");
   }
 }
@@ -418,6 +431,13 @@ class Equate extends XFAObject {
 }
 
 class EquateRange extends XFAObject {
+
+  protected from: string;
+
+  protected to: string;
+
+  protected _unicodeRange: string;
+
   constructor(attributes) {
     super(CONFIG_NS_ID, "equateRange");
 
@@ -451,7 +471,7 @@ class EquateRange extends XFAObject {
 }
 
 class Exclude extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "exclude");
   }
 
@@ -476,19 +496,26 @@ class Exclude extends ContentObject {
 }
 
 class ExcludeNS extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "excludeNS");
   }
 }
 
 class FlipLabel extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "flipLabel", ["usePrinterSetting", "on", "off"]);
   }
 }
 
 class FontInfo extends XFAObject {
-  constructor(attributes) {
+
+  protected alwaysEmbed: XFAObjectArray;
+
+  protected defaultTypeface: XFAObjectArray;
+
+  protected neverEmbed: XFAObjectArray;
+
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "fontInfo", /* hasChildren = */ true);
     this.embed = null;
     this.map = null;
@@ -500,19 +527,19 @@ class FontInfo extends XFAObject {
 }
 
 class FormFieldFilling extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "formFieldFilling");
   }
 }
 
 class GroupParent extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "groupParent");
   }
 }
 
 class IfEmpty extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "ifEmpty", [
       "dataValue",
       "dataGroup",
@@ -523,31 +550,31 @@ class IfEmpty extends OptionObject {
 }
 
 class IncludeXDPContent extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "includeXDPContent");
   }
 }
 
 class IncrementalLoad extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "incrementalLoad", ["none", "forwardOnly"]);
   }
 }
 
 class IncrementalMerge extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "incrementalMerge");
   }
 }
 
 class Interactive extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "interactive");
   }
 }
 
 class Jog extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "jog", ["usePrinterSetting", "none", "pageSet"]);
   }
 }
@@ -564,37 +591,37 @@ class LabelPrinter extends XFAObject {
 }
 
 class Layout extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "layout", ["paginate", "panel"]);
   }
 }
 
 class Level extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "level", 0, n => n > 0);
   }
 }
 
 class Linearized extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "linearized");
   }
 }
 
 class Locale extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "locale");
   }
 }
 
 class LocaleSet extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "localeSet");
   }
 }
 
 class Log extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "log", /* hasChildren = */ true);
     this.mode = null;
     this.threshold = null;
@@ -605,7 +632,7 @@ class Log extends XFAObject {
 
 // Renamed in MapElement to avoid confusion with usual js Map.
 class MapElement extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "map", /* hasChildren = */ true);
     this.equate = new XFAObjectArray();
     this.equateRange = new XFAObjectArray();
@@ -613,14 +640,14 @@ class MapElement extends XFAObject {
 }
 
 class MediumInfo extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "mediumInfo", /* hasChildren = */ true);
     this.map = null;
   }
 }
 
 class Message extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "message", /* hasChildren = */ true);
     this.msgId = null;
     this.severity = null;
@@ -628,57 +655,57 @@ class Message extends XFAObject {
 }
 
 class Messaging extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "messaging", /* hasChildren = */ true);
     this.message = new XFAObjectArray();
   }
 }
 
 class Mode extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "mode", ["append", "overwrite"]);
   }
 }
 
 class ModifyAnnots extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "modifyAnnots");
   }
 }
 
 class MsgId extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "msgId", 1, n => n >= 1);
   }
 }
 
 class NameAttr extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "nameAttr");
   }
 }
 
 class NeverEmbed extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "neverEmbed");
   }
 }
 
 class NumberOfCopies extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "numberOfCopies", null, n => n >= 2 && n <= 5);
   }
 }
 
 class OpenAction extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "openAction", /* hasChildren = */ true);
     this.destination = null;
   }
 }
 
 class Output extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "output", /* hasChildren = */ true);
     this.to = null;
     this.type = null;
@@ -687,26 +714,26 @@ class Output extends XFAObject {
 }
 
 class OutputBin extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "outputBin");
   }
 }
 
 class OutputXSL extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "outputXSL", /* hasChildren = */ true);
     this.uri = null;
   }
 }
 
 class Overprint extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "overprint", ["none", "both", "draw", "field"]);
   }
 }
 
 class Packets extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "packets");
   }
 
@@ -724,23 +751,25 @@ class Packets extends StringObject {
 }
 
 class PageOffset extends XFAObject {
+  protected x: number;
+  protected y: number;
   constructor(attributes) {
     super(CONFIG_NS_ID, "pageOffset");
     this.x = getInteger({
       data: attributes.x,
       defaultValue: "useXDCSetting",
-      validate: n => true,
+      validate: (_n: number) => true,
     });
     this.y = getInteger({
       data: attributes.y,
       defaultValue: "useXDCSetting",
-      validate: n => true,
+      validate: (_n: number) => true,
     });
   }
 }
 
 class PageRange extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "pageRange");
   }
 
@@ -758,7 +787,7 @@ class PageRange extends StringObject {
 }
 
 class Pagination extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "pagination", [
       "simplex",
       "duplexShortEdge",
@@ -768,7 +797,7 @@ class Pagination extends OptionObject {
 }
 
 class PaginationOverride extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "paginationOverride", [
       "none",
       "forceDuplex",
@@ -780,7 +809,7 @@ class PaginationOverride extends OptionObject {
 }
 
 class Part extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "part", 1, n => false);
   }
 }
@@ -827,7 +856,7 @@ class Pdf extends XFAObject {
 }
 
 class Pdfa extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "pdfa", /* hasChildren = */ true);
     this.amd = null;
     this.conformance = null;
@@ -837,7 +866,7 @@ class Pdfa extends XFAObject {
 }
 
 class Permissions extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "permissions", /* hasChildren = */ true);
     this.accessibleContent = null;
     this.change = null;
@@ -852,13 +881,13 @@ class Permissions extends XFAObject {
 }
 
 class PickTrayByPDFSize extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "pickTrayByPDFSize");
   }
 }
 
 class Picture extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "picture");
   }
 
@@ -867,13 +896,13 @@ class Picture extends StringObject {
 }
 
 class PlaintextMetadata extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "plaintextMetadata");
   }
 }
 
 class Presence extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "presence", [
       "preserve",
       "dissolve",
@@ -885,7 +914,24 @@ class Presence extends OptionObject {
 }
 
 class Present extends XFAObject {
-  constructor(attributes) {
+
+  protected driver: XFAObjectArray;
+
+  protected labelPrinter: XFAObjectArray;
+
+  protected pcl: XFAObjectArray;
+
+  protected pdf: XFAObjectArray;
+
+  protected ps: XFAObjectArray;
+
+  protected submitUrl: XFAObjectArray;
+
+  protected webClient: XFAObjectArray;
+
+  protected zpl: XFAObjectArray;
+
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "present", /* hasChildren = */ true);
     this.behaviorOverride = null;
     this.cache = null;
@@ -913,31 +959,31 @@ class Present extends XFAObject {
 }
 
 class Print extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "print");
   }
 }
 
 class PrintHighQuality extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "printHighQuality");
   }
 }
 
 class PrintScaling extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "printScaling", ["appdefault", "noScaling"]);
   }
 }
 
 class PrinterName extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "printerName");
   }
 }
 
 class Producer extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "producer");
   }
 }
@@ -957,7 +1003,7 @@ class Ps extends XFAObject {
 }
 
 class Range extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "range");
   }
 
@@ -977,7 +1023,7 @@ class Range extends ContentObject {
 }
 
 class Record extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "record");
   }
 
@@ -991,7 +1037,7 @@ class Record extends ContentObject {
 }
 
 class Relevant extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "relevant");
   }
 
@@ -1001,7 +1047,7 @@ class Relevant extends ContentObject {
 }
 
 class Rename extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "rename");
   }
 
@@ -1019,19 +1065,19 @@ class Rename extends ContentObject {
 }
 
 class RenderPolicy extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "renderPolicy", ["server", "client"]);
   }
 }
 
 class RunScripts extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "runScripts", ["both", "client", "none", "server"]);
   }
 }
 
 class Script extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "script", /* hasChildren = */ true);
     this.currentPage = null;
     this.exclude = null;
@@ -1040,13 +1086,13 @@ class Script extends XFAObject {
 }
 
 class ScriptModel extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "scriptModel", ["XFA", "none"]);
   }
 }
 
 class Severity extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "severity", [
       "ignore",
       "error",
@@ -1058,7 +1104,7 @@ class Severity extends OptionObject {
 }
 
 class SilentPrint extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "silentPrint", /* hasChildren = */ true);
     this.addSilentPrint = null;
     this.printerName = null;
@@ -1077,19 +1123,19 @@ class Staple extends XFAObject {
 }
 
 class StartNode extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "startNode");
   }
 }
 
 class StartPage extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "startPage", 0, n => true);
   }
 }
 
 class SubmitFormat extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "submitFormat", [
       "html",
       "delegate",
@@ -1101,31 +1147,31 @@ class SubmitFormat extends OptionObject {
 }
 
 class SubmitUrl extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "submitUrl");
   }
 }
 
 class SubsetBelow extends IntegerObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "subsetBelow", 100, n => n >= 0 && n <= 100);
   }
 }
 
 class SuppressBanner extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "suppressBanner");
   }
 }
 
 class Tagged extends Option01 {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "tagged");
   }
 }
 
 class Template extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "template", /* hasChildren = */ true);
     this.base = null;
     this.relevant = null;
@@ -1136,7 +1182,7 @@ class Template extends XFAObject {
 }
 
 class Threshold extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "threshold", [
       "trace",
       "error",
@@ -1147,7 +1193,7 @@ class Threshold extends OptionObject {
 }
 
 class To extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "to", [
       "null",
       "memory",
@@ -1171,14 +1217,14 @@ class TemplateCache extends XFAObject {
 }
 
 class Trace extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "trace", /* hasChildren = */ true);
     this.area = new XFAObjectArray();
   }
 }
 
 class Transform extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "transform", /* hasChildren = */ true);
     this.groupParent = null;
     this.ifEmpty = null;
@@ -1191,7 +1237,7 @@ class Transform extends XFAObject {
 }
 
 class Type extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "type", [
       "none",
       "ascii85",
@@ -1208,13 +1254,13 @@ class Type extends OptionObject {
 }
 
 class Uri extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "uri");
   }
 }
 
 class Validate extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "validate", [
       "preSubmit",
       "prePrint",
@@ -1225,7 +1271,7 @@ class Validate extends OptionObject {
 }
 
 class ValidateApprovalSignatures extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "validateApprovalSignatures");
   }
 
@@ -1238,7 +1284,7 @@ class ValidateApprovalSignatures extends ContentObject {
 }
 
 class ValidationMessaging extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "validationMessaging", [
       "allMessagesIndividually",
       "allMessagesTogether",
@@ -1249,12 +1295,19 @@ class ValidationMessaging extends OptionObject {
 }
 
 class Version extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "version", ["1.7", "1.6", "1.5", "1.4", "1.3", "1.2"]);
   }
 }
 
 class VersionControl extends XFAObject {
+
+  protected outputBelow: string;
+
+  protected sourceAbove: string;
+
+  protected sourceBelow: string;
+
   constructor(attributes) {
     super(CONFIG_NS_ID, "VersionControl");
     this.outputBelow = getStringOption(attributes.outputBelow, [
@@ -1274,7 +1327,7 @@ class VersionControl extends XFAObject {
 }
 
 class ViewerPreferences extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "viewerPreferences", /* hasChildren = */ true);
     this.ADBE_JSConsole = null;
     this.ADBE_JSDebugger = null;
@@ -1298,7 +1351,7 @@ class WebClient extends XFAObject {
 }
 
 class Whitespace extends OptionObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "whitespace", [
       "preserve",
       "ltrim",
@@ -1310,7 +1363,7 @@ class Whitespace extends OptionObject {
 }
 
 class Window extends ContentObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "window");
   }
 
@@ -1331,7 +1384,7 @@ class Window extends ContentObject {
 }
 
 class Xdc extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "xdc", /* hasChildren = */ true);
     this.uri = new XFAObjectArray();
     this.xsl = new XFAObjectArray();
@@ -1339,14 +1392,14 @@ class Xdc extends XFAObject {
 }
 
 class Xdp extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "xdp", /* hasChildren = */ true);
     this.packets = null;
   }
 }
 
 class Xsl extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: unknown) {
     super(CONFIG_NS_ID, "xsl", /* hasChildren = */ true);
     this.debug = null;
     this.uri = null;

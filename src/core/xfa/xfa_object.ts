@@ -31,7 +31,7 @@ class XFAObject {
 
   protected namespaceId: number;
 
-  protected nodeName: string;
+  readonly nodeName: string;
 
   protected _hasChildren: boolean;
 
@@ -50,6 +50,14 @@ class XFAObject {
   protected name;
 
   protected extra;
+
+  protected use: string = "";
+
+  protected usehref: string = "";
+
+  protected id: string = "";
+
+  protected _setAttributes: Set<string> = new Set();
 
   constructor(nsId: number, name: string, hasChildren = false) {
     this.namespaceId = nsId;
@@ -85,7 +93,7 @@ class XFAObject {
     return node;
   }
 
-  onChild(child) {
+  onChild(child: XFAObject) {
     if (!this._hasChildren || !this.onChildCheck(child)) {
       return false;
     }
@@ -672,6 +680,11 @@ class XFAObject {
 }
 
 class XFAObjectArray {
+
+  protected _children: XFAObject[];
+
+  protected _max: number;
+
   constructor(max = Infinity) {
     this._max = max;
     this._children = [];
@@ -685,7 +698,7 @@ class XFAObjectArray {
     return true;
   }
 
-  push(child) {
+  push(child: XFAObject) {
     const len = this._children.length;
     if (len <= this._max) {
       this._children.push(child);
@@ -758,8 +771,14 @@ class XFAAttribute {
 }
 
 class XmlObject extends XFAObject {
+
   protected _attributes: Map<any, any> | null = null;
-  constructor(nsId, name, attributes = {}) {
+
+  protected _dataValue: boolean | null;
+
+  protected consumed: boolean;
+
+  constructor(nsId: number, name: string, attributes = {}) {
     super(nsId, name);
     this.content = "";
     this._dataValue = null;
@@ -787,7 +806,7 @@ class XmlObject extends XFAObject {
   ToString(buf) {
     const tagName = this.nodeName;
     if (tagName === "#text") {
-      buf.push(encodeToXmlString(this.content));
+      buf.push(encodeToXmlString(this.content!));
       return;
     }
     const utf8TagName = utf8StringToString(tagName);
@@ -824,7 +843,7 @@ class XmlObject extends XFAObject {
     buf.push(`</${prefix}${utf8TagName}>`);
   }
 
-  onChild(child) {
+  onChild(child: XFAObject) {
     if (this.content) {
       const node = new XmlObject(this.namespaceId, "#text");
       this.appendChild(node);
@@ -835,7 +854,7 @@ class XmlObject extends XFAObject {
     return true;
   }
 
-  onText(str) {
+  onText(str: string) {
     this.content += str;
   }
 
@@ -844,7 +863,7 @@ class XmlObject extends XFAObject {
       const node = new XmlObject(this.namespaceId, "#text");
       this.appendChild(node);
       node.content = this.content;
-      delete this.content;
+      this.content = null;
     }
   }
 
@@ -859,7 +878,7 @@ class XmlObject extends XFAObject {
     return HTMLResult.EMPTY;
   }
 
-  getChildren(name = null) {
+  getChildren(name: string | null = null) {
     if (!name) {
       return this._children;
     }
@@ -871,15 +890,15 @@ class XmlObject extends XFAObject {
     return this._attributes;
   }
 
-  getChildrenByClass(name) {
-    const value = this._attributes.get(name);
+  getChildrenByClass(name: string) {
+    const value = this._attributes!.get(name);
     if (value !== undefined) {
       return value;
     }
     return this.getChildren(name);
   }
 
-  *getChildrenByNameIt(name, allTransparent) {
+  *getChildrenByNameIt(name: string, allTransparent: boolean) {
     const value = this._attributes!.get(name);
     if (value) {
       yield value;
@@ -975,12 +994,12 @@ class XmlObject extends XFAObject {
 }
 
 class ContentObject extends XFAObject {
-  constructor(nsId, name) {
+  constructor(nsId: number, name: string) {
     super(nsId, name);
     this.content = "";
   }
 
-  onText(text) {
+  onText(text: string) {
     this.content += text;
   }
 
@@ -988,7 +1007,10 @@ class ContentObject extends XFAObject {
 }
 
 class OptionObject extends ContentObject {
-  constructor(nsId, name, options) {
+
+  protected _options: string[];
+
+  constructor(nsId: number, name: string, options: string[]) {
     super(nsId, name);
     this._options = options;
   }
@@ -1009,12 +1031,17 @@ class OptionObject extends ContentObject {
 
 class StringObject extends ContentObject {
   finalize() {
-    this.content = this.content.trim();
+    this.content = this.content!.trim();
   }
 }
 
 class IntegerObject extends ContentObject {
-  constructor(nsId, name, defaultValue, validator) {
+
+  protected _defaultValue: number | null;
+
+  protected _validator: ((n: number) => boolean) | null;
+
+  constructor(nsId: number, name: string, defaultValue: number, validator: (n: number) => boolean) {
     super(nsId, name);
     this._defaultValue = defaultValue;
     this._validator = validator;
@@ -1030,19 +1057,19 @@ class IntegerObject extends ContentObject {
 
   clean(builder) {
     super.clean(builder);
-    delete this._defaultValue;
-    delete this._validator;
+    this._defaultValue = null;
+    this._validator = null;
   }
 }
 
 class Option01 extends IntegerObject {
-  constructor(nsId, name) {
+  constructor(nsId: number, name: string) {
     super(nsId, name, 0, n => n === 1);
   }
 }
 
 class Option10 extends IntegerObject {
-  constructor(nsId, name) {
+  constructor(nsId: number, name: string) {
     super(nsId, name, 1, n => n === 0);
   }
 }

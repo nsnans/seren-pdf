@@ -32,7 +32,7 @@ function stripQuotes(str: string) {
   return str;
 }
 
-function getInteger({ data, defaultValue, validate }) {
+function getInteger({ data, defaultValue, validate }): number {
   if (!data) {
     return defaultValue;
   }
