@@ -25,7 +25,7 @@ import {
   shadow,
   Util,
 } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_interface";
+import { IL10n } from "../../viewer/common/component_types";
 import { FreeTextAnnotationElement } from "../annotation_layer";
 import { AnnotationEditor } from "./editor";
 import {

@@ -28,7 +28,7 @@ import { EditorToolbar } from "./toolbar";
 import { noContextMenu, RectType } from "../display_utils";
 import { PlatformHelper } from "../../platform/platform_helper";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { IL10n } from "../../viewer/common/component_interface";
+import { IL10n } from "../../viewer/common/component_types";
 
 /**
  * @typedef {Object} AnnotationEditorParameters
@@ -1092,7 +1092,7 @@ class AnnotationEditor {
    * Render this editor in a div.
    * @returns {HTMLDivElement | null}
    */
-  render() {
+  render(): HTMLDivElement | null {
     this.div = document.createElement("div");
     this.div.setAttribute("data-editor-rotation", `${(360 - this.rotation) % 360}`);
     this.div.className = this.name;
@@ -1235,7 +1235,7 @@ class AnnotationEditor {
    * @param {number} ty - y-translation in screen coordinates.
    * @param {number} [rotation] - the rotation of the page.
    */
-  getRect(tx: number, ty: number, rotation: number = this.rotation) {
+  getRect(tx: number, ty: number, rotation: number = this.rotation): RectType {
     const scale = this.parentScale;
     const [pageWidth, pageHeight] = this.pageDimensions;
     const [pageX, pageY] = this.pageTranslation;
@@ -1700,7 +1700,7 @@ class AnnotationEditor {
   /**
    * @returns {HTMLElement | null} the element requiring an alt text.
    */
-  getImageForAltText() {
+  getImageForAltText(): HTMLElement | null {
     return null;
   }
 
@@ -1770,7 +1770,7 @@ class AnnotationEditor {
    * The telemetry data to use when saving/printing.
    * @returns {Object|null}
    */
-  get telemetryFinalData() {
+  get telemetryFinalData(): { type: string; hasAltText: boolean; } | null {
     return null;
   }
 

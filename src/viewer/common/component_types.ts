@@ -45,3 +45,32 @@ export interface IL10n {
    */
   resume(): void;
 }
+
+// Meachine Learning Manager
+// 用来推测图片上的文字，在其它浏览器中都没有实现
+// 在火狐中可能通过调用了某种方式实现了？？
+export class MLManager {
+
+  async isEnabledFor(_name: unknown) {
+    return false;
+  }
+
+  async deleteModel(_service: unknown) {
+    return null;
+  }
+
+  isReady(_name: unknown) {
+    return false;
+  }
+
+  // 这个目前没确定下来具体的返回值，只能先返回any
+  guess(_data: unknown): any {
+    throw new Error("Unsupported Method")
+  }
+
+  toggleService(_name: unknown, _enabled: unknown) { }
+
+  static getFakeMLManager(_options: unknown) {
+    throw new Error("Unsupported Method")
+  }
+}

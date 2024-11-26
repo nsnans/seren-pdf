@@ -31,7 +31,7 @@ import {
 import { AnnotationEditor } from "./editor";
 import { ColorPicker } from "./color_picker";
 import { noContextMenu } from "../display_utils";
-import { IL10n } from "../../viewer/common/component_interface";
+import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 
 /**

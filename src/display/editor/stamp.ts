@@ -20,17 +20,22 @@ import {
 } from "../../shared/util";
 import { OutputScale, PixelsPerInch } from "../display_utils";
 import { AnnotationEditor } from "./editor.js";
-import { StampAnnotationElement } from "../annotation_layer";
+import { AnnotationLayer, StampAnnotationElement } from "../annotation_layer";
+import { IL10n } from "../../viewer/common/component_types.js";
+import { AnnotationEditorUIManager } from "./tools.js";
+import { AnnotationEditorLayer } from "./annotation_editor_layer.js";
+import { PlatformHelper } from "../../platform/platform_helper.js";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
  */
 class StampEditor extends AnnotationEditor {
-  #bitmap = null;
+
+  #bitmap: HTMLImageElement | null = null;
 
   #bitmapId = null;
 
-  #bitmapPromise = null;
+  #bitmapPromise: Promise<void> | null = null;
 
   #bitmapUrl = null;
 
@@ -38,11 +43,11 @@ class StampEditor extends AnnotationEditor {
 
   #bitmapFileName = "";
 
-  #canvas = null;
+  #canvas: HTMLCanvasElement | null = null;
 
-  #observer = null;
+  #observer: ResizeObserver | null = null;
 
-  #resizeTimeoutId = null;
+  #resizeTimeoutId: number | null = null;
 
   #isSvg = false;
 
@@ -59,7 +64,7 @@ class StampEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n, uiManager) {
+  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditor.initialize(l10n, uiManager);
   }
 
@@ -89,12 +94,12 @@ class StampEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static isHandlingMimeForPasting(mime) {
+  static isHandlingMimeForPasting(mime: string) {
     return this.supportedTypes.includes(mime);
   }
 
   /** @inheritdoc */
-  static paste(item, parent) {
+  static paste(item, parent: AnnotationEditorLayer) {
     parent.pasteEditor(AnnotationEditorType.STAMP, {
       bitmapFile: item.getAsFile(),
     });
@@ -103,7 +108,7 @@ class StampEditor extends AnnotationEditor {
   /** @inheritdoc */
   altTextFinish() {
     if (this._uiManager.useNewAltTextFlow) {
-      this.div.hidden = false;
+      this.div!.hidden = false;
     }
     super.altTextFinish();
   }
@@ -151,7 +156,7 @@ class StampEditor extends AnnotationEditor {
       this._uiManager.useNewAltTextFlow &&
       this.#bitmap
     ) {
-      this._editToolbar.hide();
+      this._editToolbar!.hide();
       this._uiManager.editAltText(this, /* firstTime = */ true);
       return;
     }
@@ -172,10 +177,14 @@ class StampEditor extends AnnotationEditor {
       } catch { }
     }
 
-    this.div.focus();
+    this.div!.focus();
   }
 
-  async mlGuessAltText(imageData = null, updateAltTextData = true) {
+  async mlGuessAltText(imageData: {
+    width: number;
+    height: number;
+    data: Uint8ClampedArray;
+  } | null = null, updateAltTextData = true) {
     if (this.hasAltTextData()) {
       return null;
     }
@@ -189,7 +198,7 @@ class StampEditor extends AnnotationEditor {
     }
     const { data, width, height } =
       imageData ||
-      this.copyCanvas(null, null, /* createImageData = */ true).imageData;
+      this.copyCanvas(null, null, /* createImageData = */ true).imageData!;
     const response = await mlManager.guess({
       name: "altText",
       request: {
@@ -252,7 +261,7 @@ class StampEditor extends AnnotationEditor {
     }
 
     const input = document.createElement("input");
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       input.hidden = true;
       input.id = "stampEditorFileInput";
       document.body.append(input);
@@ -260,7 +269,7 @@ class StampEditor extends AnnotationEditor {
     input.type = "file";
     input.accept = StampEditor.supportedTypesStr;
     const signal = this._uiManager._signal;
-    this.#bitmapPromise = new Promise(resolve => {
+    this.#bitmapPromise = new Promise<void>(resolve => {
       input.addEventListener(
         "change",
         async () => {
@@ -277,10 +286,10 @@ class StampEditor extends AnnotationEditor {
             });
             this.#getBitmapFetched(data);
           }
-          if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
+          if (PlatformHelper.isTesting()) {
             input.remove();
           }
-          resolve();
+          resolve(undefined);
         },
         { signal }
       );
@@ -293,7 +302,7 @@ class StampEditor extends AnnotationEditor {
         { signal }
       );
     }).finally(() => this.#getBitmapDone());
-    if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       input.click();
     }
   }
@@ -344,7 +353,7 @@ class StampEditor extends AnnotationEditor {
   /** @inheritdoc */
   onceAdded() {
     this._isDraggable = true;
-    this.div.focus();
+    this.div!.focus();
   }
 
   /** @inheritdoc */
@@ -376,8 +385,8 @@ class StampEditor extends AnnotationEditor {
     }
 
     super.render();
-    this.div.hidden = true;
-    this.div.setAttribute("role", "figure");
+    this.div!.hidden = true;
+    this.div!.setAttribute("role", "figure");
 
     this.addAltTextButton();
 
@@ -391,8 +400,8 @@ class StampEditor extends AnnotationEditor {
       // This editor was created in using copy (ctrl+c).
       const [parentWidth, parentHeight] = this.parentDimensions;
       this.setAt(
-        baseX * parentWidth,
-        baseY * parentHeight,
+        baseX! * parentWidth,
+        baseY! * parentHeight,
         this.width * parentWidth,
         this.height * parentHeight
       );
@@ -438,12 +447,12 @@ class StampEditor extends AnnotationEditor {
       !this._uiManager.useNewAltTextFlow ||
       this.annotationElementId
     ) {
-      div.hidden = false;
+      div!.hidden = false;
     }
     this.#drawBitmap(width, height);
     this.#createObserver();
     if (!this.#hasBeenAddedInUndoStack) {
-      this.parent.addUndoableEditor(this);
+      this.parent!.addUndoableEditor(this);
       this.#hasBeenAddedInUndoStack = true;
     }
 
@@ -466,10 +475,10 @@ class StampEditor extends AnnotationEditor {
       maxDataDimension = 224;
     }
 
-    const { width: bitmapWidth, height: bitmapHeight } = this.#bitmap;
+    const { width: bitmapWidth, height: bitmapHeight } = this.#bitmap!;
     const outputScale = new OutputScale();
 
-    let bitmap = this.#bitmap;
+    let bitmap = this.#bitmap!;
     let width = bitmapWidth,
       height = bitmapHeight;
     let canvas = null;
@@ -492,10 +501,10 @@ class StampEditor extends AnnotationEditor {
       const scaledHeight = (canvas.height = Math.ceil(height * outputScale.sy));
 
       if (!this.#isSvg) {
-        bitmap = this.#scaleBitmap(scaledWidth, scaledHeight);
+        bitmap = this.#scaleBitmap(scaledWidth, scaledHeight)!;
       }
 
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d")!;
       ctx.filter = this._uiManager.hcmFilter;
 
       // Add a checkerboard pattern as a background in case the image has some
@@ -512,13 +521,13 @@ class StampEditor extends AnnotationEditor {
       const boxDimWidth = boxDim * outputScale.sx;
       const boxDimHeight = boxDim * outputScale.sy;
       const pattern = new OffscreenCanvas(boxDimWidth * 2, boxDimHeight * 2);
-      const patternCtx = pattern.getContext("2d");
+      const patternCtx = pattern.getContext("2d")!;
       patternCtx.fillStyle = white;
       patternCtx.fillRect(0, 0, boxDimWidth * 2, boxDimHeight * 2);
       patternCtx.fillStyle = black;
       patternCtx.fillRect(0, 0, boxDimWidth, boxDimHeight);
       patternCtx.fillRect(boxDimWidth, boxDimHeight, boxDimWidth, boxDimHeight);
-      ctx.fillStyle = ctx.createPattern(pattern, "repeat");
+      ctx.fillStyle = ctx.createPattern(pattern, "repeat")!;
       ctx.fillRect(0, 0, scaledWidth, scaledHeight);
       ctx.drawImage(
         bitmap,
@@ -544,7 +553,7 @@ class StampEditor extends AnnotationEditor {
         dataWidth = bitmap.width;
         dataHeight = bitmap.height;
       } else {
-        bitmap = this.#bitmap;
+        bitmap = this.#bitmap!;
         if (bitmapWidth > maxDataDimension || bitmapHeight > maxDataDimension) {
           const ratio = Math.min(
             maxDataDimension / bitmapWidth,
@@ -554,15 +563,15 @@ class StampEditor extends AnnotationEditor {
           dataHeight = Math.floor(bitmapHeight * ratio);
 
           if (!this.#isSvg) {
-            bitmap = this.#scaleBitmap(dataWidth, dataHeight);
+            bitmap = this.#scaleBitmap(dataWidth, dataHeight)!;
           }
         }
       }
 
-      const offscreen = new OffscreenCanvas(dataWidth, dataHeight);
+      const offscreen = new OffscreenCanvas(dataWidth!, dataHeight!);
       const offscreenCtx = offscreen.getContext("2d", {
         willReadFrequently: true,
-      });
+      })!;
       offscreenCtx.drawImage(
         bitmap,
         0,
@@ -571,13 +580,13 @@ class StampEditor extends AnnotationEditor {
         bitmap.height,
         0,
         0,
-        dataWidth,
-        dataHeight
+        dataWidth!,
+        dataHeight!
       );
       imageData = {
         width: dataWidth,
         height: dataHeight,
-        data: offscreenCtx.getImageData(0, 0, dataWidth, dataHeight).data,
+        data: offscreenCtx.getImageData(0, 0, dataWidth!, dataHeight!).data,
       };
     }
 
@@ -591,7 +600,7 @@ class StampEditor extends AnnotationEditor {
    * @param {number} height - the new height of the div
    * @returns
    */
-  #setDimensions(width, height) {
+  #setDimensions(width: number, height: number) {
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.width = width / parentWidth;
     this.height = height / parentHeight;
@@ -615,8 +624,8 @@ class StampEditor extends AnnotationEditor {
     }, TIME_TO_WAIT);
   }
 
-  #scaleBitmap(width, height) {
-    const { width: bitmapWidth, height: bitmapHeight } = this.#bitmap;
+  #scaleBitmap(width: number, height: number) {
+    const { width: bitmapWidth, height: bitmapHeight } = this.#bitmap!;
 
     let newWidth = bitmapWidth;
     let newHeight = bitmapHeight;
@@ -642,9 +651,9 @@ class StampEditor extends AnnotationEditor {
       }
 
       const offscreen = new OffscreenCanvas(newWidth, newHeight);
-      const ctx = offscreen.getContext("2d");
+      const ctx = offscreen.getContext("2d")!;
       ctx.drawImage(
-        bitmap,
+        bitmap!,
         0,
         0,
         prevWidth,
@@ -654,13 +663,13 @@ class StampEditor extends AnnotationEditor {
         newWidth,
         newHeight
       );
-      bitmap = offscreen.transferToImageBitmap();
+      bitmap = offscreen.transferToImageBitmap()!;
     }
 
     return bitmap;
   }
 
-  #drawBitmap(width, height) {
+  #drawBitmap(width: number, height: number) {
     const outputScale = new OutputScale();
     const scaledWidth = Math.ceil(width * outputScale.sx);
     const scaledHeight = Math.ceil(height * outputScale.sy);
@@ -679,14 +688,14 @@ class StampEditor extends AnnotationEditor {
       ? this.#bitmap
       : this.#scaleBitmap(scaledWidth, scaledHeight);
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d")!;
     ctx.filter = this._uiManager.hcmFilter;
     ctx.drawImage(
-      bitmap,
+      bitmap!,
       0,
       0,
-      bitmap.width,
-      bitmap.height,
+      bitmap!.width,
+      bitmap!.height,
       0,
       0,
       scaledWidth,
@@ -699,7 +708,7 @@ class StampEditor extends AnnotationEditor {
     return this.#canvas;
   }
 
-  #serializeBitmap(toUrl) {
+  #serializeBitmap(toUrl: boolean) {
     if (toUrl) {
       if (this.#isSvg) {
         const url = this._uiManager.imageManager.getSvgUrl(this.#bitmapId);
@@ -710,9 +719,9 @@ class StampEditor extends AnnotationEditor {
       // We convert to a data url because it's sync and the url can live in the
       // clipboard.
       const canvas = document.createElement("canvas");
-      ({ width: canvas.width, height: canvas.height } = this.#bitmap);
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(this.#bitmap, 0, 0);
+      ({ width: canvas.width, height: canvas.height } = this.#bitmap!);
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(this.#bitmap!, 0, 0);
 
       return canvas.toDataURL();
     }
@@ -728,13 +737,13 @@ class StampEditor extends AnnotationEditor {
         this.height * pageHeight * PixelsPerInch.PDF_TO_CSS_UNITS
       );
       const offscreen = new OffscreenCanvas(width, height);
-      const ctx = offscreen.getContext("2d");
+      const ctx = offscreen.getContext("2d")!;
       ctx.drawImage(
-        this.#bitmap,
+        this.#bitmap!,
         0,
         0,
-        this.#bitmap.width,
-        this.#bitmap.height,
+        this.#bitmap!.width,
+        this.#bitmap!.height,
         0,
         0,
         width,
@@ -761,7 +770,7 @@ class StampEditor extends AnnotationEditor {
         this.#setDimensions(rect.width, rect.height);
       }
     });
-    this.#observer.observe(this.div);
+    this.#observer.observe(this.div!);
     this._uiManager._signal.addEventListener(
       "abort",
       () => {
@@ -773,7 +782,7 @@ class StampEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static async deserialize(data, parent, uiManager) {
+  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
     let initialData = null;
     if (data instanceof StampAnnotationElement) {
       const {
@@ -783,12 +792,12 @@ class StampEditor extends AnnotationEditor {
           page: { pageNumber },
         },
       } = data;
-      const canvas = container.querySelector("canvas");
+      const canvas = container!.querySelector("canvas");
       const imageData = uiManager.imageManager.getFromCanvas(
-        container.id,
+        container!.id,
         canvas
       );
-      canvas.remove();
+      canvas!.remove();
 
       // When switching to edit mode, we wait for the structure tree to be
       // ready (see pdf_viewer.js), so it's fine to use getAriaAttributesSync.

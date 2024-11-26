@@ -28,6 +28,7 @@ import {
   Util,
   warn,
 } from "../../shared/util";
+import { MLManager } from "../../viewer/common/component_types";
 import {
   fetchData,
   getColorValues,
@@ -639,7 +640,7 @@ class AnnotationEditorUIManager {
 
   #mainHighlightColorPicker = null;
 
-  #mlManager = null;
+  #mlManager: MLManager | null = null;
 
   #mode = AnnotationEditorType.NONE;
 
@@ -821,7 +822,7 @@ class AnnotationEditorUIManager {
     enableHighlightFloatingButton,
     enableUpdatedAddImage,
     enableNewAltTextWhenAddingImage,
-    mlManager
+    mlManager: MLManager
   ) {
     const signal = (this._signal = this.#abortController.signal);
     this.#container = container;

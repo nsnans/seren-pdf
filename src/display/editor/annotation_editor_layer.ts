@@ -643,7 +643,7 @@ class AnnotationEditorLayer {
    * @param {number} mode
    * @param {Object} params
    */
-  pasteEditor(mode, params) {
+  pasteEditor(mode: number, params) {
     this.#uiManager.updateToolbar(mode);
     this.#uiManager.updateMode(mode);
 

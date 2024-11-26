@@ -41,7 +41,7 @@ import { AnnotationStorage } from "./annotation_storage";
 import { ColorConverters } from "../shared/scripting_utils";
 import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { XfaLayer } from "./xfa_layer";
-import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_interface";
+import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_types";
 import { PlatformHelper } from "../platform/platform_helper";
 
 const DEFAULT_TAB_INDEX = 1000;

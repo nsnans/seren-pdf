@@ -663,9 +663,9 @@ function setLayerDimensions(
  */
 class OutputScale {
 
-  protected sx: number;
+  public sx: number;
 
-  protected sy: number;
+  public sy: number;
 
   constructor() {
     const pixelRatio = window.devicePixelRatio || 1;
