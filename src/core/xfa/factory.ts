@@ -19,12 +19,11 @@ import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
 import {
-  $appendChild,
   $globalData,
   $nodeName,
   $text,
   $toHTML,
-  $toPages,
+  $toPages
 } from "./symbol_utils";
 import { stripQuotes } from "./utils";
 import { XhtmlNamespace } from "./xhtml";
@@ -155,7 +154,7 @@ class XFAFactory {
       if (!["body", "xhtml"].includes(root[$nodeName])) {
         // No body, so create one.
         const newRoot = XhtmlNamespace.body({});
-        newRoot[$appendChild](root);
+        newRoot.appendChild(root);
         root = newRoot;
       }
 

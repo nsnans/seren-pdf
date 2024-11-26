@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import {
-  $appendChild,
   $isNsAgnostic,
   $namespaceId,
   $nodeName,
-  $onChild,
+  $onChild
 } from "./symbol_utils";
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
 import { XFAObject, XmlObject } from "./xfa_object";
 
 const DATASETS_NS_ID = NamespaceIds.datasets.id;
@@ -51,7 +50,7 @@ class Datasets extends XFAObject {
     ) {
       this[name] = child;
     }
-    this[$appendChild](child);
+    this.appendChild(child);
   }
 }
 

@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+import { shadow, warn } from "../../shared/util";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import { $content, $finalize } from "./symbol_utils";
+import { $content } from "./symbol_utils";
+import { getInteger, getStringOption } from "./utils";
 import {
   ContentObject,
   IntegerObject,
@@ -25,8 +27,6 @@ import {
   XFAObject,
   XFAObjectArray,
 } from "./xfa_object";
-import { getInteger, getStringOption } from "./utils";
-import { shadow, warn } from "../../shared/util";
 
 const CONFIG_NS_ID = NamespaceIds.config.id;
 
@@ -173,7 +173,7 @@ class BehaviorOverride extends ContentObject {
     super(CONFIG_NS_ID, "behaviorOverride");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = new Map(
       this[$content]
         .trim()
@@ -456,7 +456,7 @@ class Exclude extends ContentObject {
     super(CONFIG_NS_ID, "exclude");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content]
       .trim()
       .split(/\s+/)
@@ -711,7 +711,7 @@ class Packets extends StringObject {
     super(CONFIG_NS_ID, "packets");
   }
 
-  [$finalize]() {
+  finalize() {
     if (this[$content] === "*") {
       return;
     }
@@ -745,7 +745,7 @@ class PageRange extends StringObject {
     super(CONFIG_NS_ID, "pageRange");
   }
 
-  [$finalize]() {
+  finalize() {
     const numbers = this[$content]
       .trim()
       .split(/\s+/)
@@ -962,7 +962,7 @@ class Range extends ContentObject {
     super(CONFIG_NS_ID, "range");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content]
       .trim()
       .split(/\s*,\s*/, 2)
@@ -982,7 +982,7 @@ class Record extends ContentObject {
     super(CONFIG_NS_ID, "record");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content].trim();
     const n = parseInt(this[$content], 10);
     if (!isNaN(n) && n >= 0) {
@@ -996,7 +996,7 @@ class Relevant extends ContentObject {
     super(CONFIG_NS_ID, "relevant");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content].trim().split(/\s+/);
   }
 }
@@ -1006,7 +1006,7 @@ class Rename extends ContentObject {
     super(CONFIG_NS_ID, "rename");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content].trim();
     // String must be a XFA name: same as XML one except that there
     // is no colon.
@@ -1230,7 +1230,7 @@ class ValidateApprovalSignatures extends ContentObject {
     super(CONFIG_NS_ID, "validateApprovalSignatures");
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content]
       .trim()
       .split(/\s+/)
@@ -1315,7 +1315,7 @@ class Window extends ContentObject {
     super(CONFIG_NS_ID, "window");
   }
 
-  [$finalize]() {
+  finalize() {
     const pair = this[$content]
       .trim()
       .split(/\s*,\s*/, 2)

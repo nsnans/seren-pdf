@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+import { shadow, utf8StringToString, warn } from "../../shared/util";
+import { encodeToXmlString } from "../core_utils";
+import { NamespaceIds } from "./namespaces";
+import { searchNode } from "./som";
 import {
-  $acceptWhitespace,
-  $addHTML,
-  $appendChild,
-  $childrenToHTML,
   $clean,
   $cleanup,
   $clone,
@@ -25,7 +25,6 @@ import {
   $content,
   $dump,
   $extra,
-  $finalize,
   $flushHTML,
   $getAttributeIt,
   $getAttributes,
@@ -71,13 +70,9 @@ import {
   $toHTML,
   $toString,
   $toStyle,
-  $uid,
+  $uid
 } from "./symbol_utils";
 import { getInteger, getKeyword, HTMLResult } from "./utils";
-import { shadow, utf8StringToString, warn } from "../../shared/util";
-import { encodeToXmlString } from "../core_utils";
-import { NamespaceIds } from "./namespaces";
-import { searchNode } from "./som";
 
 const _applyPrototype = Symbol();
 const _attributes = Symbol();
@@ -128,7 +123,7 @@ class XFAObject {
         const nsId =
           root[$namespaceId] === NS_DATASETS ? -1 : root[$namespaceId];
         node = new XmlObject(nsId, name);
-        root[$appendChild](node);
+        root.appendChild(node);
       }
       root = node;
     }
@@ -145,7 +140,7 @@ class XFAObject {
 
     if (node instanceof XFAObjectArray) {
       if (node.push(child)) {
-        this[$appendChild](child);
+        this.appendChild(child);
         return true;
       }
     } else {
@@ -155,7 +150,7 @@ class XFAObject {
         this[$removeChild](node);
       }
       this[name] = child;
-      this[$appendChild](child);
+      this.appendChild(child);
       return true;
     }
 
@@ -180,7 +175,7 @@ class XFAObject {
     return false;
   }
 
-  [$acceptWhitespace]() {
+  acceptWhitespace() {
     return false;
   }
 
@@ -226,7 +221,7 @@ class XFAObject {
     return false;
   }
 
-  [$appendChild](child) {
+  appendChild(child) {
     child[_parent] = this;
     this[_children].push(child);
     if (!child[$globalData] && this[$globalData]) {
@@ -247,7 +242,7 @@ class XFAObject {
 
   [$onText](_) { }
 
-  [$finalize]() { }
+  finalize() { }
 
   [$clean](builder) {
     delete this[_hasChildren];
@@ -393,13 +388,13 @@ class XFAObject {
     return null;
   }
 
-  [$addHTML](html, bbox) {
+  addHTML(html, bbox) {
     this[$extra].children.push(html);
   }
 
   [$getAvailableSpace]() { }
 
-  [$childrenToHTML]({ filter = null, include = true }) {
+  childrenToHTML({ filter = null, include = true }) {
     if (!this[$extra].generator) {
       this[$extra].generator = this[_filteredChildrenGenerator](
         filter,
@@ -412,7 +407,7 @@ class XFAObject {
         return res;
       }
       if (res.html) {
-        this[$addHTML](res.html, res.bbox);
+        this.addHTML(res.html, res.bbox);
       }
       delete this[$extra].failingNode;
     }
@@ -427,7 +422,7 @@ class XFAObject {
         return res;
       }
       if (res.html) {
-        this[$addHTML](res.html, res.bbox);
+        this.addHTML(res.html, res.bbox);
       }
     }
 
@@ -875,11 +870,11 @@ class XmlObject extends XFAObject {
   [$onChild](child) {
     if (this[$content]) {
       const node = new XmlObject(this[$namespaceId], "#text");
-      this[$appendChild](node);
+      this.appendChild(node);
       node[$content] = this[$content];
       this[$content] = "";
     }
-    this[$appendChild](child);
+    this.appendChild(child);
     return true;
   }
 
@@ -887,10 +882,10 @@ class XmlObject extends XFAObject {
     this[$content] += str;
   }
 
-  [$finalize]() {
+  finalize() {
     if (this[$content] && this[_children].length > 0) {
       const node = new XmlObject(this[$namespaceId], "#text");
-      this[$appendChild](node);
+      this.appendChild(node);
       node[$content] = this[$content];
       delete this[$content];
     }
@@ -1032,7 +1027,7 @@ class ContentObject extends XFAObject {
     this[$content] += text;
   }
 
-  [$finalize]() { }
+  finalize() { }
 }
 
 class OptionObject extends ContentObject {
@@ -1041,7 +1036,7 @@ class OptionObject extends ContentObject {
     this[_options] = options;
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = getKeyword({
       data: this[$content],
       defaultValue: this[_options][0],
@@ -1056,7 +1051,7 @@ class OptionObject extends ContentObject {
 }
 
 class StringObject extends ContentObject {
-  [$finalize]() {
+  finalize() {
     this[$content] = this[$content].trim();
   }
 }
@@ -1068,7 +1063,7 @@ class IntegerObject extends ContentObject {
     this[_validator] = validator;
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = getInteger({
       data: this[$content],
       defaultValue: this[_defaultValue],
@@ -1105,5 +1100,6 @@ export {
   XFAAttribute,
   XFAObject,
   XFAObjectArray,
-  XmlObject,
+  XmlObject
 };
+

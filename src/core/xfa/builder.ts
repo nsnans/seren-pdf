@@ -13,21 +13,20 @@
  * limitations under the License.
  */
 
+import { warn } from "../../shared/util";
 import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import { NamespaceSetUp } from "./setup";
 import {
   $cleanup,
-  $finalize,
   $ids,
   $isNsAgnostic,
   $nsAttributes,
   $onChild,
   $resolvePrototypes,
-  $root,
+  $root
 } from "./symbol_utils";
-import { NamespaceSetUp } from "./setup";
 import { Template } from "./template";
 import { UnknownNamespace } from "./unknown";
-import { warn } from "../../shared/util";
 import { XFAObject } from "./xfa_object";
 
 class Root extends XFAObject {
@@ -42,8 +41,8 @@ class Root extends XFAObject {
     return true;
   }
 
-  [$finalize]() {
-    super[$finalize]();
+  finalize() {
+    super.finalize();
     if (this.element.template instanceof Template) {
       // Set the root element in $ids using a symbol in order
       // to avoid conflict with real IDs.

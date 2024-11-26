@@ -13,17 +13,39 @@
  * limitations under the License.
  */
 
+import { fromBase64Util, Util, warn } from "../../shared/util";
+import { recoverJsURL } from "../core_utils";
+import { getMetrics } from "./fonts";
 import {
-  $acceptWhitespace,
-  $addHTML,
-  $appendChild,
-  $childrenToHTML,
+  computeBbox,
+  createWrapper,
+  fixDimensions,
+  fixTextIndent,
+  fixURL,
+  isPrintOnly,
+  layoutClass,
+  layoutNode,
+  measureToString,
+  setAccess,
+  setFontFamily,
+  setMinMaxDimensions,
+  setPara,
+  toStyle,
+} from "./html_utils";
+import {
+  addHTML,
+  checkDimensions,
+  flushHTML,
+  getAvailableSpace,
+} from "./layout";
+import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
+import { searchNode } from "./som";
+import {
   $clean,
   $cleanPage,
   $content,
   $data,
   $extra,
-  $finalize,
   $flushHTML,
   $getAvailableSpace,
   $getChildren,
@@ -57,40 +79,8 @@ import {
   $toHTML,
   $toPages,
   $toStyle,
-  $uid,
+  $uid
 } from "./symbol_utils";
-import { $buildXFAObject, NamespaceIds } from "./namespaces.js";
-import {
-  addHTML,
-  checkDimensions,
-  flushHTML,
-  getAvailableSpace,
-} from "./layout";
-import {
-  computeBbox,
-  createWrapper,
-  fixDimensions,
-  fixTextIndent,
-  fixURL,
-  isPrintOnly,
-  layoutClass,
-  layoutNode,
-  measureToString,
-  setAccess,
-  setFontFamily,
-  setMinMaxDimensions,
-  setPara,
-  toStyle,
-} from "./html_utils";
-import {
-  ContentObject,
-  Option01,
-  OptionObject,
-  StringObject,
-  XFAObject,
-  XFAObjectArray,
-} from "./xfa_object";
-import { fromBase64Util, Util, warn } from "../../shared/util";
 import {
   getBBox,
   getColor,
@@ -103,9 +93,14 @@ import {
   getStringOption,
   HTMLResult,
 } from "./utils";
-import { getMetrics } from "./fonts";
-import { recoverJsURL } from "../core_utils";
-import { searchNode } from "./som";
+import {
+  ContentObject,
+  Option01,
+  OptionObject,
+  StringObject,
+  XFAObject,
+  XFAObjectArray,
+} from "./xfa_object";
 
 const TEMPLATE_NS_ID = NamespaceIds.template.id;
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -190,7 +185,7 @@ function hasMargin(node) {
 function _setValue(templateNode, value) {
   if (!templateNode.value) {
     const nodeValue = new Value({});
-    templateNode[$appendChild](nodeValue);
+    templateNode.appendChild(nodeValue);
     templateNode.value = nodeValue;
   }
   templateNode.value[$setValue](value);
@@ -413,7 +408,7 @@ function handleOverflow(node, extraNode, space) {
 
   root[$extra].noLayoutFailure = true;
   const res = extraNode[$toHTML](space);
-  node[$addHTML](res.html, res.bbox);
+  node.addHTML(res.html, res.bbox);
   root[$extra].noLayoutFailure = saved;
   extraNode[$getSubformParent] = savedMethod;
 }
@@ -582,7 +577,7 @@ class Area extends XFAObject {
     return true;
   }
 
-  [$addHTML](html, bbox) {
+  addHTML(html, bbox) {
     const [x, y, w, h] = bbox;
     this[$extra].width = Math.max(this[$extra].width, x + w);
     this[$extra].height = Math.max(this[$extra].height, y + h);
@@ -619,7 +614,7 @@ class Area extends XFAObject {
       availableSpace,
     };
 
-    const result = this[$childrenToHTML]({
+    const result = this.childrenToHTML({
       filter: new Set([
         "area",
         "draw",
@@ -1654,7 +1649,7 @@ class DateElement extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     const date = this[$content].trim();
     this[$content] = date ? new Date(date) : null;
   }
@@ -1673,7 +1668,7 @@ class DateTime extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     const date = this[$content].trim();
     this[$content] = date ? new Date(date) : null;
   }
@@ -1754,7 +1749,7 @@ class Decimal extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     const number = parseFloat(this[$content].trim());
     this[$content] = isNaN(number) ? null : number;
   }
@@ -2386,7 +2381,7 @@ class ExclGroup extends XFAObject {
     for (const field of this.field.children) {
       if (!field.value) {
         const nodeValue = new Value({});
-        field[$appendChild](nodeValue);
+        field.appendChild(nodeValue);
         field.value = nodeValue;
       }
 
@@ -2433,7 +2428,7 @@ class ExclGroup extends XFAObject {
     return flushHTML(this);
   }
 
-  [$addHTML](html, bbox) {
+  addHTML(html, bbox) {
     addHTML(this, html, bbox);
   }
 
@@ -2537,7 +2532,7 @@ class ExclGroup extends XFAObject {
         // on the next line so this on is empty.
         this[$extra].numberInLine = 0;
       }
-      const result = this[$childrenToHTML]({
+      const result = this.childrenToHTML({
         filter,
         include: true,
       });
@@ -2752,7 +2747,7 @@ class Field extends XFAObject {
 
       this.ui = new Ui({});
       this.ui[$globalData] = this[$globalData];
-      this[$appendChild](this.ui);
+      this.appendChild(this.ui);
       let node;
 
       // The items element can have 2 element max and
@@ -2772,7 +2767,7 @@ class Field extends XFAObject {
           this.ui.choiceList = node;
           break;
       }
-      this.ui[$appendChild](node);
+      this.ui.appendChild(node);
     }
 
     if (
@@ -3192,7 +3187,7 @@ class Float extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     const number = parseFloat(this[$content].trim());
     this[$content] = isNaN(number) ? null : number;
   }
@@ -3526,7 +3521,7 @@ class Integer extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     const number = parseInt(this[$content].trim(), 10);
     this[$content] = isNaN(number) ? null : number;
   }
@@ -3741,7 +3736,7 @@ class LockDocument extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = getStringOption(this[$content], ["auto", "0", "1"]);
   }
 }
@@ -4120,14 +4115,14 @@ class PageArea extends XFAObject {
       warn("XFA - No medium specified in pageArea: please file a bug.");
     }
 
-    this[$childrenToHTML]({
+    this.childrenToHTML({
       filter: new Set(["area", "draw", "field", "subform"]),
       include: true,
     });
 
     // contentarea must be the last container to be sure it is
     // on top of the others.
-    this[$childrenToHTML]({
+    this.childrenToHTML({
       filter: new Set(["contentArea"]),
       include: true,
     });
@@ -4942,7 +4937,7 @@ class Subform extends XFAObject {
     return flushHTML(this);
   }
 
-  [$addHTML](html, bbox) {
+  addHTML(html, bbox) {
     addHTML(this, html, bbox);
   }
 
@@ -5000,7 +4995,7 @@ class Subform extends XFAObject {
           startNew: this.break.startNew.toString(),
         });
         node[$globalData] = this[$globalData];
-        this[$appendChild](node);
+        this.appendChild(node);
         this.breakAfter.push(node);
       }
 
@@ -5011,7 +5006,7 @@ class Subform extends XFAObject {
           startNew: this.break.startNew.toString(),
         });
         node[$globalData] = this[$globalData];
-        this[$appendChild](node);
+        this.appendChild(node);
         this.breakBefore.push(node);
       }
 
@@ -5022,7 +5017,7 @@ class Subform extends XFAObject {
           trailer: this.break.overflowTrailer,
         });
         node[$globalData] = this[$globalData];
-        this[$appendChild](node);
+        this.appendChild(node);
         this.overflow.push(node);
       }
 
@@ -5156,7 +5151,7 @@ class Subform extends XFAObject {
         // on the next line so this on is empty.
         this[$extra].numberInLine = 0;
       }
-      const result = this[$childrenToHTML]({
+      const result = this.childrenToHTML({
         filter,
         include: true,
       });
@@ -5318,7 +5313,7 @@ class SubjectDN extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     this[$content] = new Map(
       this[$content].split(this.delimiter).map(kv => {
         kv = kv.split("=", 2);
@@ -5403,7 +5398,7 @@ class Template extends XFAObject {
     this.subform = new XFAObjectArray();
   }
 
-  [$finalize]() {
+  finalize() {
     if (this.subform.children.length === 0) {
       warn("XFA - No subforms in template node.");
     }
@@ -5676,7 +5671,7 @@ class Template extends XFAObject {
 }
 
 class Text extends ContentObject {
-  
+
   public id: string;
   public maxChars: number;
   public name: string;
@@ -5698,7 +5693,7 @@ class Text extends ContentObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$acceptWhitespace]() {
+  acceptWhitespace() {
     return true;
   }
 
@@ -5718,7 +5713,7 @@ class Text extends ContentObject {
     super[$onText](str);
   }
 
-  [$finalize]() {
+  finalize() {
     if (typeof this[$content] === "string") {
       this[$content] = this[$content].replaceAll("\r\n", "\n");
     }
@@ -5890,7 +5885,7 @@ class Time extends StringObject {
     this.usehref = attributes.usehref || "";
   }
 
-  [$finalize]() {
+  finalize() {
     // TODO: need to handle the string as a time and not as a date.
     const date = this[$content].trim();
     this[$content] = date ? new Date(date) : null;
@@ -6078,7 +6073,7 @@ class Value extends XFAObject {
       if (parent.ui?.imageEdit) {
         if (!this.image) {
           this.image = new Image({});
-          this[$appendChild](this.image);
+          this.appendChild(this.image);
         }
         this.image[$content] = value[$content];
         return;
@@ -6101,7 +6096,7 @@ class Value extends XFAObject {
     }
 
     this[value[$nodeName]] = value;
-    this[$appendChild](value);
+    this.appendChild(value);
   }
 
   [$text]() {
@@ -6633,5 +6628,6 @@ export {
   Template,
   TemplateNamespace,
   Text,
-  Value,
+  Value
 };
+

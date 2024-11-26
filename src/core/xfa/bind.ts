@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+import { warn } from "../../shared/util";
+import { NamespaceIds } from "./namespaces";
+import { createDataNode, searchNode } from "./som";
 import {
-  $appendChild,
   $clone,
   $consumed,
   $content,
   $data,
-  $finalize,
   $getAttributeIt,
   $getChildren,
   $getDataValue,
@@ -35,13 +36,10 @@ import {
   $nodeName,
   $removeChild,
   $setValue,
-  $text,
+  $text
 } from "./symbol_utils";
 import { BindItems, Field, Items, SetProperty, Text } from "./template";
-import { createDataNode, searchNode } from "./som";
 import { XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
-import { NamespaceIds } from "./namespaces";
-import { warn } from "../../shared/util";
 
 const NS_DATASETS = NamespaceIds.datasets.id;
 
@@ -272,7 +270,7 @@ class Binder {
 
       targetNode[$data] = node;
       targetNode[$content] = content;
-      targetNode[$finalize]();
+      targetNode.finalize();
     }
   }
 
@@ -301,10 +299,10 @@ class Binder {
     const labels = new Items({});
     const values = new Items({});
 
-    formNode[$appendChild](labels);
+    formNode.appendChild(labels);
     formNode.items.push(labels);
 
-    formNode[$appendChild](values);
+    formNode.appendChild(values);
     formNode.items.push(values);
 
     for (const { ref, labelRef, valueRef, connection } of formNode.bindItems
@@ -374,10 +372,10 @@ class Binder {
         const label = createText(labelNode[$text]());
         const value = createText(valueNode[$text]());
 
-        labels[$appendChild](label);
+        labels.appendChild(label);
         labels.text.push(label);
 
-        values[$appendChild](value);
+        values.appendChild(value);
         values.text.push(value);
       }
     }
@@ -510,7 +508,7 @@ class Binder {
             nsId,
             child.name || "root"
           ));
-          dataNode[$appendChild](dataChild);
+          dataNode.appendChild(dataChild);
           this._bindElement(child, dataChild);
         }
         continue;
@@ -645,7 +643,7 @@ class Binder {
             if (this.emptyMerge) {
               match[$consumed] = true;
             }
-            dataNode[$appendChild](match);
+            dataNode.appendChild(match);
 
             // Don't bind the value in newly created node because it's empty.
             this._setAndBind(child, match);

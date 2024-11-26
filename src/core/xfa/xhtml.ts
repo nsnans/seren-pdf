@@ -14,7 +14,13 @@
  */
 
 import {
-  $acceptWhitespace,
+  fixTextIndent,
+  fixURL,
+  measureToString,
+  setFontFamily,
+} from "./html_utils";
+import { $buildXFAObject, NamespaceIds } from "./namespaces";
+import {
   $childrenToHTML,
   $clean,
   $content,
@@ -26,15 +32,8 @@ import {
   $onText,
   $pushGlyphs,
   $text,
-  $toHTML,
+  $toHTML
 } from "./symbol_utils";
-import { $buildXFAObject, NamespaceIds } from "./namespaces";
-import {
-  fixTextIndent,
-  fixURL,
-  measureToString,
-  setFontFamily,
-} from "./html_utils";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
 import { XmlObject } from "./xfa_object";
 
@@ -172,8 +171,8 @@ function mapStyle(styleStr, node, richText) {
     style.fontSize = measureToString(fontSize * SUB_SUPER_SCRIPT_FACTOR);
     style.verticalAlign = measureToString(
       Math.sign(getMeasurement(style.verticalAlign)) *
-        fontSize *
-        VERTICAL_FACTOR
+      fontSize *
+      VERTICAL_FACTOR
     );
   }
 
@@ -194,7 +193,7 @@ function checkStyle(node) {
   return node.style
     .trim()
     .split(/\s*;\s*/)
-    .filter((s:string) => !!s)
+    .filter((s: string) => !!s)
     .map(s => s.split(/\s*:\s*/, 2))
     .filter(([key, value]) => {
       if (key === "font-family") {
@@ -220,7 +219,7 @@ class XhtmlObject extends XmlObject {
     this.style = checkStyle(this);
   }
 
-  [$acceptWhitespace]() {
+  acceptWhitespace() {
     return !NoWhites.has(this[$nodeName]);
   }
 
@@ -275,7 +274,7 @@ class XhtmlObject extends XmlObject {
                 margin.bottom =
                 margin.left =
                 margin.right =
-                  values[0];
+                values[0];
               break;
             case 2:
               margin.top = margin.bottom = values[0];
@@ -337,7 +336,7 @@ class XhtmlObject extends XmlObject {
       children,
     };
 
-    this[$childrenToHTML]({});
+    this.childrenToHTML({});
 
     if (children.length === 0 && !this[$content]) {
       return HTMLResult.EMPTY;
@@ -431,7 +430,7 @@ class Html extends XhtmlObject {
       children,
     };
 
-    this[$childrenToHTML]({});
+    this.childrenToHTML({});
     if (children.length === 0) {
       return HTMLResult.success({
         name: "div",

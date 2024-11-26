@@ -15,8 +15,6 @@
 
 // We use these symbols to avoid name conflict between tags
 // and properties/methods names.
-const $acceptWhitespace = Symbol();
-const $addHTML = Symbol();
 const $appendChild = Symbol();
 const $childrenToHTML = Symbol();
 const $clean = Symbol();
@@ -28,7 +26,6 @@ const $content = Symbol("content");
 const $data = Symbol("data");
 const $dump = Symbol();
 const $extra = Symbol("extra");
-const $finalize = Symbol();
 const $flushHTML = Symbol();
 const $getAttributeIt = Symbol();
 const $getAttributes = Symbol();
@@ -85,8 +82,6 @@ const $toStyle = Symbol();
 const $uid = Symbol("uid");
 
 export {
-  $acceptWhitespace,
-  $addHTML,
   $appendChild,
   $childrenToHTML,
   $clean,
@@ -98,7 +93,6 @@ export {
   $data,
   $dump,
   $extra,
-  $finalize,
   $flushHTML,
   $getAttributeIt,
   $getAttributes,
@@ -152,5 +146,6 @@ export {
   $toPages,
   $toString,
   $toStyle,
-  $uid,
+  $uid
 };
+

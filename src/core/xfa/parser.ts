@@ -13,21 +13,19 @@
  * limitations under the License.
  */
 
+import { warn } from "../../shared/util";
+import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
+import { Builder } from "./builder";
 import {
-  $acceptWhitespace,
   $clean,
   $content,
-  $finalize,
   $globalData,
   $isCDATAXml,
   $nsAttributes,
   $onChild,
   $onText,
-  $setId,
+  $setId
 } from "./symbol_utils";
-import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
-import { Builder } from "./builder";
-import { warn } from "../../shared/util";
 
 class XFAParser extends XMLParserBase {
   constructor(rootNameSpace = null, richText = false) {
@@ -52,7 +50,7 @@ class XFAParser extends XMLParserBase {
       return undefined;
     }
 
-    this._current[$finalize]();
+    this._current.finalize();
 
     return this._current.element;
   }
@@ -61,7 +59,7 @@ class XFAParser extends XMLParserBase {
     // Normally by definition a &nbsp is unbreakable
     // but in real life Acrobat can break strings on &nbsp.
     text = text.replace(this._nbsps, match => match.slice(1) + " ");
-    if (this._richText || this._current[$acceptWhitespace]()) {
+    if (this._richText || this._current.acceptWhitespace()) {
       this._current[$onText](text, this._richText);
       return;
     }
@@ -144,7 +142,7 @@ class XFAParser extends XMLParserBase {
 
     if (isEmpty) {
       // No children: just push the node into its parent.
-      node[$finalize]();
+      node.finalize();
       if (this._current[$onChild](node)) {
         node[$setId](this._ids);
       }
@@ -166,7 +164,7 @@ class XFAParser extends XMLParserBase {
       node[$onChild](root);
     }
 
-    node[$finalize]();
+    node.finalize();
     this._current = this._stack.pop();
     if (this._current[$onChild](node)) {
       node[$setId](this._ids);
