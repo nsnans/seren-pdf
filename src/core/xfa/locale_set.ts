@@ -34,7 +34,7 @@ class CalendarSymbols extends XFAObject {
 
   protected name = "gregorian";
 
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "calendarSymbols", /* hasChildren = */ true);
     this.eraNames = null;
     this.meridiemNames = null;
@@ -42,7 +42,7 @@ class CalendarSymbols extends XFAObject {
 }
 
 class CurrencySymbol extends StringObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "currencySymbol");
     this.name = getStringOption(attributes.name, [
       "symbol",
@@ -53,14 +53,14 @@ class CurrencySymbol extends StringObject {
 }
 
 class CurrencySymbols extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "currencySymbols", /* hasChildren = */ true);
     this.currencySymbol = new XFAObjectArray(3);
   }
 }
 
 class DatePattern extends StringObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "datePattern");
     this.name = getStringOption(attributes.name, [
       "full",
@@ -72,7 +72,7 @@ class DatePattern extends StringObject {
 }
 
 class DatePatterns extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "datePatterns", /* hasChildren = */ true);
     this.datePattern = new XFAObjectArray(4);
   }
@@ -81,19 +81,19 @@ class DatePatterns extends XFAObject {
 class DateTimeSymbols extends ContentObject {
   // TODO: spec unclear about the format of the array.
 
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "dateTimeSymbols");
   }
 }
 
 class Day extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "day");
   }
 }
 
 class DayNames extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "dayNames", /* hasChildren = */ true);
     this.abbr = getInteger({
       data: attributes.abbr,
@@ -105,20 +105,20 @@ class DayNames extends XFAObject {
 }
 
 class Era extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "era");
   }
 }
 
 class EraNames extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "eraNames", /* hasChildren = */ true);
     this.era = new XFAObjectArray(2);
   }
 }
 
 class Locale extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "locale", /* hasChildren = */ true);
     this.desc = attributes.desc || "";
     this.name = "isoname";
@@ -134,33 +134,33 @@ class Locale extends XFAObject {
 }
 
 class LocaleSet extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "localeSet", /* hasChildren = */ true);
     this.locale = new XFAObjectArray();
   }
 }
 
 class Meridiem extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "meridiem");
   }
 }
 
 class MeridiemNames extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "meridiemNames", /* hasChildren = */ true);
     this.meridiem = new XFAObjectArray(2);
   }
 }
 
 class Month extends StringObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "month");
   }
 }
 
 class MonthNames extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "monthNames", /* hasChildren = */ true);
     this.abbr = getInteger({
       data: attributes.abbr,
@@ -172,7 +172,7 @@ class MonthNames extends XFAObject {
 }
 
 class NumberPattern extends StringObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberPattern");
     this.name = getStringOption(attributes.name, [
       "full",
@@ -184,14 +184,14 @@ class NumberPattern extends StringObject {
 }
 
 class NumberPatterns extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberPatterns", /* hasChildren = */ true);
     this.numberPattern = new XFAObjectArray(4);
   }
 }
 
 class NumberSymbol extends StringObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberSymbol");
     this.name = getStringOption(attributes.name, [
       "decimal",
@@ -204,14 +204,14 @@ class NumberSymbol extends StringObject {
 }
 
 class NumberSymbols extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberSymbols", /* hasChildren = */ true);
     this.numberSymbol = new XFAObjectArray(5);
   }
 }
 
 class TimePattern extends StringObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "timePattern");
     this.name = getStringOption(attributes.name, [
       "full",
@@ -223,21 +223,21 @@ class TimePattern extends StringObject {
 }
 
 class TimePatterns extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "timePatterns", /* hasChildren = */ true);
     this.timePattern = new XFAObjectArray(4);
   }
 }
 
 class TypeFace extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "typeFace", /* hasChildren = */ true);
     this.name = attributes.name | "";
   }
 }
 
 class TypeFaces extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "typeFaces", /* hasChildren = */ true);
     this.typeFace = new XFAObjectArray();
   }

@@ -33,7 +33,7 @@ class ConnectionSet extends XFAObject {
 }
 
 class EffectiveInputPolicy extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "effectiveInputPolicy");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -43,7 +43,7 @@ class EffectiveInputPolicy extends XFAObject {
 }
 
 class EffectiveOutputPolicy extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "effectiveOutputPolicy");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -53,7 +53,7 @@ class EffectiveOutputPolicy extends XFAObject {
 }
 
 class Operation extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "operation");
     this.id = attributes.id || "";
     this.input = attributes.input || "";
@@ -65,7 +65,7 @@ class Operation extends StringObject {
 }
 
 class RootElement extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "rootElement");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -75,7 +75,7 @@ class RootElement extends StringObject {
 }
 
 class SoapAction extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "soapAction");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -85,7 +85,7 @@ class SoapAction extends StringObject {
 }
 
 class SoapAddress extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "soapAddress");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -95,7 +95,7 @@ class SoapAddress extends StringObject {
 }
 
 class Uri extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "uri");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -105,7 +105,7 @@ class Uri extends StringObject {
 }
 
 class WsdlAddress extends StringObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "wsdlAddress");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -115,7 +115,7 @@ class WsdlAddress extends StringObject {
 }
 
 class WsdlConnection extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "wsdlConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";
@@ -129,7 +129,7 @@ class WsdlConnection extends XFAObject {
 }
 
 class XmlConnection extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xmlConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";
@@ -138,7 +138,7 @@ class XmlConnection extends XFAObject {
 }
 
 class XsdConnection extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes:XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xsdConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";

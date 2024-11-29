@@ -22,7 +22,7 @@ import {
 } from "./symbol_utils";
 import { Template } from "./template";
 import { UnknownNamespace } from "./unknown";
-import { AttributesObj, XFAAttribute, XFAAttributesObj, XFAObject } from "./xfa_object";
+import { AttributesObj, XFAAttributesObj, XFAObject } from "./xfa_object";
 
 class Root extends XFAObject {
 

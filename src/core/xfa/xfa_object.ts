@@ -57,10 +57,14 @@ export type AttributesObj = Record<string, string> & {
 
 // 只考虑xfa相关的nsAttributes，其它的一律去除
 export type XFAAttributesObj = Record<string, string> & {
-  nsAttributes: {
+  nsAttributes: null | {
     xfa: Record<string, string>
-  } | null
+  }
 };
+
+export const EmptyXFAAttributesObj: XFAAttributesObj = {
+  nsAttributes: null
+} as XFAAttributesObj;
 
 class XFAObject {
 
@@ -813,7 +817,7 @@ class XmlObject extends XFAObject {
 
   protected consumed: boolean;
 
-  constructor(nsId: number, name: string, attributes = {}) {
+  constructor(nsId: number, name: string, attributes = EmptyXFAAttributesObj) {
     super(nsId, name);
     this.content = "";
     this._dataValue = null;
