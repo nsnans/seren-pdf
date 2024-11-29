@@ -24,26 +24,29 @@ import { UnknownNamespace } from "./unknown";
 import { XFAObject } from "./xfa_object";
 
 class Root extends XFAObject {
+
+  protected element: XFAObject | null;
+
   constructor(ids) {
     super(-1, "root", Object.create(null));
     this.element = null;
     this.ids = ids;
   }
 
-  onChild(child) {
+  onChild(child: XFAObject) {
     this.element = child;
     return true;
   }
 
   finalize() {
     super.finalize();
-    if (this.element.template instanceof Template) {
+    if (this.element!.template instanceof Template) {
       // Set the root element in $ids using a symbol in order
       // to avoid conflict with real IDs.
       this.ids.set($root, this.element);
 
-      this.element.template.resolvePrototypes(this.ids);
-      this.element.template.ids = this.ids;
+      this.element!.template.resolvePrototypes(this.ids);
+      this.element!.template.ids = this.ids;
     }
   }
 }
@@ -53,12 +56,17 @@ class Empty extends XFAObject {
     super(-1, "", Object.create(null));
   }
 
-  onChild(_) {
+  onChild(_: XFAObject) {
     return false;
   }
 }
 
 class Builder {
+  
+  protected _nsAgnosticLevel: number;
+  
+  protected _nextNsId: number;
+
   constructor(rootNameSpace = null) {
     this._namespaceStack = [];
     this._nsAgnosticLevel = 0;

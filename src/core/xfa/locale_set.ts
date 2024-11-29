@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { getInteger, getStringOption } from "./utils";
 import {
@@ -241,107 +242,112 @@ class TypeFaces extends XFAObject {
   }
 }
 
-class LocaleSetNamespace {
-  static buildXFAObject(name, attributes) {
-    if (LocaleSetNamespace.hasOwnProperty(name)) {
-      return LocaleSetNamespace[name](attributes);
+class LocaleSetNamespace implements Namespace {
+
+  public static readonly DEFAULT = new LocaleSetNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static calendarSymbols(attrs) {
+  calendarSymbols(attrs) {
     return new CalendarSymbols(attrs);
   }
 
-  static currencySymbol(attrs) {
+  currencySymbol(attrs) {
     return new CurrencySymbol(attrs);
   }
 
-  static currencySymbols(attrs) {
+  currencySymbols(attrs) {
     return new CurrencySymbols(attrs);
   }
 
-  static datePattern(attrs) {
+  datePattern(attrs) {
     return new DatePattern(attrs);
   }
 
-  static datePatterns(attrs) {
+  datePatterns(attrs) {
     return new DatePatterns(attrs);
   }
 
-  static dateTimeSymbols(attrs) {
+  dateTimeSymbols(attrs) {
     return new DateTimeSymbols(attrs);
   }
 
-  static day(attrs) {
+  day(attrs) {
     return new Day(attrs);
   }
 
-  static dayNames(attrs) {
+  dayNames(attrs) {
     return new DayNames(attrs);
   }
 
-  static era(attrs) {
+  era(attrs) {
     return new Era(attrs);
   }
 
-  static eraNames(attrs) {
+  eraNames(attrs) {
     return new EraNames(attrs);
   }
 
-  static locale(attrs) {
+  locale(attrs) {
     return new Locale(attrs);
   }
 
-  static localeSet(attrs) {
+  localeSet(attrs) {
     return new LocaleSet(attrs);
   }
 
-  static meridiem(attrs) {
+  meridiem(attrs) {
     return new Meridiem(attrs);
   }
 
-  static meridiemNames(attrs) {
+  meridiemNames(attrs) {
     return new MeridiemNames(attrs);
   }
 
-  static month(attrs) {
+  month(attrs) {
     return new Month(attrs);
   }
 
-  static monthNames(attrs) {
+  monthNames(attrs) {
     return new MonthNames(attrs);
   }
 
-  static numberPattern(attrs) {
+  numberPattern(attrs) {
     return new NumberPattern(attrs);
   }
 
-  static numberPatterns(attrs) {
+  numberPatterns(attrs) {
     return new NumberPatterns(attrs);
   }
 
-  static numberSymbol(attrs) {
+  numberSymbol(attrs) {
     return new NumberSymbol(attrs);
   }
 
-  static numberSymbols(attrs) {
+  numberSymbols(attrs) {
     return new NumberSymbols(attrs);
   }
 
-  static timePattern(attrs) {
+  timePattern(attrs) {
     return new TimePattern(attrs);
   }
 
-  static timePatterns(attrs) {
+  timePatterns(attrs) {
     return new TimePatterns(attrs);
   }
 
-  static typeFace(attrs) {
+  typeFace(attrs) {
     return new TypeFace(attrs);
   }
 
-  static typeFaces(attrs) {
+  typeFaces(attrs) {
     return new TypeFaces(attrs);
   }
 }

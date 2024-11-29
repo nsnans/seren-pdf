@@ -593,7 +593,7 @@ function objectSize(obj: Record<string, any>) {
 
 // Ensure that the returned Object has a `null` prototype; hence why
 // `Object.fromEntries(...)` is not used.
-function objectFromMap(map: Map) {
+function objectFromMap(map: Map<string, any>) {
   const obj = Object.create(null);
   for (const [key, value] of map) {
     obj[key] = value;
@@ -675,7 +675,7 @@ class Util {
   // Apply a scaling matrix to some min/max values.
   // If a scaling factor is negative then min and max must be
   // swapped.
-  static scaleMinMax(transform, minMax) {
+  static scaleMinMax(transform: TransformType, minMax: RectType) {
     let temp;
     if (transform[0]) {
       if (transform[0] < 0) {
@@ -764,7 +764,7 @@ class Util {
     ];
   }
 
-  static inverseTransform(m) {
+  static inverseTransform(m: TransformType) {
     const d = m[0] * m[3] - m[1] * m[2];
     return [
       m[3] / d,
@@ -779,7 +779,7 @@ class Util {
   // This calculation uses Singular Value Decomposition.
   // The SVD can be represented with formula A = USV. We are interested in the
   // matrix S here because it represents the scale values.
-  static singularValueDecompose2dScale(m) {
+  static singularValueDecompose2dScale(m: number[]) {
     const transpose = [m[0], m[2], m[1], m[3]];
 
     // Multiply matrix m with its transpose.
@@ -802,7 +802,7 @@ class Util {
   // For coordinate systems whose origin lies in the bottom-left, this
   // means normalization to (BL,TR) ordering. For systems with origin in the
   // top-left, this means (TL,BR) ordering.
-  static normalizeRect(rect) {
+  static normalizeRect(rect: RectType) {
     const r = rect.slice(0); // clone rect
     if (rect[0] > rect[2]) {
       r[0] = rect[2];

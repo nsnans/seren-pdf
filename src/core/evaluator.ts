@@ -827,6 +827,9 @@ class PartialEvaluator {
           res: resources,
           image,
           isInline,
+          smask: null,
+          mask: null,
+          isMask: false,
           pdfFunctionFactory: this._pdfFunctionFactory,
           localColorSpaceCache,
         });

@@ -425,7 +425,7 @@ class ColorSpace {
     resources: Dict | null,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache
-  }) {
+  }): ColorSpace {
     const cachedColorSpace = this.getCached(cs, xref, localColorSpaceCache);
     if (cachedColorSpace) {
       return cachedColorSpace;

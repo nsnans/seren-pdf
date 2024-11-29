@@ -17,6 +17,8 @@
  * Hashes roughly 100 KB per millisecond on i7 3.4 GHz.
  */
 
+import { TypedArray } from "../types";
+
 const SEED = 0xc3d2e1f0;
 // Workaround for missing math precision in JS.
 const MASK_HIGH = 0xffff0000;
@@ -33,7 +35,7 @@ class MurmurHash3_64 {
     this.h2 = seed ? seed & 0xffffffff : SEED;
   }
 
-  update(input) {
+  update(input: string | TypedArray) {
     let data, length;
     if (typeof input === "string") {
       data = new Uint8Array(input.length * 2);

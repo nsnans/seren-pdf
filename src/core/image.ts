@@ -30,9 +30,12 @@ import { DecodeStream } from "./decode_stream";
 import { ImageResizer } from "./image_resizer";
 import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
-import { Name } from "./primitives";
+import { Dict, Name } from "./primitives";
 import { TypedArray } from "../types";
 import { XRef } from "./xref";
+import { PDFFunctionFactory } from "./function";
+import { LocalColorSpaceCache } from "./image_utils";
+import { PlatformHelper } from "../platform/platform_helper";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -94,10 +97,56 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
   return dest;
 }
 
+interface PDFImageArgs {
+  xref: XRef;
+  res;
+  image;
+  isInline: boolean;
+  smask;
+  mask;
+  isMask: boolean;
+  pdfFunctionFactory: PDFFunctionFactory;
+  localColorSpaceCache: LocalColorSpaceCache;
+}
+
 class PDFImage {
 
   protected xref: XRef;
+
   protected image;
+
+  protected width: number;
+
+  protected height: number;
+
+  protected imageMask: boolean;
+
+  protected matte: boolean;
+
+  protected bpc: number;
+
+  protected colorSpace: ColorSpace | null = null;
+
+  protected jpxDecoderOptions: {
+    numComponents: number,
+    isIndexedColormap: boolean,
+  } | null = null;
+
+  protected numComps: number | null = null;
+
+  protected needsDecode: boolean;
+
+  protected decode: TypedArray;
+
+  protected decodeCoefficients: number[] | null = null;
+
+  protected decodeAddends: number[] | null = null;
+
+  protected smask: PDFImage | null = null;
+
+  protected mask: PDFImage | null = null;
+
+  protected numComp: number = 0;
 
   constructor({
     xref,
@@ -109,7 +158,7 @@ class PDFImage {
     isMask = false,
     pdfFunctionFactory,
     localColorSpaceCache,
-  }) {
+  }: PDFImageArgs) {
     this.image = image;
     const dict = image.dict;
 
@@ -227,6 +276,8 @@ class PDFImage {
       this.numComps = this.colorSpace.numComps;
 
       if (this.jpxDecoderOptions) {
+        // this.numComp值可能存在问题，或许写错了？
+        // TODO 或许这里不应该使用this.numComp而是this.numComps？
         this.jpxDecoderOptions.numComponents = hasColorSpace ? this.numComp : 0;
         // If the jpx image has a color space then it musn't be used in order to
         // be able to use the color space that comes from the pdf.
@@ -268,10 +319,13 @@ class PDFImage {
         isInline,
         pdfFunctionFactory,
         localColorSpaceCache,
+        smask: null,
+        mask: null,
+        isMask: false,
       });
     } else if (mask) {
       if (mask instanceof BaseStream) {
-        const maskDict = mask.dict,
+        const maskDict = mask.dict!,
           imageMask = maskDict.get("IM", "ImageMask");
         if (!imageMask) {
           warn("Ignoring /Mask in image without /ImageMask.");
@@ -284,6 +338,8 @@ class PDFImage {
             isMask: true,
             pdfFunctionFactory,
             localColorSpaceCache,
+            smask: null,
+            mask: null,
           });
         }
       } else {
@@ -304,6 +360,13 @@ class PDFImage {
     isInline = false,
     pdfFunctionFactory,
     localColorSpaceCache,
+  }: {
+    xref: XRef,
+    res: Dict,
+    image,
+    isInline: boolean,
+    pdfFunctionFactory: PDFFunctionFactory,
+    localColorSpaceCache: LocalColorSpaceCache
   }) {
     const imageData = image;
     let smaskData = null;
@@ -335,6 +398,7 @@ class PDFImage {
       mask: maskData,
       pdfFunctionFactory,
       localColorSpaceCache,
+      isMask: false
     });
   }
 
@@ -507,7 +571,7 @@ class PDFImage {
 
     const width = this.width;
     const height = this.height;
-    const numComps = this.numComps;
+    const numComps = this.numComps!;
 
     const length = width * height * numComps;
     let bufferPos = 0;
@@ -587,8 +651,8 @@ class PDFImage {
     return output;
   }
 
-  async fillOpacity(rgbaBuf, width, height, actualHeight, image) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  async fillOpacity(rgbaBuf: TypedArray, width: number, height: number, actualHeight: number, image) {
+    if (PlatformHelper.isTesting()) {
       assert(
         rgbaBuf instanceof Uint8ClampedArray,
         'PDFImage.fillOpacity: Unsupported "rgbaBuf" type.'
@@ -626,7 +690,7 @@ class PDFImage {
         // Color key mask: if any of the components are outside the range
         // then they should be painted.
         alphaBuf = new Uint8ClampedArray(width * height);
-        const numComps = this.numComps;
+        const numComps = this.numComps!;
         for (i = 0, ii = width * height; i < ii; ++i) {
           let opacity = 0;
           const imageOffset = i * numComps;
@@ -657,8 +721,8 @@ class PDFImage {
     }
   }
 
-  undoPreblend(buffer, width, height) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  undoPreblend(buffer, width: number, height: number) {
+    if (PlatformHelper.isTesting()) {
       assert(
         buffer instanceof Uint8ClampedArray,
         'PDFImage.undoPreblend: Unsupported "buffer" type.'
@@ -668,7 +732,7 @@ class PDFImage {
     if (!matte) {
       return;
     }
-    const matteRgb = this.colorSpace.getRgb(matte, 0);
+    const matteRgb = this.colorSpace!.getRgb(matte, 0);
     const matteR = matteRgb[0];
     const matteG = matteRgb[1];
     const matteB = matteRgb[2];
@@ -702,7 +766,7 @@ class PDFImage {
       // Other fields are filled in below.
     };
 
-    const numComps = this.numComps;
+    const numComps = this.numComps!;
     const originalWidth = this.width;
     const originalHeight = this.height;
     const bpc = this.bpc;
@@ -713,7 +777,7 @@ class PDFImage {
       isOffscreenCanvasSupported &&
       ImageResizer.needsToBeResized(drawWidth, drawHeight);
 
-    if (!this.smask && !this.mask && this.colorSpace.name === "DeviceRGBA") {
+    if (!this.smask && !this.mask && this.colorSpace!.name === "DeviceRGBA") {
       imgData.kind = ImageKind.RGBA_32BPP;
       const imgArray = (imgData.data = await this.getImageBytes(
         originalHeight * originalWidth * 4,
@@ -744,10 +808,10 @@ class PDFImage {
       // Similarly, if it is a 24-bit-per pixel RGB image without any
       // complications, we avoid expanding by 1.333x to RGBA form.
       let kind;
-      if (this.colorSpace.name === "DeviceGray" && bpc === 1) {
+      if (this.colorSpace!.name === "DeviceGray" && bpc === 1) {
         kind = ImageKind.GRAYSCALE_1BPP;
       } else if (
-        this.colorSpace.name === "DeviceRGB" &&
+        this.colorSpace!.name === "DeviceRGB" &&
         bpc === 8 &&
         !this.needsDecode
       ) {
@@ -789,7 +853,7 @@ class PDFImage {
             kind === ImageKind.GRAYSCALE_1BPP,
             "PDFImage.createImageData: The image must be grayscale."
           );
-          const buffer = imgData.data;
+          const buffer = imgData.data!;
           for (let i = 0, ii = buffer.length; i < ii; i++) {
             buffer[i] ^= 0xff;
           }
@@ -805,7 +869,7 @@ class PDFImage {
         let imageLength = originalHeight * rowBytes;
         if (isOffscreenCanvasSupported && !mustBeResized) {
           let isHandled = false;
-          switch (this.colorSpace.name) {
+          switch (this.colorSpace!.name) {
             case "DeviceGray":
               // Avoid truncating the image, since `JpegImage.getData`
               // will expand the image data when `forceRGB === true`.
@@ -839,7 +903,7 @@ class PDFImage {
             );
           }
         } else {
-          switch (this.colorSpace.name) {
+          switch (this.colorSpace!.name) {
             case "DeviceGray":
               imageLength *= 3;
             /* falls through */
@@ -877,7 +941,7 @@ class PDFImage {
     let canvas, ctx, canvasImgData, data;
     if (isOffscreenCanvasSupported && !mustBeResized) {
       canvas = new OffscreenCanvas(drawWidth, drawHeight);
-      ctx = canvas.getContext("2d");
+      ctx = canvas.getContext("2d")!;
       canvasImgData = ctx.createImageData(drawWidth, drawHeight);
       data = canvasImgData.data;
     }
@@ -890,7 +954,7 @@ class PDFImage {
         data = new Uint8ClampedArray(drawWidth * drawHeight * 3);
         alpha01 = 0;
       } else {
-        const arr = new Uint32Array(data.buffer);
+        const arr = new Uint32Array(data!.buffer);
         arr.fill(FeatureTest.isLittleEndian ? 0xff000000 : 0x000000ff);
         alpha01 = 1;
       }
@@ -904,13 +968,13 @@ class PDFImage {
       maybeUndoPreblend = true;
 
       // Color key masking (opacity) must be performed before decoding.
-      await this.fillOpacity(data, drawWidth, drawHeight, actualHeight, comps);
+      await this.fillOpacity(data!, drawWidth, drawHeight, actualHeight, comps);
     }
 
     if (this.needsDecode) {
       this.decodeBuffer(comps);
     }
-    this.colorSpace.fillRgb(
+    this.colorSpace!.fillRgb(
       data,
       originalWidth,
       originalHeight,
@@ -926,8 +990,8 @@ class PDFImage {
     }
 
     if (isOffscreenCanvasSupported && !mustBeResized) {
-      ctx.putImageData(canvasImgData, 0, 0);
-      const bitmap = canvas.transferToImageBitmap();
+      ctx!.putImageData(canvasImgData, 0, 0);
+      const bitmap = canvas!.transferToImageBitmap();
 
       return {
         data: null,
@@ -946,7 +1010,7 @@ class PDFImage {
   }
 
   async fillGrayBuffer(buffer) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       assert(
         buffer instanceof Uint8ClampedArray,
         'PDFImage.fillGrayBuffer: Unsupported "buffer" type.'
@@ -1030,7 +1094,7 @@ class PDFImage {
     };
   }
 
-  async #getImage(width: number, height: num) {
+  async #getImage(width: number, height: number) {
     const bitmap = await this.image.getTransferableImage();
     if (!bitmap) {
       return null;

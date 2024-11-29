@@ -14,6 +14,7 @@
  */
 
 import { shadow, warn } from "../../shared/util";
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { getInteger, getStringOption } from "./utils";
 import {
@@ -1417,567 +1418,572 @@ class Zpl extends XFAObject {
   }
 }
 
-class ConfigNamespace {
-  static buildXFAObject(name, attributes) {
-    if (ConfigNamespace.hasOwnProperty(name)) {
-      return ConfigNamespace[name](attributes);
+class ConfigNamespace implements Namespace {
+
+  public static readonly DEFAULT = new ConfigNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name: string, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static acrobat(attrs) {
+  acrobat(attrs) {
     return new Acrobat(attrs);
   }
 
-  static acrobat7(attrs) {
+  acrobat7(attrs) {
     return new Acrobat7(attrs);
   }
 
-  static ADBE_JSConsole(attrs) {
+  ADBE_JSConsole(attrs) {
     return new ADBE_JSConsole(attrs);
   }
 
-  static ADBE_JSDebugger(attrs) {
+  ADBE_JSDebugger(attrs) {
     return new ADBE_JSDebugger(attrs);
   }
 
-  static addSilentPrint(attrs) {
+  addSilentPrint(attrs) {
     return new AddSilentPrint(attrs);
   }
 
-  static addViewerPreferences(attrs) {
+  addViewerPreferences(attrs) {
     return new AddViewerPreferences(attrs);
   }
 
-  static adjustData(attrs) {
+  adjustData(attrs) {
     return new AdjustData(attrs);
   }
 
-  static adobeExtensionLevel(attrs) {
+  adobeExtensionLevel(attrs) {
     return new AdobeExtensionLevel(attrs);
   }
 
-  static agent(attrs) {
+  agent(attrs) {
     return new Agent(attrs);
   }
 
-  static alwaysEmbed(attrs) {
+  alwaysEmbed(attrs) {
     return new AlwaysEmbed(attrs);
   }
 
-  static amd(attrs) {
+  amd(attrs) {
     return new Amd(attrs);
   }
 
-  static area(attrs) {
+  area(attrs) {
     return new Area(attrs);
   }
 
-  static attributes(attrs) {
+  attributes(attrs) {
     return new Attributes(attrs);
   }
 
-  static autoSave(attrs) {
+  autoSave(attrs) {
     return new AutoSave(attrs);
   }
 
-  static base(attrs) {
+  base(attrs) {
     return new Base(attrs);
   }
 
-  static batchOutput(attrs) {
+  batchOutput(attrs) {
     return new BatchOutput(attrs);
   }
 
-  static behaviorOverride(attrs) {
+  behaviorOverride(attrs) {
     return new BehaviorOverride(attrs);
   }
 
-  static cache(attrs) {
+  cache(attrs) {
     return new Cache(attrs);
   }
 
-  static change(attrs) {
+  change(attrs) {
     return new Change(attrs);
   }
 
-  static common(attrs) {
+  common(attrs) {
     return new Common(attrs);
   }
 
-  static compress(attrs) {
+  compress(attrs) {
     return new Compress(attrs);
   }
 
-  static compressLogicalStructure(attrs) {
+  compressLogicalStructure(attrs) {
     return new CompressLogicalStructure(attrs);
   }
 
-  static compressObjectStream(attrs) {
+  compressObjectStream(attrs) {
     return new CompressObjectStream(attrs);
   }
 
-  static compression(attrs) {
+  compression(attrs) {
     return new Compression(attrs);
   }
 
-  static config(attrs) {
+  config(attrs) {
     return new Config(attrs);
   }
 
-  static conformance(attrs) {
+  conformance(attrs) {
     return new Conformance(attrs);
   }
 
-  static contentCopy(attrs) {
+  contentCopy(attrs) {
     return new ContentCopy(attrs);
   }
 
-  static copies(attrs) {
+  copies(attrs) {
     return new Copies(attrs);
   }
 
-  static creator(attrs) {
+  creator(attrs) {
     return new Creator(attrs);
   }
 
-  static currentPage(attrs) {
+  currentPage(attrs) {
     return new CurrentPage(attrs);
   }
 
-  static data(attrs) {
+  data(attrs) {
     return new Data(attrs);
   }
 
-  static debug(attrs) {
+  debug(attrs) {
     return new Debug(attrs);
   }
 
-  static defaultTypeface(attrs) {
+  defaultTypeface(attrs) {
     return new DefaultTypeface(attrs);
   }
 
-  static destination(attrs) {
+  destination(attrs) {
     return new Destination(attrs);
   }
 
-  static documentAssembly(attrs) {
+  documentAssembly(attrs) {
     return new DocumentAssembly(attrs);
   }
 
-  static driver(attrs) {
+  driver(attrs) {
     return new Driver(attrs);
   }
 
-  static duplexOption(attrs) {
+  duplexOption(attrs) {
     return new DuplexOption(attrs);
   }
 
-  static dynamicRender(attrs) {
+  dynamicRender(attrs) {
     return new DynamicRender(attrs);
   }
 
-  static embed(attrs) {
+  embed(attrs) {
     return new Embed(attrs);
   }
 
-  static encrypt(attrs) {
+  encrypt(attrs) {
     return new Encrypt(attrs);
   }
 
-  static encryption(attrs) {
+  encryption(attrs) {
     return new Encryption(attrs);
   }
 
-  static encryptionLevel(attrs) {
+  encryptionLevel(attrs) {
     return new EncryptionLevel(attrs);
   }
 
-  static enforce(attrs) {
+  enforce(attrs) {
     return new Enforce(attrs);
   }
 
-  static equate(attrs) {
+  equate(attrs) {
     return new Equate(attrs);
   }
 
-  static equateRange(attrs) {
+  equateRange(attrs) {
     return new EquateRange(attrs);
   }
 
-  static exclude(attrs) {
+  exclude(attrs) {
     return new Exclude(attrs);
   }
 
-  static excludeNS(attrs) {
+  excludeNS(attrs) {
     return new ExcludeNS(attrs);
   }
 
-  static flipLabel(attrs) {
+  flipLabel(attrs) {
     return new FlipLabel(attrs);
   }
 
-  static fontInfo(attrs) {
+  fontInfo(attrs) {
     return new FontInfo(attrs);
   }
 
-  static formFieldFilling(attrs) {
+  formFieldFilling(attrs) {
     return new FormFieldFilling(attrs);
   }
 
-  static groupParent(attrs) {
+  groupParent(attrs) {
     return new GroupParent(attrs);
   }
 
-  static ifEmpty(attrs) {
+  ifEmpty(attrs) {
     return new IfEmpty(attrs);
   }
 
-  static includeXDPContent(attrs) {
+  includeXDPContent(attrs) {
     return new IncludeXDPContent(attrs);
   }
 
-  static incrementalLoad(attrs) {
+  incrementalLoad(attrs) {
     return new IncrementalLoad(attrs);
   }
 
-  static incrementalMerge(attrs) {
+  incrementalMerge(attrs) {
     return new IncrementalMerge(attrs);
   }
 
-  static interactive(attrs) {
+  interactive(attrs) {
     return new Interactive(attrs);
   }
 
-  static jog(attrs) {
+  jog(attrs) {
     return new Jog(attrs);
   }
 
-  static labelPrinter(attrs) {
+  labelPrinter(attrs) {
     return new LabelPrinter(attrs);
   }
 
-  static layout(attrs) {
+  layout(attrs) {
     return new Layout(attrs);
   }
 
-  static level(attrs) {
+  level(attrs) {
     return new Level(attrs);
   }
 
-  static linearized(attrs) {
+  linearized(attrs) {
     return new Linearized(attrs);
   }
 
-  static locale(attrs) {
+  locale(attrs) {
     return new Locale(attrs);
   }
 
-  static localeSet(attrs) {
+  localeSet(attrs) {
     return new LocaleSet(attrs);
   }
 
-  static log(attrs) {
+  log(attrs) {
     return new Log(attrs);
   }
 
-  static map(attrs) {
+  map(attrs) {
     return new MapElement(attrs);
   }
 
-  static mediumInfo(attrs) {
+  mediumInfo(attrs) {
     return new MediumInfo(attrs);
   }
 
-  static message(attrs) {
+  message(attrs) {
     return new Message(attrs);
   }
 
-  static messaging(attrs) {
+  messaging(attrs) {
     return new Messaging(attrs);
   }
 
-  static mode(attrs) {
+  mode(attrs) {
     return new Mode(attrs);
   }
 
-  static modifyAnnots(attrs) {
+  modifyAnnots(attrs) {
     return new ModifyAnnots(attrs);
   }
 
-  static msgId(attrs) {
+  msgId(attrs) {
     return new MsgId(attrs);
   }
 
-  static nameAttr(attrs) {
+  nameAttr(attrs) {
     return new NameAttr(attrs);
   }
 
-  static neverEmbed(attrs) {
+  neverEmbed(attrs) {
     return new NeverEmbed(attrs);
   }
 
-  static numberOfCopies(attrs) {
+  numberOfCopies(attrs) {
     return new NumberOfCopies(attrs);
   }
 
-  static openAction(attrs) {
+  openAction(attrs) {
     return new OpenAction(attrs);
   }
 
-  static output(attrs) {
+  output(attrs) {
     return new Output(attrs);
   }
 
-  static outputBin(attrs) {
+  outputBin(attrs) {
     return new OutputBin(attrs);
   }
 
-  static outputXSL(attrs) {
+  outputXSL(attrs) {
     return new OutputXSL(attrs);
   }
 
-  static overprint(attrs) {
+  overprint(attrs) {
     return new Overprint(attrs);
   }
 
-  static packets(attrs) {
+  packets(attrs) {
     return new Packets(attrs);
   }
 
-  static pageOffset(attrs) {
+  pageOffset(attrs) {
     return new PageOffset(attrs);
   }
 
-  static pageRange(attrs) {
+  pageRange(attrs) {
     return new PageRange(attrs);
   }
 
-  static pagination(attrs) {
+  pagination(attrs) {
     return new Pagination(attrs);
   }
 
-  static paginationOverride(attrs) {
+  paginationOverride(attrs) {
     return new PaginationOverride(attrs);
   }
 
-  static part(attrs) {
+  part(attrs) {
     return new Part(attrs);
   }
 
-  static pcl(attrs) {
+  pcl(attrs) {
     return new Pcl(attrs);
   }
 
-  static pdf(attrs) {
+  pdf(attrs) {
     return new Pdf(attrs);
   }
 
-  static pdfa(attrs) {
+  pdfa(attrs) {
     return new Pdfa(attrs);
   }
 
-  static permissions(attrs) {
+  permissions(attrs) {
     return new Permissions(attrs);
   }
 
-  static pickTrayByPDFSize(attrs) {
+  pickTrayByPDFSize(attrs) {
     return new PickTrayByPDFSize(attrs);
   }
 
-  static picture(attrs) {
+  picture(attrs) {
     return new Picture(attrs);
   }
 
-  static plaintextMetadata(attrs) {
+  plaintextMetadata(attrs) {
     return new PlaintextMetadata(attrs);
   }
 
-  static presence(attrs) {
+  presence(attrs) {
     return new Presence(attrs);
   }
 
-  static present(attrs) {
+  present(attrs) {
     return new Present(attrs);
   }
 
-  static print(attrs) {
+  print(attrs) {
     return new Print(attrs);
   }
 
-  static printHighQuality(attrs) {
+  printHighQuality(attrs) {
     return new PrintHighQuality(attrs);
   }
 
-  static printScaling(attrs) {
+  printScaling(attrs) {
     return new PrintScaling(attrs);
   }
 
-  static printerName(attrs) {
+  printerName(attrs) {
     return new PrinterName(attrs);
   }
 
-  static producer(attrs) {
+  producer(attrs) {
     return new Producer(attrs);
   }
 
-  static ps(attrs) {
+  ps(attrs) {
     return new Ps(attrs);
   }
 
-  static range(attrs) {
+  range(attrs) {
     return new Range(attrs);
   }
 
-  static record(attrs) {
+  record(attrs) {
     return new Record(attrs);
   }
 
-  static relevant(attrs) {
+  relevant(attrs) {
     return new Relevant(attrs);
   }
 
-  static rename(attrs) {
+  rename(attrs) {
     return new Rename(attrs);
   }
 
-  static renderPolicy(attrs) {
+  renderPolicy(attrs) {
     return new RenderPolicy(attrs);
   }
 
-  static runScripts(attrs) {
+  runScripts(attrs) {
     return new RunScripts(attrs);
   }
 
-  static script(attrs) {
+  script(attrs) {
     return new Script(attrs);
   }
 
-  static scriptModel(attrs) {
+  scriptModel(attrs) {
     return new ScriptModel(attrs);
   }
 
-  static severity(attrs) {
+  severity(attrs) {
     return new Severity(attrs);
   }
 
-  static silentPrint(attrs) {
+  silentPrint(attrs) {
     return new SilentPrint(attrs);
   }
 
-  static staple(attrs) {
+  staple(attrs) {
     return new Staple(attrs);
   }
 
-  static startNode(attrs) {
+  startNode(attrs) {
     return new StartNode(attrs);
   }
 
-  static startPage(attrs) {
+  startPage(attrs) {
     return new StartPage(attrs);
   }
 
-  static submitFormat(attrs) {
+  submitFormat(attrs) {
     return new SubmitFormat(attrs);
   }
 
-  static submitUrl(attrs) {
+  submitUrl(attrs) {
     return new SubmitUrl(attrs);
   }
 
-  static subsetBelow(attrs) {
+  subsetBelow(attrs) {
     return new SubsetBelow(attrs);
   }
 
-  static suppressBanner(attrs) {
+  suppressBanner(attrs) {
     return new SuppressBanner(attrs);
   }
 
-  static tagged(attrs) {
+  tagged(attrs) {
     return new Tagged(attrs);
   }
 
-  static template(attrs) {
+  template(attrs) {
     return new Template(attrs);
   }
 
-  static templateCache(attrs) {
+  templateCache(attrs) {
     return new TemplateCache(attrs);
   }
 
-  static threshold(attrs) {
+  threshold(attrs) {
     return new Threshold(attrs);
   }
 
-  static to(attrs) {
+  to(attrs) {
     return new To(attrs);
   }
 
-  static trace(attrs) {
+  trace(attrs) {
     return new Trace(attrs);
   }
 
-  static transform(attrs) {
+  transform(attrs) {
     return new Transform(attrs);
   }
 
-  static type(attrs) {
+  type(attrs) {
     return new Type(attrs);
   }
 
-  static uri(attrs) {
+  uri(attrs) {
     return new Uri(attrs);
   }
 
-  static validate(attrs) {
+  validate(attrs) {
     return new Validate(attrs);
   }
 
-  static validateApprovalSignatures(attrs) {
+  validateApprovalSignatures(attrs) {
     return new ValidateApprovalSignatures(attrs);
   }
 
-  static validationMessaging(attrs) {
+  validationMessaging(attrs) {
     return new ValidationMessaging(attrs);
   }
 
-  static version(attrs) {
+  version(attrs) {
     return new Version(attrs);
   }
 
-  static versionControl(attrs) {
+  versionControl(attrs) {
     return new VersionControl(attrs);
   }
 
-  static viewerPreferences(attrs) {
+  viewerPreferences(attrs) {
     return new ViewerPreferences(attrs);
   }
 
-  static webClient(attrs) {
+  webClient(attrs) {
     return new WebClient(attrs);
   }
 
-  static whitespace(attrs) {
+  whitespace(attrs) {
     return new Whitespace(attrs);
   }
 
-  static window(attrs) {
+  window(attrs) {
     return new Window(attrs);
   }
 
-  static xdc(attrs) {
+  xdc(attrs) {
     return new Xdc(attrs);
   }
 
-  static xdp(attrs) {
+  xdp(attrs) {
     return new Xdp(attrs);
   }
 
-  static xsl(attrs) {
+  xsl(attrs) {
     return new Xsl(attrs);
   }
 
-  static zpl(attrs) {
+  zpl(attrs) {
     return new Zpl(attrs);
   }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { StringObject, XFAObject, XFAObjectArray } from "./xfa_object";
 
@@ -21,7 +22,7 @@ const CONNECTION_SET_NS_ID = NamespaceIds.connectionSet.id;
 class ConnectionSet extends XFAObject {
 
   protected wsdlConnection = new XFAObjectArray();
-  
+
   protected xmlConnection = new XFAObjectArray();
 
   protected xsdConnection = new XFAObjectArray();
@@ -146,59 +147,64 @@ class XsdConnection extends XFAObject {
   }
 }
 
-class ConnectionSetNamespace {
-  static buildXFAObject(name, attributes) {
-    if (ConnectionSetNamespace.hasOwnProperty(name)) {
-      return ConnectionSetNamespace[name](attributes);
+class ConnectionSetNamespace implements Namespace {
+
+  public static readonly DEFAULT = new ConnectionSetNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name: string, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static connectionSet(attrs) {
+  connectionSet(attrs) {
     return new ConnectionSet(attrs);
   }
 
-  static effectiveInputPolicy(attrs) {
+  effectiveInputPolicy(attrs) {
     return new EffectiveInputPolicy(attrs);
   }
 
-  static effectiveOutputPolicy(attrs) {
+  effectiveOutputPolicy(attrs) {
     return new EffectiveOutputPolicy(attrs);
   }
 
-  static operation(attrs) {
+  operation(attrs) {
     return new Operation(attrs);
   }
 
-  static rootElement(attrs) {
+  rootElement(attrs) {
     return new RootElement(attrs);
   }
 
-  static soapAction(attrs) {
+  soapAction(attrs) {
     return new SoapAction(attrs);
   }
 
-  static soapAddress(attrs) {
+  soapAddress(attrs) {
     return new SoapAddress(attrs);
   }
 
-  static uri(attrs) {
+  uri(attrs) {
     return new Uri(attrs);
   }
 
-  static wsdlAddress(attrs) {
+  wsdlAddress(attrs) {
     return new WsdlAddress(attrs);
   }
 
-  static wsdlConnection(attrs) {
+  wsdlConnection(attrs) {
     return new WsdlConnection(attrs);
   }
 
-  static xmlConnection(attrs) {
+  xmlConnection(attrs) {
     return new XmlConnection(attrs);
   }
 
-  static xsdConnection(attrs) {
+  xsdConnection(attrs) {
     return new XsdConnection(attrs);
   }
 }

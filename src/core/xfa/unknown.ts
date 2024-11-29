@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { XmlObject } from "./xfa_object";
 
-class UnknownNamespace {
+class UnknownNamespace implements Namespace {
 
   namespaceId: number;
 

@@ -58,11 +58,11 @@ class ColorConverters {
     return ["G", 0.3 * r + 0.59 * g + 0.11 * b];
   }
 
-  static RGB_rgb(color) {
+  static RGB_rgb(color: [number, number, number]) {
     return color.map(scaleAndClamp);
   }
 
-  static RGB_HTML(color) {
+  static RGB_HTML(color: [number, number, number]) {
     return `#${color.map(makeColorComp).join("")}`;
   }
 
@@ -74,7 +74,7 @@ class ColorConverters {
     return [null];
   }
 
-  static CMYK_RGB([c, y, m, k]: [number, number, number, number]) {
+  static CMYK_RGB([c, y, m, k]: [number, number, number, number]): [string, number, number, number] {
     return [
       "RGB",
       1 - Math.min(1, c + k),
@@ -91,9 +91,10 @@ class ColorConverters {
     ];
   }
 
-  static CMYK_HTML(components) {
+  static CMYK_HTML(components: [number, number, number, number]) {
+    // TODO 这里应该注意下，slice(1)的含义
     const rgb = this.CMYK_RGB(components).slice(1);
-    return this.RGB_HTML(rgb);
+    return this.RGB_HTML(rgb as [number, number, number]);
   }
 
   static RGB_CMYK([r, g, b]: [number, number, number]) {

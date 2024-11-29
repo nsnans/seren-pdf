@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { XFAObject, XmlObject } from "./xfa_object";
 
@@ -48,19 +49,24 @@ class Datasets extends XFAObject {
   }
 }
 
-class DatasetsNamespace {
-  static buildXFAObject(name, attributes) {
-    if (DatasetsNamespace.hasOwnProperty(name)) {
-      return DatasetsNamespace[name](attributes);
+class DatasetsNamespace implements Namespace {
+
+  public static readonly DEFAULT = new DatasetsNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static datasets(attributes) {
+  datasets(attributes) {
     return new Datasets(attributes);
   }
 
-  static data(attributes) {
+  data(attributes) {
     return new Data(attributes);
   }
 }

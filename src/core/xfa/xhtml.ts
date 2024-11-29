@@ -19,6 +19,7 @@ import {
   measureToString,
   setFontFamily,
 } from "./html_utils";
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
 import { XmlObject } from "./xfa_object";
@@ -519,63 +520,68 @@ class Ul extends XhtmlObject {
   }
 }
 
-class XhtmlNamespace {
-  static buildXFAObject(name, attributes) {
+class XhtmlNamespace implements Namespace {
+
+  public static readonly DEFAULT = new XhtmlNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name: string, attributes) {
     if (XhtmlNamespace.hasOwnProperty(name)) {
-      return XhtmlNamespace[name](attributes);
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static a(attributes) {
+  a(attributes) {
     return new A(attributes);
   }
 
-  static b(attributes) {
+  b(attributes) {
     return new B(attributes);
   }
 
-  static body(attributes) {
+  body(attributes) {
     return new Body(attributes);
   }
 
-  static br(attributes) {
+  br(attributes) {
     return new Br(attributes);
   }
 
-  static html(attributes) {
+  html(attributes) {
     return new Html(attributes);
   }
 
-  static i(attributes) {
+  i(attributes) {
     return new I(attributes);
   }
 
-  static li(attributes) {
+  li(attributes) {
     return new Li(attributes);
   }
 
-  static ol(attributes) {
+  ol(attributes) {
     return new Ol(attributes);
   }
 
-  static p(attributes) {
+  p(attributes) {
     return new P(attributes);
   }
 
-  static span(attributes) {
+  span(attributes) {
     return new Span(attributes);
   }
 
-  static sub(attributes) {
+  sub(attributes) {
     return new Sub(attributes);
   }
 
-  static sup(attributes) {
+  sup(attributes) {
     return new Sup(attributes);
   }
 
-  static ul(attributes) {
+  ul(attributes) {
     return new Ul(attributes);
   }
 }

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { XFAObject } from "./xfa_object";
 
@@ -24,15 +25,20 @@ class Signature extends XFAObject {
   }
 }
 
-class SignatureNamespace {
-  static buildXFAObject(name, attributes) {
-    if (SignatureNamespace.hasOwnProperty(name)) {
-      return SignatureNamespace[name](attributes);
+class SignatureNamespace implements Namespace {
+
+  public static readonly DEFAULT = new SignatureNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name: string, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static signature(attributes) {
+  signature(attributes) {
     return new Signature(attributes);
   }
 }

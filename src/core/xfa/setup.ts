@@ -24,15 +24,15 @@ import { XdpNamespace } from "./xdp";
 import { XhtmlNamespace } from "./xhtml";
 
 const NamespaceSetUp = {
-  config: ConfigNamespace,
-  connection: ConnectionSetNamespace,
-  datasets: DatasetsNamespace,
-  localeSet: LocaleSetNamespace,
-  signature: SignatureNamespace,
-  stylesheet: StylesheetNamespace,
-  template: TemplateNamespace,
-  xdp: XdpNamespace,
-  xhtml: XhtmlNamespace,
+  config: ConfigNamespace.DEFAULT,
+  connection: ConnectionSetNamespace.DEFAULT,
+  datasets: DatasetsNamespace.DEFAULT,
+  localeSet: LocaleSetNamespace.DEFAULT,
+  signature: SignatureNamespace.DEFAULT,
+  stylesheet: StylesheetNamespace.DEFAULT,
+  template: TemplateNamespace.DEFAULT,
+  xdp: XdpNamespace.DEFAULT,
+  xhtml: XhtmlNamespace.DEFAULT,
 };
 
 export { NamespaceSetUp };

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { XFAObject } from "./xfa_object";
 
@@ -24,15 +25,20 @@ class Stylesheet extends XFAObject {
   }
 }
 
-class StylesheetNamespace {
-  static buildXFAObject(name, attributes) {
-    if (StylesheetNamespace.hasOwnProperty(name)) {
-      return StylesheetNamespace[name](attributes);
+class StylesheetNamespace implements Namespace {
+
+  public static readonly DEFAULT = new StylesheetNamespace();
+
+  protected constructor() { }
+  
+  buildXFAObject(name: string, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static stylesheet(attributes) {
+  stylesheet(attributes) {
     return new Stylesheet(attributes);
   }
 }

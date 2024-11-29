@@ -38,6 +38,7 @@ import {
   flushHTML,
   getAvailableSpace,
 } from "./layout";
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
@@ -6116,465 +6117,470 @@ class Variables extends XFAObject {
   }
 }
 
-class TemplateNamespace {
-  static buildXFAObject(name, attributes) {
-    if (TemplateNamespace.hasOwnProperty(name)) {
-      const node = TemplateNamespace[name](attributes);
+class TemplateNamespace implements Namespace {
+
+  public static readonly DEFAULT = new TemplateNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name, attributes) {
+    if (this.hasOwnProperty(name)) {
+      const node = (this as any)[name](attributes);
       node.setSetAttributes(attributes);
       return node;
     }
     return undefined;
   }
 
-  static appearanceFilter(attrs) {
+  appearanceFilter(attrs) {
     return new AppearanceFilter(attrs);
   }
 
-  static arc(attrs) {
+  arc(attrs) {
     return new Arc(attrs);
   }
 
-  static area(attrs) {
+  area(attrs) {
     return new Area(attrs);
   }
 
-  static assist(attrs) {
+  assist(attrs) {
     return new Assist(attrs);
   }
 
-  static barcode(attrs) {
+  barcode(attrs) {
     return new Barcode(attrs);
   }
 
-  static bind(attrs) {
+  bind(attrs) {
     return new Bind(attrs);
   }
 
-  static bindItems(attrs) {
+  bindItems(attrs) {
     return new BindItems(attrs);
   }
 
-  static bookend(attrs) {
+  bookend(attrs) {
     return new Bookend(attrs);
   }
 
-  static boolean(attrs) {
+  boolean(attrs) {
     return new BooleanElement(attrs);
   }
 
-  static border(attrs) {
+  border(attrs) {
     return new Border(attrs);
   }
 
-  static break(attrs) {
+  break(attrs) {
     return new Break(attrs);
   }
 
-  static breakAfter(attrs) {
+  breakAfter(attrs) {
     return new BreakAfter(attrs);
   }
 
-  static breakBefore(attrs) {
+  breakBefore(attrs) {
     return new BreakBefore(attrs);
   }
 
-  static button(attrs) {
+  button(attrs) {
     return new Button(attrs);
   }
 
-  static calculate(attrs) {
+  calculate(attrs) {
     return new Calculate(attrs);
   }
 
-  static caption(attrs) {
+  caption(attrs) {
     return new Caption(attrs);
   }
 
-  static certificate(attrs) {
+  certificate(attrs) {
     return new Certificate(attrs);
   }
 
-  static certificates(attrs) {
+  certificates(attrs) {
     return new Certificates(attrs);
   }
 
-  static checkButton(attrs) {
+  checkButton(attrs) {
     return new CheckButton(attrs);
   }
 
-  static choiceList(attrs) {
+  choiceList(attrs) {
     return new ChoiceList(attrs);
   }
 
-  static color(attrs) {
+  color(attrs) {
     return new Color(attrs);
   }
 
-  static comb(attrs) {
+  comb(attrs) {
     return new Comb(attrs);
   }
 
-  static connect(attrs) {
+  connect(attrs) {
     return new Connect(attrs);
   }
 
-  static contentArea(attrs) {
+  contentArea(attrs) {
     return new ContentArea(attrs);
   }
 
-  static corner(attrs) {
+  corner(attrs) {
     return new Corner(attrs);
   }
 
-  static date(attrs) {
+  date(attrs) {
     return new DateElement(attrs);
   }
 
-  static dateTime(attrs) {
+  dateTime(attrs) {
     return new DateTime(attrs);
   }
 
-  static dateTimeEdit(attrs) {
+  dateTimeEdit(attrs) {
     return new DateTimeEdit(attrs);
   }
 
-  static decimal(attrs) {
+  decimal(attrs) {
     return new Decimal(attrs);
   }
 
-  static defaultUi(attrs) {
+  defaultUi(attrs) {
     return new DefaultUi(attrs);
   }
 
-  static desc(attrs) {
+  desc(attrs) {
     return new Desc(attrs);
   }
 
-  static digestMethod(attrs) {
+  digestMethod(attrs) {
     return new DigestMethod(attrs);
   }
 
-  static digestMethods(attrs) {
+  digestMethods(attrs) {
     return new DigestMethods(attrs);
   }
 
-  static draw(attrs) {
+  draw(attrs) {
     return new Draw(attrs);
   }
 
-  static edge(attrs) {
+  edge(attrs) {
     return new Edge(attrs);
   }
 
-  static encoding(attrs) {
+  encoding(attrs) {
     return new Encoding(attrs);
   }
 
-  static encodings(attrs) {
+  encodings(attrs) {
     return new Encodings(attrs);
   }
 
-  static encrypt(attrs) {
+  encrypt(attrs) {
     return new Encrypt(attrs);
   }
 
-  static encryptData(attrs) {
+  encryptData(attrs) {
     return new EncryptData(attrs);
   }
 
-  static encryption(attrs) {
+  encryption(attrs) {
     return new Encryption(attrs);
   }
 
-  static encryptionMethod(attrs) {
+  encryptionMethod(attrs) {
     return new EncryptionMethod(attrs);
   }
 
-  static encryptionMethods(attrs) {
+  encryptionMethods(attrs) {
     return new EncryptionMethods(attrs);
   }
 
-  static event(attrs) {
+  event(attrs) {
     return new Event(attrs);
   }
 
-  static exData(attrs) {
+  exData(attrs) {
     return new ExData(attrs);
   }
 
-  static exObject(attrs) {
+  exObject(attrs) {
     return new ExObject(attrs);
   }
 
-  static exclGroup(attrs) {
+  exclGroup(attrs) {
     return new ExclGroup(attrs);
   }
 
-  static execute(attrs) {
+  execute(attrs) {
     return new Execute(attrs);
   }
 
-  static extras(attrs) {
+  extras(attrs) {
     return new Extras(attrs);
   }
 
-  static field(attrs) {
+  field(attrs) {
     return new Field(attrs);
   }
 
-  static fill(attrs) {
+  fill(attrs) {
     return new Fill(attrs);
   }
 
-  static filter(attrs) {
+  filter(attrs) {
     return new Filter(attrs);
   }
 
-  static float(attrs) {
+  float(attrs) {
     return new Float(attrs);
   }
 
-  static font(attrs) {
+  font(attrs) {
     return new Font(attrs);
   }
 
-  static format(attrs) {
+  format(attrs) {
     return new Format(attrs);
   }
 
-  static handler(attrs) {
+  handler(attrs) {
     return new Handler(attrs);
   }
 
-  static hyphenation(attrs) {
+  hyphenation(attrs) {
     return new Hyphenation(attrs);
   }
 
-  static image(attrs) {
+  image(attrs) {
     return new Image(attrs);
   }
 
-  static imageEdit(attrs) {
+  imageEdit(attrs) {
     return new ImageEdit(attrs);
   }
 
-  static integer(attrs) {
+  integer(attrs) {
     return new Integer(attrs);
   }
 
-  static issuers(attrs) {
+  issuers(attrs) {
     return new Issuers(attrs);
   }
 
-  static items(attrs) {
+  items(attrs) {
     return new Items(attrs);
   }
 
-  static keep(attrs) {
+  keep(attrs) {
     return new Keep(attrs);
   }
 
-  static keyUsage(attrs) {
+  keyUsage(attrs) {
     return new KeyUsage(attrs);
   }
 
-  static line(attrs) {
+  line(attrs) {
     return new Line(attrs);
   }
 
-  static linear(attrs) {
+  linear(attrs) {
     return new Linear(attrs);
   }
 
-  static lockDocument(attrs) {
+  lockDocument(attrs) {
     return new LockDocument(attrs);
   }
 
-  static manifest(attrs) {
+  manifest(attrs) {
     return new Manifest(attrs);
   }
 
-  static margin(attrs) {
+  margin(attrs) {
     return new Margin(attrs);
   }
 
-  static mdp(attrs) {
+  mdp(attrs) {
     return new Mdp(attrs);
   }
 
-  static medium(attrs) {
+  medium(attrs) {
     return new Medium(attrs);
   }
 
-  static message(attrs) {
+  message(attrs) {
     return new Message(attrs);
   }
 
-  static numericEdit(attrs) {
+  numericEdit(attrs) {
     return new NumericEdit(attrs);
   }
 
-  static occur(attrs) {
+  occur(attrs) {
     return new Occur(attrs);
   }
 
-  static oid(attrs) {
+  oid(attrs) {
     return new Oid(attrs);
   }
 
-  static oids(attrs) {
+  oids(attrs) {
     return new Oids(attrs);
   }
 
-  static overflow(attrs) {
+  overflow(attrs) {
     return new Overflow(attrs);
   }
 
-  static pageArea(attrs) {
+  pageArea(attrs) {
     return new PageArea(attrs);
   }
 
-  static pageSet(attrs) {
+  pageSet(attrs) {
     return new PageSet(attrs);
   }
 
-  static para(attrs) {
+  para(attrs) {
     return new Para(attrs);
   }
 
-  static passwordEdit(attrs) {
+  passwordEdit(attrs) {
     return new PasswordEdit(attrs);
   }
 
-  static pattern(attrs) {
+  pattern(attrs) {
     return new Pattern(attrs);
   }
 
-  static picture(attrs) {
+  picture(attrs) {
     return new Picture(attrs);
   }
 
-  static proto(attrs) {
+  proto(attrs) {
     return new Proto(attrs);
   }
 
-  static radial(attrs) {
+  radial(attrs) {
     return new Radial(attrs);
   }
 
-  static reason(attrs) {
+  reason(attrs) {
     return new Reason(attrs);
   }
 
-  static reasons(attrs) {
+  reasons(attrs) {
     return new Reasons(attrs);
   }
 
-  static rectangle(attrs) {
+  rectangle(attrs) {
     return new Rectangle(attrs);
   }
 
-  static ref(attrs) {
+  ref(attrs) {
     return new RefElement(attrs);
   }
 
-  static script(attrs) {
+  script(attrs) {
     return new Script(attrs);
   }
 
-  static setProperty(attrs) {
+  setProperty(attrs) {
     return new SetProperty(attrs);
   }
 
-  static signData(attrs) {
+  signData(attrs) {
     return new SignData(attrs);
   }
 
-  static signature(attrs) {
+  signature(attrs) {
     return new Signature(attrs);
   }
 
-  static signing(attrs) {
+  signing(attrs) {
     return new Signing(attrs);
   }
 
-  static solid(attrs) {
+  solid(attrs) {
     return new Solid(attrs);
   }
 
-  static speak(attrs) {
+  speak(attrs) {
     return new Speak(attrs);
   }
 
-  static stipple(attrs) {
+  stipple(attrs) {
     return new Stipple(attrs);
   }
 
-  static subform(attrs) {
+  subform(attrs) {
     return new Subform(attrs);
   }
 
-  static subformSet(attrs) {
+  subformSet(attrs) {
     return new SubformSet(attrs);
   }
 
-  static subjectDN(attrs) {
+  subjectDN(attrs) {
     return new SubjectDN(attrs);
   }
 
-  static subjectDNs(attrs) {
+  subjectDNs(attrs) {
     return new SubjectDNs(attrs);
   }
 
-  static submit(attrs) {
+  submit(attrs) {
     return new Submit(attrs);
   }
 
-  static template(attrs) {
+  template(attrs) {
     return new Template(attrs);
   }
 
-  static text(attrs) {
+  text(attrs) {
     return new Text(attrs);
   }
 
-  static textEdit(attrs) {
+  textEdit(attrs) {
     return new TextEdit(attrs);
   }
 
-  static time(attrs) {
+  time(attrs) {
     return new Time(attrs);
   }
 
-  static timeStamp(attrs) {
+  timeStamp(attrs) {
     return new TimeStamp(attrs);
   }
 
-  static toolTip(attrs) {
+  toolTip(attrs) {
     return new ToolTip(attrs);
   }
 
-  static traversal(attrs) {
+  traversal(attrs) {
     return new Traversal(attrs);
   }
 
-  static traverse(attrs) {
+  traverse(attrs) {
     return new Traverse(attrs);
   }
 
-  static ui(attrs) {
+  ui(attrs) {
     return new Ui(attrs);
   }
 
-  static validate(attrs) {
+  validate(attrs) {
     return new Validate(attrs);
   }
 
-  static value(attrs) {
+  value(attrs) {
     return new Value(attrs);
   }
 
-  static variables(attrs) {
+  variables(attrs) {
     return new Variables(attrs);
   }
 }

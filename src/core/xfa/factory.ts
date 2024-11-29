@@ -143,10 +143,10 @@ class XFAFactory {
     }
 
     try {
-      let root = new XFAParser(XhtmlNamespace, /* richText */ true).parse(rc);
+      let root = new XFAParser(XhtmlNamespace.DEFAULT, /* richText */ true).parse(rc);
       if (!["body", "xhtml"].includes(root.nodeName)) {
         // No body, so create one.
-        const newRoot = XhtmlNamespace.body({});
+        const newRoot = XhtmlNamespace.DEFAULT.body({});
         newRoot.appendChild(root);
         root = newRoot;
       }

@@ -16,7 +16,18 @@
 import { PDFObject } from "./pdf_object";
 
 class Util extends PDFObject {
-  #dateActionsCache = null;
+
+  #dateActionsCache: Map<string, any> | null = null;
+
+  protected _scandCache: Map<string, [string, ((value: string, data: unknown) => void)[]]>;
+
+  protected _months: string[];
+
+  protected _days: string[];
+
+  protected MILLISECONDS_IN_DAY: number;
+
+  protected MILLISECONDS_IN_WEEK: number;
 
   constructor(data) {
     super(data);
@@ -69,7 +80,7 @@ class Util extends PDFObject {
     let i = 0;
     return args[0].replaceAll(
       pattern,
-      function (match, nDecSep, cFlags, nWidth, nPrecision, cConvChar) {
+      function (_match, nDecSep, cFlags, nWidth, nPrecision, cConvChar) {
         // cConvChar must be one of d, f, s, x
         if (
           cConvChar !== "d" &&
@@ -121,7 +132,7 @@ class Util extends PDFObject {
           nWidth = parseInt(nWidth);
         }
 
-        let intPart = Math.trunc(arg);
+        let intPart: string | number = Math.trunc(arg);
 
         if (cConvChar === "x") {
           let hex = Math.abs(intPart).toString(16).toUpperCase();
@@ -145,7 +156,7 @@ class Util extends PDFObject {
           2: [".", ","],
           3: ["", ","],
           4: ["'", "."],
-        };
+        } as Record<number, [string, string]>;
         const [thousandSep, decimalSep] = separators[nDecSep];
 
         let decPart = "";
@@ -208,7 +219,7 @@ class Util extends PDFObject {
     /* Not implemented */
   }
 
-  printd(cFormat, oDate) {
+  printd(cFormat: string | 0 | 1 | 2, oDate: Date): string {
     switch (cFormat) {
       case 0:
         return this.printd("D:yyyymmddHHMMss", oDate);
@@ -219,27 +230,27 @@ class Util extends PDFObject {
     }
 
     const handlers = {
-      mmmm: data => this._months[data.month],
-      mmm: data => this._months[data.month].substring(0, 3),
-      mm: data => (data.month + 1).toString().padStart(2, "0"),
-      m: data => (data.month + 1).toString(),
-      dddd: data => this._days[data.dayOfWeek],
-      ddd: data => this._days[data.dayOfWeek].substring(0, 3),
-      dd: data => data.day.toString().padStart(2, "0"),
-      d: data => data.day.toString(),
-      yyyy: data => data.year.toString(),
-      yy: data => (data.year % 100).toString().padStart(2, "0"),
-      HH: data => data.hours.toString().padStart(2, "0"),
-      H: data => data.hours.toString(),
-      hh: data => (1 + ((data.hours + 11) % 12)).toString().padStart(2, "0"),
-      h: data => (1 + ((data.hours + 11) % 12)).toString(),
-      MM: data => data.minutes.toString().padStart(2, "0"),
-      M: data => data.minutes.toString(),
-      ss: data => data.seconds.toString().padStart(2, "0"),
-      s: data => data.seconds.toString(),
-      tt: data => (data.hours < 12 ? "am" : "pm"),
-      t: data => (data.hours < 12 ? "a" : "p"),
-    };
+      mmmm: (data: { month: number }) => this._months[data.month],
+      mmm: (data: { month: number }) => this._months[data.month].substring(0, 3),
+      mm: (data: { month: number }) => (data.month + 1).toString().padStart(2, "0"),
+      m: (data: { month: number }) => (data.month + 1).toString(),
+      dddd: (data: { dayOfWeek: number }) => this._days[data.dayOfWeek],
+      ddd: (data: { dayOfWeek: number }) => this._days[data.dayOfWeek].substring(0, 3),
+      dd: (data: { day: number }) => data.day.toString().padStart(2, "0"),
+      d: (data: { day: number }) => data.day.toString(),
+      yyyy: (data: { year: number }) => data.year.toString(),
+      yy: (data: { year: number }) => (data.year % 100).toString().padStart(2, "0"),
+      HH: (data: { hours: number }) => data.hours.toString().padStart(2, "0"),
+      H: (data: { hours: number }) => data.hours.toString(),
+      hh: (data: { hours: number }) => (1 + ((data.hours + 11) % 12)).toString().padStart(2, "0"),
+      h: (data: { hours: number }) => (1 + ((data.hours + 11) % 12)).toString(),
+      MM: (data: { minutes: number }) => data.minutes.toString().padStart(2, "0"),
+      M: (data: { minutes: number }) => data.minutes.toString(),
+      ss: (data: { seconds: number }) => data.seconds.toString().padStart(2, "0"),
+      s: (data: { seconds: number }) => data.seconds.toString(),
+      tt: (data: { hours: number }) => (data.hours < 12 ? "am" : "pm"),
+      t: (data: { hours: number }) => (data.hours < 12 ? "a" : "p"),
+    } as Record<string, (data: unknown) => string>;
 
     const data = {
       year: oDate.getFullYear(),
@@ -253,19 +264,20 @@ class Util extends PDFObject {
 
     const patterns =
       /(mmmm|mmm|mm|m|dddd|ddd|dd|d|yyyy|yy|HH|H|hh|h|MM|M|ss|s|tt|t|\\.)/g;
-    return cFormat.replaceAll(patterns, function (match, pattern) {
+    return cFormat.replaceAll(patterns, function (_match: string, pattern: string) {
       if (pattern in handlers) {
-        return handlers[pattern](data);
+        // 将就一下吧
+        return (handlers as any)[pattern](data);
       }
       return pattern.charCodeAt(1);
     });
   }
 
-  printx(cFormat, cSource) {
+  printx(cFormat: string[], cSource: string | null) {
     // case
     cSource = (cSource ?? "").toString();
-    const handlers = [x => x, x => x.toUpperCase(), x => x.toLowerCase()];
-    const buf = [];
+    const handlers = [(x: string) => x, (x: string) => x.toUpperCase(), (x: string) => x.toLowerCase()];
+    const buf = <string[]>[];
     let i = 0;
     const ii = cSource.length;
     let currCase = handlers[0];
@@ -340,7 +352,7 @@ class Util extends PDFObject {
     return buf.join("");
   }
 
-  #tryToGuessDate(cFormat, cDate) {
+  #tryToGuessDate(cFormat: string, cDate: string) {
     // We use the format to know the order of day, month, year, ...
 
     let actions = (this.#dateActionsCache ||= new Map()).get(cFormat);
@@ -349,9 +361,9 @@ class Util extends PDFObject {
       this.#dateActionsCache.set(cFormat, actions);
       cFormat.replaceAll(
         /(d+)|(m+)|(y+)|(H+)|(M+)|(s+)/g,
-        function (match, d, m, y, H, M, s) {
+        function (_match, d, m, y, H, M, s) {
           if (d) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n >= 1 && n <= 31) {
                 date.setDate(n);
                 return true;
@@ -359,7 +371,7 @@ class Util extends PDFObject {
               return false;
             });
           } else if (m) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n >= 1 && n <= 12) {
                 date.setMonth(n - 1);
                 return true;
@@ -367,17 +379,19 @@ class Util extends PDFObject {
               return false;
             });
           } else if (y) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n < 50) {
                 n += 2000;
               } else if (n < 100) {
                 n += 1900;
               }
-              date.setYear(n);
+              // 这里从setYear改成了setFullYear
+              // 因为Date对象的setYear应该已经被移除了
+              date.setFullYear(n);
               return true;
             });
           } else if (H) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n >= 0 && n <= 23) {
                 date.setHours(n);
                 return true;
@@ -385,7 +399,7 @@ class Util extends PDFObject {
               return false;
             });
           } else if (M) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n >= 0 && n <= 59) {
                 date.setMinutes(n);
                 return true;
@@ -393,7 +407,7 @@ class Util extends PDFObject {
               return false;
             });
           } else if (s) {
-            actions.push((n, date) => {
+            actions.push((n: number, date: Date) => {
               if (n >= 0 && n <= 59) {
                 date.setSeconds(n);
                 return true;
@@ -427,11 +441,11 @@ class Util extends PDFObject {
     return date;
   }
 
-  scand(cFormat, cDate) {
+  scand(cFormat: string | 0 | 1 | 2, cDate: string | number | Date) {
     return this._scand(cFormat, cDate);
   }
 
-  _scand(cFormat, cDate, strict = false) {
+  _scand(cFormat: string | 0 | 1 | 2, cDate: string | number | Date, strict = false): Date | null {
     if (typeof cDate !== "string") {
       return new Date(cDate);
     }
@@ -456,13 +470,13 @@ class Util extends PDFObject {
       const handlers = {
         mmmm: {
           pattern: `(${months.join("|")})`,
-          action: (value, data) => {
+          action: (value: string, data: { month: number }) => {
             data.month = months.indexOf(value);
           },
         },
         mmm: {
           pattern: `(${months.map(month => month.substring(0, 3)).join("|")})`,
-          action: (value, data) => {
+          action: (value: string, data: { month: number }) => {
             data.month = months.findIndex(
               month => month.substring(0, 3) === value
             );
@@ -470,110 +484,110 @@ class Util extends PDFObject {
         },
         mm: {
           pattern: `(\\d{2})`,
-          action: (value, data) => {
+          action: (value: string, data: { month: number }) => {
             data.month = parseInt(value) - 1;
           },
         },
         m: {
           pattern: `(\\d{1,2})`,
-          action: (value, data) => {
+          action: (value: string, data: { month: number }) => {
             data.month = parseInt(value) - 1;
           },
         },
         dddd: {
           pattern: `(${days.join("|")})`,
-          action: (value, data) => {
+          action: (value: string, data: { day: number }) => {
             data.day = days.indexOf(value);
           },
         },
         ddd: {
           pattern: `(${days.map(day => day.substring(0, 3)).join("|")})`,
-          action: (value, data) => {
+          action: (value: string, data: { day: number }) => {
             data.day = days.findIndex(day => day.substring(0, 3) === value);
           },
         },
         dd: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { day: number }) => {
             data.day = parseInt(value);
           },
         },
         d: {
           pattern: "(\\d{1,2})",
-          action: (value, data) => {
+          action: (value: string, data: { day: number }) => {
             data.day = parseInt(value);
           },
         },
         yyyy: {
           pattern: "(\\d{4})",
-          action: (value, data) => {
+          action: (value: string, data: { year: number }) => {
             data.year = parseInt(value);
           },
         },
         yy: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { year: number }) => {
             data.year = 2000 + parseInt(value);
           },
         },
         HH: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { hours: number }) => {
             data.hours = parseInt(value);
           },
         },
         H: {
           pattern: "(\\d{1,2})",
-          action: (value, data) => {
+          action: (value: string, data: { hours: number }) => {
             data.hours = parseInt(value);
           },
         },
         hh: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { hours: number }) => {
             data.hours = parseInt(value);
           },
         },
         h: {
           pattern: "(\\d{1,2})",
-          action: (value, data) => {
+          action: (value: string, data: { hours: number }) => {
             data.hours = parseInt(value);
           },
         },
         MM: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { minutes: number }) => {
             data.minutes = parseInt(value);
           },
         },
         M: {
           pattern: "(\\d{1,2})",
-          action: (value, data) => {
+          action: (value: string, data: { minutes: number }) => {
             data.minutes = parseInt(value);
           },
         },
         ss: {
           pattern: "(\\d{2})",
-          action: (value, data) => {
+          action: (value: string, data: { seconds: number }) => {
             data.seconds = parseInt(value);
           },
         },
         s: {
           pattern: "(\\d{1,2})",
-          action: (value, data) => {
+          action: (value: string, data: { seconds: number }) => {
             data.seconds = parseInt(value);
           },
         },
         tt: {
           pattern: "([aApP][mM])",
-          action: (value, data) => {
+          action: (value: string, data: { am: boolean }) => {
             const char = value.charAt(0);
             data.am = char === "a" || char === "A";
           },
         },
         t: {
           pattern: "([aApP])",
-          action: (value, data) => {
+          action: (value: string, data: { am: boolean }) => {
             data.am = value === "a" || value === "A";
           },
         },
@@ -583,12 +597,12 @@ class Util extends PDFObject {
       const escapedFormat = cFormat.replaceAll(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
       const patterns =
         /(mmmm|mmm|mm|m|dddd|ddd|dd|d|yyyy|yy|HH|H|hh|h|MM|M|ss|s|tt|t)/g;
-      const actions = [];
+      const actions = <((value: string, data: unknown) => void)[]>[];
 
       const re = escapedFormat.replaceAll(
         patterns,
-        function (match, patternElement) {
-          const { pattern, action } = handlers[patternElement];
+        function (_match, patternElement: string) {
+          const { pattern, action } = (handlers as any)[patternElement];
           actions.push(action);
           return pattern;
         }
@@ -597,7 +611,7 @@ class Util extends PDFObject {
       this._scandCache.set(cFormat, [re, actions]);
     }
 
-    const [re, actions] = this._scandCache.get(cFormat);
+    const [re, actions] = this._scandCache.get(cFormat)!;
 
     const matches = new RegExp(`^${re}$`, "g").exec(cDate);
     if (!matches || matches.length !== actions.length + 1) {
@@ -613,7 +627,7 @@ class Util extends PDFObject {
       seconds: 0,
       am: null,
     };
-    actions.forEach((action, i) => action(matches[i + 1], data));
+    actions.forEach((action: (value: string, data: unknown) => void, i: number) => action(matches[i + 1], data));
     if (data.am !== null) {
       data.hours = (data.hours % 12) + (data.am ? 0 : 12);
     }

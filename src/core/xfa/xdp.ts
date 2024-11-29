@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { XFAObject, XFAObjectArray } from "./xfa_object";
 
@@ -37,15 +38,20 @@ class Xdp extends XFAObject {
   }
 }
 
-class XdpNamespace {
-  static buildXFAObject(name, attributes) {
-    if (XdpNamespace.hasOwnProperty(name)) {
-      return XdpNamespace[name](attributes);
+class XdpNamespace implements Namespace {
+
+  public static readonly DEFAULT = new XdpNamespace();
+
+  protected constructor() { }
+
+  buildXFAObject(name: string, attributes) {
+    if (this.hasOwnProperty(name)) {
+      return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  static xdp(attributes) {
+  xdp(attributes) {
     return new Xdp(attributes);
   }
 }
