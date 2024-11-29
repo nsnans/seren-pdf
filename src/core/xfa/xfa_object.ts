@@ -27,6 +27,41 @@ let uid = 0;
 
 const NS_DATASETS = NamespaceIds.datasets.id;
 
+// xml属性的基本类型，也就是所有的attribute类型
+export interface XMLTagProperty { name: string, value: string }
+
+/**
+ * AttributeObj分为两部分 第一部分是传统的键值对，第二部分是nsAttribute部分
+ * 通过分析XFAParser的源码，我们能够知道Attribute一开始就是XMLTagProperty类型
+ * 通过进一部分分析_mkAttributes方法，我们进一步推算出了修饰过后的AttributeObj类型，具体如下：
+ * attributeObj的接口的样子应该是下面这样的（所有的key和value都是string类型）：
+ * {
+ *   key1: value1;
+ *   key2: value2;
+ *   ......
+ *   nsAttributes: {
+ *     namespace1: {
+ *       key1: value1;
+ *       ....
+ *     }
+ *     .......
+ *     namespaceN: {
+ *       key1: value1;
+ *     }
+ *   }
+ * }
+ */
+export type AttributesObj = Record<string, string> & {
+  nsAttributes: Record<string, Record<string, string>> | null
+};
+
+// 只考虑xfa相关的nsAttributes，其它的一律去除
+export type XFAAttributesObj = Record<string, string> & {
+  nsAttributes: {
+    xfa: Record<string, string>
+  } | null
+};
+
 class XFAObject {
 
   protected namespaceId: number;
@@ -39,13 +74,13 @@ class XFAObject {
 
   protected uid: string;
 
-  protected globalData;
+  public globalData;
 
-  protected content: string | null;
+  public content: string | null;
 
   protected _parent;
 
-  protected cleanup;
+  public cleanup;
 
   protected name;
 
@@ -203,7 +238,7 @@ class XFAObject {
 
   setValue(_: unknown) { }
 
-  onText(_: unknown) { }
+  onText(_text: string, _richText: boolean = false) { }
 
   finalize() { }
 

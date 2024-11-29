@@ -14,7 +14,7 @@
  */
 
 import { Namespace } from "./namespace";
-import { XmlObject } from "./xfa_object";
+import { XFAAttributesObj, XmlObject } from "./xfa_object";
 
 class UnknownNamespace implements Namespace {
 
@@ -24,7 +24,7 @@ class UnknownNamespace implements Namespace {
     this.namespaceId = nsId;
   }
 
-  buildXFAObject(name, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     return new XmlObject(this.namespaceId, name, attributes);
   }
 }

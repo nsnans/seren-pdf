@@ -19,6 +19,7 @@ import { getInteger, getStringOption } from "./utils";
 import {
   ContentObject,
   StringObject,
+  XFAAttributesObj,
   XFAObject,
   XFAObjectArray,
 } from "./xfa_object";
@@ -248,106 +249,106 @@ class LocaleSetNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  calendarSymbols(attrs) {
+  calendarSymbols(attrs: XFAAttributesObj) {
     return new CalendarSymbols(attrs);
   }
 
-  currencySymbol(attrs) {
+  currencySymbol(attrs: XFAAttributesObj) {
     return new CurrencySymbol(attrs);
   }
 
-  currencySymbols(attrs) {
+  currencySymbols(attrs: XFAAttributesObj) {
     return new CurrencySymbols(attrs);
   }
 
-  datePattern(attrs) {
+  datePattern(attrs: XFAAttributesObj) {
     return new DatePattern(attrs);
   }
 
-  datePatterns(attrs) {
+  datePatterns(attrs: XFAAttributesObj) {
     return new DatePatterns(attrs);
   }
 
-  dateTimeSymbols(attrs) {
+  dateTimeSymbols(attrs: XFAAttributesObj) {
     return new DateTimeSymbols(attrs);
   }
 
-  day(attrs) {
+  day(attrs: XFAAttributesObj) {
     return new Day(attrs);
   }
 
-  dayNames(attrs) {
+  dayNames(attrs: XFAAttributesObj) {
     return new DayNames(attrs);
   }
 
-  era(attrs) {
+  era(attrs: XFAAttributesObj) {
     return new Era(attrs);
   }
 
-  eraNames(attrs) {
+  eraNames(attrs: XFAAttributesObj) {
     return new EraNames(attrs);
   }
 
-  locale(attrs) {
+  locale(attrs: XFAAttributesObj) {
     return new Locale(attrs);
   }
 
-  localeSet(attrs) {
+  localeSet(attrs: XFAAttributesObj) {
     return new LocaleSet(attrs);
   }
 
-  meridiem(attrs) {
+  meridiem(attrs: XFAAttributesObj) {
     return new Meridiem(attrs);
   }
 
-  meridiemNames(attrs) {
+  meridiemNames(attrs: XFAAttributesObj) {
     return new MeridiemNames(attrs);
   }
 
-  month(attrs) {
+  month(attrs: XFAAttributesObj) {
     return new Month(attrs);
   }
 
-  monthNames(attrs) {
+  monthNames(attrs: XFAAttributesObj) {
     return new MonthNames(attrs);
   }
 
-  numberPattern(attrs) {
+  numberPattern(attrs: XFAAttributesObj) {
     return new NumberPattern(attrs);
   }
 
-  numberPatterns(attrs) {
+  numberPatterns(attrs: XFAAttributesObj) {
     return new NumberPatterns(attrs);
   }
 
-  numberSymbol(attrs) {
+  numberSymbol(attrs: XFAAttributesObj) {
     return new NumberSymbol(attrs);
   }
 
-  numberSymbols(attrs) {
+  numberSymbols(attrs: XFAAttributesObj) {
     return new NumberSymbols(attrs);
   }
 
-  timePattern(attrs) {
+  timePattern(attrs: XFAAttributesObj) {
     return new TimePattern(attrs);
   }
 
-  timePatterns(attrs) {
+  timePatterns(attrs: XFAAttributesObj) {
     return new TimePatterns(attrs);
   }
 
-  typeFace(attrs) {
+  typeFace(attrs: XFAAttributesObj) {
     return new TypeFace(attrs);
   }
 
-  typeFaces(attrs) {
+  typeFaces(attrs: XFAAttributesObj) {
     return new TypeFaces(attrs);
   }
 }

@@ -22,7 +22,7 @@ import {
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
-import { XmlObject } from "./xfa_object";
+import { XFAAttributesObj, XmlObject } from "./xfa_object";
 
 const XHTML_NS_ID = NamespaceIds.xhtml.id;
 
@@ -355,14 +355,14 @@ class XhtmlObject extends XmlObject {
 }
 
 class A extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "a");
     this.href = fixURL(attributes.href) || "";
   }
 }
 
 class B extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "b");
   }
 
@@ -374,7 +374,7 @@ class B extends XhtmlObject {
 }
 
 class Body extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "body");
   }
 
@@ -391,7 +391,7 @@ class Body extends XhtmlObject {
 }
 
 class Br extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "br");
   }
 
@@ -411,7 +411,7 @@ class Br extends XhtmlObject {
 }
 
 class Html extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "html");
   }
 
@@ -452,7 +452,7 @@ class Html extends XhtmlObject {
 }
 
 class I extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "i");
   }
 
@@ -464,19 +464,19 @@ class I extends XhtmlObject {
 }
 
 class Li extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "li");
   }
 }
 
 class Ol extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "ol");
   }
 }
 
 class P extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "p");
   }
 
@@ -497,25 +497,25 @@ class P extends XhtmlObject {
 }
 
 class Span extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "span");
   }
 }
 
 class Sub extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "sub");
   }
 }
 
 class Sup extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "sup");
   }
 }
 
 class Ul extends XhtmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(attributes, "ul");
   }
 }
@@ -526,62 +526,62 @@ class XhtmlNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name: string, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (XhtmlNamespace.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  a(attributes) {
+  a(attributes: XFAAttributesObj) {
     return new A(attributes);
   }
 
-  b(attributes) {
+  b(attributes: XFAAttributesObj) {
     return new B(attributes);
   }
 
-  body(attributes) {
+  body(attributes: XFAAttributesObj) {
     return new Body(attributes);
   }
 
-  br(attributes) {
+  br(attributes: XFAAttributesObj) {
     return new Br(attributes);
   }
 
-  html(attributes) {
+  html(attributes: XFAAttributesObj) {
     return new Html(attributes);
   }
 
-  i(attributes) {
+  i(attributes: XFAAttributesObj) {
     return new I(attributes);
   }
 
-  li(attributes) {
+  li(attributes: XFAAttributesObj) {
     return new Li(attributes);
   }
 
-  ol(attributes) {
+  ol(attributes: XFAAttributesObj) {
     return new Ol(attributes);
   }
 
-  p(attributes) {
+  p(attributes: XFAAttributesObj) {
     return new P(attributes);
   }
 
-  span(attributes) {
+  span(attributes: XFAAttributesObj) {
     return new Span(attributes);
   }
 
-  sub(attributes) {
+  sub(attributes: XFAAttributesObj) {
     return new Sub(attributes);
   }
 
-  sup(attributes) {
+  sup(attributes: XFAAttributesObj) {
     return new Sup(attributes);
   }
 
-  ul(attributes) {
+  ul(attributes: XFAAttributesObj) {
     return new Ul(attributes);
   }
 }

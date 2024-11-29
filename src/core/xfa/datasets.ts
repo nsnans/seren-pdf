@@ -15,12 +15,12 @@
 
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { XFAObject, XmlObject } from "./xfa_object";
+import { XFAAttributesObj, XFAObject, XmlObject } from "./xfa_object";
 
 const DATASETS_NS_ID = NamespaceIds.datasets.id;
 
 class Data extends XmlObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(DATASETS_NS_ID, "data", attributes);
   }
 
@@ -30,7 +30,7 @@ class Data extends XmlObject {
 }
 
 class Datasets extends XFAObject {
-  constructor(attributes) {
+  constructor(_attributes: XFAAttributesObj) {
     super(DATASETS_NS_ID, "datasets", /* hasChildren = */ true);
     this.data = null;
     this.Signature = null;
@@ -55,18 +55,18 @@ class DatasetsNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  datasets(attributes) {
+  datasets(attributes: XFAAttributesObj) {
     return new Datasets(attributes);
   }
 
-  data(attributes) {
+  data(attributes: XFAAttributesObj) {
     return new Data(attributes);
   }
 }

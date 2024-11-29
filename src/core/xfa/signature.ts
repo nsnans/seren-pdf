@@ -15,7 +15,7 @@
 
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { XFAObject } from "./xfa_object";
+import { XFAAttributesObj, XFAObject } from "./xfa_object";
 
 const SIGNATURE_NS_ID = NamespaceIds.signature.id;
 
@@ -31,14 +31,14 @@ class SignatureNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name: string, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  signature(attributes) {
+  signature(attributes: XFAAttributesObj){
     return new Signature(attributes);
   }
 }

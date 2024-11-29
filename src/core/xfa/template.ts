@@ -58,6 +58,7 @@ import {
   Option01,
   OptionObject,
   StringObject,
+  XFAAttributesObj,
   XFAObject,
   XFAObjectArray,
 } from "./xfa_object";
@@ -5666,7 +5667,7 @@ class Text extends ContentObject {
     return false;
   }
 
-  onText(str) {
+  onText(str: string) {
     if (this.content instanceof XFAObject) {
       return;
     }
@@ -6123,7 +6124,7 @@ class TemplateNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       const node = (this as any)[name](attributes);
       node.setSetAttributes(attributes);
@@ -6132,455 +6133,455 @@ class TemplateNamespace implements Namespace {
     return undefined;
   }
 
-  appearanceFilter(attrs) {
+  appearanceFilter(attrs: XFAAttributesObj) {
     return new AppearanceFilter(attrs);
   }
 
-  arc(attrs) {
+  arc(attrs: XFAAttributesObj) {
     return new Arc(attrs);
   }
 
-  area(attrs) {
+  area(attrs: XFAAttributesObj) {
     return new Area(attrs);
   }
 
-  assist(attrs) {
+  assist(attrs: XFAAttributesObj) {
     return new Assist(attrs);
   }
 
-  barcode(attrs) {
+  barcode(attrs: XFAAttributesObj) {
     return new Barcode(attrs);
   }
 
-  bind(attrs) {
+  bind(attrs: XFAAttributesObj) {
     return new Bind(attrs);
   }
 
-  bindItems(attrs) {
+  bindItems(attrs: XFAAttributesObj) {
     return new BindItems(attrs);
   }
 
-  bookend(attrs) {
+  bookend(attrs: XFAAttributesObj) {
     return new Bookend(attrs);
   }
 
-  boolean(attrs) {
+  boolean(attrs: XFAAttributesObj) {
     return new BooleanElement(attrs);
   }
 
-  border(attrs) {
+  border(attrs: XFAAttributesObj) {
     return new Border(attrs);
   }
 
-  break(attrs) {
+  break(attrs: XFAAttributesObj) {
     return new Break(attrs);
   }
 
-  breakAfter(attrs) {
+  breakAfter(attrs: XFAAttributesObj) {
     return new BreakAfter(attrs);
   }
 
-  breakBefore(attrs) {
+  breakBefore(attrs: XFAAttributesObj) {
     return new BreakBefore(attrs);
   }
 
-  button(attrs) {
+  button(attrs: XFAAttributesObj) {
     return new Button(attrs);
   }
 
-  calculate(attrs) {
+  calculate(attrs: XFAAttributesObj) {
     return new Calculate(attrs);
   }
 
-  caption(attrs) {
+  caption(attrs: XFAAttributesObj) {
     return new Caption(attrs);
   }
 
-  certificate(attrs) {
+  certificate(attrs: XFAAttributesObj) {
     return new Certificate(attrs);
   }
 
-  certificates(attrs) {
+  certificates(attrs: XFAAttributesObj) {
     return new Certificates(attrs);
   }
 
-  checkButton(attrs) {
+  checkButton(attrs: XFAAttributesObj) {
     return new CheckButton(attrs);
   }
 
-  choiceList(attrs) {
+  choiceList(attrs: XFAAttributesObj) {
     return new ChoiceList(attrs);
   }
 
-  color(attrs) {
+  color(attrs: XFAAttributesObj) {
     return new Color(attrs);
   }
 
-  comb(attrs) {
+  comb(attrs: XFAAttributesObj) {
     return new Comb(attrs);
   }
 
-  connect(attrs) {
+  connect(attrs: XFAAttributesObj) {
     return new Connect(attrs);
   }
 
-  contentArea(attrs) {
+  contentArea(attrs: XFAAttributesObj) {
     return new ContentArea(attrs);
   }
 
-  corner(attrs) {
+  corner(attrs: XFAAttributesObj) {
     return new Corner(attrs);
   }
 
-  date(attrs) {
+  date(attrs: XFAAttributesObj) {
     return new DateElement(attrs);
   }
 
-  dateTime(attrs) {
+  dateTime(attrs: XFAAttributesObj) {
     return new DateTime(attrs);
   }
 
-  dateTimeEdit(attrs) {
+  dateTimeEdit(attrs: XFAAttributesObj) {
     return new DateTimeEdit(attrs);
   }
 
-  decimal(attrs) {
+  decimal(attrs: XFAAttributesObj) {
     return new Decimal(attrs);
   }
 
-  defaultUi(attrs) {
+  defaultUi(attrs: XFAAttributesObj) {
     return new DefaultUi(attrs);
   }
 
-  desc(attrs) {
+  desc(attrs: XFAAttributesObj) {
     return new Desc(attrs);
   }
 
-  digestMethod(attrs) {
+  digestMethod(attrs: XFAAttributesObj) {
     return new DigestMethod(attrs);
   }
 
-  digestMethods(attrs) {
+  digestMethods(attrs: XFAAttributesObj) {
     return new DigestMethods(attrs);
   }
 
-  draw(attrs) {
+  draw(attrs: XFAAttributesObj) {
     return new Draw(attrs);
   }
 
-  edge(attrs) {
+  edge(attrs: XFAAttributesObj) {
     return new Edge(attrs);
   }
 
-  encoding(attrs) {
+  encoding(attrs: XFAAttributesObj) {
     return new Encoding(attrs);
   }
 
-  encodings(attrs) {
+  encodings(attrs: XFAAttributesObj) {
     return new Encodings(attrs);
   }
 
-  encrypt(attrs) {
+  encrypt(attrs: XFAAttributesObj) {
     return new Encrypt(attrs);
   }
 
-  encryptData(attrs) {
+  encryptData(attrs: XFAAttributesObj) {
     return new EncryptData(attrs);
   }
 
-  encryption(attrs) {
+  encryption(attrs: XFAAttributesObj) {
     return new Encryption(attrs);
   }
 
-  encryptionMethod(attrs) {
+  encryptionMethod(attrs: XFAAttributesObj) {
     return new EncryptionMethod(attrs);
   }
 
-  encryptionMethods(attrs) {
+  encryptionMethods(attrs: XFAAttributesObj) {
     return new EncryptionMethods(attrs);
   }
 
-  event(attrs) {
+  event(attrs: XFAAttributesObj) {
     return new Event(attrs);
   }
 
-  exData(attrs) {
+  exData(attrs: XFAAttributesObj) {
     return new ExData(attrs);
   }
 
-  exObject(attrs) {
+  exObject(attrs: XFAAttributesObj) {
     return new ExObject(attrs);
   }
 
-  exclGroup(attrs) {
+  exclGroup(attrs: XFAAttributesObj) {
     return new ExclGroup(attrs);
   }
 
-  execute(attrs) {
+  execute(attrs: XFAAttributesObj) {
     return new Execute(attrs);
   }
 
-  extras(attrs) {
+  extras(attrs: XFAAttributesObj) {
     return new Extras(attrs);
   }
 
-  field(attrs) {
+  field(attrs: XFAAttributesObj) {
     return new Field(attrs);
   }
 
-  fill(attrs) {
+  fill(attrs: XFAAttributesObj) {
     return new Fill(attrs);
   }
 
-  filter(attrs) {
+  filter(attrs: XFAAttributesObj) {
     return new Filter(attrs);
   }
 
-  float(attrs) {
+  float(attrs: XFAAttributesObj) {
     return new Float(attrs);
   }
 
-  font(attrs) {
+  font(attrs: XFAAttributesObj) {
     return new Font(attrs);
   }
 
-  format(attrs) {
+  format(attrs: XFAAttributesObj) {
     return new Format(attrs);
   }
 
-  handler(attrs) {
+  handler(attrs: XFAAttributesObj) {
     return new Handler(attrs);
   }
 
-  hyphenation(attrs) {
+  hyphenation(attrs: XFAAttributesObj) {
     return new Hyphenation(attrs);
   }
 
-  image(attrs) {
+  image(attrs: XFAAttributesObj) {
     return new Image(attrs);
   }
 
-  imageEdit(attrs) {
+  imageEdit(attrs: XFAAttributesObj) {
     return new ImageEdit(attrs);
   }
 
-  integer(attrs) {
+  integer(attrs: XFAAttributesObj) {
     return new Integer(attrs);
   }
 
-  issuers(attrs) {
+  issuers(attrs: XFAAttributesObj) {
     return new Issuers(attrs);
   }
 
-  items(attrs) {
+  items(attrs: XFAAttributesObj) {
     return new Items(attrs);
   }
 
-  keep(attrs) {
+  keep(attrs: XFAAttributesObj) {
     return new Keep(attrs);
   }
 
-  keyUsage(attrs) {
+  keyUsage(attrs: XFAAttributesObj) {
     return new KeyUsage(attrs);
   }
 
-  line(attrs) {
+  line(attrs: XFAAttributesObj) {
     return new Line(attrs);
   }
 
-  linear(attrs) {
+  linear(attrs: XFAAttributesObj) {
     return new Linear(attrs);
   }
 
-  lockDocument(attrs) {
+  lockDocument(attrs: XFAAttributesObj) {
     return new LockDocument(attrs);
   }
 
-  manifest(attrs) {
+  manifest(attrs: XFAAttributesObj) {
     return new Manifest(attrs);
   }
 
-  margin(attrs) {
+  margin(attrs: XFAAttributesObj) {
     return new Margin(attrs);
   }
 
-  mdp(attrs) {
+  mdp(attrs: XFAAttributesObj) {
     return new Mdp(attrs);
   }
 
-  medium(attrs) {
+  medium(attrs: XFAAttributesObj) {
     return new Medium(attrs);
   }
 
-  message(attrs) {
+  message(attrs: XFAAttributesObj) {
     return new Message(attrs);
   }
 
-  numericEdit(attrs) {
+  numericEdit(attrs: XFAAttributesObj) {
     return new NumericEdit(attrs);
   }
 
-  occur(attrs) {
+  occur(attrs: XFAAttributesObj) {
     return new Occur(attrs);
   }
 
-  oid(attrs) {
+  oid(attrs: XFAAttributesObj) {
     return new Oid(attrs);
   }
 
-  oids(attrs) {
+  oids(attrs: XFAAttributesObj) {
     return new Oids(attrs);
   }
 
-  overflow(attrs) {
+  overflow(attrs: XFAAttributesObj) {
     return new Overflow(attrs);
   }
 
-  pageArea(attrs) {
+  pageArea(attrs: XFAAttributesObj) {
     return new PageArea(attrs);
   }
 
-  pageSet(attrs) {
+  pageSet(attrs: XFAAttributesObj) {
     return new PageSet(attrs);
   }
 
-  para(attrs) {
+  para(attrs: XFAAttributesObj) {
     return new Para(attrs);
   }
 
-  passwordEdit(attrs) {
+  passwordEdit(attrs: XFAAttributesObj) {
     return new PasswordEdit(attrs);
   }
 
-  pattern(attrs) {
+  pattern(attrs: XFAAttributesObj) {
     return new Pattern(attrs);
   }
 
-  picture(attrs) {
+  picture(attrs: XFAAttributesObj) {
     return new Picture(attrs);
   }
 
-  proto(attrs) {
+  proto(attrs: XFAAttributesObj) {
     return new Proto(attrs);
   }
 
-  radial(attrs) {
+  radial(attrs: XFAAttributesObj) {
     return new Radial(attrs);
   }
 
-  reason(attrs) {
+  reason(attrs: XFAAttributesObj) {
     return new Reason(attrs);
   }
 
-  reasons(attrs) {
+  reasons(attrs: XFAAttributesObj) {
     return new Reasons(attrs);
   }
 
-  rectangle(attrs) {
+  rectangle(attrs: XFAAttributesObj) {
     return new Rectangle(attrs);
   }
 
-  ref(attrs) {
+  ref(attrs: XFAAttributesObj) {
     return new RefElement(attrs);
   }
 
-  script(attrs) {
+  script(attrs: XFAAttributesObj) {
     return new Script(attrs);
   }
 
-  setProperty(attrs) {
+  setProperty(attrs: XFAAttributesObj) {
     return new SetProperty(attrs);
   }
 
-  signData(attrs) {
+  signData(attrs: XFAAttributesObj) {
     return new SignData(attrs);
   }
 
-  signature(attrs) {
+  signature(attrs: XFAAttributesObj) {
     return new Signature(attrs);
   }
 
-  signing(attrs) {
+  signing(attrs: XFAAttributesObj) {
     return new Signing(attrs);
   }
 
-  solid(attrs) {
+  solid(attrs: XFAAttributesObj) {
     return new Solid(attrs);
   }
 
-  speak(attrs) {
+  speak(attrs: XFAAttributesObj) {
     return new Speak(attrs);
   }
 
-  stipple(attrs) {
+  stipple(attrs: XFAAttributesObj) {
     return new Stipple(attrs);
   }
 
-  subform(attrs) {
+  subform(attrs: XFAAttributesObj) {
     return new Subform(attrs);
   }
 
-  subformSet(attrs) {
+  subformSet(attrs: XFAAttributesObj) {
     return new SubformSet(attrs);
   }
 
-  subjectDN(attrs) {
+  subjectDN(attrs: XFAAttributesObj) {
     return new SubjectDN(attrs);
   }
 
-  subjectDNs(attrs) {
+  subjectDNs(attrs: XFAAttributesObj) {
     return new SubjectDNs(attrs);
   }
 
-  submit(attrs) {
+  submit(attrs: XFAAttributesObj) {
     return new Submit(attrs);
   }
 
-  template(attrs) {
+  template(attrs: XFAAttributesObj) {
     return new Template(attrs);
   }
 
-  text(attrs) {
+  text(attrs: XFAAttributesObj) {
     return new Text(attrs);
   }
 
-  textEdit(attrs) {
+  textEdit(attrs: XFAAttributesObj) {
     return new TextEdit(attrs);
   }
 
-  time(attrs) {
+  time(attrs: XFAAttributesObj) {
     return new Time(attrs);
   }
 
-  timeStamp(attrs) {
+  timeStamp(attrs: XFAAttributesObj) {
     return new TimeStamp(attrs);
   }
 
-  toolTip(attrs) {
+  toolTip(attrs: XFAAttributesObj) {
     return new ToolTip(attrs);
   }
 
-  traversal(attrs) {
+  traversal(attrs: XFAAttributesObj) {
     return new Traversal(attrs);
   }
 
-  traverse(attrs) {
+  traverse(attrs: XFAAttributesObj) {
     return new Traverse(attrs);
   }
 
-  ui(attrs) {
+  ui(attrs: XFAAttributesObj) {
     return new Ui(attrs);
   }
 
-  validate(attrs) {
+  validate(attrs: XFAAttributesObj) {
     return new Validate(attrs);
   }
 
-  value(attrs) {
+  value(attrs: XFAAttributesObj) {
     return new Value(attrs);
   }
 
-  variables(attrs) {
+  variables(attrs: XFAAttributesObj) {
     return new Variables(attrs);
   }
 }

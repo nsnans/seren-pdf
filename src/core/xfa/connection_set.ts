@@ -15,7 +15,7 @@
 
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { StringObject, XFAObject, XFAObjectArray } from "./xfa_object";
+import { StringObject, XFAAttributesObj, XFAObject, XFAObjectArray } from "./xfa_object";
 
 const CONNECTION_SET_NS_ID = NamespaceIds.connectionSet.id;
 
@@ -153,58 +153,58 @@ class ConnectionSetNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name: string, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  connectionSet(attrs) {
+  connectionSet(attrs: XFAAttributesObj){
     return new ConnectionSet(attrs);
   }
 
-  effectiveInputPolicy(attrs) {
+  effectiveInputPolicy(attrs: XFAAttributesObj){
     return new EffectiveInputPolicy(attrs);
   }
 
-  effectiveOutputPolicy(attrs) {
+  effectiveOutputPolicy(attrs: XFAAttributesObj){
     return new EffectiveOutputPolicy(attrs);
   }
 
-  operation(attrs) {
+  operation(attrs: XFAAttributesObj){
     return new Operation(attrs);
   }
 
-  rootElement(attrs) {
+  rootElement(attrs: XFAAttributesObj){
     return new RootElement(attrs);
   }
 
-  soapAction(attrs) {
+  soapAction(attrs: XFAAttributesObj){
     return new SoapAction(attrs);
   }
 
-  soapAddress(attrs) {
+  soapAddress(attrs: XFAAttributesObj){
     return new SoapAddress(attrs);
   }
 
-  uri(attrs) {
+  uri(attrs: XFAAttributesObj){
     return new Uri(attrs);
   }
 
-  wsdlAddress(attrs) {
+  wsdlAddress(attrs: XFAAttributesObj){
     return new WsdlAddress(attrs);
   }
 
-  wsdlConnection(attrs) {
+  wsdlConnection(attrs: XFAAttributesObj){
     return new WsdlConnection(attrs);
   }
 
-  xmlConnection(attrs) {
+  xmlConnection(attrs: XFAAttributesObj){
     return new XmlConnection(attrs);
   }
 
-  xsdConnection(attrs) {
+  xsdConnection(attrs: XFAAttributesObj){
     return new XsdConnection(attrs);
   }
 }

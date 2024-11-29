@@ -24,6 +24,7 @@ import {
   Option10,
   OptionObject,
   StringObject,
+  XFAAttributesObj,
   XFAObject,
   XFAObjectArray,
 } from "./xfa_object";
@@ -1424,566 +1425,566 @@ class ConfigNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name: string, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  acrobat(attrs) {
+  acrobat(attrs: XFAAttributesObj) {
     return new Acrobat(attrs);
   }
 
-  acrobat7(attrs) {
+  acrobat7(attrs: XFAAttributesObj){
     return new Acrobat7(attrs);
   }
 
-  ADBE_JSConsole(attrs) {
+  ADBE_JSConsole(attrs: XFAAttributesObj){
     return new ADBE_JSConsole(attrs);
   }
 
-  ADBE_JSDebugger(attrs) {
+  ADBE_JSDebugger(attrs: XFAAttributesObj) {
     return new ADBE_JSDebugger(attrs);
   }
 
-  addSilentPrint(attrs) {
+  addSilentPrint(attrs: XFAAttributesObj) {
     return new AddSilentPrint(attrs);
   }
 
-  addViewerPreferences(attrs) {
+  addViewerPreferences(attrs: XFAAttributesObj) {
     return new AddViewerPreferences(attrs);
   }
 
-  adjustData(attrs) {
+  adjustData(attrs: XFAAttributesObj) {
     return new AdjustData(attrs);
   }
 
-  adobeExtensionLevel(attrs) {
+  adobeExtensionLevel(attrs: XFAAttributesObj) {
     return new AdobeExtensionLevel(attrs);
   }
 
-  agent(attrs) {
+  agent(attrs: XFAAttributesObj) {
     return new Agent(attrs);
   }
 
-  alwaysEmbed(attrs) {
+  alwaysEmbed(attrs: XFAAttributesObj) {
     return new AlwaysEmbed(attrs);
   }
 
-  amd(attrs) {
+  amd(attrs: XFAAttributesObj) {
     return new Amd(attrs);
   }
 
-  area(attrs) {
+  area(attrs: XFAAttributesObj) {
     return new Area(attrs);
   }
 
-  attributes(attrs) {
+  attributes(attrs: XFAAttributesObj) {
     return new Attributes(attrs);
   }
 
-  autoSave(attrs) {
+  autoSave(attrs: XFAAttributesObj){
     return new AutoSave(attrs);
   }
 
-  base(attrs) {
+  base(attrs: XFAAttributesObj){
     return new Base(attrs);
   }
 
-  batchOutput(attrs) {
+  batchOutput(attrs: XFAAttributesObj){
     return new BatchOutput(attrs);
   }
 
-  behaviorOverride(attrs) {
+  behaviorOverride(attrs: XFAAttributesObj){
     return new BehaviorOverride(attrs);
   }
 
-  cache(attrs) {
+  cache(attrs: XFAAttributesObj){
     return new Cache(attrs);
   }
 
-  change(attrs) {
+  change(attrs: XFAAttributesObj){
     return new Change(attrs);
   }
 
-  common(attrs) {
+  common(attrs: XFAAttributesObj){
     return new Common(attrs);
   }
 
-  compress(attrs) {
+  compress(attrs: XFAAttributesObj){
     return new Compress(attrs);
   }
 
-  compressLogicalStructure(attrs) {
+  compressLogicalStructure(attrs: XFAAttributesObj){
     return new CompressLogicalStructure(attrs);
   }
 
-  compressObjectStream(attrs) {
+  compressObjectStream(attrs: XFAAttributesObj){
     return new CompressObjectStream(attrs);
   }
 
-  compression(attrs) {
+  compression(attrs: XFAAttributesObj){
     return new Compression(attrs);
   }
 
-  config(attrs) {
+  config(attrs: XFAAttributesObj){
     return new Config(attrs);
   }
 
-  conformance(attrs) {
+  conformance(attrs: XFAAttributesObj){
     return new Conformance(attrs);
   }
 
-  contentCopy(attrs) {
+  contentCopy(attrs: XFAAttributesObj){
     return new ContentCopy(attrs);
   }
 
-  copies(attrs) {
+  copies(attrs: XFAAttributesObj){
     return new Copies(attrs);
   }
 
-  creator(attrs) {
+  creator(attrs: XFAAttributesObj){
     return new Creator(attrs);
   }
 
-  currentPage(attrs) {
+  currentPage(attrs: XFAAttributesObj){
     return new CurrentPage(attrs);
   }
 
-  data(attrs) {
+  data(attrs: XFAAttributesObj){
     return new Data(attrs);
   }
 
-  debug(attrs) {
+  debug(attrs: XFAAttributesObj){
     return new Debug(attrs);
   }
 
-  defaultTypeface(attrs) {
+  defaultTypeface(attrs: XFAAttributesObj){
     return new DefaultTypeface(attrs);
   }
 
-  destination(attrs) {
+  destination(attrs: XFAAttributesObj){
     return new Destination(attrs);
   }
 
-  documentAssembly(attrs) {
+  documentAssembly(attrs: XFAAttributesObj){
     return new DocumentAssembly(attrs);
   }
 
-  driver(attrs) {
+  driver(attrs: XFAAttributesObj){
     return new Driver(attrs);
   }
 
-  duplexOption(attrs) {
+  duplexOption(attrs: XFAAttributesObj){
     return new DuplexOption(attrs);
   }
 
-  dynamicRender(attrs) {
+  dynamicRender(attrs: XFAAttributesObj){
     return new DynamicRender(attrs);
   }
 
-  embed(attrs) {
+  embed(attrs: XFAAttributesObj){
     return new Embed(attrs);
   }
 
-  encrypt(attrs) {
+  encrypt(attrs: XFAAttributesObj){
     return new Encrypt(attrs);
   }
 
-  encryption(attrs) {
+  encryption(attrs: XFAAttributesObj){
     return new Encryption(attrs);
   }
 
-  encryptionLevel(attrs) {
+  encryptionLevel(attrs: XFAAttributesObj){
     return new EncryptionLevel(attrs);
   }
 
-  enforce(attrs) {
+  enforce(attrs: XFAAttributesObj){
     return new Enforce(attrs);
   }
 
-  equate(attrs) {
+  equate(attrs: XFAAttributesObj){
     return new Equate(attrs);
   }
 
-  equateRange(attrs) {
+  equateRange(attrs: XFAAttributesObj){
     return new EquateRange(attrs);
   }
 
-  exclude(attrs) {
+  exclude(attrs: XFAAttributesObj){
     return new Exclude(attrs);
   }
 
-  excludeNS(attrs) {
+  excludeNS(attrs: XFAAttributesObj){
     return new ExcludeNS(attrs);
   }
 
-  flipLabel(attrs) {
+  flipLabel(attrs: XFAAttributesObj){
     return new FlipLabel(attrs);
   }
 
-  fontInfo(attrs) {
+  fontInfo(attrs: XFAAttributesObj){
     return new FontInfo(attrs);
   }
 
-  formFieldFilling(attrs) {
+  formFieldFilling(attrs: XFAAttributesObj){
     return new FormFieldFilling(attrs);
   }
 
-  groupParent(attrs) {
+  groupParent(attrs: XFAAttributesObj){
     return new GroupParent(attrs);
   }
 
-  ifEmpty(attrs) {
+  ifEmpty(attrs: XFAAttributesObj){
     return new IfEmpty(attrs);
   }
 
-  includeXDPContent(attrs) {
+  includeXDPContent(attrs: XFAAttributesObj){
     return new IncludeXDPContent(attrs);
   }
 
-  incrementalLoad(attrs) {
+  incrementalLoad(attrs: XFAAttributesObj){
     return new IncrementalLoad(attrs);
   }
 
-  incrementalMerge(attrs) {
+  incrementalMerge(attrs: XFAAttributesObj){
     return new IncrementalMerge(attrs);
   }
 
-  interactive(attrs) {
+  interactive(attrs: XFAAttributesObj){
     return new Interactive(attrs);
   }
 
-  jog(attrs) {
+  jog(attrs: XFAAttributesObj){
     return new Jog(attrs);
   }
 
-  labelPrinter(attrs) {
+  labelPrinter(attrs: XFAAttributesObj){
     return new LabelPrinter(attrs);
   }
 
-  layout(attrs) {
+  layout(attrs: XFAAttributesObj){
     return new Layout(attrs);
   }
 
-  level(attrs) {
+  level(attrs: XFAAttributesObj){
     return new Level(attrs);
   }
 
-  linearized(attrs) {
+  linearized(attrs: XFAAttributesObj){
     return new Linearized(attrs);
   }
 
-  locale(attrs) {
+  locale(attrs: XFAAttributesObj){
     return new Locale(attrs);
   }
 
-  localeSet(attrs) {
+  localeSet(attrs: XFAAttributesObj){
     return new LocaleSet(attrs);
   }
 
-  log(attrs) {
+  log(attrs: XFAAttributesObj){
     return new Log(attrs);
   }
 
-  map(attrs) {
+  map(attrs: XFAAttributesObj){
     return new MapElement(attrs);
   }
 
-  mediumInfo(attrs) {
+  mediumInfo(attrs: XFAAttributesObj){
     return new MediumInfo(attrs);
   }
 
-  message(attrs) {
+  message(attrs: XFAAttributesObj){
     return new Message(attrs);
   }
 
-  messaging(attrs) {
+  messaging(attrs: XFAAttributesObj){
     return new Messaging(attrs);
   }
 
-  mode(attrs) {
+  mode(attrs: XFAAttributesObj){
     return new Mode(attrs);
   }
 
-  modifyAnnots(attrs) {
+  modifyAnnots(attrs: XFAAttributesObj){
     return new ModifyAnnots(attrs);
   }
 
-  msgId(attrs) {
+  msgId(attrs: XFAAttributesObj){
     return new MsgId(attrs);
   }
 
-  nameAttr(attrs) {
+  nameAttr(attrs: XFAAttributesObj){
     return new NameAttr(attrs);
   }
 
-  neverEmbed(attrs) {
+  neverEmbed(attrs: XFAAttributesObj){
     return new NeverEmbed(attrs);
   }
 
-  numberOfCopies(attrs) {
+  numberOfCopies(attrs: XFAAttributesObj){
     return new NumberOfCopies(attrs);
   }
 
-  openAction(attrs) {
+  openAction(attrs: XFAAttributesObj){
     return new OpenAction(attrs);
   }
 
-  output(attrs) {
+  output(attrs: XFAAttributesObj){
     return new Output(attrs);
   }
 
-  outputBin(attrs) {
+  outputBin(attrs: XFAAttributesObj){
     return new OutputBin(attrs);
   }
 
-  outputXSL(attrs) {
+  outputXSL(attrs: XFAAttributesObj){
     return new OutputXSL(attrs);
   }
 
-  overprint(attrs) {
+  overprint(attrs: XFAAttributesObj){
     return new Overprint(attrs);
   }
 
-  packets(attrs) {
+  packets(attrs: XFAAttributesObj){
     return new Packets(attrs);
   }
 
-  pageOffset(attrs) {
+  pageOffset(attrs: XFAAttributesObj){
     return new PageOffset(attrs);
   }
 
-  pageRange(attrs) {
+  pageRange(attrs: XFAAttributesObj){
     return new PageRange(attrs);
   }
 
-  pagination(attrs) {
+  pagination(attrs: XFAAttributesObj){
     return new Pagination(attrs);
   }
 
-  paginationOverride(attrs) {
+  paginationOverride(attrs: XFAAttributesObj){
     return new PaginationOverride(attrs);
   }
 
-  part(attrs) {
+  part(attrs: XFAAttributesObj){
     return new Part(attrs);
   }
 
-  pcl(attrs) {
+  pcl(attrs: XFAAttributesObj){
     return new Pcl(attrs);
   }
 
-  pdf(attrs) {
+  pdf(attrs: XFAAttributesObj){
     return new Pdf(attrs);
   }
 
-  pdfa(attrs) {
+  pdfa(attrs: XFAAttributesObj){
     return new Pdfa(attrs);
   }
 
-  permissions(attrs) {
+  permissions(attrs: XFAAttributesObj){
     return new Permissions(attrs);
   }
 
-  pickTrayByPDFSize(attrs) {
+  pickTrayByPDFSize(attrs: XFAAttributesObj){
     return new PickTrayByPDFSize(attrs);
   }
 
-  picture(attrs) {
+  picture(attrs: XFAAttributesObj){
     return new Picture(attrs);
   }
 
-  plaintextMetadata(attrs) {
+  plaintextMetadata(attrs: XFAAttributesObj){
     return new PlaintextMetadata(attrs);
   }
 
-  presence(attrs) {
+  presence(attrs: XFAAttributesObj){
     return new Presence(attrs);
   }
 
-  present(attrs) {
+  present(attrs: XFAAttributesObj){
     return new Present(attrs);
   }
 
-  print(attrs) {
+  print(attrs: XFAAttributesObj){
     return new Print(attrs);
   }
 
-  printHighQuality(attrs) {
+  printHighQuality(attrs: XFAAttributesObj){
     return new PrintHighQuality(attrs);
   }
 
-  printScaling(attrs) {
+  printScaling(attrs: XFAAttributesObj){
     return new PrintScaling(attrs);
   }
 
-  printerName(attrs) {
+  printerName(attrs: XFAAttributesObj){
     return new PrinterName(attrs);
   }
 
-  producer(attrs) {
+  producer(attrs: XFAAttributesObj){
     return new Producer(attrs);
   }
 
-  ps(attrs) {
+  ps(attrs: XFAAttributesObj){
     return new Ps(attrs);
   }
 
-  range(attrs) {
+  range(attrs: XFAAttributesObj){
     return new Range(attrs);
   }
 
-  record(attrs) {
+  record(attrs: XFAAttributesObj){
     return new Record(attrs);
   }
 
-  relevant(attrs) {
+  relevant(attrs: XFAAttributesObj){
     return new Relevant(attrs);
   }
 
-  rename(attrs) {
+  rename(attrs: XFAAttributesObj){
     return new Rename(attrs);
   }
 
-  renderPolicy(attrs) {
+  renderPolicy(attrs: XFAAttributesObj){
     return new RenderPolicy(attrs);
   }
 
-  runScripts(attrs) {
+  runScripts(attrs: XFAAttributesObj){
     return new RunScripts(attrs);
   }
 
-  script(attrs) {
+  script(attrs: XFAAttributesObj){
     return new Script(attrs);
   }
 
-  scriptModel(attrs) {
+  scriptModel(attrs: XFAAttributesObj){
     return new ScriptModel(attrs);
   }
 
-  severity(attrs) {
+  severity(attrs: XFAAttributesObj){
     return new Severity(attrs);
   }
 
-  silentPrint(attrs) {
+  silentPrint(attrs: XFAAttributesObj){
     return new SilentPrint(attrs);
   }
 
-  staple(attrs) {
+  staple(attrs: XFAAttributesObj){
     return new Staple(attrs);
   }
 
-  startNode(attrs) {
+  startNode(attrs: XFAAttributesObj){
     return new StartNode(attrs);
   }
 
-  startPage(attrs) {
+  startPage(attrs: XFAAttributesObj){
     return new StartPage(attrs);
   }
 
-  submitFormat(attrs) {
+  submitFormat(attrs: XFAAttributesObj){
     return new SubmitFormat(attrs);
   }
 
-  submitUrl(attrs) {
+  submitUrl(attrs: XFAAttributesObj){
     return new SubmitUrl(attrs);
   }
 
-  subsetBelow(attrs) {
+  subsetBelow(attrs: XFAAttributesObj){
     return new SubsetBelow(attrs);
   }
 
-  suppressBanner(attrs) {
+  suppressBanner(attrs: XFAAttributesObj){
     return new SuppressBanner(attrs);
   }
 
-  tagged(attrs) {
+  tagged(attrs: XFAAttributesObj){
     return new Tagged(attrs);
   }
 
-  template(attrs) {
+  template(attrs: XFAAttributesObj){
     return new Template(attrs);
   }
 
-  templateCache(attrs) {
+  templateCache(attrs: XFAAttributesObj){
     return new TemplateCache(attrs);
   }
 
-  threshold(attrs) {
+  threshold(attrs: XFAAttributesObj){
     return new Threshold(attrs);
   }
 
-  to(attrs) {
+  to(attrs: XFAAttributesObj){
     return new To(attrs);
   }
 
-  trace(attrs) {
+  trace(attrs: XFAAttributesObj){
     return new Trace(attrs);
   }
 
-  transform(attrs) {
+  transform(attrs: XFAAttributesObj){
     return new Transform(attrs);
   }
 
-  type(attrs) {
+  type(attrs: XFAAttributesObj){
     return new Type(attrs);
   }
 
-  uri(attrs) {
+  uri(attrs: XFAAttributesObj){
     return new Uri(attrs);
   }
 
-  validate(attrs) {
+  validate(attrs: XFAAttributesObj){
     return new Validate(attrs);
   }
 
-  validateApprovalSignatures(attrs) {
+  validateApprovalSignatures(attrs: XFAAttributesObj){
     return new ValidateApprovalSignatures(attrs);
   }
 
-  validationMessaging(attrs) {
+  validationMessaging(attrs: XFAAttributesObj){
     return new ValidationMessaging(attrs);
   }
 
-  version(attrs) {
+  version(attrs: XFAAttributesObj){
     return new Version(attrs);
   }
 
-  versionControl(attrs) {
+  versionControl(attrs: XFAAttributesObj){
     return new VersionControl(attrs);
   }
 
-  viewerPreferences(attrs) {
+  viewerPreferences(attrs: XFAAttributesObj){
     return new ViewerPreferences(attrs);
   }
 
-  webClient(attrs) {
+  webClient(attrs: XFAAttributesObj){
     return new WebClient(attrs);
   }
 
-  whitespace(attrs) {
+  whitespace(attrs: XFAAttributesObj){
     return new Whitespace(attrs);
   }
 
-  window(attrs) {
+  window(attrs: XFAAttributesObj){
     return new Window(attrs);
   }
 
-  xdc(attrs) {
+  xdc(attrs: XFAAttributesObj){
     return new Xdc(attrs);
   }
 
-  xdp(attrs) {
+  xdp(attrs: XFAAttributesObj){
     return new Xdp(attrs);
   }
 
-  xsl(attrs) {
+  xsl(attrs: XFAAttributesObj){
     return new Xsl(attrs);
   }
 
-  zpl(attrs) {
+  zpl(attrs: XFAAttributesObj){
     return new Zpl(attrs);
   }
 }

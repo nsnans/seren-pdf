@@ -15,7 +15,7 @@
 
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { XFAObject } from "./xfa_object";
+import { XFAAttributesObj, XFAObject } from "./xfa_object";
 
 const STYLESHEET_NS_ID = NamespaceIds.stylesheet.id;
 
@@ -30,15 +30,15 @@ class StylesheetNamespace implements Namespace {
   public static readonly DEFAULT = new StylesheetNamespace();
 
   protected constructor() { }
-  
-  buildXFAObject(name: string, attributes) {
+
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  stylesheet(attributes) {
+  stylesheet(attributes: XFAAttributesObj) {
     return new Stylesheet(attributes);
   }
 }

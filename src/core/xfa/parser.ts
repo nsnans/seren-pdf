@@ -16,9 +16,28 @@
 import { warn } from "../../shared/util";
 import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
 import { Builder } from "./builder";
+import { Namespace } from "./namespace";
+import { AttributesObj, XFAObject, XMLTagProperty } from "./xfa_object";
 
 class XFAParser extends XMLParserBase {
-  constructor(rootNameSpace = null, richText = false) {
+
+  protected _builder: Builder;
+
+  protected _whiteRegex: RegExp;
+
+  protected _nbsps: RegExp;
+
+  protected _richText: boolean;
+
+  protected _errorCode: number;
+
+  protected _current: XFAObject;
+
+  protected _ids: Map<Symbol | string, XFAObject | null>;
+
+  protected _stack: XFAObject[];
+
+  constructor(rootNameSpace: Namespace | null = null, richText = false) {
     super();
     this._builder = new Builder(rootNameSpace);
     this._stack = [];
@@ -33,7 +52,7 @@ class XFAParser extends XMLParserBase {
     this._richText = richText;
   }
 
-  parse(data) {
+  parse(data: string) {
     this.parseXml(data);
 
     if (this._errorCode !== XMLParserErrorCode.NoError) {
@@ -45,7 +64,7 @@ class XFAParser extends XMLParserBase {
     return this._current.element;
   }
 
-  onText(text) {
+  onText(text: string) {
     // Normally by definition a &nbsp is unbreakable
     // but in real life Acrobat can break strings on &nbsp.
     text = text.replace(this._nbsps, match => match.slice(1) + " ");
@@ -60,39 +79,48 @@ class XFAParser extends XMLParserBase {
     this._current.onText(text.trim());
   }
 
-  onCdata(text) {
+  onCdata(text: string) {
     this._current.onText(text);
   }
 
-  _mkAttributes(attributes, tagName) {
+  _mkAttributes(attributes: XMLTagProperty[], tagName: string):
+    [string | null, { prefix: string; value: string; }[] | null, AttributesObj] {
     // Transform attributes into an object and get out
     // namespaces information.
     let namespace = null;
     let prefixes = null;
-    const attributeObj = Object.create({});
+    const attributeObj = Object.create({}) as AttributesObj;
     for (const { name, value } of attributes) {
+      // xmlns的标签是记录命名空间的，所以直接不管了
       if (name === "xmlns") {
         if (!namespace) {
           namespace = value;
         } else {
           warn(`XFA - multiple namespace definition in <${tagName}>`);
         }
-      } else if (name.startsWith("xmlns:")) {
+      }
+      // 如果是“xmlns:”开头的属性，记录到前缀里去
+      else if (name.startsWith("xmlns:")) {
         const prefix = name.substring("xmlns:".length);
         if (!prefixes) {
           prefixes = [];
         }
         prefixes.push({ prefix, value });
-      } else {
+      }
+      // 剩下的才是真正要关注的属性
+      else {
         const i = name.indexOf(":");
+
+        // 对于没有冒号分隔的，直接保留
         if (i === -1) {
           attributeObj[name] = value;
         } else {
+          // 对于有namespace的，需要按照namespace来进行分类
           // Attributes can have their own namespace.
           // For example in data, we can have <foo xfa:dataNode="dataGroup"/>
           let nsAttrs = attributeObj.nsAttributes;
           if (!nsAttrs) {
-            nsAttrs = attributeObj.nsAttributes = Object.create(null);
+            nsAttrs = attributeObj.nsAttributes = <Record<string, Record<string, string>>>Object.create(null);
           }
           const [ns, attrName] = [name.slice(0, i), name.slice(i + 1)];
           const attrs = (nsAttrs[ns] ||= Object.create(null));
@@ -100,11 +128,10 @@ class XFAParser extends XMLParserBase {
         }
       }
     }
-
     return [namespace, prefixes, attributeObj];
   }
 
-  _getNameAndPrefix(name, nsAgnostic) {
+  _getNameAndPrefix(name: string, nsAgnostic: boolean): [string, string | null] {
     const i = name.indexOf(":");
     if (i === -1) {
       return [name, null];
@@ -112,7 +139,7 @@ class XFAParser extends XMLParserBase {
     return [name.substring(i + 1), nsAgnostic ? "" : name.substring(0, i)];
   }
 
-  onBeginElement(tagName, attributes, isEmpty) {
+  onBeginElement(tagName: string, attributes: XMLTagProperty[], isEmpty: boolean) {
     const [namespace, prefixes, attributesObj] = this._mkAttributes(
       attributes,
       tagName
@@ -121,13 +148,13 @@ class XFAParser extends XMLParserBase {
       tagName,
       this._builder.isNsAgnostic()
     );
-    const node = this._builder.build({
+    const node = this._builder.build(
       nsPrefix,
       name,
-      attributes: attributesObj,
+      attributesObj,
       namespace,
       prefixes,
-    });
+    );
     node.globalData = this._globalData;
 
     if (isEmpty) {
@@ -144,7 +171,7 @@ class XFAParser extends XMLParserBase {
     this._current = node;
   }
 
-  onEndElement(name) {
+  onEndElement(_name: string) {
     const node = this._current;
     if (node.isCDATAXml() && typeof node.content === "string") {
       const parser = new XFAParser();
@@ -155,14 +182,14 @@ class XFAParser extends XMLParserBase {
     }
 
     node.finalize();
-    this._current = this._stack.pop();
+    this._current = this._stack.pop()!;
     if (this._current.onChild(node)) {
       node.setId(this._ids);
     }
     node.clean(this._builder);
   }
 
-  onError(code) {
+  onError(code: number) {
     this._errorCode = code;
   }
 }

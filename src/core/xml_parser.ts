@@ -17,6 +17,7 @@
 // https://github.com/mozilla/shumway/blob/16451d8836fa85f4b16eeda8b4bda2fa9e2b22b0/src/avm2/natives/xml.ts
 
 import { encodeToXmlString } from "./core_utils";
+import { XMLTagProperty } from "./xfa/xfa_object";
 
 const XMLParserErrorCode = {
   NoError: 0,
@@ -276,17 +277,17 @@ abstract class XMLParserBase {
     return `&${name};`;
   }
 
-  abstract onPi(_name: unknown, _value: unknown): void;
+  onPi(_name: string, _value: string) { };
 
-  abstract onComment(_text: unknown): void;
+  onComment(_text: string) { };
 
   abstract onCdata(_text: string): void;
 
-  abstract onDoctype(_doctypeContent: unknown): void
+  onDoctype(_doctypeContent: string) { }
 
   abstract onText(_text: string): void;
 
-  abstract onBeginElement(_name: string, _attributes: unknown, _isEmpty: unknown): void;
+  abstract onBeginElement(_name: string, _attributes: unknown, _isEmpty: boolean): void;
 
   abstract onEndElement(_name: string): void;
 
@@ -303,7 +304,7 @@ class SimpleDOMNode {
 
   public childNodes = [] as SimpleDOMNode[];
 
-  public attributes: { name: string, value: string }[] = [];
+  public attributes: XMLTagProperty[] = [];
 
   constructor(nodeName: string, nodeValue?: string) {
     this.nodeName = nodeName;
@@ -501,7 +502,7 @@ class SimpleXMLParser extends XMLParserBase {
     this._currentFragment!.push(node);
   }
 
-  onBeginElement(name: string, attributes: { name: string, value: string }[], isEmpty: boolean) {
+  onBeginElement(name: string, attributes: XMLTagProperty[], isEmpty: boolean) {
     if (this._lowerCaseName) {
       name = name.toLowerCase();
     }
@@ -534,15 +535,6 @@ class SimpleXMLParser extends XMLParserBase {
     this._errorCode = code;
   }
 
-  onPi(_name: unknown, _value: unknown): void {
-    throw new Error("Unsupported Operation!");
-  }
-  onComment(_text: unknown): void {
-    throw new Error("Unsupported Operation!");
-  }
-  onDoctype(_doctypeContent: unknown): void {
-    throw new Error("Unsupported Operation!");
-  }
 }
 
 export { SimpleDOMNode, SimpleXMLParser, XMLParserBase, XMLParserErrorCode };

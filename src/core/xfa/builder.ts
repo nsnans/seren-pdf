@@ -14,6 +14,7 @@
  */
 
 import { warn } from "../../shared/util";
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
 import {
@@ -21,13 +22,15 @@ import {
 } from "./symbol_utils";
 import { Template } from "./template";
 import { UnknownNamespace } from "./unknown";
-import { XFAObject } from "./xfa_object";
+import { AttributesObj, XFAAttribute, XFAAttributesObj, XFAObject } from "./xfa_object";
 
 class Root extends XFAObject {
 
   protected element: XFAObject | null;
 
-  constructor(ids) {
+  protected ids: Map<Symbol | string, XFAObject | null>;
+
+  constructor(ids: Map<Symbol | string, XFAObject | null>) {
     super(-1, "root", Object.create(null));
     this.element = null;
     this.ids = ids;
@@ -62,12 +65,20 @@ class Empty extends XFAObject {
 }
 
 class Builder {
-  
+
   protected _nsAgnosticLevel: number;
-  
+
   protected _nextNsId: number;
 
-  constructor(rootNameSpace = null) {
+  protected _namespaces: Map<string, Namespace>;
+
+  protected _currentNamespace: Namespace;
+
+  protected _namespaceStack: Namespace[];
+
+  protected _namespacePrefixes: Map<string, Namespace[]>;
+
+  constructor(rootNameSpace: Namespace | null = null) {
     this._namespaceStack = [];
     this._nsAgnosticLevel = 0;
 
@@ -81,11 +92,14 @@ class Builder {
       rootNameSpace || new UnknownNamespace(++this._nextNsId);
   }
 
-  buildRoot(ids) {
+  buildRoot(ids: Map<Symbol | string, XFAObject | null>) {
     return new Root(ids);
   }
 
-  build({ nsPrefix, name, attributes, namespace, prefixes }) {
+  // 这里直接干掉解构赋值了，如果将来出了问题，需要注意
+  // 因为解构赋值，实在是太麻烦了
+  build(nsPrefix: string | null, name: string, attributes: AttributesObj, namespace: string | null,
+    prefixes: { prefix: string; value: string; }[] | null) {
     const hasNamespaceDef = namespace !== null;
     if (hasNamespaceDef) {
       // Define the current namespace to use.
@@ -98,10 +112,10 @@ class Builder {
       this._addNamespacePrefix(prefixes);
     }
 
-    if (attributes.hasOwnProperty('nsAttributes')) {
+    if (attributes.nsAttributes != null) {
       // Only support xfa-data namespace.
       const dataTemplate = NamespaceSetUp.datasets;
-      const nsAttrs = attributes.nsAttributes;
+      const nsAttrs = attributes.nsAttributes!;
       let xfaAttrs = null;
       for (const [ns, attrs] of Object.entries(nsAttrs)) {
         const nsToUse = this._getNamespaceToUse(ns);
@@ -110,16 +124,17 @@ class Builder {
           break;
         }
       }
+
+      // 除了xfa之外的全部都过滤
       if (xfaAttrs) {
         attributes.nsAttributes = xfaAttrs;
       } else {
-        delete attributes.nsAttributes;
+        attributes.nsAttributes = null;
       }
     }
 
     const namespaceToUse = this._getNamespaceToUse(nsPrefix);
-    const node =
-      namespaceToUse?.buildXFAObject(name, attributes) || new Empty();
+    const node = namespaceToUse?.buildXFAObject(name, <XFAAttributesObj>attributes) || new Empty();
 
     if (node.isNsAgnostic()) {
       this._nsAgnosticLevel++;
@@ -142,7 +157,7 @@ class Builder {
     return this._nsAgnosticLevel > 0;
   }
 
-  _searchNamespace(nsName) {
+  _searchNamespace(nsName: string) {
     let ns = this._namespaces.get(nsName);
     if (ns) {
       return ns;
@@ -176,12 +191,12 @@ class Builder {
     }
   }
 
-  _getNamespaceToUse(prefix) {
+  _getNamespaceToUse(prefix: string | null) {
     if (!prefix) {
       return this._currentNamespace;
     }
     const prefixStack = this._namespacePrefixes.get(prefix);
-    if (prefixStack?.length > 0) {
+    if (!!prefixStack && prefixStack?.length > 0) {
       return prefixStack.at(-1);
     }
 
@@ -192,11 +207,11 @@ class Builder {
   clean(data) {
     const { hasNamespace, prefixes, nsAgnostic } = data;
     if (hasNamespace) {
-      this._currentNamespace = this._namespaceStack.pop();
+      this._currentNamespace = this._namespaceStack.pop()!;
     }
     if (prefixes) {
       prefixes.forEach(({ prefix }) => {
-        this._namespacePrefixes.get(prefix).pop();
+        this._namespacePrefixes.get(prefix)!.pop();
       });
     }
     if (nsAgnostic) {

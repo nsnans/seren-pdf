@@ -17,6 +17,7 @@ import { ConfigNamespace } from "./config";
 import { ConnectionSetNamespace } from "./connection_set";
 import { DatasetsNamespace } from "./datasets";
 import { LocaleSetNamespace } from "./locale_set";
+import { Namespace } from "./namespace";
 import { SignatureNamespace } from "./signature";
 import { StylesheetNamespace } from "./stylesheet";
 import { TemplateNamespace } from "./template";
@@ -33,6 +34,6 @@ const NamespaceSetUp = {
   template: TemplateNamespace.DEFAULT,
   xdp: XdpNamespace.DEFAULT,
   xhtml: XhtmlNamespace.DEFAULT,
-};
+} as Record<string, Namespace>;
 
 export { NamespaceSetUp };

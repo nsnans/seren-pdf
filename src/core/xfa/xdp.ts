@@ -15,12 +15,12 @@
 
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { XFAObject, XFAObjectArray } from "./xfa_object";
+import { XFAAttributesObj, XFAObject, XFAObjectArray } from "./xfa_object";
 
 const XDP_NS_ID = NamespaceIds.xdp.id;
 
 class Xdp extends XFAObject {
-  constructor(attributes) {
+  constructor(attributes: XFAAttributesObj) {
     super(XDP_NS_ID, "xdp", /* hasChildren = */ true);
     this.uuid = attributes.uuid || "";
     this.timeStamp = attributes.timeStamp || "";
@@ -44,14 +44,14 @@ class XdpNamespace implements Namespace {
 
   protected constructor() { }
 
-  buildXFAObject(name: string, attributes) {
+  buildXFAObject(name: string, attributes: XFAAttributesObj) {
     if (this.hasOwnProperty(name)) {
       return (this as any)[name](attributes);
     }
     return undefined;
   }
 
-  xdp(attributes) {
+  xdp(attributes: XFAAttributesObj) {
     return new Xdp(attributes);
   }
 }
