@@ -36,6 +36,7 @@ import {
 } from "../shared/util";
 import {
   Dict,
+  DictKey,
   isDict,
   isName,
   isRefsEqual,
@@ -104,7 +105,7 @@ function isValidExplicitDest(dest) {
 
 function fetchDest(dest) {
   if (dest instanceof Dict) {
-    dest = dest.get("D");
+    dest = dest.get(DictKey.D);
   }
   return isValidExplicitDest(dest) ? dest : null;
 }
@@ -176,7 +177,7 @@ export class Catalog {
   }
 
   get version() {
-    const version = this._catDict.get("Version");
+    const version = this._catDict.get(DictKey.Version);
     if (version instanceof Name) {
       if (PDF_VERSION_REGEXP.test(version.name)) {
         return shadow(this, "version", version.name);
@@ -187,7 +188,7 @@ export class Catalog {
   }
 
   get lang() {
-    const lang = this._catDict.get("Lang");
+    const lang = this._catDict.get(DictKey.Lang);
     return shadow(
       this,
       "lang",
@@ -200,7 +201,7 @@ export class Catalog {
    *   `false` for XFA Foreground documents.
    */
   get needsRendering() {
-    const needsRendering = this._catDict.get("NeedsRendering");
+    const needsRendering = this._catDict.get(DictKey.NeedsRendering);
     return shadow(
       this,
       "needsRendering",
@@ -211,7 +212,7 @@ export class Catalog {
   get collection() {
     let collection = null;
     try {
-      const obj = this._catDict.get("Collection");
+      const obj = this._catDict.get(DictKey.Collection);
       if (obj instanceof Dict && obj.size > 0) {
         collection = obj;
       }
@@ -227,7 +228,7 @@ export class Catalog {
   get acroForm() {
     let acroForm = null;
     try {
-      const obj = this._catDict.get("AcroForm");
+      const obj = this._catDict.get(DictKey.AcroForm);
       if (obj instanceof Dict && obj.size > 0) {
         acroForm = obj;
       }
@@ -259,8 +260,8 @@ export class Catalog {
       );
 
       if (stream instanceof BaseStream && stream.dict instanceof Dict) {
-        const type = stream.dict.get("Type");
-        const subtype = stream.dict.get("Subtype");
+        const type = stream.dict.get(DictKey.Type);
+        const subtype = stream.dict.get(DictKey.Subtype);
 
         if (isName(type, "Metadata") && isName(subtype, "XML")) {
           // XXX: This should examine the charset the XML document defines,
@@ -299,7 +300,7 @@ export class Catalog {
    * @private
    */
   _readMarkInfo() {
-    const obj = this._catDict.get("MarkInfo");
+    const obj = this._catDict.get(DictKey.MarkInfo);
     if (!(obj instanceof Dict)) {
       return null;
     }
@@ -348,7 +349,7 @@ export class Catalog {
   }
 
   get toplevelPagesDict() {
-    const pagesObj = this._catDict.get("Pages");
+    const pagesObj = this._catDict.get(DictKey.Pages);
     if (!(pagesObj instanceof Dict)) {
       throw new FormatError("Invalid top-level pages dictionary.");
     }
@@ -372,7 +373,7 @@ export class Catalog {
    * @private
    */
   _readDocumentOutline() {
-    let obj = this._catDict.get("Outlines");
+    let obj = this._catDict.get(DictKey.Outlines);
     if (!(obj instanceof Dict)) {
       return null;
     }
@@ -468,12 +469,12 @@ export class Catalog {
    * @private
    */
   _readPermissions() {
-    const encrypt = this.xref.trailer!.get("Encrypt");
+    const encrypt = this.xref.trailer!.get(DictKey.Encrypt);
     if (!(encrypt instanceof Dict)) {
       return null;
     }
 
-    let flags = encrypt.get("P");
+    let flags = encrypt.get(DictKey.P);
     if (typeof flags !== "number") {
       return null;
     }
@@ -496,7 +497,7 @@ export class Catalog {
   get optionalContentConfig() {
     let config = null;
     try {
-      const properties = this._catDict.get("OCProperties");
+      const properties = this._catDict.get(DictKey.OCProperties);
       if (!properties) {
         return shadow(this, "optionalContentConfig", null);
       }
@@ -558,9 +559,9 @@ export class Catalog {
     }
     const usageObj = obj.usage;
 
-    const print = usage.get("Print");
+    const print = usage.get(DictKey.Print);
     if (print instanceof Dict) {
-      const printState = print.get("PrintState");
+      const printState = print.get(DictKey.PrintState);
       if (printState instanceof Name) {
         switch (printState.name) {
           case "ON":
@@ -570,9 +571,9 @@ export class Catalog {
       }
     }
 
-    const view = usage.get("View");
+    const view = usage.get(DictKey.View);
     if (view instanceof Dict) {
-      const viewState = view.get("ViewState");
+      const viewState = view.get(DictKey.ViewState);
       if (viewState instanceof Name) {
         switch (viewState.name) {
           case "ON":
@@ -719,7 +720,7 @@ export class Catalog {
   }
 
   get _pagesCount() {
-    const obj = this.toplevelPagesDict.get("Count");
+    const obj = this.toplevelPagesDict.get(DictKey.Count);
     if (!Number.isInteger(obj)) {
       throw new FormatError(
         "Page count in top-level pages dictionary is not an integer."
@@ -780,12 +781,12 @@ export class Catalog {
    * @private
    */
   _readDests() {
-    const obj = this._catDict.get("Names");
+    const obj = this._catDict.get(DictKey.Names);
     if (obj?.has("Dests")) {
       return new NameTree(obj.getRaw("Dests"), this.xref);
     } else if (this._catDict.has("Dests")) {
       // Simple destination dictionary.
-      return this._catDict.get("Dests");
+      return this._catDict.get(DictKey.Dests);
     }
     return undefined;
   }
@@ -831,13 +832,13 @@ export class Catalog {
 
         if (
           labelDict.has("Type") &&
-          !isName(labelDict.get("Type"), "PageLabel")
+          !isName(labelDict.get(DictKey.Type), "PageLabel")
         ) {
           throw new FormatError("Invalid type in PageLabel dictionary.");
         }
 
         if (labelDict.has("S")) {
-          const s = labelDict.get("S");
+          const s = labelDict.get(DictKey.S);
           if (!(s instanceof Name)) {
             throw new FormatError("Invalid style in PageLabel dictionary.");
           }
@@ -846,8 +847,8 @@ export class Catalog {
           style = null;
         }
 
-        if (labelDict.has("P")) {
-          const p = labelDict.get("P");
+        if (labelDict.has(DictKey.P)) {
+          const p = labelDict.get(DictKey.P);
           if (typeof p !== "string") {
             throw new FormatError("Invalid prefix in PageLabel dictionary.");
           }
@@ -857,7 +858,7 @@ export class Catalog {
         }
 
         if (labelDict.has("St")) {
-          const st = labelDict.get("St");
+          const st = labelDict.get(DictKey.St);
           if (!(Number.isInteger(st) && st >= 1)) {
             throw new FormatError("Invalid start in PageLabel dictionary.");
           }
@@ -904,7 +905,7 @@ export class Catalog {
   }
 
   get pageLayout() {
-    const obj = this._catDict.get("PageLayout");
+    const obj = this._catDict.get(DictKey.PageLayout);
     // Purposely use a non-standard default value, rather than 'SinglePage', to
     // allow differentiating between `undefined` and /SinglePage since that does
     // affect the Scroll mode (continuous/non-continuous) used in Adobe Reader.
@@ -925,7 +926,7 @@ export class Catalog {
   }
 
   get pageMode() {
-    const obj = this._catDict.get("PageMode");
+    const obj = this._catDict.get(DictKey.PageMode);
     let pageMode = "UseNone"; // Default value.
 
     if (obj instanceof Name) {
@@ -943,7 +944,7 @@ export class Catalog {
   }
 
   get viewerPreferences() {
-    const obj = this._catDict.get("ViewerPreferences");
+    const obj = this._catDict.get(DictKey.ViewerPreferences);
     if (!(obj instanceof Dict)) {
       return shadow(this, "viewerPreferences", null);
     }
@@ -1072,14 +1073,14 @@ export class Catalog {
   }
 
   get openAction() {
-    const obj = this._catDict.get("OpenAction");
+    const obj = this._catDict.get(DictKey.OpenAction);
     const openAction = Object.create(null);
 
     if (obj instanceof Dict) {
       // Convert the OpenAction dictionary into a format that works with
       // `parseDestDictionary`, to avoid having to re-implement those checks.
       const destDict = new Dict(this.xref);
-      destDict.set("A", obj);
+      destDict.set(DictKey.A, obj);
 
       const resultObj = { url: null, dest: null, action: null };
       Catalog.parseDestDictionary({ destDict, resultObj });
@@ -1101,11 +1102,11 @@ export class Catalog {
 
   // 这应该是处理附件的？
   get attachments() {
-    const obj = this._catDict.get("Names");
+    const obj = this._catDict.get(DictKey.Names);
     let attachments: Record<string, FileSpecSerializable> | null = null;
 
-    if (obj instanceof Dict && obj.has("EmbeddedFiles")) {
-      const nameTree = new NameTree(obj.getRaw("EmbeddedFiles"), this.xref);
+    if (obj instanceof Dict && obj.has(DictKey.EmbeddedFiles)) {
+      const nameTree = new NameTree(obj.getRaw(DictKey.EmbeddedFiles), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         const fs = new FileSpec(value, this.xref);
         if (!attachments) {
@@ -1118,11 +1119,11 @@ export class Catalog {
   }
 
   get xfaImages() {
-    const obj = this._catDict.get("Names");
+    const obj = this._catDict.get(DictKey.Names);
     let xfaImages = null;
 
-    if (obj instanceof Dict && obj.has("XFAImages")) {
-      const nameTree = new NameTree(obj.getRaw("XFAImages"), this.xref);
+    if (obj instanceof Dict && obj.has(DictKey.XFAImages)) {
+      const nameTree = new NameTree(obj.getRaw(DictKey.XFAImages), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         if (!xfaImages) {
           xfaImages = new Dict(this.xref);
@@ -1134,18 +1135,18 @@ export class Catalog {
   }
 
   _collectJavaScript() {
-    const obj = this._catDict.get("Names");
+    const obj = this._catDict.get(DictKey.Names);
     let javaScript = null;
 
     function appendIfJavaScriptDict(name, jsDict) {
       if (!(jsDict instanceof Dict)) {
         return;
       }
-      if (!isName(jsDict.get("S"), "JavaScript")) {
+      if (!isName(jsDict.get(DictKey.S), "JavaScript")) {
         return;
       }
 
-      let js = jsDict.get("JS");
+      let js = jsDict.get(DictKey.JS);
       if (js instanceof BaseStream) {
         js = js.getString();
       } else if (typeof js !== "string") {
@@ -1165,7 +1166,7 @@ export class Catalog {
       }
     }
     // Append OpenAction "JavaScript" actions, if any, to the JavaScript map.
-    const openAction = this._catDict.get("OpenAction");
+    const openAction = this._catDict.get(DictKey.OpenAction);
     if (openAction) {
       appendIfJavaScriptDict("OpenAction", openAction);
     }
@@ -1539,7 +1540,7 @@ export class Catalog {
                   throw new FormatError("Kid node must be a dictionary.");
                 }
                 if (obj.has("Count")) {
-                  total += obj.get("Count");
+                  total += obj.get(DictKey.Count);
                 } else {
                   // Page leaf node.
                   total++;
@@ -1572,9 +1573,9 @@ export class Catalog {
   }
 
   get baseUrl() {
-    const uri = this._catDict.get("URI");
+    const uri = this._catDict.get(DictKey.URI);
     if (uri instanceof Dict) {
-      const base = uri.get("Base");
+      const base = uri.get(DictKey.Base);
       if (typeof base === "string") {
         const absoluteUrl = createValidAbsoluteUrl(base, null, {
           tryConvertEncoding: true,
@@ -1613,30 +1614,30 @@ export class Catalog {
       return;
     }
 
-    let action = destDict.get("A"),
+    let action = destDict.get(DictKey.A),
       url,
       dest;
     if (!(action instanceof Dict)) {
-      if (destDict.has("Dest")) {
+      if (destDict.has(DictKey.Dest)) {
         // A /Dest entry should *only* contain a Name or an Array, but some bad
         // PDF generators ignore that and treat it as an /A entry.
-        action = destDict.get("Dest");
+        action = destDict.get(DictKey.Dest);
       } else {
-        action = destDict.get("AA");
+        action = destDict.get(DictKey.AA);
         if (action instanceof Dict) {
-          if (action.has("D")) {
+          if (action.has(DictKey.D)) {
             // MouseDown
-            action = action.get("D");
-          } else if (action.has("U")) {
+            action = action.get(DictKey.D);
+          } else if (action.has(DictKey.U)) {
             // MouseUp
-            action = action.get("U");
+            action = action.get(DictKey.U);
           }
         }
       }
     }
 
     if (action instanceof Dict) {
-      const actionType = action.get("S");
+      const actionType = action.get(DictKey.S);
       if (!(actionType instanceof Name)) {
         warn("parseDestDictionary: Invalid type in Action dictionary.");
         return;
@@ -1645,11 +1646,11 @@ export class Catalog {
 
       switch (actionName) {
         case "ResetForm":
-          const flags = action.get("Flags");
+          const flags = action.get(DictKey.Flags);
           const include = ((typeof flags === "number" ? flags : 0) & 1) === 0;
           const fields = [];
           const refs = [];
-          for (const obj of action.get("Fields") || []) {
+          for (const obj of action.get(DictKey.Fields) || []) {
             if (obj instanceof Ref) {
               refs.push(obj.toString());
             } else if (typeof obj === "string") {
@@ -1659,7 +1660,7 @@ export class Catalog {
           resultObj.resetForm = { fields, refs, include };
           break;
         case "URI":
-          url = action.get("URI");
+          url = action.get(DictKey.URI);
           if (url instanceof Name) {
             // Some bad PDFs do not put parentheses around relative URLs.
             url = "/" + url.name;
@@ -1667,7 +1668,7 @@ export class Catalog {
           break;
 
         case "GoTo":
-          dest = action.get("D");
+          dest = action.get(DictKey.D);
           break;
 
         case "Launch":
@@ -1677,7 +1678,7 @@ export class Catalog {
         /* falls through */
 
         case "GoToR":
-          const urlDict = action.get("F");
+          const urlDict = action.get(DictKey.F);
           if (urlDict instanceof Dict) {
             const fs = new FileSpec(
               urlDict,
@@ -1696,19 +1697,19 @@ export class Catalog {
             url = /* baseUrl = */ url.split("#", 1)[0] + "#" + remoteDest;
           }
           // The 'NewWindow' property, equal to `LinkTarget.BLANK`.
-          const newWindow = action.get("NewWindow");
+          const newWindow = action.get(DictKey.NewWindow);
           if (typeof newWindow === "boolean") {
             resultObj.newWindow = newWindow;
           }
           break;
 
         case "GoToE":
-          const target = action.get("T");
+          const target = action.get(DictKey.T);
           let attachment;
 
           if (docAttachments && target instanceof Dict) {
-            const relationship = target.get("R");
-            const name = target.get("N");
+            const relationship = target.get(DictKey.R);
+            const name = target.get(DictKey.N);
 
             if (isName(relationship, "C") && typeof name === "string") {
               attachment = docAttachments[stringToPDFString(name)];
@@ -1729,15 +1730,15 @@ export class Catalog {
           break;
 
         case "Named":
-          const namedAction = action.get("N");
+          const namedAction = action.get(DictKey.N);
           if (namedAction instanceof Name) {
             resultObj.action = namedAction.name;
           }
           break;
 
         case "SetOCGState":
-          const state = action.get("State");
-          const preserveRB = action.get("PreserveRB");
+          const state = action.get(DictKey.State);
+          const preserveRB = action.get(DictKey.PreserveRB);
 
           if (!Array.isArray(state) || state.length === 0) {
             break;
@@ -1768,7 +1769,7 @@ export class Catalog {
           break;
 
         case "JavaScript":
-          const jsAction = action.get("JS");
+          const jsAction = action.get(DictKey.JS);
           let js;
 
           if (jsAction instanceof BaseStream) {
@@ -1795,7 +1796,7 @@ export class Catalog {
       }
     } else if (destDict.has("Dest")) {
       // Simple destination.
-      dest = destDict.get("Dest");
+      dest = destDict.get(DictKey.Dest);
     }
 
     if (typeof url === "string") {

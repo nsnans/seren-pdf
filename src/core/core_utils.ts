@@ -23,7 +23,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { Dict, isName, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, isName, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
@@ -150,7 +150,7 @@ function getInheritableProperty(
       }
       (values ||= []).push(value);
     }
-    dict = dict.get("Parent");
+    dict = dict.get(DictKey.Parent);
   }
   return values;
 }
@@ -379,8 +379,8 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
       _collectJS(element, xref, list, parents);
     }
   } else if (entry instanceof Dict) {
-    if (isName(entry.get("S"), "JavaScript")) {
-      const js = entry.get("JS");
+    if (isName(entry.get(DictKey.S), DictKey.JavaScript)) {
+      const js = entry.get(DictKey.JS);
       let code;
       if (js instanceof BaseStream) {
         code = js.getString();
@@ -433,7 +433,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
   }
   // Collect the Action if any (we may have one on pushbutton).
   if (dict.has("A")) {
-    const actionDict = dict.get("A");
+    const actionDict = dict.get(DictKey.A);
     const parents = new RefSet();
     const list = <string[]>[];
     _collectJS(actionDict, xref, list, parents);

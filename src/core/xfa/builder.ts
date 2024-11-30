@@ -24,9 +24,9 @@ import { Template } from "./template";
 import { UnknownNamespace } from "./unknown";
 import { AttributesObj, XFAAttributesObj, XFAObject } from "./xfa_object";
 
-class Root extends XFAObject {
+export class Root extends XFAObject {
 
-  protected element: XFAObject | null;
+  public element: XFAObject | null;
 
   protected ids: Map<Symbol | string, XFAObject | null>;
 

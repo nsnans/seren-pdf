@@ -1,0 +1,98 @@
+BaseFont Name
+Type Name
+Subtype Name
+Encoding Name
+Parent 应该是Ref
+Subtype Name
+Fm0 StringStream
+BM Name
+CA number
+ca number
+GS0 Dict
+ExtGState Dict
+XObject Dict
+Resources Dict
+BBox [number, number, number, number]
+R 应该是number
+BC number[]
+BG number[]
+F number
+AP Dict
+V string | string[] | Name
+MK Dict
+N Ref
+M string
+Font Dict
+// annotation.ts中存在动态的 fontName
+Matrix TransformType
+FormType number
+Type Name
+Length number
+PdfJsZaDb Dict
+Font Dict
+BaseFont Name
+Encoding Name
+I number[]
+N Ref | 可能还有其他类型
+Helv Ref | Dict
+CreationDate string
+Rect RectType
+InkList // 需要再次确认
+F number
+Rotate // 应该是number
+IT Name
+BS Dict
+W // 应该是number
+C number[]
+CA number
+AP Dict
+R0 Dict
+ExtGState Dict
+BM Name
+ca number
+Type Name
+BitsPerComponent number
+ColorSpace Name
+Filter Name
+Width number
+Height number
+XObject Dict
+Im0 Ref
+A Dict
+FontName Name
+FontFamily Name
+FontBBox RectType
+FontStretch Name
+FontWeight number
+ItalicAngle number
+CIDToGIDMap Name
+FirstChar number
+LastChar number
+FontDescriptor Ref
+DW number
+W (number | number[])[]
+Ordering string
+Registry string
+Supplement number
+CIDSystemInfo Dict
+DescendantFonts Ref[]
+ToUnicode Name
+Annots 某种类型的数组
+ParentTree Ref
+K 某种类型的数组 kids | Dict
+Nums 某种类型的数组
+ParentTreeNextKey number
+ParentTree 应该是Ref
+Pg Ref
+Obj 应该是Ref 
+Filter Name或某种形式的数组
+DecodeParms 某种类型的数组
+XFA 某种类型的数组
+NeedAppearances boolean
+Index number[]
+ID [string, string]
+Prev number
+Size number
+Root Ref
+Info Ref
+Encrypt Ref

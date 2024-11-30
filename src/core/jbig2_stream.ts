@@ -15,7 +15,7 @@
 
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Dict } from "./primitives";
+import { Dict, DictKey } from "./primitives";
 import { Jbig2Image } from "./jbig2";
 import { shadow } from "../shared/util";
 
@@ -62,7 +62,7 @@ class Jbig2Stream extends DecodeStream {
 
     const chunks = [];
     if (this.params instanceof Dict) {
-      const globalsStream = this.params.get("JBIG2Globals");
+      const globalsStream = this.params.get(DictKey.JBIG2Globals);
       if (globalsStream instanceof BaseStream) {
         const globals = globalsStream.getBytes();
         chunks.push({ data: globals, start: 0, end: globals.length });

@@ -66,11 +66,200 @@ const nonSerializable = function nonSerializableClosure() {
   return nonSerializable; // Creating closure on some variable.
 };
 
+// 为了防止Dict在get和set之后类型丢失，导致不知道无法获取到类型信息
+// 因此将所有的dict类型都拿出来
+export enum DictKey {
+  Parent = "Parent",
+  Subtype = "Subtype",
+  Fm0 = "Fm0",
+  GS0 = "GS0",
+  Resources = "Resources",
+  BBox = "BBox",
+  R = "R",
+  BC = "BC",
+  BG = "BG",
+  V = "V",
+  MK = "MK",
+  M = "M",
+  Matrix = "Matrix",
+  FormType = "FormType",
+  Length = "Length",
+  PdfJsZaDb = "PdfJsZaDb",
+  Font = "Font",
+  BaseFont = "BaseFont",
+  Encoding = "Encoding",
+  I = "I",
+  N = "N",
+  Helv = "Helv",
+  CreationDate = "CreationDate",
+  Rect = "Rect",
+  InkList = "InkList",
+  F = "F",
+  Rotate = "Rotate",
+  IT = "IT",
+  BS = "BS",
+  C = "C",
+  CA = "CA",
+  AP = "AP",
+  R0 = "R0",
+  ExtGState = "ExtGState",
+  BM = "BM",
+  ca = "ca",
+  Type = "Type",
+  BitsPerComponent = "BitsPerComponent",
+  ColorSpace = "ColorSpace",
+  Width = "Width",
+  Height = "Height",
+  XObject = "XObject",
+  Im0 = "Im0",
+  A = "A",
+  FontName = "FontName",
+  FontFamily = "FontFamily",
+  FontBBox = "FontBBox",
+  FontStretch = "FontStretch",
+  FontWeight = "FontWeight",
+  ItalicAngle = "ItalicAngle",
+  CIDToGIDMap = "CIDToGIDMap",
+  FirstChar = "FirstChar",
+  LastChar = "LastChar",
+  FontDescriptor = "FontDescriptor",
+  DW = "DW",
+  W = "W",
+  Ordering = "Ordering",
+  Registry = "Registry",
+  Supplement = "Supplement",
+  CIDSystemInfo = "CIDSystemInfo",
+  DescendantFonts = "DescendantFonts",
+  ToUnicode = "ToUnicode",
+  Annots = "Annots",
+  K = "K",
+  Nums = "Nums",
+  ParentTreeNextKey = "ParentTreeNextKey",
+  ParentTree = "ParentTree",
+  Pg = "Pg",
+  Obj = "Obj",
+  Filter = "Filter",
+  DecodeParms = "DecodeParms",
+  XFA = "XFA",
+  NeedAppearances = "NeedAppearances",
+  Index = "Index",
+  ID = "ID",
+  Prev = "Prev",
+  Size = "Size",
+  Root = "Root",
+  Info = "Info",
+  Encrypt = "Encrypt",
+
+  // 以下只有get没有set，可能是动态引入的
+  T = "T",
+  Contents = "Contents",
+  StructParent = "StructParent",
+  Kids = "Kids",
+  DA = "DA",
+  S = "S",
+  D = "D",
+  AS = "AS",
+  OC = "OC",
+  TU = "TU",
+  DR = "DR",
+  Off = "Off",
+  Name = "Name",
+  StateModel = "StateModel",
+  State = "State",
+  Open = "Open",
+  IC = "IC",
+  FS = "FS",
+  Version = "Version",
+  Lang = "Lang",
+  NeedsRendering = "NeedsRendering",
+  Collection = "Collection",
+  AcroForm = "AcroForm",
+  MarkInfo = "MarkInfo",
+  Pages = "Pages",
+  Outlines = "Outlines",
+  P = "P",
+  OCProperties = "OCProperties",
+  Print = "Print",
+  PrintState = "PrintState",
+  View = "View",
+  ViewState = "ViewState",
+  Count = "Count",
+  St = "St",
+  PageLayout = "PageLayout",
+  PageMode = "PageMode",
+  ViewerPreferences = "ViewerPreferences",
+  OpenAction = "OpenAction",
+  Names = "Names",
+  EmbeddedFiles = "EmbeddedFiles",
+  XFAImages = "XFAImages",
+  JS = "JS",
+  Base = "Base",
+  Dest = "Dest",
+  AA = "AA",
+  U = "U",
+  Flags = "Flags",
+  Fields = "Fields",
+  URI = "URI",
+  NewWindow = "NewWindow",
+  PreserveRB = "PreserveRB",
+  CF = "CF",
+  StmF = "StmF",
+  O = "O",
+  EncryptMetadata = "EncryptMetadata",
+  OE = "OE",
+  UE = "UE",
+  Perms = "Perms",
+  EFF = "EFF",
+  StrF = "StrF",
+  UserUnit = "UserUnit",
+  FT = "FT",
+  SigFlags = "SigFlags",
+  CO = "CO",
+  Group = "Group",
+  H = "H",
+  ImageMask = "ImageMask",
+  IM = "IM",
+  Interpolate = "Interpolate",
+  G = "G",
+  TR = "TR",
+  Pattern = "Pattern",
+  Shading = "Shading",
+  MCID = "MCID",
+  BaseEncoding = "BaseEncoding",
+  Differences = "Differences",
+  DOS = "DOS",
+  Mac = "Mac",
+  Unix = "Unix",
+  UF = "UF",
+  RF = "RF",
+  EF = "EF",
+  Desc = "Desc",
+  JBIG2Globals = "JBIG2Globals",
+  BPC = "BPC",
+  DP = "DP",
+  Linearized = "Linearized",
+  ShadingType = "ShadingType",
+  CS = "CS",
+  Background = "Background",
+  Function = "Function",
+  BitsPerCoordinate = "BitsPerCoordinate",
+  BitsPerFlag = "BitsPerFlag",
+  Decode = "Decode",
+  VerticesPerRow = "VerticesPerRow",
+  Predictor = "Predictor",
+  Colors = "Colors",
+  Columns = "Columns",
+  RoleMap = "RoleMap",
+  XRefStm = "XRefStm",
+  First = "First",
+
+}
+
 export class Dict {
 
   public suppressEncryption = false;
 
-  protected _map: Record<string, any> = Object.create(null);
+  protected _map: Record<DictKey, any> = Object.create(null);
 
   public xref: XRef | null;
 
@@ -94,7 +283,7 @@ export class Dict {
   }
 
   // Automatically dereferences Ref objects.
-  get(key1: string, key2?: string, key3?: string) {
+  get(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
@@ -121,7 +310,7 @@ export class Dict {
   }
 
   // Same as get(), but returns a promise and uses fetchIfRefAsync().
-  async getAsync(key1: string, key2?: string, key3?: string) {
+  async getAsync(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
@@ -148,7 +337,7 @@ export class Dict {
   }
 
   // Same as get(), but dereferences all elements if the result is an Array.
-  getArray(key1: string, key2?: string, key3?: string) {
+  getArray(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map[key1];
     if (value === undefined && key2 !== undefined) {
       if (
@@ -184,7 +373,7 @@ export class Dict {
   }
 
   // No dereferencing.
-  getRaw(key: string) {
+  getRaw(key: DictKey) {
     return this._map[key];
   }
 
@@ -197,7 +386,7 @@ export class Dict {
     return Object.values(this._map);
   }
 
-  set(key: string, value: any) {
+  set(key: DictKey, value: any) {
     if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
       if (typeof key !== "string") {
         unreachable('Dict.set: The "key" must be a string.');
@@ -208,13 +397,14 @@ export class Dict {
     this._map[key] = value;
   }
 
-  has(key: string) {
+  has(key: DictKey) {
     return this._map[key] !== undefined;
   }
 
-  forEach(callback: (key: string, value: any) => void) {
+  forEach(callback: (key: DictKey, value: any) => void) {
     for (const key in this._map) {
-      callback(key, this.get(key));
+      const dictKey = <DictKey>key;
+      callback(dictKey, this.get(dictKey));
     }
   }
 
@@ -253,20 +443,20 @@ export class Dict {
     }
     for (const [name, values] of properties) {
       if (values.length === 1 || !(values[0] instanceof Dict)) {
-        mergedDict._map[name] = values[0];
+        mergedDict._map[<DictKey>name] = values[0];
         continue;
       }
       const subDict = new Dict(xref);
 
       for (const dict of values) {
         for (const [key, value] of Object.entries(dict._map)) {
-          if (subDict._map[key] === undefined) {
-            subDict._map[key] = value;
+          if (subDict._map[<DictKey>key] === undefined) {
+            subDict._map[<DictKey>key] = value;
           }
         }
       }
       if (subDict.size > 0) {
-        mergedDict._map[name] = subDict;
+        mergedDict._map[<DictKey>name] = subDict;
       }
     }
     properties.clear();
@@ -416,7 +606,7 @@ export function isCmd(v: unknown, cmd: string) {
 
 export function isDict(v: unknown, type: string) {
   return (
-    v instanceof Dict && (type === undefined || isName(v.get("Type"), type))
+    v instanceof Dict && (type === undefined || isName(v.get(DictKey.Type), type))
   );
 }
 

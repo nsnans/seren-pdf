@@ -23,7 +23,7 @@ import {
   CalibriRegularFactors,
   CalibriRegularMetrics,
 } from "./calibri_factors";
-import { Dict, Name } from "./primitives";
+import { Dict, DictKey, Name } from "./primitives";
 import {
   HelveticaBoldFactors,
   HelveticaBoldItalicFactors,
@@ -274,21 +274,21 @@ function getXfaFontWidths(name: string) {
 function getXfaFontDict(name: string) {
   const widths = getXfaFontWidths(name);
   const dict = new Dict(null);
-  dict.set("BaseFont", Name.get(name));
-  dict.set("Type", Name.get("Font"));
-  dict.set("Subtype", Name.get("CIDFontType2"));
-  dict.set("Encoding", Name.get("Identity-H"));
-  dict.set("CIDToGIDMap", Name.get("Identity"));
-  dict.set("W", widths);
-  dict.set("FirstChar", widths[0]);
-  dict.set("LastChar", widths.at(-2) + widths.at(-1).length - 1);
+  dict.set(DictKey.BaseFont, Name.get(name));
+  dict.set(DictKey.Type, Name.get("Font"));
+  dict.set(DictKey.Subtype, Name.get("CIDFontType2"));
+  dict.set(DictKey.Encoding, Name.get("Identity-H"));
+  dict.set(DictKey.CIDToGIDMap, Name.get("Identity"));
+  dict.set(DictKey.W, widths);
+  dict.set(DictKey.FirstChar, widths[0]);
+  dict.set(DictKey.LastChar, widths.at(-2) + widths.at(-1).length - 1);
   const descriptor = new Dict(null);
-  dict.set("FontDescriptor", descriptor);
+  dict.set(DictKey.FontDescriptor, descriptor);
   const systemInfo = new Dict(null);
-  systemInfo.set("Ordering", "Identity");
-  systemInfo.set("Registry", "Adobe");
-  systemInfo.set("Supplement", 0);
-  dict.set("CIDSystemInfo", systemInfo);
+  systemInfo.set(DictKey.Ordering, "Identity");
+  systemInfo.set(DictKey.Registry, "Adobe");
+  systemInfo.set(DictKey.Supplement, 0);
+  dict.set(DictKey.CIDSystemInfo, systemInfo);
 
   return dict;
 }

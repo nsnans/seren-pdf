@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Dict, RefSet } from "./primitives";
+import { Dict, DictKey, RefSet } from "./primitives";
 import { FormatError, unreachable, warn } from "../shared/util";
 
 /**
@@ -49,8 +49,8 @@ class NameOrNumberTree {
       if (!(obj instanceof Dict)) {
         continue;
       }
-      if (obj.has("Kids")) {
-        const kids = obj.get("Kids");
+      if (obj.has(DictKey.Kids)) {
+        const kids = obj.get(DictKey.Kids);
         if (!Array.isArray(kids)) {
           continue;
         }

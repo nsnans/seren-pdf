@@ -15,7 +15,7 @@
 
 import { warn } from "../../shared/util";
 import { XMLParserBase, XMLParserErrorCode } from "../xml_parser";
-import { Builder } from "./builder";
+import { Builder, Root } from "./builder";
 import { Namespace } from "./namespace";
 import { AttributesObj, XFAObject, XMLTagProperty } from "./xfa_object";
 
@@ -61,7 +61,7 @@ class XFAParser extends XMLParserBase {
 
     this._current.finalize();
 
-    return this._current.element;
+    return this._current instanceof Root ? this._current.element : null;
   }
 
   onText(text: string) {

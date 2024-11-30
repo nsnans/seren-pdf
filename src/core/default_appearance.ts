@@ -20,7 +20,7 @@ import {
   numberToString,
   stringToUTF16HexString,
 } from "./core_utils";
-import { Dict, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "./primitives";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
@@ -111,7 +111,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
     this.evaluatorOptions = evaluatorOptions;
     this.xref = xref;
 
-    this.resources = stream.dict?.get("Resources");
+    this.resources = stream.dict?.get(DictKey.Resources);
   }
 
   parse() {
@@ -281,13 +281,13 @@ class FakeUnicodeFont {
   get fontDescriptorRef() {
     if (!FakeUnicodeFont._fontDescriptorRef) {
       const fontDescriptor = new Dict(this.xref);
-      fontDescriptor.set("Type", Name.get("FontDescriptor"));
-      fontDescriptor.set("FontName", this.fontName);
-      fontDescriptor.set("FontFamily", "MyriadPro Regular");
-      fontDescriptor.set("FontBBox", [0, 0, 0, 0]);
-      fontDescriptor.set("FontStretch", Name.get("Normal"));
-      fontDescriptor.set("FontWeight", 400);
-      fontDescriptor.set("ItalicAngle", 0);
+      fontDescriptor.set(DictKey.Type, Name.get("FontDescriptor"));
+      fontDescriptor.set(DictKey.FontName, this.fontName);
+      fontDescriptor.set(DictKey.FontFamily, "MyriadPro Regular");
+      fontDescriptor.set(DictKey.FontBBox, [0, 0, 0, 0]);
+      fontDescriptor.set(DictKey.FontStretch, Name.get("Normal"));
+      fontDescriptor.set(DictKey.FontWeight, 400);
+      fontDescriptor.set(DictKey.ItalicAngle, 0);
 
       FakeUnicodeFont._fontDescriptorRef =
         this.xref.getNewPersistentRef(fontDescriptor);
@@ -298,14 +298,14 @@ class FakeUnicodeFont {
 
   get descendantFontRef() {
     const descendantFont = new Dict(this.xref);
-    descendantFont.set("BaseFont", this.fontName);
-    descendantFont.set("Type", Name.get("Font"));
-    descendantFont.set("Subtype", Name.get("CIDFontType0"));
-    descendantFont.set("CIDToGIDMap", Name.get("Identity"));
-    descendantFont.set("FirstChar", this.firstChar);
-    descendantFont.set("LastChar", this.lastChar);
-    descendantFont.set("FontDescriptor", this.fontDescriptorRef);
-    descendantFont.set("DW", 1000);
+    descendantFont.set(DictKey.BaseFont, this.fontName);
+    descendantFont.set(DictKey.Type, Name.get("Font"));
+    descendantFont.set(DictKey.Subtype, Name.get("CIDFontType0"));
+    descendantFont.set(DictKey.CIDToGIDMap, Name.get("Identity"));
+    descendantFont.set(DictKey.FirstChar, this.firstChar);
+    descendantFont.set(DictKey.LastChar, this.lastChar);
+    descendantFont.set(DictKey.FontDescriptor, this.fontDescriptorRef);
+    descendantFont.set(DictKey.DW, 1000);
 
     const widths = [];
     const chars = [...this.widths!.entries()].sort();
@@ -330,25 +330,25 @@ class FakeUnicodeFont {
       widths.push(currentChar, currentWidths);
     }
 
-    descendantFont.set("W", widths);
+    descendantFont.set(DictKey.W, widths);
 
     const cidSystemInfo = new Dict(this.xref);
-    cidSystemInfo.set("Ordering", "Identity");
-    cidSystemInfo.set("Registry", "Adobe");
-    cidSystemInfo.set("Supplement", 0);
-    descendantFont.set("CIDSystemInfo", cidSystemInfo);
+    cidSystemInfo.set(DictKey.Ordering, "Identity");
+    cidSystemInfo.set(DictKey.Registry, "Adobe");
+    cidSystemInfo.set(DictKey.Supplement, 0);
+    descendantFont.set(DictKey.CIDSystemInfo, cidSystemInfo);
 
     return this.xref.getNewPersistentRef(descendantFont);
   }
 
   get baseFontRef() {
     const baseFont = new Dict(this.xref);
-    baseFont.set("BaseFont", this.fontName);
-    baseFont.set("Type", Name.get("Font"));
-    baseFont.set("Subtype", Name.get("Type0"));
-    baseFont.set("Encoding", Name.get("Identity-H"));
-    baseFont.set("DescendantFonts", [this.descendantFontRef]);
-    baseFont.set("ToUnicode", Name.get("Identity-H"));
+    baseFont.set(DictKey.BaseFont, this.fontName);
+    baseFont.set(DictKey.Type, Name.get("Font"));
+    baseFont.set(DictKey.Subtype, Name.get("Type0"));
+    baseFont.set(DictKey.Encoding, Name.get("Identity-H"));
+    baseFont.set(DictKey.DescendantFonts, [this.descendantFontRef]);
+    baseFont.set(DictKey.ToUnicode, Name.get("Identity-H"));
 
     return this.xref.getNewPersistentRef(baseFont);
   }
@@ -357,7 +357,7 @@ class FakeUnicodeFont {
     const resources = new Dict(this.xref);
     const font = new Dict(this.xref);
     font.set(this.fontName.name, this.baseFontRef);
-    resources.set("Font", font);
+    resources.set(DictKey.Font, font);
 
     return resources;
   }
@@ -477,11 +477,11 @@ class FakeUnicodeFont {
       buffer.push("/R0 gs");
       const extGState = new Dict(this.xref);
       const r0 = new Dict(this.xref);
-      r0.set("ca", strokeAlpha);
-      r0.set("CA", strokeAlpha);
-      r0.set("Type", Name.get("ExtGState"));
-      extGState.set("R0", r0);
-      resources.set("ExtGState", extGState);
+      r0.set(DictKey.ca, strokeAlpha);
+      r0.set(DictKey.CA, strokeAlpha);
+      r0.set(DictKey.Type, Name.get("ExtGState"));
+      extGState.set(DictKey.R0, r0);
+      resources.set(DictKey.ExtGState, extGState);
     }
 
     const vShift = numberToString(lineHeight);
@@ -492,15 +492,15 @@ class FakeUnicodeFont {
     const appearance = buffer.join("\n");
 
     const appearanceStreamDict = new Dict(this.xref);
-    appearanceStreamDict.set("Subtype", Name.get("Form"));
-    appearanceStreamDict.set("Type", Name.get("XObject"));
-    appearanceStreamDict.set("BBox", [0, 0, w, h]);
-    appearanceStreamDict.set("Length", appearance.length);
-    appearanceStreamDict.set("Resources", resources);
+    appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
+    appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
+    appearanceStreamDict.set(DictKey.BBox, [0, 0, w, h]);
+    appearanceStreamDict.set(DictKey.Length, appearance.length);
+    appearanceStreamDict.set(DictKey.Resources, resources);
 
     if (rotation) {
       const matrix = getRotationMatrix(rotation, w, h);
-      appearanceStreamDict.set("Matrix", matrix);
+      appearanceStreamDict.set(DictKey.Matrix, matrix);
     }
 
     const ap = new StringStream(appearance);

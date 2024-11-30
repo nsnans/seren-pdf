@@ -15,7 +15,7 @@
 
 import { shadow, warn } from "../shared/util";
 import { DecodeStream } from "./decode_stream";
-import { Dict } from "./primitives";
+import { Dict, DictKey } from "./primitives";
 import { JpegImage } from "./jpg";
 
 /**
@@ -70,7 +70,7 @@ class JpegStream extends DecodeStream {
     // Checking if values need to be transformed before conversion.
     const decodeArr = this.dict.getArray("D", "Decode");
     if ((this.forceRGBA || this.forceRGB) && Array.isArray(decodeArr)) {
-      const bitsPerComponent = this.dict.get("BPC", "BitsPerComponent") || 8;
+      const bitsPerComponent = this.dict.get(DictKey.BPC, DictKey.BitsPerComponent) || 8;
       const decodeArrLength = decodeArr.length;
       const transform = new Int32Array(decodeArrLength);
       let transformNeeded = false;

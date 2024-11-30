@@ -18,12 +18,14 @@ import { AbortException, assert } from "../shared/util";
 import { Stream } from "./stream";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
+import { PDFNetworkStream } from "../display/network";
+import { MessageHandler } from "../shared/message_handler";
 
 class ChunkedStream extends Stream {
 
   protected chunkSize: number;
 
-  protected numChunks: number;
+  public numChunks: number;
 
   protected _loadedChunks = new Set();
 
@@ -265,7 +267,7 @@ class ChunkedStream extends Stream {
   }
 
   getBaseStreams(): BaseStream[] {
-    return [this];
+    return [this as BaseStream];
   }
 }
 
@@ -285,7 +287,7 @@ class ChunkedStreamManager {
 
   protected _chunksNeededByRequest = new Map();
 
-  protected _requestsByChunk = new Map();
+  protected _requestsByChunk = new Map<number, number[]>();
 
   protected _promisesByRequest = new Map();
 
@@ -295,7 +297,9 @@ class ChunkedStreamManager {
 
   protected _loadedStreamCapability = <PromiseWithResolvers<ChunkedStream>>Promise.withResolvers()
 
-  constructor(pdfNetworkStream, args) {
+  protected msgHandler: MessageHandler;
+
+  constructor(pdfNetworkStream: PDFNetworkStream, args) {
     this.length = args.length;
     this.chunkSize = args.rangeChunkSize;
     this.stream = new ChunkedStream(this.length, this.chunkSize, this);
@@ -362,7 +366,7 @@ class ChunkedStreamManager {
   _requestChunks(chunks: number[]) {
     const requestId = this.currRequestId++;
 
-    const chunksNeeded = new Set();
+    const chunksNeeded = new Set<number>();
     this._chunksNeededByRequest.set(requestId, chunksNeeded);
     for (const chunk of chunks) {
       if (!this.stream.hasChunk(chunk)) {
@@ -377,7 +381,7 @@ class ChunkedStreamManager {
     const capability = Promise.withResolvers();
     this._promisesByRequest.set(requestId, capability);
 
-    const chunksToRequest = [];
+    const chunksToRequest = <number[]>[];
     for (const chunk of chunksNeeded) {
       let requestIds = this._requestsByChunk.get(chunk);
       if (!requestIds) {
@@ -429,8 +433,8 @@ class ChunkedStreamManager {
     return this._requestChunks(chunks);
   }
 
-  requestRanges(ranges = []) {
-    const chunksToRequest = [];
+  requestRanges(ranges: { begin: number, end: number }[] = []) {
+    const chunksToRequest = <number[]>[];
     for (const range of ranges) {
       const beginChunk = this.getBeginChunk(range.begin);
       const endChunk = this.getEndChunk(range.end);
@@ -451,7 +455,7 @@ class ChunkedStreamManager {
    * Groups a sorted array of chunks into as few contiguous larger
    * chunks as possible.
    */
-  groupChunks(chunks) {
+  groupChunks(chunks: number[]) {
     const groupedChunks = [];
     let beginChunk = -1;
     let prevChunk = -1;
@@ -475,7 +479,7 @@ class ChunkedStreamManager {
     return groupedChunks;
   }
 
-  onProgress(args) {
+  onProgress(args: { loaded: number }) {
     this.msgHandler.send("DocProgress", {
       loaded: this.stream.numChunksLoaded * this.chunkSize + args.loaded,
       total: this.length,
@@ -543,7 +547,7 @@ class ChunkedStreamManager {
         nextEmptyChunk = this.stream.nextEmptyChunk(endChunk);
       }
       if (Number.isInteger(nextEmptyChunk)) {
-        this._requestChunks([nextEmptyChunk]);
+        this._requestChunks([nextEmptyChunk as number]);
       }
     }
 

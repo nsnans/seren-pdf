@@ -14,7 +14,7 @@
  */
 
 import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
-import { Dict, isName, Name, Ref, RefSetCache } from "./primitives";
+import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "./primitives";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { writeObject } from "./writer";
@@ -69,7 +69,7 @@ class StructTreeRoot {
   }
 
   readRoleMap() {
-    const roleMapDict = this.dict.get("RoleMap");
+    const roleMapDict = this.dict.get(DictKey.RoleMap);
     if (!(roleMapDict instanceof Dict)) {
       return;
     }
@@ -141,16 +141,16 @@ class StructTreeRoot {
     root.set("StructTreeRoot", structTreeRootRef);
 
     const structTreeRoot = new Dict(xref);
-    structTreeRoot.set("Type", Name.get("StructTreeRoot"));
+    structTreeRoot.set(DictKey.Type, Name.get("StructTreeRoot"));
     const parentTreeRef = xref.getNewTemporaryRef();
-    structTreeRoot.set("ParentTree", parentTreeRef);
+    structTreeRoot.set(DictKey.ParentTree, parentTreeRef);
     const kids = [];
-    structTreeRoot.set("K", kids);
+    structTreeRoot.set(DictKey.K, kids);
     cache.put(structTreeRootRef, structTreeRoot);
 
     const parentTree = new Dict(xref);
     const nums = [];
-    parentTree.set("Nums", nums);
+    parentTree.set(DictKey.Nums, nums);
 
     const nextKey = await this.#writeKids({
       newAnnotationsByPage,
@@ -163,7 +163,7 @@ class StructTreeRoot {
       newRefs,
       cache,
     });
-    structTreeRoot.set("ParentTreeNextKey", nextKey);
+    structTreeRoot.set(DictKey.ParentTreeNextKey, nextKey);
 
     cache.put(parentTreeRef, parentTree);
 
@@ -181,18 +181,18 @@ class StructTreeRoot {
       return false;
     }
 
-    let nextKey = this.dict.get("ParentTreeNextKey");
+    let nextKey = this.dict.get(DictKey.ParentTreeNextKey);
     if (!Number.isInteger(nextKey) || nextKey < 0) {
       warn("Cannot update the struct tree: invalid next key.");
       return false;
     }
 
-    const parentTree = this.dict.get("ParentTree");
+    const parentTree = this.dict.get(DictKey.ParentTree);
     if (!(parentTree instanceof Dict)) {
       warn("Cannot update the struct tree: ParentTree isn't a dict.");
       return false;
     }
-    const nums = parentTree.get("Nums");
+    const nums = parentTree.get(DictKey.Nums);
     if (!Array.isArray(nums)) {
       warn("Cannot update the struct tree: nums isn't an array.");
       return false;
@@ -263,7 +263,7 @@ class StructTreeRoot {
     } else {
       parentTree = parentTreeRef;
       parentTreeRef = xref.getNewTemporaryRef();
-      structTreeRoot.set("ParentTree", parentTreeRef);
+      structTreeRoot.set(DictKey.ParentTree, parentTreeRef);
     }
     parentTree = parentTree.clone();
     cache.put(parentTreeRef, parentTree);
@@ -296,7 +296,7 @@ class StructTreeRoot {
       return;
     }
 
-    structTreeRoot.set("ParentTreeNextKey", newNextKey);
+    structTreeRoot.set(DictKey.ParentTreeNextKey, newNextKey);
 
     if (numsRef) {
       cache.put(numsRef, nums);
@@ -388,13 +388,13 @@ class StructTreeRoot {
         });
 
         const objDict = new Dict(xref);
-        tagDict.set("K", objDict);
-        objDict.set("Type", objr);
+        tagDict.set(DictKey.K, objDict);
+        objDict.set(DictKey.Type, objr);
         if (isPageRef) {
           // Pg is optional.
-          objDict.set("Pg", pageRef);
+          objDict.set(DictKey.Pg, pageRef);
         }
-        objDict.set("Obj", ref);
+        objDict.set(DictKey.Obj, ref);
 
         cache.put(tagRef, tagDict);
         nums.push(parentTreeId, tagRef);
@@ -486,10 +486,10 @@ class StructTreeRoot {
         if (!(kid instanceof Dict)) {
           continue;
         }
-        if (!isName(kid.get("Type"), "MCR")) {
+        if (!isName(kid.get(DictKey.Type), "MCR")) {
           break;
         }
-        const mcid = kid.get("MCID");
+        const mcid = kid.get(DictKey.MCID);
         if (Number.isInteger(mcid) && updateElement(mcid, pageKid, kidRef)) {
           break;
         }
@@ -782,7 +782,7 @@ class StructTreePage {
     const element = new StructElementNode(this, dict);
     map.set(dict, element);
 
-    const parent = dict.get("P");
+    const parent = dict.get(DictKey.P);
 
     if (!parent || isName(parent.get("Type"), "StructTreeRoot")) {
       if (!this.addTopLevelNode(dict, element)) {
@@ -865,8 +865,8 @@ class StructTreePage {
         if (bbox) {
           obj.bbox = bbox;
         } else {
-          const width = a.get("Width");
-          const height = a.get("Height");
+          const width = a.get(DictKey.Width);
+          const height = a.get(DictKey.Height);
           if (
             typeof width === "number" &&
             width > 0 &&

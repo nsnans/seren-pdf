@@ -14,7 +14,7 @@
  */
 
 import { bytesToString, info, warn } from "../shared/util";
-import { Dict, isName, Name, Ref } from "./primitives";
+import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import {
   escapePDFName,
   escapeString,
@@ -99,10 +99,10 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
         }
       }
       if (newFilter) {
-        dict.set("Filter", newFilter);
+        dict.set(DictKey.Filter, newFilter);
       }
       if (newParams) {
-        dict.set("DecodeParms", newParams);
+        dict.set(DictKey.DecodeParms, newParams);
       }
     } catch (ex) {
       info(`writeStream - cannot compress data: "${ex}".`);
@@ -114,7 +114,7 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
     string = transform.encryptString(string);
   }
 
-  dict.set("Length", string.length);
+  dict.set(DictKey.Length, string.length);
   await writeDict(dict, buffer, transform);
   buffer.push(" stream\n", string, "\nendstream");
 }
@@ -259,15 +259,15 @@ async function updateAcroform({
     // We've a XFA array which doesn't contain a datasets entry.
     // So we'll update the AcroForm dictionary to have an XFA containing
     // the datasets.
-    const newXfa = acroForm.get("XFA").slice();
+    const newXfa = acroForm.get(DictKey.XFA).slice();
     newXfa.splice(2, 0, "datasets");
     newXfa.splice(3, 0, xfaDatasetsRef);
 
-    dict.set("XFA", newXfa);
+    dict.set(DictKey.XFA, newXfa);
   }
 
   if (needAppearances) {
-    dict.set("NeedAppearances", true);
+    dict.set(DictKey.NeedAppearances, true);
   }
 
   const buffer = <string[]>[];
@@ -377,11 +377,11 @@ async function getXRefStreamTable(
     }
     maxGen = Math.max(maxGen, gen);
   }
-  newXref.set("Index", getIndexes(newRefs));
+  newXref.set(DictKey.Index, getIndexes(newRefs));
   const offsetSize = getSizeInBytes(maxOffset);
   const maxGenSize = getSizeInBytes(maxGen);
   const sizes = [1, offsetSize, maxGenSize];
-  newXref.set("W", sizes);
+  newXref.set(DictKey.W, sizes);
   computeIDs(baseOffset, xrefInfo, newXref);
 
   const structSize = sizes.reduce((a, x) => a + x, 0);
@@ -403,7 +403,7 @@ async function getXRefStreamTable(
 function computeIDs(baseOffset: number, xrefInfo: IncrementalXRefInfo, newXref: Dict) {
   if (Array.isArray(xrefInfo.fileIds) && xrefInfo.fileIds.length > 0) {
     const md5 = computeMD5(baseOffset, xrefInfo);
-    newXref.set("ID", [xrefInfo.fileIds[0], md5]);
+    newXref.set(DictKey.ID, [xrefInfo.fileIds[0], md5]);
   }
 }
 
@@ -411,23 +411,23 @@ function getTrailerDict(xrefInfo: IncrementalXRefInfo,
   newRefs: { ref: Ref; data: string; }[], useXrefStream: boolean) {
 
   const newXref = new Dict(null);
-  newXref.set("Prev", xrefInfo.startXRef);
+  newXref.set(DictKey.Prev, xrefInfo.startXRef);
   const refForXrefTable = xrefInfo.newRef!;
   if (useXrefStream) {
     newRefs.push({ ref: refForXrefTable, data: "" });
-    newXref.set("Size", refForXrefTable.num + 1);
-    newXref.set("Type", Name.get("XRef"));
+    newXref.set(DictKey.Size, refForXrefTable.num + 1);
+    newXref.set(DictKey.Type, Name.get("XRef"));
   } else {
-    newXref.set("Size", refForXrefTable.num);
+    newXref.set(DictKey.Size, refForXrefTable.num);
   }
   if (xrefInfo.rootRef !== null) {
-    newXref.set("Root", xrefInfo.rootRef);
+    newXref.set(DictKey.Root, xrefInfo.rootRef);
   }
   if (xrefInfo.infoRef !== null) {
-    newXref.set("Info", xrefInfo.infoRef);
+    newXref.set(DictKey.Info, xrefInfo.infoRef);
   }
   if (xrefInfo.encryptRef !== null) {
-    newXref.set("Encrypt", xrefInfo.encryptRef);
+    newXref.set(DictKey.Encrypt, xrefInfo.encryptRef);
   }
   return newXref;
 }

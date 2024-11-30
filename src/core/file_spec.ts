@@ -15,7 +15,7 @@
 
 import { shadow, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
-import { Dict } from "./primitives";
+import { Dict, DictKey } from "./primitives";
 import { XRef } from "./xref";
 
 function pickPlatformItem(dict?: Dict) {
@@ -24,16 +24,16 @@ function pickPlatformItem(dict?: Dict) {
   }
   // Look for the filename in this order:
   // UF, F, Unix, Mac, DOS
-  if (dict.has("UF")) {
-    return dict.get("UF");
-  } else if (dict.has("F")) {
-    return dict.get("F");
-  } else if (dict.has("Unix")) {
-    return dict.get("Unix");
-  } else if (dict.has("Mac")) {
-    return dict.get("Mac");
-  } else if (dict.has("DOS")) {
-    return dict.get("DOS");
+  if (dict.has(DictKey.UF)) {
+    return dict.get(DictKey.UF);
+  } else if (dict.has(DictKey.F)) {
+    return dict.get(DictKey.F);
+  } else if (dict.has(DictKey.Unix)) {
+    return dict.get(DictKey.Unix);
+  } else if (dict.has(DictKey.Mac)) {
+    return dict.get(DictKey.Mac);
+  } else if (dict.has(DictKey.DOS)) {
+    return dict.get(DictKey.DOS);
   }
   return null;
 }
@@ -78,10 +78,10 @@ export class FileSpec {
     }
     this.xref = xref;
     this.root = root;
-    if (root.has("FS")) {
-      this.fs = root.get("FS");
+    if (root.has(DictKey.FS)) {
+      this.fs = root.get(DictKey.FS);
     }
-    if (root.has("RF")) {
+    if (root.has(DictKey.RF)) {
       warn("Related file specifications are not supported");
     }
     if (!skipContent) {
@@ -110,7 +110,7 @@ export class FileSpec {
     if (!this.#contentAvailable) {
       return null;
     }
-    this._contentRef ||= pickPlatformItem(this.root?.get("EF"));
+    this._contentRef ||= pickPlatformItem(this.root?.get(DictKey.EF));
 
     let content = null;
     if (this._contentRef) {
@@ -131,7 +131,7 @@ export class FileSpec {
   get description() {
     let description = "";
 
-    const desc = this.root?.get("Desc");
+    const desc = this.root?.get(DictKey.Desc);
     if (desc && typeof desc === "string") {
       description = stringToPDFString(desc);
     }

@@ -972,7 +972,7 @@ function createNameTable(name, proto) {
  */
 class Font {
   public cMap: CMap;
-  protected name;
+  protected name: string;
   protected psName;
   protected mimetype: string | null;
   protected disableFontFace: boolean;
@@ -1008,14 +1008,14 @@ class Font {
   protected vmetrics;
   protected defaultVMetrics;
   protected isOpenType: boolean | null = null;
-  protected data: Uint8Array | null = null;
+  public data: Uint8Array | null = null;
   protected seacMap;
   protected bold: boolean | null = null;
   protected italic: boolean | null = null;
   protected black: boolean | null = null;
   protected remeasure: boolean | null = null;
 
-  constructor(name, file, properties) {
+  constructor(name: string, file: Stream, properties) {
     this.name = name;
     this.psName = null;
     this.mimetype = null;

@@ -15,6 +15,7 @@
 
 import { shadow, utf8StringToString, warn } from "../../shared/util";
 import { encodeToXmlString } from "../core_utils";
+import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
@@ -80,7 +81,7 @@ class XFAObject {
 
   public globalData;
 
-  public content: string | null;
+  public content: any | null;
 
   protected _parent;
 
@@ -117,7 +118,7 @@ class XFAObject {
     return false;
   }
 
-  createNodes(path): XFAObject | null {
+  createNodes(path: { name: string, index: number }[]): XFAObject | null {
     let root = <XFAObject>this;
     let node: XFAObject | null = null;
     for (const { name, index } of path) {
@@ -199,7 +200,7 @@ class XFAObject {
     this.getTemplateRoot().extra.paraStack.push(this.para);
   }
 
-  setId(ids) {
+  setId(ids: Map<string | Symbol, XFAObject | null>) {
     if (this.id && this.namespaceId === NamespaceIds.template.id) {
       ids.set(this.id, this);
     }
@@ -395,7 +396,9 @@ class XFAObject {
     this.extra.children.push(html);
   }
 
-  getAvailableSpace() { }
+  getAvailableSpace(): Namespace | null {
+    return null;
+  }
 
   childrenToHTML({ filter = null, include = true }) {
     if (!this.extra.generator) {

@@ -34,10 +34,10 @@ const CONFIG_NS_ID = NamespaceIds.config.id;
 class Acrobat extends XFAObject {
 
   protected acrobat7: null;
-  protected autoSave;
-  protected common;
-  protected validate;
-  protected validateApprovalSignatures;
+  protected autoSave: null;
+  protected common: null;
+  protected validate: null;
+  protected validateApprovalSignatures: null;
   protected submitUrl: XFAObjectArray;
 
   constructor(_attributes: XFAAttributesObj) {
@@ -52,6 +52,7 @@ class Acrobat extends XFAObject {
 }
 
 class Acrobat7 extends XFAObject {
+  protected dynamicRender = null;
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "acrobat7", /* hasChildren = */ true);
     this.dynamicRender = null;
@@ -186,8 +187,8 @@ class BehaviorOverride extends ContentObject {
       this.content
         .trim()
         .split(/\s+/)
-        .filter(x => x.includes(":"))
-        .map(x => x.split(":", 2))
+        .filter((x: string) => x.includes(":"))
+        .map((x: string) => x.split(":", 2))
     );
   }
 }

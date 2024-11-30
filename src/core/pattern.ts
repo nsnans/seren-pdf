@@ -34,6 +34,7 @@ import { ColorSpace } from "./colorspace";
 import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { PlatformHelper } from "../platform/platform_helper";
+import { DictKey } from "./primitives";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -478,21 +479,21 @@ class MeshShading extends BaseShading {
     if (!(stream instanceof BaseStream)) {
       throw new FormatError("Mesh data is not a stream");
     }
-    const dict = stream.dict;
-    this.shadingType = dict.get("ShadingType");
-    this.bbox = lookupNormalRect(dict.getArray("BBox"), null);
+    const dict = stream.dict!;
+    this.shadingType = dict.get(DictKey.ShadingType);
+    this.bbox = lookupNormalRect(dict.getArray(DictKey.BBox), null);
     const cs = ColorSpace.parse({
-      cs: dict.getRaw("CS") || dict.getRaw("ColorSpace"),
+      cs: dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
       xref,
       resources,
       pdfFunctionFactory,
       localColorSpaceCache,
     });
-    this.background = dict.has("Background")
-      ? cs.getRgb(dict.get("Background"), 0)
+    this.background = dict.has(DictKey.Background)
+      ? cs.getRgb(dict.get(DictKey.Background), 0)
       : null;
 
-    const fnObj = dict.getRaw("Function");
+    const fnObj = dict.getRaw(DictKey.Function);
     const fn = fnObj ? pdfFunctionFactory.createFromArray(fnObj) : null;
 
     this.coords = [];
@@ -500,10 +501,10 @@ class MeshShading extends BaseShading {
     this.figures = [];
 
     const decodeContext = {
-      bitsPerCoordinate: dict.get("BitsPerCoordinate"),
-      bitsPerComponent: dict.get("BitsPerComponent"),
-      bitsPerFlag: dict.get("BitsPerFlag"),
-      decode: dict.getArray("Decode"),
+      bitsPerCoordinate: dict.get(DictKey.BitsPerCoordinate),
+      bitsPerComponent: dict.get(DictKey.BitsPerComponent),
+      bitsPerFlag: dict.get(DictKey.BitsPerFlag),
+      decode: dict.getArray(DictKey.Decode),
       colorFn: fn,
       colorSpace: cs,
       numComps: fn ? 1 : cs.numComps,
@@ -516,7 +517,7 @@ class MeshShading extends BaseShading {
         this._decodeType4Shading(reader);
         break;
       case ShadingType.LATTICE_FORM_MESH:
-        const verticesPerRow = dict.get("VerticesPerRow") | 0;
+        const verticesPerRow = dict.get(DictKey.VerticesPerRow) | 0;
         if (verticesPerRow < 2) {
           throw new FormatError("Invalid VerticesPerRow");
         }

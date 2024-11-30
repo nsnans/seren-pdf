@@ -24,7 +24,7 @@ import {
   utf8StringToString,
   warn,
 } from "../shared/util";
-import { Dict, isName, Name } from "./primitives";
+import { Dict, DictKey, isName, Name } from "./primitives";
 import { DecryptStream } from "./decrypt_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Stream } from "./stream";
@@ -1758,13 +1758,13 @@ class CipherTransformFactory {
   }
 
   constructor(dict: Dict, fileId: string, password: string | null) {
-    const filter = dict.get("Filter");
+    const filter = dict.get(DictKey.Filter);
     if (!isName(filter, "Standard")) {
       throw new FormatError("unknown encryption method");
     }
     this.filterName = filter.name;
     this.dict = dict;
-    const algorithm = dict.get("V");
+    const algorithm = dict.get(DictKey.V);
     if (
       !Number.isInteger(algorithm) ||
       (algorithm !== 1 && algorithm !== 2 && algorithm !== 4 && algorithm !== 5)
@@ -1772,7 +1772,7 @@ class CipherTransformFactory {
       throw new FormatError("unsupported encryption algorithm");
     }
     this.algorithm = algorithm;
-    let keyLength = dict.get("Length");
+    let keyLength = dict.get(DictKey.Length);
     if (!keyLength) {
       // Spec asks to rely on encryption dictionary's Length entry, however
       // some PDFs don't have it. Trying to recover.
@@ -1781,8 +1781,8 @@ class CipherTransformFactory {
         keyLength = 40;
       } else {
         // Trying to find default handler -- it usually has Length.
-        const cfDict = dict.get("CF");
-        const streamCryptoName = dict.get("StmF");
+        const cfDict = dict.get(DictKey.CF);
+        const streamCryptoName = dict.get(DictKey.StmF);
         if (cfDict instanceof Dict && streamCryptoName instanceof Name) {
           cfDict.suppressEncryption = true; // See comment below.
           const handlerDict = cfDict.get(streamCryptoName.name);
@@ -1799,17 +1799,17 @@ class CipherTransformFactory {
       throw new FormatError("invalid key length");
     }
 
-    const ownerBytes = stringToBytes(dict.get("O")),
-      userBytes = stringToBytes(dict.get("U"));
+    const ownerBytes = stringToBytes(dict.get(DictKey.O)),
+      userBytes = stringToBytes(dict.get(DictKey.U));
     // prepare keys
     const ownerPassword = ownerBytes.subarray(0, 32);
     const userPassword = userBytes.subarray(0, 32);
-    const flags = dict.get("P");
-    const revision = dict.get("R");
+    const flags = dict.get(DictKey.P);
+    const revision = dict.get(DictKey.R);
     // meaningful when V is 4 or 5
     const encryptMetadata =
       (algorithm === 4 || algorithm === 5) &&
-      dict.get("EncryptMetadata") !== false;
+      dict.get(DictKey.EncryptMetadata) !== false;
     this.encryptMetadata = encryptMetadata;
 
     const fileIdBytes = stringToBytes(fileId);
@@ -1845,9 +1845,9 @@ class CipherTransformFactory {
       const uBytes = userBytes.subarray(0, 48);
       const userValidationSalt = userBytes.subarray(32, 40);
       const userKeySalt = userBytes.subarray(40, 48);
-      const ownerEncryption = stringToBytes(dict.get("OE"));
-      const userEncryption = stringToBytes(dict.get("UE"));
-      const perms = stringToBytes(dict.get("Perms"));
+      const ownerEncryption = stringToBytes(dict.get(DictKey.OE));
+      const userEncryption = stringToBytes(dict.get(DictKey.UE));
+      const perms = stringToBytes(dict.get(DictKey.Perms));
       encryptionKey = this.#createEncryptionKey20(
         revision,
         passwordBytes,
@@ -1898,7 +1898,7 @@ class CipherTransformFactory {
     this.encryptionKey = encryptionKey;
 
     if (algorithm >= 4) {
-      const cf = dict.get("CF");
+      const cf = dict.get(DictKey.CF);
       if (cf instanceof Dict) {
         // The 'CF' dictionary itself should not be encrypted, and by setting
         // `suppressEncryption` we can prevent an infinite loop inside of
@@ -1907,9 +1907,9 @@ class CipherTransformFactory {
         cf.suppressEncryption = true;
       }
       this.cf = cf;
-      this.stmf = dict.get("StmF") || Name.get("Identity");
-      this.strf = dict.get("StrF") || Name.get("Identity");
-      this.eff = dict.get("EFF") || this.stmf;
+      this.stmf = dict.get(DictKey.StmF) || Name.get("Identity");
+      this.strf = dict.get(DictKey.StrF) || Name.get("Identity");
+      this.eff = dict.get(DictKey.EFF) || this.stmf;
     }
   }
 

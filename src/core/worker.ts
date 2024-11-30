@@ -42,7 +42,7 @@ import {
 } from "./core_utils";
 import { LinearizationInterface } from "./parser";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
-import { Dict, isDict, Ref } from "./primitives";
+import { Dict, DictKey, isDict, Ref } from "./primitives";
 import { Stream } from "./stream";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFWorkerStream } from "./worker_stream";
@@ -673,7 +673,7 @@ class WorkerMessageHandler {
           !!acroFormRef && acroForm instanceof Dict &&
           newRefs.some(ref => ref.needAppearances);
 
-        const xfa = (acroForm instanceof Dict && acroForm.get("XFA")) || null;
+        const xfa = (acroForm instanceof Dict && acroForm.get(DictKey.XFA)) || null;
         let xfaDatasetsRef = null;
         let hasXfaDatasetsEntry = false;
         if (Array.isArray(xfa)) {
@@ -695,7 +695,7 @@ class WorkerMessageHandler {
         if (xref.trailer) {
           // Get string info from Info in order to compute fileId.
           const infoObj = Object.create(null) as Record<string, string>;
-          const xrefInfo = xref.trailer.get("Info") || null;
+          const xrefInfo = xref.trailer.get(DictKey.Info) || null;
           if (xrefInfo instanceof Dict) {
             xrefInfo.forEach((key, value) => {
               if (typeof value === "string") {
@@ -710,7 +710,7 @@ class WorkerMessageHandler {
             newRef: xref.getNewTemporaryRef(),
             infoRef: xref.trailer.getRaw("Info") || null,
             info: infoObj,
-            fileIds: xref.trailer.get("ID") || null,
+            fileIds: xref.trailer.get(DictKey.ID) || null,
             startXRef: linearization
               ? startXRef
               : (xref.lastXRefStreamPos ?? startXRef),

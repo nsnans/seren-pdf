@@ -59,47 +59,50 @@ const VALID_STYLES = new Set([
   "xfa-tab-stops",
 ]);
 
-const StyleMapping = new Map([
+type StyleMappingValueType = string | ((value: string) => string)
+  | ((value: string, original: { fontSize: number }) => string);
+
+const StyleMapping = new Map<string, StyleMappingValueType>([
   ["page-break-after", "breakAfter"],
   ["page-break-before", "breakBefore"],
   ["page-break-inside", "breakInside"],
-  ["kerning-mode", value => (value === "none" ? "none" : "normal")],
+  ["kerning-mode", (value: string) => (value === "none" ? "none" : "normal")],
   [
     "xfa-font-horizontal-scale",
-    value =>
+    (value: string) =>
       `scaleX(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`,
   ],
   [
     "xfa-font-vertical-scale",
-    value =>
+    (value: string) =>
       `scaleY(${Math.max(0, Math.min(parseInt(value) / 100)).toFixed(2)})`,
   ],
   ["xfa-spacerun", ""],
   ["xfa-tab-stops", ""],
   [
     "font-size",
-    (value, original) => {
-      value = original.fontSize = getMeasurement(value);
-      return measureToString(0.99 * value);
+    (value: string, original: { fontSize: number }) => {
+      const numVal = original.fontSize = getMeasurement(value);
+      return measureToString(0.99 * numVal);
     },
   ],
-  ["letter-spacing", value => measureToString(getMeasurement(value))],
-  ["line-height", value => measureToString(getMeasurement(value))],
-  ["margin", value => measureToString(getMeasurement(value))],
-  ["margin-bottom", value => measureToString(getMeasurement(value))],
-  ["margin-left", value => measureToString(getMeasurement(value))],
-  ["margin-right", value => measureToString(getMeasurement(value))],
-  ["margin-top", value => measureToString(getMeasurement(value))],
-  ["text-indent", value => measureToString(getMeasurement(value))],
-  ["font-family", value => value],
-  ["vertical-align", value => measureToString(getMeasurement(value))],
+  ["letter-spacing", (value: string) => measureToString(getMeasurement(value))],
+  ["line-height", (value: string) => measureToString(getMeasurement(value))],
+  ["margin", (value: string) => measureToString(getMeasurement(value))],
+  ["margin-bottom", (value: string) => measureToString(getMeasurement(value))],
+  ["margin-left", (value: string) => measureToString(getMeasurement(value))],
+  ["margin-right", (value: string) => measureToString(getMeasurement(value))],
+  ["margin-top", (value: string) => measureToString(getMeasurement(value))],
+  ["text-indent", (value: string) => measureToString(getMeasurement(value))],
+  ["font-family", (value: string) => value],
+  ["vertical-align", (value: string) => measureToString(getMeasurement(value))],
 ]);
 
 const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 const crlfForRichTextRegExp = /\r\n?/g;
 
-function mapStyle(styleStr, node, richText) {
+function mapStyle(styleStr: string, node, richText: boolean) {
   const style = Object.create(null);
   if (!styleStr) {
     return style;
@@ -199,7 +202,7 @@ class XhtmlObject extends XmlObject {
 
   protected style: string;
 
-  constructor(attributes, name) {
+  constructor(attributes: XFAAttributesObj, name: string) {
     super(XHTML_NS_ID, name);
     this.richText = false;
     this.style = attributes.style || "";
@@ -321,7 +324,7 @@ class XhtmlObject extends XmlObject {
     }
   }
 
-  toHTML(availableSpace) {
+  toHTML(_availableSpace: Namespace) {
     const children = [];
     this.extra = {
       children,
@@ -355,6 +358,9 @@ class XhtmlObject extends XmlObject {
 }
 
 class A extends XhtmlObject {
+
+  protected href: string;
+
   constructor(attributes: XFAAttributesObj) {
     super(attributes, "a");
     this.href = fixURL(attributes.href) || "";
@@ -378,7 +384,7 @@ class Body extends XhtmlObject {
     super(attributes, "body");
   }
 
-  toHTML(availableSpace) {
+  toHTML(availableSpace: Namespace) {
     const res = super.toHTML(availableSpace);
     const { html } = res;
     if (!html) {

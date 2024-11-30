@@ -30,7 +30,7 @@ import { DecodeStream } from "./decode_stream";
 import { ImageResizer } from "./image_resizer";
 import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
-import { Dict, Name } from "./primitives";
+import { Dict, DictKey, Name } from "./primitives";
 import { TypedArray } from "../types";
 import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";
@@ -326,7 +326,7 @@ class PDFImage {
     } else if (mask) {
       if (mask instanceof BaseStream) {
         const maskDict = mask.dict!,
-          imageMask = maskDict.get("IM", "ImageMask");
+          imageMask = maskDict.get(DictKey.IM, DictKey.ImageMask);
         if (!imageMask) {
           warn("Ignoring /Mask in image without /ImageMask.");
         } else {

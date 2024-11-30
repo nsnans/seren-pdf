@@ -27,6 +27,8 @@ import { isNumberArray } from "./core_utils";
 import { StandardEncoding } from "./encodings";
 import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
+import { TransformType } from "../display/display_utils";
+import { Font } from "./fonts";
 
 // TODO: use DataView and its methods.
 
@@ -56,7 +58,7 @@ function getFloat214(data: Uint8Array, offset: number) {
   return getInt16(data, offset) / 16384;
 }
 
-function getSubroutineBias(subrs) {
+function getSubroutineBias(subrs: string) {
   const numSubrs = subrs.length;
   let bias = 32768;
   if (numSubrs < 1240) {
@@ -73,7 +75,7 @@ function parseCmap(data: Uint8Array, start: number, _end: number) {
       ? getUint32(data, start + 8)
       : getUint32(data, start + 16);
   const format = getUint16(data, start + offset);
-  let ranges, p, i;
+  let ranges: { start?: number, end?: number, idDelta?: number, ids?: number[] }[], p, i;
   if (format === 4) {
     getUint16(data, start + offset + 2); // length
     const segCount = getUint16(data, start + offset + 6) >> 1;
@@ -95,8 +97,8 @@ function parseCmap(data: Uint8Array, start: number, _end: number) {
         continue;
       }
       ranges[i].ids = [];
-      for (let j = 0, jj = ranges[i].end - ranges[i].start + 1; j < jj; j++) {
-        ranges[i].ids[j] = getUint16(data, p + idOffset);
+      for (let j = 0, jj = ranges[i].end! - ranges[i].start! + 1; j < jj; j++) {
+        ranges[i].ids![j] = getUint16(data, p + idOffset);
         idOffset += 2;
       }
     }
@@ -156,8 +158,8 @@ function parseGlyfTable(glyf, loca, isGlyphLocationsLong) {
   return glyphs;
 }
 
-function lookupCmap(ranges, unicode) {
-  const code = unicode.codePointAt(0);
+function lookupCmap(ranges, unicode: string): { charCode: number, glyphId: number } {
+  const code = unicode.codePointAt(0)!;
   let gid = 0,
     l = 0,
     r = ranges.length - 1;
@@ -368,7 +370,7 @@ function compileGlyf(code, cmds, font) {
   }
 }
 
-function compileCharString(charStringCode, cmds, font, glyphId) {
+function compileCharString(charStringCode: number[], cmds: Commands, font: CompiledFont, glyphId: number) {
   function moveTo(x: number, y: number) {
     cmds.add(FontRenderOps.MOVE_TO, [x, y]);
   }
@@ -379,12 +381,12 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
     cmds.add(FontRenderOps.BEZIER_CURVE_TO, [x1, y1, x2, y2, x, y]);
   }
 
-  const stack = [];
-  let x = 0,
-    y = 0;
+  const stack = <number[]>[];
+
+  let x = 0, y = 0;
   let stems = 0;
 
-  function parse(code) {
+  function parse(code: number[]) {
     let i = 0;
     while (i < code.length) {
       let stackClean = false;
@@ -400,47 +402,47 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
           stackClean = true;
           break;
         case 4: // vmoveto
-          y += stack.pop();
+          y += stack.pop()!;
           moveTo(x, y);
           stackClean = true;
           break;
         case 5: // rlineto
           while (stack.length > 0) {
-            x += stack.shift();
-            y += stack.shift();
+            x += stack.shift()!;
+            y += stack.shift()!;
             lineTo(x, y);
           }
           break;
         case 6: // hlineto
           while (stack.length > 0) {
-            x += stack.shift();
+            x += stack.shift()!;
             lineTo(x, y);
             if (stack.length === 0) {
               break;
             }
-            y += stack.shift();
+            y += stack.shift()!;
             lineTo(x, y);
           }
           break;
         case 7: // vlineto
           while (stack.length > 0) {
-            y += stack.shift();
+            y += stack.shift()!;
             lineTo(x, y);
             if (stack.length === 0) {
               break;
             }
-            x += stack.shift();
+            x += stack.shift()!;
             lineTo(x, y);
           }
           break;
         case 8: // rrcurveto
           while (stack.length > 0) {
-            xa = x + stack.shift();
-            ya = y + stack.shift();
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            x = xb + stack.shift();
-            y = yb + stack.shift();
+            xa = x + stack.shift()!;
+            ya = y + stack.shift()!;
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            x = xb + stack.shift()!;
+            y = yb + stack.shift()!;
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
           break;
@@ -476,66 +478,66 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
           v = code[i++];
           switch (v) {
             case 34: // flex
-              xa = x + stack.shift();
-              xb = xa + stack.shift();
-              y1 = y + stack.shift();
-              x = xb + stack.shift();
+              xa = x + stack.shift()!;
+              xb = xa + stack.shift()!;
+              y1 = y + stack.shift()!;
+              x = xb + stack.shift()!;
               bezierCurveTo(xa, y, xb, y1, x, y1);
-              xa = x + stack.shift();
-              xb = xa + stack.shift();
-              x = xb + stack.shift();
+              xa = x + stack.shift()!;
+              xb = xa + stack.shift()!;
+              x = xb + stack.shift()!;
               bezierCurveTo(xa, y1, xb, y, x, y);
               break;
             case 35: // flex
-              xa = x + stack.shift();
-              ya = y + stack.shift();
-              xb = xa + stack.shift();
-              yb = ya + stack.shift();
-              x = xb + stack.shift();
-              y = yb + stack.shift();
+              xa = x + stack.shift()!;
+              ya = y + stack.shift()!;
+              xb = xa + stack.shift()!;
+              yb = ya + stack.shift()!;
+              x = xb + stack.shift()!;
+              y = yb + stack.shift()!;
               bezierCurveTo(xa, ya, xb, yb, x, y);
-              xa = x + stack.shift();
-              ya = y + stack.shift();
-              xb = xa + stack.shift();
-              yb = ya + stack.shift();
-              x = xb + stack.shift();
-              y = yb + stack.shift();
+              xa = x + stack.shift()!;
+              ya = y + stack.shift()!;
+              xb = xa + stack.shift()!;
+              yb = ya + stack.shift()!;
+              x = xb + stack.shift()!;
+              y = yb + stack.shift()!;
               bezierCurveTo(xa, ya, xb, yb, x, y);
               stack.pop(); // fd
               break;
             case 36: // hflex1
-              xa = x + stack.shift();
-              y1 = y + stack.shift();
-              xb = xa + stack.shift();
-              y2 = y1 + stack.shift();
-              x = xb + stack.shift();
+              xa = x + stack.shift()!;
+              y1 = y + stack.shift()!;
+              xb = xa + stack.shift()!;
+              y2 = y1 + stack.shift()!;
+              x = xb + stack.shift()!;
               bezierCurveTo(xa, y1, xb, y2, x, y2);
-              xa = x + stack.shift();
-              xb = xa + stack.shift();
-              y3 = y2 + stack.shift();
-              x = xb + stack.shift();
+              xa = x + stack.shift()!;
+              xb = xa + stack.shift()!;
+              y3 = y2 + stack.shift()!;
+              x = xb + stack.shift()!;
               bezierCurveTo(xa, y2, xb, y3, x, y);
               break;
             case 37: // flex1
               const x0 = x,
                 y0 = y;
-              xa = x + stack.shift();
-              ya = y + stack.shift();
-              xb = xa + stack.shift();
-              yb = ya + stack.shift();
-              x = xb + stack.shift();
-              y = yb + stack.shift();
+              xa = x + stack.shift()!;
+              ya = y + stack.shift()!;
+              xb = xa + stack.shift()!;
+              yb = ya + stack.shift()!;
+              x = xb + stack.shift()!;
+              y = yb + stack.shift()!;
               bezierCurveTo(xa, ya, xb, yb, x, y);
-              xa = x + stack.shift();
-              ya = y + stack.shift();
-              xb = xa + stack.shift();
-              yb = ya + stack.shift();
+              xa = x + stack.shift()!;
+              ya = y + stack.shift()!;
+              xb = xa + stack.shift()!;
+              yb = ya + stack.shift()!;
               x = xb;
               y = yb;
               if (Math.abs(x - x0) > Math.abs(y - y0)) {
-                x += stack.shift();
+                x += stack.shift()!;
               } else {
-                y += stack.shift();
+                y += stack.shift()!;
               }
               bezierCurveTo(xa, ya, xb, yb, x, y);
               break;
@@ -545,10 +547,10 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
           break;
         case 14: // endchar
           if (stack.length >= 4) {
-            const achar = stack.pop();
-            const bchar = stack.pop();
-            y = stack.pop();
-            x = stack.pop();
+            const achar = stack.pop()!;
+            const bchar = stack.pop()!;
+            y = stack.pop()!;
+            x = stack.pop()!;
             cmds.add(FontRenderOps.SAVE);
             cmds.add(FontRenderOps.TRANSLATE, [x, y]);
             let cmap = lookupCmap(
@@ -590,13 +592,13 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
           stackClean = true;
           break;
         case 21: // rmoveto
-          y += stack.pop();
-          x += stack.pop();
+          y += stack.pop()!;
+          x += stack.pop()!;
           moveTo(x, y);
           stackClean = true;
           break;
         case 22: // hmoveto
-          x += stack.pop();
+          x += stack.pop()!;
           moveTo(x, y);
           stackClean = true;
           break;
@@ -606,56 +608,56 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
           break;
         case 24: // rcurveline
           while (stack.length > 2) {
-            xa = x + stack.shift();
-            ya = y + stack.shift();
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            x = xb + stack.shift();
-            y = yb + stack.shift();
+            xa = x + stack.shift()!;
+            ya = y + stack.shift()!;
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            x = xb + stack.shift()!;
+            y = yb + stack.shift()!;
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
-          x += stack.shift();
-          y += stack.shift();
+          x += stack.shift()!;
+          y += stack.shift()!;
           lineTo(x, y);
           break;
         case 25: // rlinecurve
           while (stack.length > 6) {
-            x += stack.shift();
-            y += stack.shift();
+            x += stack.shift()!;
+            y += stack.shift()!;
             lineTo(x, y);
           }
-          xa = x + stack.shift();
-          ya = y + stack.shift();
-          xb = xa + stack.shift();
-          yb = ya + stack.shift();
-          x = xb + stack.shift();
-          y = yb + stack.shift();
+          xa = x + stack.shift()!;
+          ya = y + stack.shift()!;
+          xb = xa + stack.shift()!;
+          yb = ya + stack.shift()!;
+          x = xb + stack.shift()!;
+          y = yb + stack.shift()!;
           bezierCurveTo(xa, ya, xb, yb, x, y);
           break;
         case 26: // vvcurveto
           if (stack.length % 2) {
-            x += stack.shift();
+            x += stack.shift()!;
           }
           while (stack.length > 0) {
             xa = x;
-            ya = y + stack.shift();
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
+            ya = y + stack.shift()!;
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
             x = xb;
-            y = yb + stack.shift();
+            y = yb + stack.shift()!;
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
           break;
         case 27: // hhcurveto
           if (stack.length % 2) {
-            y += stack.shift();
+            y += stack.shift()!;
           }
           while (stack.length > 0) {
-            xa = x + stack.shift();
+            xa = x + stack.shift()!;
             ya = y;
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            x = xb + stack.shift();
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            x = xb + stack.shift()!;
             y = yb;
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
@@ -674,44 +676,44 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
         case 30: // vhcurveto
           while (stack.length > 0) {
             xa = x;
-            ya = y + stack.shift();
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            x = xb + stack.shift();
-            y = yb + (stack.length === 1 ? stack.shift() : 0);
+            ya = y + stack.shift()!;
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            x = xb + stack.shift()!;
+            y = yb + (stack.length === 1 ? stack.shift()! : 0);
             bezierCurveTo(xa, ya, xb, yb, x, y);
             if (stack.length === 0) {
               break;
             }
 
-            xa = x + stack.shift();
+            xa = x + stack.shift()!;
             ya = y;
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            y = yb + stack.shift();
-            x = xb + (stack.length === 1 ? stack.shift() : 0);
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            y = yb + stack.shift()!;
+            x = xb + (stack.length === 1 ? stack.shift()! : 0);
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
           break;
         case 31: // hvcurveto
           while (stack.length > 0) {
-            xa = x + stack.shift();
+            xa = x + stack.shift()!;
             ya = y;
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            y = yb + stack.shift();
-            x = xb + (stack.length === 1 ? stack.shift() : 0);
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            y = yb + stack.shift()!;
+            x = xb + (stack.length === 1 ? stack.shift()! : 0);
             bezierCurveTo(xa, ya, xb, yb, x, y);
             if (stack.length === 0) {
               break;
             }
 
             xa = x;
-            ya = y + stack.shift();
-            xb = xa + stack.shift();
-            yb = ya + stack.shift();
-            x = xb + stack.shift();
-            y = yb + (stack.length === 1 ? stack.shift() : 0);
+            ya = y + stack.shift()!;
+            xb = xa + stack.shift()!;
+            yb = ya + stack.shift()!;
+            x = xb + stack.shift()!;
+            y = yb + (stack.length === 1 ? stack.shift()! : 0);
             bezierCurveTo(xa, ya, xb, yb, x, y);
           }
           break;
@@ -745,12 +747,13 @@ function compileCharString(charStringCode, cmds, font, glyphId) {
   parse(charStringCode);
 }
 
-const NOOP = [];
+const NOOP = <number[]>[];
 
 class Commands {
-  cmds = [];
 
-  add(cmd, args?: any) {
+  cmds = <number[]>[];
+
+  add(cmd: number, args?: number[]) {
     if (args) {
       if (!isNumberArray(args, null)) {
         warn(
@@ -769,18 +772,25 @@ class Commands {
 }
 
 class CompiledFont {
-  constructor(fontMatrix) {
-    if (PlatformHelper.isTesting() && this.constructor === CompiledFont
-    ) {
+
+  protected fontMatrix: TransformType;
+
+  protected compiledGlyphs: Record<number, number[]>;
+
+  protected compiledCharCodeToGlyphId: Record<number, number>;
+
+  constructor(fontMatrix: TransformType) {
+    if (PlatformHelper.isTesting() && this.constructor === CompiledFont) {
       unreachable("Cannot initialize CompiledFont.");
     }
+
     this.fontMatrix = fontMatrix;
 
-    this.compiledGlyphs = Object.create(null);
+    this.compiledGlyphs = <Record<number, any>>Object.create(null);
     this.compiledCharCodeToGlyphId = Object.create(null);
   }
 
-  getPathJs(unicode) {
+  getPathJs(unicode: string) {
     const { charCode, glyphId } = lookupCmap(this.cmap, unicode);
     let fn = this.compiledGlyphs[glyphId],
       compileEx;
@@ -802,7 +812,7 @@ class CompiledFont {
     return fn;
   }
 
-  compileGlyph(code, glyphId) {
+  compileGlyph(code, glyphId: number) {
     if (!code || code.length === 0 || code[0] === 14) {
       return NOOP;
     }
@@ -874,14 +884,14 @@ class Type2Compiled extends CompiledFont {
     this.fdArray = cffInfo.fdArray;
   }
 
-  compileGlyphImpl(code, cmds, glyphId) {
-    compileCharString(code, cmds, this, glyphId);
+  compileGlyphImpl(code, cmds?: Commands, glyphId: number) {
+    compileCharString(code, cmds!, this, glyphId);
   }
 }
 
 class FontRendererFactory {
-  static create(font, seacAnalysisEnabled) {
-    const data = new Uint8Array(font.data);
+  static create(font: Font, seacAnalysisEnabled: boolean) {
+    const data = new Uint8Array(font.data!);
     let cmap, glyf, loca, cff, indexToLocFormat, unitsPerEm;
     const numTables = getUint16(data, 4);
     for (let i = 0, p = 12; i < numTables; i++, p += 16) {

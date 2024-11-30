@@ -174,6 +174,7 @@ function getBBox(data: string) {
 }
 
 class HTMLResult {
+
   static get FAILURE() {
     return shadow(this, "FAILURE", new HTMLResult(false, null, null, null));
   }
@@ -182,7 +183,7 @@ class HTMLResult {
     return shadow(this, "EMPTY", new HTMLResult(true, null, null, null));
   }
 
-  constructor(success, html, bbox, breakNode) {
+  constructor(success: boolean, html, bbox, breakNode) {
     this.success = success;
     this.html = html;
     this.bbox = bbox;

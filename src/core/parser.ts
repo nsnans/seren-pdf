@@ -20,7 +20,7 @@ import {
   info,
   warn,
 } from "../shared/util";
-import { Cmd, Dict, EOF, isCmd, Name, Ref } from "./primitives";
+import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "./primitives";
 import {
   isWhiteSpace,
   MissingDataException,
@@ -753,8 +753,8 @@ class Parser {
   }
 
   filter(stream: Stream, dict: Dict, length) {
-    let filter = dict.get("F", "Filter");
-    let params = dict.get("DP", "DecodeParms");
+    let filter = dict.get(DictKey.F, DictKey.Filter);
+    let params = dict.get(DictKey.DP, DictKey.DecodeParms);
 
     if (filter instanceof Name) {
       if (Array.isArray(params)) {
@@ -1413,7 +1413,7 @@ class Linearization {
     }
 
     function getHints(linDict: Dict): number[] {
-      const hints = linDict.get("H");
+      const hints = linDict.get(DictKey.H);
       let hintsLength;
 
       if (
@@ -1448,7 +1448,7 @@ class Linearization {
         Number.isInteger(obj2) &&
         isCmd(obj3, "obj") &&
         linDict instanceof Dict &&
-        typeof (obj = linDict.get("Linearized")) === "number" &&
+        typeof (obj = linDict.get(DictKey.Linearized)) === "number" &&
         obj > 0
       )
     ) {

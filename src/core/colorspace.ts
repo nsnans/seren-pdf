@@ -22,7 +22,7 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { Dict, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { TypedArray } from "../types";
@@ -465,7 +465,7 @@ class ColorSpace {
           return new PatternCS(/* baseCS = */ null);
         default:
           if (resources instanceof Dict) {
-            const colorSpaces = resources.get("ColorSpace");
+            const colorSpaces = resources.get(DictKey.ColorSpace);
             if (colorSpaces instanceof Dict) {
               const resourcesCS = colorSpaces.get(cs.name);
               if (resourcesCS) {

@@ -14,21 +14,29 @@
  */
 
 import { warn } from "../../shared/util";
+import { Root } from "./builder";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
 import { BindItems, Field, Items, SetProperty, Text } from "./template";
-import { XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
+import { EmptyXFAAttributesObj, XFAAttribute, XFAObject, XFAObjectArray, XmlObject } from "./xfa_object";
 
 const NS_DATASETS = NamespaceIds.datasets.id;
 
-function createText(content) {
-  const node = new Text({});
+function createText(content: string) {
+  const node = new Text(EmptyXFAAttributesObj);
   node.content = content;
   return node;
 }
 
 class Binder {
-  constructor(root) {
+
+  protected emptyMerge: boolean;
+
+  protected data: XFAObject;
+
+  protected root;
+
+  constructor(root: Root) {
     this.root = root;
     this.datasets = root.datasets;
     this.data =

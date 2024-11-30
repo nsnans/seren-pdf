@@ -15,6 +15,7 @@
 
 import { warn } from "../../shared/util";
 import { Binder } from "./bind";
+import { Root } from "./builder";
 import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
@@ -32,7 +33,7 @@ class XFAFactory {
   constructor(data) {
     try {
       this.root = new XFAParser().parse(XFAFactory._createDocument(data));
-      const binder = new Binder(this.root);
+      const binder = new Binder(<Root>this.root);
       this.form = binder.bind();
       this.dataHandler = new DataHandler(this.root, binder.getData());
       this.form.globalData.template = this.form;

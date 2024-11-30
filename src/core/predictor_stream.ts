@@ -14,7 +14,7 @@
  */
 
 import { DecodeStream } from "./decode_stream";
-import { Dict } from "./primitives";
+import { Dict, DictKey } from "./primitives";
 import { FormatError } from "../shared/util";
 
 class PredictorStream extends DecodeStream {
@@ -29,7 +29,7 @@ class PredictorStream extends DecodeStream {
     if (!(params instanceof Dict)) {
       return str; // no prediction
     }
-    const predictor = (this.predictor = params.get("Predictor") || 1);
+    const predictor = (this.predictor = params.get(DictKey.Predictor) || 1);
 
     if (predictor <= 1) {
       return str; // no prediction
@@ -43,9 +43,9 @@ class PredictorStream extends DecodeStream {
     this.str = str;
     this.dict = str.dict;
 
-    const colors = (this.colors = params.get("Colors") || 1);
-    const bits = (this.bits = params.get("BPC", "BitsPerComponent") || 8);
-    const columns = (this.columns = params.get("Columns") || 1);
+    const colors = (this.colors = params.get(DictKey.Colors) || 1);
+    const bits = (this.bits = params.get(DictKey.BPC, DictKey.BitsPerComponent) || 8);
+    const columns = (this.columns = params.get(DictKey.Columns) || 1);
 
     this.pixBytes = (colors * bits + 7) >> 3;
     this.rowBytes = (columns * colors * bits + 7) >> 3;

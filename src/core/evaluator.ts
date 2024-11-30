@@ -31,7 +31,7 @@ import {
   warn,
 } from "../shared/util";
 import { CMapFactory, IdentityCMap } from "./cmap";
-import { Cmd, Dict, EOF, isName, Name, Ref, RefSet, RefSetCache } from "./primitives";
+import { Cmd, Dict, DictKey, EOF, isName, Name, Ref, RefSet, RefSetCache } from "./primitives";
 import { ErrorFont, Font } from "./fonts";
 import {
   getEncoding,
@@ -348,7 +348,7 @@ class PartialEvaluator {
     while (nodes.length) {
       const node = nodes.shift();
       // First check the current resources for blend modes.
-      const graphicStates = node!.get("ExtGState");
+      const graphicStates = node!.get(DictKey.ExtGState);
       if (graphicStates instanceof Dict) {
         for (let graphicState of graphicStates.getRawValues()) {
           if (graphicState instanceof Ref) {
@@ -372,7 +372,7 @@ class PartialEvaluator {
             processed.put(graphicState.objId);
           }
 
-          const bm = graphicState.get("BM");
+          const bm = graphicState.get(DictKey.BM);
           if (bm instanceof Name) {
             if (bm.name !== "Normal") {
               return true;
@@ -389,7 +389,7 @@ class PartialEvaluator {
         }
       }
       // Descend into the XObjects to look for more resources and blend modes.
-      const xObjects = node!.get("XObject");
+      const xObjects = node!.get(DictKey.XObject);
       if (!(xObjects instanceof Dict)) {
         continue;
       }
@@ -417,7 +417,7 @@ class PartialEvaluator {
         if (xObject.dict!.objId) {
           processed.put(xObject.dict!.objId);
         }
-        const xResources = xObject.dict!.get("Resources");
+        const xResources = xObject.dict!.get(DictKey.Resources);
         if (!(xResources instanceof Dict)) {
           continue;
         }
@@ -545,16 +545,16 @@ class PartialEvaluator {
     const bbox = lookupNormalRect(dict.getArray("BBox"), null);
 
     let optionalContent, groupOptions;
-    if (dict.has("OC")) {
+    if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
-        dict.get("OC"),
+        dict.get(DictKey.OC),
         resources
       );
     }
     if (optionalContent !== undefined) {
       operatorList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
-    const group = dict.get("Group");
+    const group = dict.get(DictKey.Group);
     if (group) {
       groupOptions = {
         matrix,
@@ -606,7 +606,7 @@ class PartialEvaluator {
     await this.getOperatorList({
       stream: xobj,
       task,
-      resources: dict.get("Resources") || resources,
+      resources: dict.get(DictKey.Resources) || resources,
       operatorList,
       initialState,
     });
@@ -659,8 +659,8 @@ class PartialEvaluator {
   }) {
     const dict = image.dict!;
     const imageRef = dict.objId;
-    const w = dict.get("W", "Width");
-    const h = dict.get("H", "Height");
+    const w = dict.get(DictKey.W, DictKey.Width);
+    const h = dict.get(DictKey.H, DictKey.Height);
 
     if (!(w && typeof w === "number") || !(h && typeof h === "number")) {
       warn("Image dimensions are missing, or not numbers.");
@@ -678,14 +678,14 @@ class PartialEvaluator {
     }
 
     let optionalContent;
-    if (dict.has("OC")) {
+    if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
-        dict.get("OC"),
+        dict.get(DictKey.OC),
         resources
       );
     }
 
-    const imageMask = dict.get("IM", "ImageMask") || false;
+    const imageMask = dict.get(DictKey.IM, DictKey.ImageMask) || false;
     let imgData, args;
     if (imageMask) {
       // This depends on a tmpCanvas being filled with the
@@ -693,7 +693,7 @@ class PartialEvaluator {
       // data can't be done here. Instead of creating a
       // complete PDFImage, only read the information needed
       // for later.
-      const interpolate = dict.get("I", "Interpolate");
+      const interpolate = dict.get(DictKey.I, DictKey.Interpolate);
       const bitStrideLength = (w + 7) >> 3;
       const imgArray = image.getBytes(bitStrideLength * h);
       const decode = dict.getArray("D", "Decode");
@@ -986,15 +986,15 @@ class PartialEvaluator {
     stateManager: StateManager,
     localColorSpaceCache: LocalColorSpaceCache
   ) {
-    const smaskContent = smask.get("G");
+    const smaskContent = smask.get(DictKey.G);
     const smaskOptions = {
-      subtype: smask.get("S").name,
-      backdrop: smask.get("BC"),
+      subtype: smask.get(DictKey.S).name,
+      backdrop: smask.get(DictKey.BC),
     };
 
     // The SMask might have a alpha/luminosity value transfer function --
     // we will build a map of integer values in range 0..255 to be fast.
-    const transferObj = smask.get("TR");
+    const transferObj = smask.get(DictKey.TR);
     if (isPDFFunction(transferObj)) {
       const transferFn = this._pdfFunctionFactory.create(transferObj);
       const transferMap = new Uint8Array(256);
@@ -1347,7 +1347,7 @@ class PartialEvaluator {
       }
     } else {
       // Loading by name.
-      const fontRes = resources.get("Font");
+      const fontRes = resources.get(DictKey.Font);
       if (fontRes) {
         fontRef = fontRes.getRaw(fontName);
       }
@@ -1841,8 +1841,8 @@ class PartialEvaluator {
     const localTilingPatternCache = new LocalTilingPatternCache();
     const localShadingPatternCache = new Map();
 
-    const xobjs = resources.get("XObject") || Dict.empty;
-    const patterns = resources.get("Pattern") || Dict.empty;
+    const xobjs = resources.get(DictKey.XObject) || Dict.empty;
+    const patterns = resources.get(DictKey.Pattern) || Dict.empty;
     const stateManager = new StateManager(initialState);
     const preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
     const timeSlotManager = new TimeSlotManager();
@@ -1937,7 +1937,7 @@ class PartialEvaluator {
                   throw new FormatError("XObject should be a stream");
                 }
 
-                const type = xobj.dict!.get("Subtype");
+                const type = xobj.dict!.get(DictKey.Subtype);
                 if (!(type instanceof Name)) {
                   throw new FormatError("XObject should have a Name subtype");
                 }
@@ -2237,7 +2237,7 @@ class PartialEvaluator {
           case OPS.shadingFill:
             let shading;
             try {
-              const shadingRes = resources.get("Shading");
+              const shadingRes = resources.get(DictKey.Shading);
               if (!shadingRes) {
                 throw new FormatError("No shading resource found");
               }
@@ -2289,7 +2289,7 @@ class PartialEvaluator {
                   throw new FormatError("GState must be referred to by name.");
                 }
 
-                const extGState = resources.get("ExtGState");
+                const extGState = resources.get(DictKey.ExtGState);
                 if (!(extGState instanceof Dict)) {
                   throw new FormatError("ExtGState should be a dictionary.");
                 }
@@ -2384,7 +2384,7 @@ class PartialEvaluator {
             // Other marked content types aren't supported yet.
             args = [
               args[0].name,
-              args[1] instanceof Dict ? args[1].get("MCID") : null,
+              args[1] instanceof Dict ? args[1].get(DictKey.MCID) : null,
             ];
 
             break;
@@ -3349,7 +3349,7 @@ class PartialEvaluator {
           case OPS.paintXObject:
             flushTextContentItem();
             if (!xobjs) {
-              xobjs = resources.get("XObject") || Dict.empty;
+              xobjs = resources.get(DictKey.XObject) || Dict.empty;
             }
 
             var isValidName = args[0] instanceof Name;
@@ -3388,7 +3388,7 @@ class PartialEvaluator {
                   throw new FormatError("XObject should be a stream");
                 }
 
-                const type = xobj.dict!.get("Subtype");
+                const type = xobj.dict!.get(DictKey.Subtype);
                 if (!(type instanceof Name)) {
                   throw new FormatError("XObject should have a Name subtype");
                 }
@@ -3436,7 +3436,7 @@ class PartialEvaluator {
                 self.getTextContent({
                   stream: xobj,
                   task,
-                  resources: xobj.dict!.get("Resources") || resources,
+                  resources: xobj.dict!.get(DictKey.Resources) || resources,
                   stateManager: xObjStateManager,
                   includeMarkedContent,
                   sink: sinkWrapper,
@@ -3481,7 +3481,7 @@ class PartialEvaluator {
                   throw new FormatError("GState must be referred to by name.");
                 }
 
-                const extGState = resources.get("ExtGState");
+                const extGState = resources.get(DictKey.ExtGState);
                 if (!(extGState instanceof Dict)) {
                   throw new FormatError("ExtGState should be a dictionary.");
                 }
@@ -3494,7 +3494,7 @@ class PartialEvaluator {
                   throw new FormatError("GState should be a dictionary.");
                 }
 
-                const gStateFont = gState.get("Font");
+                const gStateFont = gState.get(DictKey.Font);
                 if (!gStateFont) {
                   emptyGStateCache.set(name, gState.objId, true);
 
@@ -3541,7 +3541,7 @@ class PartialEvaluator {
 
               let mcid = null;
               if (args[1] instanceof Dict) {
-                mcid = args[1].get("MCID");
+                mcid = args[1].get(DictKey.MCID);
               }
               textContent.items.push({
                 type: "beginMarkedContentProps",
@@ -3610,7 +3610,7 @@ class PartialEvaluator {
     });
   }
 
-  async extractDataStructures(dict, properties) {
+  async extractDataStructures(dict: Dict, properties) {
     const xref = this.xref;
     let cidToGidBytes;
     // 9.10.2
@@ -3618,17 +3618,17 @@ class PartialEvaluator {
 
     if (properties.composite) {
       // CIDSystemInfo helps to match CID to glyphs
-      const cidSystemInfo = dict.get("CIDSystemInfo");
+      const cidSystemInfo = dict.get(DictKey.CIDSystemInfo);
       if (cidSystemInfo instanceof Dict) {
         properties.cidSystemInfo = {
-          registry: stringToPDFString(cidSystemInfo.get("Registry")),
-          ordering: stringToPDFString(cidSystemInfo.get("Ordering")),
-          supplement: cidSystemInfo.get("Supplement"),
+          registry: stringToPDFString(cidSystemInfo.get(DictKey.Registry)),
+          ordering: stringToPDFString(cidSystemInfo.get(DictKey.Ordering)),
+          supplement: cidSystemInfo.get(DictKey.Supplement),
         };
       }
 
       try {
-        const cidToGidMap = dict.get("CIDToGIDMap");
+        const cidToGidMap = dict.get(DictKey.CIDToGIDMap);
         if (cidToGidMap instanceof BaseStream) {
           cidToGidBytes = cidToGidMap.getBytes();
         }
@@ -3649,15 +3649,15 @@ class PartialEvaluator {
     const differences = [];
     let baseEncodingName = null;
     let encoding;
-    if (dict.has("Encoding")) {
-      encoding = dict.get("Encoding");
+    if (dict.has(DictKey.Encoding)) {
+      encoding = dict.get(DictKey.Encoding);
       if (encoding instanceof Dict) {
-        baseEncodingName = encoding.get("BaseEncoding");
+        baseEncodingName = encoding.get(DictKey.BaseEncoding);
         baseEncodingName =
           baseEncodingName instanceof Name ? baseEncodingName.name : null;
         // Load the differences between the base and original
-        if (encoding.has("Differences")) {
-          const diffEncoding = encoding.get("Differences");
+        if (encoding.has(DictKey.Differences)) {
+          const diffEncoding = encoding.get(DictKey.Differences);
           let index = 0;
           for (const entry of diffEncoding) {
             const data = xref.fetchIfRef(entry);
@@ -3694,7 +3694,7 @@ class PartialEvaluator {
     }
 
     const nonEmbeddedFont = !properties.file || properties.isInternalFont,
-      isSymbolsFontName = getSymbolsFonts()[properties.name];
+      isSymbolsFontName = getSymbolsFonts()![properties.name];
     // Ignore an incorrectly specified named encoding for non-embedded
     // symbol fonts (fixes issue16464.pdf).
     if (baseEncodingName && nonEmbeddedFont && isSymbolsFontName) {
@@ -4250,7 +4250,7 @@ class PartialEvaluator {
       if (!(dict instanceof Dict)) {
         throw new FormatError("Descendant font is not a dictionary.");
       }
-      type = dict.get("Subtype");
+      type = dict.get(DictKey.Subtype);
       if (!(type instanceof Name)) {
         throw new FormatError("invalid font Subtype");
       }
@@ -4707,10 +4707,10 @@ class PartialEvaluator {
 
   static get fallbackFontDict() {
     const dict = new Dict();
-    dict.set("BaseFont", Name.get("Helvetica"));
-    dict.set("Type", Name.get("FallbackType"));
-    dict.set("Subtype", Name.get("FallbackType"));
-    dict.set("Encoding", Name.get("WinAnsiEncoding"));
+    dict.set(DictKey.BaseFont, Name.get("Helvetica"));
+    dict.set(DictKey.Type, Name.get("FallbackType"));
+    dict.set(DictKey.Subtype, Name.get("FallbackType"));
+    dict.set(DictKey.Encoding, Name.get("WinAnsiEncoding"));
 
     return shadow(this, "fallbackFontDict", dict);
   }
