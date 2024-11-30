@@ -563,7 +563,7 @@ class WorkerMessageHandler {
         ] = await Promise.all(globalPromises);
         const xref = <XRef>xrefResult;
         const stream = <Stream>streamResult;
-        const catalogRef = xref.trailer!.getRaw("Root") || null;
+        const catalogRef = xref.trailer!.getRaw(DictKey.Root) || null;
         let structTreeRoot: StructTreeRoot | null = null;
 
         if (newAnnotationsByPage) {
@@ -706,9 +706,9 @@ class WorkerMessageHandler {
 
           newXrefInfo = {
             rootRef: catalogRef,
-            encryptRef: xref.trailer.getRaw("Encrypt") || null,
+            encryptRef: xref.trailer.getRaw(DictKey.Encrypt) || null,
             newRef: xref.getNewTemporaryRef(),
-            infoRef: xref.trailer.getRaw("Info") || null,
+            infoRef: xref.trailer.getRaw(DictKey.Info) || null,
             info: infoObj,
             fileIds: xref.trailer.get(DictKey.ID) || null,
             startXRef: linearization

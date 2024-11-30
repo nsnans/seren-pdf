@@ -1466,7 +1466,7 @@ class Linearization {
       endFirst: getInt(linDict, "E"),
       numPages: getInt(linDict, "N"),
       mainXRefEntriesOffset: getInt(linDict, "T"),
-      pageFirst: linDict.has("P")
+      pageFirst: linDict.has(DictKey.P)
         ? getInt(linDict, "P", /* allowZeroValue = */ true)
         : 0,
     };

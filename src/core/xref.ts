@@ -680,7 +680,7 @@ export class XRef {
       }
       trailerDicts.push(dict);
 
-      if (dict.has("Encrypt")) {
+      if (dict.has(DictKey.Encrypt)) {
         isEncrypted = true;
       }
     }
@@ -723,8 +723,8 @@ export class XRef {
       // taking the first one with 'ID'
       if (
         validPagesDict &&
-        (!isEncrypted || dict.has("Encrypt")) &&
-        dict.has("ID")
+        (!isEncrypted || dict.has(DictKey.Encrypt)) &&
+        dict.has(DictKey.ID)
       ) {
         return dict;
       }

@@ -392,7 +392,7 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
         list.push(code);
       }
     }
-    _collectJS(entry.getRaw("Next"), xref, list, parents);
+    _collectJS(entry.getRaw(DictKey.Next), xref, list, parents);
   }
 
   if (parent) {
@@ -432,7 +432,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
     }
   }
   // Collect the Action if any (we may have one on pushbutton).
-  if (dict.has("A")) {
+  if (dict.has(DictKey.A)) {
     const actionDict = dict.get(DictKey.A);
     const parents = new RefSet();
     const list = <string[]>[];

@@ -242,12 +242,12 @@ export class Catalog {
   }
 
   get acroFormRef() {
-    const value = this._catDict.getRaw("AcroForm");
+    const value = this._catDict.getRaw(DictKey.AcroForm);
     return shadow(this, "acroFormRef", value instanceof Ref ? value : null);
   }
 
   get metadata() {
-    const streamRef = this._catDict.getRaw("Metadata");
+    const streamRef = this._catDict.getRaw(DictKey.Metadata);
     if (!(streamRef instanceof Ref)) {
       return shadow(this, "metadata", null);
     }
@@ -337,7 +337,7 @@ export class Catalog {
    * @private
    */
   _readStructTreeRoot() {
-    const rawObj = this._catDict.getRaw("StructTreeRoot");
+    const rawObj = this._catDict.getRaw(DictKey.StructTreeRoot);
     const obj = this.xref.fetchIfRef(rawObj);
     if (!(obj instanceof Dict)) {
       return null;
@@ -377,7 +377,7 @@ export class Catalog {
     if (!(obj instanceof Dict)) {
       return null;
     }
-    obj = obj.getRaw("First");
+    obj = obj.getRaw(DictKey.First);
     if (!(obj instanceof Ref)) {
       return null;
     }
@@ -784,7 +784,7 @@ export class Catalog {
     const obj = this._catDict.get(DictKey.Names);
     if (obj?.has("Dests")) {
       return new NameTree(obj.getRaw("Dests"), this.xref);
-    } else if (this._catDict.has("Dests")) {
+    } else if (this._catDict.has(DictKey.Dests)) {
       // Simple destination dictionary.
       return this._catDict.get(DictKey.Dests);
     }
@@ -808,7 +808,7 @@ export class Catalog {
    * @private
    */
   _readPageLabels() {
-    const obj = this._catDict.getRaw("PageLabels");
+    const obj = this._catDict.getRaw(DictKey.PageLabels);
     if (!obj) {
       return null;
     }
@@ -831,13 +831,13 @@ export class Catalog {
         }
 
         if (
-          labelDict.has("Type") &&
+          labelDict.has(DictKey.Type) &&
           !isName(labelDict.get(DictKey.Type), "PageLabel")
         ) {
           throw new FormatError("Invalid type in PageLabel dictionary.");
         }
 
-        if (labelDict.has("S")) {
+        if (labelDict.has(DictKey.S)) {
           const s = labelDict.get(DictKey.S);
           if (!(s instanceof Name)) {
             throw new FormatError("Invalid style in PageLabel dictionary.");
@@ -857,7 +857,7 @@ export class Catalog {
           prefix = "";
         }
 
-        if (labelDict.has("St")) {
+        if (labelDict.has(DictKey.St)) {
           const st = labelDict.get(DictKey.St);
           if (!(Number.isInteger(st) && st >= 1)) {
             throw new FormatError("Invalid start in PageLabel dictionary.");
@@ -1159,8 +1159,8 @@ export class Catalog {
       }
     }
 
-    if (obj instanceof Dict && obj.has("JavaScript")) {
-      const nameTree = new NameTree(obj.getRaw("JavaScript"), this.xref);
+    if (obj instanceof Dict && obj.has(DictKey.JavaScript)) {
+      const nameTree = new NameTree(obj.getRaw(DictKey.JavaScript), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         appendIfJavaScriptDict(stringToPDFString(key), value);
       }
@@ -1230,7 +1230,7 @@ export class Catalog {
     const nodesToVisit = [this.toplevelPagesDict];
     const visitedNodes = new RefSet();
 
-    const pagesRef = this._catDict.getRaw("Pages");
+    const pagesRef = this._catDict.getRaw(DictKey.Pages);
     if (pagesRef instanceof Ref) {
       visitedNodes.put(pagesRef);
     }
@@ -1259,11 +1259,11 @@ export class Catalog {
         const obj = await (pageDictCache.get(currentNode) ||
           xref.fetchAsync(currentNode));
         if (obj instanceof Dict) {
-          let type = obj.getRaw("Type");
+          let type = obj.getRaw(DictKey.Type);
           if (type instanceof Ref) {
             type = await xref.fetchAsync(type);
           }
-          if (isName(type, "Page") || !obj.has("Kids")) {
+          if (isName(type, "Page") || !obj.has(DictKey.Kids)) {
             // Cache the Page reference, since it can *greatly* improve
             // performance by reducing redundant lookups in long documents
             // where all nodes are found at *one* level of the tree.
@@ -1294,7 +1294,7 @@ export class Catalog {
       }
       const { objId } = currentNode;
 
-      let count = currentNode.getRaw("Count");
+      let count = currentNode.getRaw(DictKey.Count);
       if (count instanceof Ref) {
         count = await xref.fetchAsync(count);
       }
@@ -1312,7 +1312,7 @@ export class Catalog {
         }
       }
 
-      let kids = currentNode.getRaw("Kids");
+      let kids = currentNode.getRaw(DictKey.Kids);
       if (kids instanceof Ref) {
         kids = await xref.fetchAsync(kids);
       }
@@ -1320,11 +1320,11 @@ export class Catalog {
         // Prevent errors in corrupt PDF documents that violate the
         // specification by *inlining* Page dicts directly in the Kids
         // array, rather than using indirect objects (fixes issue9540.pdf).
-        let type = currentNode.getRaw("Type");
+        let type = currentNode.getRaw(DictKey.Type);
         if (type instanceof Ref) {
           type = await xref.fetchAsync(type);
         }
-        if (isName(type, "Page") || !currentNode.has("Kids")) {
+        if (isName(type, "Page") || !currentNode.has(DictKey.Kids)) {
           if (currentPageIndex === pageIndex) {
             return [currentNode, null];
           }
@@ -1367,7 +1367,7 @@ export class Catalog {
     const queue = [{ currentNode: this.toplevelPagesDict, posInKids: 0 }];
     const visitedNodes = new RefSet();
 
-    const pagesRef = this._catDict.getRaw("Pages");
+    const pagesRef = this._catDict.getRaw(DictKey.Pages);
     if (pagesRef instanceof Ref) {
       visitedNodes.put(pagesRef);
     }
@@ -1455,7 +1455,7 @@ export class Catalog {
         break;
       }
 
-      let type = obj.getRaw("Type");
+      let type = obj.getRaw(DictKey.Type);
       if (type instanceof Ref) {
         try {
           type = await xref.fetchAsync(type);
@@ -1464,7 +1464,7 @@ export class Catalog {
           break;
         }
       }
-      if (isName(type, "Page") || !obj.has("Kids")) {
+      if (isName(type, "Page") || !obj.has(DictKey.Kids)) {
         addPageDict(obj, kidObj instanceof Ref ? kidObj : null);
       } else {
         queue.push({ currentNode: obj, posInKids: 0 });
@@ -1495,7 +1495,7 @@ export class Catalog {
           if (
             isRefsEqual(kidRef, pageRef) &&
             !isDict(node, "Page") &&
-            !(node instanceof Dict && !node.has("Type") && node.has("Contents"))
+            !(node instanceof Dict && !node.has(DictKey.Type) && node.has(DictKey.Contents))
           ) {
             throw new FormatError(
               "The reference does not point to a /Page dictionary."
@@ -1507,8 +1507,8 @@ export class Catalog {
           if (!(node instanceof Dict)) {
             throw new FormatError("Node must be a dictionary.");
           }
-          parentRef = node.getRaw("Parent");
-          return node.getAsync("Parent");
+          parentRef = node.getRaw(DictKey.Parent);
+          return node.getAsync(DictKey.Parent);
         })
         .then(function (parent) {
           if (!parent) {
@@ -1517,7 +1517,7 @@ export class Catalog {
           if (!(parent instanceof Dict)) {
             throw new FormatError("Parent must be a dictionary.");
           }
-          return parent.getAsync("Kids");
+          return parent.getAsync(DictKey.Kids);
         })
         .then(function (kids) {
           if (!kids) {
@@ -1539,7 +1539,7 @@ export class Catalog {
                 if (!(obj instanceof Dict)) {
                   throw new FormatError("Kid node must be a dictionary.");
                 }
-                if (obj.has("Count")) {
+                if (obj.has(DictKey.Count)) {
                   total += obj.get(DictKey.Count);
                 } else {
                   // Page leaf node.
@@ -1794,7 +1794,7 @@ export class Catalog {
           warn(`parseDestDictionary - unsupported action: "${actionName}".`);
           break;
       }
-    } else if (destDict.has("Dest")) {
+    } else if (destDict.has(DictKey.Dest)) {
       // Simple destination.
       dest = destDict.get(DictKey.Dest);
     }

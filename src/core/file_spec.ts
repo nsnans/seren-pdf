@@ -85,7 +85,7 @@ export class FileSpec {
       warn("Related file specifications are not supported");
     }
     if (!skipContent) {
-      if (root.has("EF")) {
+      if (root.has(DictKey.EF)) {
         this.#contentAvailable = true;
       } else {
         warn("Non-embedded file specifications are not supported");

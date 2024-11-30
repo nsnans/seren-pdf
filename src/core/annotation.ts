@@ -317,7 +317,7 @@ class AnnotationFactory {
       if (!(annotDict instanceof Dict)) {
         return -1;
       }
-      const pageRef = annotDict.getRaw("P");
+      const pageRef = annotDict.getRaw(DictKey.P);
       if (pageRef instanceof Ref) {
         try {
           const pageIndex = await pdfManager.ensureCatalog("getPageIndex", [
@@ -328,7 +328,7 @@ class AnnotationFactory {
           info(`_getPageIndex -- not a valid page reference: "${ex}".`);
         }
       }
-      if (annotDict.has("Kids")) {
+      if (annotDict.has(DictKey.Kids)) {
         return -1; // Not an annotation reference.
       }
       // Fallback to, potentially, checking the annotations of all pages.
@@ -597,7 +597,7 @@ function getPdfColorArray(color: TypedArray) {
 function getQuadPoints(dict: Dict, rect: number[]) {
   // The region is described as a number of quadrilaterals.
   // Each quadrilateral must consist of eight coordinates.
-  const quadPoints = dict.getArray("QuadPoints");
+  const quadPoints = dict.getArray(DictKey.QuadPoints);
   if (
     !isNumberArray(quadPoints, null) ||
     quadPoints.length === 0 ||
@@ -1180,8 +1180,8 @@ class Annotation {
    */
   setBorderAndBackgroundColors(mk: Dict) {
     if (mk instanceof Dict) {
-      this.borderColor = getRgbColor(mk.getArray("BC"), null);
-      this.backgroundColor = getRgbColor(mk.getArray("BG"), null);
+      this.borderColor = getRgbColor(mk.getArray(DictKey.BC), null);
+      this.backgroundColor = getRgbColor(mk.getArray(DictKey.BG), null);
     } else {
       this.borderColor = this.backgroundColor = null;
     }
@@ -1203,7 +1203,7 @@ class Annotation {
     if (!(borderStyle instanceof Dict)) {
       return;
     }
-    if (borderStyle.has("BS")) {
+    if (borderStyle.has(DictKey.BS)) {
       const dict = borderStyle.get(DictKey.BS);
 
       if (dict instanceof Dict) {
@@ -1215,8 +1215,8 @@ class Annotation {
           this.borderStyle.setDashArray(dict.getArray(DictKey.D));
         }
       }
-    } else if (borderStyle.has("Border")) {
-      const array = borderStyle.getArray("Border");
+    } else if (borderStyle.has(DictKey.Border)) {
+      const array = borderStyle.getArray(DictKey.Border);
       if (Array.isArray(array) && array.length >= 3) {
         this.borderStyle.setHorizontalCornerRadius(array[0]);
         this.borderStyle.setVerticalCornerRadius(array[1]);
@@ -1286,7 +1286,7 @@ class Annotation {
   }
 
   loadResources(keys: string[], appearance: BaseStream) {
-    return appearance.dict!.getAsync("Resources").then((resources: Dict) => {
+    return appearance.dict!.getAsync(DictKey.Resources).then((resources: Dict) => {
       if (!resources) {
         return undefined;
       }
@@ -1331,9 +1331,9 @@ class Annotation {
       ["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"],
       appearance
     );
-    const bbox = lookupRect(appearanceDict.getArray("BBox"), [0, 0, 1, 1]);
+    const bbox = lookupRect(appearanceDict.getArray(DictKey.BBox), [0, 0, 1, 1]);
     const matrix = lookupMatrix(
-      appearanceDict.getArray("Matrix"),
+      appearanceDict.getArray(DictKey.Matrix),
       IDENTITY_MATRIX
     );
     const transform = getTransformMatrix(rect, bbox, matrix);
@@ -1432,8 +1432,8 @@ class Annotation {
 
     if (text.length > 1 || text[0]) {
       const appearanceDict = this.appearance.dict;
-      const bbox = lookupRect(appearanceDict!.getArray("BBox"), null);
-      const matrix = lookupMatrix(appearanceDict!.getArray("Matrix"), null);
+      const bbox = lookupRect(appearanceDict!.getArray(DictKey.BBox), null);
+      const matrix = lookupMatrix(appearanceDict!.getArray(DictKey.Matrix), null);
 
       this.data.textPosition = this._transformPoint(
         firstPosition,
@@ -1516,7 +1516,7 @@ class Annotation {
   _constructFieldName(dict: Dict) {
     // Both the `Parent` and `T` fields are optional. While at least one of
     // them should be provided, bad PDF generators may fail to do so.
-    if (!dict.has("T") && !dict.has("Parent")) {
+    if (!dict.has(DictKey.T) && !dict.has(DictKey.Parent)) {
       warn("Unknown field name, falling back to empty field name.");
       return "";
     }
@@ -1538,7 +1538,7 @@ class Annotation {
     if (dict.objId) {
       visited.put(dict.objId);
     }
-    while (loopDict.has("Parent")) {
+    while (loopDict.has(DictKey.Parent)) {
       loopDict = loopDict.get(DictKey.Parent);
       if (
         !(loopDict instanceof Dict) ||
@@ -2339,7 +2339,7 @@ class WidgetAnnotation extends Annotation {
     if (flags !== undefined) {
       dict.set(DictKey.F, flags);
       if (appearance === null && !needAppearances) {
-        const ap = originalDict.getRaw("AP");
+        const ap = originalDict.getRaw(DictKey.AP);
         if (ap) {
           dict.set(DictKey.AP, ap);
         }
@@ -2555,7 +2555,7 @@ class WidgetAnnotation extends Annotation {
       const fontFamily = this.data.comb ? "monospace" : "sans-serif";
       const fakeUnicodeFont = new FakeUnicodeFont(evaluator.xref, fontFamily);
       const resources = fakeUnicodeFont.createFontResources(lines.join(""));
-      const newFont = resources.getRaw("Font");
+      const newFont = resources.getRaw(DictKey.Font);
 
       if (this._fieldResources.mergedResources.has("Font")) {
         const oldFont = this._fieldResources.mergedResources.get("Font");
@@ -2898,7 +2898,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
 
     const { dict } = params;
 
-    if (dict.has("PMD")) {
+    if (dict.has(DictKey.PMD)) {
       // It's used to display a barcode but it isn't specified so we just hide
       // it to avoid any confusion.
       this.flags |= AnnotationFlag.HIDDEN;
@@ -3210,7 +3210,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     if (appearance) {
       const savedAppearance = this.appearance;
       const savedMatrix = lookupMatrix(
-        appearance.dict!.getArray("Matrix"),
+        appearance.dict!.getArray(DictKey.Matrix),
         IDENTITY_MATRIX
       );
 
@@ -3573,12 +3573,12 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   _processPushButton(params: AnnotationParameters) {
     const { dict, annotationGlobals } = params;
 
-    if (!dict.has("A") && !dict.has("AA") && !this.data.alternativeText) {
+    if (!dict.has(DictKey.A) && !dict.has(DictKey.AA) && !this.data.alternativeText) {
       warn("Push buttons without action dictionaries are not supported");
       return;
     }
 
-    this.data.isTooltipOnly = !dict.has("A") && !dict.has("AA");
+    this.data.isTooltipOnly = !dict.has(DictKey.A) && !dict.has(DictKey.AA);
 
     Catalog.parseDestDictionary({
       destDict: dict,
@@ -3638,7 +3638,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
 
     const { dict, xref } = params;
 
-    this.indices = dict.getArray("I");
+    this.indices = dict.getArray(DictKey.I);
     this.hasIndices = Array.isArray(this.indices) && this.indices.length > 0;
 
     // Determine the options. The options array may consist of strings or
@@ -4285,11 +4285,11 @@ class LineAnnotation extends MarkupAnnotation {
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
 
-    const lineCoordinates = lookupRect(dict.getArray("L"), [0, 0, 0, 0]);
+    const lineCoordinates = lookupRect(dict.getArray(DictKey.L), [0, 0, 0, 0]);
     this.data.lineCoordinates = Util.normalizeRect(lineCoordinates);
 
     if (PlatformHelper.isMozCental()) {
-      this.setLineEndings(dict.getArray("LE"));
+      this.setLineEndings(dict.getArray(DictKey.LE));
       this.data.lineEndings = this.lineEndings;
     }
 
@@ -4472,14 +4472,14 @@ class PolylineAnnotation extends MarkupAnnotation {
       !(this instanceof PolygonAnnotation)
     ) {
       // Only meaningful for polyline annotations.
-      this.setLineEndings(dict.getArray("LE"));
+      this.setLineEndings(dict.getArray(DictKey.LE));
       this.data.lineEndings = this.lineEndings;
     }
 
     // The vertices array is an array of numbers representing the alternating
     // horizontal and vertical coordinates, respectively, of each vertex.
     // Convert this to an array of objects with x and y coordinates.
-    const rawVertices = dict.getArray("Vertices");
+    const rawVertices = dict.getArray(DictKey.Vertices);
     if (!isNumberArray(rawVertices, null)) {
       return;
     }
@@ -4557,7 +4557,7 @@ class InkAnnotation extends MarkupAnnotation {
     this.data.noHTML = false;
     this.data.opacity = dict.get(DictKey.CA) || 1;
 
-    const rawInkLists = dict.getArray("InkList");
+    const rawInkLists = dict.getArray(DictKey.InkList);
     if (!Array.isArray(rawInkLists)) {
       return;
     }

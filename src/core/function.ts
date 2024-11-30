@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Dict, Ref } from "./primitives";
+import { Dict, DictKey, Ref } from "./primitives";
 import {
   FeatureTest,
   FormatError,
@@ -503,7 +503,7 @@ function isPDFFunction(v) {
   } else {
     return false;
   }
-  return fnDict.has("FunctionType");
+  return fnDict.has(DictKey.FunctionType);
 }
 
 class PostScriptStack {

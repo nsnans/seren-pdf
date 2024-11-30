@@ -541,8 +541,8 @@ class PartialEvaluator {
     localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
-    const matrix = lookupMatrix(dict.getArray("Matrix"), null);
-    const bbox = lookupNormalRect(dict.getArray("BBox"), null);
+    const matrix = lookupMatrix(dict.getArray(DictKey.Matrix), null);
+    const bbox = lookupNormalRect(dict.getArray(DictKey.BBox), null);
 
     let optionalContent, groupOptions;
     if (dict.has(DictKey.OC)) {
@@ -696,7 +696,7 @@ class PartialEvaluator {
       const interpolate = dict.get(DictKey.I, DictKey.Interpolate);
       const bitStrideLength = (w + 7) >> 3;
       const imgArray = image.getBytes(bitStrideLength * h);
-      const decode = dict.getArray("D", "Decode");
+      const decode = dict.getArray(DictKey.D, DictKey.Decode);
 
       if (this.parsingType3Font) {
         imgData = PDFImage.createRawMask({
@@ -818,8 +818,8 @@ class PartialEvaluator {
     if (
       isInline &&
       w + h < SMALL_IMAGE_DIMENSIONS &&
-      !dict.has("SMask") &&
-      !dict.has("Mask")
+      !dict.has(DictKey.SMask) &&
+      !dict.has(DictKey.Mask)
     ) {
       try {
         const imageObj = new PDFImage({
@@ -899,7 +899,7 @@ class PartialEvaluator {
       // For large (at least 500x500) or more complex images that we'll cache
       // globally, check if the image is still cached locally on the main-thread
       // to avoid having to re-parse the image (since that can be slow).
-      if (w * h > 250000 || dict.has("SMask") || dict.has("Mask")) {
+      if (w * h > 250000 || dict.has(DictKey.SMask) || dict.has(DictKey.Mask)) {
         const localLength = await this.handler.sendWithPromise("commonobj", [
           objId,
           "CopyLocalImage",
@@ -3408,7 +3408,7 @@ class PartialEvaluator {
                 const currentState = stateManager.state.clone();
                 const xObjStateManager = new StateManager(currentState);
 
-                const matrix = lookupMatrix(xobj.dict!.getArray("Matrix"), null);
+                const matrix = lookupMatrix(xobj.dict!.getArray(DictKey.Matrix), null);
                 if (matrix) {
                   xObjStateManager.transform(matrix);
                 }
@@ -4229,7 +4229,7 @@ class PartialEvaluator {
 
   preEvaluateFont(dict) {
     const baseDict = dict;
-    let type = dict.get("Subtype");
+    let type = dict.get(DictKey.Subtype);
     if (!(type instanceof Name)) {
       throw new FormatError("invalid font Subtype");
     }

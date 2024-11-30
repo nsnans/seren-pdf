@@ -256,7 +256,7 @@ class StructTreeRoot {
     const cache = new RefSetCache();
     cache.put(structTreeRootRef, structTreeRoot);
 
-    let parentTreeRef = structTreeRoot.getRaw("ParentTree");
+    let parentTreeRef = structTreeRoot.getRaw(DictKey.ParentTree);
     let parentTree;
     if (parentTreeRef instanceof Ref) {
       parentTree = xref.fetch(parentTreeRef);
@@ -861,7 +861,7 @@ class StructTreePage {
 
       const a = node.dict.get("A");
       if (a instanceof Dict) {
-        const bbox = lookupNormalRect(a.getArray("BBox"), null);
+        const bbox = lookupNormalRect(a.getArray(DictKey.BBox), null);
         if (bbox) {
           obj.bbox = bbox;
         } else {

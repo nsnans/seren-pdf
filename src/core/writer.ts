@@ -55,8 +55,8 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
   const dict = stream.dict!;
 
   const [filter, params] = await Promise.all([
-    dict.getAsync("Filter"),
-    dict.getAsync("DecodeParms"),
+    dict.getAsync(DictKey.Filter),
+    dict.getAsync(DictKey.DecodeParms),
   ]);
 
   const filterZero = Array.isArray(filter)

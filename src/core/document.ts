@@ -196,7 +196,7 @@ class Page {
   }
 
   get content() {
-    return this.pageDict.getArray("Contents");
+    return this.pageDict.getArray(DictKey.Contents);
   }
 
   get resources() {
@@ -1170,7 +1170,7 @@ class PDFDocument {
       if (!(field instanceof Dict)) {
         return false;
       }
-      if (field.has("Kids")) {
+      if (field.has(DictKey.Kids)) {
         if (++recursionDepth > RECURSION_LIMIT) {
           warn("_hasOnlyDocumentSignatures: maximum recursion depth reached");
           return false;
@@ -1669,13 +1669,13 @@ class PDFDocument {
       const obj = await xref.fetchAsync(ref);
       // Ensure that the object that was found is actually a Page dictionary.
       if (obj instanceof Dict) {
-        let type = obj.getRaw("Type");
+        let type = obj.getRaw(DictKey.Type);
         if (type instanceof Ref) {
           type = await xref.fetchAsync(type);
         }
         if (
           isName(type, "Page") ||
-          (!obj.has("Type") && !obj.has("Kids") && obj.has("Contents"))
+          (!obj.has(DictKey.Type) && !obj.has(DictKey.Kids) && obj.has(DictKey.Contents))
         ) {
           if (!catalog.pageKidsCountCache.has(ref)) {
             catalog.pageKidsCountCache.put(ref, 1); // Cache the Page reference.
@@ -1871,13 +1871,13 @@ class PDFDocument {
     if (!(field instanceof Dict)) {
       return;
     }
-    if (field.has("T")) {
-      const partName = stringToPDFString(await field.getAsync("T"));
+    if (field.has(DictKey.T)) {
+      const partName = stringToPDFString(await field.getAsync(DictKey.T));
       name = name === "" ? partName : `${name}.${partName}`;
     } else {
       let obj = field;
       while (true) {
-        obj = obj.getRaw("Parent") || parentRef;
+        obj = obj.getRaw(DictKey.Parent) || parentRef;
         if (obj instanceof Ref) {
           if (visitedRefs.has(obj)) {
             break;
@@ -1887,8 +1887,8 @@ class PDFDocument {
         if (!(obj instanceof Dict)) {
           break;
         }
-        if (obj.has("T")) {
-          const partName = stringToPDFString(await obj.getAsync("T"));
+        if (obj.has(DictKey.T)) {
+          const partName = stringToPDFString(await obj.getAsync(DictKey.T));
           name = name === "" ? partName : `${name}.${partName}`;
           break;
         }
@@ -1897,7 +1897,7 @@ class PDFDocument {
 
     if (
       parentRef &&
-      !field.has("Parent") &&
+      !field.has(DictKey.Parent) &&
       isName(field.get(DictKey.Subtype), "Widget")
     ) {
       // We've a parent from the Fields array, but the field hasn't.
@@ -1924,10 +1924,10 @@ class PDFDocument {
         })
     );
 
-    if (!field.has("Kids")) {
+    if (!field.has(DictKey.Kids)) {
       return;
     }
-    const kids = await field.getAsync("Kids");
+    const kids = await field.getAsync(DictKey.Kids);
     if (Array.isArray(kids)) {
       for (const kid of kids) {
         await this.#collectFieldObjects(
