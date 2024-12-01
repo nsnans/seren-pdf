@@ -1,3 +1,5 @@
+import { AnnotationParameters } from "../core/annotation";
+import { AnnotationElementParameters } from "../display/annotation_layer";
 import { WorkerMessageHandler } from "../pdf.worker";
 
 export interface ReaderHeadersReadyResult {
@@ -35,7 +37,8 @@ export interface SaveDocumentMessage {
 
   numPages: number | null;
 
-  annotationStorage: Map<string, object> | null;
+  // string => Annotation初始化的参数
+  annotationStorage: Map<string, Record<string, any>> | null;
 
   filename: string | null;
 

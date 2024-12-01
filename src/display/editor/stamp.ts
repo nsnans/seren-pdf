@@ -31,7 +31,7 @@ import { PlatformHelper } from "../../platform/platform_helper.js";
  */
 class StampEditor extends AnnotationEditor {
 
-  #bitmap: HTMLImageElement | null = null;
+  #bitmap: ImageBitmap | HTMLImageElement | null = null;
 
   #bitmapId = null;
 
@@ -412,7 +412,7 @@ class StampEditor extends AnnotationEditor {
 
   #createCanvas() {
     const { div } = this;
-    let { width, height } = this.#bitmap;
+    let { width, height } = this.#bitmap!;
     const [pageWidth, pageHeight] = this.pageDimensions;
     const MAX_RATIO = 0.75;
     if (this.width) {

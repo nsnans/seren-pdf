@@ -32,7 +32,7 @@ class AnnotationStorage {
 
   #modifiedIds = null;
 
-  #storage = new Map<string, object>();
+  #storage = new Map<string, Record<string, any>>();
 
   protected onSetModified: (() => void) | null;
 
@@ -100,9 +100,10 @@ class AnnotationStorage {
    * @param {string} key
    * @param {Object} value
    */
-  setValue(key: string, value: object) {
+  setValue(key: string, value: Record<string, any>) {
     const obj = this.#storage.get(key);
     let modified = false;
+    // 如果已经有这个属性了，就把这个属性加上
     if (obj !== undefined) {
       for (const [entry, val] of Object.entries(value)) {
         if (obj[entry] !== val) {
@@ -111,6 +112,7 @@ class AnnotationStorage {
         }
       }
     } else {
+      // 没有就直接往里放
       modified = true;
       this.#storage.set(key, value);
     }
@@ -187,15 +189,15 @@ class AnnotationStorage {
    * PLEASE NOTE: Only intended for usage within the API itself.
    * @ignore
    */
-  get serializable(): Readonly<{
-    map: Map<string, any> | null;
+  get serializable(): {
+    map: Map<string, Record<string, any>> | null;
     hash: string;
     transfer: any[] | undefined;
-  }> {
+  } {
     if (this.#storage.size === 0) {
       return SerializableEmpty;
     }
-    const map = new Map<string, any>(),
+    const map = new Map<string, Record<string, any>>(),
       hash = new MurmurHash3_64(),
       transfer = [];
     const context = Object.create(null);
@@ -329,7 +331,7 @@ class PrintAnnotationStorage extends AnnotationStorage {
 
   get modifiedIds() {
     return shadow(this, "modifiedIds", {
-      ids: new Set(),
+      ids: new Set<string>(),
       hash: "",
     });
   }

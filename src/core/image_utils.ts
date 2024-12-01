@@ -128,7 +128,7 @@ class LocalFunctionCache extends BaseLocalCache {
 }
 
 class LocalGStateCache extends BaseLocalCache {
-  set(name, ref = null, data) {
+  set(name: string, ref = null, data) {
     if (typeof name !== "string") {
       throw new Error('LocalGStateCache.set - expected "name" argument.');
     }

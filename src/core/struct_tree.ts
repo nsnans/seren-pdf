@@ -88,7 +88,7 @@ class StructTreeRoot {
   }: {
     catalogRef: Ref | object,
     pdfManager: PDFManager,
-    
+    newAnnotationsByPage: Map<number, Record<string, any>[]>
   }) {
     if (!(catalogRef instanceof Ref)) {
       warn("Cannot save the struct tree: no catalog reference.");

@@ -109,7 +109,7 @@ class Page {
 
   protected pageDict: Dict;
 
-  protected ref: Ref | null;
+  public ref: Ref | null;
 
   protected fontCache: RefSetCache;
 
@@ -352,7 +352,7 @@ class Page {
         annotation.ref = ref;
         promises.push(
           this.xref.fetchAsync(ref).then(
-            obj => {
+            (obj: Dict | unknown) => {
               if (obj instanceof Dict) {
                 annotation.oldAnnotation = obj.clone();
               }
@@ -368,7 +368,7 @@ class Page {
     await Promise.all(promises);
   }
 
-  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations, imagePromises) {
+  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[], imagePromises) {
     if (this.xfaFactory) {
       throw new Error("XFA: Cannot save new annotations.");
     }
@@ -432,7 +432,7 @@ class Page {
     return objects;
   }
 
-  save(handler: MessageHandler, task:  WorkerTask, annotationStorage: Map<string,object> | null) {
+  save(handler: MessageHandler, task: WorkerTask, annotationStorage: Map<string, object> | null) {
     const partialEvaluator = new PartialEvaluator({
       xref: this.xref,
       handler,
@@ -842,8 +842,7 @@ class Page {
   }
 
   get _parsedAnnotations() {
-    const promise = this.pdfManager
-      .ensure(this, "annotations")
+    const promise = this.pdfManager.ensure(this, "annotations")
       .then(async annots => {
         if (annots.length === 0) {
           return annots;

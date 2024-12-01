@@ -81,8 +81,9 @@ import { DatasetReader } from "./dataset_reader";
 import { StructTreeRoot } from "./struct_tree";
 import { FileSpecSerializable } from "./file_spec"
 import { RectType } from "../display/display_utils";
+import { CreateStampImageResult } from "../shared/collected_types";
 
-interface AnnotationParameters {
+export interface AnnotationParameters {
   xref: XRef;
   // TODO 这里需要再次验证
   ref: unknown;
@@ -355,7 +356,7 @@ class AnnotationFactory {
     return -1;
   }
 
-  static generateImages(annotations, xref: XRef, isOffscreenCanvasSupported: boolean) {
+  static generateImages(annotations: Iterable<Record<string, any>>, xref: XRef, isOffscreenCanvasSupported: boolean) {
     if (!isOffscreenCanvasSupported) {
       warn(
         "generateImages: OffscreenCanvas is not supported, cannot save or print some annotations with images."
@@ -367,14 +368,15 @@ class AnnotationFactory {
       if (!bitmap) {
         continue;
       }
-      imagePromises ||= new Map();
+      imagePromises ||= new Map<string, Promise<CreateStampImageResult>>();
+      // bitmapId 是 string类型
       imagePromises.set(bitmapId, StampAnnotation.createImage(bitmap, xref));
     }
 
     return imagePromises;
   }
 
-  static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations, imagePromises) {
+  static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations: Record<string, any>[], imagePromises) {
     const xref = evaluator.xref;
     let baseFontRef;
     const dependencies = [];
@@ -1920,7 +1922,7 @@ class MarkupAnnotation extends Annotation {
       annotation.ref = xref.getNewTemporaryRef();
     }
 
-    const annotationRef = annotation.ref;
+    const annotationRef = <Ref>annotation.ref;
     const ap = await this.createNewAppearanceStream(annotation, xref, params);
     const buffer = <string[]>[];
     let annotationDict;
@@ -5092,7 +5094,7 @@ class StampAnnotation extends MarkupAnnotation {
     return !modifiedIds?.has(this.data.id);
   }
 
-  static async createImage(bitmap, xref: XRef) {
+  static async createImage(bitmap: HTMLImageElement, xref: XRef): Promise<CreateStampImageResult> {
     // TODO: when printing, we could have a specific internal colorspace
     // (e.g. something like DeviceRGBA) in order avoid any conversion (i.e. no
     // jpeg, no rgba to rgb conversion, etc...)

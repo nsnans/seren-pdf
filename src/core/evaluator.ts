@@ -129,7 +129,7 @@ const TEXT_CHUNK_BATCH_SIZE = 10;
 const deferred = Promise.resolve();
 
 // Convert PDF blend mode names to HTML5 blend mode names.
-function normalizeBlendMode(value, parsingArray = false) {
+function normalizeBlendMode(value: Name | Name[], parsingArray = false): string | null {
   if (Array.isArray(value)) {
     // Use the first *supported* BM value in the Array (fixes issue11279.pdf).
     for (const val of value) {
@@ -1228,20 +1228,20 @@ class PartialEvaluator {
     for (const key of gState.getKeys()) {
       const value = gState.getValue(key);
       switch (key) {
-        case "Type":
+        case DictKey.Type:
           break;
-        case "LW":
-        case "LC":
-        case "LJ":
-        case "ML":
-        case "D":
-        case "RI":
-        case "FL":
-        case "CA":
-        case "ca":
+        case DictKey.LW:
+        case DictKey.LC:
+        case DictKey.LJ:
+        case DictKey.ML:
+        case DictKey.D:
+        case DictKey.RI:
+        case DictKey.FL:
+        case DictKey.CA:
+        case DictKey.ca:
           gStateObj.push([key, value]);
           break;
-        case "Font":
+        case DictKey.Font:
           isSimpleGState = false;
 
           promise = promise.then(() =>
@@ -1258,8 +1258,8 @@ class PartialEvaluator {
             })
           );
           break;
-        case "BM":
-          gStateObj.push([key, normalizeBlendMode(value)]);
+        case DictKey.BM:
+          gStateObj.push([key, normalizeBlendMode(<Name>value)]);
           break;
         case "SMask":
           if (isName(value, "None")) {
@@ -1284,25 +1284,25 @@ class PartialEvaluator {
             warn("Unsupported SMask type");
           }
           break;
-        case "TR":
+        case DictKey.TR:
           const transferMaps = this.handleTransferFunction(value);
           gStateObj.push([key, transferMaps]);
           break;
         // Only generate info log messages for the following since
         // they are unlikely to have a big impact on the rendering.
-        case "OP":
-        case "op":
-        case "OPM":
-        case "BG":
-        case "BG2":
-        case "UCR":
-        case "UCR2":
-        case "TR2":
-        case "HT":
-        case "SM":
-        case "SA":
-        case "AIS":
-        case "TK":
+        case DictKey.OP:
+        case DictKey.op:
+        case DictKey.OPM:
+        case DictKey.BG:
+        case DictKey.BG2:
+        case DictKey.UCR:
+        case DictKey.UCR2:
+        case DictKey.TR2:
+        case DictKey.HT:
+        case DictKey.SM:
+        case DictKey.SA:
+        case DictKey.AIS:
+        case DictKey.TK:
           // TODO implement these operators.
           info("graphic state operator " + key);
           break;
@@ -3621,7 +3621,6 @@ class PartialEvaluator {
       const cidSystemInfo = dict.getValue(DictKey.CIDSystemInfo);
       if (cidSystemInfo instanceof Dict) {
         properties.cidSystemInfo = {
-          const type = xobj.dict!.get(DictKey.Subtype);
           registry: stringToPDFString(cidSystemInfo.getValue(DictKey.Registry)),
           ordering: stringToPDFString(cidSystemInfo.getValue(DictKey.Ordering)),
           supplement: cidSystemInfo.getValue(DictKey.Supplement),

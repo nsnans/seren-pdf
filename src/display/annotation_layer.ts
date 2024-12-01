@@ -1908,7 +1908,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
       selectElement.addEventListener("input", removeEmptyEntry);
     }
 
-    const getValue = isExport => {
+    const getValue = (isExport: Boolean) => {
       const name = isExport ? "value" : "textContent";
       const { options, multiple } = selectElement;
       if (!multiple) {
