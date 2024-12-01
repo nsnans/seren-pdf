@@ -598,7 +598,7 @@ function getPdfColorArray(color: TypedArray) {
 function getQuadPoints(dict: Dict, rect: number[]) {
   // The region is described as a number of quadrilaterals.
   // Each quadrilateral must consist of eight coordinates.
-  const quadPoints = dict.getArray(DictKey.QuadPoints);
+  const quadPoints = dict.getArrayValue(DictKey.QuadPoints);
   if (
     !isNumberArray(quadPoints, null) ||
     quadPoints.length === 0 ||
@@ -786,8 +786,8 @@ class Annotation {
     this.setContents(dict.getValue(DictKey.Contents));
     this.setModificationDate(dict.getValue(DictKey.M));
     this.setFlags(dict.getValue(DictKey.F));
-    this.setRectangle(dict.getArray(DictKey.Rect));
-    this.setColor(dict.getArray(DictKey.C));
+    this.setRectangle(dict.getArrayValue(DictKey.Rect));
+    this.setColor(dict.getArrayValue(DictKey.C));
     this.setBorderStyle(dict);
     this.setAppearance(dict);
     this.setOptionalContent(dict);
@@ -1181,8 +1181,8 @@ class Annotation {
    */
   setBorderAndBackgroundColors(mk: Dict) {
     if (mk instanceof Dict) {
-      this.borderColor = getRgbColor(mk.getArray(DictKey.BC), null);
-      this.backgroundColor = getRgbColor(mk.getArray(DictKey.BG), null);
+      this.borderColor = getRgbColor(mk.getArrayValue(DictKey.BC), null);
+      this.backgroundColor = getRgbColor(mk.getArrayValue(DictKey.BG), null);
     } else {
       this.borderColor = this.backgroundColor = null;
     }
@@ -1213,11 +1213,11 @@ class Annotation {
         if (!dictType || isName(dictType, "Border")) {
           this.borderStyle.setWidth(<number>dict.getValue(DictKey.W), this.rectangle);
           this.borderStyle.setStyle(dict.getValue(DictKey.S));
-          this.borderStyle.setDashArray(dict.getArray(DictKey.D));
+          this.borderStyle.setDashArray(dict.getArrayValue(DictKey.D));
         }
       }
     } else if (borderStyle.has(DictKey.Border)) {
-      const array = borderStyle.getArray(DictKey.Border);
+      const array = borderStyle.getArrayValue(DictKey.Border);
       if (Array.isArray(array) && array.length >= 3) {
         this.borderStyle.setHorizontalCornerRadius(array[0]);
         this.borderStyle.setVerticalCornerRadius(array[1]);
@@ -1287,7 +1287,7 @@ class Annotation {
   }
 
   loadResources(keys: string[], appearance: BaseStream) {
-    return appearance.dict!.getAsync(DictKey.Resources).then((resources: Dict) => {
+    return appearance.dict!.getAsyncValue(DictKey.Resources).then((resources: Dict) => {
       if (!resources) {
         return undefined;
       }
@@ -1332,9 +1332,9 @@ class Annotation {
       ["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"],
       appearance
     );
-    const bbox = lookupRect(appearanceDict.getArray(DictKey.BBox), [0, 0, 1, 1]);
+    const bbox = lookupRect(appearanceDict.getArrayValue(DictKey.BBox), [0, 0, 1, 1]);
     const matrix = lookupMatrix(
-      appearanceDict.getArray(DictKey.Matrix),
+      appearanceDict.getArrayValue(DictKey.Matrix),
       IDENTITY_MATRIX
     );
     const transform = getTransformMatrix(rect, bbox, matrix);
@@ -1433,8 +1433,8 @@ class Annotation {
 
     if (text.length > 1 || text[0]) {
       const appearanceDict = this.appearance.dict;
-      const bbox = lookupRect(appearanceDict!.getArray(DictKey.BBox), null);
-      const matrix = lookupMatrix(appearanceDict!.getArray(DictKey.Matrix), null);
+      const bbox = lookupRect(appearanceDict!.getArrayValue(DictKey.BBox), null);
+      const matrix = lookupMatrix(appearanceDict!.getArrayValue(DictKey.Matrix), null);
 
       this.data.textPosition = this._transformPoint(
         firstPosition,
@@ -3211,7 +3211,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     if (appearance) {
       const savedAppearance = this.appearance;
       const savedMatrix = lookupMatrix(
-        appearance.dict!.getArray(DictKey.Matrix),
+        appearance.dict!.getArrayValue(DictKey.Matrix),
         IDENTITY_MATRIX
       );
 
@@ -3639,7 +3639,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
 
     const { dict, xref } = params;
 
-    this.indices = dict.getArray(DictKey.I);
+    this.indices = dict.getArrayValue(DictKey.I);
     this.hasIndices = Array.isArray(this.indices) && this.indices.length > 0;
 
     // Determine the options. The options array may consist of strings or
@@ -4286,11 +4286,11 @@ class LineAnnotation extends MarkupAnnotation {
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
 
-    const lineCoordinates = lookupRect(dict.getArray(DictKey.L), [0, 0, 0, 0]);
+    const lineCoordinates = lookupRect(dict.getArrayValue(DictKey.L), [0, 0, 0, 0]);
     this.data.lineCoordinates = Util.normalizeRect(lineCoordinates);
 
     if (PlatformHelper.isMozCental()) {
-      this.setLineEndings(dict.getArray(DictKey.LE));
+      this.setLineEndings(dict.getArrayValue(DictKey.LE));
       this.data.lineEndings = this.lineEndings;
     }
 
@@ -4299,7 +4299,7 @@ class LineAnnotation extends MarkupAnnotation {
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
       const strokeAlpha = dict.getValue(DictKey.CA);
 
-      const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
+      const interiorColor = getRgbColor(dict.getArrayValue(DictKey.IC), null);
       // The default fill color is transparent. Setting the fill colour is
       // necessary if/when we want to add support for non-default line endings.
       const fillColor = interiorColor ? getPdfColorArray(interiorColor) : null;
@@ -4359,7 +4359,7 @@ class SquareAnnotation extends MarkupAnnotation {
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
       const strokeAlpha = dict.getValue(DictKey.CA);
 
-      const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
+      const interiorColor = getRgbColor(dict.getArrayValue(DictKey.IC), null);
       // The default fill color is transparent.
       const fillColor = interiorColor ? getPdfColorArray(interiorColor) : null;
       const fillAlpha = fillColor ? strokeAlpha : null;
@@ -4406,7 +4406,7 @@ class CircleAnnotation extends MarkupAnnotation {
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
       const strokeAlpha = dict.getValue(DictKey.CA);
 
-      const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
+      const interiorColor = getRgbColor(dict.getArrayValue(DictKey.IC), null);
       // The default fill color is transparent.
       const fillColor = interiorColor ? getPdfColorArray(interiorColor) : null;
       const fillAlpha = fillColor ? strokeAlpha : null;
@@ -4473,14 +4473,14 @@ class PolylineAnnotation extends MarkupAnnotation {
       !(this instanceof PolygonAnnotation)
     ) {
       // Only meaningful for polyline annotations.
-      this.setLineEndings(dict.getArray(DictKey.LE));
+      this.setLineEndings(dict.getArrayValue(DictKey.LE));
       this.data.lineEndings = this.lineEndings;
     }
 
     // The vertices array is an array of numbers representing the alternating
     // horizontal and vertical coordinates, respectively, of each vertex.
     // Convert this to an array of objects with x and y coordinates.
-    const rawVertices = dict.getArray(DictKey.Vertices);
+    const rawVertices = dict.getArrayValue(DictKey.Vertices);
     if (!isNumberArray(rawVertices, null)) {
       return;
     }
@@ -4558,7 +4558,7 @@ class InkAnnotation extends MarkupAnnotation {
     this.data.noHTML = false;
     this.data.opacity = dict.getValue(DictKey.CA) || 1;
 
-    const rawInkLists = dict.getArray(DictKey.InkList);
+    const rawInkLists = dict.getArrayValue(DictKey.InkList);
     if (!Array.isArray(rawInkLists)) {
       return;
     }

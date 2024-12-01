@@ -539,6 +539,17 @@ export class Dict {
     return value;
   }
 
+
+  // 为了获取到更精确的参数类型和返回类型，而编写的兼容性代码
+  async getAsyncValue<T extends DictKey>(key: T): Promise<DictValueTypeMapping[T]> {
+    return await this.getAsync(key);
+  }
+
+  async getAsyncWithFallback<T1 extends DictKey, T2 extends DictKey>(key1: T1, key2: T2):
+    Promise<DictValueTypeMapping[T1] | DictValueTypeMapping[T2]> {
+    return await this.getAsync(key1, key2);
+  }
+
   // Same as get(), but returns a promise and uses fetchIfRefAsync().
   async getAsync(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map.get(key1);
@@ -566,9 +577,21 @@ export class Dict {
     return value;
   }
 
+  // 为了获取到更精确的参数类型和返回类型，而编写的兼容性代码
+  getArrayValue<T extends DictKey>(key: T): DictValueTypeMapping[T] {
+    return this.getArray(key);
+  }
+
+  getArrayWithFallback<T1 extends DictKey, T2 extends DictKey>(key1: T1, key2: T2):
+    DictValueTypeMapping[T1] | DictValueTypeMapping[T2] {
+    return this.getArray(key1, key2);
+  }
+
+
   // Same as get(), but dereferences all elements if the result is an Array.
+  // 这里的值其实不应当细究，不然会带来很多麻烦
   getArray(key1: DictKey, key2?: DictKey, key3?: DictKey) {
-    let value = this._map.get(key1);
+    let value: any = this._map.get(key1);
     if (value === undefined && key2 !== undefined) {
       if (
         (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
@@ -603,8 +626,8 @@ export class Dict {
   }
 
   // No dereferencing.
-  getRaw(key: DictKey) {
-    return this._map.get(key);
+  getRaw<T extends DictKey>(key: T): DictValueTypeMapping[T] {
+    return <DictValueTypeMapping[T]>this._map.get(key);
   }
 
   getKeys(): DictKey[] {

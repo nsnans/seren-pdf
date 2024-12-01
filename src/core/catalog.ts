@@ -1508,7 +1508,7 @@ export class Catalog {
             throw new FormatError("Node must be a dictionary.");
           }
           parentRef = node.getRaw(DictKey.Parent);
-          return node.getAsync(DictKey.Parent);
+          return node.getAsyncValue(DictKey.Parent);
         })
         .then(function (parent) {
           if (!parent) {
@@ -1517,7 +1517,7 @@ export class Catalog {
           if (!(parent instanceof Dict)) {
             throw new FormatError("Parent must be a dictionary.");
           }
-          return parent.getAsync(DictKey.Kids);
+          return parent.getAsyncValue(DictKey.Kids);
         })
         .then(function (kids) {
           if (!kids) {

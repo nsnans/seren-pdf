@@ -861,7 +861,7 @@ class StructTreePage {
 
       const a = node.dict.get("A");
       if (a instanceof Dict) {
-        const bbox = lookupNormalRect(a.getArray(DictKey.BBox), null);
+        const bbox = lookupNormalRect(a.getArrayValue(DictKey.BBox), null);
         if (bbox) {
           obj.bbox = bbox;
         } else {

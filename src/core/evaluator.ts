@@ -541,8 +541,8 @@ class PartialEvaluator {
     localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
-    const matrix = lookupMatrix(dict.getArray(DictKey.Matrix), null);
-    const bbox = lookupNormalRect(dict.getArray(DictKey.BBox), null);
+    const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
+    const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
 
     let optionalContent, groupOptions;
     if (dict.has(DictKey.OC)) {
@@ -696,7 +696,7 @@ class PartialEvaluator {
       const interpolate = dict.getValueWithFallback(DictKey.I, DictKey.Interpolate);
       const bitStrideLength = (w + 7) >> 3;
       const imgArray = image.getBytes(bitStrideLength * h);
-      const decode = dict.getArray(DictKey.D, DictKey.Decode);
+      const decode = dict.getArrayValue(DictKey.D, DictKey.Decode);
 
       if (this.parsingType3Font) {
         imgData = PDFImage.createRawMask({
@@ -3408,7 +3408,7 @@ class PartialEvaluator {
                 const currentState = stateManager.state.clone();
                 const xObjStateManager = new StateManager(currentState);
 
-                const matrix = lookupMatrix(xobj.dict!.getArray(DictKey.Matrix), null);
+                const matrix = lookupMatrix(xobj.dict!.getArrayValue(DictKey.Matrix), null);
                 if (matrix) {
                   xObjStateManager.transform(matrix);
                 }

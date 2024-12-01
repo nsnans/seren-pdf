@@ -143,7 +143,7 @@ function getInheritableProperty(
     if (dict.objId) {
       visited.put(dict.objId);
     }
-    const value = getArray ? dict.getArray(key) : dict.getValue(key);
+    const value = getArray ? dict.getArrayValue(key) : dict.getValue(key);
     if (value !== undefined) {
       if (stopWhenFound) {
         return value;

@@ -196,7 +196,7 @@ class Page {
   }
 
   get content() {
-    return this.pageDict.getArray(DictKey.Contents);
+    return this.pageDict.getArrayValue(DictKey.Contents);
   }
 
   get resources() {
@@ -1872,7 +1872,7 @@ class PDFDocument {
       return;
     }
     if (field.has(DictKey.T)) {
-      const partName = stringToPDFString(await field.getAsync(DictKey.T));
+      const partName = stringToPDFString(await field.getAsyncValue(DictKey.T));
       name = name === "" ? partName : `${name}.${partName}`;
     } else {
       let obj = field;
@@ -1888,7 +1888,7 @@ class PDFDocument {
           break;
         }
         if (obj.has(DictKey.T)) {
-          const partName = stringToPDFString(await obj.getAsync(DictKey.T));
+          const partName = stringToPDFString(await obj.getAsyncValue(DictKey.T));
           name = name === "" ? partName : `${name}.${partName}`;
           break;
         }
@@ -1927,7 +1927,7 @@ class PDFDocument {
     if (!field.has(DictKey.Kids)) {
       return;
     }
-    const kids = await field.getAsync(DictKey.Kids);
+    const kids = await field.getAsyncValue(DictKey.Kids);
     if (Array.isArray(kids)) {
       for (const kid of kids) {
         await this.#collectFieldObjects(

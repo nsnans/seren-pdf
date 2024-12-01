@@ -481,7 +481,7 @@ class MeshShading extends BaseShading {
     }
     const dict = stream.dict!;
     this.shadingType = dict.getValue(DictKey.ShadingType);
-    this.bbox = lookupNormalRect(dict.getArray(DictKey.BBox), null);
+    this.bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
     const cs = ColorSpace.parse({
       cs: dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
       xref,
@@ -504,7 +504,7 @@ class MeshShading extends BaseShading {
       bitsPerCoordinate: dict.getValue(DictKey.BitsPerCoordinate),
       bitsPerComponent: dict.getValue(DictKey.BitsPerComponent),
       bitsPerFlag: dict.getValue(DictKey.BitsPerFlag),
-      decode: dict.getArray(DictKey.Decode),
+      decode: dict.getArrayValue(DictKey.Decode),
       colorFn: fn,
       colorSpace: cs,
       numComps: fn ? 1 : cs.numComps,
