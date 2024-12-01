@@ -69,7 +69,7 @@ class StructTreeRoot {
   }
 
   readRoleMap() {
-    const roleMapDict = this.dict.get(DictKey.RoleMap);
+    const roleMapDict = this.dict.getValue(DictKey.RoleMap);
     if (!(roleMapDict instanceof Dict)) {
       return;
     }
@@ -181,18 +181,18 @@ class StructTreeRoot {
       return false;
     }
 
-    let nextKey = this.dict.get(DictKey.ParentTreeNextKey);
+    let nextKey = this.dict.getValue(DictKey.ParentTreeNextKey);
     if (!Number.isInteger(nextKey) || nextKey < 0) {
       warn("Cannot update the struct tree: invalid next key.");
       return false;
     }
 
-    const parentTree = this.dict.get(DictKey.ParentTree);
+    const parentTree = this.dict.getValue(DictKey.ParentTree);
     if (!(parentTree instanceof Dict)) {
       warn("Cannot update the struct tree: ParentTree isn't a dict.");
       return false;
     }
-    const nums = parentTree.get(DictKey.Nums);
+    const nums = parentTree.getValue(DictKey.Nums);
     if (!Array.isArray(nums)) {
       warn("Cannot update the struct tree: nums isn't an array.");
       return false;
@@ -486,10 +486,10 @@ class StructTreeRoot {
         if (!(kid instanceof Dict)) {
           continue;
         }
-        if (!isName(kid.get(DictKey.Type), "MCR")) {
+        if (!isName(kid.getValue(DictKey.Type), "MCR")) {
           break;
         }
-        const mcid = kid.get(DictKey.MCID);
+        const mcid = kid.getValue(DictKey.MCID);
         if (Number.isInteger(mcid) && updateElement(mcid, pageKid, kidRef)) {
           break;
         }
@@ -782,7 +782,7 @@ class StructTreePage {
     const element = new StructElementNode(this, dict);
     map.set(dict, element);
 
-    const parent = dict.get(DictKey.P);
+    const parent = dict.getValue(DictKey.P);
 
     if (!parent || isName(parent.get("Type"), "StructTreeRoot")) {
       if (!this.addTopLevelNode(dict, element)) {
@@ -865,8 +865,8 @@ class StructTreePage {
         if (bbox) {
           obj.bbox = bbox;
         } else {
-          const width = a.get(DictKey.Width);
-          const height = a.get(DictKey.Height);
+          const width = a.getValue(DictKey.Width);
+          const height = a.getValue(DictKey.Height);
           if (
             typeof width === "number" &&
             width > 0 &&

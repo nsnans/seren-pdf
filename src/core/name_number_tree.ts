@@ -50,7 +50,7 @@ class NameOrNumberTree {
         continue;
       }
       if (obj.has(DictKey.Kids)) {
-        const kids = obj.get(DictKey.Kids);
+        const kids = obj.getValue(DictKey.Kids);
         if (!Array.isArray(kids)) {
           continue;
         }
@@ -63,7 +63,7 @@ class NameOrNumberTree {
         }
         continue;
       }
-      const entries = obj.get(this._type);
+      const entries = obj.getValue(this._type);
       if (!Array.isArray(entries)) {
         continue;
       }

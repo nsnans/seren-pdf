@@ -673,7 +673,7 @@ class WorkerMessageHandler {
           !!acroFormRef && acroForm instanceof Dict &&
           newRefs.some(ref => ref.needAppearances);
 
-        const xfa = (acroForm instanceof Dict && acroForm.get(DictKey.XFA)) || null;
+        const xfa = (acroForm instanceof Dict && acroForm.getValue(DictKey.XFA)) || null;
         let xfaDatasetsRef = null;
         let hasXfaDatasetsEntry = false;
         if (Array.isArray(xfa)) {
@@ -695,7 +695,7 @@ class WorkerMessageHandler {
         if (xref.trailer) {
           // Get string info from Info in order to compute fileId.
           const infoObj = Object.create(null) as Record<string, string>;
-          const xrefInfo = xref.trailer.get(DictKey.Info) || null;
+          const xrefInfo = xref.trailer.getValue(DictKey.Info) || null;
           if (xrefInfo instanceof Dict) {
             xrefInfo.forEach((key, value) => {
               if (typeof value === "string") {
@@ -710,7 +710,7 @@ class WorkerMessageHandler {
             newRef: xref.getNewTemporaryRef(),
             infoRef: xref.trailer.getRaw(DictKey.Info) || null,
             info: infoObj,
-            fileIds: xref.trailer.get(DictKey.ID) || null,
+            fileIds: xref.trailer.getValue(DictKey.ID) || null,
             startXRef: linearization
               ? startXRef
               : (xref.lastXRefStreamPos ?? startXRef),

@@ -503,7 +503,7 @@ function isPDFFunction(v) {
   } else {
     return false;
   }
-  return fnDict.has(DictKey.FunctionType);
+  return fnDict!.has(DictKey.FunctionType);
 }
 
 class PostScriptStack {

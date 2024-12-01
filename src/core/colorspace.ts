@@ -465,9 +465,9 @@ class ColorSpace {
           return new PatternCS(/* baseCS = */ null);
         default:
           if (resources instanceof Dict) {
-            const colorSpaces = resources.get(DictKey.ColorSpace);
+            const colorSpaces = resources.getValue(DictKey.ColorSpace);
             if (colorSpaces instanceof Dict) {
-              const resourcesCS = colorSpaces.get(cs.name);
+              const resourcesCS = colorSpaces.getValue(cs.name);
               if (resourcesCS) {
                 if (resourcesCS instanceof Name) {
                   return this._parse(

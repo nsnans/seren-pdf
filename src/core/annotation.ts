@@ -80,6 +80,7 @@ import { Font } from "./fonts";
 import { DatasetReader } from "./dataset_reader";
 import { StructTreeRoot } from "./struct_tree";
 import { FileSpecSerializable } from "./file_spec"
+import { RectType } from "../display/display_utils";
 
 interface AnnotationParameters {
   xref: XRef;
@@ -204,8 +205,8 @@ class AnnotationFactory {
       ref instanceof Ref ? ref.toString() : `annot_${idFactory.createObjId()}`;
 
     // Determine the annotation's subtype.
-    let subtype = dict.get(DictKey.Subtype);
-    subtype = subtype instanceof Name ? subtype.name : null;
+    let subtypeVal = dict.getValue(DictKey.Subtype);
+    const subtype = subtypeVal instanceof Name ? subtypeVal.name : null;
 
     // Return the right annotation object based on the subtype and field type.
     const parameters: AnnotationParameters = {
@@ -218,7 +219,7 @@ class AnnotationFactory {
       collectFields,
       orphanFields,
       needAppearances:
-        !collectFields && acroForm.get(DictKey.NeedAppearances) === true,
+        !collectFields && acroForm.getValue(DictKey.NeedAppearances) === true,
       pageIndex,
       evaluatorOptions: pdfManager.evaluatorOptions,
       pageRef,
@@ -744,7 +745,7 @@ interface AnnotationData {
   lineCoordinates?: number[];
   lineEndings?: string[];
   vertices?: Float32Array;
-  opacity?: boolean;
+  opacity?: number;
   inkLists?: Float32Array[];
 }
 
@@ -781,17 +782,17 @@ class Annotation {
       dict.set(DictKey.Parent, parentRef);
     }
 
-    this.setTitle(dict.get(DictKey.T));
-    this.setContents(dict.get(DictKey.Contents));
-    this.setModificationDate(dict.get(DictKey.M));
-    this.setFlags(dict.get(DictKey.F));
+    this.setTitle(dict.getValue(DictKey.T));
+    this.setContents(dict.getValue(DictKey.Contents));
+    this.setModificationDate(dict.getValue(DictKey.M));
+    this.setFlags(dict.getValue(DictKey.F));
     this.setRectangle(dict.getArray(DictKey.Rect));
     this.setColor(dict.getArray(DictKey.C));
     this.setBorderStyle(dict);
     this.setAppearance(dict);
     this.setOptionalContent(dict);
 
-    const MK = dict.get(DictKey.MK);
+    const MK = dict.getValue(DictKey.MK);
     this.setBorderAndBackgroundColors(MK);
     this.setRotation(MK, dict);
     this.ref = params.ref instanceof Ref ? params.ref : null;
@@ -829,7 +830,7 @@ class Annotation {
     };
 
     if (annotationGlobals.structTreeRoot) {
-      let structParent = dict.get(DictKey.StructParent);
+      let structParent = dict.getValue(DictKey.StructParent);
       this.data.structParent = structParent =
         Number.isInteger(structParent) && structParent >= 0 ? structParent : -1;
 
@@ -843,7 +844,7 @@ class Annotation {
       // Fields can act as container for other fields and have
       // some actions even if no Annotation inherit from them.
       // Those fields can be referenced by CO (calculation order).
-      const kids = dict.get(DictKey.Kids);
+      const kids = dict.getValue(DictKey.Kids);
       if (Array.isArray(kids)) {
         const kidIds = [];
         for (const kid of kids) {
@@ -861,7 +862,7 @@ class Annotation {
       this.data.pageIndex = params.pageIndex;
     }
 
-    const it = dict.get(DictKey.IT);
+    const it = dict.getValue(DictKey.IT);
     if (it instanceof Name) {
       this.data.it = it.name;
     }
@@ -1015,7 +1016,7 @@ class Annotation {
 
     const defaultAppearance =
       getInheritableProperty(dict, "DA") ||
-      annotationGlobals.acroForm.get(DictKey.DA);
+      annotationGlobals.acroForm.getValue(DictKey.DA);
     this._defaultAppearance =
       typeof defaultAppearance === "string" ? defaultAppearance : "";
     this.data.defaultAppearanceData = parseDefaultAppearance(
@@ -1158,7 +1159,7 @@ class Annotation {
 
   setRotation(mk, dict: Dict) {
     this.rotation = 0;
-    let angle = mk instanceof Dict ? mk.get(DictKey.R) || 0 : dict.get(DictKey.Rotate) || 0;
+    let angle = mk instanceof Dict ? mk.getValue(DictKey.R) || 0 : dict.getValue(DictKey.Rotate) || 0;
     if (Number.isInteger(angle) && angle !== 0) {
       angle %= 360;
       if (angle < 0) {
@@ -1204,14 +1205,14 @@ class Annotation {
       return;
     }
     if (borderStyle.has(DictKey.BS)) {
-      const dict = borderStyle.get(DictKey.BS);
+      const dict = borderStyle.getValue(DictKey.BS);
 
       if (dict instanceof Dict) {
-        const dictType = dict.get(DictKey.Type);
+        const dictType = dict.getValue(DictKey.Type);
 
         if (!dictType || isName(dictType, "Border")) {
-          this.borderStyle.setWidth(dict.get(DictKey.W), this.rectangle);
-          this.borderStyle.setStyle(dict.get(DictKey.S));
+          this.borderStyle.setWidth(<number>dict.getValue(DictKey.W), this.rectangle);
+          this.borderStyle.setStyle(dict.getValue(DictKey.S));
           this.borderStyle.setDashArray(dict.getArray(DictKey.D));
         }
       }
@@ -1247,13 +1248,13 @@ class Annotation {
   setAppearance(dict: Dict) {
     this.appearance = null;
 
-    const appearanceStates = dict.get(DictKey.AP);
+    const appearanceStates = dict.getValue(DictKey.AP);
     if (!(appearanceStates instanceof Dict)) {
       return;
     }
 
     // In case the normal appearance is a stream, then it is used directly.
-    const normalAppearanceState = appearanceStates.get(DictKey.N);
+    const normalAppearanceState = appearanceStates.getValue(DictKey.N);
     if (normalAppearanceState instanceof BaseStream) {
       this.appearance = normalAppearanceState;
       return;
@@ -1264,11 +1265,11 @@ class Annotation {
 
     // In case the normal appearance is a dictionary, the `AS` entry provides
     // the key of the stream in this dictionary.
-    const as = dict.get(DictKey.AS);
-    if (!(as instanceof Name) || !normalAppearanceState.has(as.name)) {
+    const as = dict.getValue(DictKey.AS);
+    if (!(as instanceof Name) || !normalAppearanceState.has(<DictKey>as.name)) {
       return;
     }
-    const appearance = normalAppearanceState.get(as.name);
+    const appearance = normalAppearanceState.getValue(<DictKey>as.name);
     if (appearance instanceof BaseStream) {
       this.appearance = appearance;
     }
@@ -1277,7 +1278,7 @@ class Annotation {
   setOptionalContent(dict: Dict) {
     this.oc = null;
 
-    const oc = dict.get(DictKey.OC);
+    const oc = dict.getValue(DictKey.OC);
     if (oc instanceof Name) {
       warn("setOptionalContent: Support for /Name-entry is not implemented.");
     } else if (oc instanceof Dict) {
@@ -1523,14 +1524,14 @@ class Annotation {
 
     // If no parent exists, the partial and fully qualified names are equal.
     if (!dict.has(DictKey.Parent)) {
-      return stringToPDFString(dict.get(DictKey.T));
+      return stringToPDFString(dict.getValue(DictKey.T));
     }
 
     // Form the fully qualified field name by appending the partial name to
     // the parent's fully qualified name, separated by a period.
     const fieldName = [];
     if (dict.has(DictKey.T)) {
-      fieldName.unshift(stringToPDFString(dict.get(DictKey.T)));
+      fieldName.unshift(stringToPDFString(dict.getValue(DictKey.T)));
     }
 
     let loopDict = dict;
@@ -1539,7 +1540,7 @@ class Annotation {
       visited.put(dict.objId);
     }
     while (loopDict.has(DictKey.Parent)) {
-      loopDict = loopDict.get(DictKey.Parent);
+      loopDict = loopDict.getValue(DictKey.Parent);
       if (
         !(loopDict instanceof Dict) ||
         (loopDict.objId && visited.has(loopDict.objId))
@@ -1557,7 +1558,7 @@ class Annotation {
       }
 
       if (loopDict.has(DictKey.T)) {
-        fieldName.unshift(stringToPDFString(loopDict.get(DictKey.T)));
+        fieldName.unshift(stringToPDFString(loopDict.getValue(DictKey.T)));
       }
     }
     return fieldName.join(".");
@@ -2017,7 +2018,7 @@ class WidgetAnnotation extends Annotation {
       data.fieldValue = data.defaultFieldValue;
     }
 
-    data.alternativeText = stringToPDFString(dict.get(DictKey.TU) || "");
+    data.alternativeText = stringToPDFString(dict.getValue(DictKey.TU) || "");
 
     this.setDefaultAppearance(params);
 
@@ -2030,8 +2031,8 @@ class WidgetAnnotation extends Annotation {
     data.fieldType = fieldType instanceof Name ? fieldType.name : null;
 
     const localResources = getInheritableProperty(dict, "DR");
-    const acroFormResources = annotationGlobals.acroForm.get(DictKey.DR);
-    const appearanceResources = this.appearance?.dict!.get(DictKey.Resources);
+    const acroFormResources = annotationGlobals.acroForm.getValue(DictKey.DR);
+    const appearanceResources = this.appearance?.dict!.getValue(DictKey.Resources);
 
     this._fieldResources = {
       localResources,
@@ -2333,7 +2334,7 @@ class WidgetAnnotation extends Annotation {
     const dict = new Dict(xref);
     for (const key of originalDict.getKeys()) {
       if (key !== "AP") {
-        dict.set(key, originalDict.getRaw(key));
+        dict.set(key, <any>originalDict.getRaw(key));
       }
     }
     if (flags !== undefined) {
@@ -2859,17 +2860,17 @@ class WidgetAnnotation extends Annotation {
 
     for (const resources of [localResources, appearanceResources]) {
       if (resources instanceof Dict) {
-        const localFont = resources.get(DictKey.Font);
+        const localFont = resources.getValue(DictKey.Font);
         if (localFont instanceof Dict && localFont.has(fontName)) {
           return resources;
         }
       }
     }
     if (acroFormResources instanceof Dict) {
-      const acroFormFont = acroFormResources.get(DictKey.Font);
+      const acroFormFont = acroFormResources.getValue(DictKey.Font);
       if (acroFormFont instanceof Dict && acroFormFont.has(fontName)) {
         const subFontDict = new Dict(xref);
-        subFontDict.set(fontName, acroFormFont.getRaw(fontName));
+        subFontDict.set(<DictKey>fontName, <any>acroFormFont.getRaw(fontName));
 
         const subResourcesDict = new Dict(xref);
         subResourcesDict.set(DictKey.Font, subFontDict);
@@ -3394,7 +3395,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   _getDefaultCheckedAppearance(params, type: string) {
     const width = this.data.rect![2] - this.data.rect![0];
     const height = this.data.rect![3] - this.data.rect![1];
-    const bbox = [0, 0, width, height];
+    const bbox: RectType = [0, 0, width, height];
 
     // Ratio used to have a mark slightly smaller than the bbox.
     const FONT_RATIO = 0.8;
@@ -3450,19 +3451,19 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
 
   _processCheckBox(params: AnnotationParameters) {
-    const customAppearance = params.dict.get(DictKey.AP);
+    const customAppearance = params.dict.getValue(DictKey.AP);
     if (!(customAppearance instanceof Dict)) {
       return;
     }
 
-    const normalAppearance = customAppearance.get(DictKey.N);
+    const normalAppearance = customAppearance.getValue(DictKey.N);
     if (!(normalAppearance instanceof Dict)) {
       return;
     }
 
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1722036.
     // If we've an AS and a V then take AS.
-    const asValue = this._decodeFormValue(params.dict.get(DictKey.AS));
+    const asValue = this._decodeFormValue(params.dict.getValue(DictKey.AS));
     if (typeof asValue === "string") {
       this.data.fieldValue = asValue;
     }
@@ -3498,10 +3499,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     this.data.exportValue = exportValues[1];
 
-    const checkedAppearance = normalAppearance.get(this.data.exportValue!);
+    const checkedAppearance = normalAppearance.getValue(this.data.exportValue!);
     this.checkedAppearance =
       checkedAppearance instanceof BaseStream ? checkedAppearance : null;
-    const uncheckedAppearance = normalAppearance.get(DictKey.Off);
+    const uncheckedAppearance = normalAppearance.getValue(DictKey.Off);
     this.uncheckedAppearance =
       uncheckedAppearance instanceof BaseStream ? uncheckedAppearance : null;
 
@@ -3524,21 +3525,21 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     // The parent field's `V` entry holds a `Name` object with the appearance
     // state of whichever child field is currently in the "on" state.
-    const fieldParent = params.dict.get(DictKey.Parent);
+    const fieldParent = params.dict.getValue(DictKey.Parent);
     if (fieldParent instanceof Dict) {
       this.parent = params.dict.getRaw(DictKey.Parent);
-      const fieldParentValue = fieldParent.get(DictKey.V);
+      const fieldParentValue = fieldParent.getValue(DictKey.V);
       if (fieldParentValue instanceof Name) {
         this.data.fieldValue = this._decodeFormValue(fieldParentValue);
       }
     }
 
     // The button's value corresponds to its appearance state.
-    const appearanceStates = params.dict.get(DictKey.AP);
+    const appearanceStates = params.dict.getValue(DictKey.AP);
     if (!(appearanceStates instanceof Dict)) {
       return;
     }
-    const normalAppearance = appearanceStates.get(DictKey.N);
+    const normalAppearance = appearanceStates.getValue(DictKey.N);
     if (!(normalAppearance instanceof Dict)) {
       return;
     }
@@ -3549,10 +3550,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       }
     }
 
-    const checkedAppearance = normalAppearance.get(this.data.buttonValue!);
+    const checkedAppearance = normalAppearance.getValue(this.data.buttonValue!);
     this.checkedAppearance =
       checkedAppearance instanceof BaseStream ? checkedAppearance : null;
-    const uncheckedAppearance = normalAppearance.get(DictKey.Off);
+    const uncheckedAppearance = normalAppearance.getValue(DictKey.Off);
     this.uncheckedAppearance =
       uncheckedAppearance instanceof BaseStream ? uncheckedAppearance : null;
 
@@ -3931,12 +3932,12 @@ class TextAnnotation extends MarkupAnnotation {
     } else {
       this.data.rect![1] = this.data.rect![3] - DEFAULT_ICON_SIZE;
       this.data.rect![2] = this.data.rect![0] + DEFAULT_ICON_SIZE;
-      this.data.name = dict.has(DictKey.Name) ? dict.get(DictKey.Name).name : "Note";
+      this.data.name = dict.has(DictKey.Name) ? dict.getValue(DictKey.Name).name : "Note";
     }
 
     if (dict.has(DictKey.State)) {
-      this.data.state = dict.get(DictKey.State) || null;
-      this.data.stateModel = dict.get(DictKey.StateModel) || null;
+      this.data.state = dict.getValue(DictKey.State) || null;
+      this.data.stateModel = dict.getValue(DictKey.StateModel) || null;
     } else {
       this.data.state = null;
       this.data.stateModel = null;
@@ -3990,7 +3991,7 @@ class PopupAnnotation extends Annotation {
       this.data.rect = null;
     }
 
-    let parentItem = dict.get(DictKey.Parent);
+    let parentItem = dict.getValue(DictKey.Parent);
     if (!parentItem) {
       warn("Popup annotation has a missing or invalid parent annotation.");
       return;
@@ -4039,7 +4040,7 @@ class PopupAnnotation extends Annotation {
       this.data.richText = XFAFactory.getRichTextAsHtml(parentItem.get("RC"));
     }
 
-    this.data.open = !!dict.get(DictKey.Open);
+    this.data.open = !!dict.getValue(DictKey.Open);
   }
 }
 
@@ -4084,7 +4085,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
         this.data.textPosition = this._transformPoint(coords, bbox, matrix!);
       }
       if (this._isOffscreenCanvasSupported) {
-        const strokeAlpha = params.dict.get(DictKey.CA);
+        const strokeAlpha = params.dict.getValue(DictKey.CA);
         const fakeUnicodeFont = new FakeUnicodeFont(xref, "sans-serif");
         this.appearance = fakeUnicodeFont.createAppearance(
           this._contents.str,
@@ -4296,7 +4297,7 @@ class LineAnnotation extends MarkupAnnotation {
     if (!this.appearance) {
       // The default stroke color is black.
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
-      const strokeAlpha = dict.get(DictKey.CA);
+      const strokeAlpha = dict.getValue(DictKey.CA);
 
       const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
       // The default fill color is transparent. Setting the fill colour is
@@ -4356,7 +4357,7 @@ class SquareAnnotation extends MarkupAnnotation {
     if (!this.appearance) {
       // The default stroke color is black.
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
-      const strokeAlpha = dict.get(DictKey.CA);
+      const strokeAlpha = dict.getValue(DictKey.CA);
 
       const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
       // The default fill color is transparent.
@@ -4403,7 +4404,7 @@ class CircleAnnotation extends MarkupAnnotation {
     if (!this.appearance) {
       // The default stroke color is black.
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
-      const strokeAlpha = dict.get(DictKey.CA);
+      const strokeAlpha = dict.getValue(DictKey.CA);
 
       const interiorColor = getRgbColor(dict.getArray(DictKey.IC), null);
       // The default fill color is transparent.
@@ -4488,7 +4489,7 @@ class PolylineAnnotation extends MarkupAnnotation {
     if (!this.appearance) {
       // The default stroke color is black.
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
-      const strokeAlpha = dict.get(DictKey.CA);
+      const strokeAlpha = dict.getValue(DictKey.CA);
 
       const borderWidth = this.borderStyle.width || 1,
         borderAdjust = 2 * borderWidth;
@@ -4555,7 +4556,7 @@ class InkAnnotation extends MarkupAnnotation {
     this.data.isEditable = !this.data.noHTML && this.data.it === "InkHighlight";
     // We want to be able to add mouse listeners to the annotation.
     this.data.noHTML = false;
-    this.data.opacity = dict.get(DictKey.CA) || 1;
+    this.data.opacity = dict.getValue(DictKey.CA) || 1;
 
     const rawInkLists = dict.getArray(DictKey.InkList);
     if (!Array.isArray(rawInkLists)) {
@@ -4584,7 +4585,7 @@ class InkAnnotation extends MarkupAnnotation {
     if (!this.appearance) {
       // The default stroke color is black.
       const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
-      const strokeAlpha = dict.get(DictKey.CA);
+      const strokeAlpha = dict.getValue(DictKey.CA);
 
       const borderWidth = this.borderStyle.width || 1,
         borderAdjust = 2 * borderWidth;
@@ -4810,13 +4811,13 @@ class HighlightAnnotation extends MarkupAnnotation {
     this.data.isEditable = !this.data.noHTML;
     // We want to be able to add mouse listeners to the annotation.
     this.data.noHTML = false;
-    this.data.opacity = dict.get(DictKey.CA) || 1;
+    this.data.opacity = dict.getValue(DictKey.CA) || 1;
 
     const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null));
     if (quadPoints) {
-      const resources = this.appearance?.dict.get(DictKey.Resources);
+      const resources = this.appearance?.dict?.getValue(DictKey.Resources);
 
-      if (!this.appearance || !resources?.has("ExtGState")) {
+      if (!this.appearance || !resources?.has(DictKey.ExtGState)) {
         if (this.appearance) {
           // Workaround for cases where there's no /ExtGState-entry directly
           // available, e.g. when the appearance stream contains a /XObject of
@@ -4826,7 +4827,7 @@ class HighlightAnnotation extends MarkupAnnotation {
         }
         // Default color is yellow in Acrobat Reader
         const fillColor = this.color ? getPdfColorArray(this.color) : [1, 1, 0];
-        const fillAlpha = dict.get(DictKey.CA);
+        const fillAlpha = dict.getValue(DictKey.CA);
 
         this._setDefaultAppearance({
           xref,
@@ -4955,7 +4956,7 @@ class UnderlineAnnotation extends MarkupAnnotation {
         const strokeColor = this.color
           ? getPdfColorArray(this.color)
           : [0, 0, 0];
-        const strokeAlpha = dict.get(DictKey.CA);
+        const strokeAlpha = dict.getValue(DictKey.CA);
 
         // The values 0.571 and 1.3 below corresponds to what Acrobat is doing.
         this._setDefaultAppearance({
@@ -4993,7 +4994,7 @@ class SquigglyAnnotation extends MarkupAnnotation {
         const strokeColor = this.color
           ? getPdfColorArray(this.color)
           : [0, 0, 0];
-        const strokeAlpha = dict.get(DictKey.CA);
+        const strokeAlpha = dict.getValue(DictKey.CA);
 
         this._setDefaultAppearance({
           xref,
@@ -5037,7 +5038,7 @@ class StrikeOutAnnotation extends MarkupAnnotation {
         const strokeColor = this.color
           ? getPdfColorArray(this.color)
           : [0, 0, 0];
-        const strokeAlpha = dict.get(DictKey.CA);
+        const strokeAlpha = dict.getValue(DictKey.CA);
 
         this._setDefaultAppearance({
           xref,
@@ -5238,18 +5239,18 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     super(params);
 
     const { dict, xref } = params;
-    const file = new FileSpec(dict.get(DictKey.FS), xref);
+    const file = new FileSpec(dict.getValue(DictKey.FS), xref);
 
     this.data.annotationType = AnnotationType.FILEATTACHMENT;
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
     this.data.file = file.serializable;
 
-    const name = dict.get(DictKey.Name);
+    const name = dict.getValue(DictKey.Name);
     this.data.name =
       name instanceof Name ? stringToPDFString(name.name) : "PushPin";
 
-    const fillAlpha = dict.get(DictKey.ca);
+    const fillAlpha = dict.getValue(DictKey.ca);
     this.data.fillAlpha =
       typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1
         ? fillAlpha

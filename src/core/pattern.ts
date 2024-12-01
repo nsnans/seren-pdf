@@ -355,7 +355,7 @@ class MeshStreamReader {
     return true;
   }
 
-  readBits(n) {
+  readBits(n: number) {
     let buffer = this.buffer;
     let bufferLength = this.bufferLength;
     if (n === 32) {
@@ -480,7 +480,7 @@ class MeshShading extends BaseShading {
       throw new FormatError("Mesh data is not a stream");
     }
     const dict = stream.dict!;
-    this.shadingType = dict.get(DictKey.ShadingType);
+    this.shadingType = dict.getValue(DictKey.ShadingType);
     this.bbox = lookupNormalRect(dict.getArray(DictKey.BBox), null);
     const cs = ColorSpace.parse({
       cs: dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
@@ -490,7 +490,7 @@ class MeshShading extends BaseShading {
       localColorSpaceCache,
     });
     this.background = dict.has(DictKey.Background)
-      ? cs.getRgb(dict.get(DictKey.Background), 0)
+      ? cs.getRgb(dict.getValue(DictKey.Background), 0)
       : null;
 
     const fnObj = dict.getRaw(DictKey.Function);
@@ -501,9 +501,9 @@ class MeshShading extends BaseShading {
     this.figures = [];
 
     const decodeContext = {
-      bitsPerCoordinate: dict.get(DictKey.BitsPerCoordinate),
-      bitsPerComponent: dict.get(DictKey.BitsPerComponent),
-      bitsPerFlag: dict.get(DictKey.BitsPerFlag),
+      bitsPerCoordinate: dict.getValue(DictKey.BitsPerCoordinate),
+      bitsPerComponent: dict.getValue(DictKey.BitsPerComponent),
+      bitsPerFlag: dict.getValue(DictKey.BitsPerFlag),
       decode: dict.getArray(DictKey.Decode),
       colorFn: fn,
       colorSpace: cs,
@@ -517,7 +517,7 @@ class MeshShading extends BaseShading {
         this._decodeType4Shading(reader);
         break;
       case ShadingType.LATTICE_FORM_MESH:
-        const verticesPerRow = dict.get(DictKey.VerticesPerRow) | 0;
+        const verticesPerRow = dict.getValue(DictKey.VerticesPerRow) | 0;
         if (verticesPerRow < 2) {
           throw new FormatError("Invalid VerticesPerRow");
         }

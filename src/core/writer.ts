@@ -259,7 +259,7 @@ async function updateAcroform({
     // We've a XFA array which doesn't contain a datasets entry.
     // So we'll update the AcroForm dictionary to have an XFA containing
     // the datasets.
-    const newXfa = acroForm.get(DictKey.XFA).slice();
+    const newXfa = acroForm.getValue(DictKey.XFA).slice();
     newXfa.splice(2, 0, "datasets");
     newXfa.splice(3, 0, xfaDatasetsRef);
 

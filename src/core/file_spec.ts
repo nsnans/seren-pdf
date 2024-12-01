@@ -25,15 +25,15 @@ function pickPlatformItem(dict?: Dict) {
   // Look for the filename in this order:
   // UF, F, Unix, Mac, DOS
   if (dict.has(DictKey.UF)) {
-    return dict.get(DictKey.UF);
+    return dict.getValue(DictKey.UF);
   } else if (dict.has(DictKey.F)) {
-    return dict.get(DictKey.F);
+    return dict.getValue(DictKey.F);
   } else if (dict.has(DictKey.Unix)) {
-    return dict.get(DictKey.Unix);
+    return dict.getValue(DictKey.Unix);
   } else if (dict.has(DictKey.Mac)) {
-    return dict.get(DictKey.Mac);
+    return dict.getValue(DictKey.Mac);
   } else if (dict.has(DictKey.DOS)) {
-    return dict.get(DictKey.DOS);
+    return dict.getValue(DictKey.DOS);
   }
   return null;
 }
@@ -79,7 +79,7 @@ export class FileSpec {
     this.xref = xref;
     this.root = root;
     if (root.has(DictKey.FS)) {
-      this.fs = root.get(DictKey.FS);
+      this.fs = root.getValue(DictKey.FS);
     }
     if (root.has(DictKey.RF)) {
       warn("Related file specifications are not supported");
@@ -110,7 +110,7 @@ export class FileSpec {
     if (!this.#contentAvailable) {
       return null;
     }
-    this._contentRef ||= pickPlatformItem(this.root?.get(DictKey.EF));
+    this._contentRef ||= pickPlatformItem(this.root?.getValue(DictKey.EF));
 
     let content = null;
     if (this._contentRef) {
@@ -131,7 +131,7 @@ export class FileSpec {
   get description() {
     let description = "";
 
-    const desc = this.root?.get(DictKey.Desc);
+    const desc = this.root?.getValue(DictKey.Desc);
     if (desc && typeof desc === "string") {
       description = stringToPDFString(desc);
     }

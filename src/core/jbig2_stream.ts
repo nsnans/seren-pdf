@@ -62,7 +62,7 @@ class Jbig2Stream extends DecodeStream {
 
     const chunks = [];
     if (this.params instanceof Dict) {
-      const globalsStream = this.params.get(DictKey.JBIG2Globals);
+      const globalsStream = this.params.getValue(DictKey.JBIG2Globals);
       if (globalsStream instanceof BaseStream) {
         const globals = globalsStream.getBytes();
         chunks.push({ data: globals, start: 0, end: globals.length });

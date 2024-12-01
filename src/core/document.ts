@@ -249,7 +249,7 @@ class Page {
   }
 
   get userUnit() {
-    let obj = this.pageDict.get(DictKey.UserUnit);
+    let obj = this.pageDict.getValue(DictKey.UserUnit);
     if (typeof obj !== "number" || obj <= 0) {
       obj = DEFAULT_USER_UNIT;
     }
@@ -412,7 +412,7 @@ class Page {
       }
     }
 
-    const savedDict = pageDict.get(DictKey.Annots);
+    const savedDict = pageDict.getValue(DictKey.Annots);
     pageDict.set(DictKey.Annots, annotationsArray);
     const buffer = <string[]>[];
     await writeObject(this.ref!, pageDict, buffer, this.xref);
@@ -1176,12 +1176,12 @@ class PDFDocument {
           return false;
         }
         return this._hasOnlyDocumentSignatures(
-          field.get(DictKey.Kids),
+          field.getValue(DictKey.Kids),
           recursionDepth
         );
       }
-      const isSignature = isName(field.get(DictKey.FT), "Sig");
-      const rectangle = field.get(DictKey.Rect);
+      const isSignature = isName(field.getValue(DictKey.FT), "Sig");
+      const rectangle = field.getValue(DictKey.Rect);
       const isInvisible =
         Array.isArray(rectangle) && rectangle.every(value => value === 0);
       return isSignature && isInvisible;
@@ -1194,7 +1194,7 @@ class PDFDocument {
       return null;
     }
 
-    const xfa = acroForm.get(DictKey.XFA);
+    const xfa = acroForm.getValue(DictKey.XFA);
     const entries: Record<string, any> = {
       "xdp:xdp": "",
       template: "",
@@ -1332,7 +1332,7 @@ class PDFDocument {
     const objectLoader = new ObjectLoader(resources, ["Font"], this.xref);
     await objectLoader.load();
 
-    const fontRes = resources.get(DictKey.Font);
+    const fontRes = resources.getValue(DictKey.Font);
     if (!(fontRes instanceof Dict)) {
       return;
     }
@@ -1378,15 +1378,15 @@ class PDFDocument {
       if (!(descriptor instanceof Dict)) {
         continue;
       }
-      let fontFamily = descriptor.get(DictKey.FontFamily);
+      let fontFamily = descriptor.getValue(DictKey.FontFamily);
       // For example, "Wingdings 3" is not a valid font name in the css specs.
       fontFamily = fontFamily.replaceAll(/[ ]+(\d)/g, "$1");
-      const fontWeight = descriptor.get(DictKey.FontWeight);
+      const fontWeight = descriptor.getValue(DictKey.FontWeight);
 
       // Angle is expressed in degrees counterclockwise in PDF
       // when it's clockwise in CSS
       // (see https://drafts.csswg.org/css-fonts-4/#valdef-font-style-oblique-angle)
-      const italicAngle = -descriptor.get(DictKey.ItalicAngle);
+      const italicAngle = -descriptor.getValue(DictKey.ItalicAngle);
       const cssFontInfo = { fontFamily, fontWeight, italicAngle };
 
       if (!validateCSSFont(cssFontInfo)) {
@@ -1502,13 +1502,13 @@ class PDFDocument {
     }
 
     try {
-      const fields = acroForm.get(DictKey.Fields);
+      const fields = acroForm.getValue(DictKey.Fields);
       const hasFields = Array.isArray(fields) && fields.length > 0;
       formInfo.hasFields = hasFields; // Used by the `fieldObjects` getter.
 
       // The document contains XFA data if the `XFA` entry is a non-empty
       // array or stream.
-      const xfa = acroForm.get(DictKey.XFA);
+      const xfa = acroForm.getValue(DictKey.XFA);
       formInfo.hasXfa =
         (Array.isArray(xfa) && xfa.length > 0) ||
         (xfa instanceof BaseStream && !xfa.isEmpty);
@@ -1520,7 +1520,7 @@ class PDFDocument {
       // store (invisible) document signatures. This can be detected using
       // the first bit of the `SigFlags` integer (see Table 219 in the
       // specification).
-      const sigFlags = acroForm.get(DictKey.SigFlags);
+      const sigFlags = acroForm.getValue(DictKey.SigFlags);
       const hasSignatures = !!(sigFlags & 0x1);
       const hasOnlyDocumentSignatures =
         hasSignatures && this._hasOnlyDocumentSignatures(fields);
@@ -1551,7 +1551,7 @@ class PDFDocument {
 
     let infoDict;
     try {
-      infoDict = this.xref.trailer.get(DictKey.Info);
+      infoDict = this.xref.trailer?.getValue(DictKey.Info);
     } catch (err) {
       if (err instanceof MissingDataException) {
         throw err;
@@ -1563,7 +1563,7 @@ class PDFDocument {
     }
 
     for (const key of infoDict.getKeys()) {
-      const value = infoDict.get(key);
+      const value = infoDict.getValue(key);
 
       switch (key) {
         case "Title":
@@ -1632,7 +1632,7 @@ class PDFDocument {
       );
     }
 
-    const id = this.xref.trailer!.get(DictKey.ID);
+    const id = this.xref.trailer!.getValue(DictKey.ID);
     let hashOriginal, hashModified;
     if (Array.isArray(id) && validate(id[0])) {
       hashOriginal = stringToBytes(id[0]);
@@ -1898,7 +1898,7 @@ class PDFDocument {
     if (
       parentRef &&
       !field.has(DictKey.Parent) &&
-      isName(field.get(DictKey.Subtype), "Widget")
+      isName(field.getValue(DictKey.Subtype), "Widget")
     ) {
       // We've a parent from the Fields array, but the field hasn't.
       orphanFields.put(fieldRef, parentRef);
@@ -2020,7 +2020,7 @@ class PDFDocument {
   }
 
   get calculationOrderIds() {
-    const calculationOrder = this.catalog!.acroForm?.get(DictKey.CO);
+    const calculationOrder = this.catalog!.acroForm?.getValue(DictKey.CO);
     if (!Array.isArray(calculationOrder) || calculationOrder.length === 0) {
       return shadow(this, "calculationOrderIds", null);
     }

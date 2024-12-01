@@ -111,7 +111,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
     this.evaluatorOptions = evaluatorOptions;
     this.xref = xref;
 
-    this.resources = stream.dict?.get(DictKey.Resources);
+    this.resources = stream.dict?.getValue(DictKey.Resources);
   }
 
   parse() {
@@ -330,7 +330,7 @@ class FakeUnicodeFont {
       widths.push(currentChar, currentWidths);
     }
 
-    descendantFont.set(DictKey.W, widths);
+    descendantFont.set(DictKey.W, <number | number[]>widths);
 
     const cidSystemInfo = new Dict(this.xref);
     cidSystemInfo.set(DictKey.Ordering, "Identity");
@@ -356,7 +356,7 @@ class FakeUnicodeFont {
   get resources() {
     const resources = new Dict(this.xref);
     const font = new Dict(this.xref);
-    font.set(this.fontName.name, this.baseFontRef);
+    font.set(<DictKey>this.fontName.name, this.baseFontRef);
     resources.set(DictKey.Font, font);
 
     return resources;

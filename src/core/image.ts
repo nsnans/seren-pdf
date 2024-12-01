@@ -326,7 +326,7 @@ class PDFImage {
     } else if (mask) {
       if (mask instanceof BaseStream) {
         const maskDict = mask.dict!,
-          imageMask = maskDict.get(DictKey.IM, DictKey.ImageMask);
+          imageMask = maskDict.getValueWithFallback(DictKey.IM, DictKey.ImageMask);
         if (!imageMask) {
           warn("Ignoring /Mask in image without /ImageMask.");
         } else {

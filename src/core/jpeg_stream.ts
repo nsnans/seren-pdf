@@ -68,9 +68,9 @@ class JpegStream extends DecodeStream {
     };
 
     // Checking if values need to be transformed before conversion.
-    const decodeArr = this.dict.getArray(DictKey.D, DictKey.Decode);
+    const decodeArr = this.dict!.getArray(DictKey.D, DictKey.Decode);
     if ((this.forceRGBA || this.forceRGB) && Array.isArray(decodeArr)) {
-      const bitsPerComponent = this.dict.get(DictKey.BPC, DictKey.BitsPerComponent) || 8;
+      const bitsPerComponent = this.dict?.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent) || 8;
       const decodeArrLength = decodeArr.length;
       const transform = new Int32Array(decodeArrLength);
       let transformNeeded = false;

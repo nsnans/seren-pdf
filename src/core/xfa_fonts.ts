@@ -272,7 +272,7 @@ function getXfaFontWidths(name: string) {
 }
 
 function getXfaFontDict(name: string) {
-  const widths = getXfaFontWidths(name);
+  const widths = getXfaFontWidths(name)!;
   const dict = new Dict(null);
   dict.set(DictKey.BaseFont, Name.get(name));
   dict.set(DictKey.Type, Name.get("Font"));

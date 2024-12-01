@@ -163,7 +163,7 @@ export class XRef {
 
     let encrypt;
     try {
-      encrypt = trailerDict.get(DictKey.Encrypt);
+      encrypt = trailerDict.getValue(DictKey.Encrypt);
     } catch (ex) {
       if (ex instanceof MissingDataException) {
         throw ex;
@@ -171,7 +171,7 @@ export class XRef {
       warn(`XRef.parse - Invalid "Encrypt" reference: "${ex}".`);
     }
     if (encrypt instanceof Dict) {
-      const ids = trailerDict.get(DictKey.ID);
+      const ids = trailerDict.getValue(DictKey.ID);
       const fileId = ids?.length ? ids[0] : "";
       // The 'Encrypt' dictionary itself should not be encrypted, and by
       // setting `suppressEncryption` we can prevent an infinite loop inside
@@ -188,7 +188,7 @@ export class XRef {
     // Get the root dictionary (catalog) object, and do some basic validation.
     let root;
     try {
-      root = trailerDict.get(DictKey.Root);
+      root = trailerDict.getValue(DictKey.Root);
     } catch (ex) {
       if (ex instanceof MissingDataException) {
         throw ex;
@@ -197,7 +197,7 @@ export class XRef {
     }
     if (root instanceof Dict) {
       try {
-        const pages = root.get(DictKey.Pages);
+        const pages = root.getValue(DictKey.Pages);
         if (pages instanceof Dict) {
           this.root = root;
           return;
@@ -363,10 +363,10 @@ export class XRef {
       // Stores state of the stream as we process it so we can resume
       // from middle of stream in case of missing data error
       const streamParameters = stream.dict;
-      const byteWidths = streamParameters!.get(DictKey.W);
-      let range = streamParameters!.get(DictKey.Index);
+      const byteWidths = streamParameters!.getValue(DictKey.W);
+      let range = streamParameters!.getValue(DictKey.Index);
       if (!range) {
-        range = [0, streamParameters!.get(DictKey.Size)];
+        range = [0, streamParameters!.getValue(DictKey.Size)];
       }
 
       this.streamState = {
@@ -703,15 +703,15 @@ export class XRef {
       // Do some basic validation of the trailer/root dictionary candidate.
       let validPagesDict = false;
       try {
-        const rootDict = dict.get(DictKey.Root);
+        const rootDict = dict.getValue(DictKey.Root);
         if (!(rootDict instanceof Dict)) {
           continue;
         }
-        const pagesDict = rootDict.get(DictKey.Pages);
+        const pagesDict = rootDict.getValue(DictKey.Pages);
         if (!(pagesDict instanceof Dict)) {
           continue;
         }
-        const pagesCount = pagesDict.get(DictKey.Count);
+        const pagesCount = pagesDict.getValue(DictKey.Count);
         if (Number.isInteger(pagesCount)) {
           validPagesDict = true;
         }
@@ -780,7 +780,7 @@ export class XRef {
           }
 
           // Recursively get other XRefs 'XRefStm', if any
-          obj = dict.get(DictKey.XRefStm);
+          obj = dict.getValue(DictKey.XRefStm);
           if (Number.isInteger(obj) && !this._xrefStms.has(obj)) {
             // ignore previously loaded xref streams
             // (possible infinite recursion)
@@ -809,7 +809,7 @@ export class XRef {
         }
 
         // Recursively get previous dictionary, if any
-        obj = dict.get(DictKey.Prev);
+        obj = dict.getValue(DictKey.Prev);
         if (Number.isInteger(obj)) {
           this.startXRefQueue.push(obj);
         } else if (obj instanceof Ref) {
@@ -974,8 +974,8 @@ export class XRef {
     if (!(stream instanceof BaseStream)) {
       throw new FormatError("bad ObjStm stream");
     }
-    const first = stream.dict!.get(DictKey.First);
-    const n = stream.dict!.get(DictKey.N);
+    const first = stream.dict!.getValue(DictKey.First);
+    const n = stream.dict!.getValue(DictKey.N);
     if (!Number.isInteger(first) || !Number.isInteger(n)) {
       throw new FormatError("invalid first and n parameters for ObjStm stream");
     }

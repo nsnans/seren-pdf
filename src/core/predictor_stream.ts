@@ -29,7 +29,7 @@ class PredictorStream extends DecodeStream {
     if (!(params instanceof Dict)) {
       return str; // no prediction
     }
-    const predictor = (this.predictor = params.get(DictKey.Predictor) || 1);
+    const predictor = (this.predictor = params.getValue(DictKey.Predictor) || 1);
 
     if (predictor <= 1) {
       return str; // no prediction
@@ -43,9 +43,9 @@ class PredictorStream extends DecodeStream {
     this.str = str;
     this.dict = str.dict;
 
-    const colors = (this.colors = params.get(DictKey.Colors) || 1);
-    const bits = (this.bits = params.get(DictKey.BPC, DictKey.BitsPerComponent) || 8);
-    const columns = (this.columns = params.get(DictKey.Columns) || 1);
+    const colors = (this.colors = params.getValue(DictKey.Colors) || 1);
+    const bits = (this.bits = params.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent) || 8);
+    const columns = (this.columns = params.getValue(DictKey.Columns) || 1);
 
     this.pixBytes = (colors * bits + 7) >> 3;
     this.rowBytes = (columns * colors * bits + 7) >> 3;

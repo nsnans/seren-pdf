@@ -156,7 +156,7 @@ class Parser {
             if (this.buf1 === EOF) {
               break;
             }
-            dict.set(key, this.getObj(cipherTransform));
+            dict.set(<DictKey>key, this.getObj(cipherTransform));
           }
           if (this.buf1 === EOF) {
             if (this.recoveryMode) {
@@ -611,7 +611,7 @@ class Parser {
 
     const dict = new Dict(this.xref);
     for (const key in dictMap) {
-      dict.set(key, dictMap[key]);
+      dict.set(<DictKey>key, dictMap[key]);
     }
     let imageStream = stream.makeSubStream(startPos, length, dict);
     if (cipherTransform) {
@@ -753,8 +753,8 @@ class Parser {
   }
 
   filter(stream: Stream, dict: Dict, length) {
-    let filter = dict.get(DictKey.F, DictKey.Filter);
-    let params = dict.get(DictKey.DP, DictKey.DecodeParms);
+    let filter = dict.getValue(DictKey.F, DictKey.Filter);
+    let params = dict.getValue(DictKey.DP, DictKey.DecodeParms);
 
     if (filter instanceof Name) {
       if (Array.isArray(params)) {
@@ -1402,7 +1402,7 @@ export interface LinearizationInterface {
 class Linearization {
   static create(stream: Stream): LinearizationInterface | null {
     function getInt(linDict: Dict, name: string, allowZeroValue = false): number {
-      const obj = linDict.get(name);
+      const obj = linDict.getValue(name);
       if (Number.isInteger(obj) && (allowZeroValue ? obj >= 0 : obj > 0)) {
         return obj;
       }
@@ -1413,7 +1413,7 @@ class Linearization {
     }
 
     function getHints(linDict: Dict): number[] {
-      const hints = linDict.get(DictKey.H);
+      const hints = linDict.getValue(DictKey.H);
       let hintsLength;
 
       if (
@@ -1448,7 +1448,7 @@ class Linearization {
         Number.isInteger(obj2) &&
         isCmd(obj3, "obj") &&
         linDict instanceof Dict &&
-        typeof (obj = linDict.get(DictKey.Linearized)) === "number" &&
+        typeof (obj = linDict.getValue(DictKey.Linearized)) === "number" &&
         obj > 0
       )
     ) {

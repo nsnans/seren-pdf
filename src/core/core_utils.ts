@@ -143,14 +143,14 @@ function getInheritableProperty(
     if (dict.objId) {
       visited.put(dict.objId);
     }
-    const value = getArray ? dict.getArray(key) : dict.get(key);
+    const value = getArray ? dict.getArray(key) : dict.getValue(key);
     if (value !== undefined) {
       if (stopWhenFound) {
         return value;
       }
       (values ||= []).push(value);
     }
-    dict = dict.get(DictKey.Parent);
+    dict = dict.getValue(DictKey.Parent);
   }
   return values;
 }
@@ -379,8 +379,8 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
       _collectJS(element, xref, list, parents);
     }
   } else if (entry instanceof Dict) {
-    if (isName(entry.get(DictKey.S), DictKey.JavaScript)) {
-      const js = entry.get(DictKey.JS);
+    if (isName(entry.getValue(DictKey.S), DictKey.JavaScript)) {
+      const js = entry.getValue(DictKey.JS);
       let code;
       if (js instanceof BaseStream) {
         code = js.getString();
@@ -433,7 +433,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
   }
   // Collect the Action if any (we may have one on pushbutton).
   if (dict.has(DictKey.A)) {
-    const actionDict = dict.get(DictKey.A);
+    const actionDict = dict.getValue(DictKey.A);
     const parents = new RefSet();
     const list = <string[]>[];
     _collectJS(actionDict, xref, list, parents);
