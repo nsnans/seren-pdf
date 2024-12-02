@@ -313,7 +313,7 @@ export interface DocParamEvaluatorOptions {
   isEvalSupported: boolean;
   isOffscreenCanvasSupported: boolean;
   isChrome: boolean;
-  canvasMaxAreaInBytes: number | undefined;
+  canvasMaxAreaInBytes: number;
   fontExtraProperties: boolean;
   useSystemFonts: boolean;
   cMapUrl: string | null;

@@ -598,6 +598,10 @@ class OperatorList {
   // TODO dependencies理论上来说应该是Set<string>，但是会不会有其他类型，值得商榷
   protected dependencies: Set<string>;
 
+  protected fnArray: number[];
+
+  public argsArray;
+
   constructor(intent = 0, streamSink?) {
     this._streamSink = streamSink;
     this.fnArray = [];

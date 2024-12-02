@@ -337,7 +337,8 @@ class ColorSpace {
         'ColorSpace._cache - expected "parsedColorSpace" argument.'
       );
     }
-    let csName, csRef;
+    let csName: string | null = null;
+    let csRef: Ref | null = null;
     if (cacheKey instanceof Ref) {
       csRef = cacheKey;
 
@@ -382,18 +383,13 @@ class ColorSpace {
     return null;
   }
 
-  static async parseAsync({
-    cs,
-    xref,
-    resources = null,
-    pdfFunctionFactory,
-    localColorSpaceCache,
-  }: {
+  static async parseAsync(
+    cs: Name | Ref | (Ref | Name)[],
     xref: XRef,
     resources: Dict | null,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache
-  }) {
+  ) {
     if (PlatformHelper.isTesting()) {
       assert(
         !this.getCached(cs, xref, localColorSpaceCache),
@@ -410,22 +406,16 @@ class ColorSpace {
 
     // Attempt to cache the parsed ColorSpace, by name and/or reference.
     this._cache(cs, xref, localColorSpaceCache, parsedColorSpace);
-
     return parsedColorSpace;
   }
 
-  static parse({
-    cs,
-    xref,
-    resources = null,
-    pdfFunctionFactory,
-    localColorSpaceCache,
-  }: {
+  static parse(
+    cs: Name | (Ref | Name)[],
     xref: XRef,
     resources: Dict | null,
     pdfFunctionFactory: PDFFunctionFactory,
-    localColorSpaceCache: LocalColorSpaceCache
-  }): ColorSpace {
+    localColorSpaceCache: LocalColorSpaceCache,
+  ): ColorSpace {
     const cachedColorSpace = this.getCached(cs, xref, localColorSpaceCache);
     if (cachedColorSpace) {
       return cachedColorSpace;
@@ -446,7 +436,7 @@ class ColorSpace {
   /**
    * @private
    */
-  static _parse(cs, xref: XRef, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
+  static _parse(cs: Name | Ref | (Ref | Name)[], xref: XRef, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
     cs = xref.fetchIfRef(cs);
     if (cs instanceof Name) {
       switch (cs.name) {
@@ -467,7 +457,7 @@ class ColorSpace {
           if (resources instanceof Dict) {
             const colorSpaces = resources.getValue(DictKey.ColorSpace);
             if (colorSpaces instanceof Dict) {
-              const resourcesCS = colorSpaces.getValue(cs.name);
+              const resourcesCS = colorSpaces.getValue(<DictKey>cs.name);
               if (resourcesCS) {
                 if (resourcesCS instanceof Name) {
                   return this._parse(
@@ -477,7 +467,7 @@ class ColorSpace {
                     pdfFunctionFactory
                   );
                 }
-                cs = resourcesCS;
+                cs = <(Name | Ref)[]>resourcesCS;
                 break;
               }
             }

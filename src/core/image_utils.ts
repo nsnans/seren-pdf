@@ -20,52 +20,67 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { Ref, RefSet, RefSetCache } from "./primitives";
+import { ColorSpace } from "./colorspace";
+import { ImageMask } from "./core_types";
+import { Dict, DictKey, Ref, RefSet, RefSetCache } from "./primitives";
 
-class BaseLocalCache {
-
-  protected _onlyRefs: boolean;
-
-  protected _nameRefMap?: Map<any, any>;
-
-  protected _imageMap?: Map<any, any>;
+abstract class BaseLocalCache<T> {
 
   protected _imageCache = new RefSetCache();
 
-  constructor(options = {}) {
+  constructor() {
     if (PlatformHelper.isTesting() && this.constructor === BaseLocalCache) {
       unreachable("Cannot initialize BaseLocalCache.");
     }
-    this._onlyRefs = options?.onlyRefs === true;
-
-    if (!this._onlyRefs) {
-      this._nameRefMap = new Map();
-      this._imageMap = new Map();
-    }
   }
 
-  getByName(name) {
-    if (this._onlyRefs) {
-      unreachable("Should not call `getByName` method.");
-    }
+  getByRef(ref: Ref | string) {
+    return this._imageCache.get(ref) || null;
+  }
+
+  abstract set(_name: string | null, ref: Ref | string | null, data: T): void;
+}
+
+abstract class NameLocalCache<DATA> extends BaseLocalCache<DATA> {
+
+  protected _nameRefMap: Map<string | null, string | Ref> = new Map();
+
+  protected _imageMap: Map<string | null, DATA> = new Map();
+
+  getByName(name: string | null) {
     const ref = this._nameRefMap.get(name);
     if (ref) {
       return this.getByRef(ref);
     }
     return this._imageMap.get(name) || null;
   }
-
-  getByRef(ref) {
-    return this._imageCache.get(ref) || null;
-  }
-
-  set(name, ref, data) {
-    unreachable("Abstract method `set` called.");
-  }
 }
 
-class LocalImageCache extends BaseLocalCache {
-  set(name: string, ref: string | Ref | null | undefined = null, data) {
+export interface ImageCacheData {
+  objId?: string | null;
+  fn: number;
+  args: ImageMask[] | {
+    data: string;
+    width: number;
+    height: number;
+    interpolate: number[];
+    count: number;
+  }[] | (string | number)[];
+  optionalContent: {
+    type: string;
+    id?: string | null;
+    expression?: (string | string[])[] | null;
+    policy: string | null;
+  } | null;
+}
+
+export interface GlobalImageCacheData extends ImageCacheData {
+  byteSize: number;
+}
+
+class LocalImageCache extends NameLocalCache<ImageCacheData> {
+
+  set(name: string, ref: string | null, data: ImageCacheData) {
     if (typeof name !== "string") {
       throw new Error('LocalImageCache.set - expected "name" argument.');
     }
@@ -85,8 +100,9 @@ class LocalImageCache extends BaseLocalCache {
   }
 }
 
-class LocalColorSpaceCache extends BaseLocalCache {
-  set(name = null, ref = null, data) {
+class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
+
+  set(name: string | null, ref: Ref | null, data: ColorSpace) {
     if (typeof name !== "string" && !ref) {
       throw new Error(
         'LocalColorSpaceCache.set - expected "name" and/or "ref" argument.'
@@ -111,12 +127,9 @@ class LocalColorSpaceCache extends BaseLocalCache {
   }
 }
 
-class LocalFunctionCache extends BaseLocalCache {
-  constructor(options) {
-    super({ onlyRefs: true });
-  }
+class LocalFunctionCache extends BaseLocalCache<Function> {
 
-  set(name = null, ref, data) {
+  set(_name: string | null, ref: Ref | string, data: Function) {
     if (!ref) {
       throw new Error('LocalFunctionCache.set - expected "ref" argument.');
     }
@@ -127,8 +140,8 @@ class LocalFunctionCache extends BaseLocalCache {
   }
 }
 
-class LocalGStateCache extends BaseLocalCache {
-  set(name: string, ref = null, data) {
+class LocalGStateCache extends NameLocalCache<[DictKey, any][]> {
+  set(name: string, ref: string, data: [DictKey, any][]) {
     if (typeof name !== "string") {
       throw new Error('LocalGStateCache.set - expected "name" argument.');
     }
@@ -148,13 +161,20 @@ class LocalGStateCache extends BaseLocalCache {
   }
 }
 
-class LocalTilingPatternCache extends BaseLocalCache {
-  // options参数没有用上，直接删除了
-  constructor() {
-    super({ onlyRefs: true });
-  }
+export interface LocalTilingPatternData {
+  operatorListIR: {
+    // 操作符构成的数组
+    fnArray: number[],
+    // 二维数组，每个数组有不同意思
+    argsArray: any[][],
+    length: number,
+  },
+  dict: Dict
+}
 
-  set(name = null, ref, data) {
+class LocalTilingPatternCache extends BaseLocalCache<LocalTilingPatternData> {
+
+  set(_name: string | null, ref: Ref | string, data: LocalTilingPatternData) {
     if (!ref) {
       throw new Error('LocalTilingPatternCache.set - expected "ref" argument.');
     }
@@ -165,12 +185,11 @@ class LocalTilingPatternCache extends BaseLocalCache {
   }
 }
 
-class RegionalImageCache extends BaseLocalCache {
-  constructor() {
-    super({ onlyRefs: true });
-  }
 
-  set(name = null, ref, data) {
+
+class RegionalImageCache extends BaseLocalCache<ImageCacheData> {
+
+  set(_name: string | null, ref: Ref | string, data: ImageCacheData) {
     if (!ref) {
       throw new Error('RegionalImageCache.set - expected "ref" argument.');
     }
@@ -194,7 +213,7 @@ class GlobalImageCache {
   protected _imageCache = new RefSetCache();
 
   constructor() {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       assert(
         GlobalImageCache.NUM_PAGES_THRESHOLD > 1,
         "GlobalImageCache - invalid NUM_PAGES_THRESHOLD constant."
@@ -220,7 +239,7 @@ class GlobalImageCache {
     return true;
   }
 
-  shouldCache(ref, pageIndex) {
+  shouldCache(ref: Ref | string, pageIndex: number) {
     let pageIndexSet = this._refCache.get(ref);
     if (!pageIndexSet) {
       pageIndexSet = new Set();
@@ -237,18 +256,18 @@ class GlobalImageCache {
     return true;
   }
 
-  addDecodeFailed(ref) {
+  addDecodeFailed(ref: string | Ref) {
     this.#decodeFailedSet.put(ref);
   }
 
-  hasDecodeFailed(ref) {
+  hasDecodeFailed(ref: string | Ref) {
     return this.#decodeFailedSet.has(ref);
   }
 
   /**
    * PLEASE NOTE: Must be called *after* the `setData` method.
    */
-  addByteSize(ref, byteSize) {
+  addByteSize(ref: string, byteSize: number) {
     const imageData = this._imageCache.get(ref);
     if (!imageData) {
       return; // The image data isn't cached (the limit was reached).
@@ -259,7 +278,7 @@ class GlobalImageCache {
     imageData.byteSize = byteSize;
   }
 
-  getData(ref, pageIndex) {
+  getData(ref: Ref, pageIndex: number) {
     const pageIndexSet = this._refCache.get(ref);
     if (!pageIndexSet) {
       return null;
@@ -277,7 +296,7 @@ class GlobalImageCache {
     return imageData;
   }
 
-  setData(ref, data) {
+  setData(ref: string, data: GlobalImageCacheData) {
     if (!this._refCache.has(ref)) {
       throw new Error(
         'GlobalImageCache.setData - expected "shouldCache" to have been called.'

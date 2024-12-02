@@ -82,6 +82,7 @@ import { StructTreeRoot } from "./struct_tree";
 import { FileSpecSerializable } from "./file_spec"
 import { RectType } from "../display/display_utils";
 import { CreateStampImageResult } from "../shared/collected_types";
+import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 
 export interface AnnotationParameters {
   xref: XRef;
@@ -162,7 +163,7 @@ class AnnotationFactory {
     xref: XRef,
     ref: Ref,
     annotationGlobals: AnnotationGlobals,
-    idFactory: globalIdFactory,
+    idFactory: LocalIdFactory,
     collectFields: boolean,
     orphanFields: RefSetCache,
     pageRef: Ref | null
@@ -190,7 +191,7 @@ class AnnotationFactory {
     xref: XRef,
     ref: Ref,
     annotationGlobals: AnnotationGlobals,
-    idFactory,
+    idFactory: LocalIdFactory,
     collectFields = false,
     orphanFields: RefSetCache | null = null,
     pageIndex = null,
@@ -363,7 +364,7 @@ class AnnotationFactory {
       );
       return null;
     }
-    let imagePromises;
+    let imagePromises = null;
     for (const { bitmapId, bitmap } of annotations) {
       if (!bitmap) {
         continue;
@@ -379,7 +380,7 @@ class AnnotationFactory {
   static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations: Record<string, any>[], imagePromises) {
     const xref = evaluator.xref;
     let baseFontRef;
-    const dependencies = [];
+    const dependencies = <{ ref: Ref, data: string | null }[]>[];
     const promises = [];
     const { isOffscreenCanvasSupported } = evaluator.options;
 
@@ -470,8 +471,8 @@ class AnnotationFactory {
     annotationGlobals: AnnotationGlobals,
     evaluator: PartialEvaluator,
     task: WorkerTask,
-    annotations,
-    imagePromises
+    annotations: Record<string, any>[],
+    imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
     if (!annotations) {
       return null;
@@ -542,7 +543,7 @@ class AnnotationFactory {
           if (image?.imageStream) {
             const { imageStream, smaskStream } = image;
             if (smaskStream) {
-              imageStream.dict.set("SMask", smaskStream);
+              imageStream.dict!.set(DictKey.SMask, smaskStream);
             }
             image.imageRef = new JpegStream(imageStream, imageStream.length);
             image.imageStream = image.smaskStream = null;
@@ -1221,13 +1222,13 @@ class Annotation {
     } else if (borderStyle.has(DictKey.Border)) {
       const array = borderStyle.getArrayValue(DictKey.Border);
       if (Array.isArray(array) && array.length >= 3) {
-        this.borderStyle.setHorizontalCornerRadius(array[0]);
-        this.borderStyle.setVerticalCornerRadius(array[1]);
-        this.borderStyle.setWidth(array[2], this.rectangle);
+        this.borderStyle.setHorizontalCornerRadius(<number>array[0]);
+        this.borderStyle.setVerticalCornerRadius(<number>array[1]);
+        this.borderStyle.setWidth(<number>array[2], this.rectangle);
 
         if (array.length === 4) {
           // Dash array available
-          this.borderStyle.setDashArray(array[3], /* forceStyle = */ true);
+          this.borderStyle.setDashArray(<number[]>array[3], /* forceStyle = */ true);
         }
       }
     } else {

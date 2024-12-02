@@ -22,16 +22,19 @@ import { StringStream } from "./stream";
 import { XRef } from "./xref";
 
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
+
 export const EOF = Symbol("EOF");
 
-let CmdCache: Record<string, Cmd> = Object.create(null);
-let NameCache: Record<string, Name> = Object.create(null);
-let RefCache: Record<string, Ref> = Object.create(null);
+const CmdCache = new Map<string, Cmd>();
+
+const NameCache = new Map<string, Name>();
+
+const RefCache = new Map<string, Ref>();
 
 export function clearPrimitiveCaches() {
-  CmdCache = Object.create(null);
-  NameCache = Object.create(null);
-  RefCache = Object.create(null);
+  CmdCache.clear()
+  NameCache.clear();
+  RefCache.clear();
 }
 
 export class Name {
@@ -47,12 +50,18 @@ export class Name {
 
   static get(name: string) {
     // eslint-disable-next-line no-restricted-syntax
-    return (NameCache[name] ||= new Name(name));
+    const cache = NameCache.get(name);
+    if (!cache) {
+      NameCache.set(name, new Name(name))
+    }
+    return NameCache.get(name);
   }
 }
 
 export class Cmd {
+
   public cmd: string;
+
   constructor(cmd: string) {
     if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) && typeof cmd !== "string") {
       unreachable('Cmd: The "cmd" must be a string.');
@@ -62,7 +71,11 @@ export class Cmd {
 
   static get(cmd: string) {
     // eslint-disable-next-line no-restricted-syntax
-    return (CmdCache[cmd] ||= new Cmd(cmd));
+    const cache = CmdCache.get(cmd);
+    if (!cache) {
+      CmdCache.set(this.name, new Cmd(cmd))
+    }
+    return CmdCache.get(this.name);
   }
 }
 
@@ -289,6 +302,10 @@ export enum DictKey {
   SA = "SA",
   AIS = "AIS",
   TK = "TK",
+  PatternType = "PatternType",
+  Properties = "Properties",
+  VE = "VE",
+  OCGs = "OCGs",
 }
 
 /**
@@ -304,7 +321,7 @@ type DictValueTypeMapping = {
   [DictKey.BBox]: RectType,
   [DictKey.BC]: number[],
   [DictKey.BG]: number[],
-  [DictKey.BM]: Name,
+  [DictKey.BM]: Name | Name[],
   [DictKey.BPC]: number,
   [DictKey.BS]: Dict,
   [DictKey.Background]: TypedArray,
@@ -314,7 +331,7 @@ type DictValueTypeMapping = {
   [DictKey.BitsPerComponent]: number,
   [DictKey.BitsPerCoordinate]: number,
   [DictKey.BitsPerFlag]: number,
-  [DictKey.Border]: (number | Ref)[],
+  [DictKey.Border]: (number | number[] | Ref)[],
   [DictKey.ca]: number,
   [DictKey.CA]: number,
   [DictKey.CF]: Dict,
@@ -335,9 +352,9 @@ type DictValueTypeMapping = {
   [DictKey.DP]: "DP",
   [DictKey.DR]: Dict,
   [DictKey.DW]: number,
-  [DictKey.D]: "D",
+  [DictKey.D]: number[],
   [DictKey.DecodeParms]: "DecodeParms",
-  [DictKey.Decode]: "Decode",
+  [DictKey.Decode]: number[],
   [DictKey.Desc]: string,
   [DictKey.DescendantFonts]: Ref[],
   [DictKey.Dest]: "Dest",
@@ -509,6 +526,10 @@ type DictValueTypeMapping = {
   [DictKey.SA]: "SA",
   [DictKey.AIS]: "AIS",
   [DictKey.TK]: "TK",
+  [DictKey.PatternType]: number,
+  [DictKey.Properties]: Dict,
+  [DictKey.VE]: "VE",
+  [DictKey.OCGs]: "",
 }
 
 
@@ -787,7 +808,7 @@ export class Ref {
   }
 
   static fromString(str: string) {
-    const ref = RefCache[str];
+    const ref = RefCache.get(str);
     if (ref) {
       return ref;
     }
@@ -796,24 +817,31 @@ export class Ref {
       return null;
     }
 
-    // eslint-disable-next-line no-restricted-syntax
-    return (RefCache[str] = new Ref(
+    RefCache.set(str, new Ref(
       parseInt(m[1]),
       !m[2] ? 0 : parseInt(m[2])
-    ));
+    ))
+
+    return RefCache.get(str)!;
   }
 
   static get(num: number, gen: number): Ref {
     const key = gen === 0 ? `${num}R` : `${num}R${gen}`;
-    // eslint-disable-next-line no-restricted-syntax
-    return (RefCache[key] ||= new Ref(num, gen));
+    const cache = RefCache.get(key);
+    if (!cache) {
+      RefCache.set(key, new Ref(num, gen));
+    }
+    return RefCache.get(key)!;
   }
 }
 
-// The reference is identified by number and generation.
-// This structure stores only one instance of the reference.
+// 引用的唯一性由数字(num)和代数(gen)决定
+// 每个实例只会存在一个引用
 export class RefSet {
+
+  // ref <==> '${num}R${gen}' 二者之间是可以互逆的
   protected _set: Set<string>;
+
   constructor(parent: RefSet | null = null) {
     if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
       parent && !(parent instanceof RefSet)
@@ -823,17 +851,15 @@ export class RefSet {
     this._set = new Set(parent?._set);
   }
 
-  // TODO 这里到底是不是object，还是可以窄化为一个更精确地类型
-  // 需要研究一下
-  has(ref: object | string) {
+  has(ref: Ref | string) {
     return this._set.has(ref.toString());
   }
 
-  put(ref: object | string) {
+  put(ref: Ref | string) {
     this._set.add(ref.toString());
   }
 
-  remove(ref: object | string) {
+  remove(ref: Ref | string) {
     this._set.delete(ref.toString());
   }
 
@@ -848,25 +874,29 @@ export class RefSet {
 
 export class RefSetCache {
 
-  protected _map = new Map();
+  protected _map = new Map<string, any>();
 
   get size() {
     return this._map.size;
   }
 
-  get(ref: object) {
+  get(ref: Ref | string) {
     return this._map.get(ref.toString());
   }
 
-  has(ref: object) {
+  has(ref: Ref | string) {
     return this._map.has(ref.toString());
   }
 
-  put(ref, obj) {
+  // 为了应对某些糟糕的情况, ref可能不一定是一个Ref，而是一个可以toString的参数
+  // 这也是为什么这里要用toString() 而不是直接塞
+
+  // 目前还是要用any作为对象类型，实际上应该要限制any的类型，不能无限制的配置
+  put(ref: Ref | string, obj: any) {
     this._map.set(ref.toString(), obj);
   }
 
-  putAlias(ref, aliasRef) {
+  putAlias(ref: Ref, aliasRef: Ref) {
     this._map.set(ref.toString(), this.get(aliasRef));
   }
 

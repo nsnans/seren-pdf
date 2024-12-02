@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
+import { MessageHandler } from "../shared/message_handler";
 import {
   AnnotationEditorPrefix,
   assert,
@@ -28,9 +30,8 @@ import {
   stringToPDFString,
   stringToUTF8String,
   toHexUtil,
-  unreachable,
   Util,
-  warn,
+  warn
 } from "../shared/util";
 import {
   AnnotationFactory,
@@ -38,6 +39,9 @@ import {
   PopupAnnotation,
   WidgetAnnotation,
 } from "./annotation";
+import { BaseStream } from "./base_stream";
+import { Catalog } from "./catalog";
+import { clearGlobalCaches } from "./cleanup_helper";
 import {
   collectActions,
   getInheritableProperty,
@@ -50,6 +54,16 @@ import {
   XRefEntryException,
   XRefParseException,
 } from "./core_utils";
+import { calculateMD5 } from "./crypto";
+import { DatasetReader } from "./dataset_reader";
+import { StreamsSequenceStream } from "./decode_stream";
+import { PartialEvaluator } from "./evaluator";
+import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
+import { GlobalImageCache } from "./image_utils";
+import { ObjectLoader } from "./object_loader";
+import { OperatorList } from "./operator_list";
+import { Linearization, LinearizationInterface } from "./parser";
+import { PDFManager } from "./pdf_manager";
 import {
   Dict,
   DictKey,
@@ -60,27 +74,13 @@ import {
   RefSet,
   RefSetCache,
 } from "./primitives";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
-import { BaseStream } from "./base_stream";
-import { calculateMD5 } from "./crypto";
-import { Catalog } from "./catalog";
-import { clearGlobalCaches } from "./cleanup_helper";
-import { DatasetReader } from "./dataset_reader";
-import { Linearization, LinearizationInterface } from "./parser";
 import { NullStream, Stream } from "./stream";
-import { ObjectLoader } from "./object_loader";
-import { OperatorList } from "./operator_list";
-import { PartialEvaluator } from "./evaluator";
-import { StreamsSequenceStream } from "./decode_stream";
 import { StructTreePage } from "./struct_tree";
+import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XFAFactory } from "./xfa/factory";
+import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
-import { PDFManager } from "./pdf_manager";
-import { PlatformHelper } from "../platform/platform_helper";
-import { GlobalImageCache } from "./image_utils";
-import { MessageHandler } from "../shared/message_handler";
-import { WorkerTask } from "./worker";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
@@ -91,7 +91,7 @@ interface PageConstructOptions {
   pageIndex: number,
   pageDict: Dict,
   ref: Ref | null,
-  globalIdFactory,
+  globalIdFactory: GlobalIdFactory,
   fontCache: RefSetCache,
   builtInCMapCache: Map<string, any>,
   standardFontDataCache: Map<string, any>,
@@ -117,21 +117,21 @@ class Page {
 
   protected standardFontDataCache: Map<string, any>;
 
-  protected globalImageCache;
+  protected globalImageCache: GlobalImageCache;
 
   protected xref: XRef;
 
   protected systemFontCache;
 
-  protected nonBlendModesSet;
+  protected nonBlendModesSet: RefSet;
 
   protected evaluatorOptions;
 
-  protected resourcesPromise;
+  protected resourcesPromise: Promise<Dict> | null;
 
-  protected _localIdFactory;
+  protected _localIdFactory: LocalIdFactory;
 
-  protected xfaFactory;
+  protected xfaFactory: XFAFactory | null;
 
   constructor({
     pdfManager,
@@ -167,14 +167,7 @@ class Page {
       obj: 0,
     };
     // 匿名类
-    this._localIdFactory = class extends globalIdFactory {
-      static createObjId() {
-        return `p${pageIndex}_${++idCounters.obj}`;
-      }
-      static getPageObjId() {
-        return `p${ref!.toString()}`;
-      }
-    };
+    this._localIdFactory = new LocalIdFactory(globalIdFactory, pageIndex, idCounters, ref!);
   }
 
   /**
@@ -329,7 +322,7 @@ class Page {
     );
   }
 
-  async #replaceIdByRef(annotations, deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet | null) {
+  async #replaceIdByRef(annotations: Record<string, any>[], deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet | null) {
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.id) {
@@ -470,9 +463,9 @@ class Page {
     });
   }
 
-  loadResources(keys) {
+  loadResources(keys: string[]) {
     // TODO: add async `_getInheritableProperty` and remove this.
-    this.resourcesPromise ||= this.pdfManager.ensure(this, "resources");
+    this.resourcesPromise ||= <Promise<Dict>>this.pdfManager.ensure(this, "resources");
 
     return this.resourcesPromise.then(() => {
       const objectLoader = new ObjectLoader(this.resources, keys, this.xref);
@@ -687,7 +680,7 @@ class Page {
         }
       }
 
-      return Promise.all(opListPromises).then(function (opLists) {
+      return Promise.all(opListPromises).then(function (opLists: OperatorList[]) {
         let form = false,
           canvas = false;
 
@@ -842,8 +835,8 @@ class Page {
   }
 
   get _parsedAnnotations() {
-    const promise = this.pdfManager.ensure(this, "annotations")
-      .then(async annots => {
+    const promise = (<Promise<Ref[]>>this.pdfManager.ensure(this, "annotations"))
+      .then(async (annots: Ref[]) => {
         if (annots.length === 0) {
           return annots;
         }
@@ -989,7 +982,7 @@ class PDFDocument {
 
   protected _version: string | null;
 
-  protected _globalIdFactory;
+  protected _globalIdFactory: GlobalIdFactory;
 
   constructor(pdfManager: PDFManager, stream: Stream) {
 
@@ -1011,26 +1004,8 @@ class PDFDocument {
     this._pagePromises = new Map();
     this._version = null;
 
-    const idCounters = {
-      font: 0,
-    };
-    this._globalIdFactory = class {
-      static getDocId() {
-        return `g_${pdfManager.docId}`;
-      }
-
-      static createFontId() {
-        return `f${++idCounters.font}`;
-      }
-
-      static createObjId() {
-        unreachable("Abstract method `createObjId` called.");
-      }
-
-      static getPageObjId() {
-        unreachable("Abstract method `getPageObjId` called.");
-      }
-    };
+    const idCounters = { font: 0 };
+    this._globalIdFactory = new GlobalIdFactory(pdfManager, idCounters);
   }
 
   parse(recoveryMode: boolean) {

@@ -91,7 +91,7 @@ class PDFFunctionFactory {
   /**
    * @private
    */
-  _cache(cacheKey, parsedFunction) {
+  _cache(cacheKey, parsedFunction: Function) {
     if (!parsedFunction) {
       throw new Error(
         'PDFFunctionFactory._cache - expected "parsedFunction" argument.'

@@ -56,7 +56,7 @@ export interface PDFManagerArgs {
 
 interface PDFManager {
 
-  _docId: string;
+  docId: string;
 
   enableXfa: boolean;
 

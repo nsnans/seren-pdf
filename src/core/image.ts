@@ -36,6 +36,7 @@ import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { PlatformHelper } from "../platform/platform_helper";
+import { ImageMask, SingleOpaquePixelImageMask } from "./core_types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -402,14 +403,14 @@ class PDFImage {
     });
   }
 
-  static createRawMask({
-    imgArray,
-    width,
-    height,
-    imageIsFromDecodeStream,
-    inverseDecode,
-    interpolate,
-  }) {
+  static createRawMask(
+    imgArray: Uint8Array,
+    width: number,
+    height: number,
+    imageIsFromDecodeStream: boolean,
+    inverseDecode: boolean,
+    interpolate: number[],
+  ): ImageMask {
     // |imgArray| might not contain full data for every pixel of the mask, so
     // we need to distinguish between |computedLength| and |actualLength|.
     // In particular, if inverseDecode is true, then the array we return must
@@ -445,15 +446,15 @@ class PDFImage {
     return { data, width, height, interpolate };
   }
 
-  static async createMask({
-    imgArray,
-    width,
-    height,
-    imageIsFromDecodeStream,
-    inverseDecode,
-    interpolate,
+  static async createMask(
+    imgArray: Uint8Array,
+    width: number,
+    height: number,
+    imageIsFromDecodeStream: boolean,
+    inverseDecode: boolean,
+    interpolate: number[],
     isOffscreenCanvasSupported = false,
-  }) {
+  ): Promise<ImageMask | SingleOpaquePixelImageMask> {
     const isSingleOpaquePixel =
       width === 1 &&
       height === 1 &&
@@ -484,7 +485,7 @@ class PDFImage {
       }
 
       const canvas = new OffscreenCanvas(width, height);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d")!;
       const imgData = ctx.createImageData(width, height);
       convertBlackAndWhiteToRGBA({
         src: imgArray,
@@ -509,14 +510,14 @@ class PDFImage {
 
     // Get the data almost as they're and they'll be decoded
     // just before being drawn.
-    return this.createRawMask({
+    return this.createRawMask(
       imgArray,
       width,
       height,
       inverseDecode,
       imageIsFromDecodeStream,
       interpolate,
-    });
+    );
   }
 
   get drawWidth() {
