@@ -51,7 +51,7 @@ class StructTreeRoot {
     this.readRoleMap();
   }
 
-  #addIdToPage(pageRef: Ref | object, id: number, type: number) {
+  #addIdToPage(pageRef: Ref, id: number, type: number) {
     if (!(pageRef instanceof Ref) || id < 0) {
       return;
     }
@@ -64,7 +64,7 @@ class StructTreeRoot {
     ids.push([id, type]);
   }
 
-  addAnnotationIdToPage(pageRef: Ref | object, id: number) {
+  addAnnotationIdToPage(pageRef: Ref, id: number) {
     this.#addIdToPage(pageRef, id, StructElementType.ANNOTATION);
   }
 

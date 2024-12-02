@@ -79,6 +79,7 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { IPDFStream, IPDFStreamReader } from "../interfaces";
 import { TypedArray } from "../types";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
+import { StreamGetOperatorListParameters } from "../core/core_types";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -2062,7 +2063,7 @@ export class PDFPageProxy {
     // 就感觉这里应该没有问题了
     const readableStream = this._transport.messageHandler!.sendWithStream(
       "GetOperatorList",
-      {
+      <StreamGetOperatorListParameters>{
         pageIndex: this._pageIndex,
         intent: renderingIntent,
         cacheKey,

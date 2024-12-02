@@ -17,3 +17,11 @@ export interface SMaskOptions {
   subtype: string;
   backdrop: number[];
 }
+
+export interface StreamGetOperatorListParameters {
+  pageIndex: number;
+  intent: number;
+  cacheKey: string;
+  annotationStorage: Map<string, Record<string, any>> | null;
+  modifiedIds: Set<string>;
+}

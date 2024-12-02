@@ -1783,20 +1783,14 @@ class PartialEvaluator {
     return null;
   }
 
-  getOperatorList({
-    stream,
-    task,
-    resources,
-    operatorList,
-    initialState = null,
-    fallbackFontDict = null,
-  }: {
-    resources: Dict
+  getOperatorList(
     stream: BaseStream,
-    initialState: State | null
     task: WorkerTask,
-    operatorList: OperatorList
-  }) {
+    resources: Dict,
+    operatorList: OperatorList,
+    initialState: State | null = null,
+    fallbackFontDict: Dict | null = null,
+  ) {
     // Ensure that `resources`/`initialState` is correctly initialized,
     // even if the provided parameter is e.g. `null`.
     resources ||= Dict.empty;

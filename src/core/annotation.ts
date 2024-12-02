@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+import { DocParamEvaluatorOptions } from "../display/api";
+import { RectType } from "../display/display_utils";
+import { PlatformHelper } from "../platform/platform_helper";
+import { CreateStampImageResult } from "../shared/collected_types";
 import {
   AnnotationActionEventType,
   AnnotationBorderStyleType,
@@ -38,6 +42,11 @@ import {
   Util,
   warn,
 } from "../shared/util";
+import { TypedArray } from "../types";
+import { BaseStream } from "./base_stream";
+import { bidi } from "./bidi";
+import { Catalog } from "./catalog";
+import { ColorSpace } from "./colorspace";
 import {
   collectActions,
   escapeString,
@@ -51,6 +60,7 @@ import {
   stringToAsciiOrUTF16BE,
   stringToUTF16String,
 } from "./core_utils";
+import { DatasetReader } from "./dataset_reader";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,
@@ -58,36 +68,25 @@ import {
   parseAppearanceStream,
   parseDefaultAppearance,
 } from "./default_appearance";
-import { Dict, DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "./primitives";
-import { Stream, StringStream } from "./stream";
-import { BaseStream } from "./base_stream";
-import { bidi } from "./bidi";
-import { Catalog } from "./catalog";
-import { ColorSpace } from "./colorspace";
-import { FileSpec } from "./file_spec";
+import { PartialEvaluator } from "./evaluator";
+import { FileSpec, FileSpecSerializable } from "./file_spec";
+import { Font } from "./fonts";
+import { LocalIdFactory } from "./global_id_factory";
 import { JpegStream } from "./jpeg_stream";
 import { ObjectLoader } from "./object_loader";
 import { OperatorList } from "./operator_list";
+import { PDFManager } from "./pdf_manager";
+import { Dict, DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "./primitives";
+import { Stream, StringStream } from "./stream";
+import { StructTreeRoot } from "./struct_tree";
+import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XFAFactory } from "./xfa/factory";
-import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
-import { WorkerTask } from "./worker";
-import { PartialEvaluator } from "./evaluator";
-import { TypedArray } from "../types";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Font } from "./fonts";
-import { DatasetReader } from "./dataset_reader";
-import { StructTreeRoot } from "./struct_tree";
-import { FileSpecSerializable } from "./file_spec"
-import { RectType } from "../display/display_utils";
-import { CreateStampImageResult } from "../shared/collected_types";
-import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 
 export interface AnnotationParameters {
   xref: XRef;
-  // TODO 这里需要再次验证
-  ref: unknown;
+  ref: Ref;
   dict: Dict;
   subtype: string | null;
   id: string;
@@ -97,8 +96,7 @@ export interface AnnotationParameters {
   orphanFields: RefSetCache | null;
   needAppearances: boolean;
   pageIndex: number | null;
-  // TODO 这里需要再次验证
-  evaluatorOptions: unknown;
+  evaluatorOptions: DocParamEvaluatorOptions;
   // TODO 这里需要再次验证
   pageRef: Ref | null;
 }
@@ -343,7 +341,7 @@ class AnnotationFactory {
 
         const page = await pdfManager.getPage(pageIndex);
 
-        const annotations = await pdfManager.ensure(page, "annotations");
+        const annotations = <Ref[]>await pdfManager.ensure(page, "annotations");
 
         for (const annotRef of annotations) {
           if (annotRef instanceof Ref && isRefsEqual(annotRef, ref)) {
@@ -377,7 +375,7 @@ class AnnotationFactory {
     return imagePromises;
   }
 
-  static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations: Record<string, any>[], imagePromises) {
+  static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations: Record<string, any>[], imagePromises: Map<string, Promise<CreateStampImageResult>> | null) {
     const xref = evaluator.xref;
     let baseFontRef;
     const dependencies = <{ ref: Ref, data: string | null }[]>[];
@@ -441,7 +439,7 @@ class AnnotationFactory {
               const smaskRef = xref.getNewTemporaryRef();
               await writeObject(smaskRef, smaskStream, buffer, xref);
               dependencies.push({ ref: smaskRef, data: buffer.join("") });
-              imageStream.dict.set("SMask", smaskRef);
+              imageStream.dict!.set(DictKey.SMask, smaskRef);
               buffer.length = 0;
             }
             const imageRef = (image.imageRef = xref.getNewTemporaryRef());
@@ -694,7 +692,7 @@ interface AnnotationData {
   structParent: number;
   kidIds?: string[]
   fieldName?: string
-  pageIndex?: number;
+  pageIndex?: number | null;
   it?: string;
   quadPoints?: Float32Array | null;
   defaultAppearanceData?: {
@@ -763,20 +761,36 @@ class Annotation {
   protected _defaultAppearance: string = "";
 
   protected modificationDate: string | null = null;
+
   protected flags: number = 0;
+
   protected rectangle: [number, number, number, number] = [0, 0, 0, 0];
+
   protected lineEndings: string[] = [];
+
   protected rotation: number = 0;
+
   protected borderColor: Uint8ClampedArray | null = null;
+
   protected backgroundColor: Uint8ClampedArray | null = null;
+
   protected borderStyle: AnnotationBorderStyle = new AnnotationBorderStyle();
+
   protected appearance: BaseStream | null = null;
+
   protected oc: Dict | null = null;
+
   protected data: AnnotationData;
+
   protected _contents: { str: string, dir: string } = { str: "", dir: "" };
+
   protected _title: { str: string; dir: string; } = { str: "", dir: "" };
 
   protected _streams: BaseStream[];
+
+  protected color: Uint8ClampedArray | null = null;
+
+  protected _fallbackFontDict: Dict | null;
 
   constructor(params: AnnotationParameters) {
     const { dict, xref, annotationGlobals, ref, orphanFields } = params;
@@ -838,7 +852,7 @@ class Annotation {
         Number.isInteger(structParent) && structParent >= 0 ? structParent : -1;
 
       annotationGlobals.structTreeRoot.addAnnotationIdToPage(
-        params.pageRef,
+        params.pageRef!,
         structParent
       );
     }
@@ -849,7 +863,7 @@ class Annotation {
       // Those fields can be referenced by CO (calculation order).
       const kids = dict.getValue(DictKey.Kids);
       if (Array.isArray(kids)) {
-        const kidIds = [];
+        const kidIds = <string[]>[];
         for (const kid of kids) {
           if (kid instanceof Ref) {
             kidIds.push(kid.toString());
@@ -883,7 +897,7 @@ class Annotation {
     return !!(flags & flag);
   }
 
-  _buildFlags(noView, noPrint) {
+  _buildFlags(noView?: boolean, noPrint?: boolean) {
     let { flags } = this;
     if (noView === undefined) {
       if (noPrint === undefined) {
@@ -5268,5 +5282,6 @@ export {
   getQuadPoints,
   MarkupAnnotation,
   PopupAnnotation,
-  WidgetAnnotation,
+  WidgetAnnotation
 };
+

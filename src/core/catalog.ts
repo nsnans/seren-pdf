@@ -225,7 +225,7 @@ export class Catalog {
     return shadow(this, "collection", collection);
   }
 
-  get acroForm() {
+  get acroForm(): Dict | null {
     let acroForm = null;
     try {
       const obj = this._catDict.getValue(DictKey.AcroForm);

@@ -35,6 +35,7 @@ import {
 } from "../shared/util";
 import { AnnotationFactory } from "./annotation";
 import { clearGlobalCaches } from "./cleanup_helper";
+import { StreamGetOperatorListParameters } from "./core_types";
 import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
@@ -738,7 +739,7 @@ class WorkerMessageHandler {
       }
     );
 
-    handler.on("GetOperatorList", function (data, sink) {
+    handler.on("GetOperatorList", function (data: StreamGetOperatorListParameters, sink) {
       const pageIndex = data.pageIndex;
       pdfManager!.getPage(pageIndex).then(function (page) {
         const task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
@@ -748,15 +749,10 @@ class WorkerMessageHandler {
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
         // Pre compile the pdf page and fetch the fonts/images.
-        page.getOperatorList({
-          handler: handler!,
-          sink,
-          task,
-          intent: data.intent,
-          cacheKey: data.cacheKey,
-          annotationStorage: data.annotationStorage,
-          modifiedIds: data.modifiedIds,
-        }).then(
+        page.getOperatorList(
+          handler!, sink, task, data.intent, data.cacheKey,
+          data.annotationStorage, data.modifiedIds
+        ).then(
           function (operatorListInfo) {
             finishWorkerTask(task);
 

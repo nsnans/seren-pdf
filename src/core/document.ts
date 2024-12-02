@@ -14,6 +14,7 @@
  */
 
 import { PlatformHelper } from "../platform/platform_helper";
+import { CreateStampImageResult } from "../shared/collected_types";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AnnotationEditorPrefix,
@@ -34,6 +35,7 @@ import {
   warn
 } from "../shared/util";
 import {
+  Annotation,
   AnnotationFactory,
   AnnotationGlobals,
   PopupAnnotation,
@@ -361,7 +363,8 @@ class Page {
     await Promise.all(promises);
   }
 
-  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[], imagePromises) {
+  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[]
+    , imagePromises: Map<string, Promise<CreateStampImageResult>> | null) {
     if (this.xfaFactory) {
       throw new Error("XFA: Cannot save new annotations.");
     }
@@ -473,18 +476,15 @@ class Page {
     });
   }
 
-  getOperatorList({
-    handler,
-    sink,
-    task,
-    intent,
-    cacheKey,
-    annotationStorage = null,
-    modifiedIds = null,
-  }: {
+  getOperatorList(
     handler: MessageHandler,
+    sink,
     task: WorkerTask,
-  }) {
+    intent: number,
+    cacheKey: string,
+    annotationStorage: Map<string, Record<string, any>> | null = null,
+    modifiedIds: Set<string> | null = null,
+  ) {
     const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources([
       "ColorSpace",
@@ -534,7 +534,7 @@ class Page {
       const { isOffscreenCanvasSupported } = this.evaluatorOptions;
       if (missingBitmaps.size > 0) {
         const annotationWithBitmaps = newAnnots.slice();
-        for (const [key, annotation] of annotationStorage) {
+        for (const [key, annotation] of annotationStorage!) {
           if (!key.startsWith(AnnotationEditorPrefix)) {
             continue;
           }
@@ -593,12 +593,7 @@ class Page {
       });
 
       return partialEvaluator
-        .getOperatorList({
-          stream: contentStream,
-          task,
-          resources: this.resources,
-          operatorList: opList,
-        })
+        .getOperatorList(contentStream, task, this.resources, opList)
         .then(function () {
           return opList;
         });
@@ -829,6 +824,7 @@ class Page {
     return annotationsData;
   }
 
+  // annts里肯定不止Ref，但是目前我们先当它是Ref[]
   get annotations() {
     const annots = this._getInheritableProperty("Annots");
     return shadow(this, "annotations", Array.isArray(annots) ? annots : []);
@@ -896,7 +892,7 @@ class Page {
         return sortedAnnotations;
       });
 
-    return shadow(this, "_parsedAnnotations", promise);
+    return shadow(this, "_parsedAnnotations", <Promise<Annotation[]>>promise);
   }
 
   get jsActions() {
@@ -1927,7 +1923,7 @@ class PDFDocument {
 
         const [annotationGlobals, acroForm] = await Promise.all([
           this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>,
-          this.pdfManager.ensureCatalog("acroForm"),
+          this.pdfManager.ensureCatalog("acroForm") as Promise<Dict | null>,
         ]);
         if (!annotationGlobals) {
           return null;
@@ -1937,7 +1933,7 @@ class PDFDocument {
         const allFields = Object.create(null);
         const fieldPromises = new Map();
         const orphanFields = new RefSetCache();
-        for (const fieldRef of await acroForm.getAsync("Fields")) {
+        for (const fieldRef of await acroForm!.getAsyncValue(DictKey.Fields)) {
           await this.#collectFieldObjects(
             "",
             null,
