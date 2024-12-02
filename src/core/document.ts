@@ -44,6 +44,7 @@ import {
 import { BaseStream } from "./base_stream";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "./cleanup_helper";
+import { StreamSink } from "./core_types";
 import {
   collectActions,
   getInheritableProperty,
@@ -77,7 +78,7 @@ import {
   RefSetCache,
 } from "./primitives";
 import { NullStream, Stream } from "./stream";
-import { StructTreePage } from "./struct_tree";
+import { StructTreePage, StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XFAFactory } from "./xfa/factory";
@@ -478,7 +479,7 @@ class Page {
 
   getOperatorList(
     handler: MessageHandler,
-    sink,
+    sink: StreamSink,
     task: WorkerTask,
     intent: number,
     cacheKey: string,
@@ -513,7 +514,7 @@ class Page {
       ? getNewAnnotationsMap(annotationStorage)
       : null;
     const newAnnots = newAnnotsByPage?.get(this.pageIndex);
-    let newAnnotationsPromise = Promise.resolve(null);
+    let newAnnotationsPromise: Promise<any> = Promise.resolve(null);
     let deletedAnnotations = null;
 
     if (newAnnots) {
@@ -604,7 +605,7 @@ class Page {
     return Promise.all([
       pageListPromise,
       this._parsedAnnotations,
-      newAnnotationsPromise,
+      <Promise<Annotation[] | null>>newAnnotationsPromise,
     ]).then(function ([pageOpList, annotations, newAnnotations]) {
       if (newAnnotations) {
         // Some annotations can already exist (if it has the refToReplace
@@ -617,7 +618,7 @@ class Page {
           const newAnnotation = newAnnotations[i];
           if (newAnnotation.refToReplace) {
             const j = annotations.findIndex(
-              a => a.ref && isRefsEqual(a.ref, newAnnotation.refToReplace)
+              a => a.ref && isRefsEqual(a.ref, newAnnotation.refToReplace!)
             );
             if (j >= 0) {
               annotations.splice(j, 1, newAnnotation);
@@ -643,7 +644,11 @@ class Page {
 
       // Collect the operator list promises for the annotations. Each promise
       // is resolved with the complete operator list for a single annotation.
-      const opListPromises = [];
+      const opListPromises = <Promise<{
+        opList: OperatorList | null;
+        separateForm: boolean;
+        separateCanvas: boolean;
+      }>[]>[];
       for (const annotation of annotations) {
         if (
           intentAny ||
@@ -652,35 +657,38 @@ class Page {
             annotation.mustBeViewedWhenEditing(isEditing, modifiedIds)) ||
           (intentPrint && annotation.mustBePrinted(annotationStorage))
         ) {
-          opListPromises.push(
-            annotation
-              .getOperatorList(
-                partialEvaluator,
-                task,
-                intent,
-                annotationStorage
-              )
-              .catch(function (reason: unknown) {
-                warn(
-                  "getOperatorList - ignoring annotation data during " +
-                  `"${task.name}" task: "${reason}".`
-                );
-                return {
-                  opList: null,
-                  separateForm: false,
-                  separateCanvas: false,
-                };
-              })
-          );
+          const opListPromise = annotation
+            .getOperatorList(
+              partialEvaluator,
+              task,
+              intent,
+              annotationStorage
+            );
+          const catchPromise = opListPromise.catch(function (reason: unknown) {
+            warn(
+              "getOperatorList - ignoring annotation data during " +
+              `"${task.name}" task: "${reason}".`
+            );
+            return {
+              opList: null,
+              separateForm: false,
+              separateCanvas: false,
+            };
+          });
+          opListPromises.push(catchPromise);
         }
       }
 
-      return Promise.all(opListPromises).then(function (opLists: OperatorList[]) {
+      return Promise.all(opListPromises).then(function (opLists: {
+        opList: OperatorList | null;
+        separateForm: boolean;
+        separateCanvas: boolean;
+      }[]) {
         let form = false,
           canvas = false;
 
         for (const { opList, separateForm, separateCanvas } of opLists) {
-          pageOpList.addOpList(opList);
+          pageOpList.addOpList(opList!);
 
           form ||= separateForm;
           canvas ||= separateCanvas;
@@ -694,18 +702,13 @@ class Page {
     });
   }
 
-  async extractTextContent({
-    handler,
-    task,
-    includeMarkedContent,
-    disableNormalization,
-    sink,
-  }: {
+  async extractTextContent(
     handler: MessageHandler,
     task: WorkerTask,
     includeMarkedContent: boolean,
     disableNormalization: boolean,
-  }) {
+    sink: StreamSink
+  ) {
     const contentStreamPromise = this.getContentStream();
     const resourcesPromise = this.loadResources([
       "ExtGState",
@@ -713,7 +716,7 @@ class Page {
       "Properties",
       "XObject",
     ]);
-    const langPromise = this.pdfManager.ensureCatalog("lang");
+    const langPromise = <Promise<string | null>>this.pdfManager.ensureCatalog("lang");
 
     const [contentStream, , lang] = await Promise.all([
       contentStreamPromise,
@@ -746,8 +749,9 @@ class Page {
   }
 
   async getStructTree() {
-    const structTreeRoot =
-      await this.pdfManager.ensureCatalog("structTreeRoot");
+
+    const structTreeRoot = <StructTreeRoot>await this.pdfManager.ensureCatalog("structTreeRoot");
+
     if (!structTreeRoot) {
       return null;
     }
@@ -763,7 +767,7 @@ class Page {
   /**
    * @private
    */
-  _parseStructTree(structTreeRoot) {
+  _parseStructTree(structTreeRoot: StructTreeRoot) {
     const tree = new StructTreePage(structTreeRoot, this.pageDict);
     tree.parse(this.ref);
     return tree;

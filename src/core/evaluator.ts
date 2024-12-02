@@ -85,7 +85,7 @@ import { MessageHandler } from "../shared/message_handler.js";
 import { WorkerTask } from "./worker.js";
 import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory.js";
 import { DocParamEvaluatorOptions } from "../display/api.js";
-import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types.js";
+import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions, StreamSink } from "./core_types.js";
 
 const DefaultDocParamEvaluatorOptions: DocParamEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -1719,10 +1719,10 @@ class PartialEvaluator {
     }
   }
 
-  async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict) {
+  async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null) {
     let optionalContent: Dict;
     if (contentProperties instanceof Name) {
-      const properties = resources.getValue(DictKey.Properties);
+      const properties = resources!.getValue(DictKey.Properties);
       optionalContent = properties.get(<DictKey>contentProperties.name);
     } else if (contentProperties instanceof Dict) {
       optionalContent = contentProperties;
@@ -2406,24 +2406,28 @@ class PartialEvaluator {
     stream,
     task,
     resources,
-    stateManager = null,
-    includeMarkedContent = false,
     sink,
-    seenStyles = new Set(),
     viewBox,
+    includeMarkedContent = false,
+    keepWhiteSpace = false,
+    seenStyles = new Set(),
+    stateManager = null,
     lang = null,
     markedContentData = null,
     disableNormalization = false,
-    keepWhiteSpace = false,
   }: {
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict | null,
     stateManager: StateManager | null,
+    sink: StreamSink,
+    seenStyles: Set<string>,
     viewBox: number[],
     includeMarkedContent: boolean,
     disableNormalization: boolean,
-    keepWhiteSpace: boolean
+    keepWhiteSpace: boolean,
+    lang: string | null
+    markedContentData: { level: 0 } | null
   }) {
     // Ensure that `resources`/`stateManager` is correctly initialized,
     // even if the provided parameter is e.g. `null`.

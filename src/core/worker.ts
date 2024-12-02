@@ -35,7 +35,7 @@ import {
 } from "../shared/util";
 import { AnnotationFactory } from "./annotation";
 import { clearGlobalCaches } from "./cleanup_helper";
-import { StreamGetOperatorListParameters } from "./core_types";
+import { StreamGetOperatorListParameters, StreamSink } from "./core_types";
 import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
@@ -739,7 +739,7 @@ class WorkerMessageHandler {
       }
     );
 
-    handler.on("GetOperatorList", function (data: StreamGetOperatorListParameters, sink) {
+    handler.on("GetOperatorList", function (data: StreamGetOperatorListParameters, sink: StreamSink) {
       const pageIndex = data.pageIndex;
       pdfManager!.getPage(pageIndex).then(function (page) {
         const task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
@@ -778,7 +778,7 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("GetTextContent", function (data, sink) {
+    handler.on("GetTextContent", function (data, sink: StreamSink) {
       const { pageIndex, includeMarkedContent, disableNormalization } = data;
 
       pdfManager!.getPage(pageIndex).then(function (page) {
@@ -788,13 +788,10 @@ class WorkerMessageHandler {
         // NOTE: Keep this condition in sync with the `info` helper function.
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
-        page.extractTextContent({
-          handler: handler!,
-          task,
-          sink,
-          includeMarkedContent,
-          disableNormalization,
-        }).then(
+        page.extractTextContent(
+          handler!, task, includeMarkedContent,
+          disableNormalization, sink,
+        ).then(
           function () {
             finishWorkerTask(task);
 

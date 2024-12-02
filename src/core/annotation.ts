@@ -471,7 +471,7 @@ class AnnotationFactory {
     task: WorkerTask,
     annotations: Record<string, any>[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
-  ) {
+  ): Promise<Annotation[] | null> {
     if (!annotations) {
       return null;
     }
@@ -752,7 +752,7 @@ interface AnnotationData {
 
 class Annotation {
 
-  protected ref: Ref | null;
+  public ref: Ref | null;
 
   protected _needAppearances: boolean;
 
@@ -791,6 +791,8 @@ class Annotation {
   protected color: Uint8ClampedArray | null = null;
 
   protected _fallbackFontDict: Dict | null;
+
+  public refToReplace: Ref | null = null;
 
   constructor(params: AnnotationParameters) {
     const { dict, xref, annotationGlobals, ref, orphanFields } = params;
@@ -988,7 +990,7 @@ class Annotation {
     return this.printable;
   }
 
-  mustBeViewedWhenEditing(isEditing: boolean, modifiedIds = null) {
+  mustBeViewedWhenEditing(isEditing: boolean, modifiedIds: Set<string> | null = null) {
     return isEditing ? !this.data.isEditable : !modifiedIds?.has(this.data.id);
   }
 
@@ -1316,7 +1318,12 @@ class Annotation {
     });
   }
 
-  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number, annotationStorage) {
+  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number,
+    _annotationStorage: Map<string, Record<string, any>> | null): Promise<{
+      opList: OperatorList | null;
+      separateForm: boolean;
+      separateCanvas: boolean;
+    }> {
     const { hasOwnCanvas, id } = this.data;
     const rect = this.data.rect!;
     let appearance = this.appearance;
@@ -1377,13 +1384,14 @@ class Annotation {
       isUsingOwnCanvas,
     ]);
 
-    await evaluator.getOperatorList({
-      stream: appearance,
+    await evaluator.getOperatorList(
+      appearance,
       task,
-      resources: resources!,
-      operatorList: opList,
-      fallbackFontDict: this._fallbackFontDict,
-    });
+      resources!,
+      opList,
+      null,
+      this._fallbackFontDict,
+    );
     opList.addOp(OPS.endAnnotation, []);
 
     if (optionalContent !== undefined) {
@@ -1437,10 +1445,10 @@ class Annotation {
       stream: this.appearance,
       task,
       resources: resources as Dict | null,
-      includeMarkedContent: true,
-      keepWhiteSpace: true,
       sink,
       viewBox,
+      includeMarkedContent: true,
+      keepWhiteSpace: true,
     });
     this.reset();
 

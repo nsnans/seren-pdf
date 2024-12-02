@@ -1,3 +1,6 @@
+import { StreamKind, wrapReason } from "../shared/message_handler";
+import { assert } from "../shared/util";
+
 export interface ImageMask {
   data: Uint8Array | null;
   width: number;
@@ -24,4 +27,85 @@ export interface StreamGetOperatorListParameters {
   cacheKey: string;
   annotationStorage: Map<string, Record<string, any>> | null;
   modifiedIds: Set<string>;
+}
+
+export class StreamSink {
+  public sinkCapability: PromiseWithResolvers<void>;
+  public ready: Promise<void> | null = null;
+  public onPull: null = null;
+  public onCancel: null = null;
+  public isCancelled: boolean = false;
+  public desiredSize: number;
+
+  readonly comObj: Worker;
+
+  readonly sourceName: string;
+  readonly targetName: string;
+  readonly streamId: number;
+  readonly onClose: (streamId: number) => void;
+
+  constructor(comObj: Worker, sourceName: string, targetName: string,
+    streamId: number, desiredSize: number, onClose: (id: number) => void) {
+    this.comObj = comObj;
+    this.sinkCapability = Promise.withResolvers();
+    this.sourceName = sourceName;
+    this.targetName = targetName;
+    this.streamId = streamId;
+    this.desiredSize = desiredSize;
+    this.onClose = onClose;
+  }
+
+  enqueue(chunk, size = 1, transfers) {
+    if (this.isCancelled) {
+      return;
+    }
+    const lastDesiredSize = this.desiredSize;
+    this.desiredSize -= size;
+    // Enqueue decreases the desiredSize property of sink,
+    // so when it changes from positive to negative,
+    // set ready as unresolved promise.
+    if (lastDesiredSize > 0 && this.desiredSize <= 0) {
+      this.sinkCapability = Promise.withResolvers();
+      this.ready = this.sinkCapability.promise;
+    }
+    this.comObj.postMessage(
+      {
+        sourceName: this.sourceName,
+        targetName: this.targetName,
+        stream: StreamKind.ENQUEUE,
+        streamId: this.streamId,
+        chunk,
+      },
+      transfers
+    );
+  }
+
+  close() {
+    if (this.isCancelled) {
+      return;
+    }
+    this.isCancelled = true;
+    this.comObj.postMessage({
+      sourceName: this.sourceName,
+      targetName: this.streamId,
+      stream: StreamKind.CLOSE,
+      streamId: this.streamId,
+    });
+    this.onClose(this.streamId);
+  }
+
+  error(reason: Error) {
+    assert(reason instanceof Error, "error must have a valid reason");
+    if (this.isCancelled) {
+      return;
+    }
+    this.isCancelled = true;
+    this.comObj.postMessage({
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      stream: StreamKind.ERROR,
+      streamId: this.streamId,
+      reason: wrapReason(reason),
+    });
+  }
 }

@@ -36,9 +36,9 @@ class StructTreeRoot {
 
   protected ref: Ref | null;
 
-  protected dict: Dict;
+  public dict: Dict;
 
-  protected structParentIds: RefSetCache | null;
+  public structParentIds: RefSetCache | null;
 
   constructor(rootDict: Dict, rootRef: object) {
     this.dict = rootDict;
@@ -678,7 +678,11 @@ class StructElement {
 }
 
 class StructTreePage {
-  constructor(structTreeRoot, pageDict) {
+  root: StructTreeRoot;
+  rootDict: Dict | null;
+  pageDict: Dict;
+
+  constructor(structTreeRoot: StructTreeRoot, pageDict: Dict) {
     this.root = structTreeRoot;
     this.rootDict = structTreeRoot ? structTreeRoot.dict : null;
     this.pageDict = pageDict;
@@ -691,12 +695,12 @@ class StructTreePage {
    * @param {Ref} pageRef
    * @returns {Map<number, Ref>}
    */
-  collectObjects(pageRef) {
+  collectObjects(pageRef: Ref) {
     if (!this.root || !this.rootDict || !(pageRef instanceof Ref)) {
       return null;
     }
 
-    const parentTree = this.rootDict.get("ParentTree");
+    const parentTree = this.rootDict.get(DictKey.ParentTree);
     if (!parentTree) {
       return null;
     }
@@ -717,16 +721,16 @@ class StructTreePage {
     return map;
   }
 
-  parse(pageRef) {
+  parse(pageRef: Ref) {
     if (!this.root || !this.rootDict || !(pageRef instanceof Ref)) {
       return;
     }
 
-    const parentTree = this.rootDict.get("ParentTree");
+    const parentTree = this.rootDict.get(DictKey.ParentTree);
     if (!parentTree) {
       return;
     }
-    const id = this.pageDict.get("StructParents");
+    const id = this.pageDict.get(DictKey.StructParents);
     const ids = this.root.structParentIds?.get(pageRef);
     if (!Number.isInteger(id) && !ids) {
       return;

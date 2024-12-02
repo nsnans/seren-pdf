@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { StreamSink } from "../core/core_types";
 import { PlatformHelper } from "../platform/platform_helper";
 import {
   AbortException,
@@ -30,7 +31,7 @@ const CallbackKind = {
   ERROR: 2,
 };
 
-const StreamKind = {
+export const StreamKind = {
   UNKNOWN: 0,
   CANCEL: 1,
   CANCEL_COMPLETE: 2,
@@ -42,7 +43,7 @@ const StreamKind = {
   START_COMPLETE: 8,
 };
 
-function wrapReason(reason: any) {
+export function wrapReason(reason: any) {
   if (
     !(
       reason instanceof Error ||
@@ -322,71 +323,11 @@ class MessageHandler {
       sourceName = this.sourceName,
       targetName = data.sourceName,
       comObj = this.comObj;
-    const self = this,
-      action = this.actionHandler[data.action];
+    const self = this;
+    const action = this.actionHandler[data.action];
 
-    const streamSink = {
-      enqueue(chunk, size = 1, transfers) {
-        if (this.isCancelled) {
-          return;
-        }
-        const lastDesiredSize = this.desiredSize;
-        this.desiredSize -= size;
-        // Enqueue decreases the desiredSize property of sink,
-        // so when it changes from positive to negative,
-        // set ready as unresolved promise.
-        if (lastDesiredSize > 0 && this.desiredSize <= 0) {
-          this.sinkCapability = Promise.withResolvers();
-          this.ready = this.sinkCapability.promise;
-        }
-        comObj.postMessage(
-          {
-            sourceName,
-            targetName,
-            stream: StreamKind.ENQUEUE,
-            streamId,
-            chunk,
-          },
-          transfers
-        );
-      },
-
-      close() {
-        if (this.isCancelled) {
-          return;
-        }
-        this.isCancelled = true;
-        comObj.postMessage({
-          sourceName,
-          targetName,
-          stream: StreamKind.CLOSE,
-          streamId,
-        });
-        delete self.streamSinks[streamId];
-      },
-
-      error(reason: Error) {
-        assert(reason instanceof Error, "error must have a valid reason");
-        if (this.isCancelled) {
-          return;
-        }
-        this.isCancelled = true;
-        comObj.postMessage({
-          sourceName,
-          targetName,
-          stream: StreamKind.ERROR,
-          streamId,
-          reason: wrapReason(reason),
-        });
-      },
-
-      sinkCapability: Promise.withResolvers(),
-      onPull: null,
-      onCancel: null,
-      isCancelled: false,
-      desiredSize: data.desiredSize,
-      ready: null,
-    };
+    const streamSink = new StreamSink(this.comObj, sourceName, targetName
+      , streamId, data.desiredSize, (_id) => delete self.streamSinks[_id]);
 
     streamSink.sinkCapability.resolve(undefined);
     streamSink.ready = streamSink.sinkCapability.promise;

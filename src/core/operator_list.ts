@@ -14,6 +14,7 @@
  */
 
 import { ImageKind, OPS, RenderingIntentFlag, warn } from "../shared/util.js";
+import { StreamSink } from "./core_types.js";
 
 function addState(parentState, pattern, checkFn, iterateFn, processFn) {
   let state = parentState;
@@ -593,7 +594,7 @@ class OperatorList {
   // TODO NullOptimizer应该抽象出来的，但是此处没做抽象，后续需要补一下
   protected optimizer: NullOptimizer;
 
-  protected _streamSink;
+  protected _streamSink: StreamSink | null;
 
   // TODO dependencies理论上来说应该是Set<string>，但是会不会有其他类型，值得商榷
   protected dependencies: Set<string>;
@@ -602,7 +603,9 @@ class OperatorList {
 
   public argsArray;
 
-  constructor(intent = 0, streamSink?) {
+  protected _resolved: Promise<void> | null;
+
+  constructor(intent = 0, streamSink: StreamSink | null = null) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
@@ -679,7 +682,7 @@ class OperatorList {
     }
   }
 
-  addOpList(opList) {
+  addOpList(opList: OperatorList) {
     if (!(opList instanceof OperatorList)) {
       warn('addOpList - ignoring invalid "opList" parameter.');
       return;
@@ -718,12 +721,12 @@ class OperatorList {
     return transfers;
   }
 
-  flush(lastChunk = false, separateAnnots = null) {
+  flush(lastChunk = false, separateAnnots: { form: boolean, canvas: boolean } | null = null) {
     this.optimizer.flush();
     const length = this.length;
     this._totalLength += length;
 
-    this._streamSink.enqueue(
+    this._streamSink!.enqueue(
       {
         fnArray: this.fnArray,
         argsArray: this.argsArray,

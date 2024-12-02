@@ -187,7 +187,7 @@ export class Catalog {
     return shadow(this, "version", null);
   }
 
-  get lang() {
+  get lang(): string | null {
     const lang = this._catDict.getValue(DictKey.Lang);
     return shadow(
       this,
