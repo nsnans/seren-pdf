@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-import { Dict, DictKey, RefSet } from "./primitives";
+import { Dict, DictKey, Ref, RefSet } from "./primitives";
 import { FormatError, unreachable, warn } from "../shared/util";
+import { XRef } from "./xref";
+import { PlatformHelper } from "../platform/platform_helper";
 
 /**
  * A NameTree/NumberTree is like a Dict but has some advantageous properties,
@@ -22,9 +24,15 @@ import { FormatError, unreachable, warn } from "../shared/util";
  * TODO: implement all the Dict functions and make this more efficient.
  */
 class NameOrNumberTree {
-  constructor(root, xref, type) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
+
+  protected root: Ref | string;
+
+  protected xref: XRef;
+
+  protected _type: string;
+
+  constructor(root: Ref | string, xref: XRef, type: string) {
+    if (PlatformHelper.isTesting() &&
       this.constructor === NameOrNumberTree
     ) {
       unreachable("Cannot initialize NameOrNumberTree.");
@@ -42,15 +50,15 @@ class NameOrNumberTree {
     const xref = this.xref;
     // Reading Name/Number tree.
     const processed = new RefSet();
-    processed.put(this.root);
-    const queue = [this.root];
+    processed.put(<Ref>this.root);
+    const queue = <(Ref | string)[]>[this.root];
     while (queue.length > 0) {
-      const obj = xref.fetchIfRef(queue.shift());
+      const obj = xref.fetchIfRef(queue.shift()!);
       if (!(obj instanceof Dict)) {
         continue;
       }
       if (obj.has(DictKey.Kids)) {
-        const kids = obj.getValue(DictKey.Kids);
+        const kids = <Ref | string[]>obj.getValue(DictKey.Kids);
         if (!Array.isArray(kids)) {
           continue;
         }
@@ -63,7 +71,7 @@ class NameOrNumberTree {
         }
         continue;
       }
-      const entries = obj.getValue(this._type);
+      const entries = obj.getValue(<DictKey>this._type);
       if (!Array.isArray(entries)) {
         continue;
       }
@@ -74,24 +82,24 @@ class NameOrNumberTree {
     return map;
   }
 
-  getRaw(key) {
+  getRaw(key: string) {
     if (!this.root) {
       return null;
     }
     const xref = this.xref;
-    let kidsOrEntries = xref.fetchIfRef(this.root);
+    let kidsOrEntries: Dict = xref.fetchIfRef(this.root);
     let loopCount = 0;
     const MAX_LEVELS = 10;
 
     // Perform a binary search to quickly find the entry that
     // contains the key we are looking for.
-    while (kidsOrEntries.has("Kids")) {
+    while (kidsOrEntries.has(DictKey.Kids)) {
       if (++loopCount > MAX_LEVELS) {
         warn(`Search depth limit reached for "${this._type}" tree.`);
         return null;
       }
 
-      const kids = kidsOrEntries.get("Kids");
+      const kids = kidsOrEntries.get(DictKey.Kids);
       if (!Array.isArray(kids)) {
         return null;
       }
@@ -101,7 +109,7 @@ class NameOrNumberTree {
       while (l <= r) {
         const m = (l + r) >> 1;
         const kid = xref.fetchIfRef(kids[m]);
-        const limits = kid.get("Limits");
+        const limits = kid.getValue(DictKey.Limits);
 
         if (key < xref.fetchIfRef(limits[0])) {
           r = m - 1;
@@ -119,7 +127,7 @@ class NameOrNumberTree {
 
     // If we get here, then we have found the right entry. Now go through the
     // entries in the dictionary until we find the key we're looking for.
-    const entries = kidsOrEntries.get(this._type);
+    const entries = kidsOrEntries.getValue(<DictKey>this._type);
     if (Array.isArray(entries)) {
       // Perform a binary search to reduce the lookup time.
       let l = 0,
@@ -142,19 +150,19 @@ class NameOrNumberTree {
     return null;
   }
 
-  get(key) {
+  get(key: string) {
     return this.xref.fetchIfRef(this.getRaw(key));
   }
 }
 
 class NameTree extends NameOrNumberTree {
-  constructor(root, xref) {
+  constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Names");
   }
 }
 
 class NumberTree extends NameOrNumberTree {
-  constructor(root, xref) {
+  constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Nums");
   }
 }

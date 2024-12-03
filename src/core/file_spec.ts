@@ -66,13 +66,13 @@ export class FileSpec {
 
   protected root?: Dict;
 
-  protected xref?: XRef;
+  protected xref: XRef | null = null;
 
   protected fs;
 
   protected _contentRef: object | null = null;
 
-  constructor(root: Dict, xref: XRef, skipContent = false) {
+  constructor(root: Dict, xref: XRef | null, skipContent = false) {
     if (!(root instanceof Dict)) {
       return;
     }

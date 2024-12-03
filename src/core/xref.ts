@@ -850,7 +850,7 @@ export class XRef {
     return null;
   }
 
-  fetchIfRef(obj: Ref | number | object, suppressEncryption = false) {
+  fetchIfRef(obj: Ref | number | string | object, suppressEncryption = false) {
     if (obj instanceof Ref) {
       return this.fetch(obj, suppressEncryption);
     }

@@ -1660,7 +1660,7 @@ class PartialEvaluator {
             localShadingPatternCache,
           });
           if (objId) {
-            const matrix = lookupMatrix(dict.getArray(DictKey.Matrix), null as unknown as number[]);
+            const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), null as unknown as number[]);
             operatorList.addOp(fn, ["Shading", objId, matrix]);
           }
           return undefined;

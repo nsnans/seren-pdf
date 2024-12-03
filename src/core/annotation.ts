@@ -1805,7 +1805,7 @@ class MarkupAnnotation extends Annotation {
         // Fall back to the default background color.
         this.data.color = null;
       } else {
-        this.setColor(parent.getArray(DictKey.C));
+        this.setColor(parent.getArrayValue(DictKey.C));
         this.data.color = this.color;
       }
     } else {
@@ -4027,7 +4027,7 @@ class PopupAnnotation extends Annotation {
       warn("Popup annotation has a missing or invalid parent annotation.");
       return;
     }
-    this.data.parentRect = lookupNormalRect(parentItem.getArray(DictKey.Rect), null)!;
+    this.data.parentRect = lookupNormalRect(parentItem.getArrayValue(DictKey.Rect), null)!;
 
     const rt = parentItem.get(DictKey.RT);
     if (isName(rt, AnnotationReplyType.GROUP)) {
@@ -4047,7 +4047,7 @@ class PopupAnnotation extends Annotation {
       // Fall back to the default background color.
       this.data.color = null;
     } else {
-      this.setColor(parentItem.getArray(DictKey.C));
+      this.setColor(parentItem.getArrayValue(DictKey.C));
       this.data.color = this.color;
     }
 
@@ -5304,7 +5304,7 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     const fillAlpha = dict.getValue(DictKey.ca);
     this.data.fillAlpha =
       typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1
-        ? fillAlpha
+        ? fillAlpha 
         : null;
   }
 }

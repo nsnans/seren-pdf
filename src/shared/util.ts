@@ -101,7 +101,7 @@ const AnnotationEditorParamsType = {
 };
 
 // Permission flags from Table 22, Section 7.6.3.2 of the PDF specification.
-const PermissionFlag = {
+const PermissionFlag: Record<string, number> = {
   PRINT: 0x04,
   MODIFY_CONTENTS: 0x08,
   COPY: 0x10,
