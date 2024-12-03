@@ -502,12 +502,12 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("GetAnnotations", function ({ pageIndex, intent }) {
+    handler.on("GetAnnotations", function ({ pageIndex, intent }: { pageIndex: number, intent: number }) {
       return pdfManager!.getPage(pageIndex).then(function (page) {
         const task = new WorkerTask(`GetAnnotations: page ${pageIndex}`);
         startWorkerTask(task);
 
-        return page.getAnnotationsData(handler, task, intent).then(
+        return page.getAnnotationsData(handler!, task, intent).then(
           data => {
             finishWorkerTask(task);
             return data;
@@ -640,7 +640,7 @@ class WorkerMessageHandler {
         } else {
           for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
             promises.push(
-              pdfManager!.getPage(pageIndex).then(function (page) {
+              pdfManager!.getPage(pageIndex).then(async function (page) {
                 const task = new WorkerTask(`Save: page ${pageIndex}`);
                 return page
                   .save(handler!, task, annotationStorage)

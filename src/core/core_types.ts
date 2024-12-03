@@ -109,3 +109,15 @@ export class StreamSink {
     });
   }
 }
+
+export interface FieldObject {
+  id: string;
+  actions: Record<string, string[]> | null;
+  name: string;
+  strokeColor: Uint8ClampedArray | null;
+  fillColor: Uint8ClampedArray | null;
+  type: string;
+  kidIds: string[] | null;
+  page: number;
+  rotation: number;
+}

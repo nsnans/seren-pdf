@@ -1,5 +1,3 @@
-import { AnnotationParameters } from "../core/annotation";
-import { AnnotationElementParameters } from "../display/annotation_layer";
 import { WorkerMessageHandler } from "../pdf.worker";
 
 export interface ReaderHeadersReadyResult {

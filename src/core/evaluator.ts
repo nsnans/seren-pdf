@@ -248,29 +248,18 @@ class PartialEvaluator {
 
   protected type3FontRefs: RefSet | null;
 
-  constructor({
-    xref,
-    handler,
-    pageIndex,
-    idFactory,
-    fontCache,
-    builtInCMapCache,
-    standardFontDataCache,
-    globalImageCache,
-    systemFontCache,
-    options = null,
-  }: {
-    handler: MessageHandler,
+  constructor(
     xref: XRef,
+    handler: MessageHandler,
     pageIndex: number,
-    idFactory: LocalIdFactory,
+    idFactory: GlobalIdFactory,
     fontCache: RefSetCache,
     builtInCMapCache: Map<string, any>,
     standardFontDataCache: Map<string, any>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, any>,
-    options: DocParamEvaluatorOptions | null
-  }) {
+    options: DocParamEvaluatorOptions | null = null,
+  ) {
     this.xref = xref;
     this.handler = handler;
     this.pageIndex = pageIndex;
@@ -1108,8 +1097,8 @@ class PartialEvaluator {
 
   async handleSetFont(
     resources: Dict,
-    fontArgs: [Name, number] | null,
-    fontRef,
+    fontArgs: [Name | string, number] | null,
+    fontRef: Ref | null,
     operatorList: OperatorList,
     task: WorkerTask,
     state: State,
@@ -1300,8 +1289,8 @@ class PartialEvaluator {
   }
 
   loadFont(
-    fontName,
-    font,
+    fontName: string | null,
+    font: Ref | Dict | null,
     resources: Dict,
     fallbackFontDict = null,
     cssFontInfo = null
@@ -1316,7 +1305,7 @@ class PartialEvaluator {
       });
     };
 
-    let fontRef;
+    let fontRef: Ref | null = null;
     if (font) {
       // Loading by ref.
       if (font instanceof Ref) {
@@ -1326,7 +1315,7 @@ class PartialEvaluator {
       // Loading by name.
       const fontRes = resources.getValue(DictKey.Font);
       if (fontRes) {
-        fontRef = fontRes.getRaw(fontName);
+        fontRef = <Ref>fontRes.getRaw(<DictKey>fontName);
       }
     }
     if (fontRef) {
@@ -2402,33 +2391,20 @@ class PartialEvaluator {
     });
   }
 
-  getTextContent({
-    stream,
-    task,
-    resources,
-    sink,
-    viewBox,
-    includeMarkedContent = false,
-    keepWhiteSpace = false,
-    seenStyles = new Set(),
-    stateManager = null,
-    lang = null,
-    markedContentData = null,
-    disableNormalization = false,
-  }: {
+  getTextContent(
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict | null,
-    stateManager: StateManager | null,
     sink: StreamSink,
-    seenStyles: Set<string>,
     viewBox: number[],
-    includeMarkedContent: boolean,
-    disableNormalization: boolean,
-    keepWhiteSpace: boolean,
-    lang: string | null
-    markedContentData: { level: 0 } | null
-  }) {
+    includeMarkedContent = false,
+    keepWhiteSpace = false,
+    seenStyles = new Set<string>(),
+    stateManager: StateManager | null = null,
+    lang: string | null = null,
+    markedContentData: { level: 0 } | null = null,
+    disableNormalization = false
+  ) {
     // Ensure that `resources`/`stateManager` is correctly initialized,
     // even if the provided parameter is e.g. `null`.
     resources ||= Dict.empty;

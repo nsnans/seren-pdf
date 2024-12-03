@@ -28,6 +28,8 @@ export type TransformType = [number, number, number, number, number, number];
 
 export type RectType = [number, number, number, number];
 
+export type PointType = [number, number]
+
 class PixelsPerInch {
   static CSS = 96.0;
 

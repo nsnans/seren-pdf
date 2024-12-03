@@ -14,7 +14,7 @@
  */
 /* globals process */
 
-import { RectType, TransformType } from "../display/display_utils";
+import { PointType, RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { TypedArray } from "../types";
 
@@ -29,8 +29,8 @@ const isNodeJS =
   !process.versions.nw &&
   !(process.versions.electron && (process as any).type && (process as any).type !== "browser");
 
-const IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
-const FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
+const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];
+const FONT_IDENTITY_MATRIX: TransformType = [0.001, 0, 0, 0.001, 0, 0];
 
 const MAX_IMAGE_SIZE_TO_CACHE = 10e6; // Ten megabytes.
 
@@ -736,7 +736,7 @@ class Util {
   }
 
   // For 2d affine transforms
-  static applyTransform(p: number[], m: number[]): [number, number] {
+  static applyTransform(p: PointType, m: number[]): [number, number] {
     const xt = p[0] * m[0] + p[1] * m[2] + m[4];
     const yt = p[0] * m[1] + p[1] * m[3] + m[5];
     return [xt, yt];

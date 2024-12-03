@@ -34,6 +34,7 @@ import { LocalColorSpaceCache } from "./image_utils";
 import { PDFFunctionFactory } from "./function";
 import { Stream, StringStream } from "./stream";
 import { XRef } from "./xref";
+import { PointType, RectType } from "../display/display_utils";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str: string) {
@@ -402,8 +403,8 @@ class FakeUnicodeFont {
     const lineDescent = LINE_DESCENT_FACTOR * fontSize;
 
     return {
-      coords: [0, h + lineDescent - lineHeight],
-      bbox: [0, 0, w, h],
+      coords: <PointType>[0, h + lineDescent - lineHeight],
+      bbox: <RectType>[0, 0, w, h],
       matrix:
         rotation !== 0 ? getRotationMatrix(rotation, h, lineHeight) : undefined,
     };

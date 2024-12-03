@@ -401,12 +401,12 @@ export class Catalog {
       }
 
       const data = { url: null, dest: null, action: null };
-      Catalog.parseDestDictionary({
-        destDict: outlineDict,
-        resultObj: data,
-        docBaseUrl: this.baseUrl,
-        docAttachments: this.attachments,
-      });
+      Catalog.parseDestDictionary(
+        outlineDict,
+        data,
+        this.baseUrl,
+        this.attachments,
+      );
       const title = outlineDict.get("Title");
       const flags = outlineDict.get("F") || 0;
       const color = outlineDict.getArray("C");
@@ -1083,7 +1083,7 @@ export class Catalog {
       destDict.set(DictKey.A, obj);
 
       const resultObj = { url: null, dest: null, action: null };
-      Catalog.parseDestDictionary({ destDict, resultObj });
+      Catalog.parseDestDictionary(destDict, resultObj);
 
       if (Array.isArray(resultObj.dest)) {
         openAction.dest = resultObj.dest;
@@ -1603,12 +1603,12 @@ export class Catalog {
    * Helper function used to parse the contents of destination dictionaries.
    * @param {ParseDestDictionaryParameters} params
    */
-  static parseDestDictionary({
-    destDict,
-    resultObj,
-    docBaseUrl = null,
-    docAttachments = null,
-  }) {
+  static parseDestDictionary(
+    destDict: Dict,
+    resultObj: any, // 可能是多种多样的
+    docBaseUrl: string | null = null,
+    docAttachments: Record<string, FileSpecSerializable> | null = null,
+  ) {
     if (!(destDict instanceof Dict)) {
       warn("parseDestDictionary: `destDict` must be a dictionary.");
       return;

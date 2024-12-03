@@ -306,6 +306,18 @@ export enum DictKey {
   Properties = "Properties",
   VE = "VE",
   OCGs = "OCGs",
+  Trapped = "Trapped",
+  ModDate = "ModDate",
+  Producer = "Producer",
+  Creator = "Creator",
+  Keywords = "Keywords",
+  Subject = "Subject",
+  Author = "Author",
+  Title = "Title",
+  RT = "RT",
+  IRT = "IRT",
+  Popup = "Popup",
+  RC = "RC",
 }
 
 /**
@@ -337,7 +349,7 @@ type DictValueTypeMapping = {
   [DictKey.CF]: Dict,
   [DictKey.CIDSystemInfo]: Dict,
   [DictKey.CIDToGIDMap]: Name,
-  [DictKey.CO]: string[],
+  [DictKey.CO]: (string | Ref)[],
   [DictKey.CS]: Name,
   [DictKey.C]: number[],
   [DictKey.Collection]: Dict,
@@ -408,7 +420,7 @@ type DictValueTypeMapping = {
   [DictKey.JS]: BaseStream | string,
   [DictKey.JavaScript]: string,
   [DictKey.K]: Dict,
-  [DictKey.Kids]: [], // 某种类型的数组，具体还要仔细分析
+  [DictKey.Kids]: (string | Dict | Ref)[], // 某种类型的数组，具体还要仔细分析
   [DictKey.LE]: Name[],
   [DictKey.L]: RectType,
   [DictKey.Lang]: string,
@@ -449,7 +461,7 @@ type DictValueTypeMapping = {
   [DictKey.Pages]: Ref | Dict, // Dict或者Ref
   [DictKey.ParentTreeNextKey]: number,
   [DictKey.ParentTree]: Ref,
-  [DictKey.Parent]: Ref,
+  [DictKey.Parent]: Ref | Dict,
   [DictKey.Pattern]: Dict,
   [DictKey.PdfJsZaDb]: Dict,
   [DictKey.Perms]: string,
@@ -495,7 +507,7 @@ type DictValueTypeMapping = {
   [DictKey.U]: string,
   [DictKey.Unix]: string | Ref,
   [DictKey.UserUnit]: number,
-  [DictKey.V]: string | string[] | Name,
+  [DictKey.V]: number | string | string[] | Name,
   [DictKey.Version]: Name,
   [DictKey.VerticesPerRow]: number,
   [DictKey.Vertices]: number[],
@@ -529,7 +541,19 @@ type DictValueTypeMapping = {
   [DictKey.PatternType]: number,
   [DictKey.Properties]: Dict,
   [DictKey.VE]: "VE",
-  [DictKey.OCGs]: "",
+  [DictKey.OCGs]: "OCGs",
+  [DictKey.Trapped]: "Trapped",
+  [DictKey.ModDate]: "ModDate",
+  [DictKey.Producer]: "Producer",
+  [DictKey.Creator]: "Creator",
+  [DictKey.Keywords]: "Keywords",
+  [DictKey.Subject]: "Subject",
+  [DictKey.Author]: "Author",
+  [DictKey.Title]: "Title",
+  [DictKey.RT]: Name,
+  [DictKey.IRT]: Ref | Dict,
+  [DictKey.Popup]: Ref,
+  [DictKey.RC]: string,
 }
 
 

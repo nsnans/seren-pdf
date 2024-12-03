@@ -20,6 +20,7 @@ import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
 import { stripQuotes } from "./utils";
+import { EmptyXFAAttributesObj } from "./xfa_object";
 import { XhtmlNamespace } from "./xhtml";
 
 class XFAFactory {
@@ -138,16 +139,16 @@ class XFAFactory {
     return Object.values(data).join("");
   }
 
-  static getRichTextAsHtml(rc) {
+  static getRichTextAsHtml(rc: string) {
     if (!rc || typeof rc !== "string") {
       return null;
     }
 
     try {
-      let root = new XFAParser(XhtmlNamespace.DEFAULT, /* richText */ true).parse(rc);
+      let root = new XFAParser(XhtmlNamespace.DEFAULT, /* richText */ true).parse(rc)!;
       if (!["body", "xhtml"].includes(root.nodeName)) {
         // No body, so create one.
-        const newRoot = XhtmlNamespace.DEFAULT.body({});
+        const newRoot = XhtmlNamespace.DEFAULT.body(EmptyXFAAttributesObj);
         newRoot.appendChild(root);
         root = newRoot;
       }

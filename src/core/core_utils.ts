@@ -27,6 +27,7 @@ import { Dict, DictKey, isName, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
+import { RectType, TransformType } from "../display/display_utils";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -272,17 +273,17 @@ function isNumberArray(arr: unknown, len: number | null) {
 }
 
 // Returns the matrix, or the fallback value if it's invalid.
-function lookupMatrix(arr: unknown, fallback: number[]) {
+function lookupMatrix(arr: unknown, fallback: number[] | null) {
   return isNumberArray(arr, 6) ? arr : fallback;
 }
 
 // Returns the rectangle, or the fallback value if it's invalid.
-function lookupRect(arr: unknown, fallback: number[]) {
+function lookupRect(arr: unknown, fallback: number[] | null) {
   return isNumberArray(arr, 4) ? arr : fallback;
 }
 
 // Returns the normalized rectangle, or the fallback value if it's invalid.
-function lookupNormalRect(arr: unknown, fallback: number[] | null) {
+function lookupNormalRect(arr: unknown, fallback: RectType | null): RectType {
   return isNumberArray(arr, 4) ? Util.normalizeRect(arr) : fallback;
 }
 
@@ -665,7 +666,7 @@ function stringToUTF16String(str: string, bigEndian = false) {
   return buf.join("");
 }
 
-function getRotationMatrix(rotation: number, width: number, height: number) {
+function getRotationMatrix(rotation: number, width: number, height: number): TransformType {
   switch (rotation) {
     case 90:
       return [0, 1, -1, 0, width, 0];

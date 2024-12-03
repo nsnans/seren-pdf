@@ -1525,7 +1525,7 @@ class CipherTransformFactory {
 
   protected dict: Dict;
 
-  protected filterName;
+  readonly filterName;
 
   #createEncryptionKey20(
     revision: number,
@@ -1762,7 +1762,7 @@ class CipherTransformFactory {
     if (!isName(filter, "Standard")) {
       throw new FormatError("unknown encryption method");
     }
-    this.filterName = filter.name;
+    this.filterName = (<Name>filter).name;
     this.dict = dict;
     const algorithm = dict.getValue(DictKey.V);
     if (

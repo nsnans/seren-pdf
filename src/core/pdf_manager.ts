@@ -160,11 +160,11 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().getPage(pageIndex);
   }
 
-  fontFallback(id, handler) {
+  fontFallback(id: string, handler: MessageHandler) {
     return this.getPDFDocument().fontFallback(id, handler);
   }
 
-  loadXfaFonts(handler, task) {
+  loadXfaFonts(handler: MessageHandler, task: WorkerTask) {
     return this.getPDFDocument().loadXfaFonts(handler, task);
   }
 
