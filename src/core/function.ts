@@ -845,19 +845,13 @@ class MinMaxNode extends AstNode {
   }
 }
 
-class AstArgument extends AstNode {
+class AstArgument extends MinMaxNode {
 
   public index: number;
 
-  public max: number;
-
-  public min: number;
-
   constructor(index: number, min: number, max: number) {
-    super("args");
+    super("args", min, max);
     this.index = index;
-    this.min = min;
-    this.max = max;
   }
 
   visit(visitor: ExpressionBuilderVisitor) {
@@ -865,19 +859,13 @@ class AstArgument extends AstNode {
   }
 }
 
-class AstLiteral extends AstNode {
+class AstLiteral extends MinMaxNode {
 
   public number: number;
 
-  protected min: number;
-
-  protected max: number;
-
   constructor(number: number) {
-    super("literal");
+    super("literal", number, number);
     this.number = number;
-    this.min = number;
-    this.max = number;
   }
 
   visit(visitor: ExpressionBuilderVisitor) {
@@ -885,25 +873,19 @@ class AstLiteral extends AstNode {
   }
 }
 
-class AstBinaryOperation extends AstNode {
+class AstBinaryOperation extends MinMaxNode {
 
   public op: string;
 
-  public arg1: AstNode;
+  public arg1: MinMaxNode;
 
-  public arg2: AstNode;
+  public arg2: MinMaxNode;
 
-  protected min;
-
-  protected max;
-
-  constructor(op: string, arg1: AstNode, arg2: AstNode, min: number, max: number) {
-    super("binary");
+  constructor(op: string, arg1: MinMaxNode, arg2: MinMaxNode, min: number, max: number) {
+    super("binary", min, max);
     this.op = op;
     this.arg1 = arg1;
     this.arg2 = arg2;
-    this.min = min;
-    this.max = max;
   }
 
   visit(visitor: ExpressionBuilderVisitor) {
@@ -911,19 +893,13 @@ class AstBinaryOperation extends AstNode {
   }
 }
 
-class AstMin extends AstNode {
+class AstMin extends MinMaxNode {
 
-  public min: number;
+  readonly arg: MinMaxNode;
 
-  public max: number;
-
-  protected arg: AstNode;
-
-  constructor(arg: AstNode, max: number) {
-    super("max");
+  constructor(arg: MinMaxNode, max: number) {
+    super("max", arg.min, max);
     this.arg = arg;
-    this.min = arg.min;
-    this.max = max;
   }
 
   visit(visitor: ExpressionBuilderVisitor) {
@@ -931,19 +907,13 @@ class AstMin extends AstNode {
   }
 }
 
-class AstVariable extends AstNode {
-
-  protected min: number;
-
-  protected max: number;
+class AstVariable extends MinMaxNode {
 
   public index: number;
 
   constructor(index: number, min: number, max: number) {
-    super("var");
+    super("var", min, max);
     this.index = index;
-    this.min = min;
-    this.max = max;
   }
 
   visit(visitor: ExpressionBuilderVisitor) {
@@ -970,7 +940,7 @@ class AstVariableDefinition extends AstNode {
 
 class ExpressionBuilderVisitor {
 
-  protected parts;
+  protected parts: (string | number)[];
 
   constructor() {
     this.parts = [];
@@ -1023,18 +993,18 @@ class ExpressionBuilderVisitor {
   }
 }
 
-function buildAddOperation(num1, num2) {
-  if (num2.type === "literal" && num2.number === 0) {
+function buildAddOperation(num1: MinMaxNode, num2: MinMaxNode) {
+  if (num2.type === "literal" && (<AstLiteral>num2).number === 0) {
     // optimization: second operand is 0
     return num1;
   }
-  if (num1.type === "literal" && num1.number === 0) {
+  if (num1.type === "literal" && (<AstLiteral>num1).number === 0) {
     // optimization: first operand is 0
     return num2;
   }
   if (num2.type === "literal" && num1.type === "literal") {
-    // optimization: operands operand are literals
-    return new AstLiteral(num1.number + num2.number);
+    // optimization: operands operand are literals)
+    return new AstLiteral((<AstLiteral>num1).number + (<AstLiteral>num2).number);
   }
   return new AstBinaryOperation(
     "+",
@@ -1045,7 +1015,7 @@ function buildAddOperation(num1, num2) {
   );
 }
 
-function buildMulOperation(num1: AstNode, num2: AstNode) {
+function buildMulOperation(num1: MinMaxNode, num2: MinMaxNode) {
   if (num2.type === "literal") {
     // optimization: second operands is a literal...
     if ((<AstLiteral>num2).number === 0) {
@@ -1080,26 +1050,26 @@ function buildMulOperation(num1: AstNode, num2: AstNode) {
   return new AstBinaryOperation("*", num1, num2, min, max);
 }
 
-function buildSubOperation(num1, num2) {
+function buildSubOperation(num1: MinMaxNode, num2: MinMaxNode): MinMaxNode {
   if (num2.type === "literal") {
     // optimization: second operands is a literal...
-    if (num2.number === 0) {
+    if ((<AstLiteral>num2).number === 0) {
       return num1; // ... and it's 0
     } else if (num1.type === "literal") {
       // ... and first operands is a literal too
-      return new AstLiteral(num1.number - num2.number);
+      return new AstLiteral((<AstLiteral>num1).number - (<AstLiteral>num2).number);
     }
   }
   if (
     num2.type === "binary" &&
-    num2.op === "-" &&
+    (<AstBinaryOperation>num2).op === "-" &&
     num1.type === "literal" &&
-    num1.number === 1 &&
-    num2.arg1.type === "literal" &&
-    num2.arg1.number === 1
+    (<AstLiteral>num1).number === 1 &&
+    (<AstBinaryOperation>num2).arg1.type === "literal" &&
+    (<AstLiteral>(<AstBinaryOperation>num2).arg1).number === 1
   ) {
     // optimization for case: 1 - (1 - x)
-    return num2.arg2;
+    return (<AstBinaryOperation>num2).arg2;
   }
   return new AstBinaryOperation(
     "-",
@@ -1110,7 +1080,7 @@ function buildSubOperation(num1, num2) {
   );
 }
 
-function buildMinOperation(num1, max) {
+function buildMinOperation(num1: MinMaxNode, max: number) {
   if (num1.min >= max) {
     // optimization: num1 min value is not less than required max
     return new AstLiteral(max); // just returning max
@@ -1128,8 +1098,9 @@ function buildMinOperation(num1, max) {
 // optimize some expressions using basic math properties. Keeping track of
 // min/max values will allow us to avoid extra Math.min/Math.max calls.
 class PostScriptCompiler {
-  compile(code, domain, range) {
-    const stack = [];
+
+  compile(code: (string | number | null)[], domain: number[], range: number[]) {
+    const stack = <MinMaxNode[]>[];
     const instructions = [];
     const inputSize = domain.length >> 1,
       outputSize = range.length >> 1;
@@ -1152,8 +1123,8 @@ class PostScriptCompiler {
           if (stack.length < 2) {
             return null;
           }
-          num2 = stack.pop();
-          num1 = stack.pop();
+          num2 = stack.pop()!;
+          num1 = stack.pop()!;
           stack.push(buildAddOperation(num1, num2));
           break;
         case "cvr":
@@ -1165,24 +1136,24 @@ class PostScriptCompiler {
           if (stack.length < 2) {
             return null;
           }
-          num2 = stack.pop();
-          num1 = stack.pop();
+          num2 = stack.pop()!;
+          num1 = stack.pop()!;
           stack.push(buildMulOperation(num1, num2));
           break;
         case "sub":
           if (stack.length < 2) {
             return null;
           }
-          num2 = stack.pop();
-          num1 = stack.pop();
+          num2 = stack.pop()!;
+          num1 = stack.pop()!;
           stack.push(buildSubOperation(num1, num2));
           break;
         case "exch":
           if (stack.length < 2) {
             return null;
           }
-          ast1 = stack.pop();
-          ast2 = stack.pop();
+          ast1 = stack.pop()!;
+          ast2 = stack.pop()!;
           stack.push(ast1, ast2);
           break;
         case "pop":
@@ -1195,11 +1166,11 @@ class PostScriptCompiler {
           if (stack.length < 1) {
             return null;
           }
-          num1 = stack.pop();
+          num1 = stack.pop()!;
           if (num1.type !== "literal") {
             return null;
           }
-          n = num1.number;
+          n = (<AstLiteral>num1).number;
           if (n < 0 || !Number.isInteger(n) || stack.length < n) {
             return null;
           }
@@ -1226,12 +1197,12 @@ class PostScriptCompiler {
             code[i + 6] === code[i + 1]
           ) {
             // special case of the commands sequence for the min operation
-            num1 = stack.pop();
-            stack.push(buildMinOperation(num1, code[i + 1]));
+            num1 = stack.pop()!;
+            stack.push(buildMinOperation(num1, <number>code[i + 1]));
             i += 6;
             break;
           }
-          ast1 = stack.at(-1);
+          ast1 = stack.at(-1)!;
           if (ast1.type === "literal" || ast1.type === "var") {
             // we don't have to save into intermediate variable a literal or
             // variable.
@@ -1247,14 +1218,14 @@ class PostScriptCompiler {
           if (stack.length < 2) {
             return null;
           }
-          num2 = stack.pop();
-          num1 = stack.pop();
+          num2 = stack.pop()!;
+          num1 = stack.pop()!;
           if (num2.type !== "literal" || num1.type !== "literal") {
             // both roll operands must be numbers
             return null;
           }
-          j = num2.number;
-          n = num1.number;
+          j = (<AstLiteral>num2).number;
+          n = (<AstLiteral>num1).number;
           if (
             n <= 0 ||
             !Number.isInteger(n) ||
@@ -1291,7 +1262,7 @@ class PostScriptCompiler {
       expr.visit(statementBuilder);
       const min = range[i * 2],
         max = range[i * 2 + 1];
-      const out = [statementBuilder.toString()];
+      const out: (number | string)[] = [statementBuilder.toString()];
       if (min > expr.min) {
         out.unshift("Math.max(", min, ", ");
         out.push(")");
