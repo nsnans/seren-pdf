@@ -27,6 +27,8 @@ import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
 import { XRef } from "./xref";
 
+type ParserConstructFunction = (src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) => void;
+
 class PDFFunctionFactory {
 
   protected isEvalSupported: boolean;
@@ -60,11 +62,11 @@ class PDFFunctionFactory {
     if (cachedFunction) {
       return cachedFunction;
     }
-    const parsedFunction = PDFFunction.parseArray({
-      xref: this.xref,
-      isEvalSupported: this.isEvalSupported,
-      fnObj: fnObj instanceof Ref ? this.xref.fetch(fnObj) : fnObj,
-    });
+    const parsedFunction = PDFFunction.parseArray(
+      this.xref,
+      this.isEvalSupported,
+      fnObj instanceof Ref ? this.xref.fetch(fnObj) : fnObj,
+    );
 
     // Attempt to cache the parsed Function, by reference.
     this._cache(fnObj, parsedFunction);
@@ -161,9 +163,9 @@ class PDFFunction {
     return array;
   }
 
-  static parse(xref: XRef, isEvalSupported: boolean, fn) {
-    const dict = fn.dict || fn;
-    const typeNum = dict.get("FunctionType");
+  static parse(xref: XRef, isEvalSupported: boolean, fn): ParserConstructFunction {
+    const dict: Dict = fn.dict || fn;
+    const typeNum = dict.getValue(DictKey.FunctionType);
 
     switch (typeNum) {
       case 0:
@@ -171,35 +173,37 @@ class PDFFunction {
       case 1:
         break;
       case 2:
-        return this.constructInterpolated({ xref, isEvalSupported, dict });
+        return this.constructInterpolated(xref, isEvalSupported, dict);
       case 3:
-        return this.constructStiched({ xref, isEvalSupported, dict });
+        return this.constructStiched(xref, isEvalSupported, dict);
       case 4:
-        return this.constructPostScript({ xref, isEvalSupported, fn, dict });
+        return this.constructPostScript(xref, isEvalSupported, fn, dict);
     }
     throw new FormatError("Unknown type of function");
   }
 
-  static parseArray({ xref, isEvalSupported, fnObj }) {
+  static parseArray(xref: XRef, isEvalSupported: boolean, fnObj) {
     if (!Array.isArray(fnObj)) {
       // not an array -- parsing as regular function
-      return this.parse({ xref, isEvalSupported, fn: fnObj });
+      return this.parse(xref, isEvalSupported, fnObj);
     }
 
-    const fnArray = [];
+    const fnArray: ParserConstructFunction[] = [];
     for (const fn of fnObj) {
       fnArray.push(
-        this.parse({ xref, isEvalSupported, fn: xref.fetchIfRef(fn) })
+        this.parse(xref, isEvalSupported, xref.fetchIfRef(fn))
       );
     }
-    return function (src, srcOffset, dest, destOffset) {
+    return function (src: Float32Array, srcOffset: number,
+      dest: Float32Array, destOffset: number) {
       for (let i = 0, ii = fnArray.length; i < ii; i++) {
         fnArray[i](src, srcOffset, dest, destOffset + i);
       }
     };
   }
 
-  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn, dict: Dict) {
+  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn, dict: Dict)
+    : ParserConstructFunction {
     function toMultiArray(arr: number[]) {
       const inputLength = arr.length;
       const out: [number, number][] = [];
@@ -228,8 +232,8 @@ class PDFFunction {
     range = toMultiArray(range);
 
     const size = toNumberArray(dict.getArray(DictKey.Size));
-    const bps = dict.get(DictKey.BitsPerSample);
-    const order = dict.get(DictKey.Order) || 1;
+    const bps = dict.getValue(DictKey.BitsPerSample);
+    const order = <number>dict.getValue(DictKey.Order) || 1;
     if (order !== 1) {
       // No description how cubic spline interpolation works in PDF32000:2008
       // As in poppler, ignoring order, linear interpolation may work as good
@@ -329,12 +333,12 @@ class PDFFunction {
     };
   }
 
-  static constructInterpolated({ xref, isEvalSupported, dict }) {
-    const c0 = toNumberArray(dict.getArray("C0")) || [0];
-    const c1 = toNumberArray(dict.getArray("C1")) || [1];
-    const n = dict.get("N");
+  static constructInterpolated(_xref: XRef, _isEvalSupported: boolean, dict: Dict): ParserConstructFunction {
+    const c0 = toNumberArray(dict.getArrayValue(DictKey.C0)) || [0];
+    const c1 = toNumberArray(dict.getArrayValue(DictKey.C1)) || [1];
+    const n = <number>dict.getValue(DictKey.N);
 
-    const diff = [];
+    const diff = <number[]>[];
     for (let i = 0, ii = c0.length; i < ii; ++i) {
       diff.push(c1[i] - c0[i]);
     }
@@ -349,8 +353,8 @@ class PDFFunction {
     };
   }
 
-  static constructStiched({ xref, isEvalSupported, dict }) {
-    const domain = toNumberArray(dict.getArray("Domain"));
+  static constructStiched(xref: XRef, isEvalSupported: boolean, dict: Dict) {
+    const domain = toNumberArray(dict.getArray(DictKey.Domain));
 
     if (!domain) {
       throw new FormatError("No domain");
@@ -361,17 +365,17 @@ class PDFFunction {
       throw new FormatError("Bad domain for stiched function");
     }
 
-    const fns = [];
-    for (const fn of dict.get("Functions")) {
-      fns.push(this.parse({ xref, isEvalSupported, fn: xref.fetchIfRef(fn) }));
+    const fns: ParserConstructFunction[] = [];
+    for (const fn of dict.getValue(DictKey.Functions)) {
+      fns.push(this.parse(xref, isEvalSupported, xref.fetchIfRef(fn)));
     }
 
-    const bounds = toNumberArray(dict.getArray("Bounds"));
-    const encode = toNumberArray(dict.getArray("Encode"));
+    const bounds = toNumberArray(dict.getArrayValue(DictKey.Bounds))!;
+    const encode = toNumberArray(dict.getArrayValue(DictKey.Encode))!;
     const tmpBuf = new Float32Array(1);
 
-    return function constructStichedFn(src, srcOffset, dest, destOffset) {
-      const clip = function constructStichedFromIRClip(v, min, max) {
+    return function constructStichedFn(src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) {
+      const clip = function constructStichedFromIRClip(v: number, min: number, max: number) {
         if (v > max) {
           v = max;
         } else if (v < min) {
@@ -416,9 +420,10 @@ class PDFFunction {
     };
   }
 
-  static constructPostScript({ xref, isEvalSupported, fn, dict }) {
-    const domain = toNumberArray(dict.getArray("Domain"));
-    const range = toNumberArray(dict.getArray("Range"));
+  static constructPostScript(_xref: XRef, isEvalSupported: boolean, fn, dict: Dict): ParserConstructFunction {
+
+    const domain = toNumberArray(dict.getArray(DictKey.Domain));
+    const range = toNumberArray(dict.getArray(DictKey.Range));
 
     if (!domain) {
       throw new FormatError("No domain.");
@@ -439,7 +444,7 @@ class PDFFunction {
         // subtraction, Math.max, and also contains 'var' and 'return'
         // statements. See the generation in the PostScriptCompiler below.
         // eslint-disable-next-line no-new-func
-        return new Function("src", "srcOffset", "dest", "destOffset", compiled);
+        return <ParserConstructFunction>new Function("src", "srcOffset", "dest", "destOffset", compiled);
       }
     }
     info("Unable to compile PS function");
@@ -476,7 +481,7 @@ class PDFFunction {
       const stack = evaluator.execute(input);
       const stackIndex = stack.length - numOutputs;
       for (i = 0; i < numOutputs; i++) {
-        value = stack[stackIndex + i];
+        value = <number>stack[stackIndex + i];
         let bound = range[i * 2];
         if (value < bound) {
           value = bound;
@@ -497,7 +502,7 @@ class PDFFunction {
   }
 }
 
-function isPDFFunction(v) {
+function isPDFFunction(v: Dict | BaseStream) {
   let fnDict;
   if (v instanceof Dict) {
     fnDict = v;
@@ -510,13 +515,16 @@ function isPDFFunction(v) {
 }
 
 class PostScriptStack {
+
   static MAX_STACK_SIZE = 100;
 
-  constructor(initialStack) {
+  public stack: (number | boolean)[];
+
+  constructor(initialStack: Float32Array) {
     this.stack = initialStack ? Array.from(initialStack) : [];
   }
 
-  push(value) {
+  push(value: number | boolean) {
     if (this.stack.length >= PostScriptStack.MAX_STACK_SIZE) {
       throw new Error("PostScript function stack overflow.");
     }
@@ -527,10 +535,10 @@ class PostScriptStack {
     if (this.stack.length <= 0) {
       throw new Error("PostScript function stack underflow.");
     }
-    return this.stack.pop();
+    return this.stack.pop()!;
   }
 
-  copy(n) {
+  copy(n: number) {
     if (this.stack.length + n >= PostScriptStack.MAX_STACK_SIZE) {
       throw new Error("PostScript function stack overflow.");
     }
@@ -540,12 +548,12 @@ class PostScriptStack {
     }
   }
 
-  index(n) {
+  index(n: number) {
     this.push(this.stack[this.stack.length - n - 1]);
   }
 
   // rotate the last n stack elements p times
-  roll(n, p) {
+  roll(n: number, p: number) {
     const stack = this.stack;
     const l = stack.length - n;
     const r = stack.length - 1;
@@ -570,11 +578,14 @@ class PostScriptStack {
 }
 
 class PostScriptEvaluator {
-  constructor(operators) {
+
+  protected operators: (string | number | null)[];
+
+  constructor(operators: (string | number | null)[]) {
     this.operators = operators;
   }
 
-  execute(initialStack) {
+  execute(initialStack: Float32Array) {
     const stack = new PostScriptStack(initialStack);
     let counter = 0;
     const operators = this.operators;
@@ -590,25 +601,25 @@ class PostScriptEvaluator {
       switch (operator) {
         // non standard ps operators
         case "jz": // jump if false
-          b = stack.pop();
+          b = <number>stack.pop();
           a = stack.pop();
           if (!a) {
             counter = b;
           }
           break;
         case "j": // jump
-          a = stack.pop();
+          a = <number>stack.pop();
           counter = a;
           break;
 
         // all ps operators in alphabetical order (excluding if/ifelse)
         case "abs":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.abs(a));
           break;
         case "add":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a + b);
           break;
         case "and":
@@ -617,21 +628,21 @@ class PostScriptEvaluator {
           if (typeof a === "boolean" && typeof b === "boolean") {
             stack.push(a && b);
           } else {
-            stack.push(a & b);
+            stack.push(<number>a & <number>b);
           }
           break;
         case "atan":
-          b = stack.pop();
-          a = stack.pop();
-          a = (Math.atan2(a, b) / Math.PI) * 180;
+          b = stack.pop()!;
+          a = stack.pop()!;
+          a = (Math.atan2(<number>a, <number>b) / Math.PI) * 180;
           if (a < 0) {
             a += 360;
           }
           stack.push(a);
           break;
         case "bitshift":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           if (a > 0) {
             stack.push(a << b);
           } else {
@@ -639,27 +650,27 @@ class PostScriptEvaluator {
           }
           break;
         case "ceiling":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.ceil(a));
           break;
         case "copy":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.copy(a);
           break;
         case "cos":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.cos(((a % 360) / 180) * Math.PI));
           break;
         case "cvi":
-          a = stack.pop() | 0;
+          a = <number>stack.pop() | 0;
           stack.push(a);
           break;
         case "cvr":
           // noop
           break;
         case "div":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a / b);
           break;
         case "dup":
@@ -674,15 +685,15 @@ class PostScriptEvaluator {
           stack.roll(2, 1);
           break;
         case "exp":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a ** b);
           break;
         case "false":
           stack.push(false);
           break;
         case "floor":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.floor(a));
           break;
         case "ge":
@@ -696,49 +707,49 @@ class PostScriptEvaluator {
           stack.push(a > b);
           break;
         case "idiv":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push((a / b) | 0);
           break;
         case "index":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.index(a);
           break;
         case "le":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a <= b);
           break;
         case "ln":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.log(a));
           break;
         case "log":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(Math.log10(a));
           break;
         case "lt":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a < b);
           break;
         case "mod":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a % b);
           break;
         case "mul":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a * b);
           break;
         case "ne":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a !== b);
           break;
         case "neg":
-          a = stack.pop();
+          a = <number>stack.pop();
           stack.push(-a);
           break;
         case "not":
@@ -755,7 +766,7 @@ class PostScriptEvaluator {
           if (typeof a === "boolean" && typeof b === "boolean") {
             stack.push(a || b);
           } else {
-            stack.push(a | b);
+            stack.push(<number>a | <number>b);
           }
           break;
         case "pop":
@@ -764,30 +775,30 @@ class PostScriptEvaluator {
         case "roll":
           b = stack.pop();
           a = stack.pop();
-          stack.roll(a, b);
+          stack.roll(<number>a, <number>b);
           break;
         case "round":
           a = stack.pop();
-          stack.push(Math.round(a));
+          stack.push(Math.round(<number>a));
           break;
         case "sin":
           a = stack.pop();
-          stack.push(Math.sin(((a % 360) / 180) * Math.PI));
+          stack.push(Math.sin(((<number>a % 360) / 180) * Math.PI));
           break;
         case "sqrt":
           a = stack.pop();
-          stack.push(Math.sqrt(a));
+          stack.push(Math.sqrt(<number>a));
           break;
         case "sub":
-          b = stack.pop();
-          a = stack.pop();
+          b = <number>stack.pop();
+          a = <number>stack.pop();
           stack.push(a - b);
           break;
         case "true":
           stack.push(true);
           break;
         case "truncate":
-          a = stack.pop();
+          a = <number>stack.pop();
           a = a < 0 ? Math.ceil(a) : Math.floor(a);
           stack.push(a);
           break;
@@ -797,7 +808,7 @@ class PostScriptEvaluator {
           if (typeof a === "boolean" && typeof b === "boolean") {
             stack.push(a !== b);
           } else {
-            stack.push(a ^ b);
+            stack.push(<number>a ^ <number>b);
           }
           break;
         default:
@@ -809,43 +820,84 @@ class PostScriptEvaluator {
 }
 
 class AstNode {
-  constructor(type) {
+
+  readonly type: string;
+
+  constructor(type: string) {
     this.type = type;
   }
 
-  visit(visitor) {
+  visit(_visitor: ExpressionBuilderVisitor): void {
     unreachable("abstract method");
   }
 }
 
+class MinMaxNode extends AstNode {
+
+  public min: number;
+
+  public max: number;
+
+  constructor(type: string, min: number, max: number) {
+    super(type)
+    this.max = max;
+    this.min = min;
+  }
+}
+
 class AstArgument extends AstNode {
-  constructor(index, min, max) {
+
+  public index: number;
+
+  public max: number;
+
+  public min: number;
+
+  constructor(index: number, min: number, max: number) {
     super("args");
     this.index = index;
     this.min = min;
     this.max = max;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitArgument(this);
   }
 }
 
 class AstLiteral extends AstNode {
-  constructor(number) {
+
+  public number: number;
+
+  protected min: number;
+
+  protected max: number;
+
+  constructor(number: number) {
     super("literal");
     this.number = number;
     this.min = number;
     this.max = number;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitLiteral(this);
   }
 }
 
 class AstBinaryOperation extends AstNode {
-  constructor(op, arg1, arg2, min, max) {
+
+  public op: string;
+
+  public arg1: AstNode;
+
+  public arg2: AstNode;
+
+  protected min;
+
+  protected max;
+
+  constructor(op: string, arg1: AstNode, arg2: AstNode, min: number, max: number) {
     super("binary");
     this.op = op;
     this.arg1 = arg1;
@@ -854,55 +906,77 @@ class AstBinaryOperation extends AstNode {
     this.max = max;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitBinaryOperation(this);
   }
 }
 
 class AstMin extends AstNode {
-  constructor(arg, max) {
+
+  public min: number;
+
+  public max: number;
+
+  protected arg: AstNode;
+
+  constructor(arg: AstNode, max: number) {
     super("max");
     this.arg = arg;
     this.min = arg.min;
     this.max = max;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitMin(this);
   }
 }
 
 class AstVariable extends AstNode {
-  constructor(index, min, max) {
+
+  protected min: number;
+
+  protected max: number;
+
+  public index: number;
+
+  constructor(index: number, min: number, max: number) {
     super("var");
     this.index = index;
     this.min = min;
     this.max = max;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitVariable(this);
   }
 }
 
 class AstVariableDefinition extends AstNode {
-  constructor(variable, arg) {
+
+  public variable: AstVariable;
+
+  public arg: AstNode;
+
+  constructor(variable: AstVariable, arg: AstNode) {
     super("definition");
     this.variable = variable;
     this.arg = arg;
   }
 
-  visit(visitor) {
+  visit(visitor: ExpressionBuilderVisitor) {
     visitor.visitVariableDefinition(this);
   }
 }
 
 class ExpressionBuilderVisitor {
+
+  protected parts;
+
   constructor() {
     this.parts = [];
   }
 
-  visitArgument(arg) {
+  visitArgument(arg: AstArgument) {
     this.parts.push(
       "Math.max(",
       arg.min,
@@ -914,15 +988,15 @@ class ExpressionBuilderVisitor {
     );
   }
 
-  visitVariable(variable) {
+  visitVariable(variable: AstVariable) {
     this.parts.push("v", variable.index);
   }
 
-  visitLiteral(literal) {
+  visitLiteral(literal: AstLiteral) {
     this.parts.push(literal.number);
   }
 
-  visitBinaryOperation(operation) {
+  visitBinaryOperation(operation: AstBinaryOperation) {
     this.parts.push("(");
     operation.arg1.visit(this);
     this.parts.push(" ", operation.op, " ");
@@ -930,7 +1004,7 @@ class ExpressionBuilderVisitor {
     this.parts.push(")");
   }
 
-  visitVariableDefinition(definition) {
+  visitVariableDefinition(definition: AstVariableDefinition) {
     this.parts.push("var ");
     definition.variable.visit(this);
     this.parts.push(" = ");
@@ -938,7 +1012,7 @@ class ExpressionBuilderVisitor {
     this.parts.push(";");
   }
 
-  visitMin(max) {
+  visitMin(max: AstMin) {
     this.parts.push("Math.min(");
     max.arg.visit(this);
     this.parts.push(", ", max.max, ")");
@@ -971,23 +1045,23 @@ function buildAddOperation(num1, num2) {
   );
 }
 
-function buildMulOperation(num1, num2) {
+function buildMulOperation(num1: AstNode, num2: AstNode) {
   if (num2.type === "literal") {
     // optimization: second operands is a literal...
-    if (num2.number === 0) {
+    if ((<AstLiteral>num2).number === 0) {
       return new AstLiteral(0); // and it's 0
-    } else if (num2.number === 1) {
+    } else if ((<AstLiteral>num2).number === 1) {
       return num1; // and it's 1
     } else if (num1.type === "literal") {
       // ... and first operands is a literal too
-      return new AstLiteral(num1.number * num2.number);
+      return new AstLiteral((<AstLiteral>num1).number * (<AstLiteral>num2).number);
     }
   }
   if (num1.type === "literal") {
     // optimization: first operands is a literal...
-    if (num1.number === 0) {
+    if ((<AstLiteral>num1).number === 0) {
       return new AstLiteral(0); // and it's 0
-    } else if (num1.number === 1) {
+    } else if ((<AstLiteral>num1).number === 1) {
       return num2; // and it's 1
     }
   }

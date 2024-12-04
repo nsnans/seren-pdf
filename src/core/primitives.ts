@@ -350,6 +350,10 @@ export enum DictKey {
   Encode = "Encode",
   Domain = "Domain",
   Range = "Range",
+  C0 = "C0",
+  C1 = "C1",
+  Functions = "Functions",
+  Bounds = "Bounds",
 }
 
 /**
@@ -467,7 +471,7 @@ type DictValueTypeMapping = {
   [DictKey.Mask]: "Mask", // BaseStream或某种类型的数组
   [DictKey.Matrix]: number[],
   [DictKey.Metadata]: Ref,
-  [DictKey.N]: Ref | StringStream,
+  [DictKey.N]: Ref | StringStream | number,
   [DictKey.Name]: Name | string,
   [DictKey.Names]: Dict,
   [DictKey.NeedAppearances]: boolean,
@@ -595,7 +599,7 @@ type DictValueTypeMapping = {
   [DictKey.RBGroups]: Ref[][],
   [DictKey.ON]: Ref[],
   [DictKey.OFF]: Ref[],
-  [DictKey.Order]: Ref[],
+  [DictKey.Order]: Ref[] | number,
   [DictKey.Limits]: "Limits",
   [DictKey.HideToolbar]: boolean,
   [DictKey.HideMenubar]: boolean,
@@ -618,6 +622,10 @@ type DictValueTypeMapping = {
   [DictKey.Encode]: number[]
   [DictKey.Domain]: number[],
   [DictKey.Range]: number[],
+  [DictKey.C0]: number[],
+  [DictKey.C1]: number[],
+  [DictKey.Functions]: "Functions",
+  [DictKey.Bounds]: number[],
 }
 
 
