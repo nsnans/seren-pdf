@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
+import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   MAX_IMAGE_SIZE_TO_CACHE,
+  OPS,
   unreachable,
   warn,
 } from "../shared/util";
 import { ColorSpace } from "./colorspace";
-import { ImageMask } from "./core_types";
+import { ImageMask, SMaskOptions } from "./core_types";
 import { Dict, DictKey, Ref, RefSet, RefSetCache } from "./primitives";
 
 abstract class BaseLocalCache<T> {
@@ -56,9 +58,25 @@ abstract class NameLocalCache<DATA> extends BaseLocalCache<DATA> {
   }
 }
 
+export interface OptionalContent {
+  type: string;
+  id?: string | null;
+  ids?: (string | null)[];
+  expression?: (string | string[])[] | null;
+  policy?: string | null;
+}
+
+export interface GroupOptions {
+  matrix: TransformType | null,
+  bbox: RectType | null,
+  smask: SMaskOptions,
+  isolated: boolean,
+  knockout: boolean,
+}
+
 export interface ImageCacheData {
   objId?: string | null;
-  fn: number;
+  fn: OPS;
   args: ImageMask[] | {
     data: string;
     width: number;
@@ -66,12 +84,7 @@ export interface ImageCacheData {
     interpolate: number[];
     count: number;
   }[] | (string | number)[];
-  optionalContent: {
-    type: string;
-    id?: string | null;
-    expression?: (string | string[])[] | null;
-    policy: string | null;
-  } | null;
+  optionalContent: OptionalContent | null;
 }
 
 export interface GlobalImageCacheData extends ImageCacheData {

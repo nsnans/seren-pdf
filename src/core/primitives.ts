@@ -354,6 +354,12 @@ export enum DictKey {
   C1 = "C1",
   Functions = "Functions",
   Bounds = "Bounds",
+  Coords = "Coords",
+  Extend = "Extend",
+  XStep = "XStep",
+  YStep = "YStep",
+  PaintType = "PaintType",
+  TilingType = "TilingType",
 }
 
 /**
@@ -433,7 +439,7 @@ type DictValueTypeMapping = {
   [DictKey.Font]: Dict,
   [DictKey.FormType]: number,
   [DictKey.FunctionType]: number,
-  [DictKey.Function]: Ref | Function | (Ref | Function)[],
+  [DictKey.Function]: Ref | Dict | BaseStream | (Ref | Dict | BaseStream)[],
   [DictKey.GS0]: Dict,
   [DictKey.G]: BaseStream,
   [DictKey.Group]: Dict,
@@ -626,6 +632,12 @@ type DictValueTypeMapping = {
   [DictKey.C1]: number[],
   [DictKey.Functions]: "Functions",
   [DictKey.Bounds]: number[],
+  [DictKey.Coords]: number[]
+  [DictKey.Extend]: [boolean, boolean],
+  [DictKey.XStep]: number,
+  [DictKey.YStep]: number,
+  [DictKey.PaintType]: number,
+  [DictKey.TilingType]: number,
 }
 
 

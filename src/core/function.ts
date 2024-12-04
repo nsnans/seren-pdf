@@ -27,7 +27,7 @@ import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
 import { XRef } from "./xref";
 
-type ParserConstructFunction = (src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) => void;
+export type ParserConstructFunction = (src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) => void;
 
 class PDFFunctionFactory {
 
@@ -57,8 +57,8 @@ class PDFFunctionFactory {
     return parsedFunction;
   }
 
-  createFromArray(fnObj) {
-    const cachedFunction = this.getCached(fnObj);
+  createFromArray(fnObj: Dict | Ref | BaseStream | (Dict | Ref | BaseStream)[]) {
+    const cachedFunction = this.getCached(<Dict | Ref | BaseStream>fnObj);
     if (cachedFunction) {
       return cachedFunction;
     }
@@ -69,7 +69,7 @@ class PDFFunctionFactory {
     );
 
     // Attempt to cache the parsed Function, by reference.
-    this._cache(fnObj, parsedFunction);
+    this._cache(<Ref | Dict | BaseStream>fnObj, parsedFunction);
 
     return parsedFunction;
   }
@@ -134,7 +134,8 @@ function toNumberArray(arr: number[]) {
 }
 
 class PDFFunction {
-  static getSampleArray(size, outputSize, bps, stream) {
+
+  static getSampleArray(size: number[], outputSize: number, bps: number, stream: BaseStream) {
     let i, ii;
     let length = 1;
     for (i = 0, ii = size.length; i < ii; i++) {
@@ -163,13 +164,13 @@ class PDFFunction {
     return array;
   }
 
-  static parse(xref: XRef, isEvalSupported: boolean, fn): ParserConstructFunction {
-    const dict: Dict = fn.dict || fn;
+  static parse(xref: XRef, isEvalSupported: boolean, fn: BaseStream | Dict): ParserConstructFunction {
+    const dict: Dict = (<BaseStream>fn).dict || <Dict>fn;
     const typeNum = dict.getValue(DictKey.FunctionType);
 
     switch (typeNum) {
       case 0:
-        return this.constructSampled(xref, isEvalSupported, fn, dict);
+        return this.constructSampled(xref, isEvalSupported, <BaseStream>fn, dict);
       case 1:
         break;
       case 2:
@@ -177,12 +178,12 @@ class PDFFunction {
       case 3:
         return this.constructStiched(xref, isEvalSupported, dict);
       case 4:
-        return this.constructPostScript(xref, isEvalSupported, fn, dict);
+        return this.constructPostScript(xref, isEvalSupported, <BaseStream>fn, dict);
     }
     throw new FormatError("Unknown type of function");
   }
 
-  static parseArray(xref: XRef, isEvalSupported: boolean, fnObj) {
+  static parseArray(xref: XRef, isEvalSupported: boolean, fnObj: (BaseStream | Dict | (BaseStream | Dict)[])) {
     if (!Array.isArray(fnObj)) {
       // not an array -- parsing as regular function
       return this.parse(xref, isEvalSupported, fnObj);
@@ -202,7 +203,7 @@ class PDFFunction {
     };
   }
 
-  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn, dict: Dict)
+  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn: BaseStream, dict: Dict)
     : ParserConstructFunction {
     function toMultiArray(arr: number[]) {
       const inputLength = arr.length;
@@ -253,7 +254,7 @@ class PDFFunction {
     let decode: [number, number][] | number[] | null = toNumberArray(dict.getArrayValue(DictKey.Decode));
     decode = !decode ? range : toMultiArray(decode);
 
-    const samples = this.getSampleArray(size, outputSize, bps, fn);
+    const samples = this.getSampleArray(size!, outputSize, bps, fn);
     // const mask = 2 ** bps - 1;
 
     // 目前可以确定的类型有Float32Array，但不确定是不是只有Float32Array
@@ -420,7 +421,7 @@ class PDFFunction {
     };
   }
 
-  static constructPostScript(_xref: XRef, isEvalSupported: boolean, fn, dict: Dict): ParserConstructFunction {
+  static constructPostScript(_xref: XRef, isEvalSupported: boolean, fn: BaseStream, dict: Dict): ParserConstructFunction {
 
     const domain = toNumberArray(dict.getArray(DictKey.Domain));
     const range = toNumberArray(dict.getArray(DictKey.Range));

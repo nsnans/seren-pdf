@@ -15,6 +15,7 @@
 /* eslint-disable no-var */
 
 import { DocParamEvaluatorOptions } from "../display/api.js";
+import { RectType, TransformType } from "../display/display_utils.js";
 import { PlatformHelper } from "../platform/platform_helper.js";
 import { MessageHandler } from "../shared/message_handler.js";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
@@ -60,11 +61,13 @@ import { ImageResizer } from "./image_resizer";
 import {
   GlobalImageCache,
   GlobalImageCacheData,
+  GroupOptions,
   ImageCacheData,
   LocalColorSpaceCache,
   LocalGStateCache,
   LocalImageCache,
   LocalTilingPatternCache,
+  OptionalContent,
   RegionalImageCache,
 } from "./image_utils";
 import { getMetrics } from "./metrics";
@@ -522,10 +525,10 @@ class PartialEvaluator {
     localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
-    const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
+    const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
     const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
 
-    let optionalContent, groupOptions;
+    let optionalContent, groupOptions: GroupOptions | null = null;
     if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
         dict.getValue(DictKey.OC),
@@ -581,7 +584,7 @@ class PartialEvaluator {
     // If it's a group, a new canvas will be created that is the size of the
     // bounding box and translated to the correct position so we don't need to
     // apply the bounding box to it.
-    const args = group ? [matrix, null] : [matrix, bbox];
+    const args: [TransformType | null, RectType | null] = group ? [matrix, null] : [matrix, bbox];
     operatorList.addOp(OPS.paintFormXObjectBegin, args);
 
     await this.getOperatorList(
@@ -594,7 +597,7 @@ class PartialEvaluator {
     operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
     if (group) {
-      operatorList.addOp(OPS.endGroup, [groupOptions]);
+      operatorList.addOp(OPS.endGroup, [groupOptions!]);
     }
 
     if (optionalContent !== undefined) {
@@ -651,7 +654,7 @@ class PartialEvaluator {
       throw new Error(msg);
     }
 
-    let optionalContent;
+    let optionalContent = null;
     if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
         dict.getValue(DictKey.OC),
@@ -687,8 +690,8 @@ class PartialEvaluator {
 
         operatorList.addImageOps(
           OPS.paintImageMaskXObject,
-          args,
-          optionalContent
+          <[ImageMask]>args,
+          <OptionalContent | null>optionalContent
         );
 
         if (cacheKey) {
@@ -854,7 +857,7 @@ class PartialEvaluator {
 
     // Ensure that the dependency is added before the image is decoded.
     operatorList.addDependency(objId);
-    args = [objId, w, h];
+    args = <[string, number, number]>[objId, w, h];
     operatorList.addImageOps(OPS.paintImageXObject, args, optionalContent);
 
     if (cacheGlobally) {
@@ -1707,7 +1710,7 @@ class PartialEvaluator {
     }
   }
 
-  async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null) {
+  async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null): Promise<OptionalContent | null> {
     let optionalContent: Dict;
     if (contentProperties instanceof Name) {
       const properties = resources!.getValue(DictKey.Properties);

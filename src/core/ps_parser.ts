@@ -16,6 +16,7 @@
 import { FormatError, shadow } from "../shared/util";
 import { EOF } from "./primitives";
 import { isWhiteSpace } from "./core_utils";
+import { BaseStream } from "./base_stream";
 
 class PostScriptParser {
 
@@ -179,13 +180,14 @@ class PostScriptToken {
 class PostScriptLexer {
 
   protected stream;
-  protected strBuf;
-  protected currentChar;
 
-  constructor(stream) {
+  protected strBuf: string[];
+
+  protected currentChar = 0;
+
+  constructor(stream: BaseStream) {
     this.stream = stream;
     this.nextChar();
-
     this.strBuf = [];
   }
 
@@ -262,7 +264,7 @@ class PostScriptLexer {
     }
   }
 
-  getNumber() : number{
+  getNumber(): number {
     let ch = this.currentChar;
     const strBuf = this.strBuf;
     strBuf.length = 0;

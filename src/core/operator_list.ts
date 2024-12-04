@@ -13,23 +13,38 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, RenderingIntentFlag, warn } from "../shared/util.js";
+import { ImageKind, OPS, OPSArgsType, RenderingIntentFlag, warn } from "../shared/util.js";
 import { StreamSink } from "./core_types.js";
+import { OptionalContent } from "./image_utils.js";
 
-function addState(parentState, pattern, checkFn, iterateFn, processFn) {
+function addState(parentState: InitialStateFuncTree, pattern: OPS[],
+  checkFn: ((context: QueueOptimizerContext) => boolean) | null,
+  iterateFn: ((context: QueueOptimizerContext, i: number) => boolean),
+  processFn: ((context: QueueOptimizerContext, i: number) => number)) {
   let state = parentState;
+  // 这个地方比较特别，创建了一个深度嵌套的数组
   for (let i = 0, ii = pattern.length - 1; i < ii; i++) {
     const item = pattern[i];
-    state = state[item] ||= [];
+    state[item] ||= [];
+    state = <InitialStateFuncTree>state[item];
   }
-  state[pattern.at(-1)] = {
+  state[pattern.at(-1)!] = {
     checkFn,
     iterateFn,
     processFn,
   };
 }
 
-const InitialState = [];
+type InitialStateFunc = {
+  checkFn: ((context: QueueOptimizerContext) => boolean) | null;
+  iterateFn: (context: QueueOptimizerContext, i: number) => boolean;
+  processFn: (context: QueueOptimizerContext, i: number) => number;
+}
+
+// 创建了一个深度嵌套的数组
+interface InitialStateFuncTree extends Array<InitialStateFunc | InitialStateFuncTree> { }
+
+const InitialState: InitialStateFuncTree = [];
 
 // This replaces (save, transform, paintInlineImageXObject, restore)+
 // sequences with one |paintInlineImageXObjectGroup| operation.
@@ -37,7 +52,7 @@ addState(
   InitialState,
   [OPS.save, OPS.transform, OPS.paintInlineImageXObject, OPS.restore],
   null,
-  function iterateInlineImageGroup(context, i) {
+  function iterateInlineImageGroup(context: QueueOptimizerContext, i: number) {
     const fnArray = context.fnArray;
     const iFirstSave = context.iCurr - 3;
     const pos = (i - iFirstSave) % 4;
@@ -53,7 +68,8 @@ addState(
     }
     throw new Error(`iterateInlineImageGroup - invalid pos: ${pos}`);
   },
-  function foundInlineImageGroup(context, i) {
+
+  function foundInlineImageGroup(context: QueueOptimizerContext, i: number) {
     const MIN_IMAGES_IN_INLINE_IMAGES_BLOCK = 10;
     const MAX_IMAGES_IN_INLINE_IMAGES_BLOCK = 200;
     const MAX_WIDTH = 1000;
@@ -83,7 +99,7 @@ addState(
       currentY = IMAGE_PADDING;
     for (let q = 0; q < count; q++) {
       const transform = argsArray[iFirstTransform + (q << 2)];
-      const img = argsArray[iFirstPIIXO + (q << 2)][0];
+      const img = argsArray[iFirstPIIXO + (q << 2)]![0];
       if (currentX + img.width > MAX_WIDTH) {
         // starting new line
         maxX = Math.max(maxX, currentX);
@@ -106,7 +122,7 @@ addState(
     const imgData = new Uint8Array(imgWidth * imgHeight * 4);
     const imgRowSize = imgWidth << 2;
     for (let q = 0; q < count; q++) {
-      const data = argsArray[iFirstPIIXO + (q << 2)][0].data;
+      const data = argsArray[iFirstPIIXO + (q << 2)]![0].data;
       // Copy image by lines and extends pixels into padding.
       const rowSize = map[q].w << 2;
       let dataOffset = 0;
@@ -134,10 +150,13 @@ addState(
     const img = {
       width: imgWidth,
       height: imgHeight,
+      bitmap: <ImageBitmap | null>null,
+      data: <Uint8Array | null>null,
+      kind: <number | null>null
     };
     if (context.isOffscreenCanvasSupported) {
       const canvas = new OffscreenCanvas(imgWidth, imgHeight);
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d")!;
       ctx.putImageData(
         new ImageData(
           new Uint8ClampedArray(imgData.buffer),
@@ -169,7 +188,7 @@ addState(
   InitialState,
   [OPS.save, OPS.transform, OPS.paintImageMaskXObject, OPS.restore],
   null,
-  function iterateImageMaskGroup(context, i) {
+  function iterateImageMaskGroup(context: QueueOptimizerContext, i: number) {
     const fnArray = context.fnArray;
     const iFirstSave = context.iCurr - 3;
     const pos = (i - iFirstSave) % 4;
@@ -185,7 +204,7 @@ addState(
     }
     throw new Error(`iterateImageMaskGroup - invalid pos: ${pos}`);
   },
-  function foundImageMaskGroup(context, i) {
+  function foundImageMaskGroup(context: QueueOptimizerContext, i: number) {
     const MIN_IMAGES_IN_MASKS_BLOCK = 10;
     const MAX_IMAGES_IN_MASKS_BLOCK = 100;
     const MAX_SAME_IMAGES_IN_MASKS_BLOCK = 1000;
@@ -206,11 +225,11 @@ addState(
 
     let isSameImage = false;
     let iTransform, transformArgs;
-    const firstPIMXOArg0 = argsArray[iFirstPIMXO][0];
-    const firstTransformArg0 = argsArray[iFirstTransform][0],
-      firstTransformArg1 = argsArray[iFirstTransform][1],
-      firstTransformArg2 = argsArray[iFirstTransform][2],
-      firstTransformArg3 = argsArray[iFirstTransform][3];
+    const firstPIMXOArg0 = argsArray[iFirstPIMXO]![0];
+    const firstTransformArg0 = argsArray[iFirstTransform]![0],
+      firstTransformArg1 = argsArray[iFirstTransform]![1],
+      firstTransformArg2 = argsArray[iFirstTransform]![2],
+      firstTransformArg3 = argsArray[iFirstTransform]![3];
 
     if (firstTransformArg1 === firstTransformArg2) {
       isSameImage = true;
@@ -219,11 +238,11 @@ addState(
       for (let q = 1; q < count; q++, iTransform += 4, iPIMXO += 4) {
         transformArgs = argsArray[iTransform];
         if (
-          argsArray[iPIMXO][0] !== firstPIMXOArg0 ||
-          transformArgs[0] !== firstTransformArg0 ||
-          transformArgs[1] !== firstTransformArg1 ||
-          transformArgs[2] !== firstTransformArg2 ||
-          transformArgs[3] !== firstTransformArg3
+          argsArray[iPIMXO]![0] !== firstPIMXOArg0 ||
+          transformArgs![0] !== firstTransformArg0 ||
+          transformArgs![1] !== firstTransformArg1 ||
+          transformArgs![2] !== firstTransformArg2 ||
+          transformArgs![3] !== firstTransformArg3
         ) {
           if (q < MIN_IMAGES_IN_MASKS_BLOCK) {
             isSameImage = false;
@@ -240,7 +259,7 @@ addState(
       const positions = new Float32Array(count * 2);
       iTransform = iFirstTransform;
       for (let q = 0; q < count; q++, iTransform += 4) {
-        transformArgs = argsArray[iTransform];
+        transformArgs = argsArray[iTransform]!;
         positions[q << 1] = transformArgs[4];
         positions[(q << 1) + 1] = transformArgs[5];
       }
@@ -260,7 +279,7 @@ addState(
       const images = [];
       for (let q = 0; q < count; q++) {
         transformArgs = argsArray[iFirstTransform + (q << 2)];
-        const maskParams = argsArray[iFirstPIMXO + (q << 2)][0];
+        const maskParams = argsArray[iFirstPIMXO + (q << 2)]![0];
         images.push({
           data: maskParams.data,
           width: maskParams.width,
@@ -286,11 +305,11 @@ addState(
 addState(
   InitialState,
   [OPS.save, OPS.transform, OPS.paintImageXObject, OPS.restore],
-  function (context) {
+  function (context: QueueOptimizerContext) {
     const argsArray = context.argsArray;
     const iFirstTransform = context.iCurr - 2;
     return (
-      argsArray[iFirstTransform][1] === 0 && argsArray[iFirstTransform][2] === 0
+      argsArray[iFirstTransform]![1] === 0 && argsArray[iFirstTransform]![2] === 0
     );
   },
   function iterateImageGroup(context, i) {
@@ -306,13 +325,13 @@ addState(
           return false;
         }
         const iFirstTransform = context.iCurr - 2;
-        const firstTransformArg0 = argsArray[iFirstTransform][0];
-        const firstTransformArg3 = argsArray[iFirstTransform][3];
+        const firstTransformArg0 = argsArray[iFirstTransform]![0];
+        const firstTransformArg3 = argsArray[iFirstTransform]![3];
         if (
-          argsArray[i][0] !== firstTransformArg0 ||
-          argsArray[i][1] !== 0 ||
-          argsArray[i][2] !== 0 ||
-          argsArray[i][3] !== firstTransformArg3
+          argsArray[i]![0] !== firstTransformArg0 ||
+          argsArray[i]![1] !== 0 ||
+          argsArray[i]![2] !== 0 ||
+          argsArray[i]![3] !== firstTransformArg3
         ) {
           return false; // transforms don't match
         }
@@ -322,8 +341,8 @@ addState(
           return false;
         }
         const iFirstPIXO = context.iCurr - 1;
-        const firstPIXOArg0 = argsArray[iFirstPIXO][0];
-        if (argsArray[i][0] !== firstPIXOArg0) {
+        const firstPIXOArg0 = argsArray[iFirstPIXO]![0];
+        if (argsArray[i]![0] !== firstPIXOArg0) {
           return false; // images don't match
         }
         return true;
@@ -332,7 +351,7 @@ addState(
     }
     throw new Error(`iterateImageGroup - invalid pos: ${pos}`);
   },
-  function (context, i) {
+  function (context: QueueOptimizerContext, i: number) {
     const MIN_IMAGES_IN_BLOCK = 3;
     const MAX_IMAGES_IN_BLOCK = 1000;
 
@@ -342,9 +361,9 @@ addState(
     const iFirstSave = curr - 3;
     const iFirstTransform = curr - 2;
     const iFirstPIXO = curr - 1;
-    const firstPIXOArg0 = argsArray[iFirstPIXO][0];
-    const firstTransformArg0 = argsArray[iFirstTransform][0];
-    const firstTransformArg3 = argsArray[iFirstTransform][3];
+    const firstPIXOArg0 = argsArray[iFirstPIXO]![0];
+    const firstTransformArg0 = argsArray[iFirstTransform]![0];
+    const firstTransformArg3 = argsArray[iFirstTransform]![3];
 
     // At this point, i is the index of the first op past the last valid
     // quartet.
@@ -361,8 +380,8 @@ addState(
     let iTransform = iFirstTransform;
     for (let q = 0; q < count; q++, iTransform += 4) {
       const transformArgs = argsArray[iTransform];
-      positions[q << 1] = transformArgs[4];
-      positions[(q << 1) + 1] = transformArgs[5];
+      positions[q << 1] = transformArgs![4];
+      positions[(q << 1) + 1] = transformArgs![5];
     }
 
     // Replace queue items.
@@ -386,7 +405,7 @@ addState(
   InitialState,
   [OPS.beginText, OPS.setFont, OPS.setTextMatrix, OPS.showText, OPS.endText],
   null,
-  function iterateShowTextGroup(context, i) {
+  function iterateShowTextGroup(context: QueueOptimizerContext, i: number) {
     const fnArray = context.fnArray,
       argsArray = context.argsArray;
     const iFirstSave = context.iCurr - 4;
@@ -403,11 +422,11 @@ addState(
           return false;
         }
         const iFirstSetFont = context.iCurr - 3;
-        const firstSetFontArg0 = argsArray[iFirstSetFont][0];
-        const firstSetFontArg1 = argsArray[iFirstSetFont][1];
+        const firstSetFontArg0 = argsArray[iFirstSetFont]![0];
+        const firstSetFontArg1 = argsArray[iFirstSetFont]![1];
         if (
-          argsArray[i][0] !== firstSetFontArg0 ||
-          argsArray[i][1] !== firstSetFontArg1
+          argsArray[i]![0] !== firstSetFontArg0 ||
+          argsArray[i]![1] !== firstSetFontArg1
         ) {
           return false; // fonts don't match
         }
@@ -417,7 +436,7 @@ addState(
     }
     throw new Error(`iterateShowTextGroup - invalid pos: ${pos}`);
   },
-  function (context, i) {
+  function (context: QueueOptimizerContext, i: number) {
     const MIN_CHARS_IN_BLOCK = 3;
     const MAX_CHARS_IN_BLOCK = 1000;
 
@@ -429,8 +448,8 @@ addState(
     const iFirstSetTextMatrix = curr - 2;
     const iFirstShowText = curr - 1;
     const iFirstEndText = curr;
-    const firstSetFontArg0 = argsArray[iFirstSetFont][0];
-    const firstSetFontArg1 = argsArray[iFirstSetFont][1];
+    const firstSetFontArg0 = argsArray[iFirstSetFont]![0];
+    const firstSetFontArg1 = argsArray[iFirstSetFont]![1];
 
     // At this point, i is the index of the first op past the last valid
     // quintet.
@@ -452,8 +471,8 @@ addState(
       fnArray[iFirstBeginText - 3] === fnArray[iFirstSetTextMatrix] &&
       fnArray[iFirstBeginText - 2] === fnArray[iFirstShowText] &&
       fnArray[iFirstBeginText - 1] === fnArray[iFirstEndText] &&
-      argsArray[iFirstBeginText - 4][0] === firstSetFontArg0 &&
-      argsArray[iFirstBeginText - 4][1] === firstSetFontArg1
+      argsArray[iFirstBeginText - 4]![0] === firstSetFontArg0 &&
+      argsArray[iFirstBeginText - 4]![1] === firstSetFontArg1
     ) {
       count++;
       iFirst -= 5;
@@ -472,15 +491,18 @@ addState(
 );
 
 class NullOptimizer {
-  constructor(queue) {
+
+  protected queue: OperatorList;
+
+  constructor(queue: OperatorList) {
     this.queue = queue;
   }
 
   _optimize() { }
 
-  push(fn, args) {
+  push(fn: OPS, args: OPSArgsType[OPS]) {
     this.queue.fnArray.push(fn);
-    this.queue.argsArray.push(args);
+    this.queue.argsArray.push(<(any[] | null)>args);
     this._optimize();
   }
 
@@ -489,8 +511,23 @@ class NullOptimizer {
   reset() { }
 }
 
+interface QueueOptimizerContext {
+  iCurr: number;
+  fnArray: OPS[];
+  argsArray: (any[] | null)[];
+  isOffscreenCanvasSupported: boolean;
+}
+
 class QueueOptimizer extends NullOptimizer {
-  constructor(queue) {
+
+  protected lastProcessed: number;
+
+  protected context: QueueOptimizerContext;
+
+  state;
+  match;
+
+  constructor(queue: OperatorList) {
     super(queue);
     this.state = null;
     this.context = {
@@ -504,7 +541,7 @@ class QueueOptimizer extends NullOptimizer {
   }
 
   // eslint-disable-next-line accessor-pairs
-  set isOffscreenCanvasSupported(value) {
+  set isOffscreenCanvasSupported(value: boolean) {
     this.context.isOffscreenCanvasSupported = value;
   }
 
@@ -597,11 +634,11 @@ class OperatorList {
   protected _streamSink: StreamSink | null;
 
   // TODO dependencies理论上来说应该是Set<string>，但是会不会有其他类型，值得商榷
-  protected dependencies: Set<string>;
+  public dependencies: Set<string>;
 
-  protected fnArray: number[];
+  public fnArray: OPS[];
 
-  public argsArray;
+  public argsArray: (any[] | null)[];
 
   protected _resolved: Promise<void> | null;
 
@@ -640,7 +677,8 @@ class OperatorList {
     return this._totalLength + this.length;
   }
 
-  addOp(fn: number, args?: any) {
+  // args为某种类型的数组或null
+  addOp(fn: OPS, args: OPSArgsType[OPS]) {
     this.optimizer.push(fn, args);
     this.weight++;
     if (this._streamSink) {
@@ -656,7 +694,7 @@ class OperatorList {
     }
   }
 
-  addImageOps(fn: number, args, optionalContent) {
+  addImageOps(fn: OPS, args: OPSArgsType[OPS], optionalContent: OptionalContent | null) {
     if (optionalContent !== undefined) {
       this.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
@@ -668,7 +706,7 @@ class OperatorList {
     }
   }
 
-  addDependency(dependency) {
+  addDependency(dependency: string) {
     if (this.dependencies.has(dependency)) {
       return;
     }
@@ -676,7 +714,7 @@ class OperatorList {
     this.addOp(OPS.dependency, [dependency]);
   }
 
-  addDependencies(dependencies) {
+  addDependencies(dependencies: Iterable<string>) {
     for (const dependency of dependencies) {
       this.addDependency(dependency);
     }

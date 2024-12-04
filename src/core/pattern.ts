@@ -32,9 +32,11 @@ import {
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { XRef } from "./xref";
-import { PDFFunctionFactory } from "./function";
+import { ParserConstructFunction, PDFFunctionFactory } from "./function";
 import { PlatformHelper } from "../platform/platform_helper";
-import { DictKey } from "./primitives";
+import { Dict, DictKey } from "./primitives";
+import { PointType, RectType } from "../display/display_utils";
+import { LocalColorSpaceCache, LocalImageCache } from "./image_utils";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -52,14 +54,14 @@ class Pattern {
   }
 
   static parseShading(
-    shading,
+    shading: BaseStream | Dict,
     xref: XRef,
-    res,
+    res: Dict,
     pdfFunctionFactory: PDFFunctionFactory,
-    localColorSpaceCache
+    localColorSpaceCache: LocalColorSpaceCache
   ) {
-    const dict = shading instanceof BaseStream ? shading.dict : shading;
-    const type = dict.get("ShadingType");
+    const dict = shading instanceof BaseStream ? shading.dict! : shading;
+    const type = dict.get(DictKey.ShadingType);
 
     try {
       switch (type) {
@@ -77,7 +79,7 @@ class Pattern {
         case ShadingType.COONS_PATCH_MESH:
         case ShadingType.TENSOR_PATCH_MESH:
           return new MeshShading(
-            shading,
+            <BaseStream>shading,
             xref,
             res,
             pdfFunctionFactory,
@@ -114,43 +116,56 @@ class BaseShading {
   }
 }
 
+// shading 着色
 // Radial and axial shading have very similar implementations
 // If needed, the implementations can be broken into two classes.
 class RadialAxialShading extends BaseShading {
+
   protected extendStart: boolean;
+
   protected extendEnd: boolean;
-  constructor(dict, xref, resources, pdfFunctionFactory: PDFFunctionFactory, localColorSpaceCache) {
+
+  protected shadingType: number;
+
+  protected coordsArr: number[];
+
+  protected bbox: RectType | null;
+
+  protected colorStops: [number, string][];
+
+  constructor(dict: Dict, xref: XRef, resources: Dict, pdfFunctionFactory: PDFFunctionFactory
+    , localColorSpaceCache: LocalColorSpaceCache) {
     super();
-    this.shadingType = dict.get("ShadingType");
+    this.shadingType = dict.getValue(DictKey.ShadingType);
     let coordsLen = 0;
     if (this.shadingType === ShadingType.AXIAL) {
       coordsLen = 4;
     } else if (this.shadingType === ShadingType.RADIAL) {
       coordsLen = 6;
     }
-    this.coordsArr = dict.getArray("Coords");
+    this.coordsArr = dict.getArray(DictKey.Coords);
     if (!isNumberArray(this.coordsArr, coordsLen)) {
       throw new FormatError("RadialAxialShading: Invalid /Coords array.");
     }
-    const cs = ColorSpace.parse({
-      cs: dict.getRaw("CS") || dict.getRaw("ColorSpace"),
+    const cs = ColorSpace.parse(
+      dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
       xref,
       resources,
       pdfFunctionFactory,
       localColorSpaceCache,
-    });
-    this.bbox = lookupNormalRect(dict.getArray("BBox"), null);
+    );
+    this.bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
 
     let t0 = 0.0,
       t1 = 1.0;
-    const domainArr = dict.getArray("Domain");
+    const domainArr = dict.getArrayValue(DictKey.Domain);
     if (isNumberArray(domainArr, 2)) {
       [t0, t1] = domainArr;
     }
 
     let extendStart = false,
       extendEnd = false;
-    const extendArr = dict.getArray("Extend");
+    const extendArr = dict.getArray(DictKey.Extend);
     if (isBooleanArray(extendArr, 2)) {
       [extendStart, extendEnd] = extendArr;
     }
@@ -171,7 +186,7 @@ class RadialAxialShading extends BaseShading {
     this.extendStart = extendStart;
     this.extendEnd = extendEnd;
 
-    const fnObj = dict.getRaw("Function");
+    const fnObj = dict.getRaw(DictKey.Function);
     const fn = pdfFunctionFactory.createFromArray(fnObj);
 
     // Use lcm(1,2,3,4,5,6,7,8,10) = 840 (including 9 increases this to 2520)
@@ -179,7 +194,7 @@ class RadialAxialShading extends BaseShading {
     const NUMBER_OF_SAMPLES = 840;
     const step = (t1 - t0) / NUMBER_OF_SAMPLES;
 
-    const colorStops = (this.colorStops = []);
+    const colorStops: [number, string][] = (this.colorStops = []);
 
     // Protect against bad domains.
     if (t0 >= t1 || step <= 0) {
@@ -189,7 +204,7 @@ class RadialAxialShading extends BaseShading {
       return;
     }
 
-    const color = new Float32Array(cs.numComps),
+    const color = new Float32Array(cs.numComps!),
       ratio = new Float32Array(1);
     let rgbColor;
 
@@ -268,8 +283,8 @@ class RadialAxialShading extends BaseShading {
     colorStops.push([1, cssColor]);
 
     let background = "transparent";
-    if (dict.has("Background")) {
-      rgbColor = cs.getRgb(dict.get("Background"), 0);
+    if (dict.has(DictKey.Background)) {
+      rgbColor = cs.getRgb(dict.getValue(DictKey.Background), 0);
       background = Util.makeHexColor(rgbColor[0], rgbColor[1], rgbColor[2]);
     }
 
@@ -281,7 +296,7 @@ class RadialAxialShading extends BaseShading {
     }
     if (!extendEnd) {
       // Same idea as above in extendStart but for the end.
-      colorStops.at(-1)[0] -= BaseShading.SMALL_NUMBER;
+      colorStops.at(-1)![0] -= BaseShading.SMALL_NUMBER;
       colorStops.push([1, background]);
     }
 
@@ -311,6 +326,16 @@ class RadialAxialShading extends BaseShading {
   }
 }
 
+type DecodeContext = {
+  bitsPerCoordinate: number;
+  bitsPerComponent: number;
+  bitsPerFlag: number;
+  decode: number[];
+  colorFn: ParserConstructFunction | null;
+  colorSpace: ColorSpace;
+  numComps: number | null;
+}
+
 // All mesh shadings. For now, they will be presented as set of the triangles
 // to be drawn on the canvas and rgb color for each vertex.
 class MeshStreamReader {
@@ -325,15 +350,17 @@ class MeshStreamReader {
 
   protected stream: BaseStream;
 
-  constructor(stream: BaseStream, context) {
+  protected context: DecodeContext;
+
+  constructor(stream: BaseStream, context: DecodeContext) {
     this.stream = stream;
     this.context = context;
     this.buffer = 0;
     this.bufferLength = 0;
 
-    const numComps = context.numComps;
+    const numComps = context.numComps!;
     this.tmpCompsBuf = new Float32Array(numComps);
-    const csNumComps = context.colorSpace.numComps;
+    const csNumComps = context.colorSpace.numComps!;
     this.tmpCsCompsBuf = context.colorFn
       ? new Float32Array(csNumComps)
       : this.tmpCompsBuf;
@@ -403,7 +430,7 @@ class MeshStreamReader {
     return this.readBits(this.context.bitsPerFlag);
   }
 
-  readCoordinate() {
+  readCoordinate(): PointType {
     const bitsPerCoordinate = this.context.bitsPerCoordinate;
     const xi = this.readBits(bitsPerCoordinate);
     const yi = this.readBits(bitsPerCoordinate);
@@ -418,8 +445,8 @@ class MeshStreamReader {
     ];
   }
 
-  readComponents() {
-    const numComps = this.context.numComps;
+  readComponents(): Uint8ClampedArray {
+    const numComps = this.context.numComps!;
     const bitsPerComponent = this.context.bitsPerComponent;
     const scale =
       bitsPerComponent < 32
@@ -439,9 +466,9 @@ class MeshStreamReader {
   }
 }
 
-let bCache = Object.create(null);
+let bCache = new Map<number, Float32Array[]>();
 
-function buildB(count) {
+function buildB(count: number) {
   const lut = [];
   for (let i = 0; i <= count; i++) {
     const t = i / count,
@@ -452,15 +479,29 @@ function buildB(count) {
   }
   return lut;
 }
-function getB(count) {
-  return (bCache[count] ||= buildB(count));
+
+function getB(count: number) {
+  let ret = bCache.get(count);
+  if (ret === undefined) {
+    ret = buildB(count)
+    bCache.set(count, ret);
+  }
+  return ret;
 }
 
 function clearPatternCaches() {
-  bCache = Object.create(null);
+  bCache = new Map();
+}
+
+type FigureType = {
+  type: string;
+  coords: Int32Array;
+  colors: Int32Array;
+  verticesPerRow?: number;
 }
 
 class MeshShading extends BaseShading {
+
   static MIN_SPLIT_PATCH_CHUNKS_AMOUNT = 3;
 
   static MAX_SPLIT_PATCH_CHUNKS_AMOUNT = 20;
@@ -468,12 +509,28 @@ class MeshShading extends BaseShading {
   // Count of triangles per entire mesh bounds.
   static TRIANGLE_DENSITY = 20;
 
+  public shadingType: number;
+
+  public bbox: RectType | null;
+
+  public background: Uint8ClampedArray | null;
+
+  // 可能是二维数组，也可能是一维数组，如果是一维数组，那么就是奇数和偶数位代表xy
+  // 如果是二维数组，每一个数组元素代表一个点
+  public coords: PointType[] | Float32Array;
+
+  // 每一位代表r/g/b中的一个，每三位代表一个颜色
+  public colors: [number, number, number][] | (Uint8ClampedArray | Uint8Array)[] | Uint8Array;
+
+  public figures: FigureType[];
+  bounds: any;
+
   constructor(
-    stream,
+    stream: BaseStream,
     xref: XRef,
-    resources,
+    resources: Dict,
     pdfFunctionFactory: PDFFunctionFactory,
-    localColorSpaceCache
+    localColorSpaceCache: LocalColorSpaceCache
   ) {
     super();
     if (!(stream instanceof BaseStream)) {
@@ -482,13 +539,13 @@ class MeshShading extends BaseShading {
     const dict = stream.dict!;
     this.shadingType = dict.getValue(DictKey.ShadingType);
     this.bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
-    const cs = ColorSpace.parse({
-      cs: dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
+    const cs = ColorSpace.parse(
+      dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace),
       xref,
       resources,
       pdfFunctionFactory,
       localColorSpaceCache,
-    });
+    );
     this.background = dict.has(DictKey.Background)
       ? cs.getRgb(dict.getValue(DictKey.Background), 0)
       : null;
@@ -500,7 +557,7 @@ class MeshShading extends BaseShading {
     this.colors = [];
     this.figures = [];
 
-    const decodeContext = {
+    const decodeContext: DecodeContext = {
       bitsPerCoordinate: dict.getValue(DictKey.BitsPerCoordinate),
       bitsPerComponent: dict.getValue(DictKey.BitsPerComponent),
       bitsPerFlag: dict.getValue(DictKey.BitsPerFlag),
@@ -549,11 +606,11 @@ class MeshShading extends BaseShading {
     this._packData();
   }
 
-  _decodeType4Shading(reader) {
+  _decodeType4Shading(reader: MeshStreamReader) {
     const coords = this.coords;
     const colors = this.colors;
     const operators = [];
-    const ps = []; // not maintaining cs since that will match ps
+    const ps: number[] = []; // not maintaining cs since that will match ps
     let verticesLeft = 0; // assuming we have all data to start a new triangle
     while (reader.hasData) {
       const f = reader.readFlag();
@@ -569,19 +626,19 @@ class MeshShading extends BaseShading {
             verticesLeft = 3;
             break;
           case 1:
-            ps.push(ps.at(-2), ps.at(-1));
+            ps.push(ps.at(-2)!, ps.at(-1)!);
             verticesLeft = 1;
             break;
           case 2:
-            ps.push(ps.at(-3), ps.at(-1));
+            ps.push(ps.at(-3)!, ps.at(-1)!);
             verticesLeft = 1;
             break;
         }
         operators.push(f);
       }
       ps.push(coords.length);
-      coords.push(coord);
-      colors.push(color);
+      (<PointType[]>coords).push(coord);
+      (<Uint8ClampedArray[]>colors).push(color);
       verticesLeft--;
 
       reader.align();
@@ -593,7 +650,7 @@ class MeshShading extends BaseShading {
     });
   }
 
-  _decodeType5Shading(reader, verticesPerRow) {
+  _decodeType5Shading(reader: MeshStreamReader, verticesPerRow: number) {
     const coords = this.coords;
     const colors = this.colors;
     const ps = []; // not maintaining cs since that will match ps
@@ -601,8 +658,8 @@ class MeshShading extends BaseShading {
       const coord = reader.readCoordinate();
       const color = reader.readComponents();
       ps.push(coords.length);
-      coords.push(coord);
-      colors.push(color);
+      (<PointType[]>coords).push(coord);
+      (<Uint8ClampedArray[]>colors).push(color);
     }
     this.figures.push({
       type: "lattice",
@@ -612,9 +669,9 @@ class MeshShading extends BaseShading {
     });
   }
 
-  _decodeType6Shading(reader) {
+  _decodeType6Shading(reader: MeshStreamReader) {
     // A special case of Type 7. The p11, p12, p21, p22 automatically filled
-    const coords = this.coords;
+    const coords = <PointType[]>this.coords;
     const colors = this.colors;
     const ps = new Int32Array(16); // p00, p10, ..., p30, p01, ..., p33
     const cs = new Int32Array(4); // c00, c30, c03, c33
@@ -625,11 +682,11 @@ class MeshShading extends BaseShading {
       }
       const pi = coords.length;
       for (let i = 0, ii = f !== 0 ? 8 : 12; i < ii; i++) {
-        coords.push(reader.readCoordinate());
+        (<PointType[]>coords).push(reader.readCoordinate());
       }
       const ci = colors.length;
       for (let i = 0, ii = f !== 0 ? 2 : 4; i < ii; i++) {
-        colors.push(reader.readComponents());
+        (<Uint8ClampedArray[]>colors).push(reader.readComponents());
       }
       let tmp1, tmp2, tmp3, tmp4;
       switch (f) {
@@ -744,9 +801,9 @@ class MeshShading extends BaseShading {
     }
   }
 
-  _decodeType7Shading(reader) {
-    const coords = this.coords;
-    const colors = this.colors;
+  _decodeType7Shading(reader: MeshStreamReader) {
+    const coords = <PointType[]>this.coords;
+    const colors = <Uint8ClampedArray[]>this.colors;
     const ps = new Int32Array(16); // p00, p10, ..., p30, p01, ..., p33
     const cs = new Int32Array(4); // c00, c30, c03, c33
     while (reader.hasData) {
@@ -814,12 +871,12 @@ class MeshShading extends BaseShading {
     }
   }
 
-  _buildFigureFromPatch(index) {
+  _buildFigureFromPatch(index: number) {
     const figure = this.figures[index];
     assert(figure.type === "patch", "Unexpected patch mesh figure");
 
-    const coords = this.coords,
-      colors = this.colors;
+    const coords = <PointType[]>this.coords,
+      colors = <[number, number, number][]>this.colors;
     const pi = figure.coords;
     const ci = figure.colors;
 
@@ -909,7 +966,10 @@ class MeshShading extends BaseShading {
         newColor[0] = ((cl[0] * (splitXBy - col) + cr[0] * col) / splitXBy) | 0;
         newColor[1] = ((cl[1] * (splitXBy - col) + cr[1] * col) / splitXBy) | 0;
         newColor[2] = ((cl[2] * (splitXBy - col) + cr[2] * col) / splitXBy) | 0;
-        colors.push(newColor);
+
+        // 这里写法比较奇怪，因为Uint8Array[] 和[number,number, number][] 不能重叠
+        // 但是实际上push的时候都在push
+        (<Uint8Array[]>(colors as unknown)).push(newColor);
       }
     }
     figureCoords[0] = pi[0];
@@ -930,13 +990,13 @@ class MeshShading extends BaseShading {
   }
 
   _updateBounds() {
-    let minX = this.coords[0][0],
-      minY = this.coords[0][1],
+    let minX = (<PointType[]>this.coords)[0][0],
+      minY = (<PointType[]>this.coords)[0][1],
       maxX = minX,
       maxY = minY;
     for (let i = 1, ii = this.coords.length; i < ii; i++) {
-      const x = this.coords[i][0],
-        y = this.coords[i][1];
+      const x = (<PointType[]>this.coords)[i][0],
+        y = (<PointType[]>this.coords)[i][1];
       minX = minX > x ? x : minX;
       minY = minY > y ? y : minY;
       maxX = maxX < x ? x : maxX;
@@ -948,7 +1008,7 @@ class MeshShading extends BaseShading {
   _packData() {
     let i, ii, j, jj;
 
-    const coords = this.coords;
+    const coords = <PointType[]>this.coords;
     const coordsPacked = new Float32Array(coords.length * 2);
     for (i = 0, j = 0, ii = coords.length; i < ii; i++) {
       const xy = coords[i];
@@ -957,7 +1017,7 @@ class MeshShading extends BaseShading {
     }
     this.coords = coordsPacked;
 
-    const colors = this.colors;
+    const colors = <[number, number, number][]>this.colors;
     const colorsPacked = new Uint8Array(colors.length * 3);
     for (i = 0, j = 0, ii = colors.length; i < ii; i++) {
       const c = colors[i];
@@ -1006,27 +1066,27 @@ class DummyShading extends BaseShading {
   }
 }
 
-function getTilingPatternIR(operatorList, dict, color) {
-  const matrix = lookupMatrix(dict.getArray("Matrix"), IDENTITY_MATRIX);
-  const bbox = lookupNormalRect(dict.getArray("BBox"), null);
+function getTilingPatternIR(operatorList, dict: Dict, color: Uint8ClampedArray | null) {
+  const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX);
+  const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
   // Ensure that the pattern has a non-zero width and height, to prevent errors
   // in `pattern_helper.js` (fixes issue8330.pdf).
   if (!bbox || bbox[2] - bbox[0] === 0 || bbox[3] - bbox[1] === 0) {
     throw new FormatError(`Invalid getTilingPatternIR /BBox array.`);
   }
-  const xstep = dict.get("XStep");
+  const xstep = dict.getValue(DictKey.XStep);
   if (typeof xstep !== "number") {
     throw new FormatError(`Invalid getTilingPatternIR /XStep value.`);
   }
-  const ystep = dict.get("YStep");
+  const ystep = dict.getValue(DictKey.YStep);
   if (typeof ystep !== "number") {
     throw new FormatError(`Invalid getTilingPatternIR /YStep value.`);
   }
-  const paintType = dict.get("PaintType");
+  const paintType = dict.getValue(DictKey.PaintType);
   if (!Number.isInteger(paintType)) {
     throw new FormatError(`Invalid getTilingPatternIR /PaintType value.`);
   }
-  const tilingType = dict.get("TilingType");
+  const tilingType = dict.getValue(DictKey.TilingType);
   if (!Number.isInteger(tilingType)) {
     throw new FormatError(`Invalid getTilingPatternIR /TilingType value.`);
   }

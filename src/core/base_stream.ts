@@ -25,6 +25,8 @@ export abstract class BaseStream {
 
   public start: number = 0;
 
+  public end: number = 0;
+
   public bytes = new Uint8Array(0);
 
   constructor() {

@@ -646,7 +646,7 @@ function getQuadPoints(dict: Dict, rect: number[]) {
   return newQuadPoints;
 }
 
-function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformType) {
+function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformType): TransformType {
   // 12.5.5: Algorithm: Appearance streams
   const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox(
     bbox,
@@ -683,7 +683,7 @@ interface AnnotationData {
   hasAppearance: boolean;
   id: string;
   modificationDate: string | null;
-  rect: [number, number, number, number] | null;
+  rect: RectType | null;
   // TODO 要再推断一下
   subtype: unknown;
   hasOwnCanvas: boolean;
@@ -5304,7 +5304,7 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     const fillAlpha = dict.getValue(DictKey.ca);
     this.data.fillAlpha =
       typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1
-        ? fillAlpha 
+        ? fillAlpha
         : null;
   }
 }
