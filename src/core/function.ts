@@ -31,21 +31,23 @@ class PDFFunctionFactory {
 
   protected isEvalSupported: boolean;
 
-  constructor({ xref, isEvalSupported = true }: { xref: XRef, isEvalSupported: boolean }) {
+  protected xref: XRef;
+
+  constructor(xref: XRef, isEvalSupported = true) {
     this.xref = xref;
     this.isEvalSupported = isEvalSupported !== false;
   }
 
-  create(fn) {
+  create(fn: Ref) {
     const cachedFunction = this.getCached(fn);
     if (cachedFunction) {
       return cachedFunction;
     }
-    const parsedFunction = PDFFunction.parse({
-      xref: this.xref,
-      isEvalSupported: this.isEvalSupported,
-      fn: fn instanceof Ref ? this.xref.fetch(fn) : fn,
-    });
+    const parsedFunction = PDFFunction.parse(
+      this.xref,
+      this.isEvalSupported,
+      fn instanceof Ref ? this.xref.fetch(fn) : fn,
+    );
 
     // Attempt to cache the parsed Function, by reference.
     this._cache(fn, parsedFunction);
@@ -70,7 +72,7 @@ class PDFFunctionFactory {
     return parsedFunction;
   }
 
-  getCached(cacheKey) {
+  getCached(cacheKey: Ref | Dict | BaseStream) {
     let fnRef;
     if (cacheKey instanceof Ref) {
       fnRef = cacheKey;
@@ -91,7 +93,7 @@ class PDFFunctionFactory {
   /**
    * @private
    */
-  _cache(cacheKey, parsedFunction: Function) {
+  _cache(cacheKey: Ref | Dict | BaseStream, parsedFunction: Function) {
     if (!parsedFunction) {
       throw new Error(
         'PDFFunctionFactory._cache - expected "parsedFunction" argument.'
@@ -118,7 +120,7 @@ class PDFFunctionFactory {
   }
 }
 
-function toNumberArray(arr) {
+function toNumberArray(arr: number[]) {
   if (!Array.isArray(arr)) {
     return null;
   }
@@ -159,13 +161,13 @@ class PDFFunction {
     return array;
   }
 
-  static parse({ xref, isEvalSupported, fn }) {
+  static parse(xref: XRef, isEvalSupported: boolean, fn) {
     const dict = fn.dict || fn;
     const typeNum = dict.get("FunctionType");
 
     switch (typeNum) {
       case 0:
-        return this.constructSampled({ xref, isEvalSupported, fn, dict });
+        return this.constructSampled(xref, isEvalSupported, fn, dict);
       case 1:
         break;
       case 2:
@@ -197,10 +199,10 @@ class PDFFunction {
     };
   }
 
-  static constructSampled({ xref, isEvalSupported, fn, dict }) {
-    function toMultiArray(arr) {
+  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn, dict: Dict) {
+    function toMultiArray(arr: number[]) {
       const inputLength = arr.length;
-      const out = [];
+      const out: [number, number][] = [];
       let index = 0;
       for (let i = 0; i < inputLength; i += 2) {
         out[index++] = [arr[i], arr[i + 1]];
@@ -208,12 +210,12 @@ class PDFFunction {
       return out;
     }
     // See chapter 3, page 109 of the PDF reference
-    function interpolate(x, xmin, xmax, ymin, ymax) {
+    function interpolate(x: number, xmin: number, xmax: number, ymin: number, ymax: number) {
       return ymin + (x - xmin) * ((ymax - ymin) / (xmax - xmin));
     }
 
-    let domain = toNumberArray(dict.getArray("Domain"));
-    let range = toNumberArray(dict.getArray("Range"));
+    let domain: [number, number][] | number[] | null = toNumberArray(dict.getArrayValue(DictKey.Domain));
+    let range: [number, number][] | number[] | null = toNumberArray(dict.getArrayValue(DictKey.Range));
 
     if (!domain || !range) {
       throw new FormatError("No domain or range");
@@ -225,32 +227,33 @@ class PDFFunction {
     domain = toMultiArray(domain);
     range = toMultiArray(range);
 
-    const size = toNumberArray(dict.getArray("Size"));
-    const bps = dict.get("BitsPerSample");
-    const order = dict.get("Order") || 1;
+    const size = toNumberArray(dict.getArray(DictKey.Size));
+    const bps = dict.get(DictKey.BitsPerSample);
+    const order = dict.get(DictKey.Order) || 1;
     if (order !== 1) {
       // No description how cubic spline interpolation works in PDF32000:2008
       // As in poppler, ignoring order, linear interpolation may work as good
       info("No support for cubic spline interpolation: " + order);
     }
 
-    let encode = toNumberArray(dict.getArray("Encode"));
+    let encode: [number, number][] | number[] | null = toNumberArray(dict.getArrayValue(DictKey.Encode));
     if (!encode) {
-      encode = [];
+      encode = <[number, number][]>[];
       for (let i = 0; i < inputSize; ++i) {
-        encode.push([0, size[i] - 1]);
+        encode.push([0, size![i] - 1]);
       }
     } else {
-      encode = toMultiArray(encode);
+      encode = toMultiArray(<number[]>encode);
     }
 
-    let decode = toNumberArray(dict.getArray("Decode"));
+    let decode: [number, number][] | number[] | null = toNumberArray(dict.getArrayValue(DictKey.Decode));
     decode = !decode ? range : toMultiArray(decode);
 
     const samples = this.getSampleArray(size, outputSize, bps, fn);
     // const mask = 2 ** bps - 1;
 
-    return function constructSampledFn(src, srcOffset, dest, destOffset) {
+    // 目前可以确定的类型有Float32Array，但不确定是不是只有Float32Array
+    return function constructSampledFn(src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) {
       // See chapter 3, page 110 of the PDF reference.
 
       // Building the cube vertices: its part and sample index
@@ -286,7 +289,7 @@ class PDFFunction {
         );
 
         // e_i' = min(max(e_i, 0), Size_i - 1)
-        const size_i = size[i];
+        const size_i = size![i];
         e = Math.min(Math.max(e, 0), size_i - 1);
 
         // Adjusting the cube: N and vertex sample index

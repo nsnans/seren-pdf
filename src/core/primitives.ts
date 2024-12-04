@@ -346,6 +346,10 @@ export enum DictKey {
   Duplex = "Duplex",
   PrintPageRange = "PrintPageRange",
   NumCopies = "NumCopies",
+  BitsPerSample = "BitsPerSample",
+  Encode = "Encode",
+  Domain = "Domain",
+  Range = "Range",
 }
 
 /**
@@ -526,7 +530,7 @@ type DictValueTypeMapping = {
   [DictKey.Supplement]: number,
   [DictKey.TR]: Dict | BaseStream,
   [DictKey.TU]: string,
-  [DictKey.T]: string,
+  [DictKey.T]: string | Dict,
   [DictKey.ToUnicode]: Name,
   [DictKey.Type]: Name | undefined,
   [DictKey.UE]: string,
@@ -610,6 +614,10 @@ type DictValueTypeMapping = {
   [DictKey.Duplex]: Name,
   [DictKey.PrintPageRange]: [number, number],
   [DictKey.NumCopies]: number,
+  [DictKey.BitsPerSample]: number,
+  [DictKey.Encode]: number[]
+  [DictKey.Domain]: number[],
+  [DictKey.Range]: number[],
 }
 
 

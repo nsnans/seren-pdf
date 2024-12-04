@@ -283,7 +283,7 @@ function lookupRect(arr: unknown, fallback: number[] | null) {
 }
 
 // Returns the normalized rectangle, or the fallback value if it's invalid.
-function lookupNormalRect(arr: unknown, fallback: RectType | null): RectType {
+function lookupNormalRect(arr: RectType, fallback: RectType | null): RectType | null {
   return isNumberArray(arr, 4) ? Util.normalizeRect(arr) : fallback;
 }
 

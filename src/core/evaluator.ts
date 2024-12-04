@@ -14,6 +14,10 @@
  */
 /* eslint-disable no-var */
 
+import { DocParamEvaluatorOptions } from "../display/api.js";
+import { PlatformHelper } from "../platform/platform_helper.js";
+import { MessageHandler } from "../shared/message_handler.js";
+import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,
   assert,
@@ -30,9 +34,13 @@ import {
   Util,
   warn,
 } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { bidi } from "./bidi";
 import { CMapFactory, IdentityCMap } from "./cmap";
-import { Cmd, Dict, DictKey, EOF, isName, Name, Ref, RefSet, RefSetCache } from "./primitives";
-import { ErrorFont, Font } from "./fonts";
+import { ColorSpace } from "./colorspace";
+import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions, StreamSink } from "./core_types.js";
+import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
+import { DecodeStream } from "./decode_stream";
 import {
   getEncoding,
   MacRomanEncoding,
@@ -41,6 +49,29 @@ import {
   WinAnsiEncoding,
   ZapfDingbatsEncoding,
 } from "./encodings";
+import { getFontSubstitution } from "./font_substitutions";
+import { ErrorFont, Font } from "./fonts";
+import { FontFlags } from "./fonts_utils";
+import { isPDFFunction, PDFFunctionFactory } from "./function";
+import { GlobalIdFactory } from "./global_id_factory.js";
+import { getGlyphsUnicode } from "./glyphlist";
+import { PDFImage } from "./image";
+import { ImageResizer } from "./image_resizer";
+import {
+  GlobalImageCache,
+  GlobalImageCacheData,
+  ImageCacheData,
+  LocalColorSpaceCache,
+  LocalGStateCache,
+  LocalImageCache,
+  LocalTilingPatternCache,
+  RegionalImageCache,
+} from "./image_utils";
+import { getMetrics } from "./metrics";
+import { OperatorList } from "./operator_list";
+import { Lexer, Parser } from "./parser";
+import { getTilingPatternIR, Pattern } from "./pattern";
+import { Cmd, Dict, DictKey, EOF, isName, Name, Ref, RefSet, RefSetCache } from "./primitives";
 import {
   getFontNameToFileMap,
   getSerifFonts,
@@ -49,43 +80,12 @@ import {
   getSymbolsFonts,
   isKnownFontName,
 } from "./standard_fonts";
-import { getTilingPatternIR, Pattern } from "./pattern";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
-import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
-import { isPDFFunction, PDFFunctionFactory } from "./function";
-import { Lexer, Parser } from "./parser";
-import {
-  GlobalImageCache,
-  LocalColorSpaceCache,
-  LocalGStateCache,
-  LocalImageCache,
-  LocalTilingPatternCache,
-  RegionalImageCache,
-  ImageCacheData,
-  GlobalImageCacheData,
-} from "./image_utils";
-import { BaseStream } from "./base_stream";
-import { bidi } from "./bidi";
-import { ColorSpace } from "./colorspace";
-import { DecodeStream } from "./decode_stream";
-import { FontFlags } from "./fonts_utils";
-import { getFontSubstitution } from "./font_substitutions";
-import { getGlyphsUnicode } from "./glyphlist";
-import { getMetrics } from "./metrics";
-import { getUnicodeForGlyph } from "./unicode";
-import { ImageResizer } from "./image_resizer";
-import { MurmurHash3_64 } from "../shared/murmurhash3";
-import { OperatorList } from "./operator_list";
-import { PDFImage } from "./image";
 import { Stream } from "./stream";
-import { PlatformHelper } from "../platform/platform_helper.js";
-import { XRef } from "./xref.js";
-import { MessageHandler } from "../shared/message_handler.js";
+import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
+import { getUnicodeForGlyph } from "./unicode";
 import { WorkerTask } from "./worker.js";
-import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory.js";
-import { DocParamEvaluatorOptions } from "../display/api.js";
-import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions, StreamSink } from "./core_types.js";
+import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
+import { XRef } from "./xref.js";
 
 const DefaultDocParamEvaluatorOptions: DocParamEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -181,7 +181,7 @@ function normalizeBlendMode(value: Name | Name[], parsingArray = false): string 
   return "source-over";
 }
 
-function addLocallyCachedImageOps(opList: OperatorList, data) {
+function addLocallyCachedImageOps(opList: OperatorList, data: ImageCacheData) {
   if (data.objId) {
     opList.addDependency(data.objId);
   }
@@ -289,10 +289,10 @@ class PartialEvaluator {
    * `PDFFunctionFactory` instance within this `PartialEvaluator` instance.
    */
   get _pdfFunctionFactory() {
-    const pdfFunctionFactory = new PDFFunctionFactory({
-      xref: this.xref,
-      isEvalSupported: this.options.isEvalSupported,
-    });
+    const pdfFunctionFactory = new PDFFunctionFactory(
+      this.xref,
+      this.options.isEvalSupported
+    );
     return shadow(this, "_pdfFunctionFactory", pdfFunctionFactory);
   }
 
@@ -522,8 +522,8 @@ class PartialEvaluator {
     localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
-    const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), null as unknown as []);
-    const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null as unknown as []);
+    const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
+    const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
 
     let optionalContent, groupOptions;
     if (dict.has(DictKey.OC)) {
@@ -584,13 +584,13 @@ class PartialEvaluator {
     const args = group ? [matrix, null] : [matrix, bbox];
     operatorList.addOp(OPS.paintFormXObjectBegin, args);
 
-    await this.getOperatorList({
-      stream: xobj,
+    await this.getOperatorList(
+      xobj,
       task,
-      resources: dict.getValue(DictKey.Resources) || resources,
+      dict.getValue(DictKey.Resources) || resources,
       operatorList,
       initialState,
-    });
+    );
     operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
     if (group) {
@@ -670,7 +670,7 @@ class PartialEvaluator {
       const interpolate = dict.getValueWithFallback(DictKey.I, DictKey.Interpolate);
       const bitStrideLength = (w + 7) >> 3;
       const imgArray = image.getBytes(bitStrideLength * h);
-      const decode = dict.getArrayWithFallback(DictKey.D, DictKey.Decode);
+      const decode = <number[]>dict.getArrayWithFallback(DictKey.D, DictKey.Decode);
 
       if (this.parsingType3Font) {
         imgData = PDFImage.createRawMask(
@@ -1042,7 +1042,7 @@ class PartialEvaluator {
     fn: number,
     color: Uint8ClampedArray | null,
     resources: Dict,
-    pattern,
+    pattern: BaseStream,
     patternDict: Dict,
     operatorList: OperatorList,
     task: WorkerTask,
@@ -1058,31 +1058,30 @@ class PartialEvaluator {
       mergeSubDicts: false
     });
 
-    return this.getOperatorList({
-      stream: pattern,
+    return this.getOperatorList(
+      pattern,
       task,
-      resources: patternResources,
-      operatorList: tilingOpList,
-    })
-      .then(function () {
-        const operatorListIR = tilingOpList.getIR();
-        const tilingPatternIR = getTilingPatternIR(
-          operatorListIR,
-          patternDict,
-          color
-        );
-        // Add the dependencies to the parent operator list so they are
-        // resolved before the sub operator list is executed synchronously.
-        operatorList.addDependencies(tilingOpList.dependencies);
-        operatorList.addOp(fn, tilingPatternIR);
+      patternResources,
+      tilingOpList,
+    ).then(function () {
+      const operatorListIR = tilingOpList.getIR();
+      const tilingPatternIR = getTilingPatternIR(
+        operatorListIR,
+        patternDict,
+        color
+      );
+      // Add the dependencies to the parent operator list so they are
+      // resolved before the sub operator list is executed synchronously.
+      operatorList.addDependencies(tilingOpList.dependencies);
+      operatorList.addOp(fn, tilingPatternIR);
 
-        if (patternDict.objId) {
-          localTilingPatternCache.set(/* name = */ null, patternDict.objId, {
-            operatorListIR,
-            dict: patternDict,
-          });
-        }
-      })
+      if (patternDict.objId) {
+        localTilingPatternCache.set(/* name = */ null, patternDict.objId, {
+          operatorListIR,
+          dict: patternDict,
+        });
+      }
+    })
       .catch(reason => {
         if (reason instanceof AbortException) {
           return;
@@ -1860,7 +1859,7 @@ class PartialEvaluator {
                   throw new FormatError("XObject must be referred to by name.");
                 }
 
-                let xobj = xobjs.getRaw(name);
+                let xobj = xobjs.getRaw(<DictKey>name!);
                 if (xobj instanceof Ref) {
                   const localImage =
                     localImageCache.getByRef(xobj) ||

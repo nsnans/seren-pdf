@@ -9,6 +9,7 @@ export interface ImageMask {
   cached?: boolean;
   dataLen?: number;
   bitmap?: ImageBitmap;
+  ref?: string | null;
 }
 
 export interface SingleOpaquePixelImageMask {

@@ -723,14 +723,14 @@ export class Catalog {
     return this._actualNumPages !== null;
   }
 
-  get _pagesCount() {
+  get _pagesCount(): number {
     const obj = this.toplevelPagesDict.getValue(DictKey.Count);
     if (!Number.isInteger(obj)) {
       throw new FormatError(
         "Page count in top-level pages dictionary is not an integer."
       );
     }
-    return shadow(this, "_pagesCount", obj);
+    return shadow(this, "_pagesCount", <number>obj);
   }
 
   get numPages() {
@@ -787,7 +787,7 @@ export class Catalog {
   _readDests() {
     const obj = this._catDict.getValue(DictKey.Names);
     if (obj?.has(DictKey.Dests)) {
-      return new NameTree(obj.getRaw(DictKey.Dests), this.xref);
+      return new NameTree(<Ref>obj.getRaw(DictKey.Dests), this.xref);
     } else if (this._catDict.has(DictKey.Dests)) {
       // Simple destination dictionary.
       return this._catDict.getValue(DictKey.Dests);
@@ -817,7 +817,7 @@ export class Catalog {
       return null;
     }
 
-    const pageLabels = new Array(this.numPages!);
+    const pageLabels = new Array<number | string | Ref>(this.numPages!);
     let style = null,
       prefix = "";
 
@@ -826,7 +826,7 @@ export class Catalog {
     let currentLabel: string | number = "",
       currentIndex = 1;
 
-    for (let i = 0, ii = this.numPages!; i < ii; i++) {
+    for (let i = 0, ii = <number>this.numPages!; i < ii; i++) {
       const labelDict = nums.get(i);
 
       if (labelDict !== undefined) {
@@ -1495,7 +1495,7 @@ export class Catalog {
 
       return xref
         .fetchAsync(kidRef)
-        .then(function (node) {
+        .then(function (node: Dict | Ref) {
           if (
             isRefsEqual(kidRef, pageRef) &&
             !isDict(node, "Page") &&
@@ -1618,7 +1618,7 @@ export class Catalog {
       return;
     }
 
-    let action: Dict | string = destDict.getValue(DictKey.A),
+    let action: Dict | string | number[] = destDict.getValue(DictKey.A),
       url,
       dest;
     if (!(action instanceof Dict)) {

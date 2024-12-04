@@ -413,7 +413,7 @@ function _isValidProtocol(url: URL) {
  */
 
 interface CreateValidAbsoluteUrlOptions {
-  addDefaultProtocol: boolean,
+  addDefaultProtocol?: boolean,
   tryConvertEncoding: boolean,
 }
 
@@ -802,8 +802,8 @@ class Util {
   // For coordinate systems whose origin lies in the bottom-left, this
   // means normalization to (BL,TR) ordering. For systems with origin in the
   // top-left, this means (TL,BR) ordering.
-  static normalizeRect(rect: RectType) {
-    const r = rect.slice(0); // clone rect
+  static normalizeRect(rect: RectType): RectType {
+    const r = <RectType>rect.slice(0); // clone rect
     if (rect[0] > rect[2]) {
       r[0] = rect[2];
       r[2] = rect[0];

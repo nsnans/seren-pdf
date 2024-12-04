@@ -1744,7 +1744,7 @@ class PDFDocument {
     const catalog = this.catalog!;
 
     catalog.setActualNumPages(); // Ensure that it's always reset.
-    let numPages;
+    let numPages: number = -1;
 
     try {
       await Promise.all([
@@ -1758,7 +1758,7 @@ class PDFDocument {
       } else if (this.linearization) {
         numPages = this.linearization.numPages;
       } else {
-        numPages = catalog.numPages;
+        numPages = catalog.numPages!;
       }
 
       if (!Number.isInteger(numPages)) {
@@ -1853,7 +1853,7 @@ class PDFDocument {
       return;
     }
     if (field.has(DictKey.T)) {
-      const partName = stringToPDFString(await field.getAsyncValue(DictKey.T));
+      const partName = stringToPDFString(<string>await field.getAsyncValue(DictKey.T));
       name = name === "" ? partName : `${name}.${partName}`;
     } else {
       let obj: Ref | Dict = field;
@@ -1869,7 +1869,7 @@ class PDFDocument {
           break;
         }
         if (obj.has(DictKey.T)) {
-          const partName = stringToPDFString(await obj.getAsyncValue(DictKey.T));
+          const partName = stringToPDFString(<string>await obj.getAsyncValue(DictKey.T));
           name = name === "" ? partName : `${name}.${partName}`;
           break;
         }

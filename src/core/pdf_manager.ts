@@ -64,6 +64,8 @@ interface PDFManager {
 
   evaluatorOptions: DocParamEvaluatorOptions;
 
+  docBaseUrl: string;
+
   getPage(pageIndex: number): Promise<Page>;
 
   updatePassword(password: string): void;
