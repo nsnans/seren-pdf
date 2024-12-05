@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { RectType } from "../display/display_utils";
+import { PointType, RectType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { assert, shadow, unreachable } from "../shared/util";
 import { TypedArray } from "../types";
@@ -360,6 +360,15 @@ export enum DictKey {
   YStep = "YStep",
   PaintType = "PaintType",
   TilingType = "TilingType",
+  Widths = "Widths",
+  CapHeight = "CapHeight",
+  XHeight = "XHeight",
+  Ascent = "Ascent",
+  Descent = "Descent",
+  FontMatrix = "FontMatrix",
+  DW2 = "DW2",
+  W2 = "W2",
+  MissingWidth = "MissingWidth",
 }
 
 /**
@@ -390,7 +399,7 @@ type DictValueTypeMapping = {
   [DictKey.CA]: number,
   [DictKey.CF]: Dict,
   [DictKey.CIDSystemInfo]: Dict,
-  [DictKey.CIDToGIDMap]: Name,
+  [DictKey.CIDToGIDMap]: Name | Ref | BaseStream,
   [DictKey.CO]: (string | Ref)[],
   [DictKey.CS]: Name,
   [DictKey.C]: number[],
@@ -417,7 +426,7 @@ type DictValueTypeMapping = {
   [DictKey.EFF]: Name,
   [DictKey.EF]: Dict,
   [DictKey.EmbeddedFiles]: Ref,
-  [DictKey.Encoding]: Name | undefined,
+  [DictKey.Encoding]: Name | Ref | Dict | undefined,
   [DictKey.EncryptMetadata]: boolean,
   [DictKey.Encrypt]: Ref,
   [DictKey.ExtGState]: Dict,
@@ -436,7 +445,7 @@ type DictValueTypeMapping = {
   [DictKey.FontName]: Name,
   [DictKey.FontStretch]: Name,
   [DictKey.FontWeight]: number,
-  [DictKey.Font]: Dict,
+  [DictKey.Font]: Dict | [Ref, number],
   [DictKey.FormType]: number,
   [DictKey.FunctionType]: number,
   [DictKey.Function]: Ref | Dict | BaseStream | (Ref | Dict | BaseStream)[],
@@ -582,7 +591,7 @@ type DictValueTypeMapping = {
   [DictKey.TK]: "TK",
   [DictKey.PatternType]: number,
   [DictKey.Properties]: Dict,
-  [DictKey.VE]: "VE",
+  [DictKey.VE]: any[],
   [DictKey.OCGs]: "OCGs",
   [DictKey.Trapped]: "Trapped",
   [DictKey.ModDate]: "ModDate",
@@ -638,6 +647,15 @@ type DictValueTypeMapping = {
   [DictKey.YStep]: number,
   [DictKey.PaintType]: number,
   [DictKey.TilingType]: number,
+  [DictKey.Widths]: number[],
+  [DictKey.CapHeight]: number,
+  [DictKey.XHeight]: number,
+  [DictKey.Ascent]: number,
+  [DictKey.Descent]: number,
+  [DictKey.FontMatrix]: number[],
+  [DictKey.DW2]: PointType,
+  [DictKey.W2]: (Ref | number)[],
+  [DictKey.MissingWidth]: number
 }
 
 
@@ -652,6 +670,14 @@ export class Dict {
   protected __nonSerializable__ = nonSerializable; // Disable cloning of the Dict.
 
   public objId: string | null;
+
+  // 这几个值都是畸形的，而且只有一个地方用到了这个值
+  // 把Dict当成record在用，乱往里面加值、减值
+  public cacheKey: string | null = null;
+
+  public fontAliases: null = null;
+
+  public loadedName: string | null = null;
 
   constructor(xref: XRef | null = null) {
     // Map should only be used internally, use functions below to access.

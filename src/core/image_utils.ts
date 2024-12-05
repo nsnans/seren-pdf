@@ -69,21 +69,23 @@ export interface OptionalContent {
 export interface GroupOptions {
   matrix: TransformType | null,
   bbox: RectType | null,
-  smask: SMaskOptions,
+  smask: SMaskOptions | null,
   isolated: boolean,
   knockout: boolean,
+}
+
+export interface ImageMaskXObject {
+  data: string;
+  width: number;
+  height: number;
+  interpolate: number[];
+  count: number;
 }
 
 export interface ImageCacheData {
   objId?: string | null;
   fn: OPS;
-  args: ImageMask[] | {
-    data: string;
-    width: number;
-    height: number;
-    interpolate: number[];
-    count: number;
-  }[] | (string | number)[];
+  args: ImageMask[] | ImageMaskXObject[] | (string | number)[];
   optionalContent: OptionalContent | null;
 }
 
@@ -91,9 +93,9 @@ export interface GlobalImageCacheData extends ImageCacheData {
   byteSize: number;
 }
 
-class LocalImageCache extends NameLocalCache<ImageCacheData> {
+class LocalImageCache extends NameLocalCache<ImageCacheData | boolean> {
 
-  set(name: string, ref: string | null, data: ImageCacheData) {
+  set(name: string, ref: string | null, data: ImageCacheData | boolean) {
     if (typeof name !== "string") {
       throw new Error('LocalImageCache.set - expected "name" argument.');
     }
@@ -153,8 +155,8 @@ class LocalFunctionCache extends BaseLocalCache<Function> {
   }
 }
 
-class LocalGStateCache extends NameLocalCache<[DictKey, any][]> {
-  set(name: string, ref: string, data: [DictKey, any][]) {
+class LocalGStateCache extends NameLocalCache<[DictKey, any][] | boolean> {
+  set(name: string, ref: string, data: [DictKey, any][] | boolean) {
     if (typeof name !== "string") {
       throw new Error('LocalGStateCache.set - expected "name" argument.');
     }
@@ -178,8 +180,9 @@ export interface LocalTilingPatternData {
   operatorListIR: {
     // 操作符构成的数组
     fnArray: number[],
-    // 二维数组，每个数组有不同意思
-    argsArray: any[][],
+    // 二维数组，是fn对应函数的参数
+    // 每一个不同的fn有不同对应的参数，具体请查看OPSArgsType
+    argsArray: (any[] | null)[],
     length: number,
   },
   dict: Dict

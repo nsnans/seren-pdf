@@ -15,7 +15,8 @@
 /* globals process */
 
 import { ImageMask } from "../core/core_types";
-import { GroupOptions, OptionalContent } from "../core/image_utils";
+import { GroupOptions, ImageMaskXObject, OptionalContent } from "../core/image_utils";
+import { DictKey } from "../core/primitives";
 import { PointType, RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { TypedArray } from "../types";
@@ -356,7 +357,7 @@ export type OPSArgsType = {
   [OPS.setDash]: number,
   [OPS.setRenderingIntent]: number,
   [OPS.setFlatness]: number,
-  [OPS.setGState]: number,
+  [OPS.setGState]: [[DictKey, any][]],
   [OPS.save]: null,
   [OPS.restore]: number,
   [OPS.transform]: number,
@@ -384,13 +385,13 @@ export type OPSArgsType = {
   [OPS.setWordSpacing]: number,
   [OPS.setHScale]: number,
   [OPS.setLeading]: number,
-  [OPS.setFont]: number,
+  [OPS.setFont]: [string, number],
   [OPS.setTextRenderingMode]: number,
   [OPS.setTextRise]: number,
   [OPS.moveText]: number,
   [OPS.setLeadingMoveText]: number,
   [OPS.setTextMatrix]: number,
-  [OPS.nextLine]: number,
+  [OPS.nextLine]: null,
   [OPS.showText]: number,
   [OPS.showSpacedText]: number,
   [OPS.nextLineShowText]: number,
@@ -430,7 +431,7 @@ export type OPSArgsType = {
   [OPS.beginAnnotation]: [string, RectType | null, TransformType, TransformType, boolean],
   [OPS.endAnnotation]: [],
   // paintJpegXObject= 82,
-  [OPS.paintImageMaskXObject]: [ImageMask],
+  [OPS.paintImageMaskXObject]: [ImageMask] | [ImageMaskXObject],
   [OPS.paintImageMaskXObjectGroup]: number,
   [OPS.paintImageXObject]: [string, number, number],
   [OPS.paintInlineImageXObject]: number,
@@ -438,7 +439,7 @@ export type OPSArgsType = {
   [OPS.paintImageXObjectRepeat]: number,
   [OPS.paintImageMaskXObjectRepeat]: number,
   [OPS.paintSolidColorImageMask]: [],
-  [OPS.constructPath]: number,
+  [OPS.constructPath]: [[OPS], number[], RectType],
   [OPS.setStrokeTransparent]: number,
   [OPS.setFillTransparent]: number,
 }
@@ -850,8 +851,8 @@ class Util {
   // Applies the transform to the rectangle and finds the minimum axially
   // aligned bounding box.
   static getAxialAlignedBoundingBox(r: number[], m: number[]): RectType {
-    const p1 = this.applyTransform(r, m);
-    const p2 = this.applyTransform(r.slice(2, 4), m);
+    const p1 = this.applyTransform(<PointType>r, m);
+    const p2 = this.applyTransform(<PointType>r.slice(2, 4), m);
     const p3 = this.applyTransform([r[0], r[3]], m);
     const p4 = this.applyTransform([r[2], r[1]], m);
     return [

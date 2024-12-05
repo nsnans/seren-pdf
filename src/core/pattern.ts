@@ -35,8 +35,9 @@ import { XRef } from "./xref";
 import { ParserConstructFunction, PDFFunctionFactory } from "./function";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Dict, DictKey } from "./primitives";
-import { PointType, RectType } from "../display/display_utils";
+import { PointType, RectType, TransformType } from "../display/display_utils";
 import { LocalColorSpaceCache, LocalImageCache } from "./image_utils";
+import { OperatorListIR } from "./operator_list";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -1066,8 +1067,18 @@ class DummyShading extends BaseShading {
   }
 }
 
-function getTilingPatternIR(operatorList, dict: Dict, color: Uint8ClampedArray | null) {
-  const matrix = lookupMatrix(dict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX);
+export type TilingPatternIR = [
+  "TilingPattern",
+  Uint8ClampedArray | null,
+  OperatorListIR,
+  TransformType,
+  RectType,
+  number, number,
+  number, number,
+]
+
+function getTilingPatternIR(operatorList: OperatorListIR, dict: Dict, color: Uint8ClampedArray | null): TilingPatternIR {
+  const matrix = <TransformType>lookupMatrix(dict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX);
   const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
   // Ensure that the pattern has a non-zero width and height, to prevent errors
   // in `pattern_helper.js` (fixes issue8330.pdf).

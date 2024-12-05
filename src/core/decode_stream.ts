@@ -20,18 +20,18 @@ import { Stream } from "./stream";
 // we share a single empty buffer. This is (a) space-efficient and (b) avoids
 // having special cases that would be required if we used |null| for an empty
 // buffer.
-const emptyBuffer = new Uint8Array(0);
+export const emptyBuffer = new Uint8Array(0);
 
 // Super class for the decoding streams.
 abstract class DecodeStream extends BaseStream {
 
-  protected bufferLength: number = 0;
+  public bufferLength: number = 0;
 
   protected eof: boolean = false;
 
   protected minBufferLength: number = 512;
 
-  protected buffer = emptyBuffer;
+  public buffer = emptyBuffer;
 
   public _rawMinBufferLength: number;
 

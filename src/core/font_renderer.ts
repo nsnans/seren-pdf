@@ -844,7 +844,7 @@ class CompiledFont {
     unreachable("Children classes should implement this.");
   }
 
-  hasBuiltPath(unicode) {
+  hasBuiltPath(unicode: string) {
     const { charCode, glyphId } = lookupCmap(this.cmap, unicode);
     return (
       this.compiledGlyphs[glyphId] !== undefined &&

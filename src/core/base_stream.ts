@@ -29,6 +29,9 @@ export abstract class BaseStream {
 
   public bytes = new Uint8Array(0);
 
+  // 相当于是一个代理
+  public str: BaseStream | null = null;
+
   constructor() {
     if (
       (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
@@ -83,7 +86,7 @@ export abstract class BaseStream {
     return peekedByte;
   }
 
-  peekBytes(length: number) {
+  peekBytes(length?: number) {
     const bytes = this.getBytes(length);
     this.pos -= bytes.length;
     return bytes;

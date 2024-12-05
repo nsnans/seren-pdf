@@ -20,7 +20,7 @@ import { Stream } from "./stream";
 class Ascii85Stream extends DecodeStream {
   public eof: boolean = false;
   public input: Uint8Array;
-  protected str: Stream;
+  public str: Stream;
 
   constructor(str: Stream, maybeLength: number) {
     // Most streams increase in size when decoded, but Ascii85 streams

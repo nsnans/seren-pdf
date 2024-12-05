@@ -524,8 +524,9 @@ class QueueOptimizer extends NullOptimizer {
 
   protected context: QueueOptimizerContext;
 
-  state;
-  match;
+  protected state: InitialStateFuncTree | InitialStateFunc | null;
+
+  protected match: InitialStateFunc | null;
 
   constructor(queue: OperatorList) {
     super(queue);
@@ -578,7 +579,7 @@ class QueueOptimizer extends NullOptimizer {
         }
       }
       // Find the potentially optimizable items.
-      state = (state || InitialState)[fnArray[i]];
+      state = (<InitialStateFuncTree>state || InitialState)[fnArray[i]];
       if (!state || Array.isArray(state)) {
         i++;
         continue;
@@ -615,6 +616,16 @@ class QueueOptimizer extends NullOptimizer {
     this.match = null;
     this.lastProcessed = 0;
   }
+}
+
+export interface OperatorListIR {
+
+  fnArray: OPS[];
+
+  argsArray: (any[] | null)[];
+
+  length: number;
+
 }
 
 class OperatorList {
@@ -657,8 +668,8 @@ class OperatorList {
   }
 
   // eslint-disable-next-line accessor-pairs
-  set isOffscreenCanvasSupported(value) {
-    this.optimizer.isOffscreenCanvasSupported = value;
+  set isOffscreenCanvasSupported(value: boolean) {
+    (<QueueOptimizer>this.optimizer).isOffscreenCanvasSupported = value;
   }
 
   get length() {
@@ -666,7 +677,7 @@ class OperatorList {
   }
 
   get ready() {
-    return this._resolved || this._streamSink.ready;
+    return this._resolved || this._streamSink!.ready;
   }
 
   /**
@@ -729,11 +740,11 @@ class OperatorList {
       this.dependencies.add(dependency);
     }
     for (let i = 0, ii = opList.length; i < ii; i++) {
-      this.addOp(opList.fnArray[i], opList.argsArray[i]);
+      this.addOp(opList.fnArray[i], <any>opList.argsArray[i]);
     }
   }
 
-  getIR() {
+  getIR(): OperatorListIR {
     return {
       fnArray: this.fnArray,
       argsArray: this.argsArray,
@@ -749,7 +760,7 @@ class OperatorList {
         case OPS.paintInlineImageXObject:
         case OPS.paintInlineImageXObjectGroup:
         case OPS.paintImageMaskXObject:
-          const arg = argsArray[i][0]; // First parameter in imgData.
+          const arg = argsArray[i]![0]; // First parameter in imgData.
           if (!arg.cached && arg.data?.buffer instanceof ArrayBuffer) {
             transfers.push(arg.data.buffer);
           }

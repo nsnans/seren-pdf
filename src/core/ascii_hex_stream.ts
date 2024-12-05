@@ -20,7 +20,7 @@ class AsciiHexStream extends DecodeStream {
 
   protected firstDigit: number = -1;
 
-  protected str: Stream;
+  public str: Stream;
 
   constructor(str: Stream, maybeLength: number) {
     // Most streams increase in size when decoded, but AsciiHex streams shrink

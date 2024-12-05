@@ -18,7 +18,7 @@ import { Dict } from "./primitives";
 import { Stream } from "./stream";
 
 class RunLengthStream extends DecodeStream {
-  protected str: Stream;
+  public str: Stream;
   public dict: Dict | null;
   constructor(str: Stream, maybeLength: number) {
     super(maybeLength);

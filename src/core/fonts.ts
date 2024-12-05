@@ -65,6 +65,7 @@ import { OpenTypeFileBuilder } from "./opentype_file_builder";
 import { readUint32 } from "./core_utils";
 import { Stream } from "./stream.js";
 import { Type1Font } from "./type1_font";
+import { TransformType } from "../display/display_utils.js";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -241,19 +242,19 @@ function amendFallbackToUnicode(properties) {
   }
 }
 
-class Glyph {
+export class Glyph {
 
   protected originalCharCode;
 
-  protected fontChar;
+  public fontChar;
 
-  protected unicode;
+  public unicode;
 
-  protected accent;
+  public accent;
 
-  protected width;
+  public width;
 
-  protected vmetric;
+  public vmetric;
 
   protected operatorListId;
 
@@ -466,7 +467,7 @@ function isWinNameRecord(r) {
   return r.platform === 3 && r.encoding === 1 && r.language === 0x409;
 }
 
-function convertCidString(charCode, cid, shouldThrow = false) {
+function convertCidString(charCode: number, cid: string, shouldThrow = false) {
   switch (cid.length) {
     case 1:
       return cid.charCodeAt(0);
@@ -975,36 +976,36 @@ class Font {
   protected name: string;
   protected psName;
   protected mimetype: string | null;
-  protected disableFontFace: boolean;
-  protected loadedName;
-  protected isType3Font;
+  public disableFontFace: boolean;
+  public loadedName;
+  public isType3Font;
   protected missingFile: boolean;
   protected cssFontInfo;
-  protected _charsCache;
-  protected _glyphCache;
+  protected _charsCache: Record<string, Glyph[]>;
+  protected _glyphCache: Record<number, Glyph>;
   protected isSerifFont: boolean;
   protected isSymbolicFont: boolean;
   protected isMonospace: boolean;
   protected type;
   protected subtype;
-  protected systemFontInfo;
+  public systemFontInfo;
   protected isInvalidPDFjsFont: boolean;
-  protected fallbackName;
+  public fallbackName;
   protected differences;
   protected widths;
   protected defaultWidth;
   protected composite;
   protected capHeight: number;
-  protected ascent: number;
-  protected descent: number;
+  public ascent: number;
+  public descent: number;
   protected lineHeight: number;
-  protected fontMatrix;
-  protected bbox;
+  public fontMatrix: TransformType;
+  public bbox;
   protected defaultEncoding;
   protected toUnicode;
   protected toFontChar: number[];
   protected cidEncoding;
-  protected vertical: boolean | null = null;
+  public vertical: boolean | null = null;
   protected vmetrics;
   protected defaultVMetrics;
   protected isOpenType: boolean | null = null;
@@ -1014,6 +1015,7 @@ class Font {
   protected italic: boolean | null = null;
   protected black: boolean | null = null;
   protected remeasure: boolean | null = null;
+  public isCharBBox: boolean | null = null;
 
   constructor(name: string, file: Stream, properties) {
     this.name = name;
@@ -1055,7 +1057,7 @@ class Font {
     const matches = name.match(/^InvalidPDFjsFont_(.*)_\d+$/);
     this.isInvalidPDFjsFont = !!matches;
     if (this.isInvalidPDFjsFont) {
-      this.fallbackName = matches[1];
+      this.fallbackName = matches![1];
     } else if (this.isMonospace) {
       this.fallbackName = "monospace";
     } else if (this.isSerifFont) {
@@ -3400,7 +3402,7 @@ class Font {
   /**
    * @private
    */
-  _charToGlyph(charcode, isSpace = false) {
+  _charToGlyph(charcode: number, isSpace = false) {
     let glyph = this._glyphCache[charcode];
     // All `Glyph`-properties, except `isSpace` in multi-byte strings,
     // depend indirectly on the `charcode`.
@@ -3409,9 +3411,9 @@ class Font {
     }
     let fontCharCode, width, operatorListId;
 
-    let widthCode = charcode;
+    let widthCode: number | string = charcode;
     if (this.cMap?.contains(charcode)) {
-      widthCode = this.cMap.lookup(charcode);
+      widthCode = this.cMap.lookup(charcode)!;
 
       if (typeof widthCode === "string") {
         widthCode = convertCidString(charcode, widthCode);
@@ -3499,7 +3501,7 @@ class Font {
     return (this._glyphCache[charcode] = glyph);
   }
 
-  charsToGlyphs(chars) {
+  charsToGlyphs(chars: string) {
     // If we translated this string before, just grab it from the cache.
     let glyphs = this._charsCache[chars];
     if (glyphs) {
@@ -3510,8 +3512,8 @@ class Font {
     if (this.cMap) {
       // Composite fonts have multi-byte strings, convert the string from
       // single-byte to multi-byte.
-      const c = Object.create(null),
-        ii = chars.length;
+      const c = { charcode: 0, length: 0 };
+      const ii = chars.length;
       let i = 0;
       while (i < ii) {
         this.cMap.readCharCode(chars, i, c);
@@ -3628,7 +3630,25 @@ class Font {
 }
 
 class ErrorFont {
-  constructor(error) {
+
+  // 单纯做占位用
+  readonly data: null = null;
+
+  readonly loadedName: string;
+
+  readonly missingFile: true;
+
+  readonly error: string;
+
+  readonly isType3Font: null = null;
+
+  readonly fontMatrix: null = null;
+
+  readonly vertical: null = null;
+
+  readonly isCharBBox: null = null;
+
+  constructor(error: string) {
     this.error = error;
     this.loadedName = "g_font_error";
     this.missingFile = true;

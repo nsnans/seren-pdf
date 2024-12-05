@@ -127,7 +127,7 @@ class FlateStream extends DecodeStream {
 
   protected codeBuf = 0;
 
-  protected str: Stream;
+  public str: Stream;
 
   constructor(stream: Stream, maybeLength: number) {
     super(maybeLength);

@@ -1,5 +1,7 @@
+import { TransformType } from "../display/display_utils";
 import { StreamKind, wrapReason } from "../shared/message_handler";
 import { assert } from "../shared/util";
+import { Dict, Name, Ref } from "./primitives";
 
 export interface ImageMask {
   data: Uint8Array | null;
@@ -56,7 +58,7 @@ export class StreamSink {
     this.onClose = onClose;
   }
 
-  enqueue(chunk, size = 1, transfers) {
+  enqueue(chunk, size = 1, transfers?) {
     if (this.isCancelled) {
       return;
     }
@@ -121,4 +123,53 @@ export interface FieldObject {
   kidIds: string[] | null;
   page: number;
   rotation: number;
+}
+
+export interface PreEvaluatedFont {
+  descriptor: Dict | Ref;
+  dict: Dict;
+  baseDict: Dict;
+  composite: boolean;
+  type: string;
+  firstChar: number;
+  lastChar: number;
+  toUnicode: Name;
+  hash: string;
+  cssFontInfo?: null;
+}
+
+export interface TextContentItem {
+  str: string;
+  dir: string;
+  width: number;
+  height: number;
+  transform: TransformType | null;
+  fontName: string | null;
+  hasEOL: boolean;
+}
+
+export interface SimpleTextContentItem {
+  type: string;
+  id?: string | null;
+  tag?: string | null;
+}
+
+export interface DefaultTextContentItem {
+  initialized: boolean;
+  str: string[];
+  totalWidth: number;
+  totalHeight: number;
+  width: number;
+  height: number;
+  vertical: boolean;
+  prevTransform: TransformType | null;
+  textAdvanceScale: number;
+  spaceInFlowMin: number;
+  spaceInFlowMax: number;
+  trackingSpaceMin: number;
+  negativeSpaceMax: number;
+  notASpace: number;
+  transform: TransformType | null;
+  fontName: string | null;
+  hasEOL: boolean;
 }

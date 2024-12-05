@@ -40,7 +40,7 @@ class PDFFunctionFactory {
     this.isEvalSupported = isEvalSupported !== false;
   }
 
-  create(fn: Ref) {
+  create(fn: Ref | Dict | BaseStream) {
     const cachedFunction = this.getCached(fn);
     if (cachedFunction) {
       return cachedFunction;

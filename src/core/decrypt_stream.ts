@@ -19,7 +19,7 @@ import { Stream } from "./stream";
 const chunkSize = 512;
 
 class DecryptStream extends DecodeStream {
-  protected str: Stream;
+  public str: Stream;
   protected initialized: boolean;
   protected nextChunk: Uint8Array | null;
   protected decrypt: (data: Uint8Array, finalize: boolean) => Uint8Array;

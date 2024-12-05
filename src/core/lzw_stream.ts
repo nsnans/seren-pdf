@@ -24,7 +24,7 @@ class LZWStream extends DecodeStream {
 
   protected lzwState;
 
-  protected str;
+  public str;
 
   protected lastCode = null;
 

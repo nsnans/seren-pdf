@@ -329,7 +329,7 @@ class CMap {
     return this._map;
   }
 
-  readCharCode(str: string, offset: number, out: Record<string, number>) {
+  readCharCode(str: string, offset: number, out: { charcode: number, length: number }) {
     let c = 0;
     const codespaceRanges = this.codespaceRanges;
     // 9.7.6.2 CMap Mapping
