@@ -66,6 +66,8 @@ import { readUint32 } from "./core_utils";
 import { Stream } from "./stream.js";
 import { Type1Font } from "./type1_font";
 import { TransformType } from "../display/display_utils.js";
+import { OperatorListIR } from "./operator_list.js";
+import { DictKey } from "./primitives.js";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -1016,6 +1018,7 @@ class Font {
   protected black: boolean | null = null;
   protected remeasure: boolean | null = null;
   public isCharBBox: boolean | null = null;
+  public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
 
   constructor(name: string, file: Stream, properties) {
     this.name = name;
@@ -3647,6 +3650,8 @@ class ErrorFont {
   readonly vertical: null = null;
 
   readonly isCharBBox: null = null;
+
+  readonly bbox: null = null;
 
   constructor(error: string) {
     this.error = error;

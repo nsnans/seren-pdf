@@ -369,6 +369,13 @@ export enum DictKey {
   DW2 = "DW2",
   W2 = "W2",
   MissingWidth = "MissingWidth",
+  FontFile = "FontFile",
+  FontFile2 = "FontFile2",
+  FontFile3 = "FontFile3",
+  Length1 = "Length1",
+  Length2 = "Length2",
+  Length3 = "Length3",
+  CharProcs = "CharProcs",
 }
 
 /**
@@ -655,7 +662,14 @@ type DictValueTypeMapping = {
   [DictKey.FontMatrix]: number[],
   [DictKey.DW2]: PointType,
   [DictKey.W2]: (Ref | number)[],
-  [DictKey.MissingWidth]: number
+  [DictKey.MissingWidth]: number,
+  [DictKey.FontFile]: BaseStream,
+  [DictKey.FontFile2]: BaseStream,
+  [DictKey.FontFile3]: BaseStream,
+  [DictKey.Length1]: number,
+  [DictKey.Length2]: number,
+  [DictKey.Length3]: number,
+  [DictKey.CharProcs]: Dict,
 }
 
 

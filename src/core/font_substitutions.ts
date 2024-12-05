@@ -16,6 +16,8 @@
 import { normalizeFontName } from "./fonts_utils";
 import { validateFontName } from "./core_utils";
 import { warn } from "../shared/util";
+import { GlobalIdFactory } from "./global_id_factory";
+import { Font } from "./fonts";
 
 const NORMAL = {
   style: "normal",
@@ -461,8 +463,8 @@ function generateFont(
  * @returns an Object with the CSS, the loaded name, the src and the style.
  */
 function getFontSubstitution(
-  systemFontCache,
-  idFactory,
+  systemFontCache: Map<string, Promise<Font>>,
+  idFactory: GlobalIdFactory,
   localFontPath: string,
   baseFontName: string,
   standardFontName: string | undefined,

@@ -73,7 +73,7 @@ import {
   RegionalImageCache,
 } from "./image_utils";
 import { getMetrics } from "./metrics";
-import { OperatorList } from "./operator_list";
+import { OperatorList, OperatorListIR } from "./operator_list";
 import { Lexer, Parser } from "./parser";
 import { getTilingPatternIR, Pattern } from "./pattern";
 import { Cmd, Dict, DictKey, EOF, isName, Name, Ref, RefSet, RefSetCache } from "./primitives";
@@ -243,6 +243,7 @@ class PartialEvaluator {
 
   protected globalImageCache;
 
+  // 类型有待商榷
   protected systemFontCache;
 
   protected _regionalImageCache = new RegionalImageCache();
@@ -2691,7 +2692,7 @@ class PartialEvaluator {
 
       if (translated.font.isType3Font) {
         try {
-          await translated.loadType3Data(self, resources, task);
+          await translated.loadType3Data(self, resources!, task);
         } catch {
           // Ignore Type3-parsing errors, since we only use `loadType3Data`
           // here to ensure that we'll always obtain a useful /FontBBox.
@@ -4152,7 +4153,7 @@ class PartialEvaluator {
     };
   }
 
-  buildCharCodeToWidth(widthsByGlyphName, properties) {
+  buildCharCodeToWidth(widthsByGlyphName: Record<string, number>, properties) {
     const widths = Object.create(null);
     const differences = properties.differences;
     const encoding = properties.defaultEncoding;
@@ -4335,17 +4336,17 @@ class PartialEvaluator {
 
     if (!descriptor) {
       if (isType3Font) {
-        const bbox = lookupNormalRect(dict.getArray("FontBBox"), [0, 0, 0, 0]);
+        const bbox = lookupNormalRect(dict.getArrayValue(DictKey.FontBBox), [0, 0, 0, 0]);
         // FontDescriptor is only required for Type3 fonts when the document
         // is a tagged pdf. Create a barbebones one to get by.
         descriptor = new Dict(null);
-        descriptor.set("FontName", Name.get(type));
-        descriptor.set("FontBBox", bbox);
+        descriptor.set(DictKey.FontName, Name.get(type)!);
+        descriptor.set(DictKey.FontBBox, bbox!);
       } else {
         // Before PDF 1.5 if the font was one of the base 14 fonts, having a
         // FontDescriptor was not required.
         // This case is here for compatibility.
-        let baseFontName = dict.get("BaseFont");
+        let baseFontName: string | Name | undefined = dict.getValue(DictKey.BaseFont);
         if (!(baseFontName instanceof Name)) {
           throw new FormatError("Base font is not specified");
         }
@@ -4380,7 +4381,7 @@ class PartialEvaluator {
           italicAngle: 0,
           isType3Font,
         };
-        const widths = dict.get("Widths");
+        const widths = dict.getValue(DictKey.Widths);
 
         const standardFontName = getStandardFontName(baseFontName);
         let file = null;
@@ -4392,7 +4393,7 @@ class PartialEvaluator {
           properties.systemFontInfo = getFontSubstitution(
             this.systemFontCache,
             this.idFactory,
-            this.options.standardFontDataUrl,
+            this.options.standardFontDataUrl!,
             baseFontName,
             standardFontName,
             type
@@ -4420,7 +4421,7 @@ class PartialEvaluator {
             newProperties
           );
         }
-        return new Font(baseFontName, file, newProperties);
+        return new Font(baseFontName, file!, newProperties);
       }
     }
 
@@ -4430,14 +4431,14 @@ class PartialEvaluator {
     // TODO Fill the width array depending on which of the base font this is
     // a variant.
 
-    let fontName = descriptor.get("FontName");
-    let baseFont = dict.get("BaseFont");
+    let fontName: Name | null = (<Dict>descriptor).getValue(DictKey.FontName);
+    let baseFont = <Name | null>dict.getValue(DictKey.BaseFont);
     // Some bad PDFs have a string as the font name.
     if (typeof fontName === "string") {
-      fontName = Name.get(fontName);
+      fontName = <Name | null>Name.get(fontName);
     }
     if (typeof baseFont === "string") {
-      baseFont = Name.get(baseFont);
+      baseFont = <Name | null>Name.get(baseFont);
     }
 
     const fontNameStr = fontName?.name;
@@ -4467,9 +4468,9 @@ class PartialEvaluator {
       throw new FormatError("invalid font name");
     }
 
-    let fontFile, subtype, length1, length2, length3;
+    let fontFile: BaseStream | null, subtype, length1, length2, length3;
     try {
-      fontFile = descriptor.get("FontFile", "FontFile2", "FontFile3");
+      fontFile = (<Dict>descriptor).get(DictKey.FontFile, DictKey.FontFile2, DictKey.FontFile3);
 
       if (fontFile) {
         if (!(fontFile instanceof BaseStream)) {
@@ -4490,13 +4491,13 @@ class PartialEvaluator {
     let systemFontInfo = null;
     if (fontFile) {
       if (fontFile.dict) {
-        const subtypeEntry = fontFile.dict.get("Subtype");
+        const subtypeEntry = fontFile.dict.get(DictKey.Subtype);
         if (subtypeEntry instanceof Name) {
           subtype = subtypeEntry.name;
         }
-        length1 = fontFile.dict.get("Length1");
-        length2 = fontFile.dict.get("Length2");
-        length3 = fontFile.dict.get("Length3");
+        length1 = fontFile.dict.get(DictKey.Length1);
+        length2 = fontFile.dict.get(DictKey.Length2);
+        length3 = fontFile.dict.get(DictKey.Length3);
       }
     } else if (cssFontInfo) {
       // We've a missing XFA font.
@@ -4525,7 +4526,7 @@ class PartialEvaluator {
         systemFontInfo = getFontSubstitution(
           this.systemFontCache,
           this.idFactory,
-          this.options.standardFontDataUrl,
+          this.options.standardFontDataUrl!,
           fontName.name,
           standardFontName,
           type
@@ -4612,7 +4613,7 @@ class PartialEvaluator {
     const newProperties = await this.extractDataStructures(dict, properties);
     this.extractWidths(dict, <Dict>descriptor, newProperties);
 
-    return new Font(fontName.name, fontFile, newProperties);
+    return new Font(fontName.name, <Stream>fontFile!, newProperties);
   }
 
   static buildFontPaths(font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocParamEvaluatorOptions) {
@@ -4671,7 +4672,7 @@ class TranslatedFont {
 
   protected _evaluatorOptions;
 
-  protected type3Loaded;
+  protected type3Loaded: Promise<void> | null;
 
   public type3Dependencies: Set<string> | null;
 
@@ -4720,7 +4721,7 @@ class TranslatedFont {
     );
   }
 
-  loadType3Data(evaluator, resources, task) {
+  loadType3Data(evaluator: PartialEvaluator, resources: Dict, task: WorkerTask) {
     if (this.type3Loaded) {
       return this.type3Loaded;
     }
@@ -4741,9 +4742,9 @@ class TranslatedFont {
     const translatedFont = this.font,
       type3Dependencies = this.type3Dependencies;
     let loadCharProcsPromise = Promise.resolve();
-    const charProcs = this.dict.get("CharProcs");
-    const fontResources = this.dict.get("Resources") || resources;
-    const charProcOperatorList = Object.create(null);
+    const charProcs: Dict = this.dict.getValue(DictKey.CharProcs);
+    const fontResources = this.dict.getValue(DictKey.Resources) || resources;
+    const charProcOperatorList: Record<DictKey, OperatorListIR> = Object.create(null);
 
     const fontBBox = Util.normalizeRect(translatedFont.bbox || [0, 0, 0, 0]),
       width = fontBBox[2] - fontBBox[0],
@@ -4774,10 +4775,10 @@ class TranslatedFont {
             charProcOperatorList[key] = operatorList.getIR();
 
             for (const dependency of operatorList.dependencies) {
-              type3Dependencies.add(dependency);
+              type3Dependencies!.add(dependency);
             }
           })
-          .catch(function (reason) {
+          .catch(function (_reason: unknown) {
             warn(`Type3 font resource "${key}" is not available.`);
             const dummyOperatorList = new OperatorList();
             charProcOperatorList[key] = dummyOperatorList.getIR();
@@ -4785,10 +4786,10 @@ class TranslatedFont {
       });
     }
     this.type3Loaded = loadCharProcsPromise.then(() => {
-      translatedFont.charProcOperatorList = charProcOperatorList;
+      (<Font>translatedFont).charProcOperatorList = charProcOperatorList;
       if (this._bbox) {
-        translatedFont.isCharBBox = true;
-        translatedFont.bbox = this._bbox;
+        (<Font>translatedFont).isCharBBox = true;
+        (<Font>translatedFont).bbox = this._bbox;
       }
     });
     return this.type3Loaded;
@@ -4797,14 +4798,14 @@ class TranslatedFont {
   /**
    * @private
    */
-  _removeType3ColorOperators(operatorList, fontBBoxSize = NaN) {
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+  _removeType3ColorOperators(operatorList: OperatorList, fontBBoxSize = NaN) {
+    if (PlatformHelper.isTesting()) {
       assert(
         operatorList.fnArray[0] === OPS.setCharWidthAndBounds,
         "Type3 glyph shall start with the d1 operator."
       );
     }
-    const charBBox = Util.normalizeRect(operatorList.argsArray[0].slice(2)),
+    const charBBox = Util.normalizeRect(<RectType>(<number[]>operatorList.argsArray[0])!.slice(2)!),
       width = charBBox[2] - charBBox[0],
       height = charBBox[3] - charBBox[1];
     const charBBoxSize = Math.hypot(width, height);
@@ -4855,7 +4856,7 @@ class TranslatedFont {
           continue;
 
         case OPS.setGState:
-          const [gStateObj] = operatorList.argsArray[i];
+          const [gStateObj] = operatorList.argsArray[i]!;
           let j = 0,
             jj = gStateObj.length;
           while (j < jj) {
