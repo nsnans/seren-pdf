@@ -19,12 +19,12 @@ import {
   shadow,
 } from "../../shared/util";
 import { OutputScale, PixelsPerInch } from "../display_utils";
-import { AnnotationEditor } from "./editor.js";
+import { AnnotationEditor } from "./editor";
 import { AnnotationLayer, StampAnnotationElement } from "../annotation_layer";
-import { IL10n } from "../../viewer/common/component_types.js";
-import { AnnotationEditorUIManager } from "./tools.js";
-import { AnnotationEditorLayer } from "./annotation_editor_layer.js";
-import { PlatformHelper } from "../../platform/platform_helper.js";
+import { IL10n } from "../../viewer/common/component_types";
+import { AnnotationEditorUIManager } from "./tools";
+import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { PlatformHelper } from "../../platform/platform_helper";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.

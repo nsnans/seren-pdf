@@ -63,11 +63,11 @@ import { GlyfTable } from "./glyf";
 import { CMap, IdentityCMap } from "./cmap";
 import { OpenTypeFileBuilder } from "./opentype_file_builder";
 import { readUint32 } from "./core_utils";
-import { Stream } from "./stream.js";
+import { Stream } from "./stream";
 import { Type1Font } from "./type1_font";
-import { TransformType } from "../display/display_utils.js";
-import { OperatorListIR } from "./operator_list.js";
-import { DictKey } from "./primitives.js";
+import { TransformType } from "../display/display_utils";
+import { OperatorListIR } from "./operator_list";
+import { DictKey } from "./primitives";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [

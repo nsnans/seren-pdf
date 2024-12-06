@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, OPSArgsType, RenderingIntentFlag, warn } from "../shared/util.js";
-import { StreamSink } from "./core_types.js";
-import { OptionalContent } from "./image_utils.js";
+import { ImageKind, OPS, OPSArgsType, RenderingIntentFlag, warn } from "../shared/util";
+import { StreamSink } from "./core_types";
+import { OptionalContent } from "./image_utils";
 
 function addState(parentState: InitialStateFuncTree, pattern: OPS[],
   checkFn: ((context: QueueOptimizerContext) => boolean) | null,

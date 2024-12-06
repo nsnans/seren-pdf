@@ -16,7 +16,7 @@
 import { BaseException, warn } from "../shared/util";
 // 这里仔细研究一下，如何引入外部的部件
 import OpenJPEG from "../external/openjpeg/openjpeg";
-import { Stream } from "./stream.js";
+import { Stream } from "./stream";
 
 class JpxError extends BaseException {
   constructor(msg: string) {

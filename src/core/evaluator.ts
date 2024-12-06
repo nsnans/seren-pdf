@@ -14,10 +14,10 @@
  */
 /* eslint-disable no-var */
 
-import { DocParamEvaluatorOptions } from "../display/api.js";
-import { RectType, TransformType } from "../display/display_utils.js";
-import { PlatformHelper } from "../platform/platform_helper.js";
-import { MessageHandler } from "../shared/message_handler.js";
+import { DocParamEvaluatorOptions } from "../display/api";
+import { RectType, TransformType } from "../display/display_utils";
+import { PlatformHelper } from "../platform/platform_helper";
+import { MessageHandler } from "../shared/message_handler";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,
@@ -35,12 +35,12 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { TypedArray } from "../types.js";
+import { TypedArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { CMapFactory, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
-import { DefaultTextContentItem, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem } from "./core_types.js";
+import { DefaultTextContentItem, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { DecodeStream } from "./decode_stream";
 import {
@@ -55,7 +55,7 @@ import { getFontSubstitution } from "./font_substitutions";
 import { ErrorFont, Font, Glyph } from "./fonts";
 import { FontFlags } from "./fonts_utils";
 import { isPDFFunction, PDFFunctionFactory } from "./function";
-import { GlobalIdFactory } from "./global_id_factory.js";
+import { GlobalIdFactory } from "./global_id_factory";
 import { getGlyphsUnicode } from "./glyphlist";
 import { PDFImage } from "./image";
 import { ImageResizer } from "./image_resizer";
@@ -88,9 +88,9 @@ import {
 import { Stream } from "./stream";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { getUnicodeForGlyph } from "./unicode";
-import { WorkerTask } from "./worker.js";
+import { WorkerTask } from "./worker";
 import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
-import { XRef } from "./xref.js";
+import { XRef } from "./xref";
 
 const DefaultDocParamEvaluatorOptions: DocParamEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
