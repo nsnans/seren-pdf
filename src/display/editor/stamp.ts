@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../../platform/platform_helper";
 import {
   AnnotationEditorType,
   AnnotationPrefix,
   shadow,
 } from "../../shared/util";
-import { OutputScale, PixelsPerInch } from "../display_utils";
-import { AnnotationEditor } from "./editor";
-import { AnnotationLayer, StampAnnotationElement } from "../annotation_layer";
 import { IL10n } from "../../viewer/common/component_types";
-import { AnnotationEditorUIManager } from "./tools";
+import { StampAnnotationElement } from "../annotation_layer";
+import { OutputScale, PixelsPerInch } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { PlatformHelper } from "../../platform/platform_helper";
+import { AnnotationEditor } from "./editor";
+import { AnnotationEditorUIManager } from "./tools";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
