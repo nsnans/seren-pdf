@@ -15,7 +15,7 @@
 
 import { shadow, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey, Ref } from "./primitives";
 import { XRef } from "./xref";
 
 function pickPlatformItem(dict?: Dict) {
@@ -70,7 +70,7 @@ export class FileSpec {
 
   protected fs;
 
-  protected _contentRef: object | null = null;
+  protected _contentRef: Ref | null = null;
 
   constructor(root: Dict, xref: XRef | null, skipContent = false) {
     if (!(root instanceof Dict)) {
@@ -110,7 +110,7 @@ export class FileSpec {
     if (!this.#contentAvailable) {
       return null;
     }
-    this._contentRef ||= pickPlatformItem(this.root?.getValue(DictKey.EF));
+    this._contentRef ||= <Ref>pickPlatformItem(this.root?.getValue(DictKey.EF));
 
     let content = null;
     if (this._contentRef) {

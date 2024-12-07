@@ -18,7 +18,7 @@ import { Root } from "./builder";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
 import { BindItems, Field, Items, SetProperty, Text } from "./template";
-import { EmptyXFAAttributesObj, XFAAttribute, XFAObject, XFAObjectArray, XmlObject } from "./xfa_object";
+import { EmptyXFAAttributesObj, XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
 
 const NS_DATASETS = NamespaceIds.datasets.id;
 
@@ -32,7 +32,7 @@ class Binder {
 
   protected emptyMerge: boolean;
 
-  protected data: XFAObject;
+  protected data: XmlObject;
 
   protected root;
 
@@ -63,7 +63,7 @@ class Binder {
     return this.data;
   }
 
-  _bindValue(formNode, data, picture) {
+  _bindValue(formNode, data, _picture) {
     // Nodes must have the same "type": container or value.
     // Here we make the link between form node and
     // data node (through $data property): we'll use it

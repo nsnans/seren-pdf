@@ -33,7 +33,7 @@ class ConnectionSet extends XFAObject {
 }
 
 class EffectiveInputPolicy extends XFAObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "effectiveInputPolicy");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -43,7 +43,7 @@ class EffectiveInputPolicy extends XFAObject {
 }
 
 class EffectiveOutputPolicy extends XFAObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "effectiveOutputPolicy");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -53,7 +53,12 @@ class EffectiveOutputPolicy extends XFAObject {
 }
 
 class Operation extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+
+  protected input: string;
+
+  protected output: string;
+
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "operation");
     this.id = attributes.id || "";
     this.input = attributes.input || "";
@@ -65,7 +70,7 @@ class Operation extends StringObject {
 }
 
 class RootElement extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "rootElement");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -75,7 +80,7 @@ class RootElement extends StringObject {
 }
 
 class SoapAction extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "soapAction");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -85,7 +90,7 @@ class SoapAction extends StringObject {
 }
 
 class SoapAddress extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "soapAddress");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -95,7 +100,7 @@ class SoapAddress extends StringObject {
 }
 
 class Uri extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "uri");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -105,7 +110,7 @@ class Uri extends StringObject {
 }
 
 class WsdlAddress extends StringObject {
-  constructor(attributes:XFAAttributesObj) {
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "wsdlAddress");
     this.id = attributes.id || "";
     this.name = attributes.name || "";
@@ -115,7 +120,22 @@ class WsdlAddress extends StringObject {
 }
 
 class WsdlConnection extends XFAObject {
-  constructor(attributes:XFAAttributesObj) {
+
+  protected dataDescription: string;
+  
+  protected effectiveInputPolicy;
+
+  protected effectiveOutputPolicy;
+
+  protected operation;
+  
+  protected soapAction;
+
+  protected soapAddress;
+  
+  protected wsdlAddress;
+
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "wsdlConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";
@@ -129,7 +149,12 @@ class WsdlConnection extends XFAObject {
 }
 
 class XmlConnection extends XFAObject {
-  constructor(attributes:XFAAttributesObj) {
+
+  protected dataDescription: string;
+
+  protected uri;
+
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xmlConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";
@@ -138,7 +163,14 @@ class XmlConnection extends XFAObject {
 }
 
 class XsdConnection extends XFAObject {
-  constructor(attributes:XFAAttributesObj) {
+
+  protected dataDescription: string;
+
+  protected rootElement;
+
+  protected uri;
+
+  constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xsdConnection", /* hasChildren = */ true);
     this.dataDescription = attributes.dataDescription || "";
     this.name = attributes.name || "";
@@ -160,51 +192,51 @@ class ConnectionSetNamespace implements Namespace {
     return undefined;
   }
 
-  connectionSet(attrs: XFAAttributesObj){
-    return new ConnectionSet(attrs);
+  connectionSet(_attrs: XFAAttributesObj) {
+    return new ConnectionSet();
   }
 
-  effectiveInputPolicy(attrs: XFAAttributesObj){
+  effectiveInputPolicy(attrs: XFAAttributesObj) {
     return new EffectiveInputPolicy(attrs);
   }
 
-  effectiveOutputPolicy(attrs: XFAAttributesObj){
+  effectiveOutputPolicy(attrs: XFAAttributesObj) {
     return new EffectiveOutputPolicy(attrs);
   }
 
-  operation(attrs: XFAAttributesObj){
+  operation(attrs: XFAAttributesObj) {
     return new Operation(attrs);
   }
 
-  rootElement(attrs: XFAAttributesObj){
+  rootElement(attrs: XFAAttributesObj) {
     return new RootElement(attrs);
   }
 
-  soapAction(attrs: XFAAttributesObj){
+  soapAction(attrs: XFAAttributesObj) {
     return new SoapAction(attrs);
   }
 
-  soapAddress(attrs: XFAAttributesObj){
+  soapAddress(attrs: XFAAttributesObj) {
     return new SoapAddress(attrs);
   }
 
-  uri(attrs: XFAAttributesObj){
+  uri(attrs: XFAAttributesObj) {
     return new Uri(attrs);
   }
 
-  wsdlAddress(attrs: XFAAttributesObj){
+  wsdlAddress(attrs: XFAAttributesObj) {
     return new WsdlAddress(attrs);
   }
 
-  wsdlConnection(attrs: XFAAttributesObj){
+  wsdlConnection(attrs: XFAAttributesObj) {
     return new WsdlConnection(attrs);
   }
 
-  xmlConnection(attrs: XFAAttributesObj){
+  xmlConnection(attrs: XFAAttributesObj) {
     return new XmlConnection(attrs);
   }
 
-  xsdConnection(attrs: XFAAttributesObj){
+  xsdConnection(attrs: XFAAttributesObj) {
     return new XsdConnection(attrs);
   }
 }

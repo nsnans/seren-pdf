@@ -1106,7 +1106,7 @@ class PartialEvaluator {
     fontRef: Ref | null,
     operatorList: OperatorList,
     task: WorkerTask,
-    state: State,
+    state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
     cssFontInfo = null
   ) {
