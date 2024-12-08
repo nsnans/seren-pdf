@@ -100,7 +100,7 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
 
 interface PDFImageArgs {
   xref: XRef;
-  res;
+  res: Dict;
   image;
   isInline: boolean;
   smask;
@@ -161,9 +161,9 @@ class PDFImage {
     localColorSpaceCache,
   }: PDFImageArgs) {
     this.image = image;
-    const dict = image.dict;
+    const dict = image.dict!;
 
-    const filter = dict.get("F", "Filter");
+    const filter = dict.getValueWithFallback(DictKey.F, DictKey.Filter);
     let filterName;
     if (filter instanceof Name) {
       filterName = filter.name;
@@ -185,7 +185,7 @@ class PDFImage {
         this.jpxDecoderOptions = {
           numComponents: 0,
           isIndexedColormap: false,
-          smaskInData: dict.has("SMaskInData"),
+          smaskInData: dict.has(DictKey.SMaskInData),
         };
         break;
       case "JBIG2Decode":
@@ -364,7 +364,7 @@ class PDFImage {
   }: {
     xref: XRef,
     res: Dict,
-    image,
+    image: BaseStream,
     isInline: boolean,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache
@@ -373,8 +373,8 @@ class PDFImage {
     let smaskData = null;
     let maskData = null;
 
-    const smask = image.dict.get("SMask");
-    const mask = image.dict.get("Mask");
+    const smask = image.dict!.getValue(DictKey.SMask);
+    const mask = image.dict!.getValue(DictKey.Mask);
 
     if (smask) {
       if (smask instanceof BaseStream) {

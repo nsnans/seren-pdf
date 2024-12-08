@@ -112,7 +112,7 @@ function fetchDest(dest) {
 }
 
 function fetchRemoteDest(action: Dict) {
-  let dest = action.getValue(DictKey.D);
+  let dest: Dict | Name | string | number[] = action.getValue(DictKey.D);
   if (dest) {
     if (dest instanceof Name) {
       dest = dest.name;

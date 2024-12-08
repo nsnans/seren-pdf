@@ -15,13 +15,14 @@
 
 import { CCITTFaxDecoder } from "./ccitt";
 import { DecodeStream } from "./decode_stream";
-import { Dict } from "./primitives";
+import { Dict, DictKey } from "./primitives";
+import { Stream } from "./stream";
 
 class CCITTFaxStream extends DecodeStream {
 
   protected ccittFaxDecoder: CCITTFaxDecoder;
 
-  constructor(str, maybeLength, params) {
+  constructor(str: Stream, maybeLength: number, params: Dict) {
     super(maybeLength);
 
     this.str = str;
@@ -37,13 +38,13 @@ class CCITTFaxStream extends DecodeStream {
       },
     };
     this.ccittFaxDecoder = new CCITTFaxDecoder(source, {
-      K: params.get("K"),
-      EndOfLine: params.get("EndOfLine"),
-      EncodedByteAlign: params.get("EncodedByteAlign"),
-      Columns: params.get("Columns"),
-      Rows: params.get("Rows"),
-      EndOfBlock: params.get("EndOfBlock"),
-      BlackIs1: params.get("BlackIs1"),
+      K: <number>params.getValue(DictKey.K),
+      EndOfLine: params.getValue(DictKey.EndOfLine),
+      EncodedByteAlign: params.getValue(DictKey.EncodedByteAlign),
+      Columns: params.getValue(DictKey.Columns),
+      Rows: params.getValue(DictKey.Rows),
+      EndOfBlock: params.getValue(DictKey.EndOfBlock),
+      BlackIs1: params.getValue(DictKey.BlackIs1),
     });
   }
 

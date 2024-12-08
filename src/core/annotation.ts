@@ -71,7 +71,7 @@ import {
 } from "./default_appearance";
 import { PartialEvaluator } from "./evaluator";
 import { FileSpec, FileSpecSerializable } from "./file_spec";
-import { Font } from "./fonts";
+import { ErrorFont, Font, Glyph } from "./fonts";
 import { LocalIdFactory } from "./global_id_factory";
 import { JpegStream } from "./jpeg_stream";
 import { ObjectLoader } from "./object_loader";
@@ -597,7 +597,7 @@ function getPdfColorArray(color: TypedArray) {
   return Array.from(color, (c: number) => c / 255);
 }
 
-function getQuadPoints(dict: Dict, rect: number[]) {
+function getQuadPoints(dict: Dict, rect: number[] | null) {
   // The region is described as a number of quadrilaterals.
   // Each quadrilateral must consist of eight coordinates.
   const quadPoints = dict.getArrayValue(DictKey.QuadPoints);
@@ -746,7 +746,7 @@ interface AnnotationData {
   open?: boolean;
   lineCoordinates?: number[];
   lineEndings?: string[];
-  vertices?: Float32Array;
+  vertices?: Float32Array | null;
   opacity?: number;
   inkLists?: Float32Array[];
 }
@@ -1544,14 +1544,14 @@ class Annotation {
 
     // If no parent exists, the partial and fully qualified names are equal.
     if (!dict.has(DictKey.Parent)) {
-      return stringToPDFString(dict.getValue(DictKey.T));
+      return stringToPDFString(<string>dict.getValue(DictKey.T));
     }
 
     // Form the fully qualified field name by appending the partial name to
     // the parent's fully qualified name, separated by a period.
     const fieldName = [];
     if (dict.has(DictKey.T)) {
-      fieldName.unshift(stringToPDFString(dict.getValue(DictKey.T)));
+      fieldName.unshift(stringToPDFString(<string>dict.getValue(DictKey.T)));
     }
 
     let loopDict: Dict | Ref = dict;
@@ -1578,7 +1578,7 @@ class Annotation {
       }
 
       if (loopDict.has(DictKey.T)) {
-        fieldName.unshift(stringToPDFString(loopDict.getValue(DictKey.T)));
+        fieldName.unshift(stringToPDFString(<string>loopDict.getValue(DictKey.T)));
       }
     }
     return fieldName.join(".");
@@ -1779,7 +1779,7 @@ class MarkupAnnotation extends Annotation {
       // the group attributes from the primary annotation.
       const parent = <Dict>dict.getValue(DictKey.IRT);
 
-      this.setTitle(parent.getValue(DictKey.T));
+      this.setTitle(<string>parent.getValue(DictKey.T));
       this.data.titleObj = this._title;
 
       this.setContents(parent.getValue(DictKey.Contents));
@@ -1974,7 +1974,7 @@ class MarkupAnnotation extends Annotation {
     xref: XRef,
     annotation: Record<string, any>,
     params: {
-      evaluator: PartialEvaluator,
+      evaluator?: PartialEvaluator,
       image?: CreateStampImageResult | null,
       evaluatorOptions: DocParamEvaluatorOptions
     }
@@ -2004,7 +2004,15 @@ class MarkupAnnotation extends Annotation {
 class WidgetAnnotation extends Annotation {
 
   protected _hasValueFromXFA: boolean = false;
+
   protected _hasText: boolean = false;
+
+  protected _fieldResources: {
+    localResources: Dict,
+    acroFormResources: Dict,
+    appearanceResources: Dict,
+    mergedResources: Dict
+  }
 
   constructor(params: AnnotationParameters) {
     super(params);
@@ -2058,9 +2066,9 @@ class WidgetAnnotation extends Annotation {
     const fieldType = getInheritableProperty(dict, "FT");
     data.fieldType = fieldType instanceof Name ? fieldType.name : null;
 
-    const localResources = getInheritableProperty(dict, "DR");
+    const localResources = <Dict>getInheritableProperty(dict, DictKey.DR);
     const acroFormResources = annotationGlobals.acroForm.getValue(DictKey.DR);
-    const appearanceResources = this.appearance?.dict!.getValue(DictKey.Resources);
+    const appearanceResources = this.appearance?.dict!.getValue(DictKey.Resources)!;
 
     this._fieldResources = {
       localResources,
@@ -2550,7 +2558,7 @@ class WidgetAnnotation extends Annotation {
     let font = await WidgetAnnotation._getFontData(
       evaluator,
       task,
-      this.data.defaultAppearanceData,
+      this.data.defaultAppearanceData!,
       this._fieldResources.mergedResources
     );
 
@@ -2585,15 +2593,15 @@ class WidgetAnnotation extends Annotation {
       const fontFamily = this.data.comb ? "monospace" : "sans-serif";
       const fakeUnicodeFont = new FakeUnicodeFont(evaluator.xref, fontFamily);
       const resources = fakeUnicodeFont.createFontResources(lines.join(""));
-      const newFont = resources.getRaw(DictKey.Font);
+      const newFont = <Dict>resources.getRaw(DictKey.Font);
 
-      if (this._fieldResources.mergedResources.has("Font")) {
-        const oldFont = this._fieldResources.mergedResources.get("Font");
+      if (this._fieldResources.mergedResources.has(DictKey.Font)) {
+        const oldFont = this._fieldResources.mergedResources.get(DictKey.Font);
         for (const key of newFont.getKeys()) {
           oldFont.set(key, newFont.getRaw(key));
         }
       } else {
-        this._fieldResources.mergedResources.set("Font", newFont);
+        this._fieldResources.mergedResources.set(DictKey.Font, newFont);
       }
 
       const fontName = fakeUnicodeFont.fontName.name;
@@ -2641,12 +2649,12 @@ class WidgetAnnotation extends Annotation {
     }
 
     let descent = font!.descent;
-    if (isNaN(descent)) {
+    if (isNaN(descent!)) {
       descent = BASELINE_FACTOR * lineHeight;
     } else {
       descent = Math.max(
         BASELINE_FACTOR * lineHeight,
-        Math.abs(descent) * fontSize
+        Math.abs(descent!) * fontSize
       );
     }
 
@@ -2726,7 +2734,7 @@ class WidgetAnnotation extends Annotation {
   static async _getFontData(evaluator: PartialEvaluator, task: WorkerTask, appearanceData: { fontName: string, fontSize: number }, resources: Dict) {
     const operatorList = new OperatorList();
     const initialState = {
-      font: null,
+      font: <Font | ErrorFont | null>null,
       clone() {
         return this;
       },
@@ -2747,14 +2755,14 @@ class WidgetAnnotation extends Annotation {
     return initialState.font;
   }
 
-  _getTextWidth(text: string, font: Font) {
+  _getTextWidth(text: string, font: Font | ErrorFont) {
     return (
       font.charsToGlyphs(text)
         .reduce((width: number, glyph) => width + glyph.width, 0) / 1000
     );
   }
 
-  _computeFontSize(height: number, width: number, text: string, font: Font, lineCount: number): [string, number, number] {
+  _computeFontSize(height: number, width: number, text: string, font: Font | ErrorFont, lineCount: number): [string, number, number] {
     let { fontSize } = this.data.defaultAppearanceData!;
     let lineHeight = (fontSize || 12) * LINE_FACTOR,
       numberOfLines = Math.round(height / lineHeight);
@@ -2778,11 +2786,15 @@ class WidgetAnnotation extends Annotation {
         numberOfLines = 1;
       } else {
         const lines = text.split(/\r\n?|\n/);
-        const cachedLines = [];
+        const cachedLines = <{
+          line: string,
+          glyphs: Glyph[],
+          positions: [number, number][]
+        }[]>[];
         for (const line of lines) {
           const encoded = font.encodeString(line).join("");
           const glyphs = font.charsToGlyphs(encoded);
-          const positions = font.getCharPositions(encoded);
+          const positions = (<Font>font).getCharPositions(encoded);
           cachedLines.push({
             line: encoded,
             glyphs,
@@ -3059,7 +3071,11 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     );
   }
 
-  _splitLine(line: string, font: Font, fontSize: number, width: number, cache = {}): string[] {
+  _splitLine(line: string, font: Font, fontSize: number, width: number, cache: {
+    line?: string,
+    glyphs?: Glyph[],
+    positions?: [number, number][]
+  } = {}): string[] {
     line = cache.line || line;
 
     const glyphs = cache.glyphs || font.charsToGlyphs(line);
@@ -3833,7 +3849,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     const font = await WidgetAnnotation._getFontData(
       evaluator,
       task,
-      this.data.defaultAppearanceData,
+      this.data.defaultAppearanceData!,
       this._fieldResources.mergedResources
     );
 
@@ -3905,7 +3921,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
       buf.push(
         this._renderText(
           <string>displayValue,
-          font!,
+          <Font>font!,
           fontSize,
           totalWidth,
           0,

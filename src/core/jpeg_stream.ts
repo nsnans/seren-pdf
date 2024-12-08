@@ -17,6 +17,7 @@ import { shadow, warn } from "../shared/util";
 import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
 import { JpegImage } from "./jpg";
+import { Stream } from "./stream";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves
@@ -26,7 +27,9 @@ class JpegStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  constructor(stream, maybeLength: number, params?) {
+  protected stream: Stream;
+
+  constructor(stream: Stream, maybeLength: number, params?) {
     super(maybeLength);
 
     this.stream = stream;

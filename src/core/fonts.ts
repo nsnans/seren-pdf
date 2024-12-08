@@ -3546,7 +3546,7 @@ class Font {
    * @param {String} chars string encoded with font encoding.
    * @returns {Array<Array<number>>} the positions of each char in the string.
    */
-  getCharPositions(chars: string) {
+  getCharPositions(chars: string): [number, number][] {
     // This function doesn't use a cache because
     // it's called only when saving or printing.
     const positions = [];
@@ -3652,6 +3652,8 @@ class ErrorFont {
   readonly isCharBBox: null = null;
 
   readonly bbox: null = null;
+
+  readonly descent: null = null;
 
   constructor(error: string) {
     this.error = error;

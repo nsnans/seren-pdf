@@ -18,6 +18,7 @@ import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
 import { Jbig2Image } from "./jbig2";
 import { shadow } from "../shared/util";
+import { Stream } from "./stream";
 
 /**
  * For JBIG2's we use a library to decode these images and
@@ -30,7 +31,7 @@ class Jbig2Stream extends DecodeStream {
   protected maybeLength: number;
   protected params;
 
-  constructor(stream, maybeLength: number, params) {
+  constructor(stream: Stream, maybeLength: number, params) {
     super(maybeLength);
 
     this.stream = stream;
@@ -44,7 +45,7 @@ class Jbig2Stream extends DecodeStream {
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
 
-  ensureBuffer(requested) {
+  ensureBuffer(_requested) {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
   }

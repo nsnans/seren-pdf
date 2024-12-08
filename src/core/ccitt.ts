@@ -509,7 +509,15 @@ class CCITTFaxDecoder {
 
   protected err = false;
 
-  constructor(source: CCITTFaxDecoderSource, options = {}) {
+  constructor(source: CCITTFaxDecoderSource, options: {
+    K?: number,
+    EndOfLine?: boolean,
+    EncodedByteAlign?: boolean,
+    Columns?: number,
+    Rows?: number,
+    EndOfBlock?: boolean,
+    BlackIs1?: boolean
+  } = {}) {
     if (!source || typeof source.next !== "function") {
       throw new Error('CCITTFaxDecoder - invalid "source" parameter.');
     }

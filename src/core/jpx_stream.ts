@@ -16,6 +16,7 @@
 import { DecodeStream } from "./decode_stream";
 import { JpxImage } from "./jpx";
 import { shadow } from "../shared/util";
+import { Stream } from "./stream";
 
 /**
  * For JPEG 2000's we use a library to decode these images and
@@ -25,7 +26,9 @@ class JpxStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  constructor(stream, maybeLength, params) {
+  protected stream: Stream;
+
+  constructor(stream: Stream, maybeLength: number, params) {
     super(maybeLength);
 
     this.stream = stream;

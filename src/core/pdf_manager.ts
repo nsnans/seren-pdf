@@ -139,7 +139,7 @@ abstract class BasePDFManager implements PDFManager {
   };
 
   get docBaseUrl() {
-    return this._docBaseUrl;
+    return this._docBaseUrl!;
   }
 
   get catalog() {

@@ -16,6 +16,7 @@
 import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
 import { FormatError } from "../shared/util";
+import { Stream } from "./stream";
 
 class PredictorStream extends DecodeStream {
 
@@ -23,7 +24,7 @@ class PredictorStream extends DecodeStream {
 
   protected rowBytes: number;
 
-  constructor(str, maybeLength, params) {
+  constructor(str: Stream, maybeLength: number, params) {
     super(maybeLength);
 
     if (!(params instanceof Dict)) {

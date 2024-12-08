@@ -132,7 +132,7 @@ function arrayBuffersToBytes(arr: Array<ArrayBuffer>): Uint8Array {
  *   levels of the tree. The default value is `true`.
  */
 function getInheritableProperty(
-  dict: Dict,
+  dict: Dict | Ref,
   key: string,
   getArray = false,
   stopWhenFound = true

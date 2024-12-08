@@ -376,6 +376,11 @@ export enum DictKey {
   Length2 = "Length2",
   Length3 = "Length3",
   CharProcs = "CharProcs",
+  EndOfLine = "EndOfLine",
+  EncodedByteAlign = "EncodedByteAlign",
+  Rows = "Rows",
+  EndOfBlock = "EndOfBlock",
+  BlackIs1 = "BlackIs1",
 }
 
 /**
@@ -422,7 +427,7 @@ type DictValueTypeMapping = {
   [DictKey.DP]: "DP",
   [DictKey.DR]: Dict,
   [DictKey.DW]: number,
-  [DictKey.D]: number[] | Dict,
+  [DictKey.D]: number[] | Dict | Name,
   [DictKey.DecodeParms]: "DecodeParms",
   [DictKey.Decode]: number[],
   [DictKey.Desc]: string,
@@ -477,7 +482,7 @@ type DictValueTypeMapping = {
   [DictKey.JBIG2Globals]: BaseStream,
   [DictKey.JS]: BaseStream | string,
   [DictKey.JavaScript]: string,
-  [DictKey.K]: Dict,
+  [DictKey.K]: Dict | number,
   [DictKey.Kids]: (string | Dict | Ref)[], // 某种类型的数组，具体还要仔细分析
   [DictKey.LE]: Name[],
   [DictKey.L]: RectType,
@@ -670,6 +675,11 @@ type DictValueTypeMapping = {
   [DictKey.Length2]: number,
   [DictKey.Length3]: number,
   [DictKey.CharProcs]: Dict,
+  [DictKey.EndOfLine]: boolean,
+  [DictKey.EncodedByteAlign]: boolean,
+  [DictKey.Rows]: number,
+  [DictKey.EndOfBlock]: boolean,
+  [DictKey.BlackIs1]: boolean,
 }
 
 
