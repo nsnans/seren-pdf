@@ -226,7 +226,7 @@ function getXfaFontWidths(name: string) {
   const { baseWidths, baseMapping, factors } = info;
   const rescaledBaseWidths = !factors
     ? baseWidths
-    : baseWidths.map((w, i) => w * factors[i]);
+    : baseWidths.map((w: number, i: number) => w * factors[i]);
 
   let currentCode = -2;
   let currentArray;
@@ -245,13 +245,13 @@ function getXfaFontWidths(name: string) {
   const newWidths = [];
   for (const [unicode, glyphIndex] of baseMapping
     .map(
-      (charUnicode, index) => [
+      (charUnicode: number, index: number) => [
         charUnicode,
         index,
       ] /* collect unicode and glyph index */
     )
     .sort(
-      ([unicode1], [unicode2]) =>
+      ([unicode1]: [number], [unicode2]: [number]) =>
         unicode1 - unicode2 /* order by unicode only */
     )) {
     if (unicode === -1) {
@@ -259,7 +259,7 @@ function getXfaFontWidths(name: string) {
     }
 
     if (unicode === currentCode + 1) {
-      currentArray.push(rescaledBaseWidths[glyphIndex]);
+      currentArray!.push(rescaledBaseWidths[glyphIndex]);
       currentCode += 1;
     } else {
       currentCode = unicode;
@@ -278,7 +278,7 @@ function getXfaFontDict(name: string) {
   dict.set(DictKey.Type, Name.get("Font"));
   dict.set(DictKey.Subtype, Name.get("CIDFontType2"));
   dict.set(DictKey.Encoding, Name.get("Identity-H"));
-  dict.set(DictKey.CIDToGIDMap, Name.get("Identity"));
+  dict.set(DictKey.CIDToGIDMap, Name.get("Identity")!);
   dict.set(DictKey.W, widths);
   dict.set(DictKey.FirstChar, widths[0]);
   dict.set(DictKey.LastChar, widths.at(-2) + widths.at(-1).length - 1);

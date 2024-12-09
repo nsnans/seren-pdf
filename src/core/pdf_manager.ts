@@ -23,6 +23,7 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
+import { Catalog } from "./catalog";
 import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";
 import { Page, PDFDocument } from "./document";
@@ -65,6 +66,8 @@ interface PDFManager {
   evaluatorOptions: DocParamEvaluatorOptions;
 
   docBaseUrl: string;
+
+  catalog: Catalog;
 
   getPage(pageIndex: number): Promise<Page>;
 

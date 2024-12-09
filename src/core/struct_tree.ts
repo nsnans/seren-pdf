@@ -19,6 +19,7 @@ import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { writeObject } from "./writer";
 import { PDFManager } from "./pdf_manager";
+import { XRef } from "./xref";
 
 const MAX_DEPTH = 40;
 
@@ -126,19 +127,19 @@ class StructTreeRoot {
     return true;
   }
 
-  static async createStructureTree({
-    newAnnotationsByPage,
-    xref,
-    catalogRef,
-    pdfManager,
+  static async createStructureTree(
+    newAnnotationsByPage: Map<number, Record<string, any>[]>,
+    xref: XRef,
+    catalogRef: Ref,
+    pdfManager: PDFManager,
     newRefs,
-  }) {
+  ) {
     const root = pdfManager.catalog.cloneDict();
     const cache = new RefSetCache();
     cache.put(catalogRef, root);
 
     const structTreeRootRef = xref.getNewTemporaryRef();
-    root.set("StructTreeRoot", structTreeRootRef);
+    root.set(DictKey.StructTreeRoot, structTreeRootRef);
 
     const structTreeRoot = new Dict(xref);
     structTreeRoot.set(DictKey.Type, Name.get("StructTreeRoot"));
@@ -737,14 +738,14 @@ class StructTreePage {
     }
 
     const map = new Map();
-    const numberTree = new NumberTree(parentTree, this.rootDict.xref);
+    const numberTree = new NumberTree(parentTree, this.rootDict.xref!);
 
     if (Number.isInteger(id)) {
       const parentArray = numberTree.get(id);
       if (Array.isArray(parentArray)) {
         for (const ref of parentArray) {
           if (ref instanceof Ref) {
-            this.addNode(this.rootDict.xref.fetch(ref), map);
+            this.addNode(this.rootDict.xref!.fetch(ref), map);
           }
         }
       }
@@ -756,7 +757,7 @@ class StructTreePage {
     for (const [elemId, type] of ids) {
       const obj = numberTree.get(elemId);
       if (obj) {
-        const elem = this.addNode(this.rootDict.xref.fetchIfRef(obj), map);
+        const elem = this.addNode(this.rootDict.xref!.fetchIfRef(obj), map);
         if (
           elem?.kids?.length === 1 &&
           elem.kids[0].type === StructElementType.OBJECT
@@ -770,7 +771,7 @@ class StructTreePage {
     }
   }
 
-  addNode(dict, map, level = 0) {
+  addNode(dict: Dict, map, level = 0) {
     if (level > MAX_DEPTH) {
       warn("StructTree MAX_DEPTH reached.");
       return null;
@@ -786,9 +787,9 @@ class StructTreePage {
     const element = new StructElementNode(this, dict);
     map.set(dict, element);
 
-    const parent = dict.getValue(DictKey.P);
+    const parent = <Dict>dict.getValue(DictKey.P);
 
-    if (!parent || isName(parent.get("Type"), "StructTreeRoot")) {
+    if (!parent || isName(parent.getValue(DictKey.Type), "StructTreeRoot")) {
       if (!this.addTopLevelNode(dict, element)) {
         map.delete(dict);
       }
@@ -813,7 +814,7 @@ class StructTreePage {
   }
 
   addTopLevelNode(dict, element) {
-    const obj = this.rootDict.get("K");
+    const obj = this.rootDict!.get(DictKey.K);
     if (!obj) {
       return false;
     }

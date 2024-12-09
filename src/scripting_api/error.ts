@@ -14,7 +14,7 @@
  */
 
 class NotSupportedError extends Error {
-  constructor(name) {
+  constructor(name: string) {
     super(`${name} isn't supported in PDF.js`);
     this.name = "NotSupportedError";
   }

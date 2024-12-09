@@ -272,7 +272,7 @@ class CFFParser {
       const fdArrayIndex = this.parseIndex(topDict.getByName("FDArray")).obj;
       for (let i = 0, ii = fdArrayIndex.count; i < ii; ++i) {
         const dictRaw = fdArrayIndex.get(i);
-        const fontDict = this.createDict(
+        const fontDict = <CFFTopDict>this.createDict(
           CFFTopDict,
           this.parseDict(dictRaw),
           cff.strings
@@ -1000,6 +1000,24 @@ class CFF {
 
   protected isCIDFont = false;
 
+  protected header;
+
+  protected names;
+
+  protected topDict;
+
+  protected globalSubrIndex;
+
+  protected encoding;
+
+  protected charset;
+
+  protected charStrings;
+
+  readonly fdArray: CFFDict[];
+
+  protected fdSelect;
+
   constructor() {
     this.header = null;
     this.names = [];
@@ -1031,7 +1049,7 @@ class CFF {
     }
   }
 
-  hasGlyphId(id) {
+  hasGlyphId(id: number) {
     if (id < 0 || id >= this.charStrings.count) {
       return false;
     }
@@ -1041,7 +1059,16 @@ class CFF {
 }
 
 class CFFHeader {
-  constructor(major, minor, hdrSize, offSize) {
+
+  protected hdrSize: number;
+
+  protected offSize: number;
+
+  protected major;
+
+  protected minor;
+
+  constructor(major: number, minor: number, hdrSize: number, offSize: number) {
     this.major = major;
     this.minor = minor;
     this.hdrSize = hdrSize;
@@ -1050,11 +1077,14 @@ class CFFHeader {
 }
 
 class CFFStrings {
+
+  protected strings: string[];
+
   constructor() {
     this.strings = [];
   }
 
-  get(index) {
+  get(index: number) {
     if (index >= 0 && index <= NUM_STANDARD_CFF_STRINGS - 1) {
       return CFFStandardStrings[index];
     }
@@ -1064,7 +1094,7 @@ class CFFStrings {
     return CFFStandardStrings[0];
   }
 
-  getSID(str) {
+  getSID(str: string) {
     let index = CFFStandardStrings.indexOf(str);
     if (index !== -1) {
       return index;
@@ -1076,7 +1106,7 @@ class CFFStrings {
     return -1;
   }
 
-  add(value) {
+  add(value: string) {
     this.strings.push(value);
   }
 
@@ -1089,6 +1119,8 @@ class CFFIndex {
 
   protected length = 0;
 
+  protected objects: Uint8Array[];
+
   constructor() {
     this.objects = [];
     this.length = 0;
@@ -1099,7 +1131,8 @@ class CFFIndex {
     this.objects.push(data);
   }
 
-  set(index: number, data) {
+  // data类型不是一个准确的推测
+  set(index: number, data: Uint8Array) {
     this.length += data.length - this.objects[index].length;
     this.objects[index] = data;
   }

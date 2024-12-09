@@ -381,6 +381,7 @@ export enum DictKey {
   Rows = "Rows",
   EndOfBlock = "EndOfBlock",
   BlackIs1 = "BlackIs1",
+  StructParents = "StructParents",
 }
 
 /**
@@ -517,7 +518,7 @@ type DictValueTypeMapping = {
   [DictKey.Ordering]: string,
   [DictKey.Outlines]: Dict,
   [DictKey.PMD]: unknown, // 这个值只有一处读取，没有具体的写入，给个unknown吧
-  [DictKey.P]: string | number | Ref,
+  [DictKey.P]: string | number | Ref | Dict,
   [DictKey.PageLabels]: Dict | Ref,
   [DictKey.PageLayout]: Name,
   [DictKey.PageMode]: Name,
@@ -680,6 +681,7 @@ type DictValueTypeMapping = {
   [DictKey.Rows]: number,
   [DictKey.EndOfBlock]: boolean,
   [DictKey.BlackIs1]: boolean,
+  [DictKey.StructParents]: number
 }
 
 

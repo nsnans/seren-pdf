@@ -889,19 +889,19 @@ const getSupplementalGlyphMapForCalibri = getLookupTableFactory(function (t) {
   t[1086] = 45;
 });
 
-function getStandardFontName(name) {
+function getStandardFontName(name: string) {
   const fontName = normalizeFontName(name);
   const stdFontMap = getStdFontMap() as Record<string, string>;
   return stdFontMap[fontName];
 }
 
-function isKnownFontName(name) {
+function isKnownFontName(name: string) {
   const fontName = normalizeFontName(name);
   return !!(
-    getStdFontMap()[fontName] ||
-    getNonStdFontMap()[fontName] ||
-    getSerifFonts()[fontName] ||
-    getSymbolsFonts()[fontName]
+    getStdFontMap()![fontName] ||
+    getNonStdFontMap()![fontName] ||
+    getSerifFonts()![fontName] ||
+    getSymbolsFonts()![fontName]
   );
 }
 

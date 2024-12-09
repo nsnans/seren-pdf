@@ -611,13 +611,13 @@ class WorkerMessageHandler {
             // No structTreeRoot exists, so we need to create one.
             promises.push(
               Promise.all(newAnnotationPromises).then(async newRefs => {
-                await StructTreeRoot.createStructureTree({
+                await StructTreeRoot.createStructureTree(
                   newAnnotationsByPage,
                   xref,
                   catalogRef,
-                  pdfManager,
+                  pdfManager!,
                   newRefs,
-                });
+                );
                 return newRefs;
               })
             );

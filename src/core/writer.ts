@@ -99,7 +99,7 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
         }
       }
       if (newFilter) {
-        dict.set(DictKey.Filter, newFilter);
+        dict.set(DictKey.Filter, <Name | Name[]>newFilter!);
       }
       if (newParams) {
         dict.set(DictKey.DecodeParms, newParams);
@@ -174,7 +174,7 @@ function writeString(string: string, offset: number, buffer: Uint8Array) {
   }
 }
 
-function computeMD5(filesize, xrefInfo) {
+function computeMD5(filesize: number, xrefInfo) {
   const time = Math.floor(Date.now() / 1000);
   const filename = xrefInfo.filename || "";
   const md5Buffer = [time.toString(), filename, filesize.toString()];

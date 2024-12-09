@@ -108,7 +108,7 @@ class CFFFont {
     return charCodeToGlyphId;
   }
 
-  hasGlyphId(id) {
+  hasGlyphId(id: number) {
     return this.cff.hasGlyphId(id);
   }
 

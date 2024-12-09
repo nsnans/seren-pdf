@@ -370,8 +370,8 @@ export class XRef {
       }
 
       this.streamState = {
-        entryRanges: range,
-        byteWidths,
+        entryRanges: <[number, number]>range,
+        byteWidths: <[number, number, number]>byteWidths,
         entryNum: 0,
         streamPos: stream.pos,
       };
@@ -975,7 +975,7 @@ export class XRef {
       throw new FormatError("bad ObjStm stream");
     }
     const first = stream.dict!.getValue(DictKey.First);
-    const n = stream.dict!.getValue(DictKey.N);
+    const n = <number>stream.dict!.getValue(DictKey.N);
     if (!Number.isInteger(first) || !Number.isInteger(n)) {
       throw new FormatError("invalid first and n parameters for ObjStm stream");
     }
@@ -1004,7 +1004,7 @@ export class XRef {
       offsets[i] = offset;
     }
 
-    const start = (stream.start || 0) + first;
+    const start = (stream.start || 0) + <number>first;
     const entries = new Array(n);
     // read stream objects for cache
     for (let i = 0; i < n; ++i) {
