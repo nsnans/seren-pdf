@@ -48,13 +48,13 @@ export class Name {
     this.name = name;
   }
 
-  static get(name: string) {
+  static get(name: string): Name {
     // eslint-disable-next-line no-restricted-syntax
     const cache = NameCache.get(name);
     if (!cache) {
       NameCache.set(name, new Name(name))
     }
-    return NameCache.get(name);
+    return NameCache.get(name)!;
   }
 }
 

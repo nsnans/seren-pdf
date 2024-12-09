@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   FontRenderOps,
@@ -34,10 +35,7 @@ class FontLoader {
     this._document = ownerDocument;
 
     this.nativeFontFaces = new Set();
-    this.styleElement =
-      typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")
-        ? styleElement
-        : null;
+    this.styleElement = PlatformHelper.isTesting() ? styleElement : null;
 
     if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
       this.loadingRequests = [];

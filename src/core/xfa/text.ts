@@ -84,6 +84,8 @@ class FontInfo {
 }
 
 class FontSelector {
+
+  protected stack: FontInfo[];
   constructor(
     defaultXfaFont,
     defaultParaMargin,

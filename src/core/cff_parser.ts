@@ -28,6 +28,7 @@ import {
   ISOAdobeCharset,
 } from "./charsets";
 import { ExpertEncoding, StandardEncoding } from "./encodings";
+import { Stream } from "./stream";
 
 // Maximum subroutine call depth of type 2 charstrings. Matches OTS.
 const MAX_SUBR_NESTING = 10;
@@ -199,7 +200,7 @@ const CharstringValidationData12 = [
     id: "mul",
     min: 2,
     stackDelta: -1,
-    stackFn(stack, index) {
+    stackFn(stack: number[], index: number) {
       stack[index - 2] = stack[index - 2] * stack[index - 1];
     },
   },
@@ -219,7 +220,8 @@ const CharstringValidationData12 = [
 ];
 
 class CFFParser {
-  constructor(file, properties, seacAnalysisEnabled) {
+
+  constructor(file: Stream, properties, seacAnalysisEnabled) {
     this.bytes = file.getBytes();
     this.properties = properties;
     this.seacAnalysisEnabled = !!seacAnalysisEnabled;
