@@ -14,6 +14,7 @@
  */
 
 import { warn } from "../../shared/util";
+import { ErrorFont, Font } from "../fonts";
 import { Binder } from "./bind";
 import { Root } from "./builder";
 import { DataHandler } from "./data";
@@ -97,7 +98,7 @@ class XFAFactory {
     this.form.globalData.images = images;
   }
 
-  setFonts(fonts) {
+  setFonts(fonts: (Font | ErrorFont)[]) {
     this.form.globalData.fontFinder = new FontFinder(fonts);
     const missingFonts = [];
     for (let typeface of this.form.globalData.usedTypefaces) {

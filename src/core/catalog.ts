@@ -56,6 +56,7 @@ import { StructTreeRoot } from "./struct_tree";
 import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
 import { MessageHandler } from "../shared/message_handler";
+import { FontSubstitutionInfo } from "./font_substitutions";
 
 function isValidExplicitDest(dest) {
   if (!Array.isArray(dest) || dest.length < 2) {
@@ -148,8 +149,7 @@ export class Catalog {
 
   public nonBlendModesSet = new RefSet();
 
-  // TODO 这里面参数可能是 substitution，可以在修复完毕的时候，改成substitution试试看
-  public systemFontCache = new Map<string, any>();
+  public systemFontCache = new Map<string, FontSubstitutionInfo | null>();
 
   protected _catDict: Dict;
 

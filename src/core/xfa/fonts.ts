@@ -17,8 +17,11 @@ import { warn } from "../../shared/util";
 import { stripQuotes } from "./utils";
 
 class FontFinder {
+
   protected fonts = new Map();
+
   protected cache = new Map();
+  
   protected warned = new Set();
   
   constructor(pdfFonts) {

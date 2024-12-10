@@ -60,7 +60,9 @@ import {
 import { calculateMD5 } from "./crypto";
 import { DatasetReader } from "./dataset_reader";
 import { StreamsSequenceStream } from "./decode_stream";
-import { PartialEvaluator } from "./evaluator";
+import { CssFontInfo, PartialEvaluator } from "./evaluator";
+import { FontSubstitutionInfo } from "./font_substitutions";
+import { ErrorFont, Font } from "./fonts";
 import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 import { GlobalImageCache } from "./image_utils";
 import { ObjectLoader } from "./object_loader";
@@ -88,22 +90,6 @@ import { XRef } from "./xref";
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
 
-interface PageConstructOptions {
-  pdfManager: PDFManager
-  xref: XRef,
-  pageIndex: number,
-  pageDict: Dict,
-  ref: Ref | null,
-  globalIdFactory: GlobalIdFactory,
-  fontCache: RefSetCache,
-  builtInCMapCache: Map<string, any>,
-  standardFontDataCache: Map<string, any>,
-  globalImageCache: GlobalImageCache,
-  systemFontCache: Map<string, any>,
-  nonBlendModesSet: RefSet,
-  xfaFactory: XFAFactory | null,
-}
-
 class Page {
 
   protected pdfManager: PDFManager;
@@ -124,7 +110,7 @@ class Page {
 
   protected xref: XRef;
 
-  protected systemFontCache;
+  protected systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
   protected nonBlendModesSet: RefSet;
 
@@ -136,21 +122,21 @@ class Page {
 
   protected xfaFactory: XFAFactory | null;
 
-  constructor({
-    pdfManager,
-    xref,
-    pageIndex,
-    pageDict,
-    ref,
-    globalIdFactory,
-    fontCache,
-    builtInCMapCache,
-    standardFontDataCache,
-    globalImageCache,
-    systemFontCache,
-    nonBlendModesSet,
-    xfaFactory,
-  }: PageConstructOptions) {
+  constructor(
+    pdfManager: PDFManager,
+    xref: XRef,
+    pageIndex: number,
+    pageDict: Dict,
+    ref: Ref | null,
+    globalIdFactory: GlobalIdFactory,
+    fontCache: RefSetCache,
+    builtInCMapCache: Map<string, any>,
+    standardFontDataCache: Map<string, any>,
+    globalImageCache: GlobalImageCache,
+    systemFontCache: Map<string, FontSubstitutionInfo | null>,
+    nonBlendModesSet: RefSet,
+    xfaFactory: XFAFactory | null,
+  ) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
     this.pageDict = pageDict;
@@ -1337,7 +1323,7 @@ class PDFDocument {
       options,
     );
     const operatorList = new OperatorList();
-    const pdfFonts = [];
+    const pdfFonts: (Font | ErrorFont)[] = [];
     const initialState = {
       get font() {
         return pdfFonts.at(-1);
@@ -1438,7 +1424,7 @@ class PDFDocument {
               task,
               initialState,
               /* fallbackFontDict = */ dict,
-              /* cssFontInfo = */ {
+              /* cssFontInfo = */ <CssFontInfo>{
                 fontFamily: missing,
                 fontWeight: fontInfo.fontWeight,
                 italicAngle: fontInfo.italicAngle,
@@ -1699,21 +1685,21 @@ class PDFDocument {
     // 这种promise最好不要复用，因为类型都变了
     // eslint-disable-next-line arrow-body-style
     const pagePromise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
-      return new Page({
-        pdfManager: this.pdfManager,
-        xref: this.xref,
+      return new Page(
+        this.pdfManager,
+        this.xref,
         pageIndex,
         pageDict,
         ref,
-        globalIdFactory: this._globalIdFactory,
-        fontCache: catalog.fontCache,
-        builtInCMapCache: catalog.builtInCMapCache,
-        standardFontDataCache: catalog.standardFontDataCache,
-        globalImageCache: catalog.globalImageCache,
-        systemFontCache: catalog.systemFontCache,
-        nonBlendModesSet: catalog.nonBlendModesSet,
+        this._globalIdFactory,
+        catalog.fontCache,
+        catalog.builtInCMapCache,
+        catalog.standardFontDataCache,
+        catalog.globalImageCache,
+        catalog.systemFontCache,
+        catalog.nonBlendModesSet,
         xfaFactory,
-      });
+      );
     });
 
     this._pagePromises.set(pageIndex, pagePromise);
@@ -1799,21 +1785,21 @@ class PDFDocument {
           promise.catch(() => { });
         } else {
           promise = Promise.resolve(
-            new Page({
+            new Page(
               pdfManager,
-              xref: this.xref,
+              this.xref,
               pageIndex,
               pageDict,
               ref,
-              globalIdFactory: this._globalIdFactory,
-              fontCache: catalog.fontCache,
-              builtInCMapCache: catalog.builtInCMapCache,
-              standardFontDataCache: catalog.standardFontDataCache,
-              globalImageCache: catalog.globalImageCache,
-              systemFontCache: catalog.systemFontCache,
-              nonBlendModesSet: catalog.nonBlendModesSet,
-              xfaFactory: null,
-            })
+              this._globalIdFactory,
+              catalog.fontCache,
+              catalog.builtInCMapCache,
+              catalog.standardFontDataCache,
+              catalog.globalImageCache,
+              catalog.systemFontCache,
+              catalog.nonBlendModesSet,
+              null,
+            )
           );
         }
 

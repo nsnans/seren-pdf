@@ -28,6 +28,7 @@ import {
   ISOAdobeCharset,
 } from "./charsets";
 import { ExpertEncoding, StandardEncoding } from "./encodings";
+import { EvaluatorProperties } from "./evaluator";
 import { Stream } from "./stream";
 
 // Maximum subroutine call depth of type 2 charstrings. Matches OTS.
@@ -221,7 +222,7 @@ const CharstringValidationData12 = [
 
 class CFFParser {
 
-  constructor(file: Stream, properties, seacAnalysisEnabled) {
+  constructor(file: Stream, properties: EvaluatorProperties, seacAnalysisEnabled: boolean) {
     this.bytes = file.getBytes();
     this.properties = properties;
     this.seacAnalysisEnabled = !!seacAnalysisEnabled;

@@ -38,7 +38,7 @@ import {
 import { TypedArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
-import { CMapFactory, IdentityCMap } from "./cmap";
+import { CMap, CMapFactory, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
 import { DefaultTextContentItem, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
@@ -51,7 +51,7 @@ import {
   WinAnsiEncoding,
   ZapfDingbatsEncoding,
 } from "./encodings";
-import { getFontSubstitution } from "./font_substitutions";
+import { FontSubstitutionInfo, getFontSubstitution } from "./font_substitutions";
 import { ErrorFont, Font, Glyph } from "./fonts";
 import { FontFlags } from "./fonts_utils";
 import { isPDFFunction, PDFFunctionFactory } from "./function";
@@ -91,6 +91,63 @@ import { getUnicodeForGlyph } from "./unicode";
 import { WorkerTask } from "./worker";
 import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
+
+export interface EvaluatorProperties {
+  type: string;
+  name: string;
+  subtype: string | null;
+  loadedName: string | null;
+  systemFontInfo: FontSubstitutionInfo | null;
+  widths: number[];
+  defaultWidth: number;
+  isSimulatedFlags: boolean;
+  flags: number;
+  firstChar: number;
+  lastChar: number;
+  toUnicode: BaseStream | Name | ToUnicodeMap | IdentityToUnicodeMap;
+  xHeight: number;
+  capHeight: number;
+  italicAngle: number;
+  isType3Font: boolean;
+  isInternalFont?: boolean;
+  composite: boolean;
+  cidSystemInfo: {
+    registry: string,
+    ordering: string,
+    supplement: number,
+  } | null,
+  defaultEncoding: string[] | null;
+  file: BaseStream | null;
+  hasIncludedToUnicodeMap: boolean;
+  dict: Dict | null;
+  hasEncoding: boolean;
+  baseEncodingName: string | null;
+  differences: string[];
+  cidToGidMap: number[];
+  fallbackToUnicode: string[];
+  cMap: IdentityCMap | CMap | null;
+  vertical: boolean;
+  cidEncoding: string;
+  defaultVMetrics: number[];
+  vmetrics: number[][];
+  length1: any;
+  length2: any;
+  length3: any;
+  fixedPitch: boolean;
+  fontMatrix: TransformType | null;
+  bbox: RectType | null;
+  ascent: number | null;
+  descent: number | null;
+  cssFontInfo: CssFontInfo | null;
+  scaleFactors: number[] | null;
+}
+
+export interface CssFontInfo {
+  fontFamily: string,
+  fontWeight: number,
+  italicAngle: number,
+  metrics: { lineHeight: number, lineGap: number }
+}
 
 const DefaultDocParamEvaluatorOptions: DocParamEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
@@ -243,8 +300,7 @@ class PartialEvaluator {
 
   protected globalImageCache;
 
-  // 类型有待商榷
-  protected systemFontCache;
+  protected systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
   protected _regionalImageCache = new RegionalImageCache();
 
@@ -252,7 +308,7 @@ class PartialEvaluator {
 
   public options: DocParamEvaluatorOptions;
 
-  protected type3FontRefs: RefSet | null;
+  public type3FontRefs: RefSet | null;
 
   constructor(
     xref: XRef,
@@ -263,7 +319,7 @@ class PartialEvaluator {
     builtInCMapCache: Map<string, any>,
     standardFontDataCache: Map<string, any>,
     globalImageCache: GlobalImageCache,
-    systemFontCache: Map<string, Promise<Font>>,
+    systemFontCache: Map<string, FontSubstitutionInfo | null>,
     options: DocParamEvaluatorOptions | null = null,
   ) {
     this.xref = xref;
@@ -1108,7 +1164,7 @@ class PartialEvaluator {
     task: WorkerTask,
     state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
-    cssFontInfo = null
+    cssFontInfo: CssFontInfo | null = null
   ) {
     const fontName = fontArgs?.[0] instanceof Name ? fontArgs[0].name : null;
 
@@ -1299,7 +1355,7 @@ class PartialEvaluator {
     font: Ref | Dict | null,
     resources: Dict,
     fallbackFontDict: Dict | null = null,
-    cssFontInfo = null
+    cssFontInfo: CssFontInfo | null = null
   ): Promise<TranslatedFont> {
     // eslint-disable-next-line arrow-body-style
     const errorFont = async () => {
@@ -3551,11 +3607,11 @@ class PartialEvaluator {
     });
   }
 
-  async extractDataStructures(dict: Dict, properties) {
+  async extractDataStructures(dict: Dict, properties: EvaluatorProperties) {
     const xref = this.xref;
     let cidToGidBytes;
     // 9.10.2
-    const toUnicodePromise = this.readToUnicode(properties.toUnicode);
+    const toUnicodePromise = this.readToUnicode(<BaseStream>properties.toUnicode);
 
     if (properties.composite) {
       // CIDSystemInfo helps to match CID to glyphs
@@ -3676,7 +3732,7 @@ class PartialEvaluator {
     properties.hasEncoding = !!baseEncodingName || differences.length > 0;
     properties.dict = dict;
 
-    properties.toUnicode = await toUnicodePromise;
+    properties.toUnicode = (await toUnicodePromise)!;
 
     const builtToUnicode = await this.buildToUnicode(properties);
     properties.toUnicode = builtToUnicode;
@@ -3694,11 +3750,11 @@ class PartialEvaluator {
    * @returns {Array}
    * @private
    */
-  _simpleFontToUnicode(properties, forceGlyphs = false) {
+  _simpleFontToUnicode(properties: EvaluatorProperties, forceGlyphs = false): string[] {
     assert(!properties.composite, "Must be a simple font.");
 
     const toUnicode = <string[]>[];
-    const encoding = properties.defaultEncoding.slice();
+    const encoding = properties.defaultEncoding!.slice();
     const baseEncodingName = properties.baseEncodingName;
     // Merge in the differences array.
     const differences = properties.differences;
@@ -3789,7 +3845,7 @@ class PartialEvaluator {
           const baseEncoding = getEncoding(baseEncodingName);
           if (baseEncoding && (glyphName = baseEncoding[charcode])) {
             toUnicode[charcode] = String.fromCharCode(
-              glyphsUnicodeMap[glyphName]
+              glyphsUnicodeMap![glyphName]
             );
             continue;
           }
@@ -3806,8 +3862,8 @@ class PartialEvaluator {
    * @returns {Promise} A Promise that is resolved with a
    *   {ToUnicodeMap|IdentityToUnicodeMap} object.
    */
-  async buildToUnicode(properties): Promise<ToUnicodeMap | IdentityToUnicodeMap> {
-    properties.hasIncludedToUnicodeMap = properties.toUnicode?.length > 0;
+  async buildToUnicode(properties: EvaluatorProperties): Promise<ToUnicodeMap | IdentityToUnicodeMap> {
+    properties.hasIncludedToUnicodeMap = (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode)?.length > 0;
 
     // Section 9.10.2 Mapping Character Codes to Unicode Values
     if (properties.hasIncludedToUnicodeMap) {
@@ -3817,7 +3873,7 @@ class PartialEvaluator {
       if (!properties.composite && properties.hasEncoding) {
         properties.fallbackToUnicode = this._simpleFontToUnicode(properties);
       }
-      return properties.toUnicode;
+      return <ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode;
     }
 
     // According to the spec if the font is a simple font we should only map
@@ -3835,7 +3891,7 @@ class PartialEvaluator {
     // Adobe-Korea1 character collection:
     if (
       properties.composite &&
-      ((properties.cMap.builtInCMap &&
+      ((properties.cMap!.builtInCMap &&
         !(properties.cMap instanceof IdentityCMap)) ||
         // The font is supposed to have a CIDSystemInfo dictionary, but some
         // PDFs don't include it (fixes issue 17689), hence the `?'.
@@ -3851,7 +3907,7 @@ class PartialEvaluator {
       // b) Obtain the registry and ordering of the character collection used
       // by the font’s CMap (for example, Adobe and Japan1) from its
       // CIDSystemInfo dictionary.
-      const { registry, ordering } = properties.cidSystemInfo;
+      const { registry, ordering } = properties.cidSystemInfo!;
       // c) Construct a second CMap name by concatenating the registry and
       // ordering obtained in step (b) in the format registry–ordering–UCS2
       // (for example, Adobe–Japan1–UCS2).
@@ -3863,15 +3919,15 @@ class PartialEvaluator {
         fetchBuiltInCMap: this._fetchBuiltInCMapBound,
         useCMap: null,
       });
-      const toUnicode = [],
-        buf = [];
-      properties.cMap.forEach(function (charcode, cid) {
-        if (cid > 0xffff) {
+      const toUnicode: string[] = [];
+      const buf: number[] = [];
+      properties.cMap!.forEach(function (charcode, cid) {
+        if (<number>cid > 0xffff) {
           throw new FormatError("Max size of CID is 65,535");
         }
         // e) Map the CID obtained in step (a) according to the CMap
         // obtained in step (d), producing a Unicode value.
-        const ucs2 = ucs2CMap.lookup(cid);
+        const ucs2 = ucs2CMap.lookup(<number>cid);
         if (ucs2) {
           buf.length = 0;
           // Support multi-byte entries (fixes issue16176.pdf).
@@ -3902,7 +3958,7 @@ class PartialEvaluator {
       if (cmap instanceof IdentityCMap) {
         return new IdentityToUnicodeMap(0, 0xffff);
       }
-      return new ToUnicodeMap(cmap.getMap());
+      return new ToUnicodeMap(<string[]>cmap.getMap());
     }
     if (cmapObj instanceof BaseStream) {
       try {
@@ -3975,11 +4031,11 @@ class PartialEvaluator {
     return result;
   }
 
-  extractWidths(dict: Dict, descriptor: Dict, properties) {
+  extractWidths(dict: Dict, descriptor: Dict, properties: EvaluatorProperties) {
     const xref = this.xref;
-    let glyphsWidths = [];
+    let glyphsWidths: number[] = [];
     let defaultWidth = 0;
-    const glyphsVMetrics = [];
+    const glyphsVMetrics: number[][] = [];
     let defaultVMetrics;
     if (properties.composite) {
       const dw = dict.getValue(DictKey.DW);
@@ -4031,7 +4087,7 @@ class PartialEvaluator {
 
             if (Array.isArray(code)) {
               for (let j = 0, jj = code.length; j < jj; j++) {
-                const vmetric = [
+                const vmetric: number[] = [
                   xref.fetchIfRef(code[j++]),
                   xref.fetchIfRef(code[j++]),
                   xref.fetchIfRef(code[j]),
@@ -4110,7 +4166,7 @@ class PartialEvaluator {
 
     properties.defaultWidth = defaultWidth;
     properties.widths = glyphsWidths;
-    properties.defaultVMetrics = defaultVMetrics;
+    properties.defaultVMetrics = defaultVMetrics!;
     properties.vmetrics = glyphsVMetrics;
   }
 
@@ -4153,10 +4209,10 @@ class PartialEvaluator {
     };
   }
 
-  buildCharCodeToWidth(widthsByGlyphName: Record<string, number>, properties) {
-    const widths = Object.create(null);
+  buildCharCodeToWidth(widthsByGlyphName: Record<string, number>, properties: EvaluatorProperties) {
+    const widths = [];
     const differences = properties.differences;
-    const encoding = properties.defaultEncoding;
+    const encoding = properties.defaultEncoding!;
     for (let charCode = 0; charCode < 256; charCode++) {
       if (charCode in differences && widthsByGlyphName[differences[charCode]]) {
         widths[charCode] = widthsByGlyphName[differences[charCode]];
@@ -4318,6 +4374,7 @@ class PartialEvaluator {
       lastChar,
       toUnicode,
       hash: hash ? hash.hexdigest() : "",
+      cssFontInfo: null
     };
   }
 
@@ -4364,12 +4421,12 @@ class PartialEvaluator {
             ? FontFlags.Symbolic
             : FontFlags.Nonsymbolic);
 
-        const properties = {
+        const properties: EvaluatorProperties = {
           type,
           name: baseFontName,
           loadedName: baseDict.loadedName,
           systemFontInfo: null,
-          widths: metrics.widths,
+          widths: metrics.widths as any, // 又是属性的动态赋值引起的
           defaultWidth: metrics.defaultWidth,
           isSimulatedFlags: true,
           flags,
@@ -4380,6 +4437,33 @@ class PartialEvaluator {
           capHeight: 0,
           italicAngle: 0,
           isType3Font,
+          composite: false,
+          cidSystemInfo: null,
+          defaultEncoding: null,
+          file: null,
+          hasIncludedToUnicodeMap: false,
+          dict: null,
+          hasEncoding: false,
+          baseEncodingName: null,
+          differences: [],
+          cidToGidMap: [],
+          fallbackToUnicode: [],
+          cMap: null,
+          vertical: false,
+          cidEncoding: "",
+          defaultVMetrics: [],
+          vmetrics: [],
+          subtype: null,
+          length1: undefined,
+          length2: undefined,
+          length3: undefined,
+          fixedPitch: false,
+          fontMatrix: null,
+          bbox: null,
+          ascent: null,
+          descent: null,
+          cssFontInfo: null,
+          scaleFactors: null
         };
         const widths = dict.getValue(DictKey.Widths);
 
@@ -4534,7 +4618,7 @@ class PartialEvaluator {
       }
     }
 
-    const fontMatrix = lookupMatrix(
+    const fontMatrix = <TransformType>lookupMatrix(
       dict.getArrayValue(DictKey.FontMatrix),
       FONT_IDENTITY_MATRIX
     );
@@ -4567,10 +4651,10 @@ class PartialEvaluator {
       italicAngle = 0;
     }
 
-    const properties = {
+    const properties: EvaluatorProperties = {
       type,
       name: fontName.name,
-      subtype,
+      subtype: <string | null>subtype,
       file: fontFile,
       length1,
       length2,
@@ -4579,21 +4663,38 @@ class PartialEvaluator {
       loadedName: baseDict.loadedName,
       composite,
       fixedPitch: false,
-      fontMatrix,
+      fontMatrix: fontMatrix,
       firstChar,
       lastChar,
       toUnicode,
       bbox,
-      ascent,
-      descent,
+      ascent: <number | null>ascent,
+      descent: <number | null>descent,
       xHeight,
       capHeight,
       flags,
       italicAngle,
       isType3Font,
       cssFontInfo,
-      scaleFactors: glyphScaleFactors,
+      scaleFactors: <number[]>glyphScaleFactors,
       systemFontInfo,
+      widths: [],
+      defaultWidth: 0,
+      isSimulatedFlags: false,
+      cidSystemInfo: null,
+      defaultEncoding: null,
+      hasIncludedToUnicodeMap: false,
+      dict: null,
+      hasEncoding: false,
+      baseEncodingName: null,
+      differences: [],
+      cidToGidMap: [],
+      fallbackToUnicode: [],
+      cMap: null,
+      vertical: false,
+      cidEncoding: "",
+      defaultVMetrics: [],
+      vmetrics: []
     };
 
     if (composite) {

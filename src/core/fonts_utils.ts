@@ -18,6 +18,7 @@ import { getGlyphsUnicode } from "./glyphlist";
 import { getLookupTableFactory } from "./core_utils";
 import { getUnicodeForGlyph } from "./unicode";
 import { info } from "../shared/util";
+import { EvaluatorProperties } from "./evaluator";
 
 // Accented characters have issues on Windows and Linux. When this flag is
 // enabled glyphs that use seac and seac style endchar operators are truncated
@@ -108,7 +109,7 @@ function recoverGlyphName(name, glyphsUnicodeMap) {
  *   glyph ID.
  * @returns {Object} A char code to glyph ID map.
  */
-function type1FontGlyphMapping(properties, builtInEncoding, glyphNames) {
+function type1FontGlyphMapping(properties: EvaluatorProperties, builtInEncoding, glyphNames) {
   const charCodeToGlyphId = Object.create(null);
   let glyphId, charCode, baseEncoding;
   const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);

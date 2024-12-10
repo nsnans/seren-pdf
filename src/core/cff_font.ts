@@ -16,12 +16,15 @@
 import { CFF, CFFCompiler, CFFParser } from "./cff_parser";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
 import { warn } from "../shared/util";
+import { EvaluatorProperties } from "./evaluator";
 
 class CFFFont {
 
   protected cff: CFF;
 
-  constructor(file, properties) {
+  protected properties: EvaluatorProperties;
+
+  constructor(file, properties: EvaluatorProperties) {
     this.properties = properties;
 
     const parser = new CFFParser(file, properties, SEAC_ANALYSIS_ENABLED);

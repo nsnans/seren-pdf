@@ -1,6 +1,7 @@
 import { TransformType } from "../display/display_utils";
 import { StreamKind, wrapReason } from "../shared/message_handler";
 import { assert } from "../shared/util";
+import { CssFontInfo } from "./evaluator";
 import { Dict, Name, Ref } from "./primitives";
 
 export interface ImageMask {
@@ -135,7 +136,7 @@ export interface PreEvaluatedFont {
   lastChar: number;
   toUnicode: Name;
   hash: string;
-  cssFontInfo?: null;
+  cssFontInfo: CssFontInfo | null;
 }
 
 export interface TextContentItem {

@@ -13,11 +13,22 @@
  * limitations under the License.
  */
 
-import { normalizeFontName } from "./fonts_utils";
-import { validateFontName } from "./core_utils";
 import { warn } from "../shared/util";
+import { validateFontName } from "./core_utils";
+import { normalizeFontName } from "./fonts_utils";
 import { GlobalIdFactory } from "./global_id_factory";
-import { Font } from "./fonts";
+
+export interface FontSubstitutionInfo {
+  css: string;
+  guessFallback: boolean;
+  loadedName: string;
+  baseFontName: string;
+  src: string;
+  style: {
+    style: string;
+    weight: string;
+  } | null;
+}
 
 const NORMAL = {
   style: "normal",
@@ -463,7 +474,7 @@ function generateFont(
  * @returns an Object with the CSS, the loaded name, the src and the style.
  */
 function getFontSubstitution(
-  systemFontCache: Map<string, Promise<Font>>,
+  systemFontCache: Map<string, FontSubstitutionInfo | null>,
   idFactory: GlobalIdFactory,
   localFontPath: string,
   baseFontName: string,
@@ -487,7 +498,7 @@ function getFontSubstitution(
   baseFontName = normalizeFontName(baseFontName);
 
   const key = baseFontName;
-  let substitutionInfo = systemFontCache.get(key);
+  let substitutionInfo = <FontSubstitutionInfo | null>systemFontCache.get(key);
   if (substitutionInfo) {
     return substitutionInfo;
   }

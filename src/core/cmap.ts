@@ -207,7 +207,7 @@ class CMap {
 
   public vertical = false;
 
-  protected builtInCMap: boolean;
+  public builtInCMap: boolean;
 
   protected _map: (number | string)[];
 

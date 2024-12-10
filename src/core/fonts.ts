@@ -68,6 +68,7 @@ import { Type1Font } from "./type1_font";
 import { TransformType } from "../display/display_utils";
 import { OperatorListIR } from "./operator_list";
 import { DictKey } from "./primitives";
+import { EvaluatorProperties } from "./evaluator";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -225,7 +226,7 @@ function adjustType1ToUnicode(properties, builtInEncoding) {
  * NOTE: This function should only be called at the *end* of font-parsing,
  *       after e.g. `adjustType1ToUnicode` has run, to prevent any issues.
  */
-function amendFallbackToUnicode(properties) {
+function amendFallbackToUnicode(properties: EvaluatorProperties) {
   if (!properties.fallbackToUnicode) {
     return;
   }
@@ -402,7 +403,7 @@ function isCFFFile(file) {
   return false;
 }
 
-function getFontFileType(file, { type, subtype, composite }) {
+function getFontFileType(file, { type, subtype, composite }: EvaluatorProperties) {
   let fileType, fileSubtype;
 
   if (isTrueTypeFile(file) || isTrueTypeCollectionFile(file)) {
@@ -1020,7 +1021,7 @@ class Font {
   public isCharBBox: boolean | null = null;
   public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
 
-  constructor(name: string, file: Stream, properties) {
+  constructor(name: string, file: Stream, properties: EvaluatorProperties) {
     this.name = name;
     this.psName = null;
     this.mimetype = null;
@@ -1079,12 +1080,12 @@ class Font {
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
     this.composite = properties.composite;
-    this.cMap = properties.cMap;
+    this.cMap = properties.cMap!;
     this.capHeight = properties.capHeight / PDF_GLYPH_SPACE_UNITS;
-    this.ascent = properties.ascent / PDF_GLYPH_SPACE_UNITS;
-    this.descent = properties.descent / PDF_GLYPH_SPACE_UNITS;
+    this.ascent = properties.ascent! / PDF_GLYPH_SPACE_UNITS;
+    this.descent = properties.descent! / PDF_GLYPH_SPACE_UNITS;
     this.lineHeight = this.ascent - this.descent;
-    this.fontMatrix = properties.fontMatrix;
+    this.fontMatrix = properties.fontMatrix!;
     this.bbox = properties.bbox;
     this.defaultEncoding = properties.defaultEncoding;
 
@@ -1179,7 +1180,7 @@ class Font {
     // Transfer some properties again that could change during font conversion
     this.type = type;
     this.subtype = subtype;
-    this.fontMatrix = properties.fontMatrix;
+    this.fontMatrix = properties.fontMatrix!;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
     this.toUnicode = properties.toUnicode;
@@ -1208,7 +1209,7 @@ class Font {
     return data;
   }
 
-  fallbackToSystemFont(properties) {
+  fallbackToSystemFont(properties: EvaluatorProperties) {
     this.missingFile = true;
     // The file data is not specified. Trying to fix the font name
     // to be used with the canvas.font.
@@ -1359,7 +1360,7 @@ class Font {
     this.loadedName = fontName.split("-", 1)[0];
   }
 
-  checkAndRepair(name, font, properties) {
+  checkAndRepair(name, font, properties: EvaluatorProperties) {
     const VALID_TABLES = [
       "OS/2",
       "cmap",
