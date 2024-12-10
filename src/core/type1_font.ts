@@ -323,7 +323,7 @@ class Type1Font {
     return type2Subrs;
   }
 
-  wrap(name, glyphs, charstrings, subrs, properties) {
+  wrap(name, glyphs, charstrings, subrs, properties: EvaluatorProperties) {
     const cff = new CFF();
     cff.header = new CFFHeader(1, 0, 4, 4);
 

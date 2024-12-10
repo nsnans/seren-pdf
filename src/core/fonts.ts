@@ -138,7 +138,7 @@ function adjustWidths(properties: EvaluatorProperties) {
   properties.defaultWidth *= scale;
 }
 
-function adjustTrueTypeToUnicode(properties, isSymbolicFont, nameRecords) {
+function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont, nameRecords) {
   if (properties.isInternalFont) {
     return;
   }
@@ -187,7 +187,7 @@ function adjustTrueTypeToUnicode(properties, isSymbolicFont, nameRecords) {
   }
 }
 
-function adjustType1ToUnicode(properties, builtInEncoding) {
+function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding) {
   if (properties.isInternalFont) {
     return;
   }
@@ -765,7 +765,7 @@ function validateOS2Table(os2, file) {
   return true;
 }
 
-function createOS2Table(properties, charstrings, override) {
+function createOS2Table(properties: EvaluatorProperties, charstrings, override) {
   override ||= {
     unitsPerEm: 0,
     yMax: 0,
@@ -836,7 +836,7 @@ function createOS2Table(properties, charstrings, override) {
     override.ascent || Math.round(scale * (properties.ascent || bbox[3]));
   let typoDescent =
     override.descent || Math.round(scale * (properties.descent || bbox[1]));
-  if (typoDescent > 0 && properties.descent > 0 && bbox[1] < 0) {
+  if (typoDescent > 0 && properties.descent! > 0 && bbox[1] < 0) {
     typoDescent = -typoDescent; // fixing incorrect descent
   }
   const winAscent = override.yMax || typoAscent;
@@ -2255,7 +2255,7 @@ class Font {
       };
     }
 
-    function readPostScriptTable(post, propertiesObj, maxpNumGlyphs) {
+    function readPostScriptTable(post, propertiesObj: EvaluatorProperties, maxpNumGlyphs) {
       const start = (font.start || 0) + post.offset;
       font.pos = start;
 
@@ -3162,7 +3162,7 @@ class Font {
     return builder.toArray();
   }
 
-  convert(fontName, font, properties) {
+  convert(fontName, font, properties: EvaluatorProperties) {
     // TODO: Check the charstring widths to determine this.
     properties.fixedPitch = false;
 

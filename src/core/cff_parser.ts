@@ -222,6 +222,8 @@ const CharstringValidationData12 = [
 
 class CFFParser {
 
+  protected properties: EvaluatorProperties;
+
   constructor(file: Stream, properties: EvaluatorProperties, seacAnalysisEnabled: boolean) {
     this.bytes = file.getBytes();
     this.properties = properties;
@@ -883,7 +885,7 @@ class CFFParser {
     return new CFFCharset(false, format, charset, raw);
   }
 
-  parseEncoding(pos, properties, strings, charset) {
+  parseEncoding(pos, _properties: EvaluatorProperties, strings, charset) {
     const encoding = Object.create(null);
     const bytes = this.bytes;
     let predefined = false;
