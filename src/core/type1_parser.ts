@@ -17,6 +17,7 @@ import { getEncoding } from "./encodings";
 import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 import { warn } from "../shared/util";
+import { EvaluatorProperties } from "./evaluator";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -554,7 +555,7 @@ class Type1Parser {
    * Returns an object containing a Subrs array and a CharStrings
    * array extracted from and eexec encrypted block of data
    */
-  extractFontProgram(properties) {
+  extractFontProgram(properties: EvaluatorProperties) {
     const stream = this.stream;
 
     const subrs = [],
@@ -718,7 +719,7 @@ class Type1Parser {
     return program;
   }
 
-  extractFontHeader(properties) {
+  extractFontHeader(properties: EvaluatorProperties) {
     let token;
     while ((token = this.getToken()) !== null) {
       if (token !== "/") {

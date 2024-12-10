@@ -29,6 +29,7 @@ import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
 import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 import { Type1Parser } from "./type1_parser";
+import { EvaluatorProperties } from "./evaluator";
 
 function findBlock(streamBytes, signature, startIndex) {
   const streamBytesLength = streamBytes.length;
@@ -153,7 +154,7 @@ function getEexecBlock(stream, suggestedLength) {
  * Type1Font is also a CIDFontType0.
  */
 class Type1Font {
-  constructor(name, file, properties) {
+  constructor(name, file, properties: EvaluatorProperties) {
     // Some bad generators embed pfb file as is, we have to strip 6-byte header.
     // Also, length1 and length2 might be off by 6 bytes as well.
     // http://www.math.ubc.ca/~cass/piscript/type1.pdf
@@ -228,7 +229,7 @@ class Type1Font {
     return charset;
   }
 
-  getGlyphMapping(properties) {
+  getGlyphMapping(properties: EvaluatorProperties) {
     const charstrings = this.charstrings;
 
     if (properties.composite) {

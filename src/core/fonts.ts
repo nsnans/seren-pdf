@@ -122,7 +122,7 @@ const EXPORT_DATA_EXTRA_PROPERTIES = [
   "widths",
 ];
 
-function adjustWidths(properties) {
+function adjustWidths(properties: EvaluatorProperties) {
   if (!properties.fontMatrix) {
     return;
   }
@@ -885,7 +885,7 @@ function createOS2Table(properties, charstrings, override) {
   ); // usMaxContext
 }
 
-function createPostTable(properties) {
+function createPostTable(properties: EvaluatorProperties) {
   const angle = Math.floor(properties.italicAngle * 2 ** 16);
   return (
     "\x00\x03\x00\x00" + // Version number

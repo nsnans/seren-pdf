@@ -123,7 +123,7 @@ function type1FontGlyphMapping(properties: EvaluatorProperties, builtInEncoding,
   } else if (properties.baseEncodingName) {
     // If a valid base encoding name was used, the mapping is initialized with
     // that.
-    baseEncoding = getEncoding(properties.baseEncodingName);
+    baseEncoding = getEncoding(properties.baseEncodingName)!;
     for (charCode = 0; charCode < baseEncoding.length; charCode++) {
       glyphId = glyphNames.indexOf(baseEncoding[charCode]);
       charCodeToGlyphId[charCode] = glyphId >= 0 ? glyphId : /* notdef = */ 0;
