@@ -362,7 +362,7 @@ class CFFParser {
     return { obj: header, endPos: hdrSize };
   }
 
-  parseDict(dict: Uint8Array) {
+  parseDict(dict: Uint8Array | number[]) {
     let pos = 0;
 
     function parseOperand() {
@@ -416,7 +416,7 @@ class CFFParser {
     }
 
     let operands = [];
-    const entries = [];
+    const entries: [number, number[]][] = [];
 
     pos = 0;
     const end = dict.length;
@@ -471,7 +471,7 @@ class CFFParser {
     const names = [];
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const name = index.get(i);
-      names.push(bytesToString(name));
+      names.push(bytesToString(<Uint8Array>name));
     }
     return names;
   }
@@ -480,21 +480,21 @@ class CFFParser {
     const strings = new CFFStrings();
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const data = index.get(i);
-      strings.add(bytesToString(data));
+      strings.add(bytesToString(<Uint8Array>data));
     }
     return strings;
   }
 
   createDict<T extends CFFDict>(Type: new (...args: any) => T
-    , dict: (number | number[])[][], strings: CFFStrings): T {
+    , dict: ((number | number[])[])[], strings: CFFStrings): T {
     const cffDict = new Type(strings);
     for (const [key, value] of dict) {
-      cffDict.setByKey(key, value);
+      cffDict.setByKey(<number>key, <number[]>value);
     }
     return cffDict;
   }
 
-  parseCharString(state, data: Uint8Array, localSubrIndex: CFFIndex, globalSubrIndex: CFFIndex) {
+  parseCharString(state, data: Uint8Array | number[], localSubrIndex: CFFIndex, globalSubrIndex: CFFIndex) {
     if (!data || state.callDepth > MAX_SUBR_NESTING) {
       return false;
     }
@@ -1163,25 +1163,34 @@ class CFFIndex {
   }
 }
 
+type CFFDictTable = {
+  keyToNameMap: Record<number, string>;
+  nameToKeyMap: Record<string, number>;
+  defaults: Record<number, number | number[] | null>;
+  types: Record<number, string | string[]>;
+  opcodes: Record<number, Array<number>>;
+  order: number[];
+}
+
 class CFFDict {
 
   public strings: CFFStrings;
 
-  public keyToNameMap;
+  public keyToNameMap: Record<number, string>;
 
-  public nameToKeyMap;
+  public nameToKeyMap: Record<string, number>;
 
-  public defaults;
+  public defaults: Record<number, number | number[] | null>;
 
-  public types;
+  public types: Record<number, string | string[]>;
 
-  public opcodes;
+  public opcodes: Record<number, number[]>;
 
-  public order;
+  public order: number[];
 
   public values;
 
-  constructor(tables, strings: CFFStrings) {
+  constructor(tables: CFFDictTable, strings: CFFStrings) {
     this.keyToNameMap = tables.keyToNameMap;
     this.nameToKeyMap = tables.nameToKeyMap;
     this.defaults = tables.defaults;
@@ -1193,7 +1202,7 @@ class CFFDict {
   }
 
   // value should always be an array
-  setByKey(key, value) {
+  setByKey(key: number, value: number[]) {
     if (!(key in this.keyToNameMap)) {
       return false;
     }
@@ -1209,26 +1218,27 @@ class CFFDict {
       }
     }
     const type = this.types[key];
+    let retVal: number | number[] = value;
     // remove the array wrapping these types of values
     if (type === "num" || type === "sid" || type === "offset") {
-      value = value[0];
+      retVal = value[0];
     }
-    this.values[key] = value;
+    this.values[key] = retVal;
     return true;
   }
 
-  setByName(name, value) {
+  setByName(name: string, value: number | number[] | null) {
     if (!(name in this.nameToKeyMap)) {
       throw new FormatError(`Invalid dictionary name "${name}"`);
     }
     this.values[this.nameToKeyMap[name]] = value;
   }
 
-  hasName(name) {
+  hasName(name: string) {
     return this.nameToKeyMap[name] in this.values;
   }
 
-  getByName(name) {
+  getByName(name: string) {
     if (!(name in this.nameToKeyMap)) {
       throw new FormatError(`Invalid dictionary name ${name}"`);
     }
@@ -1239,18 +1249,18 @@ class CFFDict {
     return this.values[key];
   }
 
-  removeByName(name) {
+  removeByName(name: string) {
     delete this.values[this.nameToKeyMap[name]];
   }
 
-  static createTables(layout) {
-    const tables = {
-      keyToNameMap: {},
-      nameToKeyMap: {},
-      defaults: {},
-      types: {},
-      opcodes: {},
-      order: [],
+  static createTables(layout: CFFDictLayoutType): CFFDictTable {
+    const tables: CFFDictTable = {
+      keyToNameMap: <Record<number, string>>{},
+      nameToKeyMap: <Record<string, number>>{},
+      defaults: <Record<number, number | number[] | null>>{},
+      types: <Record<number, string | string[]>>{},
+      opcodes: <Record<number, Array<number>>>{},
+      order: <number[]>[],
     };
     for (const entry of layout) {
       const key = Array.isArray(entry[0])
@@ -1267,7 +1277,9 @@ class CFFDict {
   }
 }
 
-const CFFTopDictLayout = [
+type CFFDictLayoutType = [number | [number, number], string, string | string[], number | number[] | null][]
+
+const CFFTopDictLayout: CFFDictLayoutType = [
   [[12, 30], "ROS", ["sid", "sid", "num"], null],
   [[12, 20], "SyntheticBase", "num", null],
   [0, "version", "sid", null],
@@ -1322,7 +1334,7 @@ class CFFTopDict extends CFFDict {
   }
 }
 
-const CFFPrivateDictLayout = [
+const CFFPrivateDictLayout: CFFDictLayoutType = [
   [6, "BlueValues", "delta", null],
   [7, "OtherBlues", "delta", null],
   [8, "FamilyBlues", "delta", null],
@@ -1423,32 +1435,35 @@ class CFFFDSelect {
 // Helper class to keep track of where an offset is within the data and helps
 // filling in that offset once it's known.
 class CFFOffsetTracker {
+
+  protected offsets: Record<string, number>;
+
   constructor() {
     this.offsets = Object.create(null);
   }
 
-  isTracking(key) {
+  isTracking(key: string) {
     return key in this.offsets;
   }
 
-  track(key, location) {
+  track(key: string, location: number) {
     if (key in this.offsets) {
       throw new FormatError(`Already tracking location of ${key}`);
     }
     this.offsets[key] = location;
   }
 
-  offset(value) {
+  offset(value: number) {
     for (const key in this.offsets) {
       this.offsets[key] += value;
     }
   }
 
-  setEntryLocation(key, values, output) {
+  setEntryLocation(key: string, values: number[], outputData: number[]) {
     if (!(key in this.offsets)) {
       throw new FormatError(`Not tracking location of ${key}`);
     }
-    const data = output.data;
+    const data = outputData;
     const dataOffset = this.offsets[key];
     const size = 5;
     for (let i = 0, ii = values.length; i < ii; ++i) {
@@ -1489,9 +1504,9 @@ class CFFCompiler {
   compile() {
     const cff = this.cff;
     const output = {
-      data: <any[]>[],
+      data: <number[]>[],
       length: 0,
-      add(data: any) {
+      add(data: number[]) {
         try {
           // It's possible to exceed the call stack maximum size when trying
           // to push too much elements.
@@ -1524,9 +1539,9 @@ class CFFCompiler {
       // - If neither have matrices, use default.
       // To make this work on all platforms we move the top matrix into each
       // sub top dict and concat if necessary.
-      if (cff.topDict.hasName("FontMatrix")) {
-        const base = cff.topDict.getByName("FontMatrix");
-        cff.topDict.removeByName("FontMatrix");
+      if (cff.topDict!.hasName("FontMatrix")) {
+        const base = cff.topDict!.getByName("FontMatrix");
+        cff.topDict!.removeByName("FontMatrix");
         for (const subDict of cff.fdArray) {
           let matrix = base.slice(0);
           if (subDict.hasName("FontMatrix")) {
@@ -1564,11 +1579,11 @@ class CFFCompiler {
         topDictTracker.setEntryLocation(
           "Encoding",
           [cff.encoding.format],
-          output
+          output.data
         );
       } else {
         const encoding = this.compileEncoding(cff.encoding);
-        topDictTracker.setEntryLocation("Encoding", [output.length], output);
+        topDictTracker.setEntryLocation("Encoding", [output.length], output.data);
         output.add(encoding);
       }
     }
@@ -1578,23 +1593,23 @@ class CFFCompiler {
       cff.strings,
       cff.isCIDFont
     );
-    topDictTracker.setEntryLocation("charset", [output.length], output);
+    topDictTracker.setEntryLocation("charset", [output.length], output.data);
     output.add(charset);
 
     const charStrings = this.compileCharStrings(cff.charStrings!);
-    topDictTracker.setEntryLocation("CharStrings", [output.length], output);
+    topDictTracker.setEntryLocation("CharStrings", [output.length], output.data);
     output.add(charStrings);
 
     if (cff.isCIDFont) {
       // For some reason FDSelect must be in front of FDArray on windows. OSX
       // and linux don't seem to care.
-      topDictTracker.setEntryLocation("FDSelect", [output.length], output);
-      const fdSelect = this.compileFDSelect(cff.fdSelect);
+      topDictTracker.setEntryLocation("FDSelect", [output.length], output.data);
+      const fdSelect = this.compileFDSelect(cff.fdSelect!);
       output.add(fdSelect);
       // It is unclear if the sub font dictionary can have CID related
       // dictionary keys, but the sanitizer doesn't like them so remove them.
       compiled = this.compileTopDicts(cff.fdArray, output.length, true);
-      topDictTracker.setEntryLocation("FDArray", [output.length], output);
+      topDictTracker.setEntryLocation("FDArray", [output.length], output.data);
       output.add(compiled.output);
       const fontDictTrackers = compiled.trackers;
 
@@ -1749,9 +1764,16 @@ class CFFCompiler {
     };
   }
 
-  compilePrivateDicts(dicts: CFFDict[], trackers: CFFOffsetTracker[], output) {
+  compilePrivateDicts(dicts: CFFDict[], trackers: CFFOffsetTracker[],
+    output: {
+      data: number[],
+      length: number,
+      add: (data: number[]) => void
+    }
+  ) {
     for (let i = 0, ii = dicts.length; i < ii; ++i) {
       const fontDict = dicts[i];
+      // 这种写法也是有毛病的
       const privateDict = fontDict.privateDict;
       if (!privateDict || !fontDict.hasName("Private")) {
         throw new FormatError("There must be a private dictionary.");
@@ -1771,7 +1793,7 @@ class CFFCompiler {
       trackers[i].setEntryLocation(
         "Private",
         [privateDictData.length, outputLength],
-        output
+        output.data
       );
       output.add(privateDictData);
 
@@ -1780,7 +1802,7 @@ class CFFCompiler {
         privateDictTracker.setEntryLocation(
           "Subrs",
           [privateDictData.length],
-          output
+          output.data
         );
         output.add(subrs);
       }
@@ -1913,7 +1935,7 @@ class CFFCompiler {
     return this.compileTypedArray(encoding.raw!);
   }
 
-  compileFDSelect(fdSelect) {
+  compileFDSelect(fdSelect: CFFFDSelect) {
     const format = fdSelect.format;
     let out, i;
     switch (format) {
@@ -2039,5 +2061,6 @@ export {
   CFFPrivateDict,
   CFFStandardStrings,
   CFFStrings,
-  CFFTopDict,
+  CFFTopDict
 };
+
