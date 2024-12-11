@@ -159,7 +159,7 @@ const CharstringValidationData12 = [
     id: "add",
     min: 2,
     stackDelta: -1,
-    stackFn(stack, index) {
+    stackFn(stack: number[], index: number) {
       stack[index - 2] = stack[index - 2] + stack[index - 1];
     },
   },
@@ -167,7 +167,7 @@ const CharstringValidationData12 = [
     id: "sub",
     min: 2,
     stackDelta: -1,
-    stackFn(stack, index) {
+    stackFn(stack: number[], index: number) {
       stack[index - 2] = stack[index - 2] - stack[index - 1];
     },
   },
@@ -175,7 +175,7 @@ const CharstringValidationData12 = [
     id: "div",
     min: 2,
     stackDelta: -1,
-    stackFn(stack, index) {
+    stackFn(stack: number[], index: number) {
       stack[index - 2] = stack[index - 2] / stack[index - 1];
     },
   },
@@ -184,7 +184,7 @@ const CharstringValidationData12 = [
     id: "neg",
     min: 1,
     stackDelta: 0,
-    stackFn(stack, index) {
+    stackFn(stack: number[], index: number) {
       stack[index - 1] = -stack[index - 1];
     },
   },
@@ -224,6 +224,12 @@ class CFFParser {
 
   protected properties: EvaluatorProperties;
 
+  protected bytes: Uint8Array;
+
+  protected seacAnalysisEnabled: boolean;
+
+  protected cff: CFF | null = null;
+
   constructor(file: Stream, properties: EvaluatorProperties, seacAnalysisEnabled: boolean) {
     this.bytes = file.getBytes();
     this.properties = properties;
@@ -244,6 +250,7 @@ class CFFParser {
     const globalSubrIndex = this.parseIndex(stringIndex.endPos);
 
     const topDictParsed = this.parseDict(topDictIndex.obj.get(0));
+
     const topDict = this.createDict(CFFTopDict, topDictParsed, cff.strings);
 
     cff.header = header.obj;
@@ -315,18 +322,17 @@ class CFFParser {
     cff.charset = charset;
     cff.encoding = encoding;
 
-    const charStringsAndSeacs = this.parseCharStrings({
-      charStrings: charStringIndex,
-      localSubrIndex: topDict.privateDict.subrsIndex,
-      globalSubrIndex: globalSubrIndex.obj,
-      fdSelect: cff.fdSelect,
-      fdArray: cff.fdArray,
-      privateDict: topDict.privateDict,
-    });
+    const charStringsAndSeacs = this.parseCharStrings(
+      charStringIndex,
+      topDict.privateDict!.subrsIndex!,
+      globalSubrIndex.obj,
+      cff.fdSelect!,
+      cff.fdArray,
+      topDict.privateDict!,
+    );
     cff.charStrings = charStringsAndSeacs.charStrings;
     cff.seacs = charStringsAndSeacs.seacs;
     cff.widths = charStringsAndSeacs.widths;
-
     return cff;
   }
 
@@ -356,7 +362,7 @@ class CFFParser {
     return { obj: header, endPos: hdrSize };
   }
 
-  parseDict(dict) {
+  parseDict(dict: Uint8Array) {
     let pos = 0;
 
     function parseOperand() {
@@ -430,7 +436,7 @@ class CFFParser {
     return entries;
   }
 
-  parseIndex(pos) {
+  parseIndex(pos: number) {
     const cffIndex = new CFFIndex();
     const bytes = this.bytes;
     const count = (bytes[pos++] << 8) | bytes[pos++];
@@ -461,7 +467,7 @@ class CFFParser {
     return { obj: cffIndex, endPos: end };
   }
 
-  parseNameIndex(index) {
+  parseNameIndex(index: CFFIndex) {
     const names = [];
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const name = index.get(i);
@@ -470,7 +476,7 @@ class CFFParser {
     return names;
   }
 
-  parseStringIndex(index) {
+  parseStringIndex(index: CFFIndex) {
     const strings = new CFFStrings();
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const data = index.get(i);
@@ -479,7 +485,8 @@ class CFFParser {
     return strings;
   }
 
-  createDict(Type, dict, strings) {
+  createDict<T extends CFFDict>(Type: new (...args: any) => T
+    , dict: (number | number[])[][], strings: CFFStrings): T {
     const cffDict = new Type(strings);
     for (const [key, value] of dict) {
       cffDict.setByKey(key, value);
@@ -487,7 +494,7 @@ class CFFParser {
     return cffDict;
   }
 
-  parseCharString(state, data, localSubrIndex, globalSubrIndex) {
+  parseCharString(state, data: Uint8Array, localSubrIndex: CFFIndex, globalSubrIndex: CFFIndex) {
     if (!data || state.callDepth > MAX_SUBR_NESTING) {
       return false;
     }
@@ -566,7 +573,7 @@ class CFFParser {
         const subrsIndex = value === 10 ? localSubrIndex : globalSubrIndex;
         if (!subrsIndex) {
           validationCommand = CharstringValidationData[value];
-          warn("Missing subrsIndex for " + validationCommand.id);
+          warn("Missing subrsIndex for " + validationCommand!.id);
           return false;
         }
         let bias = 32768;
@@ -582,7 +589,7 @@ class CFFParser {
           isNaN(subrNumber)
         ) {
           validationCommand = CharstringValidationData[value];
-          warn("Out of bounds subrIndex for " + validationCommand.id);
+          warn("Out of bounds subrIndex for " + validationCommand!.id);
           return false;
         }
         state.stackSize = stackSize;
@@ -671,7 +678,7 @@ class CFFParser {
         }
         if ("stackDelta" in validationCommand) {
           if ("stackFn" in validationCommand) {
-            validationCommand.stackFn(stack, stackSize);
+            validationCommand!.stackFn!(stack, stackSize);
           }
           stackSize += validationCommand.stackDelta;
         } else if (validationCommand.stackClearing) {
@@ -693,16 +700,16 @@ class CFFParser {
     return true;
   }
 
-  parseCharStrings({
-    charStrings,
-    localSubrIndex,
-    globalSubrIndex,
-    fdSelect,
-    fdArray,
-    privateDict,
-  }) {
-    const seacs = [];
-    const widths = [];
+  parseCharStrings(
+    charStrings: CFFIndex,
+    localSubrIndex: CFFIndex,
+    globalSubrIndex: CFFIndex,
+    fdSelect: CFFFDSelect,
+    fdArray: CFFDict[],
+    privateDict: CFFPrivateDict,
+  ) {
+    const seacs: number[] = [];
+    const widths: number[] = [];
     const count = charStrings.count;
     for (let i = 0; i < count; i++) {
       const charstring = charStrings.get(i);
@@ -731,7 +738,7 @@ class CFFParser {
           valid = false;
         }
         if (valid) {
-          privateDictToUse = fdArray[fdIndex].privateDict;
+          privateDictToUse = (<CFFTopDict>fdArray[fdIndex]).privateDict!;
           localSubrToUse = privateDictToUse.subrsIndex;
         }
       } else if (localSubrIndex) {
@@ -741,12 +748,12 @@ class CFFParser {
         valid = this.parseCharString(
           state,
           charstring,
-          localSubrToUse,
+          localSubrToUse!,
           globalSubrIndex
         );
       }
       if (state.width !== null) {
-        const nominalWidth = privateDictToUse.getByName("nominalWidthX");
+        const nominalWidth = <number>privateDictToUse.getByName("nominalWidthX");
         widths[i] = nominalWidth + state.width;
       } else {
         const defaultWidth = privateDictToUse.getByName("defaultWidthX");
@@ -763,13 +770,13 @@ class CFFParser {
     return { charStrings, seacs, widths };
   }
 
-  emptyPrivateDictionary(parentDict) {
+  emptyPrivateDictionary(parentDict: CFFTopDict) {
     const privateDict = this.createDict(CFFPrivateDict, [], parentDict.strings);
     parentDict.setByKey(18, [0, 0]);
     parentDict.privateDict = privateDict;
   }
 
-  parsePrivateDict(parentDict) {
+  parsePrivateDict(parentDict: CFFTopDict) {
     // no private dict, do nothing
     if (!parentDict.hasName("Private")) {
       this.emptyPrivateDictionary(parentDict);
@@ -820,7 +827,7 @@ class CFFParser {
     privateDict.subrsIndex = subrsIndex.obj;
   }
 
-  parseCharsets(pos, length, strings, cid) {
+  parseCharsets(pos: number, length: number, strings: CFFStrings, cid: boolean) {
     if (pos === 0) {
       return new CFFCharset(
         true,
@@ -885,8 +892,9 @@ class CFFParser {
     return new CFFCharset(false, format, charset, raw);
   }
 
-  parseEncoding(pos, _properties: EvaluatorProperties, strings, charset) {
-    const encoding = Object.create(null);
+  parseEncoding(pos: number, _properties: EvaluatorProperties, strings: CFFStrings, charset: (string | number)[]) {
+    // TODO 考虑一下，这边是不是稀疏数组
+    const encoding: Array<number> = new Array();
     const bytes = this.bytes;
     let predefined = false;
     let format, i, ii;
@@ -906,7 +914,7 @@ class CFFParser {
       format = pos;
       const baseEncoding = pos ? ExpertEncoding : StandardEncoding;
       for (i = 0, ii = charset.length; i < ii; i++) {
-        const index = baseEncoding.indexOf(charset[i]);
+        const index = baseEncoding.indexOf(<string>charset[i]);
         if (index !== -1) {
           encoding[index] = i;
         }
@@ -1001,27 +1009,31 @@ class CFFParser {
 // Compact Font Format
 class CFF {
 
-  protected strings = new CFFStrings();
+  public strings = new CFFStrings();
 
-  protected isCIDFont = false;
+  public isCIDFont = false;
 
-  protected header;
+  public header: CFFHeader | null;
 
-  protected names;
+  public names: string[];
 
-  protected topDict;
+  public topDict: CFFTopDict | null;
 
-  protected globalSubrIndex;
+  public globalSubrIndex;
 
-  protected encoding;
+  public encoding: CFFEncoding | null;
 
-  protected charset;
+  public charset: CFFCharset | null;
 
-  protected charStrings;
+  public charStrings: CFFIndex | null;
 
   readonly fdArray: CFFDict[];
 
-  protected fdSelect;
+  public fdSelect: CFFFDSelect | null;
+
+  public seacs: number[] = [];
+
+  public widths: number[] = [];
 
   constructor() {
     this.header = null;
@@ -1043,35 +1055,35 @@ class CFF {
     // Browsers will not display a glyph at position 0. Typically glyph 0 is
     // notdef, but a number of fonts put a valid glyph there so it must be
     // duplicated and appended.
-    if (this.charStrings.count >= 65535) {
+    if (this.charStrings!.count >= 65535) {
       warn("Not enough space in charstrings to duplicate first glyph.");
       return;
     }
-    const glyphZero = this.charStrings.get(0);
-    this.charStrings.add(glyphZero);
+    const glyphZero = this.charStrings!.get(0);
+    this.charStrings!.add(glyphZero);
     if (this.isCIDFont) {
-      this.fdSelect.fdSelect.push(this.fdSelect.fdSelect[0]);
+      this.fdSelect!.fdSelect.push(this.fdSelect!.fdSelect[0]);
     }
   }
 
   hasGlyphId(id: number) {
-    if (id < 0 || id >= this.charStrings.count) {
+    if (id < 0 || id >= this.charStrings!.count) {
       return false;
     }
-    const glyph = this.charStrings.get(id);
+    const glyph = this.charStrings!.get(id);
     return glyph.length > 0;
   }
 }
 
 class CFFHeader {
 
-  protected hdrSize: number;
+  public hdrSize: number;
 
-  protected offSize: number;
+  public offSize: number;
 
-  protected major;
+  public major;
 
-  protected minor;
+  public minor;
 
   constructor(major: number, minor: number, hdrSize: number, offSize: number) {
     this.major = major;
@@ -1083,7 +1095,7 @@ class CFFHeader {
 
 class CFFStrings {
 
-  protected strings: string[];
+  public strings: string[];
 
   constructor() {
     this.strings = [];
@@ -1124,14 +1136,14 @@ class CFFIndex {
 
   protected length = 0;
 
-  protected objects: Uint8Array[];
+  public objects: (Uint8Array | number[])[];
 
   constructor() {
     this.objects = [];
     this.length = 0;
   }
 
-  add(data: Uint8Array) {
+  add(data: Uint8Array | number[]) {
     this.length += data.length;
     this.objects.push(data);
   }
@@ -1152,7 +1164,24 @@ class CFFIndex {
 }
 
 class CFFDict {
-  constructor(tables, strings) {
+
+  public strings: CFFStrings;
+
+  public keyToNameMap;
+
+  public nameToKeyMap;
+
+  public defaults;
+
+  public types;
+
+  public opcodes;
+
+  public order;
+
+  public values;
+
+  constructor(tables, strings: CFFStrings) {
     this.keyToNameMap = tables.keyToNameMap;
     this.nameToKeyMap = tables.nameToKeyMap;
     this.defaults = tables.defaults;
@@ -1280,11 +1309,14 @@ const CFFTopDictLayout = [
 ];
 
 class CFFTopDict extends CFFDict {
+
+  public privateDict: CFFPrivateDict | null;
+
   static get tables() {
     return shadow(this, "tables", this.createTables(CFFTopDictLayout));
   }
 
-  constructor(strings) {
+  constructor(strings: CFFStrings) {
     super(CFFTopDict.tables, strings);
     this.privateDict = null;
   }
@@ -1312,11 +1344,14 @@ const CFFPrivateDictLayout = [
 ];
 
 class CFFPrivateDict extends CFFDict {
+
   static get tables() {
     return shadow(this, "tables", this.createTables(CFFPrivateDictLayout));
   }
 
-  constructor(strings) {
+  public subrsIndex: CFFIndex | null;
+
+  constructor(strings: CFFStrings) {
     super(CFFPrivateDict.tables, strings);
     this.subrsIndex = null;
   }
@@ -1329,7 +1364,17 @@ const CFFCharsetPredefinedTypes = {
 };
 
 class CFFCharset {
-  constructor(predefined, format, charset, raw) {
+
+  protected predefined: boolean;
+
+  protected format: number;
+
+  public charset: (string | number)[];
+
+  protected raw: Uint8Array | null;
+
+  constructor(predefined: boolean, format: number
+    , charset: (string | number)[], raw: Uint8Array | null = null) {
     this.predefined = predefined;
     this.format = format;
     this.charset = charset;
@@ -1338,7 +1383,17 @@ class CFFCharset {
 }
 
 class CFFEncoding {
-  constructor(predefined, format, encoding, raw) {
+
+  public predefined: boolean;
+
+  public format: number;
+
+  public encoding: Array<number>;
+
+  public raw: Uint8Array | null;
+
+  constructor(predefined: boolean, format: number
+    , encoding: Array<number>, raw: Uint8Array | null) {
     this.predefined = predefined;
     this.format = format;
     this.encoding = encoding;
@@ -1347,12 +1402,17 @@ class CFFEncoding {
 }
 
 class CFFFDSelect {
-  constructor(format, fdSelect) {
+
+  readonly format;
+
+  readonly fdSelect;
+
+  constructor(format: number, fdSelect: number[]) {
     this.format = format;
     this.fdSelect = fdSelect;
   }
 
-  getFDIndex(glyphIndex) {
+  getFDIndex(glyphIndex: number) {
     if (glyphIndex < 0 || glyphIndex >= this.fdSelect.length) {
       return -1;
     }
@@ -1419,16 +1479,19 @@ class CFFOffsetTracker {
 
 // Takes a CFF and converts it to the binary representation.
 class CFFCompiler {
-  constructor(cff) {
+
+  protected cff: CFF;
+
+  constructor(cff: CFF) {
     this.cff = cff;
   }
 
   compile() {
     const cff = this.cff;
     const output = {
-      data: [],
+      data: <any[]>[],
       length: 0,
-      add(data) {
+      add(data: any) {
         try {
           // It's possible to exceed the call stack maximum size when trying
           // to push too much elements.
@@ -1442,7 +1505,7 @@ class CFFCompiler {
     };
 
     // Compile the five entries that must be in order.
-    const header = this.compileHeader(cff.header);
+    const header = this.compileHeader(cff.header!);
     output.add(header);
 
     const nameIndex = this.compileNameIndex(cff.names);
@@ -1474,15 +1537,15 @@ class CFFCompiler {
       }
     }
 
-    const xuid = cff.topDict.getByName("XUID");
+    const xuid = cff.topDict!.getByName("XUID");
     if (xuid?.length > 16) {
       // Length of XUID array must not be greater than 16 (issue #12399).
-      cff.topDict.removeByName("XUID");
+      cff.topDict!.removeByName("XUID");
     }
 
-    cff.topDict.setByName("charset", 0);
+    cff.topDict!.setByName("charset", 0);
     let compiled = this.compileTopDicts(
-      [cff.topDict],
+      [cff.topDict!],
       output.length,
       cff.isCIDFont
     );
@@ -1496,7 +1559,7 @@ class CFFCompiler {
     output.add(globalSubrIndex);
 
     // Now start on the other entries that have no specific order.
-    if (cff.encoding && cff.topDict.hasName("Encoding")) {
+    if (cff.encoding && cff.topDict!.hasName("Encoding")) {
       if (cff.encoding.predefined) {
         topDictTracker.setEntryLocation(
           "Encoding",
@@ -1510,15 +1573,15 @@ class CFFCompiler {
       }
     }
     const charset = this.compileCharset(
-      cff.charset,
-      cff.charStrings.count,
+      cff.charset!,
+      cff.charStrings!.count,
       cff.strings,
       cff.isCIDFont
     );
     topDictTracker.setEntryLocation("charset", [output.length], output);
     output.add(charset);
 
-    const charStrings = this.compileCharStrings(cff.charStrings);
+    const charStrings = this.compileCharStrings(cff.charStrings!);
     topDictTracker.setEntryLocation("CharStrings", [output.length], output);
     output.add(charStrings);
 
@@ -1538,7 +1601,7 @@ class CFFCompiler {
       this.compilePrivateDicts(cff.fdArray, fontDictTrackers, output);
     }
 
-    this.compilePrivateDicts([cff.topDict], [topDictTracker], output);
+    this.compilePrivateDicts([cff.topDict!], [topDictTracker], output);
 
     // If the font data ends with INDEX whose object data is zero-length,
     // the sanitizer will bail out. Add a dummy byte to avoid that.
@@ -1547,7 +1610,7 @@ class CFFCompiler {
     return output.data;
   }
 
-  encodeNumber(value) {
+  encodeNumber(value: number) {
     if (Number.isInteger(value)) {
       return this.encodeInteger(value);
     }
@@ -1562,7 +1625,7 @@ class CFFCompiler {
     );
   }
 
-  encodeFloat(num) {
+  encodeFloat(num: number) {
     let value = num.toString();
 
     // Rounding inaccurate doubles.
@@ -1594,7 +1657,7 @@ class CFFCompiler {
     return out;
   }
 
-  encodeInteger(value) {
+  encodeInteger(value: number) {
     let code;
     if (value >= -107 && value <= 107) {
       code = [value + 139];
@@ -1618,18 +1681,18 @@ class CFFCompiler {
     return code;
   }
 
-  compileHeader(header) {
+  compileHeader(header: CFFHeader) {
     // `header.hdrSize` can be any value but we only write 4 values
     // so header size is 4 (prevents OTS from rejecting the font).
     return [header.major, header.minor, 4, header.offSize];
   }
 
-  compileNameIndex(names) {
+  compileNameIndex(names: string[]) {
     const nameIndex = new CFFIndex();
     for (const name of names) {
       // OTS doesn't allow names to be over 127 characters.
       const length = Math.min(name.length, 127);
-      let sanitizedName = new Array(length);
+      let sanitizedName: string | Array<string> = new Array(length);
       for (let j = 0; j < length; j++) {
         // OTS requires chars to be between a range and not certain other
         // chars.
@@ -1662,8 +1725,8 @@ class CFFCompiler {
     return this.compileIndex(nameIndex);
   }
 
-  compileTopDicts(dicts, length, removeCidKeys) {
-    const fontDictTrackers = [];
+  compileTopDicts(dicts: CFFDict[], length: number, removeCidKeys: boolean) {
+    const fontDictTrackers: CFFOffsetTracker[] = [];
     let fdArrayIndex = new CFFIndex();
     for (const fontDict of dicts) {
       if (removeCidKeys) {
@@ -1679,14 +1742,14 @@ class CFFCompiler {
       fdArrayIndex.add(fontDictData);
       fontDictTracker.offset(length);
     }
-    fdArrayIndex = this.compileIndex(fdArrayIndex, fontDictTrackers);
+    const compiledFdArrayIndex = this.compileIndex(fdArrayIndex, fontDictTrackers);
     return {
       trackers: fontDictTrackers,
-      output: fdArrayIndex,
+      output: compiledFdArrayIndex,
     };
   }
 
-  compilePrivateDicts(dicts, trackers, output) {
+  compilePrivateDicts(dicts: CFFDict[], trackers: CFFOffsetTracker[], output) {
     for (let i = 0, ii = dicts.length; i < ii; ++i) {
       const fontDict = dicts[i];
       const privateDict = fontDict.privateDict;
@@ -1724,8 +1787,8 @@ class CFFCompiler {
     }
   }
 
-  compileDict(dict, offsetTracker) {
-    const out = [];
+  compileDict(dict: CFFDict, offsetTracker: CFFOffsetTracker) {
+    const out: number[] = [];
     // The dictionary keys must be in a certain order.
     for (const key of dict.order) {
       if (!(key in dict.values)) {
@@ -1781,7 +1844,7 @@ class CFFCompiler {
     return out;
   }
 
-  compileStringIndex(strings) {
+  compileStringIndex(strings: string[]) {
     const stringIndex = new CFFIndex();
     for (const string of strings) {
       stringIndex.add(stringToBytes(string));
@@ -1789,7 +1852,7 @@ class CFFCompiler {
     return this.compileIndex(stringIndex);
   }
 
-  compileCharStrings(charStrings) {
+  compileCharStrings(charStrings: CFFIndex) {
     const charStringsIndex = new CFFIndex();
     for (let i = 0; i < charStrings.count; i++) {
       const glyph = charStrings.get(i);
@@ -1804,7 +1867,7 @@ class CFFCompiler {
     return this.compileIndex(charStringsIndex);
   }
 
-  compileCharset(charset, numGlyphs, strings, isCIDFont) {
+  compileCharset(charset: CFFCharset, numGlyphs: number, strings: CFFStrings, isCIDFont: boolean) {
     // Freetype requires the number of charset strings be correct and MacOS
     // requires a valid mapping for printing.
     let out;
@@ -1830,7 +1893,7 @@ class CFFCompiler {
         let sid = 0;
         if (charsetIndex < numCharsets) {
           const name = charset.charset[charsetIndex++];
-          sid = strings.getSID(name);
+          sid = strings.getSID(<string>name);
           if (sid === -1) {
             sid = 0;
             if (!warned) {
@@ -1846,8 +1909,8 @@ class CFFCompiler {
     return this.compileTypedArray(out);
   }
 
-  compileEncoding(encoding) {
-    return this.compileTypedArray(encoding.raw);
+  compileEncoding(encoding: CFFEncoding) {
+    return this.compileTypedArray(encoding.raw!);
   }
 
   compileFDSelect(fdSelect) {
@@ -1888,14 +1951,14 @@ class CFFCompiler {
         out = new Uint8Array(ranges);
         break;
     }
-    return this.compileTypedArray(out);
+    return this.compileTypedArray(out!);
   }
 
-  compileTypedArray(data) {
+  compileTypedArray(data: Uint8Array) {
     return Array.from(data);
   }
 
-  compileIndex(index, trackers = []) {
+  compileIndex(index: CFFIndex, trackers: CFFOffsetTracker[] = []) {
     const objects = index.objects;
     // First 2 bytes contains the number of objects contained into this index
     const count = objects.length;

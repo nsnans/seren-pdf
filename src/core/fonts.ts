@@ -138,7 +138,7 @@ function adjustWidths(properties: EvaluatorProperties) {
   properties.defaultWidth *= scale;
 }
 
-function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont, nameRecords) {
+function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont: boolean, nameRecords) {
   if (properties.isInternalFont) {
     return;
   }
@@ -169,8 +169,8 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont
   }
   const encoding = WinAnsiEncoding;
 
-  const toUnicode = [],
-    glyphsUnicodeMap = getGlyphsUnicode();
+  const toUnicode = [];
+  const glyphsUnicodeMap = getGlyphsUnicode();
   for (const charCode in encoding) {
     const glyphName = encoding[charCode];
     if (glyphName === "") {
@@ -905,7 +905,7 @@ function createPostscriptName(name) {
   return name.replaceAll(/[^\x21-\x7E]|[[\](){}<>/%]/g, "").slice(0, 63);
 }
 
-function createNameTable(name, proto) {
+function createNameTable(name: string, proto: string[][] | null = null) {
   if (!proto) {
     proto = [[], []]; // no strings and unicode strings
   }

@@ -93,6 +93,8 @@ import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
 
 export interface EvaluatorProperties {
+  ascentScaled: boolean;
+  builtInEncoding: (string | number)[];
   type: string;
   name: string;
   subtype: string | null;

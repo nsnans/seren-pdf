@@ -704,7 +704,7 @@ class Type1Parser {
       // Attempt to replace missing widths, from the font dictionary /Widths
       // entry, with ones from the font data (fixes issue11150_reduced.pdf).
       if (properties.builtInEncoding) {
-        const index = properties.builtInEncoding.indexOf(glyph);
+        const index = properties.builtInEncoding.indexOf(glyph!);
         if (
           index > -1 &&
           properties.widths[index] === undefined &&
@@ -756,12 +756,12 @@ class Type1Parser {
               }
               const index = this.readInt();
               this.getToken(); // read in '/'
-              const glyph = this.getToken();
+              const glyph = this.getToken()!;
               encoding[index] = glyph;
               this.getToken(); // read the in 'put'
             }
           }
-          properties.builtInEncoding = encoding;
+          properties.builtInEncoding = encoding!;
           break;
         case "FontBBox":
           const fontBBox = this.readNumberArray();

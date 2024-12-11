@@ -17,6 +17,7 @@ import { CFF, CFFCompiler, CFFParser } from "./cff_parser";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
 import { warn } from "../shared/util";
 import { EvaluatorProperties } from "./evaluator";
+import { Stream } from "./stream";
 
 class CFFFont {
 
@@ -24,7 +25,10 @@ class CFFFont {
 
   protected properties: EvaluatorProperties;
 
-  constructor(file, properties: EvaluatorProperties) {
+  // 解析成功的时候是any[]，失败的时候是Stream
+  protected data: any[] | Stream;
+
+  constructor(file: Stream, properties: EvaluatorProperties) {
     this.properties = properties;
 
     const parser = new CFFParser(file, properties, SEAC_ANALYSIS_ENABLED);
@@ -48,14 +52,14 @@ class CFFFont {
   }
 
   getCharset() {
-    return this.cff.charset.charset;
+    return this.cff.charset!.charset;
   }
 
   getGlyphMapping() {
     const cff = this.cff;
     const properties = this.properties;
     const { cidToGidMap, cMap } = properties;
-    const charsets = cff.charset.charset;
+    const charsets = cff.charset!.charset;
     let charCodeToGlyphId;
     let glyphId;
 
@@ -78,7 +82,7 @@ class CFFFont {
         // to map CIDs to GIDs.
         for (glyphId = 0; glyphId < charsets.length; glyphId++) {
           const cid = charsets[glyphId];
-          charCode = cMap.charCodeOf(cid);
+          charCode = cMap!.charCodeOf(<number>cid);
 
           if (invCidToGidMap?.[charCode] !== undefined) {
             // According to the PDF specification, see Table 117, it's not clear
@@ -96,7 +100,7 @@ class CFFFont {
         // If it is NOT actually a CID font then CIDs should be mapped
         // directly to GIDs.
         for (glyphId = 0; glyphId < cff.charStrings.count; glyphId++) {
-          charCode = cMap.charCodeOf(glyphId);
+          charCode = cMap!.charCodeOf(glyphId);
           charCodeToGlyphId[charCode] = glyphId;
         }
       }
@@ -123,16 +127,16 @@ class CFFFont {
     if (!charset || !encoding) {
       return;
     }
-    const charsets = charset.charset,
-      encodings = encoding.encoding;
-    const map = [];
+    const charsets = charset.charset;
+    const encodings = encoding.encoding;
+    const map: (string | number)[] = [];
 
     for (const charCode in encodings) {
       const glyphId = encodings[charCode];
       if (glyphId >= 0) {
         const glyphName = charsets[glyphId];
         if (glyphName) {
-          map[charCode] = glyphName;
+          map[Number(charCode)] = glyphName;
         }
       }
     }

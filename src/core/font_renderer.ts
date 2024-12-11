@@ -121,7 +121,7 @@ function parseCmap(data: Uint8Array, start: number, _end: number) {
   throw new FormatError(`unsupported cmap: ${format}`);
 }
 
-function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled) {
+function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled: boolean) {
   const properties = {};
   const parser = new CFFParser(
     new Stream(data, start, end - start),
