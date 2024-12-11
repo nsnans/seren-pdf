@@ -261,7 +261,7 @@ export class Glyph {
 
   protected operatorListId;
 
-  protected isSpace;
+  public isSpace;
 
   protected isInFont;
 
@@ -1092,7 +1092,7 @@ class Font {
     this.bbox = properties.bbox;
     this.defaultEncoding = properties.defaultEncoding;
 
-    this.toUnicode = properties.toUnicode;
+    this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
     this.toFontChar = [];
 
     if (properties.type === "Type3") {
@@ -1186,7 +1186,7 @@ class Font {
     this.fontMatrix = properties.fontMatrix!;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
-    this.toUnicode = properties.toUnicode;
+    this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
     this.seacMap = properties.seacMap;
   }
 
@@ -3165,7 +3165,7 @@ class Font {
     return builder.toArray();
   }
 
-  convert(fontName, font, properties: EvaluatorProperties) {
+  convert(fontName: string, font: CFFFont | Type1Font, properties: EvaluatorProperties) {
     // TODO: Check the charstring widths to determine this.
     properties.fixedPitch = false;
 
@@ -3378,12 +3378,12 @@ class Font {
         width = this.widths[glyphName];
         break;
       }
-      const glyphsUnicodeMap = getGlyphsUnicode();
+      const glyphsUnicodeMap : Record<string, number>= getGlyphsUnicode()!;
       const glyphUnicode = glyphsUnicodeMap[glyphName];
       // finding the charcode via unicodeToCID map
-      let charcode = 0;
+      let charcode: number | string = 0;
       if (this.composite && this.cMap.contains(glyphUnicode)) {
-        charcode = this.cMap.lookup(glyphUnicode);
+        charcode = this.cMap.lookup(glyphUnicode)!;
 
         if (typeof charcode === "string") {
           charcode = convertCidString(glyphUnicode, charcode);
@@ -3394,11 +3394,11 @@ class Font {
         charcode = this.toUnicode.charCodeOf(glyphUnicode);
       }
       // setting it to unicode if negative or undefined
-      if (charcode <= 0) {
+      if (<number>charcode <= 0) {
         charcode = glyphUnicode;
       }
       // trying to get width via charcode
-      width = this.widths[charcode];
+      width = this.widths[<number>charcode];
       if (width) {
         break; // the non-zero width found
       }
@@ -3426,11 +3426,11 @@ class Font {
         widthCode = convertCidString(charcode, widthCode);
       }
     }
-    width = this.widths[widthCode];
+    width = this.widths[<number>widthCode];
     if (typeof width !== "number") {
       width = this.defaultWidth;
     }
-    const vmetric = this.vmetrics?.[widthCode];
+    const vmetric = this.vmetrics?.[<number>widthCode];
 
     let unicode = this.toUnicode.get(charcode) || charcode;
     if (typeof unicode === "number") {
@@ -3443,7 +3443,7 @@ class Font {
     fontCharCode = this.toFontChar[charcode] || charcode;
     if (this.missingFile) {
       const glyphName =
-        this.differences[charcode] || this.defaultEncoding[charcode];
+        this.differences[charcode] || this.defaultEncoding![charcode];
       if (
         (glyphName === ".notdef" || glyphName === "") &&
         this.type === "Type1"
@@ -3488,7 +3488,7 @@ class Font {
     }
 
     if (this.missingFile && this.vertical && fontChar.length === 1) {
-      const vertical = getVerticalPresentationForm()[fontChar.charCodeAt(0)];
+      const vertical = getVerticalPresentationForm()![fontChar.charCodeAt(0)];
       if (vertical) {
         fontChar = unicode = String.fromCharCode(vertical);
       }
@@ -3553,7 +3553,7 @@ class Font {
   getCharPositions(chars: string): [number, number][] {
     // This function doesn't use a cache because
     // it's called only when saving or printing.
-    const positions = [];
+    const positions: [number, number][] = [];
 
     if (this.cMap) {
       const c = Object.create(null);
@@ -3584,7 +3584,7 @@ class Font {
    * @param {String} a js string.
    * @returns {Array<String>} an array of encoded strings or non-encoded ones.
    */
-  encodeString(str) {
+  encodeString(str: string): string[] {
     const buffers = [];
     const currentBuf = [];
 
@@ -3596,11 +3596,11 @@ class Font {
 
     const getCharCode =
       this.toUnicode instanceof IdentityToUnicodeMap
-        ? unicode => this.toUnicode.charCodeOf(unicode)
-        : unicode => this.toUnicode.charCodeOf(String.fromCodePoint(unicode));
+        ? (unicode: number) => (<IdentityToUnicodeMap>this.toUnicode).charCodeOf(unicode)
+        : (unicode: number) => (<ToUnicodeMap>this.toUnicode).charCodeOf(String.fromCodePoint(unicode));
 
     for (let i = 0, ii = str.length; i < ii; i++) {
-      const unicode = str.codePointAt(i);
+      const unicode = str.codePointAt(i)!;
       if (unicode > 0xd7ff && (unicode < 0xe000 || unicode > 0xfffd)) {
         // unicode is represented by two uint16
         i++;
@@ -3669,11 +3669,11 @@ class ErrorFont {
     return [];
   }
 
-  encodeString(chars) {
+  encodeString(chars: string) {
     return [chars];
   }
 
-  exportData(extraProperties = false) {
+  exportData(_extraProperties = false) {
     return { error: this.error };
   }
 }

@@ -18,6 +18,7 @@ import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 import { warn } from "../shared/util";
 import { EvaluatorProperties } from "./evaluator";
+import { TransformType } from "../display/display_utils";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -81,18 +82,25 @@ const COMMAND_MAP = {
  */
 class Type1CharString {
 
-  protected width = 0;
+  public width = 0;
 
-  protected lsb = 0;
+  public lsb = 0;
 
   protected flexing = false;
+
+  public stack: number[];
+
+  public output: number[]
+
+  // 给了初始值
+  public seac: number[] = [];
 
   constructor() {
     this.output = [];
     this.stack = [];
   }
 
-  convert(encoded, subrs, seacAnalysisEnabled) {
+  convert(encoded: Uint8Array, subrs: Uint8Array[], seacAnalysisEnabled: boolean): boolean {
     const count = encoded.length;
     let error = false;
     let wx, sbx, subrNumber;
@@ -125,7 +133,7 @@ class Type1CharString {
               }
               // Add the dx for flex and but also swap the values so they are
               // the right order.
-              const dy = this.stack.pop();
+              const dy = this.stack.pop()!;
               this.stack.push(0, dy);
               break;
             }
@@ -153,7 +161,7 @@ class Type1CharString {
               error = true;
               break;
             }
-            subrNumber = this.stack.pop();
+            subrNumber = this.stack.pop()!;
             if (!subrs[subrNumber]) {
               error = true;
               break;
@@ -169,8 +177,8 @@ class Type1CharString {
             }
             // To convert to type2 we have to move the width value to the
             // first part of the charstring and then use hmoveto with lsb.
-            wx = this.stack.pop();
-            sbx = this.stack.pop();
+            wx = this.stack.pop()!;
+            sbx = this.stack.pop()!;
             this.lsb = sbx;
             this.width = wx;
             this.stack.push(wx, sbx);
@@ -227,7 +235,7 @@ class Type1CharString {
             // seac is like type 2's special endchar but it doesn't use the
             // first argument asb, so remove it.
             if (seacAnalysisEnabled) {
-              const asb = this.stack.at(-5);
+              const asb = this.stack.at(-5)!;
               this.seac = this.stack.splice(-4, 4);
               this.seac[0] += this.lsb - asb;
               error = this.executeCommand(0, COMMAND_MAP.endchar);
@@ -245,9 +253,9 @@ class Type1CharString {
             // (dx, dy). The height argument will not be used for vmtx and
             // vhea tables reconstruction -- ignoring it.
             this.stack.pop(); // wy
-            wx = this.stack.pop();
-            const sby = this.stack.pop();
-            sbx = this.stack.pop();
+            wx = this.stack.pop()!;
+            const sby = this.stack.pop()!;
+            sbx = this.stack.pop()!;
             this.lsb = sbx;
             this.width = wx;
             this.stack.push(wx, sbx, sby);
@@ -258,8 +266,8 @@ class Type1CharString {
               error = true;
               break;
             }
-            const num2 = this.stack.pop();
-            const num1 = this.stack.pop();
+            const num2 = this.stack.pop()!;
+            const num1 = this.stack.pop()!;
             this.stack.push(num1 / num2);
             break;
           case (12 << 8) + 16: // callothersubr
@@ -328,7 +336,7 @@ class Type1CharString {
     return error;
   }
 
-  executeCommand(howManyArgs, command, keepStack) {
+  executeCommand(howManyArgs: number, command: number[], keepStack = false) {
     const stackLength = this.stack.length;
     if (howManyArgs > stackLength) {
       return true;
@@ -337,7 +345,7 @@ class Type1CharString {
     for (let i = start; i < stackLength; i++) {
       let value = this.stack[i];
       if (Number.isInteger(value)) {
-        this.output.push(28, (value >> 8) & 0xff, value & 0xff);
+        this.output!.push(28, (value >> 8) & 0xff, value & 0xff);
       } else {
         // fixed point
         value = (65536 * value) | 0;
@@ -368,7 +376,7 @@ class Type1CharString {
 const EEXEC_ENCRYPT_KEY = 55665;
 const CHAR_STRS_ENCRYPT_KEY = 4330;
 
-function isHexDigit(code) {
+function isHexDigit(code: number) {
   return (
     (code >= 48 && code <= 57) || // '0'-'9'
     (code >= 65 && code <= 70) || // 'A'-'F'
@@ -376,7 +384,7 @@ function isHexDigit(code) {
   );
 }
 
-function decrypt(data, key, discardNumber) {
+function decrypt(data: Uint8Array, key: number, discardNumber: number) {
   if (discardNumber >= data.length) {
     return new Uint8Array(0);
   }
@@ -398,7 +406,7 @@ function decrypt(data, key, discardNumber) {
   return decrypted;
 }
 
-function decryptAscii(data, key, discardNumber) {
+function decryptAscii(data: Uint8Array, key: number, discardNumber: number) {
   const c1 = 52845,
     c2 = 22719;
   let r = key | 0;
@@ -412,12 +420,12 @@ function decryptAscii(data, key, discardNumber) {
       continue;
     }
     i++;
-    let digit2;
+    let digit2: number;
     while (i < count && !isHexDigit((digit2 = data[i]))) {
       i++;
     }
     if (i < count) {
-      const value = parseInt(String.fromCharCode(digit1, digit2), 16);
+      const value = parseInt(String.fromCharCode(digit1, digit2!), 16);
       decrypted[j++] = value ^ (r >> 8);
       r = ((value + r) * c1 + c2) & ((1 << 16) - 1);
     }
@@ -425,7 +433,7 @@ function decryptAscii(data, key, discardNumber) {
   return decrypted.slice(discardNumber, j);
 }
 
-function isSpecial(c) {
+function isSpecial(c: number) {
   return (
     c === /* '/' = */ 0x2f ||
     c === /* '[' = */ 0x5b ||
@@ -437,6 +445,8 @@ function isSpecial(c) {
   );
 }
 
+type CharStringObjectType = { glyphName: string | null; charstring: number[]; width: number; lsb: number; seac: number[]; }
+
 /**
  * Type1Parser encapsulate the needed code for parsing a Type1 font program.
  * Some of its logic depends on the Type2 charstrings structure.
@@ -445,7 +455,14 @@ function isSpecial(c) {
  *       without a full parse.
  */
 class Type1Parser {
-  constructor(stream, encrypted, seacAnalysisEnabled) {
+
+  protected seacAnalysisEnabled: boolean;
+
+  protected stream: Stream;
+
+  protected currentChar: number | null = null;
+
+  constructor(stream: Stream, encrypted: boolean, seacAnalysisEnabled: boolean) {
     if (encrypted) {
       const data = stream.getBytes();
       const isBinary = !(
@@ -458,11 +475,9 @@ class Type1Parser {
         isHexDigit(data[6]) &&
         isHexDigit(data[7])
       );
-      stream = new Stream(
-        isBinary
-          ? decrypt(data, EEXEC_ENCRYPT_KEY, 4)
-          : decryptAscii(data, EEXEC_ENCRYPT_KEY, 4)
-      );
+      const key = EEXEC_ENCRYPT_KEY;
+      const param = isBinary ? decrypt(data, key, 4) : decryptAscii(data, key, 4);
+      stream = new Stream(param);
     }
     this.seacAnalysisEnabled = !!seacAnalysisEnabled;
 
@@ -478,21 +493,25 @@ class Type1Parser {
       if (token === null || token === "]" || token === "}") {
         break;
       }
-      array.push(parseFloat(token || 0));
+
+      // 这里由数字0改成了字符串0
+      array.push(parseFloat(token || "0"));
     }
     return array;
   }
 
   readNumber() {
     const token = this.getToken();
-    return parseFloat(token || 0);
+    // 这里由数字0改成了字符串0
+    return parseFloat(token || "0");
   }
 
   readInt() {
     // Use '| 0' to prevent setting a double into length such as the double
     // does not flow into the loop variable.
     const token = this.getToken();
-    return parseInt(token || 0, 10) | 0;
+    // 这里的由数字0改为了字符串0
+    return parseInt(token || "0", 10) | 0;
   }
 
   readBoolean() {
@@ -513,7 +532,7 @@ class Type1Parser {
   getToken() {
     // Eat whitespace and comments.
     let comment = false;
-    let ch = this.currentChar;
+    let ch = this.currentChar!;
     while (true) {
       if (ch === -1) {
         return null;
@@ -542,7 +561,7 @@ class Type1Parser {
     return token;
   }
 
-  readCharStrings(bytes, lenIV) {
+  readCharStrings(bytes: Uint8Array, lenIV: number) {
     if (lenIV === -1) {
       // This isn't in the spec, but Adobe's tx program handles -1
       // as plain text.
@@ -558,13 +577,13 @@ class Type1Parser {
   extractFontProgram(properties: EvaluatorProperties) {
     const stream = this.stream;
 
-    const subrs = [],
-      charstrings = [];
+    const subrs = [];
+    const charstrings = [];
     const privateData = Object.create(null);
     privateData.lenIV = 4;
     const program = {
       subrs: [],
-      charstrings: [],
+      charstrings: <CharStringObjectType[]>[],
       properties: {
         privateData,
       },
@@ -687,7 +706,7 @@ class Type1Parser {
         // here and put an endchar to make the validator happy.
         output = [14];
       }
-      const charStringObject = {
+      const charStringObject: CharStringObjectType = {
         glyphName: glyph,
         charstring: output,
         width: charString.width,
@@ -729,10 +748,10 @@ class Type1Parser {
       switch (token) {
         case "FontMatrix":
           const matrix = this.readNumberArray();
-          properties.fontMatrix = matrix;
+          properties.fontMatrix = <TransformType>matrix;
           break;
         case "Encoding":
-          const encodingArg = this.getToken();
+          const encodingArg = this.getToken()!;
           let encoding;
           if (!/^\d+$/.test(encodingArg)) {
             // encoding name is specified

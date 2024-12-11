@@ -17,7 +17,7 @@ import { unreachable } from "../shared/util";
 
 class ToUnicodeMap {
 
-  protected _map: string[];
+  protected _map: (number | string)[];
 
   constructor(cmap: string[] = []) {
     // The elements of this._map can be integers or strings, depending on how
@@ -31,7 +31,7 @@ class ToUnicodeMap {
 
   forEach(callback: (index: string, char: number) => void) {
     for (const charCode in this._map) {
-      callback(charCode, this._map[charCode].charCodeAt(0));
+      callback(charCode, (<string>this._map[charCode]).charCodeAt(0));
     }
   }
 
@@ -44,7 +44,7 @@ class ToUnicodeMap {
   }
 
   // 究竟是数字还是字符串，需要再考虑一下
-  charCodeOf(value) {
+  charCodeOf(value: string | number) {
     // `Array.prototype.indexOf` is *extremely* inefficient for arrays which
     // are both very sparse and very large (see issue8372.pdf).
     const map = this._map;

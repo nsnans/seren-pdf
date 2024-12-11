@@ -133,6 +133,7 @@ type CFFInfo = {
 }
 
 function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled: boolean): CFFInfo {
+  // 这个变量根本就没有用到过
   const properties = {};
   const parser = new CFFParser(
     new Stream(data, start, end - start),
@@ -925,7 +926,7 @@ class Type2Compiled extends CompiledFont {
   public glyphNameMap: Record<string, number>;
 
   constructor(cffInfo: CFFInfo, cmap: CMapRange[], fontMatrix: TransformType
-    , glyphNameMap: Record<string, number>) {
+    , glyphNameMap: Record<string, number> | null) {
     super(fontMatrix || [0.001, 0, 0, 0.001, 0, 0]);
 
     this._glyphs = <Uint8Array[]>cffInfo.glyphs;
