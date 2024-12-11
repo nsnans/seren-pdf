@@ -21,7 +21,7 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { CFFParser } from "./cff_parser";
+import { CFFDict, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
 import { getGlyphsUnicode } from "./glyphlist";
 import { isNumberArray } from "./core_utils";
 import { StandardEncoding } from "./encodings";
@@ -58,7 +58,7 @@ function getFloat214(data: Uint8Array, offset: number) {
   return getInt16(data, offset) / 16384;
 }
 
-function getSubroutineBias(subrs: string) {
+function getSubroutineBias(subrs: string | any[]) {
   const numSubrs = subrs.length;
   let bias = 32768;
   if (numSubrs < 1240) {
@@ -69,13 +69,15 @@ function getSubroutineBias(subrs: string) {
   return bias;
 }
 
+type CMapRange = { start?: number, end?: number, idDelta?: number, ids?: number[] };
+
 function parseCmap(data: Uint8Array, start: number, _end: number) {
   const offset =
     getUint16(data, start + 2) === 1
       ? getUint32(data, start + 8)
       : getUint32(data, start + 16);
   const format = getUint16(data, start + offset);
-  let ranges: { start?: number, end?: number, idDelta?: number, ids?: number[] }[], p, i;
+  let ranges: CMapRange[], p, i;
   if (format === 4) {
     getUint16(data, start + offset + 2); // length
     const segCount = getUint16(data, start + offset + 6) >> 1;
@@ -121,7 +123,16 @@ function parseCmap(data: Uint8Array, start: number, _end: number) {
   throw new FormatError(`unsupported cmap: ${format}`);
 }
 
-function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled: boolean) {
+type CFFInfo = {
+  glyphs: (Uint8Array | number[])[];
+  subrs: (Uint8Array | number[])[] | undefined;
+  gsubrs: (Uint8Array | number[])[] | undefined;
+  isCFFCIDFont: boolean;
+  fdSelect: CFFFDSelect | null;
+  fdArray: CFFDict[];
+}
+
+function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled: boolean): CFFInfo {
   const properties = {};
   const parser = new CFFParser(
     new Stream(data, start, end - start),
@@ -130,8 +141,8 @@ function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnab
   );
   const cff = parser.parse();
   return {
-    glyphs: cff.charStrings.objects,
-    subrs: cff.topDict.privateDict?.subrsIndex?.objects,
+    glyphs: cff.charStrings!.objects,
+    subrs: cff.topDict!.privateDict?.subrsIndex?.objects,
     gsubrs: cff.globalSubrIndex?.objects,
     isCFFCIDFont: cff.isCIDFont,
     fdSelect: cff.fdSelect,
@@ -139,14 +150,14 @@ function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnab
   };
 }
 
-function parseGlyfTable(glyf, loca, isGlyphLocationsLong) {
+function parseGlyfTable(glyf: Uint8Array, loca: Uint8Array, isGlyphLocationsLong: number): Uint8Array[] {
   let itemSize, itemDecode;
   if (isGlyphLocationsLong) {
     itemSize = 4;
     itemDecode = getUint32;
   } else {
     itemSize = 2;
-    itemDecode = (data, offset) => 2 * getUint16(data, offset);
+    itemDecode = (data: Uint8Array, offset: number) => 2 * getUint16(data, offset);
   }
   const glyphs = [];
   let startOffset = itemDecode(loca, 0);
@@ -158,23 +169,23 @@ function parseGlyfTable(glyf, loca, isGlyphLocationsLong) {
   return glyphs;
 }
 
-function lookupCmap(ranges, unicode: string): { charCode: number, glyphId: number } {
+function lookupCmap(ranges: CMapRange[], unicode: string): { charCode: number, glyphId: number } {
   const code = unicode.codePointAt(0)!;
   let gid = 0,
     l = 0,
     r = ranges.length - 1;
   while (l < r) {
     const c = (l + r + 1) >> 1;
-    if (code < ranges[c].start) {
+    if (code < ranges[c].start!) {
       r = c - 1;
     } else {
       l = c;
     }
   }
-  if (ranges[l].start <= code && code <= ranges[l].end) {
+  if (ranges[l].start! <= code && code <= ranges[l].end!) {
     gid =
-      (ranges[l].idDelta +
-        (ranges[l].ids ? ranges[l].ids[code - ranges[l].start] : code)) &
+      (ranges[l].idDelta! +
+        (ranges[l].ids ? ranges[l].ids![code - ranges[l].start!] : code)) &
       0xffff;
   }
   return {
@@ -183,22 +194,24 @@ function lookupCmap(ranges, unicode: string): { charCode: number, glyphId: numbe
   };
 }
 
-function compileGlyf(code, cmds, font) {
+function compileGlyf(code: Uint8Array, cmds: Commands, font: CompiledFont) {
+
   function moveTo(x: number, y: number) {
     cmds.add(FontRenderOps.MOVE_TO, [x, y]);
   }
+
   function lineTo(x: number, y: number) {
     cmds.add(FontRenderOps.LINE_TO, [x, y]);
   }
-  function quadraticCurveTo(xa, ya, x, y) {
+
+  function quadraticCurveTo(xa: number, ya: number, x: number, y: number) {
     cmds.add(FontRenderOps.QUADRATIC_CURVE_TO, [xa, ya, x, y]);
   }
 
   let i = 0;
   const numberOfContours = getInt16(code, i);
   let flags;
-  let x = 0,
-    y = 0;
+  let x = 0, y = 0;
   i += 10;
   if (numberOfContours < 0) {
     // composite glyph
@@ -280,8 +293,8 @@ function compileGlyf(code, cmds, font) {
     }
     const instructionLength = getUint16(code, i);
     i += 2 + instructionLength; // skipping the instructions
-    const numberOfPoints = endPtsOfContours.at(-1) + 1;
-    const points = [];
+    const numberOfPoints = endPtsOfContours.at(-1)! + 1;
+    const points: { flags: number, x?: number, y?: number }[] = [];
     while (points.length < numberOfPoints) {
       flags = code[i++];
       let repeat = 1;
@@ -331,37 +344,37 @@ function compileGlyf(code, cmds, font) {
       const contour = points.slice(startPoint, endPoint + 1);
       if (contour[0].flags & 1) {
         contour.push(contour[0]); // using start point at the contour end
-      } else if (contour.at(-1).flags & 1) {
+      } else if (contour.at(-1)!.flags & 1) {
         // first is off-curve point, trying to use one from the end
-        contour.unshift(contour.at(-1));
+        contour.unshift(contour.at(-1)!);
       } else {
         // start and end are off-curve points, creating implicit one
         const p = {
           flags: 1,
-          x: (contour[0].x + contour.at(-1).x) / 2,
-          y: (contour[0].y + contour.at(-1).y) / 2,
+          x: (contour[0].x! + contour.at(-1)!.x!) / 2,
+          y: (contour[0].y! + contour.at(-1)!.y!) / 2,
         };
         contour.unshift(p);
         contour.push(p);
       }
-      moveTo(contour[0].x, contour[0].y);
+      moveTo(contour[0].x!, contour[0].y!);
       for (j = 1, jj = contour.length; j < jj; j++) {
         if (contour[j].flags & 1) {
-          lineTo(contour[j].x, contour[j].y);
+          lineTo(contour[j].x!, contour[j].y!);
         } else if (contour[j + 1].flags & 1) {
           quadraticCurveTo(
-            contour[j].x,
-            contour[j].y,
-            contour[j + 1].x,
-            contour[j + 1].y
+            contour[j].x!,
+            contour[j].y!,
+            contour[j + 1].x!,
+            contour[j + 1].y!
           );
           j++;
         } else {
           quadraticCurveTo(
-            contour[j].x,
-            contour[j].y,
-            (contour[j].x + contour[j + 1].x) / 2,
-            (contour[j].y + contour[j + 1].y) / 2
+            contour[j].x!,
+            contour[j].y!,
+            (contour[j].x! + contour[j + 1].x!) / 2,
+            (contour[j].y! + contour[j + 1].y!) / 2
           );
         }
       }
@@ -370,7 +383,7 @@ function compileGlyf(code, cmds, font) {
   }
 }
 
-function compileCharString(charStringCode: number[], cmds: Commands, font: CompiledFont, glyphId: number) {
+function compileCharString(charStringCode: number[] | Uint8Array, cmds: Commands, font: Type2Compiled, glyphId: number) {
   function moveTo(x: number, y: number) {
     cmds.add(FontRenderOps.MOVE_TO, [x, y]);
   }
@@ -386,7 +399,7 @@ function compileCharString(charStringCode: number[], cmds: Commands, font: Compi
   let x = 0, y = 0;
   let stems = 0;
 
-  function parse(code: number[]) {
+  function parse(code: number[] | Uint8Array) {
     let i = 0;
     while (i < code.length) {
       let stackClean = false;
@@ -447,15 +460,15 @@ function compileCharString(charStringCode: number[], cmds: Commands, font: Compi
           }
           break;
         case 10: // callsubr
-          n = stack.pop();
+          n = stack.pop()!;
           subrCode = null;
           if (font.isCFFCIDFont) {
-            const fdIndex = font.fdSelect.getFDIndex(glyphId);
+            const fdIndex = font.fdSelect!.getFDIndex(glyphId);
             if (fdIndex >= 0 && fdIndex < font.fdArray.length) {
               const fontDict = font.fdArray[fdIndex];
               let subrs;
-              if (fontDict.privateDict?.subrsIndex) {
-                subrs = fontDict.privateDict.subrsIndex.objects;
+              if ((<CFFTopDict>fontDict).privateDict?.subrsIndex) {
+                subrs = (<CFFTopDict>fontDict).privateDict!.subrsIndex!.objects;
               }
               if (subrs) {
                 // Add subroutine bias.
@@ -667,7 +680,7 @@ function compileCharString(charStringCode: number[], cmds: Commands, font: Compi
           i += 2;
           break;
         case 29: // callgsubr
-          n = stack.pop() + font.gsubrsBias;
+          n = stack.pop()! + font.gsubrsBias;
           subrCode = font.gsubrs[n];
           if (subrCode) {
             parse(subrCode);
@@ -779,6 +792,8 @@ class CompiledFont {
 
   protected compiledCharCodeToGlyphId: Record<number, number>;
 
+  public cmap: CMapRange[] = [];
+
   constructor(fontMatrix: TransformType) {
     if (PlatformHelper.isTesting() && this.constructor === CompiledFont) {
       unreachable("Cannot initialize CompiledFont.");
@@ -788,6 +803,22 @@ class CompiledFont {
 
     this.compiledGlyphs = <Record<number, any>>Object.create(null);
     this.compiledCharCodeToGlyphId = Object.create(null);
+  }
+
+  get glyphs(): Uint8Array[] {
+    return []
+  }
+
+  get isCFFCIDFont(): boolean {
+    return false;
+  }
+
+  get fdSelect(): CFFFDSelect | null {
+    return null;
+  }
+
+  get fdArray(): CFFDict[] {
+    return [];
   }
 
   getPathJs(unicode: string) {
@@ -812,7 +843,7 @@ class CompiledFont {
     return fn;
   }
 
-  compileGlyph(code, glyphId: number) {
+  compileGlyph(code: Uint8Array, glyphId: number) {
     if (!code || code.length === 0 || code[0] === 14) {
       return NOOP;
     }
@@ -821,7 +852,7 @@ class CompiledFont {
     if (this.isCFFCIDFont) {
       // Top DICT's FontMatrix can be ignored because CFFCompiler always
       // removes it and copies to FDArray DICTs.
-      const fdIndex = this.fdSelect.getFDIndex(glyphId);
+      const fdIndex = this.fdSelect!.getFDIndex(glyphId);
       if (fdIndex >= 0 && fdIndex < this.fdArray.length) {
         const fontDict = this.fdArray[fdIndex];
         fontMatrix = fontDict.getByName("FontMatrix") || FONT_IDENTITY_MATRIX;
@@ -840,7 +871,7 @@ class CompiledFont {
     return cmds.cmds;
   }
 
-  compileGlyphImpl() {
+  compileGlyphImpl(_code: Uint8Array, _cmds: Commands, _glyphId: number): void {
     unreachable("Children classes should implement this.");
   }
 
@@ -854,37 +885,76 @@ class CompiledFont {
 }
 
 class TrueTypeCompiled extends CompiledFont {
-  constructor(glyphs, cmap, fontMatrix) {
+
+  protected _glyphs: Uint8Array[];
+
+  constructor(glyphs: Uint8Array[], cmap: CMapRange[], fontMatrix: TransformType | null) {
     super(fontMatrix || [0.000488, 0, 0, 0.000488, 0, 0]);
 
-    this.glyphs = glyphs;
+    this._glyphs = glyphs;
     this.cmap = cmap;
   }
 
-  compileGlyphImpl(code, cmds) {
+  get glyphs(): Uint8Array[] {
+    return this._glyphs;
+  }
+
+  compileGlyphImpl(code: Uint8Array, cmds: Commands) {
     compileGlyf(code, cmds, this);
   }
 }
 
 class Type2Compiled extends CompiledFont {
-  constructor(cffInfo, cmap, fontMatrix, glyphNameMap) {
+
+  protected _glyphs: Uint8Array[];
+
+  public gsubrs;
+
+  public subrs: Uint8Array[]
+
+  protected _isCFFCIDFont: boolean;
+
+  public gsubrsBias: number;
+
+  public subrsBias: number;
+
+  protected _fdSelect: CFFFDSelect;
+
+  protected _fdArray: CFFDict[];
+
+  public glyphNameMap: Record<string, number>;
+
+  constructor(cffInfo: CFFInfo, cmap: CMapRange[], fontMatrix: TransformType
+    , glyphNameMap: Record<string, number>) {
     super(fontMatrix || [0.001, 0, 0, 0.001, 0, 0]);
 
-    this.glyphs = cffInfo.glyphs;
-    this.gsubrs = cffInfo.gsubrs || [];
-    this.subrs = cffInfo.subrs || [];
+    this._glyphs = <Uint8Array[]>cffInfo.glyphs;
+    this.gsubrs = <Uint8Array[] | null>cffInfo.gsubrs || [];
+    this.subrs = <Uint8Array[] | null>cffInfo.subrs || [];
     this.cmap = cmap;
-    this.glyphNameMap = glyphNameMap || getGlyphsUnicode();
+    this.glyphNameMap = glyphNameMap || getGlyphsUnicode()!;
 
     this.gsubrsBias = getSubroutineBias(this.gsubrs);
     this.subrsBias = getSubroutineBias(this.subrs);
 
-    this.isCFFCIDFont = cffInfo.isCFFCIDFont;
-    this.fdSelect = cffInfo.fdSelect;
-    this.fdArray = cffInfo.fdArray;
+    this._isCFFCIDFont = cffInfo.isCFFCIDFont;
+    this._fdSelect = cffInfo.fdSelect!;
+    this._fdArray = cffInfo.fdArray;
   }
 
-  compileGlyphImpl(code, cmds?: Commands, glyphId: number) {
+  get isCFFCIDFont(): boolean {
+    return this._isCFFCIDFont;
+  }
+
+  get glyphs() {
+    return this._glyphs;
+  }
+
+  get fdSelect() {
+    return this._fdSelect;
+  }
+
+  compileGlyphImpl(code: Uint8Array, cmds: Commands, glyphId: number) {
     compileCharString(code, cmds!, this, glyphId);
   }
 }
@@ -923,12 +993,12 @@ class FontRendererFactory {
         ? font.fontMatrix
         : [1 / unitsPerEm, 0, 0, 1 / unitsPerEm, 0, 0];
       return new TrueTypeCompiled(
-        parseGlyfTable(glyf, loca, indexToLocFormat),
-        cmap,
-        fontMatrix
+        parseGlyfTable(glyf, loca!, indexToLocFormat!),
+        cmap!,
+        <TransformType>fontMatrix
       );
     }
-    return new Type2Compiled(cff, cmap, font.fontMatrix, font.glyphNameMap);
+    return new Type2Compiled(cff!, cmap!, font.fontMatrix, font.glyphNameMap);
   }
 }
 

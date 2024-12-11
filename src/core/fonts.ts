@@ -1021,6 +1021,9 @@ class Font {
   public isCharBBox: boolean | null = null;
   public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
 
+  // 暂时先是null吧，具体啥值，需要等到后面处理的比较完整的时候才知道
+  public glyphNameMap: null = null;
+
   constructor(name: string, file: Stream, properties: EvaluatorProperties) {
     this.name = name;
     this.psName = null;

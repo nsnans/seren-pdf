@@ -82,7 +82,7 @@ const MacStandardGlyphOrdering = [
 
 // Some bad PDF generators, e.g. Scribus PDF, include glyph names
 // in a 'uniXXXX' format -- attempting to recover proper ones.
-function recoverGlyphName(name, glyphsUnicodeMap) {
+function recoverGlyphName(name: string, glyphsUnicodeMap: Record<string, number>) {
   if (glyphsUnicodeMap[name] !== undefined) {
     return name;
   }
@@ -109,7 +109,9 @@ function recoverGlyphName(name, glyphsUnicodeMap) {
  *   glyph ID.
  * @returns {Object} A char code to glyph ID map.
  */
-function type1FontGlyphMapping(properties: EvaluatorProperties, builtInEncoding, glyphNames) {
+function type1FontGlyphMapping(properties: EvaluatorProperties
+  , builtInEncoding: (string | number)[]
+  , glyphNames: (string | number)[]) {
   const charCodeToGlyphId = Object.create(null);
   let glyphId, charCode, baseEncoding;
   const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
@@ -155,7 +157,7 @@ function type1FontGlyphMapping(properties: EvaluatorProperties, builtInEncoding,
         if (!glyphsUnicodeMap) {
           glyphsUnicodeMap = getGlyphsUnicode();
         }
-        const standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap);
+        const standardGlyphName = recoverGlyphName(glyphName, glyphsUnicodeMap!);
         if (standardGlyphName !== glyphName) {
           glyphId = glyphNames.indexOf(standardGlyphName);
         }

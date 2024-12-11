@@ -47,7 +47,20 @@ const BOLDITALIC = {
   weight: "bold",
 };
 
-const substitutionMap = new Map([
+type FontSubstitution = {
+  local?: string[],
+  style?: {
+    style: string,
+    weight: string,
+  },
+  ultimate?: string,
+  alias?: string,
+  path?: string,
+  fallback?: string
+}
+
+
+const substitutionMap = new Map<string, FontSubstitution>([
   [
     "Times-Roman",
     {
@@ -394,16 +407,16 @@ function getFamilyName(str: string) {
  * @return {Object} { style, ultimate }.
  */
 function generateFont(
-  { alias, local, path, fallback, style, ultimate },
-  src,
-  localFontPath,
+  { alias, local, path, fallback, style, ultimate }: FontSubstitution,
+  src: string[],
+  localFontPath: string,
   useFallback = true,
   usePath = true,
   append = ""
 ) {
   const result = {
-    style: null,
-    ultimate: null,
+    style: <{ style: string; weight: string; } | null>null,
+    ultimate: <string | null>null,
   };
   if (local) {
     const extra = append ? ` ${append}` : "";
@@ -412,8 +425,8 @@ function generateFont(
     }
   }
   if (alias) {
-    const substitution = substitutionMap.get(alias);
-    const aliasAppend = append || getStyleToAppend(style);
+    const substitution = substitutionMap.get(alias)!;
+    const aliasAppend = append || getStyleToAppend(style!);
     Object.assign(
       result,
       generateFont(
@@ -433,7 +446,7 @@ function generateFont(
     result.ultimate = ultimate;
   }
   if (useFallback && fallback) {
-    const fallbackInfo = substitutionMap.get(fallback);
+    const fallbackInfo = substitutionMap.get(fallback)!;
     const { ultimate: fallbackUltimate } = generateFont(
       fallbackInfo,
       src,

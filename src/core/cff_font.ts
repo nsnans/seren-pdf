@@ -28,6 +28,8 @@ class CFFFont {
   // 解析成功的时候是any[]，失败的时候是Stream
   protected data: any[] | Stream;
 
+  protected seacs: number[][];
+
   constructor(file: Stream, properties: EvaluatorProperties) {
     this.properties = properties;
 
@@ -48,7 +50,7 @@ class CFFFont {
   }
 
   get numGlyphs() {
-    return this.cff.charStrings.count;
+    return this.cff.charStrings!.count;
   }
 
   getCharset() {
@@ -99,7 +101,7 @@ class CFFFont {
       } else {
         // If it is NOT actually a CID font then CIDs should be mapped
         // directly to GIDs.
-        for (glyphId = 0; glyphId < cff.charStrings.count; glyphId++) {
+        for (glyphId = 0; glyphId < cff.charStrings!.count; glyphId++) {
           charCode = cMap!.charCodeOf(glyphId);
           charCodeToGlyphId[charCode] = glyphId;
         }
@@ -107,11 +109,11 @@ class CFFFont {
       return charCodeToGlyphId;
     }
 
-    let encoding = cff.encoding ? cff.encoding.encoding : null;
+    let encoding: (number | string)[] | null = cff.encoding ? cff.encoding.encoding : null;
     if (properties.isInternalFont) {
       encoding = properties.defaultEncoding;
     }
-    charCodeToGlyphId = type1FontGlyphMapping(properties, encoding, charsets);
+    charCodeToGlyphId = type1FontGlyphMapping(properties, encoding!, charsets);
     return charCodeToGlyphId;
   }
 

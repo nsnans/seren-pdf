@@ -659,7 +659,7 @@ function bytesToString(bytes: Uint8Array) {
   return strBuf.join("");
 }
 
-function stringToBytes(str: string) {
+function stringToBytes(str: string): Uint8Array {
   if (typeof str !== "string") {
     unreachable("Invalid argument for stringToBytes");
   }

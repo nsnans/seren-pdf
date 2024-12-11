@@ -109,7 +109,16 @@ const CFFStandardStrings = [
 
 const NUM_STANDARD_CFF_STRINGS = 391;
 
-const CharstringValidationData = [
+type CharstringValidationDataType = {
+  id: string,
+  min: number,
+  stackClearing?: boolean,
+  resetStack?: boolean,
+  stem?: boolean
+  undefStack?: boolean
+};
+
+const CharstringValidationData: (CharstringValidationDataType | null)[] = [
   /*  0 */ null,
   /*  1 */ { id: "hstem", min: 2, stackClearing: true, stem: true },
   /*  2 */ null,
@@ -144,7 +153,15 @@ const CharstringValidationData = [
   /* 31 */ { id: "hvcurveto", min: 4, resetStack: true },
 ];
 
-const CharstringValidationData12 = [
+type CharstringValidationData12Type = {
+  id: string,
+  min: number,
+  stackDelta?: number,
+  stackFn?: (stack: number[], index: number) => void,
+  resetStack?: boolean
+};
+
+const CharstringValidationData12: (CharstringValidationData12Type | null)[] = [
   null,
   null,
   null,
@@ -219,6 +236,18 @@ const CharstringValidationData12 = [
   { id: "hflex1", min: 9, resetStack: true },
   { id: "flex1", min: 11, resetStack: true },
 ];
+
+export interface CharStringsParserState {
+  callDepth: number;
+  stackSize: number;
+  stack: number[];
+  undefStack: boolean;
+  hints: number;
+  firstStackClearing: boolean;
+  seac: number[] | null;
+  width: number | null;
+  hasVStems: boolean;
+}
 
 class CFFParser {
 
@@ -494,7 +523,7 @@ class CFFParser {
     return cffDict;
   }
 
-  parseCharString(state, data: Uint8Array | number[], localSubrIndex: CFFIndex, globalSubrIndex: CFFIndex) {
+  parseCharString(state: CharStringsParserState, data: Uint8Array | number[], localSubrIndex: CFFIndex, globalSubrIndex: CFFIndex) {
     if (!data || state.callDepth > MAX_SUBR_NESTING) {
       return false;
     }
@@ -505,7 +534,7 @@ class CFFParser {
 
     for (let j = 0; j < length;) {
       const value = data[j++];
-      let validationCommand = null;
+      let validationCommand: CharstringValidationData12Type | CharstringValidationDataType | null = null;
       if (value === 12) {
         const q = data[j++];
         if (q === 0) {
@@ -625,7 +654,7 @@ class CFFParser {
         validationCommand = CharstringValidationData[value];
       }
       if (validationCommand) {
-        if (validationCommand.stem) {
+        if ((<CharstringValidationDataType>validationCommand).stem) {
           state.hints += stackSize >> 1;
           if (value === 3 || value === 23) {
             // vstem or vstemhm.
@@ -659,12 +688,12 @@ class CFFParser {
             return false;
           }
         }
-        if (state.firstStackClearing && validationCommand.stackClearing) {
+        if (state.firstStackClearing && (<CharstringValidationDataType>validationCommand).stackClearing) {
           state.firstStackClearing = false;
           // the optional character width can be found before the first
           // stack-clearing command arguments
           stackSize -= validationCommand.min;
-          if (stackSize >= 2 && validationCommand.stem) {
+          if (stackSize >= 2 && (<CharstringValidationDataType>validationCommand).stem) {
             // there are even amount of arguments for stem commands
             stackSize %= 2;
           } else if (stackSize > 1) {
@@ -680,13 +709,13 @@ class CFFParser {
           if ("stackFn" in validationCommand) {
             validationCommand!.stackFn!(stack, stackSize);
           }
-          stackSize += validationCommand.stackDelta;
-        } else if (validationCommand.stackClearing) {
+          stackSize += validationCommand.stackDelta!;
+        } else if ((<CharstringValidationDataType>validationCommand).stackClearing) {
           stackSize = 0;
         } else if (validationCommand.resetStack) {
           stackSize = 0;
           state.undefStack = false;
-        } else if (validationCommand.undefStack) {
+        } else if ((<CharstringValidationDataType>validationCommand).undefStack) {
           stackSize = 0;
           state.undefStack = true;
           state.firstStackClearing = false;
@@ -708,12 +737,12 @@ class CFFParser {
     fdArray: CFFDict[],
     privateDict: CFFPrivateDict,
   ) {
-    const seacs: number[] = [];
+    const seacs: number[][] = [];
     const widths: number[] = [];
     const count = charStrings.count;
     for (let i = 0; i < count; i++) {
       const charstring = charStrings.get(i);
-      const state = {
+      const state: CharStringsParserState = {
         callDepth: 0,
         stackSize: 0,
         stack: [],
@@ -1019,7 +1048,7 @@ class CFF {
 
   public topDict: CFFTopDict | null;
 
-  public globalSubrIndex;
+  public globalSubrIndex: CFFIndex | null;
 
   public encoding: CFFEncoding | null;
 
@@ -1031,7 +1060,7 @@ class CFF {
 
   public fdSelect: CFFFDSelect | null;
 
-  public seacs: number[] = [];
+  public seacs: number[][] = [];
 
   public widths: number[] = [];
 
@@ -1172,7 +1201,7 @@ type CFFDictTable = {
   order: number[];
 }
 
-class CFFDict {
+export class CFFDict {
 
   public strings: CFFStrings;
 
@@ -1363,7 +1392,7 @@ class CFFPrivateDict extends CFFDict {
 
   public subrsIndex: CFFIndex | null;
 
-  constructor(strings: CFFStrings) {
+  constructor(strings: CFFStrings = new CFFStrings()) {
     super(CFFPrivateDict.tables, strings);
     this.subrsIndex = null;
   }
@@ -1570,7 +1599,7 @@ class CFFCompiler {
     const stringIndex = this.compileStringIndex(cff.strings.strings);
     output.add(stringIndex);
 
-    const globalSubrIndex = this.compileIndex(cff.globalSubrIndex);
+    const globalSubrIndex = this.compileIndex(cff.globalSubrIndex!);
     output.add(globalSubrIndex);
 
     // Now start on the other entries that have no specific order.
@@ -1774,7 +1803,7 @@ class CFFCompiler {
     for (let i = 0, ii = dicts.length; i < ii; ++i) {
       const fontDict = dicts[i];
       // 这种写法也是有毛病的
-      const privateDict = fontDict.privateDict;
+      const privateDict = fontDict instanceof CFFTopDict ? fontDict.privateDict : null;
       if (!privateDict || !fontDict.hasName("Private")) {
         throw new FormatError("There must be a private dictionary.");
       }
