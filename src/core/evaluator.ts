@@ -132,9 +132,9 @@ export interface EvaluatorProperties {
   cidEncoding: string;
   defaultVMetrics: number[];
   vmetrics: number[][];
-  length1: any;
-  length2: any;
-  length3: any;
+  length1: number | null;
+  length2: number | null;
+  length3: number | null;
   fixedPitch: boolean;
   fontMatrix: TransformType | null;
   bbox: RectType | null;
@@ -148,6 +148,7 @@ export interface CssFontInfo {
   fontFamily: string,
   fontWeight: number,
   italicAngle: number,
+  lineHeight?: number,
   metrics: { lineHeight: number, lineGap: number }
 }
 
@@ -2630,7 +2631,7 @@ class PartialEvaluator {
         (textState!.fontSize <= 1 || font.isCharBBox) &&
         !isArrayEqual(textState!.fontMatrix, FONT_IDENTITY_MATRIX)
       ) {
-        const glyphHeight = (<Font>font).bbox[3] - (<Font>font).bbox[1];
+        const glyphHeight = (<Font>font).bbox![3] - (<Font>font).bbox![1];
         if (glyphHeight > 0) {
           tsm[3] *= glyphHeight * textState!.fontMatrix[3];
         }
@@ -2658,8 +2659,8 @@ class PartialEvaluator {
         };
         if (self.options.fontExtraProperties && (<Font>font).systemFontInfo) {
           const style = textContent.styles[loadedName];
-          style.fontSubstitution = (<Font>font).systemFontInfo.css;
-          style.fontSubstitutionLoadedName = (<Font>font).systemFontInfo.loadedName;
+          style.fontSubstitution = (<Font>font).systemFontInfo!.css;
+          style.fontSubstitutionLoadedName = (<Font>font).systemFontInfo!.loadedName;
         }
       }
       textContentItem.fontName = loadedName;
@@ -4456,9 +4457,9 @@ class PartialEvaluator {
           defaultVMetrics: [],
           vmetrics: [],
           subtype: null,
-          length1: undefined,
-          length2: undefined,
-          length3: undefined,
+          length1: null,
+          length2: null,
+          length3: null,
           fixedPitch: false,
           fontMatrix: null,
           bbox: null,

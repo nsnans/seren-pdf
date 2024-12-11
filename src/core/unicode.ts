@@ -45,19 +45,19 @@ const getSpecialPUASymbols = getLookupTableFactory(function (t) {
   t[63736] = 0x23a0; // parenrightbt (0xF8F8)
 });
 
-function mapSpecialUnicodeValues(code) {
+function mapSpecialUnicodeValues(code: number): number {
   if (code >= 0xfff0 && code <= 0xffff) {
     // Specials unicode block.
     return 0;
   } else if (code >= 0xf600 && code <= 0xf8ff) {
-    return getSpecialPUASymbols()[code] || code;
+    return getSpecialPUASymbols()![code] || code;
   } else if (code === /* softhyphen = */ 0x00ad) {
     return 0x002d; // hyphen
   }
   return code;
 }
 
-function getUnicodeForGlyph(name: string, glyphsUnicodeMap: Record<string, number>) {
+function getUnicodeForGlyph(name: string, glyphsUnicodeMap: Record<string, number>): number {
   let unicode = glyphsUnicodeMap[name];
   if (unicode !== undefined) {
     return unicode;

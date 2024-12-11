@@ -445,7 +445,7 @@ function isSpecial(c: number) {
   );
 }
 
-type CharStringObjectType = { glyphName: string | null; charstring: number[]; width: number; lsb: number; seac: number[]; }
+export type CharStringObjectType = { glyphName: string | null; charstring: number[]; width: number; lsb: number; seac: number[]; }
 
 /**
  * Type1Parser encapsulate the needed code for parsing a Type1 font program.

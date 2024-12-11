@@ -69,6 +69,7 @@ import { TransformType } from "../display/display_utils";
 import { OperatorListIR } from "./operator_list";
 import { DictKey } from "./primitives";
 import { EvaluatorProperties } from "./evaluator";
+import { PlatformHelper } from "../platform/platform_helper";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -138,7 +139,8 @@ function adjustWidths(properties: EvaluatorProperties) {
   properties.defaultWidth *= scale;
 }
 
-function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont: boolean, nameRecords) {
+function adjustTrueTypeToUnicode(properties: EvaluatorProperties
+  , isSymbolicFont: boolean, nameRecords) {
   if (properties.isInternalFont) {
     return;
   }
@@ -169,8 +171,8 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont
   }
   const encoding = WinAnsiEncoding;
 
-  const toUnicode = [];
-  const glyphsUnicodeMap = getGlyphsUnicode();
+  const toUnicode: string[] = [];
+  const glyphsUnicodeMap = getGlyphsUnicode()!;
   for (const charCode in encoding) {
     const glyphName = encoding[charCode];
     if (glyphName === "") {
@@ -183,11 +185,11 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties, isSymbolicFont
     toUnicode[charCode] = String.fromCharCode(unicode);
   }
   if (toUnicode.length > 0) {
-    properties.toUnicode.amend(toUnicode);
+    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
   }
 }
 
-function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding) {
+function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding: (string | number)[]) {
   if (properties.isInternalFont) {
     return;
   }
@@ -200,8 +202,8 @@ function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding) 
   if (properties.toUnicode instanceof IdentityToUnicodeMap) {
     return;
   }
-  const toUnicode = [],
-    glyphsUnicodeMap = getGlyphsUnicode();
+  const toUnicode = [];
+  const glyphsUnicodeMap = getGlyphsUnicode()!;
   for (const charCode in builtInEncoding) {
     if (properties.hasEncoding) {
       if (
@@ -212,13 +214,14 @@ function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding) 
       }
     }
     const glyphName = builtInEncoding[charCode];
-    const unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
+    const unicode = getUnicodeForGlyph(<string>glyphName, glyphsUnicodeMap);
     if (unicode !== -1) {
-      toUnicode[charCode] = String.fromCharCode(unicode);
+      // 因为是charCode in的缘故，这里做一个强转
+      toUnicode[Number.parseInt(charCode)] = String.fromCharCode(unicode);
     }
   }
   if (toUnicode.length > 0) {
-    properties.toUnicode.amend(toUnicode);
+    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
   }
 }
 
@@ -235,13 +238,13 @@ function amendFallbackToUnicode(properties: EvaluatorProperties) {
   }
   const toUnicode = [];
   for (const charCode in properties.fallbackToUnicode) {
-    if (properties.toUnicode.has(charCode)) {
+    if ((<IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode).has(Number.parseInt(charCode))) {
       continue; // The font dictionary has a `ToUnicode` entry.
     }
-    toUnicode[charCode] = properties.fallbackToUnicode[charCode];
+    toUnicode[Number.parseInt(charCode)] = properties.fallbackToUnicode[charCode];
   }
   if (toUnicode.length > 0) {
-    properties.toUnicode.amend(toUnicode);
+    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
   }
 }
 
@@ -266,13 +269,13 @@ export class Glyph {
   protected isInFont;
 
   constructor(
-    originalCharCode,
+    originalCharCode: number,
     fontChar: string,
-    unicode,
+    unicode: string,
     accent,
-    width,
-    vmetric,
-    operatorListId,
+    width: number,
+    vmetric: number[] | null,
+    operatorListId: number | null,
     isSpace: boolean,
     isInFont: boolean
   ) {
@@ -306,7 +309,7 @@ function int16(b0: number, b1: number) {
   return (b0 << 8) + b1;
 }
 
-function writeSignedInt16(bytes, index, value) {
+function writeSignedInt16(bytes: Uint8Array, index: number, value: number) {
   bytes[index + 1] = value;
   bytes[index] = value >>> 8;
 }
@@ -316,7 +319,7 @@ function signedInt16(b0: number, b1: number) {
   return value & (1 << 15) ? value - 0x10000 : value;
 }
 
-function writeUint32(bytes, index, value) {
+function writeUint32(bytes, index: number, value: number) {
   bytes[index + 3] = value & 0xff;
   bytes[index + 2] = value >>> 8;
   bytes[index + 1] = value >>> 16;
@@ -327,8 +330,8 @@ function int32(b0: number, b1: number, b2: number, b3: number) {
   return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
 }
 
-function string16(value) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+function string16(value: number) {
+  if (PlatformHelper.isTesting()) {
     assert(
       typeof value === "number" && Math.abs(value) < 2 ** 16,
       `string16: Unexpected input "${value}".`
@@ -337,8 +340,8 @@ function string16(value) {
   return String.fromCharCode((value >> 8) & 0xff, value & 0xff);
 }
 
-function safeString16(value) {
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+function safeString16(value: number) {
+  if (PlatformHelper.isTesting()) {
     assert(
       typeof value === "number" && !Number.isNaN(value),
       `safeString16: Unexpected input "${value}".`
@@ -353,24 +356,24 @@ function safeString16(value) {
   return String.fromCharCode((value >> 8) & 0xff, value & 0xff);
 }
 
-function isTrueTypeFile(file) {
+function isTrueTypeFile(file: Stream) {
   const header = file.peekBytes(4);
   return (
     readUint32(header, 0) === 0x00010000 || bytesToString(header) === "true"
   );
 }
 
-function isTrueTypeCollectionFile(file) {
+function isTrueTypeCollectionFile(file: Stream) {
   const header = file.peekBytes(4);
   return bytesToString(header) === "ttcf";
 }
 
-function isOpenTypeFile(file) {
+function isOpenTypeFile(file: Stream) {
   const header = file.peekBytes(4);
   return bytesToString(header) === "OTTO";
 }
 
-function isType1File(file) {
+function isType1File(file: Stream) {
   const header = file.peekBytes(2);
   // All Type1 font programs must begin with the comment '%!' (0x25 + 0x21).
   if (header[0] === 0x25 && header[1] === 0x21) {
@@ -389,7 +392,7 @@ function isType1File(file) {
  * but contains version numbers. To reduce the possibility of misclassifying
  * font files as CFF, it's recommended to check for other font formats first.
  */
-function isCFFFile(file) {
+function isCFFFile(file: Stream) {
   const header = file.peekBytes(4);
   if (
     /* major version, [1, 255] */ header[0] >= 1 &&
@@ -403,8 +406,9 @@ function isCFFFile(file) {
   return false;
 }
 
-function getFontFileType(file, { type, subtype, composite }: EvaluatorProperties) {
-  let fileType, fileSubtype;
+function getFontFileType(file: Stream, { type, subtype, composite }: EvaluatorProperties)
+  : [string, string | null] {
+  let fileType, fileSubtype = null;
 
   if (isTrueTypeFile(file) || isTrueTypeCollectionFile(file)) {
     fileType = composite ? "CIDFontType2" : "TrueType";
@@ -439,7 +443,8 @@ function applyStandardFontGlyphMap(map: number[], glyphMap: Record<number, numbe
   }
 }
 
-function buildToFontChar(encoding, glyphsUnicodeMap, differences) {
+function buildToFontChar(encoding: string[], glyphsUnicodeMap: Record<string, number>
+  , differences: string[]): number[] {
   const toFontChar = [];
   let unicode;
   for (let i = 0, ii = encoding.length; i < ii; i++) {
@@ -459,15 +464,15 @@ function buildToFontChar(encoding, glyphsUnicodeMap, differences) {
 
 // Please refer to:
 //  - https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
-function isMacNameRecord(r) {
-  return r.platform === 1 && r.encoding === 0 && r.language === 0;
+function isMacNameRecord(platform: number, encoding: number, language: number) {
+  return platform === 1 && encoding === 0 && language === 0;
 }
 
 // Please refer to:
 //  - https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
 //  - https://learn.microsoft.com/en-us/typography/opentype/spec/name#windows-language-ids
-function isWinNameRecord(r) {
-  return r.platform === 3 && r.encoding === 1 && r.language === 0x409;
+function isWinNameRecord(platform: number, encoding: number, language: number) {
+  return platform === 3 && encoding === 1 && language === 0x409;
 }
 
 function convertCidString(charCode: number, cid: string, shouldThrow = false) {
@@ -505,7 +510,7 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   const privateUseOffetStart = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
   let nextAvailableFontCharCode = privateUseOffetStart;
   let privateUseOffetEnd = PRIVATE_USE_AREAS[privateUseAreaIndex][1];
-  const isInPrivateArea = code =>
+  const isInPrivateArea = (code: number) =>
     (PRIVATE_USE_AREAS[0][0] <= code && code <= PRIVATE_USE_AREAS[0][1]) ||
     (PRIVATE_USE_AREAS[1][0] <= code && code <= PRIVATE_USE_AREAS[1][1]);
   for (const originalCharCode in charCodeToGlyphId) {
@@ -555,7 +560,7 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   };
 }
 
-function getRanges(glyphs, toUnicodeExtraMap, numGlyphs) {
+function getRanges(glyphs, toUnicodeExtraMap, numGlyphs: number) {
   // Array.sort() sorts by characters, not numerically, so convert to an
   // array of characters.
   const codes = [];
@@ -605,9 +610,9 @@ function getRanges(glyphs, toUnicodeExtraMap, numGlyphs) {
   return ranges;
 }
 
-function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs) {
+function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs: number) {
   const ranges = getRanges(glyphs, toUnicodeExtraMap, numGlyphs);
-  const numTables = ranges.at(-1)[1] > 0xffff ? 2 : 1;
+  const numTables = ranges.at(-1)![1] > 0xffff ? 2 : 1;
   let cmap =
     "\x00\x00" + // version
     string16(numTables) + // numTables
@@ -738,7 +743,7 @@ function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs) {
   );
 }
 
-function validateOS2Table(os2, file) {
+function validateOS2Table(os2, file: Stream) {
   file.pos = (file.start || 0) + os2.offset;
   const version = file.getUint16();
   // TODO verify all OS/2 tables fields, but currently we validate only those
@@ -880,7 +885,7 @@ function createOS2Table(properties: EvaluatorProperties, charstrings, override) 
     string16(properties.xHeight) + // sxHeight
     string16(properties.capHeight) + // sCapHeight
     string16(0) + // usDefaultChar
-    string16(firstCharIndex || properties.firstChar) + // usBreakChar
+    string16(<number>firstCharIndex || properties.firstChar) + // usBreakChar
     "\x00\x03"
   ); // usMaxContext
 }
@@ -900,7 +905,7 @@ function createPostTable(properties: EvaluatorProperties) {
   ); // maxMemType1
 }
 
-function createPostscriptName(name) {
+function createPostscriptName(name: string) {
   // See https://docs.microsoft.com/en-us/typography/opentype/spec/recom#name.
   return name.replaceAll(/[^\x21-\x7E]|[[\](){}<>/%]/g, "").slice(0, 63);
 }
@@ -1023,6 +1028,7 @@ class Font {
 
   // 暂时先是null吧，具体啥值，需要等到后面处理的比较完整的时候才知道
   public glyphNameMap: null = null;
+  public lineGap: number | null = null;
 
   constructor(name: string, file: Stream, properties: EvaluatorProperties) {
     this.name = name;
@@ -1258,7 +1264,7 @@ class Font {
     if (
       (isStandardFont || isMappedToStandardFont) &&
       type === "CIDFontType2" &&
-      this.cidEncoding.startsWith("Identity-")
+      this.cidEncoding!.startsWith("Identity-")
     ) {
       const cidToGidMap = properties.cidToGidMap;
       // Standard fonts might be embedded as CID font without glyph mapping.
@@ -1307,25 +1313,25 @@ class Font {
     } else if (/Symbol/i.test(fontName)) {
       this.toFontChar = buildToFontChar(
         SymbolSetEncoding,
-        getGlyphsUnicode(),
+        getGlyphsUnicode()!,
         this.differences
       );
     } else if (/Dingbats/i.test(fontName)) {
       this.toFontChar = buildToFontChar(
         ZapfDingbatsEncoding,
-        getDingbatsGlyphsUnicode(),
+        getDingbatsGlyphsUnicode()!,
         this.differences
       );
     } else if (isStandardFont || isMappedToStandardFont) {
       const map = buildToFontChar(
-        this.defaultEncoding,
-        getGlyphsUnicode(),
+        this.defaultEncoding!,
+        getGlyphsUnicode()!,
         this.differences
       );
 
       if (
         type === "CIDFontType2" &&
-        !this.cidEncoding.startsWith("Identity-") &&
+        !this.cidEncoding!.startsWith("Identity-") &&
         !(this.toUnicode instanceof IdentityToUnicodeMap)
       ) {
         this.toUnicode.forEach(function (charCode, unicodeCharCode) {
@@ -1339,7 +1345,7 @@ class Font {
       this.toUnicode.forEach((charCode: number, unicodeCharCode: number) => {
         if (!this.composite) {
           const glyphName =
-            this.differences[charCode] || this.defaultEncoding[charCode];
+            this.differences[charCode] || this.defaultEncoding![charCode];
           const unicode = getUnicodeForGlyph(glyphName, glyphsUnicodeMap);
           if (unicode !== -1) {
             unicodeCharCode = unicode;
@@ -1363,7 +1369,7 @@ class Font {
     this.loadedName = fontName.split("-", 1)[0];
   }
 
-  checkAndRepair(name, font, properties: EvaluatorProperties) {
+  checkAndRepair(name: string, font: Stream, properties: EvaluatorProperties) {
     const VALID_TABLES = [
       "OS/2",
       "cmap",
@@ -1381,7 +1387,7 @@ class Font {
       "CFF ",
     ];
 
-    function readTables(file, numTables) {
+    function readTables(file: Stream, numTables: number) {
       const tables = Object.create(null);
       tables["OS/2"] = null;
       tables.cmap = null;
@@ -1405,7 +1411,7 @@ class Font {
       return tables;
     }
 
-    function readTableEntry(file) {
+    function readTableEntry(file: Stream) {
       const tag = file.getString(4);
 
       const checksum = file.getInt32() >>> 0;
@@ -1434,7 +1440,7 @@ class Font {
       };
     }
 
-    function readOpenTypeHeader(ttf) {
+    function readOpenTypeHeader(ttf: Stream) {
       return {
         version: ttf.getString(4),
         numTables: ttf.getUint16(),
@@ -1444,7 +1450,7 @@ class Font {
       };
     }
 
-    function readTrueTypeCollectionHeader(ttc) {
+    function readTrueTypeCollectionHeader(ttc: Stream) {
       const ttcTag = ttc.getString(4);
       assert(ttcTag === "ttcf", "Must be a TrueType Collection font.");
 
@@ -1477,7 +1483,7 @@ class Font {
       );
     }
 
-    function readTrueTypeCollectionData(ttc, fontName) {
+    function readTrueTypeCollectionData(ttc: Stream, fontName: string) {
       const { numFonts, offsetTable } = readTrueTypeCollectionHeader(ttc);
       const fontNameParts = fontName.split("+");
       let fallbackData;
@@ -1540,7 +1546,7 @@ class Font {
      * Read the appropriate subtable from the cmap according to 9.6.6.4 from
      * PDF spec
      */
-    function readCmapTable(cmap, file, isSymbolicFont, hasEncoding) {
+    function readCmapTable(cmap, file: Stream, isSymbolicFont: boolean, hasEncoding: boolean) {
       if (!cmap) {
         warn("No cmap table available.");
         return {
@@ -1721,7 +1727,7 @@ class Font {
         // might be changed
         const segCount = file.getUint16() >> 1;
         file.skip(6); // skipping range fields
-        const segments = [];
+        const segments: { end?: number, start?: number, delta?: number, offsetIndex?: number }[] = [];
         let segIndex;
         for (segIndex = 0; segIndex < segCount; segIndex++) {
           segments.push({ end: file.getUint16() });
@@ -1749,7 +1755,7 @@ class Font {
           segment.offsetIndex = offsetIndex;
           offsetsCount = Math.max(
             offsetsCount,
-            offsetIndex + segment.end - segment.start + 1
+            offsetIndex + segment.end! - segment.start! + 1
           );
         }
 
@@ -1761,9 +1767,9 @@ class Font {
         for (segIndex = 0; segIndex < segCount; segIndex++) {
           segment = segments[segIndex];
           start = segment.start;
-          const end = segment.end;
+          const end = segment.end!;
           const delta = segment.delta;
-          offsetIndex = segment.offsetIndex;
+          offsetIndex = segment.offsetIndex!;
 
           for (j = start; j <= end; j++) {
             if (j === 0xffff) {
@@ -1848,12 +1854,12 @@ class Font {
     }
 
     function sanitizeMetrics(
-      file,
+      file: Stream,
       header,
       metrics,
       headTable,
-      numGlyphs,
-      dupFirstEntry
+      numGlyphs: number,
+      dupFirstEntry: boolean
     ) {
       if (!header) {
         if (metrics) {
@@ -1918,12 +1924,12 @@ class Font {
     }
 
     function sanitizeGlyph(
-      source,
-      sourceStart,
-      sourceEnd,
-      dest,
-      destStart,
-      hintsValid
+      source: Uint8Array,
+      sourceStart: number,
+      sourceEnd: number,
+      dest: Uint8Array,
+      destStart: number,
+      hintsValid: boolean
     ) {
       const glyphProfile = {
         length: 0,
@@ -2052,7 +2058,7 @@ class Font {
       return glyphProfile;
     }
 
-    function sanitizeHead(head, numGlyphs, locaLength) {
+    function sanitizeHead(head, numGlyphs: number, locaLength: number) {
       const data = head.data;
 
       // Validate version:
@@ -2102,17 +2108,17 @@ class Font {
 
     function sanitizeGlyphLocations(
       loca,
-      glyf,
-      numGlyphs,
-      isGlyphLocationsLong,
-      hintsValid,
-      dupFirstEntry,
-      maxSizeOfInstructions
+      glyf: { tag: string, data: Uint8Array },
+      numGlyphs: number,
+      isGlyphLocationsLong: number,
+      hintsValid: boolean,
+      dupFirstEntry: boolean,
+      maxSizeOfInstructions: number
     ) {
       let itemSize, itemDecode, itemEncode;
       if (isGlyphLocationsLong) {
         itemSize = 4;
-        itemDecode = function fontItemDecodeLong(data, offset) {
+        itemDecode = function fontItemDecodeLong(data: Uint8Array, offset: number) {
           return (
             (data[offset] << 24) |
             (data[offset + 1] << 16) |
@@ -2120,7 +2126,7 @@ class Font {
             data[offset + 3]
           );
         };
-        itemEncode = function fontItemEncodeLong(data, offset, value) {
+        itemEncode = function fontItemEncodeLong(data: Uint8Array, offset: number, value: number) {
           data[offset] = (value >>> 24) & 0xff;
           data[offset + 1] = (value >> 16) & 0xff;
           data[offset + 2] = (value >> 8) & 0xff;
@@ -2128,10 +2134,10 @@ class Font {
         };
       } else {
         itemSize = 2;
-        itemDecode = function fontItemDecode(data, offset) {
+        itemDecode = function fontItemDecode(data: Uint8Array, offset: number) {
           return (data[offset] << 9) | (data[offset + 1] << 1);
         };
-        itemEncode = function fontItemEncode(data, offset, value) {
+        itemEncode = function fontItemEncode(data: Uint8Array, offset: number, value: number) {
           data[offset] = (value >> 9) & 0xff;
           data[offset + 1] = (value >> 1) & 0xff;
         };
@@ -2194,7 +2200,7 @@ class Font {
       // If the last offset is 0 in the loca table then we can't compute the
       // endOffset for the last glyph. So in such a case we set the endOffset
       // to the end of the data (fixes issue #17671).
-      const last = locaEntries.at(-2);
+      const last = locaEntries.at(-2)!;
       if (last.offset !== 0 && last.endOffset === 0) {
         last.endOffset = oldGlyfDataLength;
       }
@@ -2357,7 +2363,9 @@ class Font {
           offset: font.getUint16(),
         };
         // using only Macintosh and Windows platform/encoding names
-        if (isMacNameRecord(r) || isWinNameRecord(r)) {
+        if (
+          isMacNameRecord(r.platform, r.encoding, r.language) ||
+          isWinNameRecord(r.platform, r.encoding, r.language)) {
           records.push(r);
         }
       }
@@ -2911,7 +2919,7 @@ class Font {
     const charCodeToGlyphId = Object.create(null);
 
     // Helper function to try to skip mapping of empty glyphs.
-    function hasGlyph(glyphId) {
+    function hasGlyph(glyphId: number) {
       return !missingGlyphs[glyphId];
     }
 
@@ -2919,18 +2927,18 @@ class Font {
       const cidToGidMap = properties.cidToGidMap || [];
       const isCidToGidMapEmpty = cidToGidMap.length === 0;
 
-      properties.cMap.forEach(function (charCode, cid) {
+      properties.cMap!.forEach(function (charCode, cid) {
         if (typeof cid === "string") {
           cid = convertCidString(charCode, cid, /* shouldThrow = */ true);
         }
-        if (cid > 0xffff) {
+        if (<number>cid > 0xffff) {
           throw new FormatError("Max size of CID is 65,535");
         }
         let glyphId = -1;
         if (isCidToGidMapEmpty) {
           glyphId = cid;
-        } else if (cidToGidMap[cid] !== undefined) {
-          glyphId = cidToGidMap[cid];
+        } else if (cidToGidMap[<number>cid] !== undefined) {
+          glyphId = cidToGidMap[<number>cid];
         }
 
         if (glyphId >= 0 && glyphId < numGlyphs && hasGlyph(glyphId)) {
@@ -2949,14 +2957,14 @@ class Font {
       const cmapPlatformId = cmapTable.platformId;
       const cmapEncodingId = cmapTable.encodingId;
       const cmapMappings = cmapTable.mappings;
-      let baseEncoding = [],
+      let baseEncoding: string[] = [],
         forcePostTable = false;
       if (
         properties.hasEncoding &&
         (properties.baseEncodingName === "MacRomanEncoding" ||
           properties.baseEncodingName === "WinAnsiEncoding")
       ) {
-        baseEncoding = getEncoding(properties.baseEncodingName);
+        baseEncoding = getEncoding(properties.baseEncodingName) ?? [];
       }
 
       // If the font has an encoding and is not symbolic then follow the rules
@@ -2967,7 +2975,7 @@ class Font {
         ((cmapPlatformId === 3 && cmapEncodingId === 1) ||
           (cmapPlatformId === 1 && cmapEncodingId === 0))
       ) {
-        const glyphsUnicodeMap = getGlyphsUnicode();
+        const glyphsUnicodeMap = getGlyphsUnicode()!;
         for (let charCode = 0; charCode < 256; charCode++) {
           let glyphName;
           if (this.differences[charCode] !== undefined) {
@@ -3004,7 +3012,7 @@ class Font {
             ) {
               const unicode = this.toUnicode.get(charCode);
               if (unicode) {
-                unicodeOrCharCode = unicode.codePointAt(0);
+                unicodeOrCharCode = (<string>unicode).codePointAt(0);
               }
             }
 
@@ -3202,25 +3210,26 @@ class Font {
     }
     const numGlyphs = font.numGlyphs;
 
-    function getCharCodes(charCodeToGlyphId, glyphId) {
+    function getCharCodes(charCodeToGlyphId, glyphId: string) {
       let charCodes = null;
       for (const charCode in charCodeToGlyphId) {
         if (glyphId === charCodeToGlyphId[charCode]) {
+          // 因为forin的问题，这里的charcode强转了一下
           (charCodes ||= []).push(charCode | 0);
         }
       }
       return charCodes;
     }
 
-    function createCharCode(charCodeToGlyphId, glyphId) {
+    function createCharCode(charCodeToGlyphId, glyphId: number) {
       for (const charCode in charCodeToGlyphId) {
         if (glyphId === charCodeToGlyphId[charCode]) {
           return charCode | 0;
         }
       }
-      newMapping.charCodeToGlyphId[newMapping.nextAvailableFontCharCode] =
+      newMapping!.charCodeToGlyphId[newMapping!.nextAvailableFontCharCode] =
         glyphId;
-      return newMapping.nextAvailableFontCharCode++;
+      return newMapping!.nextAvailableFontCharCode++;
     }
 
     const seacs = font.seacs;
@@ -3297,9 +3306,9 @@ class Font {
       "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // creation date
       "\x00\x00\x00\x00\x9e\x0b\x7e\x27" + // modifification date
       "\x00\x00" + // xMin
-      safeString16(properties.descent) + // yMin
+      safeString16(properties.descent!) + // yMin
       "\x0F\xFF" + // xMax
-      safeString16(properties.ascent) + // yMax
+      safeString16(properties.ascent!) + // yMax
       string16(properties.italicAngle ? 2 : 0) + // macStyle
       "\x00\x11" + // lowestRecPPEM
       "\x00\x00" + // fontDirectionHint
@@ -3311,8 +3320,8 @@ class Font {
     builder.addTable(
       "hhea",
       "\x00\x01\x00\x00" + // Version number
-      safeString16(properties.ascent) + // Typographic Ascent
-      safeString16(properties.descent) + // Typographic Descent
+      safeString16(properties.ascent!) + // Typographic Ascent
+      safeString16(properties.descent!) + // Typographic Descent
       "\x00\x00" + // Line Gap
       "\xFF\xFF" + // advanceWidthMax
       "\x00\x00" + // minLeftSidebearing
@@ -3378,7 +3387,7 @@ class Font {
         width = this.widths[glyphName];
         break;
       }
-      const glyphsUnicodeMap : Record<string, number>= getGlyphsUnicode()!;
+      const glyphsUnicodeMap: Record<string, number> = getGlyphsUnicode()!;
       const glyphUnicode = glyphsUnicodeMap[glyphName];
       // finding the charcode via unicodeToCID map
       let charcode: number | string = 0;
@@ -3416,7 +3425,8 @@ class Font {
     if (glyph?.isSpace === isSpace) {
       return glyph;
     }
-    let fontCharCode, width, operatorListId;
+    let fontCharCode: number;
+    let width, operatorListId;
 
     let widthCode: number | string = charcode;
     if (this.cMap?.contains(charcode)) {
@@ -3500,8 +3510,8 @@ class Font {
       unicode,
       accent,
       width,
-      vmetric,
-      operatorListId,
+      <number[] | null>vmetric,
+      <number | null>operatorListId,
       isSpace,
       isInFont
     );

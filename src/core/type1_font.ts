@@ -28,10 +28,10 @@ import { FormatError, warn } from "../shared/util";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
 import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
-import { Type1Parser } from "./type1_parser";
+import { CharStringObjectType, Type1Parser } from "./type1_parser";
 import { EvaluatorProperties } from "./evaluator";
 
-function findBlock(streamBytes, signature, startIndex) {
+function findBlock(streamBytes, signature: number[], startIndex: number) {
   const streamBytesLength = streamBytes.length;
   const signatureLength = signature.length;
   const scanLength = streamBytesLength - signatureLength;
@@ -60,7 +60,7 @@ function findBlock(streamBytes, signature, startIndex) {
   };
 }
 
-function getHeaderBlock(stream, suggestedLength) {
+function getHeaderBlock(stream: Stream, suggestedLength: number) {
   const EEXEC_SIGNATURE = [0x65, 0x65, 0x78, 0x65, 0x63];
 
   const streamStartPos = stream.pos; // Save the initial stream position.
@@ -87,7 +87,7 @@ function getHeaderBlock(stream, suggestedLength) {
 
     if (block.found && block.length === suggestedLength) {
       return {
-        stream: new Stream(headerBytes),
+        stream: new Stream(headerBytes!),
         length: suggestedLength,
       };
     }
@@ -126,7 +126,7 @@ function getHeaderBlock(stream, suggestedLength) {
   };
 }
 
-function getEexecBlock(stream, suggestedLength) {
+function getEexecBlock(stream: Stream, _suggestedLength: number | null) {
   // We should ideally parse the eexec block to ensure that `suggestedLength`
   // is correct, so we don't truncate the block data if it's too small.
   // However, this would also require checking if the fixed-content portion
@@ -154,7 +154,14 @@ function getEexecBlock(stream, suggestedLength) {
  * Type1Font is also a CIDFontType0.
  */
 class Type1Font {
-  constructor(name, file, properties: EvaluatorProperties) {
+
+  public charstrings: CharStringObjectType[];
+
+  public seacs: number[][];
+  
+  protected data: number[];
+
+  constructor(name: string, file: Stream, properties: EvaluatorProperties) {
     // Some bad generators embed pfb file as is, we have to strip 6-byte header.
     // Also, length1 and length2 might be off by 6 bytes as well.
     // http://www.math.ubc.ca/~cass/piscript/type1.pdf
@@ -173,7 +180,7 @@ class Type1Font {
     }
 
     // Get the data block containing glyphs and subrs information
-    const headerBlock = getHeaderBlock(file, headerBlockLength);
+    const headerBlock = getHeaderBlock(file, headerBlockLength!);
     const headerBlockParser = new Type1Parser(
       headerBlock.stream,
       false,
@@ -224,7 +231,7 @@ class Type1Font {
   getCharset() {
     const charset = [".notdef"];
     for (const { glyphName } of this.charstrings) {
-      charset.push(glyphName);
+      charset.push(glyphName!);
     }
     return charset;
   }
@@ -240,7 +247,7 @@ class Type1Font {
         glyphId < charstringsLen;
         glyphId++
       ) {
-        const charCode = properties.cMap.charCodeOf(glyphId);
+        const charCode = properties.cMap!.charCodeOf(glyphId);
         // Add 1 because glyph 0 is duplicated.
         charCodeToGlyphId[charCode] = glyphId + 1;
       }
@@ -250,13 +257,13 @@ class Type1Font {
     const glyphNames = [".notdef"];
     let builtInEncoding, glyphId;
     for (glyphId = 0; glyphId < charstrings.length; glyphId++) {
-      glyphNames.push(charstrings[glyphId].glyphName);
+      glyphNames.push(charstrings[glyphId].glyphName!);
     }
     const encoding = properties.builtInEncoding;
     if (encoding) {
       builtInEncoding = Object.create(null);
       for (const charCode in encoding) {
-        glyphId = glyphNames.indexOf(encoding[charCode]);
+        glyphId = glyphNames.indexOf(<string>encoding[charCode]);
         if (glyphId >= 0) {
           builtInEncoding[charCode] = glyphId;
         }
@@ -266,7 +273,7 @@ class Type1Font {
     return type1FontGlyphMapping(properties, builtInEncoding, glyphNames);
   }
 
-  hasGlyphId(id) {
+  hasGlyphId(id: number) {
     if (id < 0 || id >= this.numGlyphs) {
       return false;
     }
@@ -278,7 +285,7 @@ class Type1Font {
     return glyph.charstring.length > 0;
   }
 
-  getSeacs(charstrings) {
+  getSeacs(charstrings: CharStringObjectType[]) {
     const seacMap = [];
     for (let i = 0, ii = charstrings.length; i < ii; i++) {
       const charstring = charstrings[i];
@@ -290,7 +297,7 @@ class Type1Font {
     return seacMap;
   }
 
-  getType2Charstrings(type1Charstrings) {
+  getType2Charstrings(type1Charstrings: CharStringObjectType[]) {
     const type2Charstrings = [];
     for (const type1Charstring of type1Charstrings) {
       type2Charstrings.push(type1Charstring.charstring);
@@ -323,7 +330,8 @@ class Type1Font {
     return type2Subrs;
   }
 
-  wrap(name, glyphs, charstrings, subrs, properties: EvaluatorProperties) {
+  wrap(name: string, glyphs: number[][], charstrings: CharStringObjectType[]
+    , subrs, properties: EvaluatorProperties) {
     const cff = new CFF();
     cff.header = new CFFHeader(1, 0, 4, 4);
 
@@ -359,7 +367,7 @@ class Type1Font {
     const charsetArray = [".notdef"];
     let i, ii;
     for (i = 0; i < count; i++) {
-      const glyphName = charstrings[i].glyphName;
+      const glyphName = charstrings[i].glyphName!;
       const index = CFFStandardStrings.indexOf(glyphName);
       if (index === -1) {
         strings.add(glyphName);

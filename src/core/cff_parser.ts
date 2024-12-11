@@ -1357,7 +1357,7 @@ class CFFTopDict extends CFFDict {
     return shadow(this, "tables", this.createTables(CFFTopDictLayout));
   }
 
-  constructor(strings: CFFStrings) {
+  constructor(strings: CFFStrings = new CFFStrings) {
     super(CFFTopDict.tables, strings);
     this.privateDict = null;
   }

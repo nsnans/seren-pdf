@@ -74,7 +74,7 @@ function convertRGBToRGBA({
   dest,
   destPos = 0,
   width,
-  height,
+  _height,
 }) {
   let i = 0;
   const len32 = src.length >> 2;

@@ -142,7 +142,7 @@ class Glyph {
     this.composites = composites;
   }
 
-  static parse(pos, glyf) {
+  static parse(pos: number, glyf) {
     const [read, header] = GlyphHeader.parse(pos, glyf);
     pos += read;
 
@@ -220,7 +220,7 @@ class GlyphHeader {
     this.yMax = yMax;
   }
 
-  static parse(pos, glyf) {
+  static parse(pos: number, glyf): [number, GlyphHeader] {
     return [
       10,
       new GlyphHeader({
