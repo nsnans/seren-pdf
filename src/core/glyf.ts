@@ -51,7 +51,8 @@ class GlyfTable {
 
   protected glyphs: Glyph[];
 
-  constructor({ glyfTable, isGlyphLocationsLong, locaTable, numGlyphs }) {
+  constructor(glyfTable: Uint8Array, isGlyphLocationsLong: number
+    , locaTable: Uint8Array, numGlyphs: number) {
     this.glyphs = [];
     const loca = new DataView(
       locaTable.buffer,
@@ -72,7 +73,7 @@ class GlyfTable {
         ? loca.getUint32(pos)
         : 2 * loca.getUint16(pos);
       if (next === prev) {
-        this.glyphs.push(new Glyph({}));
+        this.glyphs.push(new Glyph());
         continue;
       }
 
@@ -136,19 +137,26 @@ class GlyfTable {
 }
 
 class Glyph {
-  constructor({ header = null, simple = null, composites = null }) {
+
+  protected header: GlyphHeader | null;
+
+  protected simple: SimpleGlyph | null;
+
+  protected composites: CompositeGlyph[] | null;
+
+  constructor(header: GlyphHeader | null = null, simple: SimpleGlyph | null = null, composites: CompositeGlyph[] | null = null) {
     this.header = header;
     this.simple = simple;
     this.composites = composites;
   }
 
-  static parse(pos: number, glyf) {
+  static parse(pos: number, glyf: DataView) {
     const [read, header] = GlyphHeader.parse(pos, glyf);
     pos += read;
 
     if (header.numberOfContours < 0) {
       // Composite glyph.
-      const composites = [];
+      const composites: CompositeGlyph[] = [];
       while (true) {
         const [n, composite] = CompositeGlyph.parse(pos, glyf);
         pos += n;
@@ -158,12 +166,12 @@ class Glyph {
         }
       }
 
-      return new Glyph({ header, composites });
+      return new Glyph(header, null, composites);
     }
 
     const simple = SimpleGlyph.parse(pos, glyf, header.numberOfContours);
 
-    return new Glyph({ header, simple });
+    return new Glyph(header, simple);
   }
 
   getSize() {
@@ -172,11 +180,11 @@ class Glyph {
     }
     const size = this.simple
       ? this.simple.getSize()
-      : this.composites.reduce((a, c) => a + c.getSize(), 0);
+      : this.composites!.reduce((a, c) => a + c.getSize(), 0);
     return this.header.getSize() + size;
   }
 
-  write(pos, buf) {
+  write(pos: number, buf: DataView) {
     if (!this.header) {
       return 0;
     }
@@ -186,7 +194,7 @@ class Glyph {
     if (this.simple) {
       pos += this.simple.write(pos, buf);
     } else {
-      for (const composite of this.composites) {
+      for (const composite of this.composites!) {
         pos += composite.write(pos, buf);
       }
     }
@@ -194,17 +202,17 @@ class Glyph {
     return pos - spos;
   }
 
-  scale(factor) {
+  scale(factor: number) {
     if (!this.header) {
       return;
     }
 
-    const xMiddle = (this.header.xMin + this.header.xMax) / 2;
+    const xMiddle = (this.header!.xMin + this.header!.xMax) / 2;
     this.header.scale(xMiddle, factor);
     if (this.simple) {
       this.simple.scale(xMiddle, factor);
     } else {
-      for (const composite of this.composites) {
+      for (const composite of this.composites!) {
         composite.scale(xMiddle, factor);
       }
     }
@@ -212,7 +220,18 @@ class Glyph {
 }
 
 class GlyphHeader {
-  constructor({ numberOfContours, xMin, yMin, xMax, yMax }) {
+
+  readonly numberOfContours: number;
+
+  public xMin: number;
+
+  public yMin: number;
+
+  public xMax: number;
+
+  public yMax: number;
+
+  constructor(numberOfContours: number, xMin: number, yMin: number, xMax: number, yMax: number) {
     this.numberOfContours = numberOfContours;
     this.xMin = xMin;
     this.yMin = yMin;
@@ -220,16 +239,16 @@ class GlyphHeader {
     this.yMax = yMax;
   }
 
-  static parse(pos: number, glyf): [number, GlyphHeader] {
+  static parse(pos: number, glyf: DataView): [number, GlyphHeader] {
     return [
       10,
-      new GlyphHeader({
-        numberOfContours: glyf.getInt16(pos),
-        xMin: glyf.getInt16(pos + 2),
-        yMin: glyf.getInt16(pos + 4),
-        xMax: glyf.getInt16(pos + 6),
-        yMax: glyf.getInt16(pos + 8),
-      }),
+      new GlyphHeader(
+        glyf.getInt16(pos),
+        glyf.getInt16(pos + 2),
+        glyf.getInt16(pos + 4),
+        glyf.getInt16(pos + 6),
+        glyf.getInt16(pos + 8),
+      ),
     ];
   }
 
@@ -237,7 +256,7 @@ class GlyphHeader {
     return 10;
   }
 
-  write(pos, buf) {
+  write(pos: number, buf: DataView) {
     buf.setInt16(pos, this.numberOfContours);
     buf.setInt16(pos + 2, this.xMin);
     buf.setInt16(pos + 4, this.yMin);
@@ -247,14 +266,21 @@ class GlyphHeader {
     return 10;
   }
 
-  scale(x, factor) {
+  scale(x: number, factor: number) {
     this.xMin = Math.round(x + (this.xMin - x) * factor);
     this.xMax = Math.round(x + (this.xMax - x) * factor);
   }
 }
 
 class Contour {
-  constructor({ flags, xCoordinates, yCoordinates }) {
+
+  readonly xCoordinates: number[];
+
+  readonly yCoordinates: number[];
+
+  readonly flags: number[];
+
+  constructor(flags: number[], xCoordinates: number[], yCoordinates: number[]) {
     this.xCoordinates = xCoordinates;
     this.yCoordinates = yCoordinates;
     this.flags = flags;
@@ -262,12 +288,17 @@ class Contour {
 }
 
 class SimpleGlyph {
-  constructor({ contours, instructions }) {
+
+  protected contours: Contour[];
+
+  protected instructions: Uint8Array;
+
+  constructor(contours: Contour[], instructions: Uint8Array) {
     this.contours = contours;
     this.instructions = instructions;
   }
 
-  static parse(pos, glyf, numberOfContours) {
+  static parse(pos: number, glyf: DataView, numberOfContours: number): SimpleGlyph {
     const endPtsOfContours = [];
     for (let i = 0; i < numberOfContours; i++) {
       const endPt = glyf.getUint16(pos);
@@ -298,11 +329,17 @@ class SimpleGlyph {
     }
 
     const allXCoordinates = [];
-    let xCoordinates = [];
-    let yCoordinates = [];
-    let pointFlags = [];
-    const contours = [];
+
+    let xCoordinates: number[] = [];
+
+    let yCoordinates: number[] = [];
+
+    let pointFlags: number[] = [];
+
+    const contours: Contour[] = [];
+
     let endPtsOfContoursIndex = 0;
+
     let lastCoordinate = 0;
 
     // Get x coordinates.
@@ -355,21 +392,21 @@ class SimpleGlyph {
         xCoordinates = allXCoordinates[endPtsOfContoursIndex];
         endPtsOfContoursIndex++;
         contours.push(
-          new Contour({
-            flags: pointFlags,
+          new Contour(
+            pointFlags,
             xCoordinates,
             yCoordinates,
-          })
+          )
         );
         yCoordinates = [];
         pointFlags = [];
       }
     }
 
-    return new SimpleGlyph({
+    return new SimpleGlyph(
       contours,
       instructions,
-    });
+    );
   }
 
   getSize() {
@@ -401,7 +438,7 @@ class SimpleGlyph {
     return size;
   }
 
-  write(pos, buf) {
+  write(pos: number, buf: DataView) {
     const spos = pos;
     const xCoordinates = [];
     const yCoordinates = [];
@@ -502,7 +539,7 @@ class SimpleGlyph {
     return pos - spos;
   }
 
-  scale(x, factor) {
+  scale(x: number, factor: number) {
     for (const contour of this.contours) {
       if (contour.xCoordinates.length === 0) {
         continue;
@@ -518,14 +555,27 @@ class SimpleGlyph {
 }
 
 class CompositeGlyph {
-  constructor({
-    flags,
-    glyphIndex,
-    argument1,
-    argument2,
-    transf,
-    instructions,
-  }) {
+
+  public flags: number;
+
+  protected glyphIndex: number;
+
+  protected argument1: number;
+
+  protected argument2: number;
+
+  protected transf: number[];
+
+  protected instructions: Uint8Array | null;
+
+  constructor(
+    flags: number,
+    glyphIndex: number,
+    argument1: number,
+    argument2: number,
+    transf: number[],
+    instructions: Uint8Array | null,
+  ) {
     this.flags = flags;
     this.glyphIndex = glyphIndex;
     this.argument1 = argument1;
@@ -534,9 +584,9 @@ class CompositeGlyph {
     this.instructions = instructions;
   }
 
-  static parse(pos, glyf) {
+  static parse(pos: number, glyf: DataView): [number, CompositeGlyph] {
     const spos = pos;
-    const transf = [];
+    const transf: number[] = [];
     let flags = glyf.getUint16(pos);
     const glyphIndex = glyf.getUint16(pos + 2);
     pos += 4;
@@ -592,21 +642,21 @@ class CompositeGlyph {
 
     return [
       pos - spos,
-      new CompositeGlyph({
+      new CompositeGlyph(
         flags,
         glyphIndex,
         argument1,
         argument2,
         transf,
         instructions,
-      }),
+      ),
     ];
   }
 
   getSize() {
     let size = 2 + 2 + this.transf.length * 2;
     if (this.flags & WE_HAVE_INSTRUCTIONS) {
-      size += 2 + this.instructions.length;
+      size += 2 + this.instructions!.length;
     }
 
     size += 2;
@@ -636,7 +686,7 @@ class CompositeGlyph {
     return size;
   }
 
-  write(pos, buf) {
+  write(pos: number, buf: DataView) {
     const spos = pos;
 
     if (this.flags & ARGS_ARE_XY_VALUES) {
@@ -682,22 +732,22 @@ class CompositeGlyph {
     }
 
     if (this.flags & WE_HAVE_INSTRUCTIONS) {
-      buf.setUint16(pos, this.instructions.length);
+      buf.setUint16(pos, this.instructions!.length);
       pos += 2;
       // Write instructions.
-      if (this.instructions.length) {
+      if (this.instructions!.length) {
         new Uint8Array(buf.buffer, 0, buf.buffer.byteLength).set(
-          this.instructions,
+          this.instructions!,
           pos
         );
-        pos += this.instructions.length;
+        pos += this.instructions!.length;
       }
     }
 
     return pos - spos;
   }
 
-  scale(x, factor) { }
+  scale(_x: number, _factor: number) { }
 }
 
 export { GlyfTable };

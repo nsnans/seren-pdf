@@ -2869,12 +2869,12 @@ class Font {
         tables.head!.data![51]
       );
 
-      const glyphs = new GlyfTable({
-        glyfTable: tables.glyf!.data,
+      const glyphs = new GlyfTable(
+        tables.glyf!.data!,
         isGlyphLocationsLong,
-        locaTable: tables.loca!.data,
+        tables.loca!.data!,
         numGlyphs,
-      });
+      );
       glyphs.scale(scaleFactors);
 
       const { glyf, loca, isLocationLong } = glyphs.write();
