@@ -382,6 +382,8 @@ export enum DictKey {
   EndOfBlock = "EndOfBlock",
   BlackIs1 = "BlackIs1",
   StructParents = "StructParents",
+  SMaskInData = "SMaskInData",
+  Matte = "Matte",
 }
 
 /**
@@ -496,7 +498,7 @@ type DictValueTypeMapping = {
   [DictKey.M]: string,
   [DictKey.Mac]: string | Ref,
   [DictKey.MarkInfo]: Dict,
-  [DictKey.Mask]: "Mask", // BaseStream或某种类型的数组
+  [DictKey.Mask]: BaseStream | number[], // BaseStream或某种类型的数组，猜测是数字数组
   [DictKey.Matrix]: number[],
   [DictKey.Metadata]: Ref,
   [DictKey.N]: Ref | StringStream | number,
@@ -682,6 +684,8 @@ type DictValueTypeMapping = {
   [DictKey.EndOfBlock]: boolean,
   [DictKey.BlackIs1]: boolean,
   [DictKey.StructParents]: number
+  [DictKey.SMaskInData]: "SMaskInData",
+  [DictKey.Matte]: boolean,
 }
 
 

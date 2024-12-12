@@ -31,7 +31,7 @@ abstract class DecodeStream extends BaseStream {
 
   protected minBufferLength: number = 512;
 
-  public buffer = emptyBuffer;
+  public buffer: Uint8Array | Uint8ClampedArray = emptyBuffer;
 
   public _rawMinBufferLength: number;
 

@@ -207,15 +207,15 @@ function log2(x: number) {
   return Math.ceil(Math.log2(x));
 }
 
-function readInt8(data, offset: number) {
+function readInt8(data: Uint8Array, offset: number) {
   return (data[offset] << 24) >> 24;
 }
 
-function readUint16(data, offset: number) {
+function readUint16(data: Uint8Array, offset: number) {
   return (data[offset] << 8) | data[offset + 1];
 }
 
-function readUint32(data, offset: number) {
+function readUint32(data: Uint8Array, offset: number) {
   return (
     ((data[offset] << 24) |
       (data[offset + 1] << 16) |

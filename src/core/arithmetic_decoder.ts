@@ -127,7 +127,7 @@ class ArithmeticDecoder {
   }
 
   // C.3.2 Decoding a decision (DECODE)
-  readBit(contexts, pos: number) {
+  readBit(contexts: Int8Array, pos: number) {
     // Contexts are packed into 1 byte:
     // highest 7 bits carry cx.index, lowest bit carries cx.mps
     let cx_index = contexts[pos] >> 1,

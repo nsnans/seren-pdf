@@ -52,7 +52,8 @@ class ToUnicodeMap {
     if (map.length <= 0x10000) {
       return map.indexOf(value);
     }
-    for (const charCode in map) {
+    for (const _charCode in map) {
+      const charCode = Number.parseInt(_charCode);
       if (map[charCode] === value) {
         return charCode | 0;
       }
@@ -60,8 +61,9 @@ class ToUnicodeMap {
     return -1;
   }
 
-  amend(map) {
-    for (const charCode in map) {
+  amend(map: string[]) {
+    for (const _charCode in map) {
+      const charCode = Number.parseInt(_charCode);
       this._map[charCode] = map[charCode];
     }
   }

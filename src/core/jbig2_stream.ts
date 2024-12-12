@@ -40,7 +40,7 @@ class Jbig2Stream extends DecodeStream {
     this.params = params;
   }
 
-  get bytes() {
+  get bytes(): Uint8Array {
     // If `this.maybeLength` is null, we'll get the entire stream.
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
@@ -54,14 +54,14 @@ class Jbig2Stream extends DecodeStream {
     this.decodeImage();
   }
 
-  decodeImage(bytes) {
+  decodeImage(bytes: Uint8Array | null) {
     if (this.eof) {
       return this.buffer;
     }
     bytes ||= this.bytes;
     const jbig2Image = new Jbig2Image();
 
-    const chunks = [];
+    const chunks: { data: Uint8Array, start: number, end: number }[] = [];
     if (this.params instanceof Dict) {
       const globalsStream = this.params.getValue(DictKey.JBIG2Globals);
       if (globalsStream instanceof BaseStream) {
@@ -70,7 +70,7 @@ class Jbig2Stream extends DecodeStream {
       }
     }
     chunks.push({ data: bytes, start: 0, end: bytes.length });
-    const data = jbig2Image.parseChunks(chunks);
+    const data = jbig2Image.parseChunks(chunks)!;
     const dataLength = data.length;
 
     // JBIG2 had black as 1 and white as 0, inverting the colors

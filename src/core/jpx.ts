@@ -17,6 +17,7 @@ import { BaseException, warn } from "../shared/util";
 // 这里仔细研究一下，如何引入外部的部件
 import OpenJPEG from "../external/openjpeg/openjpeg";
 import { Stream } from "./stream";
+import { PlatformHelper } from "../platform/platform_helper";
 
 class JpxError extends BaseException {
   constructor(msg: string) {
@@ -41,8 +42,13 @@ class JpxImage {
     this.#module = null;
   }
 
-  static parseImageProperties(stream) {
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("IMAGE_DECODERS")) {
+  static parseImageProperties(stream): {
+    width: number,
+    height: number,
+    bitsPerComponent: number,
+    componentsCount: number
+  } {
+    if (PlatformHelper.testImageDecoders()) {
       if (stream instanceof ArrayBuffer || ArrayBuffer.isView(stream)) {
         stream = new Stream(stream);
       } else {

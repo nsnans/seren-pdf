@@ -17,6 +17,7 @@ import { BaseException, shadow } from "../shared/util";
 import { log2, readInt8, readUint16, readUint32 } from "./core_utils";
 import { ArithmeticDecoder } from "./arithmetic_decoder";
 import { CCITTFaxDecoder } from "./ccitt";
+import { PlatformHelper } from "../platform/platform_helper";
 
 class Jbig2Error extends BaseException {
   constructor(msg: string) {
@@ -25,12 +26,16 @@ class Jbig2Error extends BaseException {
 }
 
 // Utility data structures
+// 这个类比较简单，做了一些改写，把this[id]的写法干掉了
 class ContextCache {
-  getContexts(id) {
-    if (id in this) {
-      return this[id];
+
+  protected map = new Map<string, Int8Array>;
+
+  getContexts(id: string) {
+    if (!this.map.has(id)) {
+      this.map.set(id, new Int8Array(1 << 16));
     }
-    return (this[id] = new Int8Array(1 << 16));
+    return this.map.get(id)!
   }
 }
 
@@ -40,7 +45,9 @@ class DecodingContext {
 
   public end: number;
 
-  constructor(data, start: number, end: number) {
+  public data: Uint8Array;
+
+  constructor(data: Uint8Array, start: number, end: number) {
     this.data = data;
     this.start = start;
     this.end = end;
@@ -62,7 +69,7 @@ const MIN_INT_32 = -(2 ** 31);
 
 // Annex A. Arithmetic Integer Decoding Procedure
 // A.2 Procedure for decoding values
-function decodeInteger(contextCache, procedure, decoder) {
+function decodeInteger(contextCache: ContextCache, procedure: string, decoder: ArithmeticDecoder) {
   const contexts = contextCache.getContexts(procedure);
   let prev = 1;
 
@@ -97,7 +104,7 @@ function decodeInteger(contextCache, procedure, decoder) {
   } else if (value > 0) {
     signedValue = -value;
   } else {
-    throw new Error("signed value不应当为负数，如果出现负数，则说明存在问题")
+    throw new Error("signed value不应当为负数,如果出现负数,则说明存在问题")
   }
   // Ensure that the integer value doesn't underflow or overflow.
   if (signedValue >= MIN_INT_32 && signedValue <= MAX_INT_32) {
@@ -107,7 +114,7 @@ function decodeInteger(contextCache, procedure, decoder) {
 }
 
 // A.3 The IAID decoding procedure
-function decodeIAID(contextCache, decoder, codeLength: number) {
+function decodeIAID(contextCache: ContextCache, decoder: ArithmeticDecoder, codeLength: number) {
   const contexts = contextCache.getContexts("IAID");
 
   let prev = 1;
@@ -290,7 +297,7 @@ const RefinementReusedContexts = [
   0x0008, // '0000' + '001000'
 ];
 
-function decodeBitmapTemplate0(width: number, height: number, decodingContext) {
+function decodeBitmapTemplate0(width: number, height: number, decodingContext: DecodingContext) {
   const decoder = decodingContext.decoder;
   const contexts = decodingContext.contextCache.getContexts("GB");
   const bitmap = [];
@@ -335,14 +342,14 @@ function decodeBitmapTemplate0(width: number, height: number, decodingContext) {
 
 // 6.2 Generic Region Decoding Procedure
 function decodeBitmap(
-  mmr,
-  width,
-  height,
-  templateIndex,
-  prediction,
-  skip,
-  at,
-  decodingContext
+  mmr: boolean,
+  width: number,
+  height: number,
+  templateIndex: number,
+  prediction: boolean,
+  skip: number[][] | null,
+  at: { x: number; y: number; }[],
+  decodingContext: DecodingContext
 ) {
   if (mmr) {
     const input = new Reader(
@@ -498,15 +505,15 @@ function decodeBitmap(
 
 // 6.3.2 Generic Refinement Region Decoding Procedure
 function decodeRefinement(
-  width,
-  height,
-  templateIndex,
-  referenceBitmap,
-  offsetX,
-  offsetY,
-  prediction,
-  at,
-  decodingContext
+  width: number,
+  height: number,
+  templateIndex: number,
+  referenceBitmap: Uint8Array[],
+  offsetX: number,
+  offsetY: number,
+  prediction: boolean,
+  at: { x: number; y: number; }[],
+  decodingContext: DecodingContext
 ) {
   let codingTemplate = RefinementTemplates[templateIndex].coding;
   if (templateIndex === 0) {
@@ -583,19 +590,24 @@ function decodeRefinement(
 
 // 6.5.5 Decoding the symbol dictionary
 function decodeSymbolDictionary(
-  huffman,
-  refinement,
-  symbols,
-  numberOfNewSymbols,
-  numberOfExportedSymbols,
-  huffmanTables,
-  templateIndex,
-  at,
-  refinementTemplateIndex,
-  refinementAt,
+  huffman: boolean,
+  refinement: boolean,
+  symbols: Uint8Array[][],
+  numberOfNewSymbols: number,
+  _numberOfExportedSymbols: number,
+  huffmanTables: {
+    tableDeltaHeight: HuffmanTable;
+    tableDeltaWidth: HuffmanTable;
+    tableBitmapSize: HuffmanTable;
+    tableAggregateInstances: HuffmanTable;
+  } | null,
+  templateIndex: number,
+  at: { x: number; y: number; }[] | null,
+  refinementTemplateIndex: number,
+  refinementAt: { x: number; y: number; }[] | null,
   decodingContext: DecodingContext,
-  huffmanInput
-) {
+  huffmanInput: Reader
+): Uint8Array[][] {
   if (huffman && refinement) {
     throw new Jbig2Error("symbol refinement with Huffman is not supported");
   }
@@ -606,7 +618,7 @@ function decodeSymbolDictionary(
 
   const decoder = decodingContext.decoder;
   const contextCache = decodingContext.contextCache;
-  let tableB1, symbolWidths;
+  let tableB1, symbolWidths: number[] | null;
   if (huffman) {
     tableB1 = getStandardTable(1); // standard table B.1
     symbolWidths = [];
@@ -615,15 +627,15 @@ function decodeSymbolDictionary(
 
   while (newSymbols.length < numberOfNewSymbols) {
     const deltaHeight = huffman
-      ? huffmanTables.tableDeltaHeight.decode(huffmanInput)
-      : decodeInteger(contextCache, "IADH", decoder); // 6.5.6
+      ? huffmanTables!.tableDeltaHeight.decode(huffmanInput)!
+      : decodeInteger(contextCache, "IADH", decoder)!; // 6.5.6
     currentHeight += deltaHeight;
     let currentWidth = 0,
       totalWidth = 0;
-    const firstSymbol = huffman ? symbolWidths.length : 0;
+    const firstSymbol = huffman ? symbolWidths!.length : 0;
     while (true) {
       const deltaWidth = huffman
-        ? huffmanTables.tableDeltaWidth.decode(huffmanInput)
+        ? huffmanTables!.tableDeltaWidth.decode(huffmanInput)
         : decodeInteger(contextCache, "IADW", decoder); // 6.5.7
       if (deltaWidth === null) {
         break; // OOB
@@ -633,7 +645,7 @@ function decodeSymbolDictionary(
       let bitmap;
       if (refinement) {
         // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
-        const numberOfInstances = decodeInteger(contextCache, "IAAI", decoder);
+        const numberOfInstances = decodeInteger(contextCache, "IAAI", decoder)!;
         if (numberOfInstances > 1) {
           bitmap = decodeTextRegion(
             huffman,
@@ -649,12 +661,14 @@ function decodeSymbolDictionary(
             0, // ds offset
             1, // top left 7.4.3.1.1
             0, // OR operator
-            huffmanTables,
+            // TODO 这个点有点诡异，回头还要再看看，可能是bug，也可能是我没看懂
+            // 用any过渡一下
+            huffmanTables as any,
             refinementTemplateIndex,
             refinementAt,
             decodingContext,
             0,
-            huffmanInput
+            huffmanInput!
           );
         } else {
           const symbolId = decodeIAID(contextCache, decoder, symbolCodeLength);
@@ -669,10 +683,10 @@ function decodeSymbolDictionary(
             currentHeight,
             refinementTemplateIndex,
             symbol,
-            rdx,
-            rdy,
+            rdx!,
+            rdy!,
             false,
-            refinementAt,
+            refinementAt!,
             decodingContext
           );
         }
@@ -680,7 +694,7 @@ function decodeSymbolDictionary(
       } else if (huffman) {
         // Store only symbol width and decode a collective bitmap when the
         // height class is done.
-        symbolWidths.push(currentWidth);
+        symbolWidths!.push(currentWidth);
       } else {
         // 6.5.8.1 Direct-coded symbol bitmap
         bitmap = decodeBitmap(
@@ -690,7 +704,7 @@ function decodeSymbolDictionary(
           templateIndex,
           false,
           null,
-          at,
+          at!,
           decodingContext
         );
         newSymbols.push(bitmap);
@@ -698,7 +712,7 @@ function decodeSymbolDictionary(
     }
     if (huffman && !refinement) {
       // 6.5.9 Height class collective bitmap
-      const bitmapSize = huffmanTables.tableBitmapSize.decode(huffmanInput);
+      const bitmapSize = huffmanTables!.tableBitmapSize.decode(huffmanInput)!;
       huffmanInput.byteAlign();
       let collectiveBitmap;
       if (bitmapSize === 0) {
@@ -722,7 +736,7 @@ function decodeSymbolDictionary(
         huffmanInput.end = originalEnd;
         huffmanInput.position = bitmapEnd;
       }
-      const numberOfSymbolsDecoded = symbolWidths.length;
+      const numberOfSymbolsDecoded = symbolWidths!.length;
       if (firstSymbol === numberOfSymbolsDecoded - 1) {
         // collectiveBitmap is a single symbol.
         newSymbols.push(collectiveBitmap);
@@ -735,7 +749,7 @@ function decodeSymbolDictionary(
           bitmapWidth,
           symbolBitmap;
         for (i = firstSymbol; i < numberOfSymbolsDecoded; i++) {
-          bitmapWidth = symbolWidths[i];
+          bitmapWidth = symbolWidths![i];
           xMax = xMin + bitmapWidth;
           symbolBitmap = [];
           for (y = 0; y < currentHeight; y++) {
@@ -749,7 +763,7 @@ function decodeSymbolDictionary(
   }
 
   // 6.5.10 Exported symbols
-  const exportedSymbols = [],
+  const exportedSymbols: Uint8Array[][] = [],
     flags = [];
   let currentFlag = false,
     i,
@@ -757,8 +771,8 @@ function decodeSymbolDictionary(
   const totalSymbolsLength = symbols.length + numberOfNewSymbols;
   while (flags.length < totalSymbolsLength) {
     let runLength = huffman
-      ? tableB1.decode(huffmanInput)
-      : decodeInteger(contextCache, "IAEX", decoder);
+      ? tableB1!.decode(huffmanInput)!
+      : decodeInteger(contextCache, "IAEX", decoder)!;
     while (runLength--) {
       flags.push(currentFlag);
     }
@@ -778,25 +792,33 @@ function decodeSymbolDictionary(
 }
 
 function decodeTextRegion(
-  huffman,
-  refinement,
-  width,
-  height,
-  defaultPixelValue,
-  numberOfSymbolInstances,
-  stripSize,
-  inputSymbols,
-  symbolCodeLength,
-  transposed,
-  dsOffset,
-  referenceCorner,
-  combinationOperator,
-  huffmanTables,
-  refinementTemplateIndex,
-  refinementAt,
-  decodingContext,
-  logStripSize,
-  huffmanInput
+  huffman: boolean,
+  refinement: boolean,
+  width: number,
+  height: number,
+  defaultPixelValue: number,
+  numberOfSymbolInstances: number,
+  stripSize: number,
+  inputSymbols: Uint8Array[][],
+  symbolCodeLength: number,
+  transposed: boolean | number,
+  dsOffset: number,
+  referenceCorner: number,
+  combinationOperator: number,
+  huffmanTables: {
+    symbolIDTable: HuffmanTable;
+    tableFirstS: HuffmanTable;
+    tableDeltaS: HuffmanTable;
+    tableDeltaT: HuffmanTable;
+  },
+  refinementTemplateIndex: number,
+  refinementAt: {
+    x: number;
+    y: number;
+  }[] | null,
+  decodingContext: DecodingContext,
+  logStripSize: number,
+  huffmanInput: Reader
 ) {
   if (huffman && refinement) {
     throw new Jbig2Error("refinement with Huffman is not supported");
@@ -819,19 +841,19 @@ function decodeTextRegion(
   const contextCache = decodingContext.contextCache;
 
   let stripT = huffman
-    ? -huffmanTables.tableDeltaT.decode(huffmanInput)
-    : -decodeInteger(contextCache, "IADT", decoder); // 6.4.6
+    ? -huffmanTables.tableDeltaT.decode(huffmanInput)!
+    : -decodeInteger(contextCache, "IADT", decoder)!; // 6.4.6
   let firstS = 0;
   i = 0;
   while (i < numberOfSymbolInstances) {
     const deltaT = huffman
-      ? huffmanTables.tableDeltaT.decode(huffmanInput)
-      : decodeInteger(contextCache, "IADT", decoder); // 6.4.6
+      ? huffmanTables.tableDeltaT.decode(huffmanInput)!
+      : decodeInteger(contextCache, "IADT", decoder)!; // 6.4.6
     stripT += deltaT;
 
     const deltaFirstS = huffman
-      ? huffmanTables.tableFirstS.decode(huffmanInput)
-      : decodeInteger(contextCache, "IAFS", decoder); // 6.4.7
+      ? huffmanTables.tableFirstS.decode(huffmanInput)!
+      : decodeInteger(contextCache, "IAFS", decoder)!; // 6.4.7
     firstS += deltaFirstS;
     let currentS = firstS;
     do {
@@ -839,12 +861,12 @@ function decodeTextRegion(
       if (stripSize > 1) {
         currentT = huffman
           ? huffmanInput.readBits(logStripSize)
-          : decodeInteger(contextCache, "IAIT", decoder);
+          : decodeInteger(contextCache, "IAIT", decoder)!;
       }
       const t = stripSize * stripT + currentT;
       const symbolId = huffman
-        ? huffmanTables.symbolIDTable.decode(huffmanInput)
-        : decodeIAID(contextCache, decoder, symbolCodeLength);
+        ? huffmanTables.symbolIDTable.decode(huffmanInput)!
+        : decodeIAID(contextCache, decoder, symbolCodeLength)!;
       const applyRefinement =
         refinement &&
         (huffman
@@ -854,10 +876,10 @@ function decodeTextRegion(
       let symbolWidth = symbolBitmap[0].length;
       let symbolHeight = symbolBitmap.length;
       if (applyRefinement) {
-        const rdw = decodeInteger(contextCache, "IARDW", decoder); // 6.4.11.1
-        const rdh = decodeInteger(contextCache, "IARDH", decoder); // 6.4.11.2
-        const rdx = decodeInteger(contextCache, "IARDX", decoder); // 6.4.11.3
-        const rdy = decodeInteger(contextCache, "IARDY", decoder); // 6.4.11.4
+        const rdw = decodeInteger(contextCache, "IARDW", decoder)!; // 6.4.11.1
+        const rdh = decodeInteger(contextCache, "IARDH", decoder)!; // 6.4.11.2
+        const rdx = decodeInteger(contextCache, "IARDX", decoder)!; // 6.4.11.3
+        const rdy = decodeInteger(contextCache, "IARDY", decoder)!; // 6.4.11.4
         symbolWidth += rdw;
         symbolHeight += rdh;
         symbolBitmap = decodeRefinement(
@@ -868,7 +890,7 @@ function decodeTextRegion(
           (rdw >> 1) + rdx,
           (rdh >> 1) + rdy,
           false,
-          refinementAt,
+          refinementAt!,
           decodingContext
         );
       }
@@ -956,12 +978,12 @@ function decodeTextRegion(
 }
 
 function decodePatternDictionary(
-  mmr,
-  patternWidth,
-  patternHeight,
-  maxPatternIndex,
-  template,
-  decodingContext
+  mmr: boolean,
+  patternWidth: number,
+  patternHeight: number,
+  maxPatternIndex: number,
+  template: number,
+  decodingContext: DecodingContext
 ) {
   const at = [];
   if (!mmr) {
@@ -1012,21 +1034,21 @@ function decodePatternDictionary(
 }
 
 function decodeHalftoneRegion(
-  mmr,
-  patterns,
-  template,
-  regionWidth,
-  regionHeight,
-  defaultPixelValue,
-  enableSkip,
-  combinationOperator,
-  gridWidth,
-  gridHeight,
-  gridOffsetX,
-  gridOffsetY,
-  gridVectorX,
-  gridVectorY,
-  decodingContext
+  mmr: boolean,
+  patterns: Uint8Array[][],
+  template: number,
+  regionWidth: number,
+  regionHeight: number,
+  defaultPixelValue: number,
+  enableSkip: boolean,
+  combinationOperator: number,
+  gridWidth: number,
+  gridHeight: number,
+  gridOffsetX: number,
+  gridOffsetY: number,
+  gridVectorX: number,
+  gridVectorY: number,
+  decodingContext: DecodingContext
 ) {
   const skip = null;
   if (enableSkip) {
@@ -1093,7 +1115,7 @@ function decodeHalftoneRegion(
   }
   for (i = bitsPerValue - 1; i >= 0; i--) {
     if (mmr) {
-      bitmap = decodeMMRBitmap(mmrInput, gridWidth, gridHeight, true);
+      bitmap = decodeMMRBitmap(mmrInput!, gridWidth, gridHeight, true);
     } else {
       bitmap = decodeBitmap(
         false,
@@ -1157,8 +1179,20 @@ function decodeHalftoneRegion(
   return regionBitmap;
 }
 
-function readSegmentHeader(data, start) {
-  const segmentHeader = {};
+interface SegmentHeaderType {
+  number?: number,
+  type?: number,
+  typeName?: string | null,
+  deferredNonRetain?: boolean,
+  retainBits?: number[],
+  referredTo?: number[],
+  length?: number;
+  pageAssociation?: number;
+  headerEnd?: number;
+}
+
+function readSegmentHeader(data: Uint8Array, start: number): SegmentHeaderType {
+  const segmentHeader: SegmentHeaderType = {};
   segmentHeader.number = readUint32(data, start);
   const flags = data[start + 4];
   const segmentType = flags & 0x3f;
@@ -1194,7 +1228,7 @@ function readSegmentHeader(data, start) {
   } else if (segmentHeader.number <= 65536) {
     referredToSegmentNumberSize = 2;
   }
-  const referredTo = [];
+  const referredTo: number[] = [];
   let i, ii;
   for (i = 0; i < referredToCount; i++) {
     let number;
@@ -1258,19 +1292,26 @@ function readSegmentHeader(data, start) {
   return segmentHeader;
 }
 
-function readSegments(header, data, start, end) {
-  const segments = [];
+interface SegmentWrapper {
+  header: SegmentHeaderType;
+  data: Uint8Array;
+  start?: number;
+  end?: number;
+}
+
+function readSegments(header: { randomAccess?: boolean }, data: Uint8Array, start: number, end: number) {
+  const segments: SegmentWrapper[] = [];
   let position = start;
   while (position < end) {
     const segmentHeader = readSegmentHeader(data, position);
-    position = segmentHeader.headerEnd;
-    const segment = {
+    position = segmentHeader.headerEnd!;
+    const segment: SegmentWrapper = {
       header: segmentHeader,
       data,
     };
     if (!header.randomAccess) {
       segment.start = position;
-      position += segmentHeader.length;
+      position += segmentHeader.length!;
       segment.end = position;
     }
     segments.push(segment);
@@ -1281,7 +1322,7 @@ function readSegments(header, data, start, end) {
   if (header.randomAccess) {
     for (let i = 0, ii = segments.length; i < ii; i++) {
       segments[i].start = position;
-      position += segments[i].header.length;
+      position += segments[i].header.length!;
       segments[i].end = position;
     }
   }
@@ -1289,7 +1330,7 @@ function readSegments(header, data, start, end) {
 }
 
 // 7.4.1 Region segment information field
-function readRegionSegmentInformation(data, start) {
+function readRegionSegmentInformation(data: Uint8Array, start: number) {
   return {
     width: readUint32(data, start),
     height: readUint32(data, start + 4),
@@ -1300,28 +1341,118 @@ function readRegionSegmentInformation(data, start) {
 }
 const RegionSegmentInformationFieldLength = 17;
 
-function processSegment(segment, visitor) {
+interface SegmentDictionary {
+  huffman: boolean,
+  refinement: boolean;
+  huffmanDHSelector: number;
+  huffmanDWSelector: number;
+  bitmapSizeSelector: number;
+  aggregationInstancesSelector: number;
+  bitmapCodingContextUsed: boolean;
+  bitmapCodingContextRetained: boolean;
+  template: number;
+  refinementTemplate: number
+  at: { x: number; y: number; }[] | null;
+  refinementAt: { x: number; y: number; }[] | null;
+  numberOfNewSymbols: number;
+  numberOfExportedSymbols: number;
+}
+
+interface SegmentTextRegion {
+  numberOfSymbolInstances: number;
+  refinementAt: { x: number; y: number; }[] | null;
+  refinementTemplate: number;
+  dsOffset: number;
+  defaultPixelValue: number;
+  combinationOperator: number;
+  transposed: boolean;
+  referenceCorner: number;
+  stripSize: number;
+  logStripSize: number;
+  refinement: boolean;
+  info: { width: number; height: number; x: number; y: number; combinationOperator: number; };
+  huffman: boolean;
+  huffmanRefinementSizeSelector: boolean | null;
+  huffmanRefinementDY: number | null;
+  huffmanRefinementDX: number | null;
+  huffmanRefinementDH: number | null;
+  huffmanRefinementDW: number | null;
+  huffmanDT: number | null;
+  huffmanDS: number | null;
+  huffmanFS: number | null;
+}
+
+interface SegmentPatternDictionary {
+  mmr: boolean;
+  template: number;
+  patternWidth: number;
+  patternHeight: number;
+  maxPatternIndex: number;
+}
+
+interface SegmentHalftoneRegion {
+  gridVectorX: number;
+  gridVectorY: number;
+  gridOffsetY: number;
+  gridOffsetX: number;
+  gridHeight: number;
+  gridWidth: number;
+  defaultPixelValue: number;
+  combinationOperator: number;
+  enableSkip: boolean;
+  template: number;
+  mmr: boolean;
+  info: { width: number; height: number; x: number; y: number; combinationOperator: number; };
+}
+
+interface SegmentGenericRegion {
+  at: { x: number; y: number; }[] | null;
+  prediction: boolean;
+  template: number;
+  mmr: boolean;
+  info: { width: number; height: number; x: number; y: number; combinationOperator: number; };
+}
+
+interface SegmentPageInfo {
+  width: number;
+  height: number | undefined;
+  resolutionX: number;
+  resolutionY: number;
+  lossless: boolean;
+  refinement: boolean;
+  defaultPixelValue: number;
+  combinationOperator: number;
+  requiresBuffer: boolean;
+  combinationOperatorOverride: boolean;
+}
+
+function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) {
   const header = segment.header;
 
   const data = segment.data,
     end = segment.end;
-  let position = segment.start;
+  let position = segment.start!;
   let args, at, i, atLength;
   switch (header.type) {
     case 0: // SymbolDictionary
       // 7.4.2 Symbol dictionary segment syntax
-      const dictionary = {};
       const dictionaryFlags = readUint16(data, position); // 7.4.2.1.1
-      dictionary.huffman = !!(dictionaryFlags & 1);
-      dictionary.refinement = !!(dictionaryFlags & 2);
-      dictionary.huffmanDHSelector = (dictionaryFlags >> 2) & 3;
-      dictionary.huffmanDWSelector = (dictionaryFlags >> 4) & 3;
-      dictionary.bitmapSizeSelector = (dictionaryFlags >> 6) & 1;
-      dictionary.aggregationInstancesSelector = (dictionaryFlags >> 7) & 1;
-      dictionary.bitmapCodingContextUsed = !!(dictionaryFlags & 256);
-      dictionary.bitmapCodingContextRetained = !!(dictionaryFlags & 512);
-      dictionary.template = (dictionaryFlags >> 10) & 3;
-      dictionary.refinementTemplate = (dictionaryFlags >> 12) & 1;
+      const dictionary: SegmentDictionary = {
+        huffman: !!(dictionaryFlags & 1),
+        refinement: !!(dictionaryFlags & 2),
+        huffmanDHSelector: (dictionaryFlags >> 2) & 3,
+        huffmanDWSelector: (dictionaryFlags >> 4) & 3,
+        bitmapSizeSelector: (dictionaryFlags >> 6) & 1,
+        aggregationInstancesSelector: (dictionaryFlags >> 7) & 1,
+        bitmapCodingContextUsed: !!(dictionaryFlags & 256),
+        bitmapCodingContextRetained: !!(dictionaryFlags & 512),
+        template: (dictionaryFlags >> 10) & 3,
+        refinementTemplate: (dictionaryFlags >> 12) & 1,
+        at: null,
+        refinementAt: null,
+        numberOfNewSymbols: 0,
+        numberOfExportedSymbols: 0
+      }
       position += 2;
       if (!dictionary.huffman) {
         atLength = dictionary.template === 0 ? 4 : 1;
@@ -1361,21 +1492,34 @@ function processSegment(segment, visitor) {
       break;
     case 6: // ImmediateTextRegion
     case 7: // ImmediateLosslessTextRegion
-      const textRegion = {};
-      textRegion.info = readRegionSegmentInformation(data, position);
+      // 这两行代码移动了位置
       position += RegionSegmentInformationFieldLength;
       const textRegionSegmentFlags = readUint16(data, position);
       position += 2;
-      textRegion.huffman = !!(textRegionSegmentFlags & 1);
-      textRegion.refinement = !!(textRegionSegmentFlags & 2);
-      textRegion.logStripSize = (textRegionSegmentFlags >> 2) & 3;
-      textRegion.stripSize = 1 << textRegion.logStripSize;
-      textRegion.referenceCorner = (textRegionSegmentFlags >> 4) & 3;
-      textRegion.transposed = !!(textRegionSegmentFlags & 64);
-      textRegion.combinationOperator = (textRegionSegmentFlags >> 7) & 3;
-      textRegion.defaultPixelValue = (textRegionSegmentFlags >> 9) & 1;
-      textRegion.dsOffset = (textRegionSegmentFlags << 17) >> 27;
-      textRegion.refinementTemplate = (textRegionSegmentFlags >> 15) & 1;
+      const logStripSize = (textRegionSegmentFlags >> 2) & 3;
+      const textRegion: SegmentTextRegion = {
+        info: readRegionSegmentInformation(data, position),
+        huffman: !!(textRegionSegmentFlags & 1),
+        refinement: !!(textRegionSegmentFlags & 2),
+        logStripSize: logStripSize,
+        stripSize: 1 << logStripSize,
+        referenceCorner: (textRegionSegmentFlags >> 4) & 3,
+        transposed: !!(textRegionSegmentFlags & 64),
+        combinationOperator: (textRegionSegmentFlags >> 7) & 3,
+        defaultPixelValue: (textRegionSegmentFlags >> 9) & 1,
+        dsOffset: (textRegionSegmentFlags << 17) >> 27,
+        refinementTemplate: (textRegionSegmentFlags >> 15) & 1,
+        huffmanRefinementSizeSelector: null,
+        huffmanRefinementDY: null,
+        huffmanRefinementDX: null,
+        huffmanRefinementDH: null,
+        huffmanRefinementDW: null,
+        huffmanDT: null,
+        huffmanDS: null,
+        huffmanFS: null,
+        numberOfSymbolInstances: 0,
+        refinementAt: null
+      }
       if (textRegion.huffman) {
         const textRegionHuffmanFlags = readUint16(data, position);
         position += 2;
@@ -1407,84 +1551,103 @@ function processSegment(segment, visitor) {
       break;
     case 16: // PatternDictionary
       // 7.4.4. Pattern dictionary segment syntax
-      const patternDictionary = {};
       const patternDictionaryFlags = data[position++];
-      patternDictionary.mmr = !!(patternDictionaryFlags & 1);
-      patternDictionary.template = (patternDictionaryFlags >> 1) & 3;
-      patternDictionary.patternWidth = data[position++];
-      patternDictionary.patternHeight = data[position++];
-      patternDictionary.maxPatternIndex = readUint32(data, position);
+      const patternDictionary: SegmentPatternDictionary = {
+        mmr: !!(patternDictionaryFlags & 1),
+        template: (patternDictionaryFlags >> 1) & 3,
+        patternWidth: data[position++],
+        patternHeight: data[position++],
+        maxPatternIndex: readUint32(data, position),
+      }
       position += 4;
       args = [patternDictionary, header.number, data, position, end];
       break;
     case 22: // ImmediateHalftoneRegion
     case 23: // ImmediateLosslessHalftoneRegion
-      // 7.4.5 Halftone region segment syntax
-      const halftoneRegion = {};
-      halftoneRegion.info = readRegionSegmentInformation(data, position);
-      position += RegionSegmentInformationFieldLength;
-      const halftoneRegionFlags = data[position++];
-      halftoneRegion.mmr = !!(halftoneRegionFlags & 1);
-      halftoneRegion.template = (halftoneRegionFlags >> 1) & 3;
-      halftoneRegion.enableSkip = !!(halftoneRegionFlags & 8);
-      halftoneRegion.combinationOperator = (halftoneRegionFlags >> 4) & 7;
-      halftoneRegion.defaultPixelValue = (halftoneRegionFlags >> 7) & 1;
-      halftoneRegion.gridWidth = readUint32(data, position);
-      position += 4;
-      halftoneRegion.gridHeight = readUint32(data, position);
-      position += 4;
-      halftoneRegion.gridOffsetX = readUint32(data, position) & 0xffffffff;
-      position += 4;
-      halftoneRegion.gridOffsetY = readUint32(data, position) & 0xffffffff;
-      position += 4;
-      halftoneRegion.gridVectorX = readUint16(data, position);
-      position += 2;
-      halftoneRegion.gridVectorY = readUint16(data, position);
-      position += 2;
-      args = [halftoneRegion, header.referredTo, data, position, end];
+      {
+        // 7.4.5 Halftone region segment syntax
+        const info = readRegionSegmentInformation(data, position);
+        position += RegionSegmentInformationFieldLength;
+        const halftoneRegionFlags = data[position++];
+        const mmr = !!(halftoneRegionFlags & 1);
+        const template = (halftoneRegionFlags >> 1) & 3;
+        const enableSkip = !!(halftoneRegionFlags & 8);
+        const combinationOperator = (halftoneRegionFlags >> 4) & 7;
+        const defaultPixelValue = (halftoneRegionFlags >> 7) & 1;
+        const gridWidth = readUint32(data, position);
+        position += 4;
+        const gridHeight = readUint32(data, position);
+        position += 4;
+        const gridOffsetX = readUint32(data, position) & 0xffffffff;
+        position += 4;
+        const gridOffsetY = readUint32(data, position) & 0xffffffff;
+        position += 4;
+        const gridVectorX = readUint16(data, position);
+        position += 2;
+        const gridVectorY = readUint16(data, position);
+        position += 2;
+        const halftoneRegion: SegmentHalftoneRegion = {
+          info, mmr, template, enableSkip, combinationOperator, defaultPixelValue,
+          gridWidth, gridHeight, gridOffsetX, gridOffsetY, gridVectorX, gridVectorY
+        };
+        args = [halftoneRegion, header.referredTo, data, position, end];
+      }
       break;
     case 38: // ImmediateGenericRegion
     case 39: // ImmediateLosslessGenericRegion
-      const genericRegion = {};
-      genericRegion.info = readRegionSegmentInformation(data, position);
-      position += RegionSegmentInformationFieldLength;
-      const genericRegionSegmentFlags = data[position++];
-      genericRegion.mmr = !!(genericRegionSegmentFlags & 1);
-      genericRegion.template = (genericRegionSegmentFlags >> 1) & 3;
-      genericRegion.prediction = !!(genericRegionSegmentFlags & 8);
-      if (!genericRegion.mmr) {
-        atLength = genericRegion.template === 0 ? 4 : 1;
-        at = [];
-        for (i = 0; i < atLength; i++) {
-          at.push({
-            x: readInt8(data, position),
-            y: readInt8(data, position + 1),
-          });
-          position += 2;
+      {
+        const info = readRegionSegmentInformation(data, position);
+        position += RegionSegmentInformationFieldLength;
+        const genericRegionSegmentFlags = data[position++];
+        const mmr = !!(genericRegionSegmentFlags & 1);
+        const template = (genericRegionSegmentFlags >> 1) & 3;
+        const prediction = !!(genericRegionSegmentFlags & 8);
+        if (!mmr) {
+          atLength = template === 0 ? 4 : 1;
+          at = [];
+          for (i = 0; i < atLength; i++) {
+            at.push({
+              x: readInt8(data, position),
+              y: readInt8(data, position + 1),
+            });
+            position += 2;
+          }
+          // genericRegion.at = at;
         }
-        genericRegion.at = at;
+        const genericRegion: SegmentGenericRegion = {
+          info, mmr, template, prediction, at: !mmr ? at! : null,
+        };
+        args = [genericRegion, data, position, end];
       }
-      args = [genericRegion, data, position, end];
       break;
     case 48: // PageInformation
       const pageInfo = {
         width: readUint32(data, position),
-        height: readUint32(data, position + 4),
+        height: <number | undefined>readUint32(data, position + 4),
         resolutionX: readUint32(data, position + 8),
         resolutionY: readUint32(data, position + 12),
       };
       if (pageInfo.height === 0xffffffff) {
-        delete pageInfo.height;
+        // delete pageInfo.height;
+        pageInfo.height = undefined;
       }
       const pageSegmentFlags = data[position + 16];
       readUint16(data, position + 17); // pageStripingInformation
-      pageInfo.lossless = !!(pageSegmentFlags & 1);
-      pageInfo.refinement = !!(pageSegmentFlags & 2);
-      pageInfo.defaultPixelValue = (pageSegmentFlags >> 2) & 1;
-      pageInfo.combinationOperator = (pageSegmentFlags >> 3) & 3;
-      pageInfo.requiresBuffer = !!(pageSegmentFlags & 32);
-      pageInfo.combinationOperatorOverride = !!(pageSegmentFlags & 64);
-      args = [pageInfo];
+      const lossless = !!(pageSegmentFlags & 1);
+      const refinement = !!(pageSegmentFlags & 2);
+      const defaultPixelValue = (pageSegmentFlags >> 2) & 1;
+      const combinationOperator = (pageSegmentFlags >> 3) & 3;
+      const requiresBuffer = !!(pageSegmentFlags & 32);
+      const combinationOperatorOverride = !!(pageSegmentFlags & 64);
+      const segmentPageInfo: SegmentPageInfo = {
+        width: pageInfo.width,
+        height: pageInfo.height,
+        resolutionX: pageInfo.resolutionX,
+        resolutionY: pageInfo.resolutionY,
+        lossless, refinement, defaultPixelValue,
+        combinationOperator, requiresBuffer, combinationOperatorOverride
+      }
+      args = [segmentPageInfo];
       break;
     case 49: // EndOfPage
       break;
@@ -1510,13 +1673,13 @@ function processSegment(segment, visitor) {
   }
 }
 
-function processSegments(segments, visitor) {
+function processSegments(segments: SegmentWrapper[], visitor: SimpleSegmentVisitor) {
   for (let i = 0, ii = segments.length; i < ii; i++) {
     processSegment(segments[i], visitor);
   }
 }
 
-function parseJbig2Chunks(chunks) {
+function parseJbig2Chunks(chunks: { data: Uint8Array, start: number, end: number }[]) {
   const visitor = new SimpleSegmentVisitor();
   for (let i = 0, ii = chunks.length; i < ii; i++) {
     const chunk = chunks[i];
@@ -1526,8 +1689,8 @@ function parseJbig2Chunks(chunks) {
   return visitor.buffer;
 }
 
-function parseJbig2(data) {
-  if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("IMAGE_DECODERS")) {
+function parseJbig2(data: Uint8Array) {
+  if (PlatformHelper.testImageDecoders()) {
     throw new Error("Not implemented: parseJbig2");
   }
   const end = data.length;
@@ -1546,7 +1709,7 @@ function parseJbig2(data) {
     throw new Jbig2Error("parseJbig2 - invalid header.");
   }
 
-  const header = Object.create(null);
+  const header: { randomAccess?: boolean, numberOfPages?: number } = Object.create(null);
   position += 8;
   const flags = data[position++];
   header.randomAccess = !(flags & 1);
@@ -1559,32 +1722,43 @@ function parseJbig2(data) {
   const visitor = new SimpleSegmentVisitor();
   processSegments(segments, visitor);
 
-  const { width, height } = visitor.currentPageInfo;
+  const { width, height } = visitor.currentPageInfo!;
   const bitPacked = visitor.buffer;
-  const imgData = new Uint8ClampedArray(width * height);
+  const imgData = new Uint8ClampedArray(width * height!);
   let q = 0,
     k = 0;
-  for (let i = 0; i < height; i++) {
+  for (let i = 0; i < height!; i++) {
     let mask = 0,
       buffer;
     for (let j = 0; j < width; j++) {
       if (!mask) {
         mask = 128;
-        buffer = bitPacked[k++];
+        buffer = bitPacked![k++];
       }
-      imgData[q++] = buffer & mask ? 0 : 255;
+      imgData[q++] = buffer! & mask ? 0 : 255;
       mask >>= 1;
     }
   }
 
-  return { imgData, width, height };
+  return { imgData, width, height: <number | null>height };
 }
 
 class SimpleSegmentVisitor {
-  onPageInformation(info) {
+
+  protected symbols: Record<number, Uint8Array[][]> | null = null;
+
+  public buffer: Uint8ClampedArray | null = null;
+
+  public currentPageInfo: SegmentPageInfo | null = null;
+
+  protected customTables: Record<number, HuffmanTable> | null = null;
+
+  protected patterns: Record<number, Uint8Array[][]> | null = null;
+
+  onPageInformation(info: SegmentPageInfo) {
     this.currentPageInfo = info;
     const rowSize = (info.width + 7) >> 3;
-    const buffer = new Uint8ClampedArray(rowSize * info.height);
+    const buffer = new Uint8ClampedArray(rowSize * info.height!);
     // The contents of ArrayBuffers are initialized to 0.
     // Fill the buffer with 0xFF only if info.defaultPixelValue is set
     if (info.defaultPixelValue) {
@@ -1593,15 +1767,22 @@ class SimpleSegmentVisitor {
     this.buffer = buffer;
   }
 
-  drawBitmap(regionInfo, bitmap) {
-    const pageInfo = this.currentPageInfo;
+  drawBitmap(
+    regionInfo: {
+      width: number;
+      height: number;
+      x: number;
+      y: number;
+      combinationOperator: number;
+    }, bitmap: Uint8Array[]) {
+    const pageInfo = this.currentPageInfo!;
     const width = regionInfo.width,
       height = regionInfo.height;
     const rowSize = (pageInfo.width + 7) >> 3;
     const combinationOperator = pageInfo.combinationOperatorOverride
       ? regionInfo.combinationOperator
       : pageInfo.combinationOperator;
-    const buffer = this.buffer;
+    const buffer = this.buffer!;
     const mask0 = 128 >> (regionInfo.x & 7);
     let offset0 = regionInfo.y * rowSize + (regionInfo.x >> 3);
     let i, j, mask, offset;
@@ -1647,7 +1828,7 @@ class SimpleSegmentVisitor {
     }
   }
 
-  onImmediateGenericRegion(region, data, start, end) {
+  onImmediateGenericRegion(region: SegmentGenericRegion, data: Uint8Array, start: number, end: number) {
     const regionInfo = region.info;
     const decodingContext = new DecodingContext(data, start, end);
     const bitmap = decodeBitmap(
@@ -1657,7 +1838,7 @@ class SimpleSegmentVisitor {
       region.template,
       region.prediction,
       null,
-      region.at,
+      region.at!,
       decodingContext
     );
     this.drawBitmap(regionInfo, bitmap);
@@ -1667,20 +1848,29 @@ class SimpleSegmentVisitor {
     this.onImmediateGenericRegion(...arguments);
   }
 
+
+  // on开头的，都是通过反射来进行调用的。
+  // 连个注册的地方都没有，很容易就跟丢了。
   onSymbolDictionary(
-    dictionary,
-    currentSegment,
-    referredSegments,
-    data,
-    start,
-    end
+    dictionary: SegmentDictionary,
+    currentSegment: number,
+    referredSegments: number[],
+    data: Uint8Array,
+    start: number,
+    end: number
   ) {
-    let huffmanTables, huffmanInput;
+    let huffmanTables: {
+      tableDeltaHeight: HuffmanTable;
+      tableDeltaWidth: HuffmanTable;
+      tableBitmapSize: HuffmanTable;
+      tableAggregateInstances: HuffmanTable;
+    } | null = null;
+    let huffmanInput: Reader | null = null;
     if (dictionary.huffman) {
       huffmanTables = getSymbolDictionaryHuffmanTables(
         dictionary,
         referredSegments,
-        this.customTables
+        this.customTables!
       );
       huffmanInput = new Reader(data, start, end);
     }
@@ -1691,7 +1881,7 @@ class SimpleSegmentVisitor {
       this.symbols = symbols = {};
     }
 
-    const inputSymbols = [];
+    const inputSymbols: Uint8Array[][] = [];
     for (const referredSegment of referredSegments) {
       const referredSymbols = symbols[referredSegment];
       // referredSymbols is undefined when we have a reference to a Tables
@@ -1714,16 +1904,23 @@ class SimpleSegmentVisitor {
       dictionary.refinementTemplate,
       dictionary.refinementAt,
       decodingContext,
-      huffmanInput
+      huffmanInput!
     );
   }
 
-  onImmediateTextRegion(region, referredSegments, data, start, end) {
+  onImmediateTextRegion(region: SegmentTextRegion, referredSegments: number[]
+    , data: Uint8Array, start: number, end: number) {
     const regionInfo = region.info;
-    let huffmanTables, huffmanInput;
+    let huffmanTables: {
+      symbolIDTable: HuffmanTable;
+      tableFirstS: HuffmanTable;
+      tableDeltaS: HuffmanTable;
+      tableDeltaT: HuffmanTable;
+    } | null = null;
+    let huffmanInput;
 
     // Combines exported symbols from all referred segments
-    const symbols = this.symbols;
+    const symbols = this.symbols!;
     const inputSymbols = [];
     for (const referredSegment of referredSegments) {
       const referredSymbols = symbols[referredSegment];
@@ -1739,7 +1936,7 @@ class SimpleSegmentVisitor {
       huffmanTables = getTextRegionHuffmanTables(
         region,
         referredSegments,
-        this.customTables,
+        this.customTables!,
         inputSymbols.length,
         huffmanInput
       );
@@ -1760,12 +1957,12 @@ class SimpleSegmentVisitor {
       region.dsOffset,
       region.referenceCorner,
       region.combinationOperator,
-      huffmanTables,
+      huffmanTables!,
       region.refinementTemplate,
       region.refinementAt,
       decodingContext,
       region.logStripSize,
-      huffmanInput
+      huffmanInput!
     );
     this.drawBitmap(regionInfo, bitmap);
   }
@@ -1774,7 +1971,10 @@ class SimpleSegmentVisitor {
     this.onImmediateTextRegion(...arguments);
   }
 
-  onPatternDictionary(dictionary, currentSegment, data, start, end) {
+  onPatternDictionary(
+    dictionary: SegmentPatternDictionary, currentSegment: number,
+    data: Uint8Array, start: number, end: number
+  ) {
     let patterns = this.patterns;
     if (!patterns) {
       this.patterns = patterns = {};
@@ -1790,9 +1990,12 @@ class SimpleSegmentVisitor {
     );
   }
 
-  onImmediateHalftoneRegion(region, referredSegments, data, start, end) {
+  onImmediateHalftoneRegion(
+    region: SegmentHalftoneRegion, referredSegments: number[],
+    data: Uint8Array, start: number, end: number
+  ) {
     // HalftoneRegion refers to exactly one PatternDictionary.
-    const patterns = this.patterns[referredSegments[0]];
+    const patterns = this.patterns![referredSegments[0]];
     const regionInfo = region.info;
     const decodingContext = new DecodingContext(data, start, end);
     const bitmap = decodeHalftoneRegion(
@@ -1819,7 +2022,7 @@ class SimpleSegmentVisitor {
     this.onImmediateHalftoneRegion(...arguments);
   }
 
-  onTables(currentSegment, data, start, end) {
+  onTables(currentSegment: number, data: Uint8Array, start: number, end: number) {
     let customTables = this.customTables;
     if (!customTables) {
       this.customTables = customTables = {};
@@ -1828,8 +2031,23 @@ class SimpleSegmentVisitor {
   }
 }
 
+type HuffmanLineParamType = [number, number] | [number, number, number, number] | [number, number, number, number, string];
+
 class HuffmanLine {
-  constructor(lineData) {
+
+  public isOOB: boolean;
+
+  public rangeLow: number;
+
+  public prefixLength: number;
+
+  public rangeLength: number;
+
+  public prefixCode: number;
+
+  public isLowerRange: boolean;
+
+  constructor(lineData: HuffmanLineParamType) {
     if (lineData.length === 2) {
       // OOB line.
       this.isOOB = true;
@@ -1852,7 +2070,20 @@ class HuffmanLine {
 }
 
 class HuffmanTreeNode {
-  constructor(line) {
+
+  protected children: HuffmanTreeNode[];
+
+  protected isLeaf: boolean;
+
+  protected rangeLength: number | null;
+
+  protected rangeLow: number | null;
+
+  protected isLowerRange: boolean | null;
+
+  protected isOOB: boolean | null;
+
+  constructor(line: HuffmanLine | null) {
     this.children = [];
     if (line) {
       // Leaf node
@@ -1864,10 +2095,14 @@ class HuffmanTreeNode {
     } else {
       // Intermediate or root node
       this.isLeaf = false;
+      this.rangeLength = null;
+      this.rangeLow = null;
+      this.isLowerRange = null;
+      this.isOOB = null;
     }
   }
 
-  buildTree(line, shift) {
+  buildTree(line: HuffmanLine, shift: number) {
     const bit = (line.prefixCode >> shift) & 1;
     if (shift <= 0) {
       // Create a leaf node.
@@ -1882,13 +2117,13 @@ class HuffmanTreeNode {
     }
   }
 
-  decodeNode(reader) {
+  decodeNode(reader: Reader): number | null {
     if (this.isLeaf) {
       if (this.isOOB) {
         return null;
       }
-      const htOffset = reader.readBits(this.rangeLength);
-      return this.rangeLow + (this.isLowerRange ? -htOffset : htOffset);
+      const htOffset = reader.readBits(this.rangeLength!);
+      return this.rangeLow! + (this.isLowerRange ? -htOffset : htOffset);
     }
     const node = this.children[reader.readBit()];
     if (!node) {
@@ -1899,7 +2134,8 @@ class HuffmanTreeNode {
 }
 
 class HuffmanTable {
-  constructor(lines, prefixCodesDone) {
+  rootNode: HuffmanTreeNode;
+  constructor(lines: HuffmanLine[], prefixCodesDone: boolean) {
     if (!prefixCodesDone) {
       this.assignPrefixCodes(lines);
     }
@@ -1913,11 +2149,11 @@ class HuffmanTable {
     }
   }
 
-  decode(reader) {
+  decode(reader: Reader) {
     return this.rootNode.decodeNode(reader);
   }
 
-  assignPrefixCodes(lines) {
+  assignPrefixCodes(lines: HuffmanLine[]) {
     // Annex B.3 Assigning the prefix codes.
     const linesLength = lines.length;
     let prefixLengthMax = 0;
@@ -1953,7 +2189,7 @@ class HuffmanTable {
   }
 }
 
-function decodeTablesSegment(data, start, end) {
+function decodeTablesSegment(data: Uint8Array, start: number, end: number) {
   // Decodes a Tables segment, i.e., a custom Huffman table.
   // Annex B.2 Code table structure.
   const flags = data[start];
@@ -1995,15 +2231,15 @@ function decodeTablesSegment(data, start, end) {
   return new HuffmanTable(lines, false);
 }
 
-const standardTablesCache = {};
+const standardTablesCache: Record<number, HuffmanTable> = {};
 
-function getStandardTable(number) {
+function getStandardTable(number: number) {
   // Annex B.5 Standard Huffman tables.
   let table = standardTablesCache[number];
   if (table) {
     return table;
   }
-  let lines;
+  let lines: (HuffmanLineParamType | HuffmanLine)[];
   switch (number) {
     case 1:
       lines = [
@@ -2254,15 +2490,28 @@ function getStandardTable(number) {
   }
 
   for (let i = 0, ii = lines.length; i < ii; i++) {
-    lines[i] = new HuffmanLine(lines[i]);
+    lines[i] = new HuffmanLine(<HuffmanLineParamType>lines[i]);
   }
-  table = new HuffmanTable(lines, true);
+  table = new HuffmanTable(<HuffmanLine[]>lines, true);
   standardTablesCache[number] = table;
   return table;
 }
 
 class Reader {
-  constructor(data, start, end) {
+
+  protected shift: number;
+
+  public position: number;
+
+  public start: number;
+
+  public end: number;
+
+  protected currentByte: number;
+
+  protected data: Uint8Array;
+
+  constructor(data: Uint8Array, start: number, end: number) {
     this.data = data;
     this.start = start;
     this.end = end;
@@ -2284,7 +2533,7 @@ class Reader {
     return bit;
   }
 
-  readBits(numBits) {
+  readBits(numBits: number) {
     let result = 0,
       i;
     for (i = numBits - 1; i >= 0; i--) {
@@ -2305,7 +2554,10 @@ class Reader {
   }
 }
 
-function getCustomHuffmanTable(index, referredTo, customTables) {
+function getCustomHuffmanTable(
+  index: number, referredTo: number[],
+  customTables: Record<number, HuffmanTable>
+) {
   // Returns a Tables segment that has been earlier decoded.
   // See 7.4.2.1.6 (symbol dictionary) or 7.4.3.1.6 (text region).
   let currentIndex = 0;
@@ -2322,11 +2574,11 @@ function getCustomHuffmanTable(index, referredTo, customTables) {
 }
 
 function getTextRegionHuffmanTables(
-  textRegion,
-  referredTo,
-  customTables,
-  numberOfSymbols,
-  reader
+  textRegion: SegmentTextRegion,
+  referredTo: number[],
+  customTables: Record<number, HuffmanTable>,
+  numberOfSymbols: number,
+  reader: Reader
 ) {
   // 7.4.3.1.7 Symbol ID Huffman table decoding
 
@@ -2343,7 +2595,7 @@ function getTextRegionHuffmanTables(
   // Interpret the RUNCODE codes and the additional bits (if any).
   codes.length = 0;
   for (let i = 0; i < numberOfSymbols;) {
-    const codeLength = runCodesTable.decode(reader);
+    const codeLength = runCodesTable.decode(reader)!;
     if (codeLength >= 32) {
       let repeatedLength, numberOfRepeats, j;
       switch (codeLength) {
@@ -2370,7 +2622,7 @@ function getTextRegionHuffmanTables(
         i++;
       }
     } else {
-      codes.push(new HuffmanLine([i, codeLength, 0, 0]));
+      codes.push(new HuffmanLine([i, codeLength!, 0, 0]));
       i++;
     }
   }
@@ -2451,9 +2703,9 @@ function getTextRegionHuffmanTables(
 }
 
 function getSymbolDictionaryHuffmanTables(
-  dictionary,
-  referredTo,
-  customTables
+  dictionary: SegmentDictionary,
+  referredTo: number[],
+  customTables: Record<number, HuffmanTable>
 ) {
   // 7.4.2.1.6 Symbol dictionary segment Huffman table selection
 
@@ -2524,7 +2776,7 @@ function getSymbolDictionaryHuffmanTables(
   };
 }
 
-function readUncompressedBitmap(reader, width: number, height: number) {
+function readUncompressedBitmap(reader: Reader, width: number, height: number) {
   const bitmap = [];
   for (let y = 0; y < height; y++) {
     const row = new Uint8Array(width);
@@ -2537,7 +2789,7 @@ function readUncompressedBitmap(reader, width: number, height: number) {
   return bitmap;
 }
 
-function decodeMMRBitmap(input, width: number, height: number, endOfBlock) {
+function decodeMMRBitmap(input: Reader, width: number, height: number, endOfBlock: boolean) {
   // MMR is the same compression algorithm as the PDF filter
   // CCITTFaxDecode with /K -1.
   const params = {
@@ -2585,12 +2837,17 @@ function decodeMMRBitmap(input, width: number, height: number, endOfBlock) {
 }
 
 class Jbig2Image {
-  parseChunks(chunks) {
+
+  width: number | null = null;
+
+  height: number | null = null;
+
+  parseChunks(chunks: { data: Uint8Array, start: number, end: number }[]) {
     return parseJbig2Chunks(chunks);
   }
 
-  parse(data) {
-    if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("IMAGE_DECODERS")) {
+  parse(data: Uint8Array) {
+    if (PlatformHelper.testImageDecoders()) {
       throw new Error("Not implemented: Jbig2Image.parse");
     }
     const { imgData, width, height } = parseJbig2(data);

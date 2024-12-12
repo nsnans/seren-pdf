@@ -8,7 +8,7 @@
  */
 class PlatformHelper {
 
-  static hasDefined(){
+  static hasDefined() {
     return true;
   }
 
@@ -27,6 +27,10 @@ class PlatformHelper {
   }
 
   static testLib() {
+    return false;
+  }
+
+  static testImageDecoders() {
     return false;
   }
 

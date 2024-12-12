@@ -872,17 +872,17 @@ class PartialEvaluator {
       !dict.has(DictKey.Mask)
     ) {
       try {
-        const imageObj = new PDFImage({
-          xref: this.xref,
-          res: resources,
+        const imageObj = new PDFImage(
+          this.xref,
+          resources,
           image,
           isInline,
-          smask: null,
-          mask: null,
-          isMask: false,
-          pdfFunctionFactory: this._pdfFunctionFactory,
+          null,
+          null,
+          false,
+          this._pdfFunctionFactory,
           localColorSpaceCache,
-        });
+        );
         // We force the use of RGBA_32BPP images here, because we can't handle
         // any other kind.
         imgData = await imageObj.createImageData(

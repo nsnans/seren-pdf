@@ -98,20 +98,9 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
   return dest;
 }
 
-interface PDFImageArgs {
-  xref: XRef;
-  res: Dict;
-  image;
-  isInline: boolean;
-  smask;
-  mask;
-  isMask: boolean;
-  pdfFunctionFactory: PDFFunctionFactory;
-  localColorSpaceCache: LocalColorSpaceCache;
-}
-
 class PDFImage {
 
+  // 这个变量似乎没有用到
   protected xref: XRef;
 
   protected image;
@@ -149,17 +138,18 @@ class PDFImage {
 
   protected numComp: number = 0;
 
-  constructor({
-    xref,
-    res,
-    image,
-    isInline = false,
-    smask = null,
-    mask = null,
-    isMask = false,
-    pdfFunctionFactory,
-    localColorSpaceCache,
-  }: PDFImageArgs) {
+  constructor(
+    xref: XRef,
+    res: Dict,
+    image: BaseStream, // 应该没有这么简单
+    isInline: boolean = false,
+    smask: BaseStream | null,
+    mask: BaseStream | number[] | null,
+    isMask: boolean = false,
+    pdfFunctionFactory: PDFFunctionFactory,
+    localColorSpaceCache: LocalColorSpaceCache,
+  ) {
+    this.xref = xref;
     this.image = image;
     const dict = image.dict!;
 
@@ -194,8 +184,8 @@ class PDFImage {
         break;
     }
 
-    let width = dict.get("W", "Width");
-    let height = dict.get("H", "Height");
+    let width = dict.getValueWithFallback(DictKey.W, DictKey.Width);
+    let height = dict.getValueWithFallback(DictKey.H, DictKey.Height);
 
     if (
       Number.isInteger(image.width) &&
@@ -219,13 +209,13 @@ class PDFImage {
     this.width = width;
     this.height = height;
 
-    this.interpolate = dict.get("I", "Interpolate");
-    this.imageMask = dict.get("IM", "ImageMask") || false;
-    this.matte = dict.get("Matte") || false;
+    this.interpolate = dict.getValueWithFallback(DictKey.I, DictKey.Interpolate);
+    this.imageMask = dict.getValueWithFallback(DictKey.IM, DictKey.ImageMask) || false;
+    this.matte = dict.getValue(DictKey.Matte) || false;
 
     let bitsPerComponent = image.bitsPerComponent;
     if (!bitsPerComponent) {
-      bitsPerComponent = dict.get("BPC", "BitsPerComponent");
+      bitsPerComponent = dict.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent);
       if (!bitsPerComponent) {
         if (this.imageMask) {
           bitsPerComponent = 1;
@@ -239,7 +229,7 @@ class PDFImage {
     this.bpc = bitsPerComponent;
 
     if (!this.imageMask) {
-      let colorSpace = dict.getRaw("CS") || dict.getRaw("ColorSpace");
+      let colorSpace = dict.getRaw(DictKey.CS) || dict.getRaw(DictKey.ColorSpace);
       const hasColorSpace = !!colorSpace;
       if (!hasColorSpace) {
         if (this.jpxDecoderOptions) {
@@ -267,13 +257,13 @@ class PDFImage {
         colorSpace = Name.get("DeviceRGBA");
       }
 
-      this.colorSpace = ColorSpace.parse({
-        cs: colorSpace,
+      this.colorSpace = ColorSpace.parse(
+        colorSpace,
         xref,
-        resources: isInline ? res : null,
+        isInline ? res : null,
         pdfFunctionFactory,
         localColorSpaceCache,
-      });
+      );
       this.numComps = this.colorSpace.numComps;
 
       if (this.jpxDecoderOptions) {
@@ -287,7 +277,7 @@ class PDFImage {
       }
     }
 
-    this.decode = dict.getArray("D", "Decode");
+    this.decode = dict.getArrayWithFallback(DictKey.D, DictKey.Decode);
     this.needsDecode = false;
     if (
       this.decode &&
@@ -313,17 +303,17 @@ class PDFImage {
     }
 
     if (smask) {
-      this.smask = new PDFImage({
+      this.smask = new PDFImage(
         xref,
         res,
-        image: smask,
+        /* image */smask,
         isInline,
+        /*smask*/ null,
+        /*mask*/ null,
+        /*isMask*/ false,
         pdfFunctionFactory,
         localColorSpaceCache,
-        smask: null,
-        mask: null,
-        isMask: false,
-      });
+      );
     } else if (mask) {
       if (mask instanceof BaseStream) {
         const maskDict = mask.dict!,
@@ -331,17 +321,17 @@ class PDFImage {
         if (!imageMask) {
           warn("Ignoring /Mask in image without /ImageMask.");
         } else {
-          this.mask = new PDFImage({
+          this.mask = new PDFImage(
             xref,
             res,
-            image: mask,
+            /*image*/mask,
             isInline,
-            isMask: true,
+            /*smask*/null,
+            /*mask*/null,
+            /*isMask*/ true,
             pdfFunctionFactory,
             localColorSpaceCache,
-            smask: null,
-            mask: null,
-          });
+          );
         }
       } else {
         // Color key mask (just an array).
@@ -390,17 +380,17 @@ class PDFImage {
       }
     }
 
-    return new PDFImage({
+    return new PDFImage(
       xref,
       res,
-      image: imageData,
+      /*image*/imageData,
       isInline,
-      smask: smaskData,
-      mask: maskData,
+      /*smask*/smaskData,
+      /*mask*/ maskData,
+      false,
       pdfFunctionFactory,
       localColorSpaceCache,
-      isMask: false
-    });
+    );
   }
 
   static createRawMask(

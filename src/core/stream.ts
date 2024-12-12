@@ -27,12 +27,13 @@ class Stream extends BaseStream {
 
   public dict: Dict | null;
 
-  constructor(arrayBuffer: Uint8Array | ArrayBufferLike, start = 0, length?: number, dict: Dict | null = null) {
+  constructor(
+    arrayBuffer: Uint8Array | ArrayBufferLike,
+    start = 0, length: number | null = null,
+    dict: Dict | null = null
+  ) {
     super();
-    this.bytes =
-      arrayBuffer instanceof Uint8Array
-        ? arrayBuffer
-        : new Uint8Array(arrayBuffer);
+    this.bytes = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
     this.end = length != undefined ? start + length : this.bytes.length;
@@ -88,7 +89,7 @@ class Stream extends BaseStream {
     this.start = this.pos;
   }
 
-  makeSubStream(start: number, length?: number, dict: Dict | null = null) {
+  makeSubStream(start: number, length: number | null = null, dict: Dict | null = null) {
     return new Stream(this.bytes.buffer, start, length, dict);
   }
 

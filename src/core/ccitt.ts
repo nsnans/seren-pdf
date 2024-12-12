@@ -509,6 +509,7 @@ class CCITTFaxDecoder {
 
   protected err = false;
 
+  // 这里必须是这个类型，而不能是Reader，因为Reader会有问题
   constructor(source: CCITTFaxDecoderSource, options: {
     K?: number,
     EndOfLine?: boolean,
