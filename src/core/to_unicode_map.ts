@@ -19,7 +19,7 @@ class ToUnicodeMap {
 
   protected _map: (number | string)[];
 
-  constructor(cmap: string[] = []) {
+  constructor(cmap: (number | string)[] = []) {
     // The elements of this._map can be integers or strings, depending on how
     // `cmap` was created.
     this._map = cmap;
@@ -29,8 +29,9 @@ class ToUnicodeMap {
     return this._map.length;
   }
 
-  forEach(callback: (index: string, char: number) => void) {
-    for (const charCode in this._map) {
+  forEach(callback: (index: number, char: number) => void) {
+    for (const _charCode in this._map) {
+      const charCode = Number.parseInt(_charCode);
       callback(charCode, (<string>this._map[charCode]).charCodeAt(0));
     }
   }

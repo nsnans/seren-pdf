@@ -92,7 +92,17 @@ import { WorkerTask } from "./worker";
 import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
 
+export interface SeacMapValue {
+  baseFontCharCode: number;
+  accentFontCharCode: number;
+  accentOffset: {
+    x: number;
+    y: number;
+  };
+}
 export interface EvaluatorProperties {
+  glyphNames: string[];
+  seacMap: Record<number, SeacMapValue>;
   ascentScaled: boolean;
   builtInEncoding: (string | number)[];
   type: string;

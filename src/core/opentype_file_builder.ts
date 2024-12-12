@@ -143,7 +143,7 @@ class OpenTypeFileBuilder {
     return file;
   }
 
-  addTable(tag, data) {
+  addTable(tag: string, data) {
     if (tag in this.tables) {
       throw new Error("Table " + tag + " already exists");
     }

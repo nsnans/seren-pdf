@@ -65,11 +65,12 @@ import { OpenTypeFileBuilder } from "./opentype_file_builder";
 import { readUint32 } from "./core_utils";
 import { Stream } from "./stream";
 import { Type1Font } from "./type1_font";
-import { TransformType } from "../display/display_utils";
+import { RectType, TransformType } from "../display/display_utils";
 import { OperatorListIR } from "./operator_list";
 import { DictKey } from "./primitives";
-import { EvaluatorProperties } from "./evaluator";
+import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "./evaluator";
 import { PlatformHelper } from "../platform/platform_helper";
+import { FontSubstitutionInfo } from "./font_substitutions";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -140,7 +141,7 @@ function adjustWidths(properties: EvaluatorProperties) {
 }
 
 function adjustTrueTypeToUnicode(properties: EvaluatorProperties
-  , isSymbolicFont: boolean, nameRecords) {
+  , isSymbolicFont: boolean, nameRecords: NameRecordState[]) {
   if (properties.isInternalFont) {
     return;
   }
@@ -165,7 +166,7 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties
     return;
   }
   for (const r of nameRecords) {
-    if (!isWinNameRecord(r)) {
+    if (!isWinNameRecord(r.platform, r.encoding, r.language)) {
       return; // Not Windows, hence `WinAnsiEncoding` wouldn't make sense.
     }
   }
@@ -272,7 +273,13 @@ export class Glyph {
     originalCharCode: number,
     fontChar: string,
     unicode: string,
-    accent,
+    accent: {
+      fontChar: string;
+      offset: {
+        x: number;
+        y: number;
+      };
+    } | null,
     width: number,
     vmetric: number[] | null,
     operatorListId: number | null,
@@ -319,7 +326,7 @@ function signedInt16(b0: number, b1: number) {
   return value & (1 << 15) ? value - 0x10000 : value;
 }
 
-function writeUint32(bytes, index: number, value: number) {
+function writeUint32(bytes: Uint8Array, index: number, value: number) {
   bytes[index + 3] = value & 0xff;
   bytes[index + 2] = value >>> 8;
   bytes[index + 1] = value >>> 16;
@@ -501,10 +508,11 @@ function convertCidString(charCode: number, cid: string, shouldThrow = false) {
  * font that we build
  * 'charCodeToGlyphId' - maps the new font char codes to glyph ids
  */
-function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
-  const newMap = Object.create(null);
-  const toUnicodeExtraMap = new Map();
-  const toFontChar = [];
+function adjustMapping(charCodeToGlyphId: Record<number, number>, hasGlyph: (id: number) => boolean
+  , newGlyphZeroId: number, toUnicode: ToUnicodeMap | IdentityToUnicodeMap) {
+  const newMap: Record<number, number> = Object.create(null);
+  const toUnicodeExtraMap = new Map<number, number>();
+  const toFontChar: number[] = [];
   const usedGlyphIds = new Set();
   let privateUseAreaIndex = 0;
   const privateUseOffetStart = PRIVATE_USE_AREAS[privateUseAreaIndex][0];
@@ -513,7 +521,8 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   const isInPrivateArea = (code: number) =>
     (PRIVATE_USE_AREAS[0][0] <= code && code <= PRIVATE_USE_AREAS[0][1]) ||
     (PRIVATE_USE_AREAS[1][0] <= code && code <= PRIVATE_USE_AREAS[1][1]);
-  for (const originalCharCode in charCodeToGlyphId) {
+  for (const _originalCharCode in charCodeToGlyphId) {
+    const originalCharCode = Number.parseInt(_originalCharCode);
     let glyphId = charCodeToGlyphId[originalCharCode];
     // For missing glyphs don't create the mappings so the glyph isn't
     // drawn.
@@ -560,11 +569,14 @@ function adjustMapping(charCodeToGlyphId, hasGlyph, newGlyphZeroId, toUnicode) {
   };
 }
 
-function getRanges(glyphs, toUnicodeExtraMap, numGlyphs: number) {
+function getRanges(glyphs: Record<number, number>
+  , toUnicodeExtraMap: Map<number, number>
+  , numGlyphs: number): [number, number, number[]][] {
   // Array.sort() sorts by characters, not numerically, so convert to an
   // array of characters.
   const codes = [];
-  for (const charCode in glyphs) {
+  for (const _charCode in glyphs) {
+    const charCode = Number.parseInt(_charCode);
     // Remove an invalid glyph ID mappings to make OTS happy.
     if (glyphs[charCode] >= numGlyphs) {
       continue;
@@ -589,7 +601,7 @@ function getRanges(glyphs, toUnicodeExtraMap, numGlyphs: number) {
   });
 
   // Split the sorted codes into ranges.
-  const ranges = [];
+  const ranges: [number, number, number[]][] = [];
   const length = codes.length;
   for (let n = 0; n < length;) {
     const start = codes[n].fontCharCode;
@@ -610,7 +622,7 @@ function getRanges(glyphs, toUnicodeExtraMap, numGlyphs: number) {
   return ranges;
 }
 
-function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs: number) {
+function createCmapTable(glyphs: Record<number, number>, toUnicodeExtraMap: Map<number, number>, numGlyphs: number) {
   const ranges = getRanges(glyphs, toUnicodeExtraMap, numGlyphs);
   const numTables = ranges.at(-1)![1] > 0xffff ? 2 : 1;
   let cmap =
@@ -743,8 +755,9 @@ function createCmapTable(glyphs, toUnicodeExtraMap, numGlyphs: number) {
   );
 }
 
-function validateOS2Table(os2, file: Stream) {
-  file.pos = (file.start || 0) + os2.offset;
+// os2似乎没有offset这个属性，也许有，但是我没找到它
+function validateOS2Table(os2: TablePropType, file: Stream) {
+  file.pos = (file.start || 0) + os2.offset!;
   const version = file.getUint16();
   // TODO verify all OS/2 tables fields, but currently we validate only those
   // that give us issues
@@ -766,11 +779,13 @@ function validateOS2Table(os2, file: Stream) {
   }
 
   // OS/2 appears to be valid, resetting some fields
-  os2.data[8] = os2.data[9] = 0; // IE rejects fonts if fsType != 0
+  // 这里直接给string用下标来配置0，也许是bug，也许是我没看懂
+  (<Uint8Array>os2.data)[8] = (<Uint8Array>os2.data)[9] = 0; // IE rejects fonts if fsType != 0
   return true;
 }
 
-function createOS2Table(properties: EvaluatorProperties, charstrings, override) {
+function createOS2Table(properties: EvaluatorProperties, charstrings: Record<number, number>,
+  /*只在这个方法里出现的临时对象，就不管太多了*/override: Record<string, number> | null = null) {
   override ||= {
     unitsPerEm: 0,
     yMax: 0,
@@ -789,9 +804,10 @@ function createOS2Table(properties: EvaluatorProperties, charstrings, override) 
   let position = -1;
 
   if (charstrings) {
-    for (let code in charstrings) {
+    for (let _code in charstrings) {
+      let code = Number.parseInt(_code);
       code |= 0;
-      if (firstCharIndex > code || !firstCharIndex) {
+      if (firstCharIndex! > code || !firstCharIndex) {
         firstCharIndex = code;
       }
       if (lastCharIndex < code) {
@@ -873,7 +889,7 @@ function createOS2Table(properties: EvaluatorProperties, charstrings, override) 
     string32(ulUnicodeRange4) + // ulUnicodeRange4 (Bits 96-127)
     "\x2A\x32\x31\x2A" + // achVendID
     string16(properties.italicAngle ? 1 : 0) + // fsSelection
-    string16(firstCharIndex || properties.firstChar) + // usFirstCharIndex
+    string16(<number>firstCharIndex || properties.firstChar) + // usFirstCharIndex
     string16(lastCharIndex || properties.lastChar) + // usLastCharIndex
     string16(typoAscent) + // sTypoAscender
     string16(typoDescent) + // sTypoDescender
@@ -975,59 +991,134 @@ function createNameTable(name: string, proto: string[][] | null = null) {
   return nameTable;
 }
 
+interface NameRecordState {
+  platform: number;
+  encoding: number;
+  language: number;
+  name: number;
+  length: number;
+  offset: number;
+}
+
+
+type ValidTableType = "OS/2" | "cmap" | "head" | "hhea" | "hmtx" | "maxp" | "name" |
+  "post" | "loca" | "glyf" | "fpgm" | "prep" | "cvt " | "CFF "
+
+interface TablePropType {
+  tag: string;
+  checksum?: number;
+  length?: number;
+  offset?: number;
+  data: Uint8Array | null;
+}
+
+interface TTContext {
+  functionsDefined: { data: Uint8Array, i: number }[];
+  functionsUsed: boolean[];
+  functionsStackDeltas: number[];
+  tooComplexToFollowFunctions: boolean;
+  hintsValid: boolean;
+}
+
 /**
  * 'Font' is the class the outside world should use, it encapsulate all the font
  * decoding logics whatever type it is (assuming the font type is supported).
  */
 class Font {
+
   public cMap: CMap;
+
   protected name: string;
-  protected psName;
+
+  protected psName: string | null;
+
   protected mimetype: string | null;
+
   public disableFontFace: boolean;
-  public loadedName;
-  public isType3Font;
+
+  public loadedName: string | null;
+
+  public isType3Font: boolean;
+
   protected missingFile: boolean;
-  protected cssFontInfo;
+
+  protected cssFontInfo: CssFontInfo | null;
+
   protected _charsCache: Record<string, Glyph[]>;
+
   protected _glyphCache: Record<number, Glyph>;
+
   protected isSerifFont: boolean;
+
   protected isSymbolicFont: boolean;
+
   protected isMonospace: boolean;
-  protected type;
-  protected subtype;
-  public systemFontInfo;
+
+  protected type: string;
+
+  protected subtype: string | null;
+
+  public systemFontInfo: FontSubstitutionInfo | null;
+
   protected isInvalidPDFjsFont: boolean;
-  public fallbackName;
-  protected differences;
-  protected widths;
-  protected defaultWidth;
-  protected composite;
+
+  public fallbackName: string;
+
+  protected differences: string[];
+
+  protected widths: number[];
+
+  protected defaultWidth: number;
+
+  protected composite: boolean;
+
   protected capHeight: number;
+
   public ascent: number;
+
   public descent: number;
+
   protected lineHeight: number;
+
   public fontMatrix: TransformType;
-  public bbox;
-  protected defaultEncoding;
-  protected toUnicode;
-  protected toFontChar: number[];
-  protected cidEncoding;
+
+  public bbox: RectType | null;
+
+  protected defaultEncoding: string[];
+
+  protected toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
+
+  protected toFontChar: (number | string)[];
+
+  protected cidEncoding: string | null = null;
+
   public vertical: boolean | null = null;
-  protected vmetrics;
-  protected defaultVMetrics;
+
+  protected vmetrics: number[][] | null = null;
+
+  protected defaultVMetrics: number[] | null = null;
+
   protected isOpenType: boolean | null = null;
+
   public data: Uint8Array | null = null;
-  protected seacMap;
+
+  protected seacMap: Record<number, SeacMapValue> = Object.create(null);
+
   protected bold: boolean | null = null;
+
   protected italic: boolean | null = null;
+
   protected black: boolean | null = null;
+
   protected remeasure: boolean | null = null;
+
   public isCharBBox: boolean | null = null;
+
   public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
 
   // 暂时先是null吧，具体啥值，需要等到后面处理的比较完整的时候才知道
   public glyphNameMap: null = null;
+
   public lineGap: number | null = null;
 
   constructor(name: string, file: Stream, properties: EvaluatorProperties) {
@@ -1096,7 +1187,9 @@ class Font {
     this.lineHeight = this.ascent - this.descent;
     this.fontMatrix = properties.fontMatrix!;
     this.bbox = properties.bbox;
-    this.defaultEncoding = properties.defaultEncoding;
+
+    // 这里加了默认值
+    this.defaultEncoding = properties.defaultEncoding ?? [];
 
     this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
     this.toFontChar = [];
@@ -1104,7 +1197,7 @@ class Font {
     if (properties.type === "Type3") {
       for (let charCode = 0; charCode < 256; charCode++) {
         this.toFontChar[charCode] =
-          this.differences[charCode] || properties.defaultEncoding[charCode];
+          this.differences[charCode] || properties.defaultEncoding![charCode];
       }
       return;
     }
@@ -1370,6 +1463,7 @@ class Font {
   }
 
   checkAndRepair(name: string, font: Stream, properties: EvaluatorProperties) {
+    // 这里的类型必须要和ValidTableType对得上才行
     const VALID_TABLES = [
       "OS/2",
       "cmap",
@@ -1388,7 +1482,7 @@ class Font {
     ];
 
     function readTables(file: Stream, numTables: number) {
-      const tables = Object.create(null);
+      const tables: Record<ValidTableType, TablePropType | null> = Object.create(null);
       tables["OS/2"] = null;
       tables.cmap = null;
       tables.head = null;
@@ -1397,6 +1491,12 @@ class Font {
       tables.maxp = null;
       tables.name = null;
       tables.post = null;
+      tables.loca = null;
+      tables.glyf = null;
+      tables.fpgm = null;
+      tables.prep = null;
+      tables["cvt "] = null;
+      tables["CFF "] = null;
 
       for (let i = 0; i < numTables; i++) {
         const table = readTableEntry(file);
@@ -1406,7 +1506,7 @@ class Font {
         if (table.length === 0) {
           continue; // skipping empty tables
         }
-        tables[table.tag] = table;
+        tables[<ValidTableType>table.tag] = table;
       }
       return tables;
     }
@@ -1468,6 +1568,9 @@ class Font {
         minorVersion,
         numFonts,
         offsetTable,
+        dsigTag: <number | null>null,
+        dsigLength: <number | null>null,
+        dsigOffset: <number | null>null
       };
       switch (majorVersion) {
         case 1:
@@ -1546,7 +1649,7 @@ class Font {
      * Read the appropriate subtable from the cmap according to 9.6.6.4 from
      * PDF spec
      */
-    function readCmapTable(cmap, file: Stream, isSymbolicFont: boolean, hasEncoding: boolean) {
+    function readCmapTable(cmap: TablePropType | null, file: Stream, isSymbolicFont: boolean, hasEncoding: boolean) {
       if (!cmap) {
         warn("No cmap table available.");
         return {
@@ -1557,13 +1660,13 @@ class Font {
         };
       }
       let segment;
-      let start = (file.start || 0) + cmap.offset;
+      let start = (file.start || 0) + cmap.offset!;
       file.pos = start;
 
       file.skip(2); // version
       const numTables = file.getUint16();
 
-      let potentialTable;
+      let potentialTable: { platformId: number, encodingId: number, offset: number } | null = null;
       let canBreak = false;
       // There's an order of preference in terms of which cmap subtable to
       // use:
@@ -1580,8 +1683,8 @@ class Font {
         // Sometimes there are multiple of the same type of table. Default
         // to choosing the first table and skip the rest.
         if (
-          potentialTable?.platformId === platformId &&
-          potentialTable?.encodingId === encodingId
+          potentialTable && potentialTable.platformId === platformId &&
+          potentialTable.encodingId === encodingId
         ) {
           continue;
         }
@@ -1766,7 +1869,7 @@ class Font {
 
         for (segIndex = 0; segIndex < segCount; segIndex++) {
           segment = segments[segIndex];
-          start = segment.start;
+          start = segment.start!;
           const end = segment.end!;
           const delta = segment.delta;
           offsetIndex = segment.offsetIndex!;
@@ -1777,7 +1880,7 @@ class Font {
             }
 
             glyphId = offsetIndex < 0 ? j : offsets[offsetIndex + j - start];
-            glyphId = (glyphId + delta) & 0xffff;
+            glyphId = (glyphId + delta!) & 0xffff;
             mappings.push({
               charCode: j,
               glyphId,
@@ -1855,9 +1958,9 @@ class Font {
 
     function sanitizeMetrics(
       file: Stream,
-      header,
-      metrics,
-      headTable,
+      header: TablePropType | null,
+      metrics: TablePropType | null,
+      headTable: TablePropType | null,
       numGlyphs: number,
       dupFirstEntry: boolean
     ) {
@@ -1868,7 +1971,7 @@ class Font {
         return;
       }
 
-      file.pos = (file.start || 0) + header.offset;
+      file.pos = (file.start || 0) + header.offset!;
       file.pos += 4; // version
       file.pos += 2; // ascent
       file.pos += 2; // descent
@@ -1885,11 +1988,11 @@ class Font {
       let numOfMetrics = file.getUint16();
 
       if (caretOffset !== 0) {
-        const macStyle = int16(headTable.data[44], headTable.data[45]);
+        const macStyle = int16(headTable!.data![44], headTable!.data![45]);
         if (!(macStyle & 2)) {
           // Suppress OTS warnings about the `caretOffset` in the hhea-table.
-          header.data[22] = 0;
-          header.data[23] = 0;
+          header!.data![22] = 0;
+          header!.data![23] = 0;
         }
       }
 
@@ -1900,26 +2003,26 @@ class Font {
         );
         // Reduce numOfMetrics if it is greater than numGlyphs
         numOfMetrics = numGlyphs;
-        header.data[34] = (numOfMetrics & 0xff00) >> 8;
-        header.data[35] = numOfMetrics & 0x00ff;
+        header!.data![34] = (numOfMetrics & 0xff00) >> 8;
+        header!.data![35] = numOfMetrics & 0x00ff;
       }
 
       const numOfSidebearings = numGlyphs - numOfMetrics;
       const numMissing =
-        numOfSidebearings - ((metrics.length - numOfMetrics * 4) >> 1);
+        numOfSidebearings - ((metrics!.length! - numOfMetrics * 4) >> 1);
 
       if (numMissing > 0) {
         // For each missing glyph, we set both the width and lsb to 0 (zero).
         // Since we need to add two properties for each glyph, this explains
         // the use of |numMissing * 2| when initializing the typed array.
-        const entries = new Uint8Array(metrics.length + numMissing * 2);
-        entries.set(metrics.data);
+        const entries = new Uint8Array(metrics!.length! + numMissing * 2);
+        entries.set(metrics!.data!);
         if (dupFirstEntry) {
           // Set the sidebearing value of the duplicated glyph.
-          entries[metrics.length] = metrics.data[2];
-          entries[metrics.length + 1] = metrics.data[3];
+          entries[metrics!.length!] = metrics!.data![2];
+          entries[metrics!.length! + 1] = metrics!.data![3];
         }
-        metrics.data = entries;
+        metrics!.data = entries;
       }
     }
 
@@ -2058,8 +2161,8 @@ class Font {
       return glyphProfile;
     }
 
-    function sanitizeHead(head, numGlyphs: number, locaLength: number) {
-      const data = head.data;
+    function sanitizeHead(head: TablePropType, numGlyphs: number, locaLength: number) {
+      const data = head.data!;
 
       // Validate version:
       // Should always be 0x00010000
@@ -2107,8 +2210,8 @@ class Font {
     }
 
     function sanitizeGlyphLocations(
-      loca,
-      glyf: { tag: string, data: Uint8Array },
+      loca: TablePropType,
+      glyf: TablePropType,
       numGlyphs: number,
       isGlyphLocationsLong: number,
       hintsValid: boolean,
@@ -2147,10 +2250,10 @@ class Font {
       const locaDataSize = itemSize * (1 + numGlyphsOut);
       // Resize loca table to account for duplicated glyph.
       const locaData = new Uint8Array(locaDataSize);
-      locaData.set(loca.data.subarray(0, locaDataSize));
+      locaData.set(loca.data!.subarray(0, locaDataSize));
       loca.data = locaData;
       // removing the invalid glyphs
-      const oldGlyfData = glyf.data;
+      const oldGlyfData = glyf.data!;
       const oldGlyfDataLength = oldGlyfData.length;
       const newGlyfData = new Uint8Array(oldGlyfDataLength);
 
@@ -2264,11 +2367,11 @@ class Font {
       };
     }
 
-    function readPostScriptTable(post, propertiesObj: EvaluatorProperties, maxpNumGlyphs) {
-      const start = (font.start || 0) + post.offset;
+    function readPostScriptTable(post: TablePropType, propertiesObj: EvaluatorProperties, maxpNumGlyphs: number) {
+      const start = (font.start || 0) + post.offset!;
       font.pos = start;
 
-      const length = post.length,
+      const length = post.length!,
         end = start + length;
       const version = font.getInt32();
       // skip rest to the tables
@@ -2330,18 +2433,20 @@ class Font {
           }
           break;
       }
-      propertiesObj.glyphNames = glyphNames;
+      propertiesObj.glyphNames = glyphNames ?? [];
       return valid;
     }
 
-    function readNameTable(nameTable) {
-      const start = (font.start || 0) + nameTable.offset;
+    function readNameTable(nameTable: TablePropType): [[string[], string[]], NameRecordState[]] {
+
+      const start = (font.start || 0) + nameTable.offset!;
       font.pos = start;
 
-      const names = [[], []],
-        records = [];
-      const length = nameTable.length,
-        end = start + length;
+      const names: [string[], string[]] = [[], []];
+      const records: NameRecordState[] = [];
+
+      const length = nameTable.length!,
+        end = start + length!;
       const format = font.getUint16();
       const FORMAT_0_HEADER_LENGTH = 6;
       if (format !== 0 || length < FORMAT_0_HEADER_LENGTH) {
@@ -2354,7 +2459,7 @@ class Font {
       let i, ii;
 
       for (i = 0; i < numRecords && font.pos + NAME_RECORD_LENGTH <= end; i++) {
-        const r = {
+        const r: NameRecordState = {
           platform: font.getUint16(),
           encoding: font.getUint16(),
           language: font.getUint16(),
@@ -2407,8 +2512,8 @@ class Font {
       -999, -2, -2, 0, 0, -1, -2, -2, 0, 0, 0, -1, -1, -1, -2];
     // 0xC0-DF == -1 and 0xE0-FF == -2
 
-    function sanitizeTTProgram(table, ttContext) {
-      let data = table.data;
+    function sanitizeTTProgram(table: TablePropType, ttContext: TTContext) {
+      let data = table.data!;
       let i = 0,
         j,
         n,
@@ -2419,7 +2524,7 @@ class Font {
         lastDeff = 0;
       const stack = [];
       const callstack = [];
-      const functionsCalled = [];
+      const functionsCalled: number[] = [];
       let tooComplexToFollowFunctions = ttContext.tooComplexToFollowFunctions;
       let inFDEF = false,
         ifLevel = 0,
@@ -2474,7 +2579,7 @@ class Font {
           // CALL
           if (!inFDEF && !inELSE) {
             // collecting information about which functions are used
-            funcId = stack.at(-1);
+            funcId = stack.at(-1)!;
             if (isNaN(funcId)) {
               info("TT: CALL empty stack (or invalid entry).");
             } else {
@@ -2489,12 +2594,12 @@ class Font {
                 }
                 stack.length = newStackLength;
               } else if (
-                funcId in ttContext.functionsDefined &&
-                !functionsCalled.includes(funcId)
+                funcId! in ttContext.functionsDefined &&
+                !functionsCalled.includes(funcId!)
               ) {
                 callstack.push({ data, i, stackTop: stack.length - 1 });
-                functionsCalled.push(funcId);
-                pc = ttContext.functionsDefined[funcId];
+                functionsCalled.push(funcId!);
+                pc = ttContext.functionsDefined[funcId!];
                 if (!pc) {
                   warn("TT: CALL non-existent function");
                   ttContext.hintsValid = false;
@@ -2515,7 +2620,7 @@ class Font {
           // collecting information about which functions are defined
           lastDeff = i;
           funcId = stack.pop();
-          ttContext.functionsDefined[funcId] = { data, i };
+          ttContext.functionsDefined[funcId!] = { data, i };
         } else if (op === 0x2d) {
           // ENDF - end of function
           if (inFDEF) {
@@ -2531,7 +2636,7 @@ class Font {
             funcId = functionsCalled.pop();
             data = pc.data;
             i = pc.i;
-            ttContext.functionsStackDeltas[funcId] = stack.length - pc.stackTop;
+            ttContext.functionsStackDeltas[funcId!] = stack.length - pc.stackTop;
           }
         } else if (op === 0x89) {
           // IDEF - instruction definition
@@ -2557,7 +2662,7 @@ class Font {
         } else if (op === 0x1c) {
           // JMPR
           if (!inFDEF && !inELSE) {
-            const offset = stack.at(-1);
+            const offset = stack.at(-1)!;
             // only jumping forward to prevent infinite loop
             if (offset > 0) {
               i += offset - 1;
@@ -2575,7 +2680,7 @@ class Font {
             stackDelta = -2;
           }
           if (op >= 0x71 && op <= 0x75) {
-            n = stack.pop();
+            n = stack.pop()!;
             if (!isNaN(n)) {
               stackDelta = -n * 2;
             }
@@ -2604,7 +2709,7 @@ class Font {
       foldTTTable(table, content);
     }
 
-    function checkInvalidFunctions(ttContext, maxFunctionDefs) {
+    function checkInvalidFunctions(ttContext: TTContext, maxFunctionDefs: number) {
       if (ttContext.tooComplexToFollowFunctions) {
         return;
       }
@@ -2627,7 +2732,7 @@ class Font {
       }
     }
 
-    function foldTTTable(table, content) {
+    function foldTTTable(table: TablePropType, content: Uint8Array[]) {
       if (content.length > 1) {
         // concatenating the content items
         let newLength = 0;
@@ -2647,8 +2752,12 @@ class Font {
       }
     }
 
-    function sanitizeTTPrograms(fpgm, prep, cvt, maxFunctionDefs) {
-      const ttContext = {
+    function sanitizeTTPrograms(fpgm: TablePropType | null
+      , prep: TablePropType | null
+      , cvt: TablePropType | null
+      , maxFunctionDefs: number) {
+
+      const ttContext: TTContext = {
         functionsDefined: [],
         functionsUsed: [],
         functionsStackDeltas: [],
@@ -2664,9 +2773,9 @@ class Font {
       if (fpgm) {
         checkInvalidFunctions(ttContext, maxFunctionDefs);
       }
-      if (cvt && cvt.length & 1) {
-        const cvtData = new Uint8Array(cvt.length + 1);
-        cvtData.set(cvt.data);
+      if (cvt && cvt.length! & 1) {
+        const cvtData = new Uint8Array(cvt.length! + 1);
+        cvtData.set(cvt.data!);
         cvt.data = cvtData;
       }
       return ttContext.hintsValid;
@@ -2701,7 +2810,7 @@ class Font {
         !tables.post
       ) {
         // No major tables: throwing everything at `CFFFont`.
-        cffFile = new Stream(tables["CFF "].data);
+        cffFile = new Stream(tables["CFF "]!.data!);
         cff = new CFFFont(cffFile, properties);
 
         adjustWidths(properties);
@@ -2709,11 +2818,14 @@ class Font {
         return this.convert(name, cff, properties);
       }
 
-      delete tables.glyf;
-      delete tables.loca;
-      delete tables.fpgm;
-      delete tables.prep;
-      delete tables["cvt "];
+      // table to delete
+      const ttd = <Record<string, TablePropType>>tables;
+
+      delete ttd.glyf;
+      delete ttd.loca;
+      delete ttd.fpgm;
+      delete ttd.prep;
+      delete ttd["cvt "];
       this.isOpenType = true;
     } else {
       if (!tables.loca) {
@@ -2734,7 +2846,7 @@ class Font {
       throw new FormatError('Required "maxp" table is not found');
     }
 
-    font.pos = (font.start || 0) + tables.maxp.offset;
+    font.pos = (font.start || 0) + tables.maxp.offset!;
     let version = font.getInt32();
     const numGlyphs = font.getUint16();
 
@@ -2742,39 +2854,39 @@ class Font {
       // https://learn.microsoft.com/en-us/typography/opentype/spec/maxp
       if (tables.maxp.length === 6) {
         version = 0x0005000;
-      } else if (tables.maxp.length >= 32) {
+      } else if (tables.maxp.length! >= 32) {
         version = 0x00010000;
       } else {
         throw new FormatError(`"maxp" table has a wrong version number`);
       }
-      writeUint32(tables.maxp.data, 0, version);
+      writeUint32(tables.maxp.data!, 0, version);
     }
 
     if (properties.scaleFactors?.length === numGlyphs && isTrueType) {
       const { scaleFactors } = properties;
       const isGlyphLocationsLong = int16(
-        tables.head.data[50],
-        tables.head.data[51]
+        tables.head!.data![50],
+        tables.head!.data![51]
       );
 
       const glyphs = new GlyfTable({
-        glyfTable: tables.glyf.data,
+        glyfTable: tables.glyf!.data,
         isGlyphLocationsLong,
-        locaTable: tables.loca.data,
+        locaTable: tables.loca!.data,
         numGlyphs,
       });
       glyphs.scale(scaleFactors);
 
       const { glyf, loca, isLocationLong } = glyphs.write();
-      tables.glyf.data = glyf;
-      tables.loca.data = loca;
+      tables.glyf!.data = glyf;
+      tables.loca!.data = loca;
 
       if (isLocationLong !== !!isGlyphLocationsLong) {
-        tables.head.data[50] = 0;
-        tables.head.data[51] = isLocationLong ? 1 : 0;
+        tables.head!.data![50] = 0;
+        tables.head!.data![51] = isLocationLong ? 1 : 0;
       }
 
-      const metrics = tables.hmtx.data;
+      const metrics = tables.hmtx!.data!;
 
       for (let i = 0; i < numGlyphs; i++) {
         const j = 4 * i;
@@ -2800,14 +2912,14 @@ class Font {
     }
     let maxFunctionDefs = 0;
     let maxSizeOfInstructions = 0;
-    if (version >= 0x00010000 && tables.maxp.length >= 32) {
+    if (version >= 0x00010000 && tables.maxp.length! >= 32) {
       // maxZones can be invalid
       font.pos += 8;
       const maxZones = font.getUint16();
       if (maxZones > 2) {
         // reset to 2 if font has invalid maxZones
-        tables.maxp.data[14] = 0;
-        tables.maxp.data[15] = 2;
+        tables.maxp.data![14] = 0;
+        tables.maxp.data![15] = 2;
       }
       font.pos += 4;
       maxFunctionDefs = font.getUint16();
@@ -2815,8 +2927,8 @@ class Font {
       maxSizeOfInstructions = font.getUint16();
     }
 
-    tables.maxp.data[4] = numGlyphsOut >> 8;
-    tables.maxp.data[5] = numGlyphsOut & 255;
+    tables.maxp.data![4] = numGlyphsOut >> 8;
+    tables.maxp.data![5] = numGlyphsOut & 255;
 
     const hintsValid = sanitizeTTPrograms(
       tables.fpgm,
@@ -2825,9 +2937,9 @@ class Font {
       maxFunctionDefs
     );
     if (!hintsValid) {
-      delete tables.fpgm;
-      delete tables.prep;
-      delete tables["cvt "];
+      delete (<Record<string, any>>tables).fpgm;
+      delete (<Record<string, any>>tables).prep;
+      delete (<Record<string, any>>tables)["cvt "];
     }
 
     // Ensure the hmtx table contains the advance width and
@@ -2845,17 +2957,17 @@ class Font {
       throw new FormatError('Required "head" table is not found');
     }
 
-    sanitizeHead(tables.head, numGlyphs, isTrueType ? tables.loca.length : 0);
+    sanitizeHead(tables.head, numGlyphs, isTrueType ? tables.loca!.length! : 0);
 
     let missingGlyphs = Object.create(null);
     if (isTrueType) {
       const isGlyphLocationsLong = int16(
-        tables.head.data[50],
-        tables.head.data[51]
+        tables.head.data![50],
+        tables.head.data![51]
       );
       const glyphsInfo = sanitizeGlyphLocations(
-        tables.loca,
-        tables.glyf,
+        tables.loca!,
+        tables.glyf!,
         numGlyphs,
         isGlyphLocationsLong,
         hintsValid,
@@ -2866,9 +2978,9 @@ class Font {
 
       // Some fonts have incorrect maxSizeOfInstructions values, so we use
       // the computed value instead.
-      if (version >= 0x00010000 && tables.maxp.length >= 32) {
-        tables.maxp.data[26] = glyphsInfo.maxSizeOfInstructions >> 8;
-        tables.maxp.data[27] = glyphsInfo.maxSizeOfInstructions & 255;
+      if (version >= 0x00010000 && tables.maxp.length! >= 32) {
+        tables.maxp.data![26] = glyphsInfo.maxSizeOfInstructions >> 8;
+        tables.maxp.data![27] = glyphsInfo.maxSizeOfInstructions & 255;
       }
     }
     if (!tables.hhea) {
@@ -2877,20 +2989,20 @@ class Font {
 
     // Sanitizer reduces the glyph advanceWidth to the maxAdvanceWidth
     // Sometimes it's 0. That needs to be fixed
-    if (tables.hhea.data[10] === 0 && tables.hhea.data[11] === 0) {
-      tables.hhea.data[10] = 0xff;
-      tables.hhea.data[11] = 0xff;
+    if (tables.hhea.data![10] === 0 && tables.hhea.data![11] === 0) {
+      tables.hhea.data![10] = 0xff;
+      tables.hhea.data![11] = 0xff;
     }
 
     // Extract some more font properties from the OpenType head and
     // hhea tables; yMin and descent value are always negative.
     const metricsOverride = {
-      unitsPerEm: int16(tables.head.data[18], tables.head.data[19]),
-      yMax: signedInt16(tables.head.data[42], tables.head.data[43]),
-      yMin: signedInt16(tables.head.data[38], tables.head.data[39]),
-      ascent: signedInt16(tables.hhea.data[4], tables.hhea.data[5]),
-      descent: signedInt16(tables.hhea.data[6], tables.hhea.data[7]),
-      lineGap: signedInt16(tables.hhea.data[8], tables.hhea.data[9]),
+      unitsPerEm: int16(tables.head.data![18], tables.head.data![19]),
+      yMax: signedInt16(tables.head.data![42], tables.head.data![43]),
+      yMin: signedInt16(tables.head.data![38], tables.head.data![39]),
+      ascent: signedInt16(tables.hhea.data![4], tables.hhea.data![5]),
+      descent: signedInt16(tables.hhea.data![6], tables.hhea.data![7]),
+      lineGap: signedInt16(tables.hhea.data![8], tables.hhea.data![9]),
     };
 
     // PDF FontDescriptor metrics lie -- using data from actual font.
@@ -2911,12 +3023,13 @@ class Font {
     }
 
     // The original 'post' table is not needed, replace it.
+    // 或许这里应该使用Uin8Array而不是string，还是得考虑一下
     tables.post = {
       tag: "post",
       data: createPostTable(properties),
     };
 
-    const charCodeToGlyphId = Object.create(null);
+    const charCodeToGlyphId: Record<number, number> = Object.create(null);
 
     // Helper function to try to skip mapping of empty glyphs.
     function hasGlyph(glyphId: number) {
@@ -2936,7 +3049,7 @@ class Font {
         }
         let glyphId = -1;
         if (isCidToGidMapEmpty) {
-          glyphId = cid;
+          glyphId = <number>cid;
         } else if (cidToGidMap[<number>cid] !== undefined) {
           glyphId = cidToGidMap[<number>cid];
         }
@@ -3082,7 +3195,9 @@ class Font {
       }
     }
 
-    if (charCodeToGlyphId.length === 0) {
+    // 这里原来使用.length来记录长度，但是会报错，因为record没有length属性
+    // 因此改用keys来解决了
+    if (Object.keys(charCodeToGlyphId).length === 0) {
       // defines at least one glyph
       charCodeToGlyphId[0] = 0;
     }
@@ -3131,7 +3246,7 @@ class Font {
     if (!isTrueType) {
       try {
         // Trying to repair CFF file
-        cffFile = new Stream(tables["CFF "].data);
+        cffFile = new Stream(tables["CFF "]!.data!);
         const parser = new CFFParser(
           cffFile,
           properties,
@@ -3140,7 +3255,7 @@ class Font {
         cff = parser.parse();
         cff.duplicateFirstGlyph();
         const compiler = new CFFCompiler(cff);
-        tables["CFF "].data = compiler.compile();
+        tables["CFF "]!.data = compiler.compile();
       } catch {
         warn("Failed to compile font " + properties.loadedName);
       }
@@ -3168,7 +3283,7 @@ class Font {
 
     const builder = new OpenTypeFileBuilder(header.version);
     for (const tableTag in tables) {
-      builder.addTable(tableTag, tables[tableTag].data);
+      builder.addTable(tableTag, tables[<ValidTableType>tableTag]!.data);
     }
     return builder.toArray();
   }
@@ -3210,21 +3325,22 @@ class Font {
     }
     const numGlyphs = font.numGlyphs;
 
-    function getCharCodes(charCodeToGlyphId, glyphId: string) {
+    function getCharCodes(charCodeToGlyphId: number[] | Record<number, number>, glyphId: number) {
       let charCodes = null;
       for (const charCode in charCodeToGlyphId) {
         if (glyphId === charCodeToGlyphId[charCode]) {
           // 因为forin的问题，这里的charcode强转了一下
-          (charCodes ||= []).push(charCode | 0);
+          (charCodes ||= []).push(Number.parseInt(charCode) | 0);
         }
       }
       return charCodes;
     }
 
-    function createCharCode(charCodeToGlyphId, glyphId: number) {
+    function createCharCode(charCodeToGlyphId: number[] | Record<number, number>, glyphId: number) {
       for (const charCode in charCodeToGlyphId) {
         if (glyphId === charCodeToGlyphId[charCode]) {
-          return charCode | 0;
+          // 因为forin的问题，这里的charcode强转了一下
+          return Number.parseInt(charCode) | 0;
         }
       }
       newMapping!.charCodeToGlyphId[newMapping!.nextAvailableFontCharCode] =
@@ -3236,8 +3352,9 @@ class Font {
     if (newMapping && SEAC_ANALYSIS_ENABLED && seacs?.length) {
       const matrix = properties.fontMatrix || FONT_IDENTITY_MATRIX;
       const charset = font.getCharset();
-      const seacMap = Object.create(null);
-      for (let glyphId in seacs) {
+      const seacMap: Record<string, SeacMapValue> = Object.create(null);
+      for (let _glyphId in seacs) {
+        let glyphId = Number.parseInt(_glyphId);
         glyphId |= 0;
         const seac = seacs[glyphId];
         const baseGlyphName = StandardEncoding[seac[2]];
@@ -3292,7 +3409,7 @@ class Font {
     // Character to glyphs mapping
     builder.addTable(
       "cmap",
-      createCmapTable(newCharCodeToGlyphId, toUnicodeExtraMap, numGlyphs)
+      createCmapTable(newCharCodeToGlyphId, toUnicodeExtraMap!, numGlyphs)
     );
     // Font header
     builder.addTable(
@@ -3342,8 +3459,8 @@ class Font {
     builder.addTable(
       "hmtx",
       (function fontFieldsHmtx() {
-        const charstrings = font.charstrings;
-        const cffWidths = font.cff ? font.cff.widths : null;
+        const charstrings = (<Type1Font>font).charstrings;
+        const cffWidths = (<CFFFont>font).cff ? (<CFFFont>font).cff.widths : null;
         let hmtx = "\x00\x00\x00\x00"; // Fake .notdef
         for (let i = 1, ii = numGlyphs; i < ii; i++) {
           let width = 0;
@@ -3450,7 +3567,7 @@ class Font {
     let isInFont = this.toFontChar[charcode] !== undefined;
     // First try the toFontChar map, if it's not there then try falling
     // back to the char code.
-    fontCharCode = this.toFontChar[charcode] || charcode;
+    fontCharCode = <number>this.toFontChar[charcode] || charcode;
     if (this.missingFile) {
       const glyphName =
         this.differences[charcode] || this.defaultEncoding![charcode];

@@ -111,8 +111,8 @@ function recoverGlyphName(name: string, glyphsUnicodeMap: Record<string, number>
  */
 function type1FontGlyphMapping(properties: EvaluatorProperties
   , builtInEncoding: (string | number)[]
-  , glyphNames: (string | number)[]) {
-  const charCodeToGlyphId = Object.create(null);
+  , glyphNames: (string | number)[]): Record<number, number> {
+  const charCodeToGlyphId: Record<number, number> = Object.create(null);
   let glyphId, charCode, baseEncoding;
   const isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
 
@@ -133,7 +133,7 @@ function type1FontGlyphMapping(properties: EvaluatorProperties
   } else if (isSymbolicFont) {
     // For a symbolic font the encoding should be the fonts built-in encoding.
     for (charCode in builtInEncoding) {
-      charCodeToGlyphId[charCode] = builtInEncoding[charCode];
+      charCodeToGlyphId[charCode] = <number>builtInEncoding[charCode];
     }
   } else {
     // For non-symbolic fonts that don't have a base encoding the standard

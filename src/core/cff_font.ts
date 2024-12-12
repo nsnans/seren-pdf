@@ -21,14 +21,14 @@ import { Stream } from "./stream";
 
 class CFFFont {
 
-  protected cff: CFF;
+  public cff: CFF;
 
   protected properties: EvaluatorProperties;
 
   // 解析成功的时候是any[]，失败的时候是Stream
-  protected data: any[] | Stream;
+  public data: any[] | Stream;
 
-  protected seacs: number[][];
+  public seacs: number[][];
 
   constructor(file: Stream, properties: EvaluatorProperties) {
     this.properties = properties;
@@ -57,7 +57,7 @@ class CFFFont {
     return this.cff.charset!.charset;
   }
 
-  getGlyphMapping() {
+  getGlyphMapping(): Record<number, number> {
     const cff = this.cff;
     const properties = this.properties;
     const { cidToGidMap, cMap } = properties;

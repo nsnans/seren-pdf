@@ -158,8 +158,8 @@ class Type1Font {
   public charstrings: CharStringObjectType[];
 
   public seacs: number[][];
-  
-  protected data: number[];
+
+  public data: number[];
 
   constructor(name: string, file: Stream, properties: EvaluatorProperties) {
     // Some bad generators embed pfb file as is, we have to strip 6-byte header.
@@ -236,7 +236,7 @@ class Type1Font {
     return charset;
   }
 
-  getGlyphMapping(properties: EvaluatorProperties) {
+  getGlyphMapping(properties: EvaluatorProperties): Record<number, number> {
     const charstrings = this.charstrings;
 
     if (properties.composite) {
