@@ -753,8 +753,8 @@ class Parser {
   }
 
   filter(stream: Stream, dict: Dict, length) {
-    let filter = dict.getValue(DictKey.F, DictKey.Filter);
-    let params = dict.getValue(DictKey.DP, DictKey.DecodeParms);
+    let filter = dict.getValueWithFallback(DictKey.F, DictKey.Filter);
+    let params = dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
 
     if (filter instanceof Name) {
       if (Array.isArray(params)) {

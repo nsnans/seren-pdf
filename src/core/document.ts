@@ -96,7 +96,7 @@ class Page {
 
   protected pageIndex: number;
 
-  protected pageDict: Dict;
+  public pageDict: Dict;
 
   public ref: Ref | null;
 

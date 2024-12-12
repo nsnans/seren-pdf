@@ -54,7 +54,7 @@ class Jbig2Stream extends DecodeStream {
     this.decodeImage();
   }
 
-  decodeImage(bytes: Uint8Array | null) {
+  decodeImage(bytes: Uint8Array | null = null) {
     if (this.eof) {
       return this.buffer;
     }

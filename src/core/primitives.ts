@@ -384,6 +384,9 @@ export enum DictKey {
   StructParents = "StructParents",
   SMaskInData = "SMaskInData",
   Matte = "Matte",
+  Alt = "Alt",
+  E = "E",
+  ActualText = "ActualText",
 }
 
 /**
@@ -485,7 +488,7 @@ type DictValueTypeMapping = {
   [DictKey.JBIG2Globals]: BaseStream,
   [DictKey.JS]: BaseStream | string,
   [DictKey.JavaScript]: string,
-  [DictKey.K]: Dict | number,
+  [DictKey.K]: Dict | number | Ref[],
   [DictKey.Kids]: (string | Dict | Ref)[], // 某种类型的数组，具体还要仔细分析
   [DictKey.LE]: Name[],
   [DictKey.L]: RectType,
@@ -508,7 +511,7 @@ type DictValueTypeMapping = {
   [DictKey.NeedsRendering]: boolean,
   [DictKey.NewWindow]: boolean,
   [DictKey.Next]: Ref,
-  [DictKey.Nums]: [], // 某种类型的数组，具体还要仔细分析
+  [DictKey.Nums]: (Ref | number)[], // 某种类型的数组，具体还要仔细分析
   [DictKey.OCProperties]: Dict,
   [DictKey.OC]: Name | Dict,
   [DictKey.OE]: string,
@@ -686,6 +689,9 @@ type DictValueTypeMapping = {
   [DictKey.StructParents]: number
   [DictKey.SMaskInData]: "SMaskInData",
   [DictKey.Matte]: boolean,
+  [DictKey.Alt]: string,
+  [DictKey.E]: string,
+  [DictKey.ActualText]: string,
 }
 
 

@@ -42,7 +42,7 @@ class JpxStream extends DecodeStream {
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
 
-  ensureBuffer(requested) {
+  ensureBuffer(_requested) {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
   }

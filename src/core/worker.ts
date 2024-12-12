@@ -579,11 +579,11 @@ class WorkerMessageHandler {
               structTreeRoot = null;
             }
           } else if (
-            await _structTreeRoot.canUpdateStructTree({
-              pdfManager,
+            await _structTreeRoot.canUpdateStructTree(
+              pdfManager!,
               xref,
               newAnnotationsByPage,
-            })
+            )
           ) {
             structTreeRoot = _structTreeRoot;
           }
@@ -624,11 +624,11 @@ class WorkerMessageHandler {
           } else if (structTreeRoot) {
             promises.push(
               Promise.all(newAnnotationPromises).then(async newRefs => {
-                await structTreeRoot!.updateStructureTree({
+                await structTreeRoot!.updateStructureTree(
                   newAnnotationsByPage,
-                  pdfManager,
+                  pdfManager!,
                   newRefs,
-                });
+                );
                 return newRefs;
               })
             );

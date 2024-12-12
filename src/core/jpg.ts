@@ -78,7 +78,7 @@ const dctSin6 = 3784; // sin(6*pi/16)
 const dctSqrt2 = 5793; // sqrt(2)
 const dctSqrt1d2 = 2896; // sqrt(2) / 2
 
-function buildHuffmanTable(codeLengths, values) {
+function buildHuffmanTable(codeLengths: Uint8Array, values: Uint8Array) {
   let k = 0,
     i,
     j,
@@ -86,20 +86,20 @@ function buildHuffmanTable(codeLengths, values) {
   while (length > 0 && !codeLengths[length - 1]) {
     length--;
   }
-  const code = [{ children: [], index: 0 }];
+  const code = [{ children: <number[] | number[][]>[], index: 0 }];
   let p = code[0],
     q;
   for (i = 0; i < length; i++) {
     for (j = 0; j < codeLengths[i]; j++) {
-      p = code.pop();
+      p = code.pop()!;
       p.children[p.index] = values[k];
       while (p.index > 0) {
-        p = code.pop();
+        p = code.pop()!;
       }
       p.index++;
       code.push(p);
       while (code.length <= i) {
-        code.push((q = { children: [], index: 0 }));
+        code.push((q = { children: <number[]>[], index: 0 }));
         p.children[p.index] = q.children;
         p = q;
       }
@@ -121,14 +121,14 @@ function getBlockBufferOffset(component, row: number, col: number) {
 
 function decodeScan(
   data,
-  offset,
+  offset: number,
   frame,
   components,
   resetInterval,
   spectralStart,
   spectralEnd,
-  successivePrev,
-  successive,
+  successivePrev: number,
+  successive: number,
   parseDNLMarker = false
 ) {
   const mcusPerLine = frame.mcusPerLine;
@@ -355,7 +355,7 @@ function decodeScan(
   }
 
   let blockRow = 0;
-  function decodeMcu(component, decode, mcu, row, col) {
+  function decodeMcu(component, decode, mcu: number, row: number, col: number) {
     const mcuRow = (mcu / mcusPerLine) | 0;
     const mcuCol = mcu % mcusPerLine;
     blockRow = mcuRow * component.v + row;
@@ -364,7 +364,7 @@ function decodeScan(
     decode(component, blockOffset);
   }
 
-  function decodeBlock(component, decode, mcu) {
+  function decodeBlock(component, decode, mcu: number) {
     blockRow = (mcu / component.blocksPerLine) | 0;
     const blockCol = mcu % component.blocksPerLine;
     const blockOffset = getBlockBufferOffset(component, blockRow, blockCol);
