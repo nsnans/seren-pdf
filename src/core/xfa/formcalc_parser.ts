@@ -979,6 +979,9 @@ class ContinueDecl extends Leaf {
 }
 
 class Parser {
+
+  protected lexer;
+  
   constructor(code) {
     this.lexer = new Lexer(code);
   }

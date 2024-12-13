@@ -123,7 +123,12 @@ const eolPattern = /[\r\n]+/;
 const identifierPattern = new RegExp("^[\\p{L}_$!][\\p{L}\\p{N}_$]*", "u");
 
 class Token {
-  constructor(id, value = null) {
+
+  protected id: number;
+
+  protected value: number | string | null;
+  
+  constructor(id: number, value: number | string | null = null) {
     this.id = id;
     this.value = value;
   }

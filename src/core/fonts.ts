@@ -267,7 +267,7 @@ export class Glyph {
 
   public isSpace;
 
-  protected isInFont;
+  public isInFont;
 
   constructor(
     originalCharCode: number,

@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { Dict, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { warn } from "../shared/util";
 import { XRef } from "./xref";
 
-function mayHaveChildren(value) {
+function mayHaveChildren(value: unknown) {
   return (
     value instanceof Ref ||
     value instanceof Dict ||
@@ -82,7 +82,7 @@ class ObjectLoader {
     // Setup the initial nodes to visit.
     const nodesToVisit = [];
     for (const key of keys) {
-      const rawValue = dict.getRaw(key);
+      const rawValue = dict.getRaw(<DictKey>key);
       // Skip nodes that are guaranteed to be empty.
       if (rawValue !== undefined) {
         nodesToVisit.push(rawValue);
@@ -146,7 +146,7 @@ class ObjectLoader {
         // Remove any reference nodes from the current `RefSet` so they
         // aren't skipped when we revist them.
         if (node instanceof Ref) {
-          this.refSet.remove(node);
+          this.refSet!.remove(node);
         }
       }
       return this._walk(nodesToRevisit);

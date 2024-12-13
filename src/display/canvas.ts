@@ -47,6 +47,8 @@ import { PDFObject } from "../scripting_api/pdf_object";
 import { PDFObjects } from "./api";
 import { FilterFactory } from "./filter_factory";
 import { PlatformHelper } from "../platform/platform_helper";
+import { FontFaceObject } from "./font_loader";
+import { Glyph } from "../core/fonts";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -535,6 +537,9 @@ class CanvasExtraState {
 
   public fontDirection: number | null = null;
 
+  // TODO 除了FontFaceObjet之外，还有其它可能，需要做验证
+  public font: any;
+
   constructor(width: number, height: number) {
     // Are soft masks and alpha values shapes or opacities?
     this.alphaIsShape = false;
@@ -950,7 +955,16 @@ class CanvasGraphics {
   protected _cachedGetSinglePixelWidth: null | number;
 
   protected pendingClip: typeof NORMAL_CLIP | typeof EO_CLIP | null = null;
+
   protected markedContentStack: { visible: boolean }[];
+
+  protected pendingTextPaths: {
+    transform: TransformType;
+    x: number;
+    y: number;
+    fontSize: number;
+    addToPath: ((ctx: CanvasRenderingContext2D, size?: number) => void) | null;
+  }[] | null = null;
 
   constructor(
     canvasCtx: CanvasRenderingContext2D,
@@ -1065,7 +1079,7 @@ class CanvasGraphics {
   executeOperatorList(
     operatorList,
     executionStartIdx = null,
-    continueCallback = null,
+    continueCallback: (() => void) | null = null,
     stepper = null
   ) {
     const argsArray = operatorList.argsArray;
@@ -2011,7 +2025,7 @@ class CanvasGraphics {
   }
 
   endText() {
-    const paths = this.pendingTextPaths;
+    const paths = this.pendingTextPaths!;
     const ctx = this.ctx;
     if (paths === undefined) {
       ctx.beginPath();
@@ -2028,7 +2042,8 @@ class CanvasGraphics {
     ctx.restore();
     ctx.clip();
     ctx.beginPath();
-    delete this.pendingTextPaths;
+    // delete this.pendingTextPaths;
+    this.pendingTextPaths = null;
   }
 
   setCharSpacing(spacing: number) {
@@ -2135,10 +2150,10 @@ class CanvasGraphics {
     this.moveText(0, this.current.leading);
   }
 
-  paintChar(character, x: number, y: number, patternTransform) {
+  paintChar(character: string, x: number, y: number, patternTransform: TransformType) {
     const ctx = this.ctx;
     const current = this.current;
-    const font = current.font;
+    const font = <FontFaceObject>current.font;
     const textRenderingMode = current.textRenderingMode;
     const fontSize = current.fontSize / current.fontSizeScale;
     const fillStrokeMode =
@@ -2148,7 +2163,7 @@ class CanvasGraphics {
     );
     const patternFill = current.patternFill && !font.missingFile;
 
-    let addToPath;
+    let addToPath = null;
     if (font.disableFontFace || isAddToPathSet || patternFill) {
       addToPath = font.getPathGenerator(this.commonObjs, character);
     }
@@ -2157,7 +2172,7 @@ class CanvasGraphics {
       ctx.save();
       ctx.translate(x, y);
       ctx.beginPath();
-      addToPath(ctx, fontSize);
+      addToPath!(ctx, fontSize);
       if (patternTransform) {
         ctx.setTransform(...patternTransform);
       }
@@ -2222,7 +2237,8 @@ class CanvasGraphics {
     return shadow(this, "isFontSubpixelAAEnabled", enabled);
   }
 
-  showText(glyphs) {
+  // 猜测是(numbler| Glyph)，调试时发现确实是这个值
+  showText(glyphs: (number | Glyph)[]) {
     const current = this.current;
     const font = current.font;
     if (font.isType3Font) {
@@ -2252,7 +2268,7 @@ class CanvasGraphics {
       !current.patternFill;
 
     ctx.save();
-    ctx.transform(...current.textMatrix);
+    ctx.transform(...<TransformType>current.textMatrix);
     ctx.translate(current.x, current.y + current.textRise);
 
     if (fontDirection > 0) {
@@ -2301,8 +2317,8 @@ class CanvasGraphics {
       const chars = [];
       let width = 0;
       for (const glyph of glyphs) {
-        chars.push(glyph.unicode);
-        width += glyph.width;
+        chars.push((<Glyph>glyph).unicode);
+        width += (<Glyph>glyph).width;
       }
       ctx.fillText(chars.join(""), 0, 0);
       current.x += width * widthAdvanceScale * textHScale;
@@ -2367,7 +2383,7 @@ class CanvasGraphics {
           // common case
           ctx.fillText(character, scaledX, scaledY);
         } else {
-          this.paintChar(character, scaledX, scaledY, patternTransform);
+          this.paintChar(character, scaledX, scaledY, patternTransform!);
           if (accent) {
             const scaledAccentX =
               scaledX + (fontSize * accent.offset.x) / fontSizeScale;
@@ -2377,7 +2393,7 @@ class CanvasGraphics {
               accent.fontChar,
               scaledAccentX,
               scaledAccentY,
-              patternTransform
+              patternTransform!
             );
           }
         }

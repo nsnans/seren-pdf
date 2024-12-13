@@ -148,7 +148,7 @@ class PageViewport {
 
   protected offsetY: number;
 
-  protected transform: TransformType;
+  public transform: TransformType;
 
   protected width: number;
 

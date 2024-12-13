@@ -290,7 +290,7 @@ class DocumentInitParameters {
   enableHWA?: boolean;
 
   /* Parameters only intended for development/testing purposes.*/
-  styleElement: object | null = null;
+  styleElement: HTMLStyleElement | null = null;
 }
 
 /**
@@ -2644,7 +2644,7 @@ class WorkerTransportParameters {
 
   pdfBug: boolean;
 
-  styleElement: object | null;
+  styleElement: HTMLStyleElement | null;
 
   loadingParams: WorkerTransportLoadingParameters;
 
@@ -2652,7 +2652,7 @@ class WorkerTransportParameters {
     fontExtraProperties: boolean,
     ownerDocument: HTMLDocument,
     pdfBug: boolean,
-    styleElement: object | null,
+    styleElement: HTMLStyleElement | null,
     loadingParams: WorkerTransportLoadingParameters
   ) {
     this.disableFontFace = disableFontFace;
@@ -2720,10 +2720,10 @@ class WorkerTransport {
     networkStream: IPDFStream, params: WorkerTransportParameters, factory: TransportFactory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
-    this.fontLoader = new FontLoader({
-      ownerDocument: params.ownerDocument,
-      styleElement: params.styleElement,
-    });
+    this.fontLoader = new FontLoader(
+      params.ownerDocument,
+      params.styleElement,
+    );
     this.loadingParams = params.loadingParams;
     this._params = params;
 
@@ -3139,7 +3139,7 @@ class WorkerTransport {
 
           const inspectFont =
             pdfBug && (globalThis as any).FontInspector?.enabled
-              ? (font, url) => globalThis.FontInspector.fontAdded(font, url)
+              ? (font: FontFaceObject, url?: string) => (globalThis as any).FontInspector.fontAdded(font, url!)
               : null;
           const font = new FontFaceObject(exportedData, {
             disableFontFace,
@@ -3483,6 +3483,13 @@ class WorkerTransport {
 
 const INITIAL_DATA = Symbol("INITIAL_DATA");
 
+interface PDFObjectData {
+  promise: Promise<void>;
+  resolve: () => void;
+  reject: (reason: unknown) => void;
+  data: any;
+}
+
 /**
  * A PDF document and page is built of many objects. E.g. there are objects for
  * fonts, images, rendering code, etc. These objects may get processed inside of
@@ -3497,7 +3504,7 @@ export class PDFObjects {
    * @param {string} objId
    * @returns {Object}
    */
-  #ensureObj(objId: string): object {
+  #ensureObj(objId: string): PDFObjectData {
     return (this.#objs[objId] ||= {
       ...Promise.withResolvers(),
       data: INITIAL_DATA,
@@ -3516,7 +3523,7 @@ export class PDFObjects {
    * @param {function} [callback]
    * @returns {any}
    */
-  get(objId: string, callback = null) {
+  get(objId: string, callback: ((data: any) => void) | null = null) {
     // If there is a callback, then the get can be async and the object is
     // not required to be resolved right now.
     if (callback) {
@@ -3550,7 +3557,7 @@ export class PDFObjects {
    * @param {string} objId
    * @param {any} [data]
    */
-  resolve(objId: string, data = null) {
+  resolve(objId: string, data: any = null) {
     const obj = this.#ensureObj(objId);
     obj.data = data;
     obj.resolve();
