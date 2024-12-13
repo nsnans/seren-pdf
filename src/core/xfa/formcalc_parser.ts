@@ -13,7 +13,12 @@
  * limitations under the License.
  */
 
-import { Lexer, TOKEN } from "./formcalc_lexer";
+
+/*
+ * 这个文件只在测试代码中被调用过 
+ */
+import { isNumberObject } from "util/types";
+import { Lexer, Token, TOKEN } from "./formcalc_lexer";
 
 const Errors = {
   assignment: "Invalid token in assignment.",
@@ -121,7 +126,16 @@ const BUILTINS = new Set([
 const LTR = true;
 const RTL = false;
 
-const Operators = {
+interface OperatorType {
+  id: number,
+  prec: number,
+  assoc: boolean,
+  nargs: number,
+  repr?: string,
+  op?: ((x: number) => number) | ((x: number, y: number) => number)
+}
+
+const Operators: Record<string, OperatorType> = {
   dot: { id: 0, prec: 0, assoc: RTL, nargs: 0, repr: "." },
   dotDot: { id: 1, prec: 0, assoc: RTL, nargs: 0, repr: ".." },
   dotHash: { id: 2, prec: 0, assoc: RTL, nargs: 0, repr: ".#" },
@@ -129,8 +143,8 @@ const Operators = {
   call: { id: 1, prec: 1, assoc: LTR, nargs: 0 },
 
   // Unary operators.
-  minus: { id: 4, nargs: 1, prec: 2, assoc: RTL, repr: "-", op: x => -x },
-  plus: { id: 5, nargs: 1, prec: 2, assoc: RTL, repr: "+", op: x => +x },
+  minus: { id: 4, nargs: 1, prec: 2, assoc: RTL, repr: "-", op: (x: number) => -x },
+  plus: { id: 5, nargs: 1, prec: 2, assoc: RTL, repr: "+", op: (x: number) => +x },
   not: {
     id: 6,
     nargs: 1,
@@ -261,7 +275,16 @@ const OPERAND = false;
 // until the opening parenthesis is met.
 //
 class SimpleExprParser {
-  constructor(lexer) {
+
+  protected lexer: Lexer;
+
+  protected operands: Leaf[];
+
+  protected operators: OperatorType[];
+
+  protected last: boolean;
+
+  constructor(lexer: Lexer) {
     this.lexer = lexer;
     this.operands = [];
     this.operators = [];
@@ -274,7 +297,7 @@ class SimpleExprParser {
     this.last = OPERATOR;
   }
 
-  parse(tok) {
+  parse(tok: Token | null = null): [Token, Leaf] {
     tok ||= this.lexer.next();
 
     while (true) {
@@ -345,7 +368,7 @@ class SimpleExprParser {
         case TOKEN.leftBracket:
           if (this.last === OPERAND) {
             this.flushWithOperator(Operators.subscript);
-            const operand = this.operands.pop();
+            const operand = this.operands.pop()!;
             const index = SimpleExprParser.parseIndex(this.lexer);
             this.operands.push(new AstSubscript(operand, index));
             this.last = OPERAND;
@@ -354,15 +377,15 @@ class SimpleExprParser {
           return [tok, this.getNode()];
         case TOKEN.leftParen:
           if (this.last === OPERAND) {
-            const lastOperand = this.operands.at(-1);
+            const lastOperand = this.operands.at(-1)!;
             if (!(lastOperand instanceof AstIdentifier)) {
               return [tok, this.getNode()];
             }
             lastOperand.toLowerCase();
-            const name = lastOperand.id;
+            const name = <string>lastOperand.id;
 
             this.flushWithOperator(Operators.call);
-            const callee = this.operands.pop();
+            const callee = this.operands.pop()!;
             const params = SimpleExprParser.parseParams(this.lexer);
 
             if (callee instanceof AstIdentifier && BUILTINS.has(name)) {
@@ -410,7 +433,7 @@ class SimpleExprParser {
           return [tok, this.getNode()];
         case TOKEN.number:
           if (this.last === OPERATOR) {
-            this.pushOperand(new AstNumber(tok.value));
+            this.pushOperand(new AstNumber(<number>tok.value));
             break;
           }
           return [tok, this.getNode()];
@@ -439,7 +462,7 @@ class SimpleExprParser {
           break;
         case TOKEN.string:
           if (this.last === OPERATOR) {
-            this.pushOperand(new AstString(tok.value));
+            this.pushOperand(new AstString(<string>tok.value));
             break;
           }
           return [tok, this.getNode()];
@@ -457,7 +480,7 @@ class SimpleExprParser {
           return [tok, this.getNode()];
         case TOKEN.identifier:
           if (this.last === OPERATOR) {
-            this.pushOperand(new AstIdentifier(tok.value));
+            this.pushOperand(new AstIdentifier(<string>tok.value));
             break;
           }
           return [tok, this.getNode()];
@@ -468,7 +491,7 @@ class SimpleExprParser {
     }
   }
 
-  static parseParams(lexer) {
+  static parseParams(lexer: Lexer) {
     const parser = new SimpleExprParser(lexer);
     const params = [];
     while (true) {
@@ -485,7 +508,7 @@ class SimpleExprParser {
     }
   }
 
-  static parseIndex(lexer) {
+  static parseIndex(lexer: Lexer) {
     let tok = lexer.next();
     if (tok.id === TOKEN.times) {
       tok = lexer.next();
@@ -501,31 +524,31 @@ class SimpleExprParser {
     return expr;
   }
 
-  pushOperator(op) {
+  pushOperator(op: OperatorType) {
     this.flushWithOperator(op);
     this.operators.push(op);
     this.last = OPERATOR;
   }
 
-  pushOperand(op) {
+  pushOperand(op: Leaf) {
     this.operands.push(op);
     this.last = OPERAND;
   }
 
-  operate(op) {
+  operate(op: OperatorType) {
     if (op.nargs === 1) {
-      const arg = this.operands.pop();
+      const arg = this.operands.pop()!;
       this.operands.push(AstUnaryOperator.getOperatorOrValue(op, arg));
     } else {
-      const arg2 = this.operands.pop();
-      const arg1 = this.operands.pop();
+      const arg2 = this.operands.pop()!;
+      const arg1 = this.operands.pop()!;
       this.operands.push(AstBinaryOperator.getOperatorOrValue(op, arg1, arg2));
     }
   }
 
-  flushWithOperator(op) {
+  flushWithOperator(op: OperatorType) {
     while (true) {
-      const top = this.operators.at(-1);
+      const top = this.operators.at(-1)!;
       if (top) {
         if (top.id >= 0 && SimpleExprParser.checkPrecedence(top, op)) {
           this.operators.pop();
@@ -547,7 +570,7 @@ class SimpleExprParser {
     }
   }
 
-  flushUntil(id) {
+  flushUntil(id: number) {
     while (true) {
       const op = this.operators.pop();
       if (!op) {
@@ -562,10 +585,10 @@ class SimpleExprParser {
 
   getNode() {
     this.flush();
-    return this.operands.pop();
+    return this.operands.pop()!;
   }
 
-  static checkPrecedence(left, right) {
+  static checkPrecedence(left: OperatorType, right: OperatorType) {
     return (
       left.prec < right.prec || (left.prec === right.prec && left.assoc === LTR)
     );
@@ -593,13 +616,18 @@ class Leaf {
     return 0;
   }
 
-  toComparable() {
+  toComparable(): number | null {
     return null;
   }
 }
 
 class AstCall extends Leaf {
-  constructor(callee, params) {
+
+  protected callee: Leaf;
+
+  protected params: Leaf[];
+
+  constructor(callee: Leaf, params: Leaf[]) {
     super();
     this.callee = callee;
     this.params = params;
@@ -614,7 +642,12 @@ class AstCall extends Leaf {
 }
 
 class AstBuiltinCall extends Leaf {
-  constructor(id, params) {
+
+  protected id: string;
+
+  protected params: Leaf[];
+
+  constructor(id: string, params: Leaf[]) {
     super();
     this.id = id;
     this.params = params;
@@ -629,7 +662,12 @@ class AstBuiltinCall extends Leaf {
 }
 
 class AstSubscript extends Leaf {
-  constructor(operand, index) {
+
+  protected operand: Leaf;
+
+  protected index: Leaf;
+
+  constructor(operand: Leaf, index: Leaf) {
     super();
     this.operand = operand;
     this.index = index;
@@ -644,7 +682,16 @@ class AstSubscript extends Leaf {
 }
 
 class AstBinaryOperator extends Leaf {
-  constructor(id, left, right, repr) {
+
+  protected id: number;
+
+  protected left: Leaf;
+
+  protected right: Leaf;
+
+  protected repr: string | null;
+
+  constructor(id: number, left: Leaf, right: Leaf, repr: string | null) {
     super();
     this.id = id;
     this.left = left;
@@ -675,9 +722,9 @@ class AstBinaryOperator extends Leaf {
     );
   }
 
-  static getOperatorOrValue(operator, left, right) {
+  static getOperatorOrValue(operator: OperatorType, left: Leaf, right: Leaf) {
     if (!left.isConstant() || !right.isConstant()) {
-      return new AstBinaryOperator(operator.id, left, right, operator.repr);
+      return new AstBinaryOperator(operator.id, left, right, <string | null>operator.repr);
     }
 
     if (
@@ -687,16 +734,23 @@ class AstBinaryOperator extends Leaf {
       !(right instanceof AstNumber)
     ) {
       return new AstNumber(
-        operator.op(left.toComparable(), right.toComparable())
+        operator.op!(left.toComparable()!, right.toComparable()!)
       );
     }
 
-    return new AstNumber(operator.op(left.toNumber(), right.toNumber()));
+    return new AstNumber(operator.op!(left.toNumber(), right.toNumber()));
   }
 }
 
 class AstUnaryOperator extends Leaf {
-  constructor(id, arg, repr) {
+
+  protected id: number;
+
+  protected arg: Leaf;
+
+  protected repr: string | null;
+
+  constructor(id: number, arg: Leaf, repr: string | null) {
     super();
     this.id = id;
     this.arg = arg;
@@ -710,17 +764,20 @@ class AstUnaryOperator extends Leaf {
     };
   }
 
-  static getOperatorOrValue(operator, arg) {
+  static getOperatorOrValue(operator: OperatorType, arg: Leaf) {
     if (!arg.isConstant()) {
-      return new AstUnaryOperator(operator.id, arg, operator.repr);
+      return new AstUnaryOperator(operator.id, arg, operator.repr!);
     }
-
-    return new AstNumber(operator.op(arg.toNumber()));
+    const op = <(x: number) => number>operator.op!;
+    return new AstNumber(op(arg.toNumber()));
   }
 }
 
 class AstNumber extends Leaf {
-  constructor(number) {
+
+  protected number;
+
+  constructor(number: number) {
     super();
     this.number = number;
   }
@@ -739,7 +796,10 @@ class AstNumber extends Leaf {
 }
 
 class AstString extends Leaf {
-  constructor(str) {
+
+  protected str: string;
+
+  constructor(str: string) {
     super();
     this.str = str;
   }
@@ -753,11 +813,13 @@ class AstString extends Leaf {
   }
 
   toNumber() {
-    return !isNaN(this.str) ? parseFloat(this.str) : 0;
+    const numStr = Number.parseFloat(this.str);
+    return !isNaN(numStr) ? parseFloat(this.str) : 0;
   }
 
   toComparable() {
-    return this.str;
+    const num = Number.parseFloat(this.str);
+    return num;
   }
 }
 
@@ -768,7 +830,10 @@ class AstThis extends Leaf {
 }
 
 class AstIdentifier extends Leaf {
-  constructor(id) {
+
+  public id: string;
+
+  constructor(id: string) {
     super();
     this.id = id;
   }
@@ -778,7 +843,7 @@ class AstIdentifier extends Leaf {
   }
 
   toLowerCase() {
-    this.id = this.id.toLowerCase();
+    this.id = this.id!.toLowerCase();
   }
 }
 
@@ -791,19 +856,44 @@ class AstNull extends Leaf {
     return true;
   }
 
-  toComparable() {
+  toComparable(): number | null {
     return null;
   }
 }
 
-class AstEveryOccurence {
+class AstEveryOccurence extends Leaf {
   dump() {
     return { special: "*" };
+  }
+
+  isSomPredicate(): boolean {
+    throw new Error('Unspport Method in AstEveryOccurence')
+  }
+
+  isDotExpression(): boolean {
+    throw new Error('Unspport Method in AstEveryOccurence')
+  }
+
+  isConstant(): boolean {
+    throw new Error('Unspport Method in AstEveryOccurence')
+  }
+
+  toNumber(): number {
+    throw new Error('Unspport Method in AstEveryOccurence')
+  }
+
+  toComparable(): number | null {
+    throw new Error('Unspport Method in AstEveryOccurence')
   }
 }
 
 class VarDecl extends Leaf {
-  constructor(id, expr) {
+
+  protected id: string;
+
+  protected expr: Leaf | null;
+
+  constructor(id: string, expr: Leaf | null) {
     super();
     this.id = id;
     this.expr = expr;
@@ -812,13 +902,18 @@ class VarDecl extends Leaf {
   dump() {
     return {
       var: this.id,
-      expr: this.expr.dump(),
+      expr: this.expr!.dump(),
     };
   }
 }
 
 class Assignment extends Leaf {
-  constructor(id, expr) {
+
+  protected id: string;
+
+  protected expr: Leaf;
+
+  constructor(id: string, expr: Leaf) {
     super();
     this.id = id;
     this.expr = expr;
@@ -833,7 +928,14 @@ class Assignment extends Leaf {
 }
 
 class FuncDecl extends Leaf {
-  constructor(id, params, body) {
+
+  protected body: ExprList;
+
+  protected params: (string | number | null)[];
+
+  protected id: string | number | null;
+
+  constructor(id: string | number | null, params: (string | number | null)[], body: ExprList) {
     super();
     this.id = id;
     this.params = params;
@@ -850,7 +952,16 @@ class FuncDecl extends Leaf {
 }
 
 class IfDecl extends Leaf {
-  constructor(condition, thenClause, elseIfClause, elseClause) {
+
+  protected condition: Leaf;
+
+  protected then: ExprList;
+
+  protected elseif: Leaf[] | null;
+
+  protected else: ExprList | null;
+
+  constructor(condition: Leaf, thenClause: ExprList, elseIfClause: Leaf[] | null, elseClause: ExprList | null) {
     super();
     this.condition = condition;
     this.then = thenClause;
@@ -870,7 +981,12 @@ class IfDecl extends Leaf {
 }
 
 class ElseIfDecl extends Leaf {
-  constructor(condition, thenClause) {
+
+  protected condition: Leaf;
+
+  protected then: ExprList;
+
+  constructor(condition: Leaf, thenClause: ExprList) {
     super();
     this.condition = condition;
     this.then = thenClause;
@@ -886,7 +1002,12 @@ class ElseIfDecl extends Leaf {
 }
 
 class WhileDecl extends Leaf {
-  constructor(condition, whileClause) {
+
+  protected condition: Leaf;
+
+  protected body: ExprList;
+
+  constructor(condition: Leaf, whileClause: ExprList) {
     super();
     this.condition = condition;
     this.body = whileClause;
@@ -902,7 +1023,18 @@ class WhileDecl extends Leaf {
 }
 
 class ForDecl extends Leaf {
-  constructor(assignment, upto, end, step, body) {
+
+  protected assignment: Leaf;
+
+  protected upto: boolean;
+
+  protected end: Leaf;
+
+  protected step: Leaf | null;
+
+  protected body: ExprList;
+
+  constructor(assignment: Leaf, upto: boolean, end: Leaf, step: Leaf | null, body: ExprList) {
     super();
     this.assignment = assignment;
     this.upto = upto;
@@ -924,7 +1056,14 @@ class ForDecl extends Leaf {
 }
 
 class ForeachDecl extends Leaf {
-  constructor(id, params, body) {
+
+  protected id: string;
+
+  protected params: Leaf[];
+
+  protected body: ExprList;
+
+  constructor(id: string, params: Leaf[], body: ExprList) {
     super();
     this.id = id;
     this.params = params;
@@ -942,7 +1081,10 @@ class ForeachDecl extends Leaf {
 }
 
 class BlockDecl extends Leaf {
-  constructor(body) {
+
+  protected body: ExprList;
+
+  constructor(body: ExprList) {
     super();
     this.body = body;
   }
@@ -956,7 +1098,10 @@ class BlockDecl extends Leaf {
 }
 
 class ExprList extends Leaf {
-  constructor(expressions) {
+
+  protected expressions: Leaf[];
+
+  constructor(expressions: Leaf[]) {
     super();
     this.expressions = expressions;
   }
@@ -981,20 +1126,20 @@ class ContinueDecl extends Leaf {
 class Parser {
 
   protected lexer;
-  
-  constructor(code) {
+
+  constructor(code: string) {
     this.lexer = new Lexer(code);
   }
 
   parse() {
     const [tok, decls] = this.parseExprList();
-    if (tok.id !== TOKEN.eof) {
+    if (tok!.id !== TOKEN.eof) {
       throw new Error("Invalid token in Form code");
     }
     return decls;
   }
 
-  parseExprList() {
+  parseExprList(): [Token | null, ExprList] {
     const expressions = [];
     let tok = null,
       expr;
@@ -1007,7 +1152,7 @@ class Parser {
     }
   }
 
-  parseExpr(tok) {
+  parseExpr(tok: Token | null = null): [Token | null, Leaf] {
     tok ||= this.lexer.next();
     switch (tok.id) {
       case TOKEN.identifier:
@@ -1035,22 +1180,22 @@ class Parser {
     }
   }
 
-  parseAssigmentOrExpr(tok) {
+  parseAssigmentOrExpr(tok: Token): [Token, Leaf] {
     const savedTok = tok;
 
     tok = this.lexer.next();
     if (tok.id === TOKEN.assign) {
       const [tok1, expr] = this.parseSimpleExpr(null);
-      return [tok1, new Assignment(savedTok.value, expr)];
+      return [tok1, new Assignment(<string>savedTok.value, expr)];
     }
 
     const parser = new SimpleExprParser(this.lexer);
-    parser.pushOperand(new AstIdentifier(savedTok.value));
+    parser.pushOperand(new AstIdentifier(<string>savedTok.value));
 
     return parser.parse(tok);
   }
 
-  parseBlock() {
+  parseBlock(): [null, BlockDecl] {
     const [tok1, body] = this.parseExprList();
 
     const tok = tok1 || this.lexer.next();
@@ -1061,7 +1206,7 @@ class Parser {
     return [null, new BlockDecl(body)];
   }
 
-  parseVarDecl() {
+  parseVarDecl(): [Token | null, VarDecl] {
     // 'var' Identifier ('=' SimpleExpression)?
     let tok = this.lexer.next();
     if (tok.id !== TOKEN.identifier) {
@@ -1072,14 +1217,14 @@ class Parser {
 
     tok = this.lexer.next();
     if (tok.id !== TOKEN.assign) {
-      return [tok, new VarDecl(identifier, null)];
+      return [tok, new VarDecl(<string>identifier, null)];
     }
 
     const [tok1, expr] = this.parseSimpleExpr();
-    return [tok1, new VarDecl(identifier, expr)];
+    return [tok1, new VarDecl(<string>identifier, expr)];
   }
 
-  parseFuncDecl() {
+  parseFuncDecl(): [null, FuncDecl] {
     // 'func' Identifier ParameterList 'do' ExpressionList 'endfunc'.
     let tok = this.lexer.next();
     if (tok.id !== TOKEN.identifier) {
@@ -1101,12 +1246,12 @@ class Parser {
       throw new Error(Errors.func);
     }
 
-    return [null, new FuncDecl(identifier, params, body)];
+    return [null, new FuncDecl(identifier!, params, body)];
   }
 
   parseParamList() {
     // '(' Identifier * ')'.
-    const params = [];
+    const params: (string | number | null)[] = [];
 
     let tok = this.lexer.next();
     if (tok.id !== TOKEN.leftParen) {
@@ -1134,16 +1279,16 @@ class Parser {
     }
   }
 
-  parseSimpleExpr(tok = null) {
+  parseSimpleExpr(tok: Token | null = null) {
     return new SimpleExprParser(this.lexer).parse(tok);
   }
 
-  parseIf() {
+  parseIf(): [null, IfDecl] {
     // 'if' '(' SimpleExpression ')' then ExpressionList
     // ('elseif' '(' SimpleExpression ')' then ExpressionList )*
     // ('else' ExpressionList)?
     // 'endif'.
-    let elseIfClause = [];
+    let elseIfClause: Leaf[] | null = [];
     let tok = this.lexer.next();
     if (tok.id !== TOKEN.leftParen) {
       throw new Error(Errors.if);
@@ -1210,7 +1355,7 @@ class Parser {
     return [null, new IfDecl(condition, thenClause, elseIfClause, elseClause)];
   }
 
-  parseWhile() {
+  parseWhile(): [null, WhileDecl] {
     // 'while' '(' SimpleExpression ')' 'do' ExprList 'endwhile'
     let tok = this.lexer.next();
     if (tok.id !== TOKEN.leftParen) {
@@ -1239,7 +1384,7 @@ class Parser {
     return [null, new WhileDecl(condition, whileClause)];
   }
 
-  parseAssignment() {
+  parseAssignment(): [Token, Leaf] {
     let tok = this.lexer.next();
     let hasVar = false;
     if (tok.id === TOKEN.var) {
@@ -1260,12 +1405,12 @@ class Parser {
 
     const [tok1, expr] = this.parseSimpleExpr();
     if (hasVar) {
-      return [tok1, new VarDecl(identifier, expr)];
+      return [tok1, new VarDecl(<string>identifier, expr)];
     }
-    return [tok1, new Assignment(identifier, expr)];
+    return [tok1, new Assignment(<string>identifier, expr)];
   }
 
-  parseFor() {
+  parseFor(): [null, ForDecl] {
     // 'for' Assignment ('upto'|'downto') Expr ('step' Expr)? 'do'
     // ExprList 'endfor'
     let tok,
@@ -1302,7 +1447,7 @@ class Parser {
     return [null, new ForDecl(assignment, upto, end, step, body)];
   }
 
-  parseForeach() {
+  parseForeach(): [null, ForeachDecl] {
     // 'for' Identifier 'in' '(' ArgumentList ')' 'do'
     // ExprList 'endfor'
     let tok = this.lexer.next();
@@ -1336,7 +1481,7 @@ class Parser {
       throw new Error(Errors.foreach);
     }
 
-    return [null, new ForeachDecl(identifier, params, body)];
+    return [null, new ForeachDecl(<string>identifier, params, body)];
   }
 }
 

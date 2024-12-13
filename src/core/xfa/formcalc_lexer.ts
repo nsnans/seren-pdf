@@ -124,16 +124,19 @@ const identifierPattern = new RegExp("^[\\p{L}_$!][\\p{L}\\p{N}_$]*", "u");
 
 class Token {
 
-  protected id: number;
+  readonly id: number;
 
-  protected value: number | string | null;
-  
+  readonly value: number | string | null;
+
   constructor(id: number, value: number | string | null = null) {
     this.id = id;
     this.value = value;
   }
 }
 
+
+// 确保除了指定多个token之外，都是单例对象
+// 相当于享元模式
 const Singletons = (function () {
   const obj = Object.create(null);
   const nonSingleton = new Set([
@@ -143,6 +146,7 @@ const Singletons = (function () {
     "nan",
     "infinity",
   ]);
+  // 这里遍历了，相当于给所有的token一个单例实现
   for (const [name, id] of Object.entries(TOKEN)) {
     if (!nonSingleton.has(name)) {
       obj[name] = new Token(id);
@@ -158,7 +162,13 @@ class Lexer {
 
   protected pos = 0;
 
-  constructor(data) {
+  protected data: string;
+
+  protected len: number;
+
+  protected strBuf: string[];
+
+  constructor(data: string) {
     this.data = data;
     this.pos = 0;
     this.len = data.length;
@@ -168,7 +178,7 @@ class Lexer {
   skipUntilEOL() {
     const match = this.data.slice(this.pos).match(eolPattern);
     if (match) {
-      this.pos += match.index + match[0].length;
+      this.pos += match.index! + match[0].length;
     } else {
       // No eol so consume all the chars.
       this.pos = this.len;
@@ -195,7 +205,7 @@ class Lexer {
     return Singletons[lower];
   }
 
-  getString() {
+  getString(): Token {
     const str = this.strBuf;
     const data = this.data;
     let start = this.pos;
@@ -245,8 +255,8 @@ class Lexer {
     return new Token(TOKEN.string, string);
   }
 
-  getNumber(first) {
-    const match = this.data.substring(this.pos).match(numberPattern);
+  getNumber(first: number) {
+    const match = this.data.substring(this.pos).match(numberPattern)!;
     if (!match[0]) {
       return new Token(TOKEN.number, first - 0x30 /* = 0 */);
     }
@@ -258,7 +268,8 @@ class Lexer {
     return new Token(TOKEN.number, number);
   }
 
-  getCompOperator(alt1, alt2) {
+  // 神奇的写法，需要结合闭包来进行理解
+  getCompOperator(alt1: Token, alt2: Token) {
     if (this.data.charCodeAt(this.pos) === 0x3d /* = = */) {
       this.pos++;
       return alt1;
@@ -321,7 +332,7 @@ class Lexer {
     return Singletons.dot;
   }
 
-  next() {
+  next(): Token {
     while (this.pos < this.len) {
       const char = this.data.charCodeAt(this.pos++);
       switch (char) {
