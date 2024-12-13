@@ -64,14 +64,17 @@ class JpegStream extends DecodeStream {
     this.decodeImage();
   }
 
-  get jpegOptions() {
+  get jpegOptions(): {
+    decodeTransform: Int32Array | null,
+    colorTransform: number | null
+  } {
     const jpegOptions = {
-      decodeTransform: undefined,
-      colorTransform: undefined,
+      decodeTransform: null,
+      colorTransform: null,
     };
 
     // Checking if values need to be transformed before conversion.
-    const decodeArr = this.dict!.getArrayValue(DictKey.D, DictKey.Decode);
+    const decodeArr = this.dict!.getArrayWithFallback(DictKey.D, DictKey.Decode);
     if ((this.forceRGBA || this.forceRGB) && Array.isArray(decodeArr)) {
       const bitsPerComponent = this.dict?.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent) || 8;
       const decodeArrLength = decodeArr.length;
@@ -99,7 +102,7 @@ class JpegStream extends DecodeStream {
     return shadow(this, "jpegOptions", jpegOptions);
   }
 
-  #skipUselessBytes(data) {
+  #skipUselessBytes(data: Uint8Array) {
     // Some images may contain 'junk' before the SOI (start-of-image) marker.
     // Note: this seems to mainly affect inline images.
     for (let i = 0, ii = data.length - 1; i < ii; i++) {
@@ -113,7 +116,7 @@ class JpegStream extends DecodeStream {
     return data;
   }
 
-  decodeImage(bytes) {
+  decodeImage(bytes: Uint8Array | null) {
     if (this.eof) {
       return this.buffer;
     }
@@ -123,15 +126,16 @@ class JpegStream extends DecodeStream {
     // So ideally get a VideoFrame from getTransferableImage and then use
     // copyTo.
 
-    const jpegImage = new JpegImage(this.jpegOptions);
+    const options = this.jpegOptions;
+    const jpegImage = new JpegImage(options.decodeTransform, options.colorTransform ?? -1);
     jpegImage.parse(bytes);
-    const data = jpegImage.getData({
-      width: this.drawWidth,
-      height: this.drawHeight,
-      forceRGBA: this.forceRGBA,
-      forceRGB: this.forceRGB,
-      isSourcePDF: true,
-    });
+    const data = jpegImage.getData(
+      this.drawWidth,
+      this.drawHeight,
+      this.forceRGBA,
+      this.forceRGB,
+      true,
+    );
     this.buffer = data;
     this.bufferLength = data.length;
     this.eof = true;
@@ -166,7 +170,7 @@ class JpegStream extends DecodeStream {
         return null;
       }
       const data = this.#skipUselessBytes(bytes);
-      if (!JpegImage.canUseImageDecoder(data, jpegOptions.colorTransform)) {
+      if (!JpegImage.canUseImageDecoder(data, jpegOptions.colorTransform ?? -1)) {
         return null;
       }
       // eslint-disable-next-line no-undef
