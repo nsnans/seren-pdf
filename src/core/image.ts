@@ -552,7 +552,7 @@ class PDFImage {
     }
   }
 
-  getComponents(buffer) {
+  getComponents(buffer): Uint8Array | Uint16Array | Uint32Array {
     const bpc = this.bpc;
 
     // This image doesn't require any extra work.

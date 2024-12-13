@@ -213,7 +213,7 @@ class ColorSpace {
     height: number,
     actualHeight: number,
     bpc: number,
-    comps,
+    comps: TypedArray,
     alpha01: number
   ) {
     if (PlatformHelper.isTesting()) {
@@ -543,7 +543,7 @@ class ColorSpace {
           const name = xref.fetchIfRef(cs[1]);
           numComps = Array.isArray(name) ? name.length : 1;
           baseCS = this._parse(cs[2], xref, resources, pdfFunctionFactory);
-          const tintFn = pdfFunctionFactory.create(cs[3]);
+          const tintFn = pdfFunctionFactory.create(<Ref | Dict | BaseStream>cs[3]);
           return new AlternateCS(numComps, baseCS, tintFn);
         case "Lab":
           params = xref.fetchIfRef(cs[1]);

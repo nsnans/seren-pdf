@@ -50,7 +50,8 @@ class MurmurHash3_64 {
         }
       }
     } else if (ArrayBuffer.isView(input)) {
-      data = (input as ArrayBufferView).slice();
+      // 转换为any只是权宜之计
+      data = (input as TypedArray).slice();
       length = data.byteLength;
     } else {
       throw new Error("Invalid data format, must be a string or TypedArray.");

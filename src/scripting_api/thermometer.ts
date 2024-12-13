@@ -16,6 +16,15 @@
 import { PDFObject } from "./pdf_object";
 
 class Thermometer extends PDFObject {
+
+  protected _cancelled: boolean;
+
+  protected _duration: number;
+
+  protected _text: string;
+
+  protected _value: number;
+
   constructor(data) {
     super(data);
 

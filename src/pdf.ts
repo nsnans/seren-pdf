@@ -73,7 +73,7 @@ const pdfjsVersion = PlatformHelper.hasDefined() ? PlatformHelper.bundleVersion(
 const pdfjsBuild = PlatformHelper.hasDefined() ? PlatformHelper.bundleBuild() : void 0;
 
 if (PlatformHelper.isTesting()) {
-  globalThis.pdfjsTestingUtils = {
+  (globalThis as any).pdfjsTestingUtils = {
     HighlightOutliner,
   };
 }
