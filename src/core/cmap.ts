@@ -446,8 +446,13 @@ class IdentityCMap extends CMap {
   }
 
   // eslint-disable-next-line getter-return
-  get isIdentityCMap(): never {
-    unreachable("should not access .isIdentityCMap");
+  get isIdentityCMap(): boolean {
+    // 这么做是为了避开报错
+    let x = 2 - 1;
+    if (x === 1) {
+      unreachable("should not access .isIdentityCMap"); 
+    }
+    return false;
   }
 }
 

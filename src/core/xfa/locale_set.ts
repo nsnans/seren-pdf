@@ -95,11 +95,11 @@ class Day extends StringObject {
 class DayNames extends XFAObject {
   constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "dayNames", /* hasChildren = */ true);
-    this.abbr = getInteger({
-      data: attributes.abbr,
-      defaultValue: 0,
-      validate: x => x === 1,
-    });
+    this.abbr = getInteger(
+      attributes.abbr,
+      0,
+      x => x === 1,
+    );
     this.day = new XFAObjectArray(7);
   }
 }
@@ -162,11 +162,11 @@ class Month extends StringObject {
 class MonthNames extends XFAObject {
   constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "monthNames", /* hasChildren = */ true);
-    this.abbr = getInteger({
-      data: attributes.abbr,
-      defaultValue: 0,
-      validate: x => x === 1,
-    });
+    this.abbr = getInteger(
+      attributes.abbr,
+      0,
+      x => x === 1,
+    );
     this.month = new XFAObjectArray(12);
   }
 }

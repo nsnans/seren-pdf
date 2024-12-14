@@ -32,7 +32,7 @@ function stripQuotes(str: string) {
   return str;
 }
 
-function getInteger({ data, defaultValue, validate }): number {
+export function tryGetInteger(data: string, defaultValue: string, validate: (n: number) => boolean): number | string {
   if (!data) {
     return defaultValue;
   }
@@ -44,7 +44,19 @@ function getInteger({ data, defaultValue, validate }): number {
   return defaultValue;
 }
 
-function getFloat({ data, defaultValue, validate }) {
+function getInteger(data: string, defaultValue: number, validate: (n: number) => boolean): number {
+  if (!data) {
+    return defaultValue;
+  }
+  data = data.trim();
+  const n = parseInt(data, 10);
+  if (!isNaN(n) && validate(n)) {
+    return n;
+  }
+  return defaultValue;
+}
+
+function getFloat(data: string, defaultValue: number, validate: (n: number) => boolean) {
   if (!data) {
     return defaultValue;
   }
@@ -56,7 +68,7 @@ function getFloat({ data, defaultValue, validate }) {
   return defaultValue;
 }
 
-function getKeyword({ data, defaultValue, validate }) {
+function getKeyword(data: string, defaultValue: string, validate: (x: string) => boolean) {
   if (!data) {
     return defaultValue;
   }
@@ -67,12 +79,12 @@ function getKeyword({ data, defaultValue, validate }) {
   return defaultValue;
 }
 
-function getStringOption(data, options) {
-  return getKeyword({
+function getStringOption(data: string, options: string[]) {
+  return getKeyword(
     data,
-    defaultValue: options[0],
-    validate: k => options.includes(k),
-  });
+    options[0],
+    (k: string) => options.includes(k),
+  );
 }
 
 function getMeasurement(str: string, def = "0") {
@@ -124,7 +136,7 @@ function getRatio(data: string) {
   return { num, den };
 }
 
-function getRelevant(data: string) {
+function getRelevant(data: string): { excluded: boolean; viewname: string; }[] {
   if (!data) {
     return [];
   }
@@ -174,6 +186,7 @@ function getBBox(data: string) {
 }
 
 class HTMLResult {
+  html: any;
 
   static get FAILURE() {
     return shadow(this, "FAILURE", new HTMLResult(false, null, null, null));

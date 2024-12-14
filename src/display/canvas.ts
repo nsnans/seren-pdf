@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+import { Glyph } from "../core/fonts";
+import { TilingPatternIR } from "../core/pattern";
+import { PlatformHelper } from "../platform/platform_helper";
+import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
 import {
   FeatureTest,
   FONT_IDENTITY_MATRIX,
@@ -27,29 +31,25 @@ import {
   Util,
   warn,
 } from "../shared/util";
+import { PDFObjects } from "./api";
+import { CanvasAndContext, CanvasFactory } from "./canvas_factory";
 import {
   getCurrentTransform,
   getCurrentTransformInverse,
   PageViewport,
   PixelsPerInch,
+  PointType,
   RectType,
   TransformType,
 } from "./display_utils";
+import { FilterFactory } from "./filter_factory";
+import { FontFaceObject } from "./font_loader";
 import {
   BaseShadingPattern,
   getShadingPattern,
   PathType,
   TilingPattern,
 } from "./pattern_helper";
-import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
-import { BaseCanvasFactory, CanvasAndContext, CanvasFactory } from "./canvas_factory";
-import { PDFObject } from "../scripting_api/pdf_object";
-import { PDFObjects } from "./api";
-import { FilterFactory } from "./filter_factory";
-import { PlatformHelper } from "../platform/platform_helper";
-import { FontFaceObject } from "./font_loader";
-import { Glyph } from "../core/fonts";
-import { TilingPatternIR } from "../core/pattern";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -149,7 +149,7 @@ function mirrorContextOperations(ctx: DecoratedCanvasRenderingContext2D, destCtx
     this.__originalTransform(a, b, c, d, e, f);
   };
 
-  ctx.setTransform = function ctxSetTransform(a: number, b: number, c: number, d: number, e: number, f: number) {
+  ctx.setTransform = function (a: number, b: number, c: number, d: number, e: number, f: number) {
     destCtx.setTransform(a, b, c, d, e, f);
     this.__originalSetTransform(a, b, c, d, e, f);
   };
@@ -211,7 +211,7 @@ export class CachedCanvases {
     this.cache = Object.create(null);
   }
 
-  getCanvas(id, width: number, height: number): { canvas: HTMLCanvasElement, context: CanvasRenderingContext2D } {
+  getCanvas(id: string, width: number, height: number): { canvas: HTMLCanvasElement, context: CanvasRenderingContext2D } {
     let canvasEntry;
     if (this.cache[id] !== undefined) {
       canvasEntry = this.cache[id];
@@ -223,7 +223,7 @@ export class CachedCanvases {
     return canvasEntry;
   }
 
-  delete(id) {
+  delete(id: string) {
     delete this.cache[id];
   }
 
@@ -237,16 +237,16 @@ export class CachedCanvases {
 }
 
 function drawImageAtIntegerCoords(
-  ctx,
+  ctx: CanvasRenderingContext2D,
   srcImg,
-  srcX,
-  srcY,
-  srcW,
-  srcH,
-  destX,
-  destY,
-  destW,
-  destH
+  srcX: number,
+  srcY: number,
+  srcW: number,
+  srcH: number,
+  destX: number,
+  destY: number,
+  destW: number,
+  destH: number
 ) {
   const [a, b, c, d, tx, ty] = getCurrentTransform(ctx);
   if (b === 0 && c === 0) {
@@ -320,13 +320,13 @@ function compileType3Glyph(imgData) {
   ]);
 
   const width1 = width + 1;
-  let points = new Uint8Array(width1 * (height + 1));
+  let points: Uint8Array | null = new Uint8Array(width1 * (height + 1));
   let i, j, j0;
 
   // decodes bit-packed mask data
   const lineSize = (width + 7) & ~7;
-  let data = new Uint8Array(lineSize * height),
-    pos = 0;
+  let data: Uint8Array | null = new Uint8Array(lineSize * height);
+  let pos = 0;
   for (const elem of imgData.data) {
     let mask = 128;
     while (mask > 0) {
@@ -596,8 +596,8 @@ class CanvasExtraState {
   }
 
   updateRectMinMax(transform: TransformType, rect: RectType) {
-    const p1 = Util.applyTransform(rect, transform);
-    const p2 = Util.applyTransform(rect.slice(2), transform);
+    const p1 = Util.applyTransform(rect as unknown as PointType, transform);
+    const p2 = Util.applyTransform(<PointType>rect.slice(2), transform);
     const p3 = Util.applyTransform([rect[0], rect[3]], transform);
     const p4 = Util.applyTransform([rect[2], rect[1]], transform);
 

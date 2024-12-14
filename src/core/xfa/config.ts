@@ -16,7 +16,7 @@
 import { shadow, warn } from "../../shared/util";
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
-import { getInteger, getStringOption } from "./utils";
+import { getInteger, getStringOption, tryGetInteger } from "./utils";
 import {
   ContentObject,
   IntegerObject,
@@ -122,11 +122,11 @@ class Area extends XFAObject {
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "area");
-    this.level = getInteger({
-      data: attributes.level,
-      defaultValue: 0,
-      validate: (n: number) => n >= 1 && n <= 3,
-    });
+    this.level = getInteger(
+      attributes.level,
+      0,
+      (n: number) => n >= 1 && n <= 3,
+    );
     this.name = getStringOption(attributes.name, [
       "",
       "barcode",
@@ -194,6 +194,9 @@ class BehaviorOverride extends ContentObject {
 }
 
 class Cache extends XFAObject {
+
+  protected templateCache: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "cache", /* hasChildren = */ true);
     this.templateCache = null;
@@ -207,6 +210,25 @@ class Change extends Option01 {
 }
 
 class Common extends XFAObject {
+
+  protected data: null;
+
+  protected locale: null;
+
+  protected localeSet: null;
+
+  protected messaging: null;
+
+  protected suppressBanner: null;
+
+  protected template: null;
+
+  protected validationMessaging: null;
+
+  protected versionControl: null;
+
+  protected log: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "common", /* hasChildren = */ true);
     this.data = null;
@@ -242,6 +264,15 @@ class CompressObjectStream extends Option10 {
 }
 
 class Compression extends XFAObject {
+
+  protected compressLogicalStructure: null;
+
+  protected compressObjectStream: null;
+
+  protected level: null;
+
+  protected type: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "compression", /* hasChildren = */ true);
     this.compressLogicalStructure = null;
@@ -252,6 +283,15 @@ class Compression extends XFAObject {
 }
 
 class Config extends XFAObject {
+
+  protected acrobat: null;
+
+  protected present: null;
+
+  protected trace: null;
+
+  protected agent: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "config", /* hasChildren = */ true);
     this.acrobat = null;
@@ -292,8 +332,31 @@ class CurrentPage extends IntegerObject {
 }
 
 class Data extends XFAObject {
+
   protected excludeNS: XFAObjectArray;
+
   protected transform: XFAObjectArray;
+
+  protected adjustData: null;
+
+  protected attributes: null;
+
+  protected incrementalLoad: null;
+
+  protected outputXSL: null;
+
+  protected range: null;
+
+  protected record: null;
+
+  protected startNode: null;
+
+  protected uri: null;
+
+  protected window: null;
+
+  protected xsl: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "data", /* hasChildren = */ true);
     this.adjustData = null;
@@ -312,6 +375,9 @@ class Data extends XFAObject {
 }
 
 class Debug extends XFAObject {
+
+  protected uri: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "debug", /* hasChildren = */ true);
     this.uri = null;
@@ -361,6 +427,11 @@ class DocumentAssembly extends Option01 {
 }
 
 class Driver extends XFAObject {
+
+  protected fontInfo: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "driver", /* hasChildren = */ true);
     this.name = attributes.name ? attributes.name.trim() : "";
@@ -398,6 +469,13 @@ class Encrypt extends Option01 {
 }
 
 class Encryption extends XFAObject {
+
+  protected encrypt: null;
+
+  protected encryptionLevel: null;
+
+  protected permissions: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "encryption", /* hasChildren = */ true);
     this.encrypt = null;
@@ -419,14 +497,21 @@ class Enforce extends StringObject {
 }
 
 class Equate extends XFAObject {
+
+  protected force: number;
+
+  protected from: string;
+
+  protected to: string;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "equate");
 
-    this.force = getInteger({
-      data: attributes.force,
-      defaultValue: 1,
-      validate: n => n === 0,
-    });
+    this.force = getInteger(
+      attributes.force,
+      1,
+      (n: number) => n === 0,
+    );
 
     this.from = attributes.from || "";
     this.to = attributes.to || "";
@@ -453,21 +538,19 @@ class EquateRange extends XFAObject {
     const ranges = [];
     const unicodeRegex = /U\+([0-9a-fA-F]+)/;
     const unicodeRange = this._unicodeRange;
-    for (let range of unicodeRange
-      .split(",")
-      .map(x => x.trim())
-      .filter(x => !!x)) {
-      range = range.split("-", 2).map(x => {
+    for (let range of unicodeRange.split(",").map(x => x.trim()).filter(x => !!x)) {
+      // 做了一点小改动，来避免range类型的报错
+      const ranger = range.split("-", 2).map(x => {
         const found = x.match(unicodeRegex);
         if (!found) {
           return 0;
         }
         return parseInt(found[1], 16);
       });
-      if (range.length === 1) {
-        range.push(range[0]);
+      if (ranger.length === 1) {
+        ranger.push(ranger[0]);
       }
-      ranges.push(range);
+      ranges.push(ranger);
     }
     return shadow(this, "unicodeRange", ranges);
   }
@@ -483,7 +566,7 @@ class Exclude extends ContentObject {
       .trim()
       .split(/\s+/)
       .filter(
-        x =>
+        (x: string) =>
           x &&
           [
             "calculate",
@@ -517,6 +600,12 @@ class FontInfo extends XFAObject {
   protected defaultTypeface: XFAObjectArray;
 
   protected neverEmbed: XFAObjectArray;
+
+  protected embed: null;
+
+  protected map: null;
+
+  protected subsetBelow: null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "fontInfo", /* hasChildren = */ true);
@@ -583,6 +672,15 @@ class Jog extends OptionObject {
 }
 
 class LabelPrinter extends XFAObject {
+
+  protected batchOutput: null;
+
+  protected flipLabel: null;
+
+  protected fontInfo: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "labelPrinter", /* hasChildren = */ true);
     this.name = getStringOption(attributes.name, ["zpl", "dpl", "ipl", "tcpl"]);
@@ -624,6 +722,15 @@ class LocaleSet extends StringObject {
 }
 
 class Log extends XFAObject {
+
+  protected mode: null;
+
+  protected threshold: null;
+
+  protected to: null;
+
+  protected uri: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "log", /* hasChildren = */ true);
     this.mode = null;
@@ -635,6 +742,11 @@ class Log extends XFAObject {
 
 // Renamed in MapElement to avoid confusion with usual js Map.
 class MapElement extends XFAObject {
+
+  protected equate: XFAObjectArray;
+
+  protected equateRange: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "map", /* hasChildren = */ true);
     this.equate = new XFAObjectArray();
@@ -643,6 +755,9 @@ class MapElement extends XFAObject {
 }
 
 class MediumInfo extends XFAObject {
+
+  protected map: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "mediumInfo", /* hasChildren = */ true);
     this.map = null;
@@ -650,6 +765,11 @@ class MediumInfo extends XFAObject {
 }
 
 class Message extends XFAObject {
+
+  protected msgId: null;
+
+  protected severity: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "message", /* hasChildren = */ true);
     this.msgId = null;
@@ -658,6 +778,9 @@ class Message extends XFAObject {
 }
 
 class Messaging extends XFAObject {
+
+  protected message: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "messaging", /* hasChildren = */ true);
     this.message = new XFAObjectArray();
@@ -701,6 +824,7 @@ class NumberOfCopies extends IntegerObject {
 }
 
 class OpenAction extends XFAObject {
+  protected destination: null;
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "openAction", /* hasChildren = */ true);
     this.destination = null;
@@ -708,6 +832,13 @@ class OpenAction extends XFAObject {
 }
 
 class Output extends XFAObject {
+
+  protected to: null;
+
+  protected type: null;
+
+  protected uri: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "output", /* hasChildren = */ true);
     this.to = null;
@@ -723,6 +854,9 @@ class OutputBin extends StringObject {
 }
 
 class OutputXSL extends XFAObject {
+
+  protected uri: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "outputXSL", /* hasChildren = */ true);
     this.uri = null;
@@ -747,31 +881,32 @@ class Packets extends StringObject {
     this.content = this.content
       .trim()
       .split(/\s+/)
-      .filter(x =>
+      .filter((x: string) =>
         ["config", "datasets", "template", "xfdf", "xslt"].includes(x)
       );
   }
 }
 
 class PageOffset extends XFAObject {
-  protected x: number;
-  protected y: number;
+  protected x: number | string;
+  protected y: number | string;
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pageOffset");
-    this.x = getInteger({
-      data: attributes.x,
-      defaultValue: "useXDCSetting",
-      validate: (_n: number) => true,
-    });
-    this.y = getInteger({
-      data: attributes.y,
-      defaultValue: "useXDCSetting",
-      validate: (_n: number) => true,
-    });
+    this.x = tryGetInteger(
+      attributes.x,
+      "useXDCSetting",
+      (_n: number) => true,
+    );
+    this.y = tryGetInteger(
+      attributes.y,
+      "useXDCSetting",
+      (_n: number) => true,
+    );
   }
 }
 
 class PageRange extends StringObject {
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pageRange");
   }
@@ -780,7 +915,7 @@ class PageRange extends StringObject {
     const numbers = this.content
       .trim()
       .split(/\s+/)
-      .map(x => parseInt(x, 10));
+      .map((x: string) => parseInt(x, 10));
     const ranges = [];
     for (let i = 0, ii = numbers.length; i < ii; i += 2) {
       ranges.push(numbers.slice(i, i + 2));
@@ -813,11 +948,28 @@ class PaginationOverride extends OptionObject {
 
 class Part extends IntegerObject {
   constructor(_attributes: XFAAttributesObj) {
-    super(CONFIG_NS_ID, "part", 1, n => false);
+    super(CONFIG_NS_ID, "part", 1, _n => false);
   }
 }
 
 class Pcl extends XFAObject {
+
+  protected batchOutput: null;
+
+  protected fontInfo: null;
+
+  protected jog: null;
+
+  protected mediumInfo: null;
+
+  protected outputBin: null;
+
+  protected pageOffset: null;
+
+  protected staple: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pcl", /* hasChildren = */ true);
     this.name = attributes.name || "";
@@ -833,6 +985,45 @@ class Pcl extends XFAObject {
 }
 
 class Pdf extends XFAObject {
+
+  protected adobeExtensionLevel: null;
+
+  protected batchOutput: null;
+
+  protected compression: null;
+
+  protected creator: null;
+
+  protected encryption: null;
+
+  protected fontInfo: null;
+
+  protected interactive: null;
+
+  protected linearized: null;
+
+  protected openAction: null;
+
+  protected pdfa: null;
+
+  protected producer: null;
+
+  protected renderPolicy: null;
+
+  protected scriptModel: null;
+
+  protected silentPrint: null;
+
+  protected submitFormat: null;
+
+  protected tagged: null;
+
+  protected version: null;
+
+  protected viewerPreferences: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pdf", /* hasChildren = */ true);
     this.name = attributes.name || "";
@@ -859,6 +1050,15 @@ class Pdf extends XFAObject {
 }
 
 class Pdfa extends XFAObject {
+
+  protected amd: null;
+
+  protected conformance: null;
+
+  protected includeXDPContent: null;
+
+  protected part: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pdfa", /* hasChildren = */ true);
     this.amd = null;
@@ -869,6 +1069,25 @@ class Pdfa extends XFAObject {
 }
 
 class Permissions extends XFAObject {
+
+  protected accessibleContent: null;
+
+  protected change: null;
+
+  protected contentCopy: null;
+
+  protected documentAssembly: null;
+
+  protected formFieldFilling: null;
+
+  protected modifyAnnots: null;
+
+  protected plaintextMetadata: null;
+
+  protected print: null;
+
+  protected printHighQuality: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "permissions", /* hasChildren = */ true);
     this.accessibleContent = null;
@@ -934,6 +1153,34 @@ class Present extends XFAObject {
 
   protected zpl: XFAObjectArray;
 
+  protected behaviorOverride: null;
+
+  protected cache: null;
+
+  protected common: null;
+
+  protected copies: null;
+
+  protected destination: null;
+
+  protected incrementalMerge: null;
+
+  protected layout: null;
+
+  protected output: null;
+
+  protected overprint: null;
+
+  protected pagination: null;
+
+  protected paginationOverride: null;
+
+  protected script: null;
+
+  protected validate: null;
+
+  protected xdp: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "present", /* hasChildren = */ true);
     this.behaviorOverride = null;
@@ -992,6 +1239,21 @@ class Producer extends StringObject {
 }
 
 class Ps extends XFAObject {
+
+  protected batchOutput: null;
+
+  protected fontInfo: null;
+
+  protected jog: null;
+
+  protected mediumInfo: null;
+
+  protected outputBin: null;
+
+  protected staple: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "ps", /* hasChildren = */ true);
     this.name = attributes.name || "";
@@ -1014,9 +1276,9 @@ class Range extends ContentObject {
     this.content = this.content
       .trim()
       .split(/\s*,\s*/, 2)
-      .map(range => range.split("-").map(x => parseInt(x.trim(), 10)))
-      .filter(range => range.every(x => !isNaN(x)))
-      .map(range => {
+      .map((range: string) => range.split("-").map((x: string) => parseInt(x.trim(), 10)))
+      .filter((range: number[]) => range.every((x: number) => !isNaN(x)))
+      .map((range: number[]) => {
         if (range.length === 1) {
           range.push(range[0]);
         }
@@ -1080,6 +1342,13 @@ class RunScripts extends OptionObject {
 }
 
 class Script extends XFAObject {
+
+  protected currentPage: null;
+
+  protected exclude: null;
+
+  protected runScripts: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "script", /* hasChildren = */ true);
     this.currentPage = null;
@@ -1107,6 +1376,11 @@ class Severity extends OptionObject {
 }
 
 class SilentPrint extends XFAObject {
+
+  protected addSilentPrint: null;
+
+  protected printerName: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "silentPrint", /* hasChildren = */ true);
     this.addSilentPrint = null;
@@ -1115,6 +1389,7 @@ class SilentPrint extends XFAObject {
 }
 
 class Staple extends XFAObject {
+  protected mode: string;
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "staple");
     this.mode = getStringOption(attributes.mode, [
@@ -1133,7 +1408,7 @@ class StartNode extends StringObject {
 
 class StartPage extends IntegerObject {
   constructor(_attributes: XFAAttributesObj) {
-    super(CONFIG_NS_ID, "startPage", 0, n => true);
+    super(CONFIG_NS_ID, "startPage", 0, _n => true);
   }
 }
 
@@ -1174,6 +1449,17 @@ class Tagged extends Option01 {
 }
 
 class Template extends XFAObject {
+
+  protected base: null;
+
+  protected relevant: null;
+
+  protected startPage: null;
+
+  protected uri: null;
+
+  protected xsl: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "template", /* hasChildren = */ true);
     this.base = null;
@@ -1209,17 +1495,23 @@ class To extends OptionObject {
 }
 
 class TemplateCache extends XFAObject {
+
+  protected maxEntries: number;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "templateCache");
-    this.maxEntries = getInteger({
-      data: attributes.maxEntries,
-      defaultValue: 5,
-      validate: n => n >= 0,
-    });
+    this.maxEntries = getInteger(
+      attributes.maxEntries,
+      5,
+      (n: number) => n >= 0
+    );
   }
 }
 
 class Trace extends XFAObject {
+
+  protected area: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "trace", /* hasChildren = */ true);
     this.area = new XFAObjectArray();
@@ -1227,6 +1519,21 @@ class Trace extends XFAObject {
 }
 
 class Transform extends XFAObject {
+
+  protected groupParent: null;
+
+  protected ifEmpty: null;
+
+  protected nameAttr: null;
+
+  protected picture: null;
+
+  protected presence: null;
+
+  protected rename: null;
+
+  protected whitespace: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "transform", /* hasChildren = */ true);
     this.groupParent = null;
@@ -1282,7 +1589,7 @@ class ValidateApprovalSignatures extends ContentObject {
     this.content = this.content
       .trim()
       .split(/\s+/)
-      .filter(x => ["docReady", "postSign"].includes(x));
+      .filter((x: string) => ["docReady", "postSign"].includes(x));
   }
 }
 
@@ -1330,6 +1637,25 @@ class VersionControl extends XFAObject {
 }
 
 class ViewerPreferences extends XFAObject {
+
+  protected ADBE_JSConsole: null;
+
+  protected ADBE_JSDebugger: null;
+
+  protected addViewerPreferences: null;
+
+  protected duplexOption: null;
+
+  protected enforce: null;
+
+  protected numberOfCopies: null;
+
+  protected pageRange: null;
+
+  protected pickTrayByPDFSize: null;
+
+  protected printScaling: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "viewerPreferences", /* hasChildren = */ true);
     this.ADBE_JSConsole = null;
@@ -1345,6 +1671,11 @@ class ViewerPreferences extends XFAObject {
 }
 
 class WebClient extends XFAObject {
+
+  protected fontInfo: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "webClient", /* hasChildren = */ true);
     this.name = attributes.name ? attributes.name.trim() : "";
@@ -1374,8 +1705,8 @@ class Window extends ContentObject {
     const pair = this.content
       .trim()
       .split(/\s*,\s*/, 2)
-      .map(x => parseInt(x, 10));
-    if (pair.some(x => isNaN(x))) {
+      .map((x: string) => parseInt(x, 10));
+    if (pair.some((x: number) => isNaN(x))) {
       this.content = [0, 0];
       return;
     }
@@ -1387,6 +1718,11 @@ class Window extends ContentObject {
 }
 
 class Xdc extends XFAObject {
+
+  protected uri: XFAObjectArray;
+
+  protected xsl: XFAObjectArray;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xdc", /* hasChildren = */ true);
     this.uri = new XFAObjectArray();
@@ -1395,6 +1731,9 @@ class Xdc extends XFAObject {
 }
 
 class Xdp extends XFAObject {
+
+  protected packets: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xdp", /* hasChildren = */ true);
     this.packets = null;
@@ -1402,6 +1741,11 @@ class Xdp extends XFAObject {
 }
 
 class Xsl extends XFAObject {
+
+  protected debug: null;
+
+  protected uri: null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xsl", /* hasChildren = */ true);
     this.debug = null;
@@ -1410,6 +1754,15 @@ class Xsl extends XFAObject {
 }
 
 class Zpl extends XFAObject {
+
+  protected batchOutput: null;
+
+  protected flipLabel: null;
+
+  protected fontInfo: null;
+
+  protected xdc: null;
+
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "zpl", /* hasChildren = */ true);
     this.name = attributes.name ? attributes.name.trim() : "";

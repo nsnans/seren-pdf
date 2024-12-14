@@ -620,7 +620,8 @@ class AlternateCS extends ColorSpace {
   // 最后一个参数不知道是做什么用的
   protected tintFn: (src: TypedArray, srcOffset: number, tmpBuf: Float32Array, _unknow: number) => void;
 
-  constructor(numComps: number, base: ColorSpace, tintFn) {
+  constructor(numComps: number, base: ColorSpace
+    , tintFn: (src: TypedArray, srcOffset: number, tmpBuf: Float32Array, _unknow: number) => void) {
     super("Alternate", numComps);
     this.base = base;
     this.tintFn = tintFn;

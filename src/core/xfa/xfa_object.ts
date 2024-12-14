@@ -68,6 +68,12 @@ export const EmptyXFAAttributesObj: XFAAttributesObj = {
 } as XFAAttributesObj;
 
 class XFAObject {
+  cleanPage() {
+    throw new Error("Method not implemented.");
+  }
+  getNextPage() {
+    throw new Error("Method not implemented.");
+  }
 
   protected namespaceId: number;
 
@@ -77,7 +83,7 @@ class XFAObject {
 
   protected _children: XFAObject[];
 
-  protected uid: string;
+  public uid: string;
 
   public globalData;
 
@@ -87,7 +93,7 @@ class XFAObject {
 
   public cleanup;
 
-  protected name;
+  protected name: string;
 
   protected extra;
 
@@ -98,6 +104,11 @@ class XFAObject {
   protected id: string = "";
 
   protected _setAttributes: Set<string> = new Set();
+  thickness: any;
+  radius: number;
+  value: any;
+  oddOrEven: string;
+  pagePosition: string;
 
   constructor(nsId: number, name: string, hasChildren = false) {
     this.namespaceId = nsId;
@@ -1081,20 +1092,20 @@ class IntegerObject extends ContentObject {
 
   protected _defaultValue: number | null;
 
-  protected _validator: ((n: number) => boolean) | null;
+  protected _validator: ((n: number) => boolean);
 
-  constructor(nsId: number, name: string, defaultValue: number, validator: (n: number) => boolean) {
+  constructor(nsId: number, name: string, defaultValue: number | null, validator: (n: number) => boolean) {
     super(nsId, name);
     this._defaultValue = defaultValue;
     this._validator = validator;
   }
 
   finalize() {
-    this.content = getInteger({
-      data: this.content,
-      defaultValue: this._defaultValue,
-      validate: this._validator,
-    });
+    this.content = getInteger(
+      this.content,
+      this._defaultValue!,
+      this._validator,
+    );
   }
 
   clean(builder) {
