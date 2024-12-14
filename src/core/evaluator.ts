@@ -1675,7 +1675,7 @@ class PartialEvaluator {
 
   handleColorN(
     operatorList: OperatorList,
-    fn: OPS,
+    fn: OPS, // 值应当是OPS.setFillColorN | OPS.setFillColorN,
     args: any[],
     cs: ColorSpace,
     patterns: Dict,

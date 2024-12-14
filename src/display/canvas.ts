@@ -49,6 +49,7 @@ import { FilterFactory } from "./filter_factory";
 import { PlatformHelper } from "../platform/platform_helper";
 import { FontFaceObject } from "./font_loader";
 import { Glyph } from "../core/fonts";
+import { TilingPatternIR } from "../core/pattern";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -199,7 +200,7 @@ function mirrorContextOperations(ctx: DecoratedCanvasRenderingContext2D, destCtx
   };
 }
 
-class CachedCanvases {
+export class CachedCanvases {
 
   protected canvasFactory: CanvasFactory;
 
@@ -622,7 +623,7 @@ class CanvasExtraState {
     this.updateRectMinMax(transform, box);
   }
 
-  getPathBoundingBox(pathType = PathType.FILL, transform = null) {
+  getPathBoundingBox(pathType = PathType.FILL, transform: TransformType | null = null) {
     const box = [this.minX!, this.minY!, this.maxX!, this.maxY!];
     if (pathType === PathType.STROKE) {
       if (!transform) {
@@ -658,7 +659,7 @@ class CanvasExtraState {
     this.maxY = 0;
   }
 
-  getClippedPathBoundingBox(pathType = PathType.FILL, transform = null) {
+  getClippedPathBoundingBox(pathType = PathType.FILL, transform: TransformType | null = null) {
     return Util.intersect(
       this.clipBox!,
       this.getPathBoundingBox(pathType, transform)
@@ -898,11 +899,15 @@ const LINE_JOIN_STYLES: CanvasLineJoin[] = ["miter", "round", "bevel"];
 const NORMAL_CLIP = {};
 const EO_CLIP = {};
 
+export interface CanvasGraphicsFactory {
+  createCanvasGraphics(ctx: CanvasRenderingContext2D): CanvasGraphics;
+}
+
 class CanvasGraphics {
 
-  protected ctx: CanvasRenderingContext2D;
+  public ctx: CanvasRenderingContext2D;
 
-  protected current: CanvasExtraState;
+  public current: CanvasExtraState;
 
   protected pendingEOFill: boolean;
 
@@ -914,11 +919,11 @@ class CanvasGraphics {
 
   protected filterFactory: FilterFactory;
 
-  protected groupLevel: number;
+  public groupLevel: number;
 
   protected smaskCounter: number;
 
-  protected cachedCanvases: CachedCanvases;
+  public cachedCanvases: CachedCanvases;
 
   protected annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
 
@@ -936,9 +941,9 @@ class CanvasGraphics {
 
   protected stateStack: CanvasExtraState[];
 
-  protected baseTransformStack: ([number, number, number, number, number, number] | null)[];
+  protected baseTransformStack: (TransformType | null)[];
 
-  protected baseTransform: [number, number, number, number, number, number] | null;
+  public baseTransform: TransformType | null;
 
   protected cachedPatterns: Map<string, BaseShadingPattern>;
 
@@ -2495,12 +2500,12 @@ class CanvasGraphics {
   }
 
   // Color
-  getColorN_Pattern(IR): TilingPattern | BaseShadingPattern {
+  getColorN_Pattern(IR: TilingPatternIR): TilingPattern | BaseShadingPattern {
     let pattern;
     if (IR[0] === "TilingPattern") {
-      const color = IR[1];
+      const color = IR[1]!;
       const baseTransform = this.baseTransform || getCurrentTransform(this.ctx);
-      const canvasGraphicsFactory = {
+      const canvasGraphicsFactory: CanvasGraphicsFactory = {
         createCanvasGraphics: (ctx: CanvasRenderingContext2D) =>
           new CanvasGraphics(
             ctx,

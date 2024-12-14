@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+import { OperatorListIR } from "../core/operator_list";
+import { FigureType, TilingPatternIR } from "../core/pattern";
 import { PlatformHelper } from "../platform/platform_helper";
 import { FormatError, info, unreachable, Util } from "../shared/util";
-import { getCurrentTransform } from "./display_utils";
+import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
+import { getCurrentTransform, PointType, RectType, TransformType } from "./display_utils";
 
 const PathType = {
   FILL: "Fill",
@@ -23,7 +26,7 @@ const PathType = {
   SHADING: "Shading",
 };
 
-function applyBoundingBox(ctx, bbox) {
+function applyBoundingBox(ctx: CanvasRenderingContext2D, bbox: RectType | null) {
   if (!bbox) {
     return;
   }
@@ -41,13 +44,34 @@ export class BaseShadingPattern {
     }
   }
 
-  getPattern() {
+  getPattern(_ctx: CanvasRenderingContext2D, _owner: CanvasGraphics,
+    _inverse: TransformType, _pathType: string): CanvasGradient | CanvasPattern | string {
     unreachable("Abstract method `getPattern` called.");
   }
 }
 
+export type RadialAxialIR = [string, string, RectType | null, [number, string][],
+  number[], number[], number | null, number | null]
+
 class RadialAxialShadingPattern extends BaseShadingPattern {
-  constructor(IR) {
+
+  protected _type: string;
+
+  protected _bbox: RectType | null;
+
+  protected _colorStops: [number, string][];
+
+  protected _p0: number[];
+
+  protected _p1: number[];
+
+  protected _r0: number | null;
+
+  protected _r1: number | null;
+
+  protected matrix: TransformType | null;
+
+  constructor(IR: RadialAxialIR) {
     super();
     this._type = IR[1];
     this._bbox = IR[2];
@@ -59,7 +83,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     this.matrix = null;
   }
 
-  _createGradient(ctx) {
+  _createGradient(ctx: CanvasRenderingContext2D): CanvasGradient {
     let grad;
     if (this._type === "axial") {
       grad = ctx.createLinearGradient(
@@ -67,26 +91,29 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
         this._p0[1],
         this._p1[0],
         this._p1[1]
-      );
+      )!;
     } else if (this._type === "radial") {
       grad = ctx.createRadialGradient(
         this._p0[0],
         this._p0[1],
-        this._r0,
+        this._r0!,
         this._p1[0],
         this._p1[1],
-        this._r1
-      );
+        this._r1!
+      )!;
     }
 
     for (const colorStop of this._colorStops) {
-      grad.addColorStop(colorStop[0], colorStop[1]);
+      grad!.addColorStop(colorStop[0], colorStop[1]);
     }
-    return grad;
+    return grad!;
   }
 
-  getPattern(ctx, owner, inverse, pathType) {
-    let pattern;
+  getPattern(ctx: CanvasRenderingContext2D
+    , owner: CanvasGraphics
+    , inverse: TransformType
+    , pathType: string) {
+    let pattern: CanvasGradient | CanvasPattern;
     if (pathType === PathType.STROKE || pathType === PathType.FILL) {
       const ownerBBox = owner.current.getClippedPathBoundingBox(
         pathType,
@@ -121,7 +148,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
         ownerBBox[1],
       ]);
 
-      tmpCtx.transform(...owner.baseTransform);
+      tmpCtx.transform(...owner.baseTransform!);
       if (this.matrix) {
         tmpCtx.transform(...this.matrix);
       }
@@ -130,7 +157,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       tmpCtx.fillStyle = this._createGradient(tmpCtx);
       tmpCtx.fill();
 
-      pattern = ctx.createPattern(tmpCanvas.canvas, "no-repeat");
+      pattern = ctx.createPattern(tmpCanvas.canvas, "no-repeat")!;
       const domMatrix = new DOMMatrix(inverse);
       pattern.setTransform(domMatrix);
     } else {
@@ -144,11 +171,12 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
   }
 }
 
-function drawTriangle(data, context, p1: number, p2: number, p3: number
+function drawTriangle(data: ImageData, context: DrawFigureContext, p1: number, p2: number, p3: number
   , c1: number, c2: number, c3: number) {
   // Very basic Gouraud-shaded triangle rasterization algorithm.
-  const coords = context.coords,
-    colors = context.colors;
+  const coords = context.coords;
+  // 不得已而为之，因为colors的类型五花八门，也不知道具体值会是什么类型
+  const colors = context.colors as unknown as number[];
   const bytes = data.data,
     rowSize = data.width * 4;
   let tmp;
@@ -176,12 +204,12 @@ function drawTriangle(data, context, p1: number, p2: number, p3: number
     c1 = c2;
     c2 = tmp;
   }
-  const x1 = (coords[p1] + context.offsetX) * context.scaleX;
-  const y1 = (coords[p1 + 1] + context.offsetY) * context.scaleY;
-  const x2 = (coords[p2] + context.offsetX) * context.scaleX;
-  const y2 = (coords[p2 + 1] + context.offsetY) * context.scaleY;
-  const x3 = (coords[p3] + context.offsetX) * context.scaleX;
-  const y3 = (coords[p3 + 1] + context.offsetY) * context.scaleY;
+  const x1 = (<number>coords[p1] + context.offsetX) * context.scaleX;
+  const y1 = (<number>coords[p1 + 1] + context.offsetY) * context.scaleY;
+  const x2 = (<number>coords[p2] + context.offsetX) * context.scaleX;
+  const y2 = (<number>coords[p2 + 1] + context.offsetY) * context.scaleY;
+  const x3 = (<number>coords[p3] + context.offsetX) * context.scaleX;
+  const y3 = (<number>coords[p3 + 1] + context.offsetY) * context.scaleY;
   if (y1 >= y3) {
     return;
   }
@@ -251,13 +279,22 @@ function drawTriangle(data, context, p1: number, p2: number, p3: number
   }
 }
 
-function drawFigure(data, figure, context) {
+export interface DrawFigureContext {
+  coords: Float32Array | PointType[];
+  colors: Uint8Array | [number, number, number][] | (Uint8ClampedArray | Uint8Array)[];
+  offsetX: number;
+  offsetY: number;
+  scaleX: number;
+  scaleY: number;
+}
+
+function drawFigure(data: ImageData, figure: FigureType, context: DrawFigureContext) {
   const ps = figure.coords;
   const cs = figure.colors;
   let i, ii;
   switch (figure.type) {
     case "lattice":
-      const verticesPerRow = figure.verticesPerRow;
+      const verticesPerRow = figure.verticesPerRow!;
       const rows = Math.floor(ps.length / verticesPerRow) - 1;
       const cols = verticesPerRow - 1;
       for (i = 0; i < rows; i++) {
@@ -305,19 +342,42 @@ function drawFigure(data, figure, context) {
   }
 }
 
+export type MeshShadingPatternIR = [string, number, PointType[] | Float32Array,
+  [number, number, number][] | Uint8Array | (Uint8ClampedArray | Uint8Array)[],
+  FigureType[], RectType, RectType | null, Uint8ClampedArray | null, null]
+
 class MeshShadingPattern extends BaseShadingPattern {
-  constructor(IR) {
+
+  protected _coords: Float32Array | PointType[];
+
+  protected _colors: Uint8Array | [number, number, number][] | (Uint8Array | Uint8ClampedArray)[];
+
+  protected _figures: FigureType[];
+
+  protected _bounds: RectType;
+
+  protected _bbox: RectType | null;
+
+  protected _background: Uint8ClampedArray | null;
+
+  protected matrix: TransformType | null;
+
+  constructor(IR: MeshShadingPatternIR) {
     super();
     this._coords = IR[2];
     this._colors = IR[3];
     this._figures = IR[4];
     this._bounds = IR[5];
-    this._bbox = IR[7];
+
+    // 这里到底是7，8还是6,7，可能是有bug，但是我也不好瞎改
+    this._bbox = IR[7] as unknown as RectType;
     this._background = IR[8];
     this.matrix = null;
   }
 
-  _createMeshCanvas(combinedScale, backgroundColor, cachedCanvases) {
+  _createMeshCanvas(combinedScale: number[]
+    , backgroundColor: Uint8ClampedArray | null
+    , cachedCanvases: CachedCanvases) {
     // we will increase scale on some weird factor to let antialiasing take
     // care of "rough" edges
     const EXPECTED_SCALE = 1.1;
@@ -343,7 +403,7 @@ class MeshShadingPattern extends BaseShadingPattern {
     const scaleX = boundsWidth / width;
     const scaleY = boundsHeight / height;
 
-    const context = {
+    const context: DrawFigureContext = {
       coords: this._coords,
       colors: this._colors,
       offsetX: -offsetX,
@@ -387,14 +447,15 @@ class MeshShadingPattern extends BaseShadingPattern {
     };
   }
 
-  getPattern(ctx, owner, inverse, pathType) {
+  getPattern(ctx: CanvasRenderingContext2D, owner: CanvasGraphics
+    , _inverse: TransformType, pathType: string): CanvasPattern {
     applyBoundingBox(ctx, this._bbox);
     let scale;
     if (pathType === PathType.SHADING) {
       scale = Util.singularValueDecompose2dScale(getCurrentTransform(ctx));
     } else {
       // Obtain scale from matrix and current transformation matrix.
-      scale = Util.singularValueDecompose2dScale(owner.baseTransform);
+      scale = Util.singularValueDecompose2dScale(owner.baseTransform!);
       if (this.matrix) {
         const matrixScale = Util.singularValueDecompose2dScale(this.matrix);
         scale = [scale[0] * matrixScale[0], scale[1] * matrixScale[1]];
@@ -410,7 +471,7 @@ class MeshShadingPattern extends BaseShadingPattern {
     );
 
     if (pathType !== PathType.SHADING) {
-      ctx.setTransform(...owner.baseTransform);
+      ctx.setTransform(...owner.baseTransform!);
       if (this.matrix) {
         ctx.transform(...this.matrix);
       }
@@ -422,22 +483,26 @@ class MeshShadingPattern extends BaseShadingPattern {
     );
     ctx.scale(temporaryPatternCanvas.scaleX, temporaryPatternCanvas.scaleY);
 
-    return ctx.createPattern(temporaryPatternCanvas.canvas, "no-repeat");
+    return ctx.createPattern(temporaryPatternCanvas.canvas, "no-repeat")!;
   }
 }
 
 class DummyShadingPattern extends BaseShadingPattern {
-  getPattern() {
+  getPattern(
+    _ctx: CanvasRenderingContext2D,
+    _owner: CanvasGraphics,
+    _inverse: TransformType,
+    _pathType: string) {
     return "hotpink";
   }
 }
 
-function getShadingPattern(IR): BaseShadingPattern {
+function getShadingPattern(IR: RadialAxialIR | MeshShadingPatternIR | ["Dummy"]): BaseShadingPattern {
   switch (IR[0]) {
     case "RadialAxial":
-      return new RadialAxialShadingPattern(IR);
+      return new RadialAxialShadingPattern(<RadialAxialIR>IR);
     case "Mesh":
-      return new MeshShadingPattern(IR);
+      return new MeshShadingPattern(<MeshShadingPatternIR>IR);
     case "Dummy":
       return new DummyShadingPattern();
   }
@@ -453,7 +518,32 @@ class TilingPattern {
   // 10in @ 300dpi shall be enough.
   static MAX_PATTERN_SIZE = 3000;
 
-  constructor(IR, color, ctx, canvasGraphicsFactory, baseTransform) {
+  protected canvasGraphicsFactory: CanvasGraphicsFactory;
+
+  protected baseTransform: TransformType;
+
+  protected ctx: CanvasRenderingContext2D;
+
+  protected xstep: number;
+
+  protected ystep: number;
+
+  protected operatorList: OperatorListIR;
+
+  protected matrix: TransformType;
+
+  protected bbox: RectType;
+
+  protected paintType: number;
+
+  protected tilingType: number;
+
+  protected color: Uint8ClampedArray;
+
+  constructor(IR: TilingPatternIR, color: Uint8ClampedArray
+    , ctx: CanvasRenderingContext2D
+    , canvasGraphicsFactory: CanvasGraphicsFactory
+    , baseTransform: TransformType) {
     this.operatorList = IR[2];
     this.matrix = IR[3];
     this.bbox = IR[4];
@@ -467,7 +557,7 @@ class TilingPattern {
     this.baseTransform = baseTransform;
   }
 
-  createPatternCanvas(owner) {
+  createPatternCanvas(owner: CanvasGraphics) {
     const {
       bbox,
       operatorList,
@@ -650,7 +740,7 @@ class TilingPattern {
     };
   }
 
-  getSizeAndScale(step, realOutputSize, scale) {
+  getSizeAndScale(step: number, realOutputSize: number, scale: number) {
     // MAX_PATTERN_SIZE is used to avoid OOM situation.
     // Use the destination canvas's size if it is bigger than the hard-coded
     // limit of MAX_PATTERN_SIZE to avoid clipping patterns that cover the
@@ -665,7 +755,7 @@ class TilingPattern {
     return { scale, size };
   }
 
-  clipBbox(graphics, x0, y0, x1, y1) {
+  clipBbox(graphics: CanvasGraphics, x0: number, y0: number, x1: number, y1: number) {
     const bboxWidth = x1 - x0;
     const bboxHeight = y1 - y0;
     graphics.ctx.rect(x0, y0, bboxWidth, bboxHeight);
@@ -679,7 +769,9 @@ class TilingPattern {
     graphics.endPath();
   }
 
-  setFillAndStrokeStyleToContext(graphics, paintType, color) {
+  setFillAndStrokeStyleToContext(graphics: CanvasGraphics
+    , paintType: number
+    , color: Uint8ClampedArray) {
     const context = graphics.ctx,
       current = graphics.current;
     switch (paintType) {
@@ -703,11 +795,11 @@ class TilingPattern {
     }
   }
 
-  getPattern(ctx, owner, inverse, pathType) {
+  getPattern(ctx: CanvasRenderingContext2D, owner: CanvasGraphics, inverse: TransformType, pathType: string) {
     // PDF spec 8.7.2 NOTE 1: pattern's matrix is relative to initial matrix.
     let matrix = inverse;
     if (pathType !== PathType.SHADING) {
-      matrix = Util.transform(matrix, owner.baseTransform);
+      matrix = Util.transform(matrix, owner.baseTransform!);
       if (this.matrix) {
         matrix = Util.transform(matrix, this.matrix);
       }
@@ -727,7 +819,7 @@ class TilingPattern {
       1 / temporaryPatternCanvas.scaleY
     );
 
-    const pattern = ctx.createPattern(temporaryPatternCanvas.canvas, "repeat");
+    const pattern = ctx.createPattern(temporaryPatternCanvas.canvas, "repeat")!;
     pattern.setTransform(domMatrix);
 
     return pattern;

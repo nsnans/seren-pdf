@@ -26,7 +26,7 @@ class MetadataParser {
     data = this._repair(data);
 
     // Convert the string to an XML document.
-    const parser = new SimpleXMLParser({ lowerCaseName: true });
+    const parser = new SimpleXMLParser(false, true);
     const xmlDocument = parser.parseFromString(data);
 
     this._data = data;

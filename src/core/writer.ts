@@ -194,7 +194,7 @@ function computeMD5(filesize: number, xrefInfo) {
 }
 
 function writeXFADataForAcroform(str: string, newRefs) {
-  const xml = new SimpleXMLParser({ hasAttributes: true }).parseFromString(str)!;
+  const xml = new SimpleXMLParser(true).parseFromString(str)!;
 
   // 这里似乎有点问题，好像属性对不上了，可能漏了几个属性？
   for (const { xfa } of newRefs) {

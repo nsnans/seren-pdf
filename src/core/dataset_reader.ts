@@ -15,7 +15,7 @@
 
 import { stringToUTF8String, warn } from "../shared/util";
 import { parseXFAPath } from "./core_utils";
-import { SimpleXMLParser } from "./xml_parser";
+import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
 
 function decodeString(str: string) {
   try {
@@ -27,8 +27,11 @@ function decodeString(str: string) {
 }
 
 class DatasetXMLParser extends SimpleXMLParser {
-  constructor(options) {
-    super(options);
+
+  public node: SimpleDOMNode | null;
+
+  constructor(hasAttribute: boolean) {
+    super(hasAttribute);
     this.node = null;
   }
 
@@ -45,13 +48,16 @@ class DatasetXMLParser extends SimpleXMLParser {
 }
 
 class DatasetReader {
-  constructor(data) {
+
+  protected node: SimpleDOMNode | null;
+
+  constructor(data: { [x: string]: string; }) {
     if (data.datasets) {
-      this.node = new SimpleXMLParser({ hasAttributes: true }).parseFromString(
+      this.node = new SimpleXMLParser(true).parseFromString(
         data.datasets
-      ).documentElement;
+      )!.documentElement;
     } else {
-      const parser = new DatasetXMLParser({ hasAttributes: true });
+      const parser = new DatasetXMLParser(true);
       try {
         parser.parseFromString(data["xdp:xdp"]);
       } catch { }
@@ -59,7 +65,7 @@ class DatasetReader {
     }
   }
 
-  getValue(path) {
+  getValue(path: string) {
     if (!this.node || !path) {
       return "";
     }

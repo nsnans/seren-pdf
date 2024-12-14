@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+import { PointType, RectType, TransformType } from "../display/display_utils";
+import { MeshShadingPatternIR } from "../display/pattern_helper";
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   FormatError,
@@ -22,6 +25,8 @@ import {
   Util,
   warn,
 } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { ColorSpace } from "./colorspace";
 import {
   isBooleanArray,
   isNumberArray,
@@ -29,15 +34,11 @@ import {
   lookupNormalRect,
   MissingDataException,
 } from "./core_utils";
-import { BaseStream } from "./base_stream";
-import { ColorSpace } from "./colorspace";
-import { XRef } from "./xref";
 import { ParserConstructFunction, PDFFunctionFactory } from "./function";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Dict, DictKey } from "./primitives";
-import { PointType, RectType, TransformType } from "../display/display_utils";
-import { LocalColorSpaceCache, LocalImageCache } from "./image_utils";
+import { LocalColorSpaceCache } from "./image_utils";
 import { OperatorListIR } from "./operator_list";
+import { Dict, DictKey } from "./primitives";
+import { XRef } from "./xref";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -494,7 +495,7 @@ function clearPatternCaches() {
   bCache = new Map();
 }
 
-type FigureType = {
+export type FigureType = {
   type: string;
   coords: Int32Array;
   colors: Int32Array;
@@ -524,7 +525,8 @@ class MeshShading extends BaseShading {
   public colors: [number, number, number][] | (Uint8ClampedArray | Uint8Array)[] | Uint8Array;
 
   public figures: FigureType[];
-  bounds: any;
+
+  public bounds: RectType | null = null;
 
   constructor(
     stream: BaseStream,
@@ -907,7 +909,7 @@ class MeshShading extends BaseShading {
     );
     let splitXBy = Math.ceil(
       ((figureMaxX - figureMinX) * MeshShading.TRIANGLE_DENSITY) /
-      (this.bounds[2] - this.bounds[0])
+      (this.bounds![2] - this.bounds![0])
     );
     splitXBy = Math.max(
       MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT,
@@ -915,7 +917,7 @@ class MeshShading extends BaseShading {
     );
     let splitYBy = Math.ceil(
       ((figureMaxY - figureMinY) * MeshShading.TRIANGLE_DENSITY) /
-      (this.bounds[3] - this.bounds[1])
+      (this.bounds![3] - this.bounds![1])
     );
     splitYBy = Math.max(
       MeshShading.MIN_SPLIT_PATCH_CHUNKS_AMOUNT,
@@ -1040,14 +1042,15 @@ class MeshShading extends BaseShading {
     }
   }
 
-  getIR() {
-    const { bounds } = this;
+  getIR(): MeshShadingPatternIR {
+    const bounds = this.bounds!;
     // Ensure that the shading has non-zero width and height, to prevent errors
     // in `pattern_helper.js` (fixes issue17848.pdf).
     if (bounds[2] - bounds[0] === 0 || bounds[3] - bounds[1] === 0) {
       throw new FormatError(`Invalid MeshShading bounds: [${bounds}].`);
     }
-
+    // [string, number, PointType[] | Float32Array, [number, number, number][] | Uint8Array | (Uint8ClampedArray | Uint8Array)[],
+    // FigureType[],RectType,Uint8ClampedArray | null]
     return [
       "Mesh",
       this.shadingType,
@@ -1057,6 +1060,7 @@ class MeshShading extends BaseShading {
       bounds,
       this.bbox,
       this.background,
+      null, // 返回值有8个，使用的时候却用了9个，最后一个补null，这或许会出问题？
     ];
   }
 }

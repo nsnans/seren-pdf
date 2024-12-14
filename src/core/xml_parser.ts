@@ -462,7 +462,7 @@ class SimpleXMLParser extends XMLParserBase {
 
   protected _lowerCaseName: boolean;
 
-  constructor({ hasAttributes = false, lowerCaseName = false }) {
+  constructor(hasAttributes = false, lowerCaseName = false) {
     super();
     this._currentFragment = null;
     this._stack = null;
