@@ -6097,7 +6097,7 @@ class Subform extends XFAObject {
         const node = new BreakAfter({
           targetType: this.break.after,
           target: this.break.afterTarget,
-          startNew: this.break.startNew.toString(), 1
+          startNew: this.break.startNew.toString(),
         });
         node.globalData = this.globalData;
         this.appendChild(node);
