@@ -91,7 +91,7 @@ class ImageManager {
 
   #id = 0;
 
-  #cache = null;
+  #cache: Map<any, any> | null = null;
 
   static get _isSVGFittingCanvas() {
     // By default, Firefox doesn't rescale without preserving the aspect ratio
