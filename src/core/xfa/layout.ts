@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { AvailableSpace, RectType } from "../../display/display_utils";
 import { measureToString } from "./html_utils";
 
 // Subform and ExclGroup have a layout so they share these functions.
@@ -84,7 +85,7 @@ function flushHTML(node) {
   return html;
 }
 
-function addHTML(node, html, bbox) {
+function addHTML(node, html, bbox: RectType) {
   const extra = node.extra;
   const availableSpace = extra.availableSpace;
 
@@ -254,7 +255,7 @@ function getTransformedBBox(node) {
  * else the layout will go to its next step (changing of line
  * in case of lr-tb or changing content area...).
  */
-function checkDimensions(node, space) {
+function checkDimensions(node, space: AvailableSpace) {
   if (node.getTemplateRoot().extra.firstUnsplittable === null) {
     return true;
   }

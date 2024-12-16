@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+import { AvailableSpace, RectType } from "../../display/display_utils";
 import { createValidAbsoluteUrl, warn } from "../../shared/util";
 import { selectFont } from "./fonts";
+import { Namespace } from "./namespace";
 import { TextMeasure } from "./text";
 import { getMeasurement, stripQuotes } from "./utils";
 import { XFAObject } from "./xfa_object";
@@ -190,7 +192,7 @@ function layoutText(text, xfaFont, margin, lineHeight, fontFinder, width) {
   return measure.compute(width);
 }
 
-function layoutNode(node, availableSpace) {
+function layoutNode(node, availableSpace: AvailableSpace) {
   let height = null;
   let width = null;
   let isBroken = false;
@@ -273,8 +275,8 @@ function layoutNode(node, availableSpace) {
   return { w: width, h: height, isBroken };
 }
 
-function computeBbox(node, html, availableSpace) {
-  let bbox;
+function computeBbox(node, html, availableSpace: AvailableSpace): RectType | null {
+  let bbox: RectType | null;
   if (node.w !== "" && node.h !== "") {
     bbox = [node.x, node.y, node.w, node.h];
   } else {
@@ -362,7 +364,7 @@ function layoutClass(node) {
   }
 }
 
-function toStyle(node, ...names) {
+function toStyle(node, ...names: string[]) {
   const style = Object.create(null);
   for (const name of names) {
     const value = node[name];

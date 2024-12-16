@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { RectType } from "../../display/display_utils";
 import { shadow } from "../../shared/util";
 
 const dimConverters = {
@@ -149,6 +150,12 @@ function getRelevant(data: string): { excluded: boolean; viewname: string; }[] {
     }));
 }
 
+export type ColorRGB = {
+  r: number,
+  g: number,
+  b: number
+}
+
 function getColor(data: string, def = [0, 0, 0]) {
   let [r, g, b] = def;
   if (!data) {
@@ -211,7 +218,7 @@ class HTMLResult {
     return new HTMLResult(false, null, null, node);
   }
 
-  static success(html, bbox = null) {
+  static success(html, bbox: RectType | null = null) {
     return new HTMLResult(true, html, bbox, null);
   }
 }

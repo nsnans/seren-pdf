@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { AvailableSpace, RectType } from "../../display/display_utils";
 import { shadow, utf8StringToString, warn } from "../../shared/util";
 import { encodeToXmlString } from "../core_utils";
 import { Namespace } from "./namespace";
@@ -68,12 +69,6 @@ export const EmptyXFAAttributesObj: XFAAttributesObj = {
 } as XFAAttributesObj;
 
 class XFAObject {
-  cleanPage() {
-    throw new Error("Method not implemented.");
-  }
-  getNextPage() {
-    throw new Error("Method not implemented.");
-  }
 
   protected namespaceId: number;
 
@@ -95,7 +90,7 @@ class XFAObject {
 
   protected name: string;
 
-  protected extra;
+  public extra;
 
   protected use: string = "";
 
@@ -127,6 +122,14 @@ class XFAObject {
 
   get isXFAObjectArray() {
     return false;
+  }
+
+  cleanPage() {
+    throw new Error("Method not implemented.");
+  }
+
+  getNextPage() {
+    throw new Error("Method not implemented.");
   }
 
   createNodes(path: { name: string, index: number }[]): XFAObject | null {
@@ -371,11 +374,11 @@ class XFAObject {
     return dumped;
   }
 
-  toStyle() {
+  toStyle() : string | null {
     return null;
   }
 
-  toHTML() {
+  toHTML(_availableSpace: AvailableSpace | null = null): HTMLResult | null {
     return HTMLResult.EMPTY;
   }
 
@@ -403,15 +406,15 @@ class XFAObject {
     return null;
   }
 
-  addHTML(html, bbox) {
+  addHTML(html, _bbox: RectType) {
     this.extra.children.push(html);
   }
 
-  getAvailableSpace(): Namespace | null {
+  getAvailableSpace(): AvailableSpace | null {
     return null;
   }
 
-  childrenToHTML({ filter = null, include = true }) {
+  childrenToHTML(filter: Set<string> | null = null, include: boolean = true) {
     if (!this.extra.generator) {
       this.extra.generator = this._filteredChildrenGenerator(
         filter,
@@ -920,7 +923,7 @@ class XmlObject extends XFAObject {
     }
   }
 
-  toHTML() {
+  toHTML(_availableSpace: Namespace | null = null) {
     if (this.nodeName === "#text") {
       return HTMLResult.success({
         name: "#text",

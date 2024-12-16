@@ -14,6 +14,7 @@
  */
 
 import { warn } from "../../shared/util";
+import { XFAObject } from "./xfa_object";
 
 const namePattern = /^[^.[]+/;
 const indexPattern = /^[^\]]+/;
@@ -26,23 +27,23 @@ const operators = {
 };
 
 const shortcuts = new Map([
-  ["$data", (root, current) => (root.datasets ? root.datasets.data : root)],
+  ["$data", (root, _current: XFAObject) => (root.datasets ? root.datasets.data : root)],
   [
     "$record",
-    (root, current) =>
+    (root, _current: XFAObject) =>
       (root.datasets ? root.datasets.data : root).getChildren()[0],
   ],
-  ["$template", (root, current) => root.template],
-  ["$connectionSet", (root, current) => root.connectionSet],
-  ["$form", (root, current) => root.form],
-  ["$layout", (root, current) => root.layout],
-  ["$host", (root, current) => root.host],
-  ["$dataWindow", (root, current) => root.dataWindow],
-  ["$event", (root, current) => root.event],
-  ["!", (root, current) => root.datasets],
-  ["$xfa", (root, current) => root],
-  ["xfa", (root, current) => root],
-  ["$", (root, current) => current],
+  ["$template", (root, _current: XFAObject) => root.template],
+  ["$connectionSet", (root, _current: XFAObject) => root.connectionSet],
+  ["$form", (root, _current: XFAObject) => root.form],
+  ["$layout", (root, _current: XFAObject) => root.layout],
+  ["$host", (root, _current: XFAObject) => root.host],
+  ["$dataWindow", (root, _current: XFAObject) => root.dataWindow],
+  ["$event", (root, _current: XFAObject) => root.event],
+  ["!", (root, _current: XFAObject) => root.datasets],
+  ["$xfa", (root, _current: XFAObject) => root],
+  ["xfa", (root, _current: XFAObject) => root],
+  ["$", (root, current: XFAObject) => current],
 ]);
 
 const somCache = new WeakMap();
@@ -58,7 +59,7 @@ function parseIndex(index) {
 // For now expressions containing .[...] or .(...) are not
 // evaluated so don't parse them.
 // TODO: implement that stuff and the remove the noExpr param.
-function parseExpression(expr, dotDotAllowed, noExpr = true) {
+function parseExpression(expr: string, dotDotAllowed: boolean, noExpr = true) {
   let match = expr.match(namePattern);
   if (!match) {
     return null;
@@ -87,7 +88,7 @@ function parseExpression(expr, dotDotAllowed, noExpr = true) {
         warn("XFA - Invalid index in SOM expression");
         return null;
       }
-      parsed.at(-1).index = parseIndex(match[0]);
+      parsed.at(-1)!.index = parseIndex(match[0]);
       pos += match[0].length + 1;
       continue;
     }
@@ -155,7 +156,7 @@ function parseExpression(expr, dotDotAllowed, noExpr = true) {
 function searchNode(
   root,
   container,
-  expr,
+  expr: string,
   dotDotAllowed = true,
   useCache = true
 ) {

@@ -409,7 +409,7 @@ class Br extends XhtmlObject {
     measure.addString("\n");
   }
 
-  toHTML(availableSpace) {
+  toHTML(_availableSpace: Namespace | null = null) {
     return HTMLResult.success({
       name: "br",
     });
@@ -421,7 +421,7 @@ class Html extends XhtmlObject {
     super(attributes, "html");
   }
 
-  toHTML(availableSpace) {
+  toHTML(_availableSpace: Namespace | null) {
     const children = [];
     this.extra = {
       children,

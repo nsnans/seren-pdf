@@ -767,7 +767,8 @@ const hexNumbers = Array.from(Array(256).keys(), n =>
 );
 
 class Util {
-  static makeHexColor(r: number, g: number, b: number) {
+
+  static makeHexColor(r: number, g: number, b: number): string {
     return `#${hexNumbers[r]}${hexNumbers[g]}${hexNumbers[b]}`;
   }
 

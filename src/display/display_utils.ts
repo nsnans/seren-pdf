@@ -22,7 +22,7 @@ import {
   warn,
 } from "../shared/util";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
+export const SVG_NS = "http://www.w3.org/2000/svg";
 
 export type TransformType = [number, number, number, number, number, number];
 
@@ -30,7 +30,13 @@ export type RectType = [number, number, number, number];
 
 export type PointType = [number, number]
 
-class PixelsPerInch {
+export interface AvailableSpace {
+  width: number,
+  height: number
+}
+
+export class PixelsPerInch {
+
   static CSS = 96.0;
 
   static PDF = 72.0;
@@ -38,7 +44,7 @@ class PixelsPerInch {
   static PDF_TO_CSS_UNITS = this.CSS / this.PDF;
 }
 
-async function fetchData(url: string, type: XMLHttpRequestResponseType = "text") {
+export async function fetchData(url: string, type: XMLHttpRequestResponseType = "text") {
   if (PlatformHelper.isMozCental() || isValidFetchUrl(url, document.baseURI)) {
     const response = await fetch(url);
     if (!response.ok) {
@@ -136,7 +142,7 @@ export interface PageViewportCloneParameters {
 /**
  * PDF page viewport created based on scale, rotation and offset.
  */
-class PageViewport {
+export class PageViewport {
 
   protected viewBox: RectType;
 
@@ -322,7 +328,7 @@ class PageViewport {
   }
 }
 
-class RenderingCancelledException extends BaseException {
+export class RenderingCancelledException extends BaseException {
   extraDelay: number;
   constructor(msg: string, extraDelay = 0) {
     super(msg, "RenderingCancelledException");
@@ -330,7 +336,7 @@ class RenderingCancelledException extends BaseException {
   }
 }
 
-function isDataScheme(url: string) {
+export function isDataScheme(url: string) {
   const ii = url.length;
   let i = 0;
   while (i < ii && url[i].trim() === "") {
@@ -339,7 +345,7 @@ function isDataScheme(url: string) {
   return url.substring(i, i + 5).toLowerCase() === "data:";
 }
 
-function isPdfFile(filename: string | null) {
+export function isPdfFile(filename: string | null) {
   return typeof filename === "string" && /\.pdf$/i.test(filename);
 }
 
@@ -348,7 +354,7 @@ function isPdfFile(filename: string | null) {
  * @param {string} url
  * @returns {string}
  */
-function getFilenameFromUrl(url: string): string {
+export function getFilenameFromUrl(url: string): string {
   [url] = url.split(/[#?]/, 1);
   return url.substring(url.lastIndexOf("/") + 1);
 }
@@ -360,7 +366,7 @@ function getFilenameFromUrl(url: string): string {
  *   unknown, or the protocol is unsupported.
  * @returns {string} Guessed PDF filename.
  */
-function getPdfFilenameFromUrl(url: string, defaultFilename = "document.pdf"): string {
+export function getPdfFilenameFromUrl(url: string, defaultFilename = "document.pdf"): string {
   if (typeof url !== "string") {
     return defaultFilename;
   }
@@ -401,7 +407,7 @@ interface TimeStat {
   end: number;
 }
 
-class StatTimer {
+export class StatTimer {
 
   started: Record<string, any> = Object.create(null);
 
@@ -441,7 +447,7 @@ class StatTimer {
   }
 }
 
-function isValidFetchUrl(url: string, baseUrl?: string) {
+export function isValidFetchUrl(url: string, baseUrl?: string) {
   if (PlatformHelper.isMozCental()) {
     throw new Error("Not implemented: isValidFetchUrl");
   }
@@ -458,16 +464,16 @@ function isValidFetchUrl(url: string, baseUrl?: string) {
 /**
  * Event handler to suppress context menu.
  */
-function noContextMenu(e: MouseEvent) {
+export function noContextMenu(e: MouseEvent) {
   e.preventDefault();
 }
 
 // Deprecated API function -- display regardless of the `verbosity` setting.
-function deprecated(details?: string) {
+export function deprecated(details?: string) {
   console.log("Deprecated API usage: " + details);
 }
 
-class PDFDateString {
+export class PDFDateString {
 
   static #regex?: RegExp;
 
@@ -554,7 +560,7 @@ class PDFDateString {
 /**
  * NOTE: This is (mostly) intended to support printing of XFA forms.
  */
-function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
+export function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
   const { width, height } = xfaPage.attributes.style;
   const viewBox: RectType = [0, 0, parseInt(width), parseInt(height)];
 
@@ -568,7 +574,7 @@ function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
   });
 }
 
-function getRGB(color: string) {
+export function getRGB(color: string) {
   if (color.startsWith("#")) {
     const colorRGB = parseInt(color.slice(1), 16);
     return [
@@ -598,7 +604,7 @@ function getRGB(color: string) {
   return [0, 0, 0];
 }
 
-function getColorValues(colors) {
+export function getColorValues(colors) {
   const span = document.createElement("span");
   span.style.visibility = "hidden";
   document.body.append(span);
@@ -610,12 +616,12 @@ function getColorValues(colors) {
   span.remove();
 }
 
-function getCurrentTransform(ctx: CanvasRenderingContext2D): TransformType {
+export function getCurrentTransform(ctx: CanvasRenderingContext2D): TransformType {
   const { a, b, c, d, e, f } = ctx.getTransform();
   return [a, b, c, d, e, f];
 }
 
-function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): TransformType {
+export function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): TransformType {
   const { a, b, c, d, e, f } = ctx.getTransform().invertSelf();
   return [a, b, c, d, e, f];
 }
@@ -626,7 +632,7 @@ function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): TransformTyp
  * @param {boolean} mustFlip
  * @param {boolean} mustRotate
  */
-function setLayerDimensions(
+export function setLayerDimensions(
   div: HTMLDivElement,
   viewport: PageViewport,
   mustFlip = false,
@@ -663,7 +669,7 @@ function setLayerDimensions(
 /**
  * Scale factors for the canvas, necessary with HiDPI displays.
  */
-class OutputScale {
+export class OutputScale {
 
   public sx: number;
 
@@ -694,28 +700,3 @@ class OutputScale {
     return this.sx === this.sy;
   }
 }
-
-export {
-  deprecated,
-  fetchData,
-  getColorValues,
-  getCurrentTransform,
-  getCurrentTransformInverse,
-  getFilenameFromUrl,
-  getPdfFilenameFromUrl,
-  getRGB,
-  getXfaPageViewport,
-  isDataScheme,
-  isPdfFile,
-  isValidFetchUrl,
-  noContextMenu,
-  OutputScale,
-  PageViewport,
-  PDFDateString,
-  PixelsPerInch,
-  RenderingCancelledException,
-  setLayerDimensions,
-  StatTimer,
-  SVG_NS
-};
-
