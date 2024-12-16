@@ -57,7 +57,6 @@ import {
   tryGetInteger,
 } from "./utils";
 import {
-  AttributesObj,
   ContentObject,
   EmptyXFAAttributesObj,
   Option01,
@@ -65,7 +64,7 @@ import {
   StringObject,
   XFAAttributesObj,
   XFAObject,
-  XFAObjectArray,
+  XFAObjectArray
 } from "./xfa_object";
 
 const TEMPLATE_NS_ID = NamespaceIds.template.id;
@@ -154,7 +153,7 @@ function _setValue(templateNode: XFAObject, value) {
     templateNode.appendChild(nodeValue);
     templateNode.value = nodeValue;
   }
-  templateNode.value.setValue(value);
+  (<Value>templateNode.value).setValue(value);
 }
 
 function* getContainedChildren(node: Area | Subform | SubformSet) {
@@ -171,7 +170,7 @@ function isRequired(node: { validate?: Validate }) {
   return node.validate?.nullTest === "error";
 }
 
-function setTabIndex(node) {
+function setTabIndex(node: Draw | ExclGroup | Field | Subform) {
   while (node) {
     if (!node.traversal) {
       node.tabIndex = node.getParent().tabIndex;
@@ -207,7 +206,7 @@ function setTabIndex(node) {
   }
 }
 
-function applyAssist(obj, attributes) {
+function applyAssist(obj: Draw | ExclGroup | Field | Subform, attributes) {
   const assist = <Assist | null>obj.assist;
   if (assist) {
     const assistTitle = assist.toHTML();
@@ -253,7 +252,7 @@ function ariaLabel(obj: { assist?: Assist | null }) {
   return null;
 }
 
-function valueToHtml(value): HTMLResult {
+function valueToHtml(value: string): HTMLResult {
   return HTMLResult.success({
     name: "div",
     attributes: {
@@ -272,7 +271,7 @@ function valueToHtml(value): HTMLResult {
   });
 }
 
-function setFirstUnsplittable(node) {
+function setFirstUnsplittable(node: Draw | ExclGroup | Field | Subform) {
   const root = node.getTemplateRoot();
   if (root.extra.firstUnsplittable === null) {
     root.extra.firstUnsplittable = node;
@@ -280,7 +279,7 @@ function setFirstUnsplittable(node) {
   }
 }
 
-function unsetFirstUnsplittable(node) {
+function unsetFirstUnsplittable(node: Draw | ExclGroup | Field | Subform) {
   const root = node.getTemplateRoot();
   if (root.extra.firstUnsplittable === node) {
     root.extra.noLayoutFailure = false;
@@ -330,10 +329,10 @@ function handleBreak(node: BreakBefore | BreakAfter) {
     target = null;
   }
 
-  const pageArea = target && target.getParent();
+  const pageArea = <PageArea>(target && target.getParent());
 
   let index;
-  let nextPageArea = pageArea;
+  let nextPageArea: PageArea | null = pageArea;
   if (node.startNew) {
     // startNew === 1 so we must create a new container (pageArea or
     // contentArea).
@@ -609,17 +608,9 @@ class Area extends XFAObject {
       availableSpace,
     };
 
-    const result = this.childrenToHTML({
-      filter: new Set([
-        "area",
-        "draw",
-        "field",
-        "exclGroup",
-        "subform",
-        "subformSet",
-      ]),
-      include: true,
-    });
+    const filter = new Set(["area", "draw", "field", "exclGroup", "subform", "subformSet"]);
+
+    const result = this.childrenToHTML(filter, true);
 
     if (!result.success) {
       if (result.isBreak()) {
@@ -954,7 +945,7 @@ class Border extends XFAObject {
     if (!this.extra) {
       const edges = this.edge.children.slice();
       if (edges.length < 4) {
-        const defaultEdge = edges.at(-1) || new Edge({});
+        const defaultEdge = edges.at(-1) || new Edge(EmptyXFAAttributesObj);
         for (let i = edges.length; i < 4; i++) {
           edges.push(defaultEdge);
         }
@@ -1082,7 +1073,7 @@ class Break extends XFAObject {
   }
 }
 
-class BreakAfter extends XFAObject {
+export class BreakAfter extends XFAObject {
 
   protected leader: string;
 
@@ -1118,9 +1109,9 @@ class BreakAfter extends XFAObject {
   }
 }
 
-class BreakBefore extends XFAObject {
+export class BreakBefore extends XFAObject {
 
-  protected leader: string;
+  public leader: string;
 
   public startNew: number;
 
@@ -1128,25 +1119,17 @@ class BreakBefore extends XFAObject {
 
   public targetType: string;
 
-  protected trailer: string;
+  public trailer: string;
 
-  protected script: null;
+  public script: Script | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "breakBefore", /* hasChildren = */ true);
     this.id = attributes.id || "";
     this.leader = attributes.leader || "";
-    this.startNew = getInteger(
-      attributes.startNew,
-      0,
-      x => x === 1,
-    );
+    this.startNew = getInteger(attributes.startNew, 0, x => x === 1);
     this.target = attributes.target || "";
-    this.targetType = getStringOption(attributes.targetType, [
-      "auto",
-      "contentArea",
-      "pageArea",
-    ]);
+    this.targetType = getStringOption(attributes.targetType, ["auto", "contentArea", "pageArea"]);
     this.trailer = attributes.trailer || "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
@@ -1167,12 +1150,7 @@ class Button extends XFAObject {
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "button", /* hasChildren = */ true);
-    this.highlight = getStringOption(attributes.highlight, [
-      "inverted",
-      "none",
-      "outline",
-      "push",
-    ]);
+    this.highlight = getStringOption(attributes.highlight, ["inverted", "none", "outline", "push"]);
     this.id = attributes.id || "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
@@ -1227,13 +1205,13 @@ class Button extends XFAObject {
 
 class Calculate extends XFAObject {
 
-  protected override: string;
+  public override: string;
 
-  protected extras: null;
+  public extras: Extras | null;
 
-  protected message: null;
+  public message: Message | null;
 
-  protected script: null;
+  public script: Script | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "calculate", /* hasChildren = */ true);
@@ -1444,17 +1422,17 @@ class Certificates extends XFAObject {
 
 class CheckButton extends XFAObject {
 
-  protected mark: string;
+  public mark: string;
 
-  protected shape: string;
+  public shape: string;
 
-  protected size: number;
+  public size: number;
 
-  protected border: null;
+  public border: Border | null;
 
-  protected extras: null;
+  public extras: Extras | null;
 
-  protected margin: null;
+  public margin: Margin | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "checkButton", /* hasChildren = */ true);
@@ -1552,11 +1530,11 @@ class CheckButton extends XFAObject {
 
 class ChoiceList extends XFAObject {
 
-  protected commitOn: string;
+  public commitOn: string;
 
-  protected open: string;
+  public open: string;
 
-  protected textEntry: number;
+  public textEntry: number;
 
   public border: Border | null;
 
@@ -1671,9 +1649,9 @@ class ChoiceList extends XFAObject {
   }
 }
 
-class Color extends XFAObject {
+export class Color extends XFAObject {
 
-  protected cSpace: string;
+  public cSpace: string;
 
   public value: string | ColorRGB;
 
@@ -1744,15 +1722,15 @@ class Connect extends XFAObject {
 
 class ContentArea extends XFAObject {
 
-  protected h: number;
+  public h: number;
 
-  protected relevant: { excluded: boolean; viewname: string; }[];
+  public relevant: { excluded: boolean; viewname: string; }[];
 
-  protected w: number;
+  public w: number;
 
-  protected x: number;
+  public x: number;
 
-  protected y: number;
+  public y: number;
 
   public desc: Desc | null;
 
@@ -1866,6 +1844,7 @@ class Corner extends XFAObject {
 }
 
 class DateElement extends ContentObject {
+
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "date");
     this.id = attributes.id || "";
@@ -1905,20 +1884,21 @@ class DateTime extends ContentObject {
 
 class DateTimeEdit extends XFAObject {
 
-  protected picker: string;
-  hScrollPolicy: string;
-  border: null;
-  comb: null;
-  extras: null;
-  margin: null;
+  public picker: string;
+
+  public hScrollPolicy: string;
+
+  public border: Border | null;
+
+  public comb: Comb | null;
+
+  public extras: Extras | null;
+
+  public margin: Margin | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "dateTimeEdit", /* hasChildren = */ true);
-    this.hScrollPolicy = getStringOption(attributes.hScrollPolicy, [
-      "auto",
-      "off",
-      "on",
-    ]);
+    this.hScrollPolicy = getStringOption(attributes.hScrollPolicy, ["auto", "off", "on"]);
     this.id = attributes.id || "";
     this.picker = getStringOption(attributes.picker, ["host", "none"]);
     this.use = attributes.use || "";
@@ -1965,9 +1945,9 @@ class DateTimeEdit extends XFAObject {
 
 class Decimal extends ContentObject {
 
-  protected fracDigits: number;
+  public fracDigits: number;
 
-  protected leadDigits: number;
+  public leadDigits: number;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "decimal");
@@ -1992,7 +1972,9 @@ class Decimal extends ContentObject {
 }
 
 class DefaultUi extends XFAObject {
-  extras: null;
+
+  public extras: Extras | null;
+
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "defaultUi", /* hasChildren = */ true);
     this.id = attributes.id || "";
@@ -2004,23 +1986,23 @@ class DefaultUi extends XFAObject {
 
 class Desc extends XFAObject {
 
-  protected boolean: XFAObjectArray;
+  public boolean: XFAObjectArray;
 
-  protected date: XFAObjectArray;
+  public date: XFAObjectArray;
 
-  protected dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray;
 
-  protected decimal: XFAObjectArray;
+  public decimal: XFAObjectArray;
 
-  protected exData: XFAObjectArray;
+  public exData: XFAObjectArray;
 
-  protected float: XFAObjectArray;
+  public float: XFAObjectArray;
 
-  protected image: XFAObjectArray;
+  public image: XFAObjectArray;
 
-  protected integer: XFAObjectArray;
+  public integer: XFAObjectArray;
 
-  protected time: XFAObjectArray;
+  public time: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "desc", /* hasChildren = */ true);
@@ -2057,9 +2039,9 @@ class DigestMethod extends OptionObject {
 
 class DigestMethods extends XFAObject {
 
-  protected type: string;
+  public type: string;
 
-  protected digestMethod: XFAObjectArray;
+  public digestMethod: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "digestMethods", /* hasChildren = */ true);
@@ -2073,37 +2055,37 @@ class DigestMethods extends XFAObject {
 
 class Draw extends XFAObject {
 
-  protected anchorType: string;
+  public anchorType: string;
 
-  protected colSpan: number;
+  public colSpan: number;
 
-  protected h: string | number;
+  public h: string | number;
 
-  protected hAlign: string;
+  public hAlign: string;
 
-  protected locale: string;
+  public locale: string;
 
-  protected maxH: number;
+  public maxH: number;
 
-  protected maxW: number;
+  public maxW: number;
 
-  protected minH: number;
+  public minH: number;
 
-  protected minW: number;
+  public minW: number;
 
-  protected presence: string;
+  public presence: string;
 
-  protected relevant: { excluded: boolean; viewname: string; }[];
+  public relevant: { excluded: boolean; viewname: string; }[];
 
-  protected rotate: number;
+  public rotate: number;
 
-  protected w: string | number;
+  public w: string | number;
 
-  protected x: number;
+  public x: number;
 
-  protected y: number;
+  public y: number;
 
-  protected setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray;
 
   public assist: Assist | null;
 
@@ -2127,6 +2109,8 @@ class Draw extends XFAObject {
 
   public ui: Ui | null;
 
+  public tabIndex: number | null = null;
+
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "draw", /* hasChildren = */ true);
     this.anchorType = getStringOption(attributes.anchorType, [
@@ -2140,11 +2124,7 @@ class Draw extends XFAObject {
       "topCenter",
       "topRight",
     ]);
-    this.colSpan = getInteger(
-      attributes.colSpan,
-      1,
-      n => n >= 1 || n === -1,
-    );
+    this.colSpan = getInteger(attributes.colSpan, 1, n => n >= 1 || n === -1);
     this.h = attributes.h ? getMeasurement(attributes.h) : "";
     this.hAlign = getStringOption(attributes.hAlign, [
       "left",
@@ -2168,11 +2148,7 @@ class Draw extends XFAObject {
       "invisible",
     ]);
     this.relevant = getRelevant(attributes.relevant);
-    this.rotate = getInteger(
-      attributes.rotate,
-      0,
-      x => x % 90 === 0,
-    );
+    this.rotate = getInteger(attributes.rotate, 0, x => x % 90 === 0);
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
     this.w = attributes.w ? getMeasurement(attributes.w) : "";
@@ -2308,11 +2284,11 @@ class Draw extends XFAObject {
 
 class Edge extends XFAObject {
 
-  protected cap: string;
+  public cap: string;
 
   public presence: string;
 
-  protected stroke: string;
+  public stroke: string;
 
   public thickness: number;
 
@@ -2437,19 +2413,18 @@ class Encrypt extends XFAObject {
 
 class EncryptData extends XFAObject {
 
-  protected operation: string;
+  public operation: string;
 
-  protected target: string;
-  filter: null;
-  manifest: null;
+  public target: string;
+
+  public filter: Filter | null;
+
+  public manifest: Manifest | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encryptData", /* hasChildren = */ true);
     this.id = attributes.id || "";
-    this.operation = getStringOption(attributes.operation, [
-      "encrypt",
-      "decrypt",
-    ]);
+    this.operation = getStringOption(attributes.operation, ["encrypt", "decrypt"]);
     this.target = attributes.target || "";
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
@@ -2460,9 +2435,9 @@ class EncryptData extends XFAObject {
 
 class Encryption extends XFAObject {
 
-  protected type: string;
+  public type: string;
 
-  protected certificate: XFAObjectArray;
+  public certificate: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encryption", /* hasChildren = */ true);
@@ -2491,9 +2466,9 @@ class EncryptionMethod extends OptionObject {
 
 class EncryptionMethods extends XFAObject {
 
-  protected type: string;
+  public type: string;
 
-  protected encryptionMethod: XFAObjectArray;
+  public encryptionMethod: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encryptionMethods", /* hasChildren = */ true);
@@ -2507,17 +2482,23 @@ class EncryptionMethods extends XFAObject {
 
 class Event extends XFAObject {
 
-  protected activity: string;
+  public activity: string;
 
-  protected listen: string;
+  public listen: string;
 
-  protected ref: string;
-  extras: null;
-  encryptData: null;
-  execute: null;
-  script: null;
-  signData: null;
-  submit: null;
+  public ref: string;
+
+  public extras: Extras | null;
+
+  public encryptData: Encryption | null;
+
+  public execute: Execute | null;
+
+  public script: Script | null;
+
+  public signData: SignData | null;
+
+  public submit: Submit | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "event", /* hasChildren = */ true);
@@ -2551,10 +2532,7 @@ class Event extends XFAObject {
       "validationState",
     ]);
     this.id = attributes.id || "";
-    this.listen = getStringOption(attributes.listen, [
-      "refOnly",
-      "refAndDescendents",
-    ]);
+    this.listen = getStringOption(attributes.listen, ["refOnly", "refAndDescendents"]);
     this.name = attributes.name || "";
     this.ref = attributes.ref || "";
     this.use = attributes.use || "";
@@ -2572,33 +2550,25 @@ class Event extends XFAObject {
 
 class ExData extends ContentObject {
 
-  protected contentType: string;
+  public contentType: string;
 
-  protected href: string;
+  public href: string;
 
-  protected maxLength: number;
+  public maxLength: number;
 
-  protected rid: string;
+  public rid: string;
 
-  protected transferEncoding: string;
+  public transferEncoding: string;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "exData");
     this.contentType = attributes.contentType || "";
     this.href = attributes.href || "";
     this.id = attributes.id || "";
-    this.maxLength = getInteger(
-      attributes.maxLength,
-      -1,
-      x => x >= -1,
-    );
+    this.maxLength = getInteger(attributes.maxLength, -1, x => x >= -1);
     this.name = attributes.name || "";
     this.rid = attributes.rid || "";
-    this.transferEncoding = getStringOption(attributes.transferEncoding, [
-      "none",
-      "base64",
-      "package",
-    ]);
+    this.transferEncoding = getStringOption(attributes.transferEncoding, ["none", "base64", "package"]);
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
   }
@@ -2636,34 +2606,35 @@ class ExData extends ContentObject {
 
 class ExObject extends XFAObject {
 
-  protected archive: string;
+  public archive: string;
 
-  protected classId: string;
+  public classId: string;
 
-  protected codeBase: string;
+  public codeBase: string;
 
-  protected codeType: string;
+  public codeType: string;
 
-  protected boolean: XFAObjectArray;
+  public boolean: XFAObjectArray;
 
-  protected date: XFAObjectArray;
+  public date: XFAObjectArray;
 
-  protected dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray;
 
-  protected decimal: XFAObjectArray;
+  public decimal: XFAObjectArray;
 
-  protected exData: XFAObjectArray;
+  public exData: XFAObjectArray;
 
-  protected exObject: XFAObjectArray;
+  public exObject: XFAObjectArray;
 
-  protected float: XFAObjectArray;
+  public float: XFAObjectArray;
 
-  protected image: XFAObjectArray;
+  public image: XFAObjectArray;
 
-  protected integer: XFAObjectArray;
+  public integer: XFAObjectArray;
 
-  protected time: XFAObjectArray;
-  extras: null;
+  public time: XFAObjectArray;
+
+  public extras: Extras | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "exObject", /* hasChildren = */ true);
@@ -2692,69 +2663,71 @@ class ExObject extends XFAObject {
 
 class ExclGroup extends XFAObject {
 
-  protected access: string;
+  public access: string;
 
-  protected accessKey: string;
+  public accessKey: string;
 
-  protected anchorType: string;
+  public anchorType: string;
 
-  protected colSpan: number;
+  public colSpan: number;
 
-  protected h: string | number;
+  public h: string | number;
 
-  protected hAlign: string;
+  public hAlign: string;
 
-  protected layout: string;
+  public layout: string;
 
-  protected maxH: number;
+  public maxH: number;
 
-  protected maxW: number;
+  public maxW: number;
 
-  protected minH: number;
+  public minH: number;
 
-  protected minW: number;
+  public minW: number;
 
-  protected presence: string;
+  public presence: string;
 
-  protected relevant: { excluded: boolean; viewname: string; }[];
+  public relevant: { excluded: boolean; viewname: string; }[];
 
-  protected w: string | number;
+  public w: string | number;
 
-  protected x: number;
+  public x: number;
 
-  protected y: number;
+  public y: number;
 
-  protected connect: XFAObjectArray;
+  public connect: XFAObjectArray;
 
-  protected event: XFAObjectArray;
+  public event: XFAObjectArray;
 
-  protected field: XFAObjectArray;
+  public field: XFAObjectArray;
 
-  protected setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray;
 
   data: any;
 
   public assist: Assist | null;
 
-  protected bind: Bind | null;
+  public bind: Bind | null;
 
-  protected border: Border | null;
+  public border: Border | null;
 
-  protected calculate: Calculate | null;
+  public calculate: Calculate | null;
 
-  protected caption: Caption | null;
+  public caption: Caption | null;
 
-  protected desc: Desc | null;
+  public desc: Desc | null;
 
-  protected extras: Extras | null;
+  public extras: Extras | null;
 
-  protected margin: Margin | null;
+  public margin: Margin | null;
 
-  protected para: Para | null;
+  public para: Para | null;
 
-  protected traversal: Traversal | null;
+  public traversal: Traversal | null;
 
-  protected validate: Validate | null;
+  public validate: Validate | null;
+
+  public tabIndex: number | null = null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "exclGroup", /* hasChildren = */ true);
@@ -3067,11 +3040,11 @@ class ExclGroup extends XFAObject {
 
 class Execute extends XFAObject {
 
-  protected connection: string;
+  public connection: string;
 
-  protected executeType: string;
+  public executeType: string;
 
-  protected runAt: string;
+  public runAt: string;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "execute");
@@ -3093,25 +3066,25 @@ class Execute extends XFAObject {
 
 class Extras extends XFAObject {
 
-  protected boolean: XFAObjectArray;
+  public boolean: XFAObjectArray;
 
-  protected date: XFAObjectArray;
+  public date: XFAObjectArray;
 
-  protected dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray;
 
-  protected decimal: XFAObjectArray;
+  public decimal: XFAObjectArray;
 
-  protected exData: XFAObjectArray;
+  public exData: XFAObjectArray;
 
-  protected extras: XFAObjectArray;
+  public extras: XFAObjectArray;
 
-  protected float: XFAObjectArray;
+  public float: XFAObjectArray;
 
-  protected image: XFAObjectArray;
+  public image: XFAObjectArray;
 
-  protected integer: XFAObjectArray;
+  public integer: XFAObjectArray;
 
-  protected time: XFAObjectArray;
+  public time: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "extras", /* hasChildren = */ true);
@@ -3139,49 +3112,49 @@ class Extras extends XFAObject {
 
 class Field extends XFAObject {
 
-  protected access: string;
+  public access: string;
 
-  protected accessKey: string;
+  public accessKey: string;
 
-  protected anchorType: string;
+  public anchorType: string;
 
-  protected colSpan: number;
+  public colSpan: number;
 
-  protected h: string | number;
+  public h: string | number;
 
-  protected hAlign: string;
+  public hAlign: string;
 
-  protected locale: string;
+  public locale: string;
 
-  protected maxH: number;
+  public maxH: number;
 
-  protected maxW: number;
+  public maxW: number;
 
-  protected minH: number;
+  public minH: number;
 
-  protected minW: number;
+  public minW: number;
 
-  protected presence: string;
+  public presence: string;
 
-  protected relevant: { excluded: boolean; viewname: string; }[];
+  public relevant: { excluded: boolean; viewname: string; }[];
 
-  protected rotate: number;
+  public rotate: number;
 
-  protected w: string | number;
+  public w: string | number;
 
-  protected x: number;
+  public x: number;
 
-  protected y: number;
+  public y: number;
 
-  protected items: XFAObjectArray;
+  public items: XFAObjectArray;
 
-  protected bindItems: XFAObjectArray;
+  public bindItems: XFAObjectArray;
 
-  protected connect: XFAObjectArray;
+  public connect: XFAObjectArray;
 
-  protected event: XFAObjectArray;
+  public event: XFAObjectArray;
 
-  protected setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray;
 
   public assist: Assist | null;
 
@@ -3208,6 +3181,8 @@ class Field extends XFAObject {
   public para: Para | null;
 
   public traversal: Traversal | null;
+
+  public tabIndex: number | null = null;
 
   public ui: Ui | null;
 
@@ -3852,41 +3827,17 @@ class Font extends XFAObject {
     this.fontHorizontalScale = getFloat(attributes.fontHorizontalScale, 100, x => x >= 0);
     this.fontVerticalScale = getFloat(attributes.fontVerticalScale, 100, x => x >= 0);
     this.id = attributes.id || "";
-    this.kerningMode = getStringOption(attributes.kerningMode, [
-      "none",
-      "pair",
-    ]);
+    this.kerningMode = getStringOption(attributes.kerningMode, ["none", "pair"]);
     this.letterSpacing = getMeasurement(attributes.letterSpacing, "0");
-    this.lineThrough = getInteger(
-      attributes.lineThrough,
-      0,
-      x => x === 1 || x === 2,
-    );
-    this.lineThroughPeriod = getStringOption(attributes.lineThroughPeriod, [
-      "all",
-      "word",
-    ]);
-    this.overline = getInteger(
-      attributes.overline,
-      0,
-      x => x === 1 || x === 2,
-    );
-    this.overlinePeriod = getStringOption(attributes.overlinePeriod, [
-      "all",
-      "word",
-    ]);
+    this.lineThrough = getInteger(attributes.lineThrough, 0, x => x === 1 || x === 2);
+    this.lineThroughPeriod = getStringOption(attributes.lineThroughPeriod, ["all", "word"]);
+    this.overline = getInteger(attributes.overline, 0, x => x === 1 || x === 2);
+    this.overlinePeriod = getStringOption(attributes.overlinePeriod, ["all", "word"]);
     this.posture = getStringOption(attributes.posture, ["normal", "italic"]);
     this.size = getMeasurement(attributes.size, "10pt");
     this.typeface = attributes.typeface || "Courier";
-    this.underline = getInteger(
-      attributes.underline,
-      0,
-      x => x === 1 || x === 2,
-    );
-    this.underlinePeriod = getStringOption(attributes.underlinePeriod, [
-      "all",
-      "word",
-    ]);
+    this.underline = getInteger(attributes.underline, 0, x => x === 1 || x === 2);
+    this.underlinePeriod = getStringOption(attributes.underlinePeriod, ["all", "word"]);
     this.use = attributes.use || "";
     this.usehref = attributes.usehref || "";
     this.weight = getStringOption(attributes.weight, ["normal", "bold"]);
@@ -4204,29 +4155,29 @@ class Issuers extends XFAObject {
 
 class Items extends XFAObject {
 
-  protected presence: string;
+  public presence: string;
 
-  protected ref: string;
+  public ref: string;
 
-  protected save: number;
+  public save: number;
 
-  protected boolean: XFAObjectArray;
+  public boolean: XFAObjectArray;
 
-  protected date: XFAObjectArray;
+  public date: XFAObjectArray;
 
-  protected dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray;
 
-  protected decimal: XFAObjectArray;
+  public decimal: XFAObjectArray;
 
-  protected exData: XFAObjectArray;
+  public exData: XFAObjectArray;
 
-  protected float: XFAObjectArray;
+  public float: XFAObjectArray;
 
-  protected image: XFAObjectArray;
+  public image: XFAObjectArray;
 
-  protected integer: XFAObjectArray;
+  public integer: XFAObjectArray;
 
-  protected time: XFAObjectArray;
+  public time: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "items", /* hasChildren = */ true);
@@ -4292,23 +4243,23 @@ class Keep extends XFAObject {
 
 class KeyUsage extends XFAObject {
 
-  protected crlSign: string;
+  public crlSign: string;
 
-  protected dataEncipherment: string;
+  public dataEncipherment: string;
 
-  protected decipherOnly: string;
+  public decipherOnly: string;
 
-  protected digitalSignature: string;
+  public digitalSignature: string;
 
-  protected keyAgreement: string;
+  public keyAgreement: string;
 
-  protected keyCertSign: string;
+  public keyCertSign: string;
 
-  protected keyEncipherment: string;
+  public keyEncipherment: string;
 
-  protected nonRepudiation: string;
+  public nonRepudiation: string;
 
-  protected type: string;
+  public type: string;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "keyUsage");
@@ -4337,11 +4288,11 @@ class KeyUsage extends XFAObject {
 
 class Line extends XFAObject {
 
-  protected hand: string;
+  public hand: string;
 
-  protected slope: string;
+  public slope: string;
 
-  protected edge: Edge | null;
+  public edge: Edge | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "line", /* hasChildren = */ true);
@@ -4423,9 +4374,11 @@ class Line extends XFAObject {
 
 class Linear extends XFAObject {
 
-  protected type: string;
-  color: null;
-  extras: null;
+  public type: string;
+
+  public color: Color | null;
+
+  public extras: Extras | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "linear", /* hasChildren = */ true);
@@ -4442,8 +4395,8 @@ class Linear extends XFAObject {
     this.extras = null;
   }
 
-  toStyle(startColor) {
-    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
+  toStyle(_startColor: Color) {
+    const startColor = _startColor ? _startColor.toStyle() : "#FFFFFF";
     const transf = this.type.replace(/([RBLT])/, " $1").toLowerCase();
     const endColor = this.color ? this.color.toStyle() : "#000000";
     return `linear-gradient(${transf}, ${startColor}, ${endColor})`;
@@ -4722,9 +4675,9 @@ class Oid extends StringObject {
 
 class Oids extends XFAObject {
 
-  protected type: string;
+  public type: string;
 
-  protected oid: XFAObjectArray;
+  public oid: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "oids", /* hasChildren = */ true);
@@ -5189,8 +5142,8 @@ class Pattern extends XFAObject {
     this.extras = null;
   }
 
-  toStyle(startColor) {
-    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
+  toStyle(_startColor: Color) {
+    const startColor = _startColor ? _startColor.toStyle() : "#FFFFFF";
     const endColor = this.color ? this.color.toStyle() : "#000000";
     const width = 5;
     const cmd = "repeating-linear-gradient";
@@ -5575,8 +5528,8 @@ class Radial extends XFAObject {
     this.extras = null;
   }
 
-  toStyle(startColor) {
-    startColor = startColor ? startColor.toStyle() : "#FFFFFF";
+  toStyle(_startColor: Color) {
+    const startColor = _startColor ? _startColor.toStyle() : "#FFFFFF";
     const endColor = this.color ? this.color.toStyle() : "#000000";
     const colors =
       this.type === "toEdge"
@@ -5809,9 +5762,9 @@ class Signature extends XFAObject {
 
 class Signing extends XFAObject {
 
-  protected type: string;
+  public type: string;
 
-  protected certificate: XFAObjectArray;
+  public certificate: XFAObjectArray;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "signing", /* hasChildren = */ true);
@@ -5833,18 +5786,18 @@ class Solid extends XFAObject {
     this.extras = null;
   }
 
-  toStyle(startColor) {
+  toStyle(startColor: Color) {
     return startColor ? startColor.toStyle() : "#FFFFFF";
   }
 }
 
 class Speak extends StringObject {
 
-  protected disable: number;
+  public disable: number;
 
-  protected priority: string;
+  public priority: string;
 
-  protected rid: string;
+  public rid: string;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "speak");
@@ -5888,17 +5841,18 @@ class Stipple extends XFAObject {
     this.extras = null;
   }
 
-  toStyle(bgColor) {
+  toStyle(bgColor: Color) {
     const alpha = this.rate / 100;
+    const rgb = <ColorRGB>bgColor.value;
     return Util.makeHexColor(
-      Math.round(bgColor.value.r * (1 - alpha) + this.value.r * alpha),
-      Math.round(bgColor.value.g * (1 - alpha) + this.value.g * alpha),
-      Math.round(bgColor.value.b * (1 - alpha) + this.value.b * alpha)
+      Math.round(rgb.r * (1 - alpha) + this.value.r * alpha),
+      Math.round(rgb.g * (1 - alpha) + this.value.g * alpha),
+      Math.round(rgb.b * (1 - alpha) + this.value.b * alpha)
     );
   }
 }
 
-class Subform extends XFAObject {
+export class Subform extends XFAObject {
 
   public access: string;
 
@@ -5971,6 +5925,8 @@ class Subform extends XFAObject {
   public para: Para | null;
 
   public traversal: Traversal | null;
+
+  public tabIndex: number | null = null;
 
   public validate: Validate | null;
 
@@ -6316,7 +6272,7 @@ class Subform extends XFAObject {
     ]);
 
     if (this.layout.includes("row")) {
-      const columnWidths = this.getSubformParent().columnWidths;
+      const columnWidths = (<Subform>this.getSubformParent()).columnWidths;
       if (Array.isArray(columnWidths) && columnWidths.length > 0) {
         this.extra.columnWidths = columnWidths;
         this.extra.currentColumn = 0;
@@ -6525,7 +6481,7 @@ class SubformSet extends XFAObject {
     yield* getContainedChildren(this);
   }
 
-  getSubformParent() {
+  getSubformParent(): Subform {
     let parent = this.getParent();
     while (!(parent instanceof Subform)) {
       parent = parent.getParent();
@@ -6598,11 +6554,7 @@ class Submit extends XFAObject {
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "submit", /* hasChildren = */ true);
-    this.embedPDF = getInteger(
-      attributes.embedPDF,
-      0,
-      x => x === 1,
-    );
+    this.embedPDF = getInteger(attributes.embedPDF, 0, x => x === 1);
     this.format = getStringOption(attributes.format, [
       "xdp",
       "formdata",
@@ -6737,9 +6689,9 @@ class Template extends XFAObject {
       breakBeforeTarget = breakBefore!.beforeTarget;
     } else if (
       root.subform.children.length >= 1 &&
-      root.subform.children[0].break?.beforeTarget
+      (<Subform>(root.subform.children[0])).break?.beforeTarget
     ) {
-      breakBefore = root.subform.children[0].break;
+      breakBefore = (<Subform>(root.subform.children[0])).break;
       breakBeforeTarget = (<Break>breakBefore!).beforeTarget;
     }
 
@@ -7433,7 +7385,7 @@ class Value extends XFAObject {
     if (parent instanceof Field) {
       if (parent.ui?.imageEdit) {
         if (!this.image) {
-          this.image = new Image({});
+          this.image = new Image(EmptyXFAAttributesObj);
           this.appendChild(this.image);
         }
         this.image.content = value.content;
@@ -7496,27 +7448,27 @@ class Value extends XFAObject {
 class Variables extends XFAObject {
 
   public boolean: XFAObjectArray;
-  
+
   public date: XFAObjectArray;
-  
+
   public dateTime: XFAObjectArray;
-  
+
   public decimal: XFAObjectArray;
-  
+
   public exData: XFAObjectArray;
-  
+
   public float: XFAObjectArray;
- 
+
   public image: XFAObjectArray;
- 
+
   public integer: XFAObjectArray;
- 
+
   public manifest: XFAObjectArray;
- 
+
   public script: XFAObjectArray;
- 
+
   public time: XFAObjectArray;
- 
+
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "variables", /* hasChildren = */ true);
     this.id = attributes.id || "";

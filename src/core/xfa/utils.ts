@@ -15,6 +15,7 @@
 
 import { RectType } from "../../display/display_utils";
 import { shadow } from "../../shared/util";
+import { BreakAfter, BreakBefore } from "./template";
 
 const dimConverters = {
   pt: (x: number) => x,
@@ -193,7 +194,6 @@ function getBBox(data: string) {
 }
 
 class HTMLResult {
-  html: any;
 
   static get FAILURE() {
     return shadow(this, "FAILURE", new HTMLResult(false, null, null, null));
@@ -203,7 +203,15 @@ class HTMLResult {
     return shadow(this, "EMPTY", new HTMLResult(true, null, null, null));
   }
 
-  constructor(success: boolean, html, bbox, breakNode) {
+  readonly success: boolean;
+
+  readonly html: any;
+
+  readonly bbox: RectType | null;
+
+  readonly breakNode: BreakBefore | BreakAfter | null;
+
+  constructor(success: boolean, html, bbox: RectType | null, breakNode: BreakBefore | BreakAfter | null) {
     this.success = success;
     this.html = html;
     this.bbox = bbox;
@@ -214,7 +222,7 @@ class HTMLResult {
     return !!this.breakNode;
   }
 
-  static breakNode(node) {
+  static breakNode(node: BreakAfter | BreakBefore) {
     return new HTMLResult(false, null, null, node);
   }
 

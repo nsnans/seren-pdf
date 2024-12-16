@@ -1225,12 +1225,12 @@ class PDFDocument {
     return shadow(this, "xfaDatasets", null);
   }
 
-  get xfaData() {
+  get xfaData(): Record<string, string> | null {
     const streams = this._xfaStreams;
     if (!streams) {
       return null;
     }
-    const data = Object.create(null);
+    const data: Record<string, string> = Object.create(null);
     for (const [key, stream] of Object.entries(streams)) {
       if (!stream) {
         continue;

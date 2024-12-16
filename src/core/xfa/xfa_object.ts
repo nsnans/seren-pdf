@@ -22,6 +22,7 @@ import { searchNode } from "./som";
 import {
   $root
 } from "./symbol_utils";
+import { Color } from "./template";
 import { getInteger, getKeyword, HTMLResult } from "./utils";
 
 
@@ -84,7 +85,7 @@ class XFAObject {
 
   public content: any | null;
 
-  protected _parent;
+  public _parent: XFAObject;
 
   public cleanup;
 
@@ -333,11 +334,11 @@ class XFAObject {
     return false;
   }
 
-  getParent() {
+  getParent(): XFAObject {
     return this._parent;
   }
 
-  getSubformParent() {
+  getSubformParent() : XFAObject | Subform{
     return this.getParent();
   }
 
@@ -374,7 +375,7 @@ class XFAObject {
     return dumped;
   }
 
-  toStyle() : string | null {
+  toStyle(_color: Color | null = null): string | null {
     return null;
   }
 

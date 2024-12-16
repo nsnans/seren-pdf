@@ -32,7 +32,7 @@ class XFAFactory {
 
   protected dataHandler?: DataHandler;
 
-  constructor(data) {
+  constructor(data: Record<string, string>) {
     try {
       this.root = new XFAParser().parse(XFAFactory._createDocument(data));
       const binder = new Binder(<Root>this.root);
@@ -133,7 +133,7 @@ class XFAFactory {
     return this.dataHandler!.serialize(storage);
   }
 
-  static _createDocument(data) {
+  static _createDocument(data: Record<string, string>) {
     if (!data["/xdp:xdp"]) {
       return data["xdp:xdp"];
     }
@@ -154,7 +154,7 @@ class XFAFactory {
         root = newRoot;
       }
 
-      const result = root.toHTML();
+      const result = root.toHTML()!;
       if (!result.success) {
         return null;
       }
