@@ -3283,7 +3283,7 @@ class Font {
 
     const builder = new OpenTypeFileBuilder(header.version);
     for (const tableTag in tables) {
-      builder.addTable(tableTag, tables[<ValidTableType>tableTag]!.data);
+      builder.addTable(tableTag, tables[<ValidTableType>tableTag]!.data!);
     }
     return builder.toArray();
   }
@@ -3403,7 +3403,7 @@ class Font {
 
     const builder = new OpenTypeFileBuilder("\x4F\x54\x54\x4F");
     // PostScript Font Program
-    builder.addTable("CFF ", font.data);
+    builder.addTable("CFF ", <number[]>font.data);
     // OS/2 and Windows Specific metrics
     builder.addTable("OS/2", createOS2Table(properties, newCharCodeToGlyphId));
     // Character to glyphs mapping

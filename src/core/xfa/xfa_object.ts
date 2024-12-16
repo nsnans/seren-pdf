@@ -22,7 +22,7 @@ import { searchNode } from "./som";
 import {
   $root
 } from "./symbol_utils";
-import { Color } from "./template";
+import { Color, Subform } from "./template";
 import { getInteger, getKeyword, HTMLResult } from "./utils";
 
 
@@ -324,7 +324,7 @@ class XFAObject {
   }
 
   isDescendent(parent: XFAObject) {
-    let node = this;
+    let node: XFAObject = this;
     while (node) {
       if (node === parent) {
         return true;
@@ -338,7 +338,7 @@ class XFAObject {
     return this._parent;
   }
 
-  getSubformParent() : XFAObject | Subform{
+  getSubformParent(): XFAObject | Subform {
     return this.getParent();
   }
 
@@ -390,11 +390,11 @@ class XFAObject {
     }
   }
 
-  *_filteredChildrenGenerator(filter, include) {
+  *_filteredChildrenGenerator(filter: Set<string> | null, include: boolean) {
     for (const node of this.getContainedChildren()) {
       if (!filter || include === filter.has(node.nodeName)) {
         const availableSpace = this.getAvailableSpace();
-        const res = node.toHTML(availableSpace);
+        const res = node.toHTML(availableSpace)!;
         if (!res.success) {
           this.extra.failingNode = node;
         }
@@ -470,13 +470,13 @@ class XFAObject {
    * Update the node with properties coming from a prototype and apply
    * this function recursively to all children.
    */
-  resolvePrototypes(ids, ancestors = new Set()) {
+  resolvePrototypes(ids: Map<Symbol | string, XFAObject | null>, ancestors = new Set<XFAObject>()) {
     for (const child of this._children) {
       child._resolvePrototypesHelper(ids, ancestors);
     }
   }
 
-  _resolvePrototypesHelper(ids, ancestors) {
+  _resolvePrototypesHelper(ids: Map<Symbol | string, XFAObject | null>, ancestors: Set<XFAObject>) {
     const proto = this._getPrototype(ids, ancestors);
     if (proto) {
       // _applyPrototype will apply $resolvePrototypes with correct ancestors
@@ -487,13 +487,13 @@ class XFAObject {
     }
   }
 
-  _getPrototype(ids, ancestors) {
+  _getPrototype(ids: Map<Symbol | string, XFAObject | null>, ancestors: Set<XFAObject>) {
     const { use, usehref } = this;
     if (!use && !usehref) {
       return null;
     }
 
-    let proto = null;
+    let proto: XFAObject | null = null;
     let somExpression = null;
     let id = null;
     let ref = use;
@@ -525,12 +525,12 @@ class XFAObject {
 
     this.use = this.usehref = "";
     if (id) {
-      proto = ids.get(id);
+      proto = ids.get(id)!;
     } else {
       proto = searchNode(
         ids.get($root),
         this,
-        somExpression,
+        somExpression!,
         true /* = dotDotAllowed */,
         false /* = useCache */
       );
@@ -573,7 +573,7 @@ class XFAObject {
     return proto;
   }
 
-  protected _applyPrototype(proto, ids, ancestors) {
+  protected _applyPrototype(proto: XFAObject, ids: Map<Symbol | string, XFAObject | null>, ancestors: Set<XFAObject>) {
     if (ancestors.has(proto)) {
       // We've a cycle so break it.
       warn(`XFA - Cycle detected in prototypes use.`);
@@ -924,7 +924,7 @@ class XmlObject extends XFAObject {
     }
   }
 
-  toHTML(_availableSpace: Namespace | null = null) {
+  toHTML(_availableSpace: AvailableSpace | null = null) {
     if (this.nodeName === "#text") {
       return HTMLResult.success({
         name: "#text",

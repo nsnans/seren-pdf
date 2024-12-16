@@ -566,9 +566,7 @@ export class XRef {
           // Before overwriting an existing entry, ensure that the new one won't
           // cause *immediate* errors when it's accessed (fixes issue13783.pdf).
           try {
-            const parser = new Parser({
-              lexer: new Lexer(stream.makeSubStream(startPos)),
-            });
+            const parser = new Parser(new Lexer(stream.makeSubStream(startPos)));
             parser.getObj();
             updateEntries = true;
           } catch (ex) {
@@ -663,12 +661,7 @@ export class XRef {
     let isEncrypted = false;
     for (const trailer of trailers) {
       stream.pos = trailer;
-      const parser = new Parser({
-        lexer: new Lexer(stream),
-        xref: this,
-        allowStreams: true,
-        recoveryMode: true,
-      });
+      const parser = new Parser(new Lexer(stream), this, true, true);
       const obj = parser.getObj();
       if (!isCmd(obj, "trailer")) {
         continue;
@@ -763,11 +756,7 @@ export class XRef {
 
         stream.pos = startXRef + stream.start;
 
-        const parser = new Parser({
-          lexer: new Lexer(stream),
-          xref: this,
-          allowStreams: true,
-        });
+        const parser = new Parser(new Lexer(stream), this, true);
         let obj = parser.getObj();
         let dict;
 
@@ -930,11 +919,7 @@ export class XRef {
     const stream = this.stream.makeSubStream(
       xrefEntry.offset + this.stream.start
     );
-    const parser = new Parser({
-      lexer: new Lexer(stream),
-      xref: this,
-      allowStreams: true,
-    });
+    const parser = new Parser(new Lexer(stream), this, true);
     const obj1 = parser.getObj();
     const obj2 = parser.getObj();
     const obj3 = parser.getObj();
@@ -979,11 +964,7 @@ export class XRef {
     if (!Number.isInteger(first) || !Number.isInteger(n)) {
       throw new FormatError("invalid first and n parameters for ObjStm stream");
     }
-    let parser = new Parser({
-      lexer: new Lexer(stream),
-      xref: this,
-      allowStreams: true,
-    });
+    let parser = new Parser(new Lexer(stream), this, true);
     const nums = new Array(n);
     const offsets = new Array(n);
     // read the object numbers to populate cache
@@ -1012,13 +993,8 @@ export class XRef {
       if (length! < 0) {
         throw new FormatError("Invalid offset in the ObjStm stream.");
       }
-      parser = new Parser({
-        lexer: new Lexer(
-          <Stream>stream.makeSubStream(start + offsets[i], length!, stream.dict)
-        ),
-        xref: this,
-        allowStreams: true,
-      });
+      const lexer = new Lexer(<Stream>stream.makeSubStream(start + offsets[i], length!, stream.dict));
+      parser = new Parser(lexer, this, true);
 
       const obj = parser.getObj();
       entries[i] = obj;

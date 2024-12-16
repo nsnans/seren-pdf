@@ -51,7 +51,7 @@ export abstract class BaseStream {
 
   abstract getByte(): number;
 
-  abstract getBytes(_length?: number): Uint8Array;
+  abstract getBytes(_length?: number): Uint8Array | Uint8ClampedArray;
 
   /**
    * NOTE: This method can only be used to get image-data that is guaranteed
@@ -117,7 +117,7 @@ export abstract class BaseStream {
     return bytesToString(this.getBytes(length));
   }
 
-  skip(n: number) {
+  skip(n?: number) {
     this.pos += n || 1;
   }
 

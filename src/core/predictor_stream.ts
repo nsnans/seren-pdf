@@ -20,11 +20,11 @@ import { Stream } from "./stream";
 
 class PredictorStream extends DecodeStream {
 
-  protected pixBytes: number;
+  protected pixBytes: number = 0;
 
-  protected rowBytes: number;
+  protected rowBytes: number = 0;
 
-  constructor(str: Stream, maybeLength: number, params) {
+  constructor(str: Stream, maybeLength: number, params: Dict) {
     super(maybeLength);
 
     if (!(params instanceof Dict)) {

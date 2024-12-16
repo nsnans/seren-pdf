@@ -55,7 +55,7 @@ class Stream extends BaseStream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length?: number) {
+  getBytes(length?: number): Uint8Array {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;

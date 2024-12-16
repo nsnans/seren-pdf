@@ -16,19 +16,19 @@
 import { readUint32 } from "./core_utils";
 import { string32 } from "../shared/util";
 
-function writeInt16(dest, offset: number, num: number) {
+function writeInt16(dest: Uint8Array, offset: number, num: number) {
   dest[offset] = (num >> 8) & 0xff;
   dest[offset + 1] = num & 0xff;
 }
 
-function writeInt32(dest, offset: number, num: number) {
+function writeInt32(dest: Uint8Array, offset: number, num: number) {
   dest[offset] = (num >> 24) & 0xff;
   dest[offset + 1] = (num >> 16) & 0xff;
   dest[offset + 2] = (num >> 8) & 0xff;
   dest[offset + 3] = num & 0xff;
 }
 
-function writeData(dest, offset: number, data) {
+function writeData(dest: Uint8Array, offset: number, data: Uint8Array | string | number[]) {
   if (data instanceof Uint8Array) {
     dest.set(data, offset);
   } else if (typeof data === "string") {
@@ -47,12 +47,17 @@ const OTF_HEADER_SIZE = 12;
 const OTF_TABLE_ENTRY_SIZE = 16;
 
 class OpenTypeFileBuilder {
-  constructor(sfnt) {
+
+  protected readonly sfnt: string;
+
+  protected readonly tables: Map<string, string | Uint8Array | number[]>;
+
+  constructor(sfnt: string) {
     this.sfnt = sfnt;
-    this.tables = Object.create(null);
+    this.tables = new Map();
   }
 
-  static getSearchParams(entriesCount, entrySize) {
+  static getSearchParams(entriesCount: number, entrySize: number) {
     let maxPower2 = 1,
       log2 = 0;
     while ((maxPower2 ^ entriesCount) > maxPower2) {
@@ -72,7 +77,7 @@ class OpenTypeFileBuilder {
 
     // Tables needs to be written by ascendant alphabetic order
     const tables = this.tables;
-    const tablesNames = Object.keys(tables);
+    const tablesNames = Array.from(tables.keys());
     tablesNames.sort();
     const numTables = tablesNames.length;
 
@@ -81,7 +86,7 @@ class OpenTypeFileBuilder {
     let offset = OTF_HEADER_SIZE + numTables * OTF_TABLE_ENTRY_SIZE;
     const tableOffsets = [offset];
     for (i = 0; i < numTables; i++) {
-      table = tables[tablesNames[i]];
+      table = tables.get(tablesNames[i])!;
       const paddedLength = ((table.length + 3) & ~3) >>> 0;
       offset += paddedLength;
       tableOffsets.push(offset);
@@ -90,7 +95,7 @@ class OpenTypeFileBuilder {
     const file = new Uint8Array(offset);
     // write the table data first (mostly for checksum)
     for (i = 0; i < numTables; i++) {
-      table = tables[tablesNames[i]];
+      table = tables.get(tablesNames[i])!;
       writeData(file, tableOffsets[i], table);
     }
 
@@ -136,18 +141,19 @@ class OpenTypeFileBuilder {
       // offset
       writeInt32(file, offset + 8, tableOffsets[i]);
       // length
-      writeInt32(file, offset + 12, tables[tableName].length);
+      writeInt32(file, offset + 12, tables.get(tableName)!.length);
 
       offset += OTF_TABLE_ENTRY_SIZE;
     }
     return file;
   }
 
-  addTable(tag: string, data) {
-    if (tag in this.tables) {
+  // 应该是string和Uint8Array
+  addTable(tag: string, data: Uint8Array | string | number[]) {
+    if (this.tables.has(tag)) {
       throw new Error("Table " + tag + " already exists");
     }
-    this.tables[tag] = data;
+    this.tables.set(tag, data);
   }
 }
 

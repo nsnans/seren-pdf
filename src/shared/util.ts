@@ -639,7 +639,7 @@ class AbortException extends BaseException {
 
 // 调用的地方很多，可能参数不止Uint8Array类型
 // 目前看到的都是Uint8Array
-function bytesToString(bytes: Uint8Array) {
+function bytesToString(bytes: Uint8Array | Uint8ClampedArray | number[]) {
   if (typeof bytes !== "object" || bytes?.length === undefined) {
     unreachable("Invalid argument for bytesToString");
   }
@@ -652,7 +652,7 @@ function bytesToString(bytes: Uint8Array) {
   const strBuf = [];
   for (let i = 0; i < length; i += MAX_ARGUMENT_COUNT) {
     const chunkEnd = Math.min(i + MAX_ARGUMENT_COUNT, length);
-    const chunk = bytes.subarray(i, chunkEnd);
+    const chunk = (<Uint8Array | Uint8ClampedArray>bytes).subarray(i, chunkEnd);
     // TODO 使用Array转换，是否可能会出现问题
     strBuf.push(String.fromCharCode.apply(null, Array.from(chunk)));
   }

@@ -14,6 +14,7 @@
  */
 
 import { BaseStream } from "./base_stream";
+import { Dict } from "./primitives";
 import { Stream } from "./stream";
 
 // Lots of DecodeStreams are created whose buffers are never used.  For these
@@ -118,7 +119,7 @@ abstract class DecodeStream extends BaseStream {
     this.pos = 0;
   }
 
-  makeSubStream(start: number, length: number, dict = null) {
+  makeSubStream(start: number, length: number, dict: Dict | null = null) {
     if (length === undefined) {
       while (!this.eof) {
         this.readBlock();

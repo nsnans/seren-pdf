@@ -40,10 +40,11 @@ import { RunLengthStream } from "./run_length_stream";
 import { XRef } from "./xref";
 import { CipherTransform } from "./crypto";
 import { BaseStream } from "./base_stream";
+import { PlatformHelper } from "../platform/platform_helper";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
-function getInlineImageCacheKey(bytes) {
+function getInlineImageCacheKey(bytes: Uint8Array) {
   const strBuf = [],
     ii = bytes.length;
   let i = 0;
@@ -74,15 +75,24 @@ interface ParserOptions {
 }
 
 class Parser {
+
   public lexer: Lexer;
+
   protected xref: XRef | null;
+
   protected allowStreams;
+
   protected recoveryMode: boolean;
+
   protected imageCache: Record<string, any>;
+
   protected _imageId = 0;
+
   public buf1;
+
   public buf2;
-  constructor({ lexer, xref = null, allowStreams = false, recoveryMode = false }: ParserOptions) {
+
+  constructor(lexer: Lexer, xref: XRef | null = null, allowStreams = false, recoveryMode = false) {
     this.lexer = lexer;
     this.xref = xref;
     this.allowStreams = allowStreams;
@@ -205,7 +215,7 @@ class Parser {
    * Find the end of the stream by searching for the /EI\s/.
    * @returns {number} The inline stream length.
    */
-  findDefaultInlineStreamEnd(stream) {
+  findDefaultInlineStreamEnd(stream: BaseStream) {
     const E = 0x45,
       I = 0x49,
       SPACE = 0x20,
@@ -224,7 +234,7 @@ class Parser {
       } else if (state === 1) {
         state = ch === I ? 2 : 0;
       } else {
-        if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
+        if (PlatformHelper.isTesting()) {
           assert(state === 2, "findDefaultInlineStreamEnd - invalid state.");
         }
         if (ch === SPACE || ch === LF || ch === CR) {
@@ -342,7 +352,7 @@ class Parser {
    * Find the EOI (end-of-image) marker 0xFFD9 of the stream.
    * @returns {number} The inline stream length.
    */
-  findDCTDecodeInlineStreamEnd(stream) {
+  findDCTDecodeInlineStreamEnd(stream: BaseStream) {
     const startPos = stream.pos;
     let foundEOI = false,
       b,
@@ -444,7 +454,7 @@ class Parser {
    * Find the EOD (end-of-data) marker '~>' (i.e. TILDE + GT) of the stream.
    * @returns {number} The inline stream length.
    */
-  findASCII85DecodeInlineStreamEnd(stream) {
+  findASCII85DecodeInlineStreamEnd(stream: BaseStream) {
     const TILDE = 0x7e,
       GT = 0x3e;
     const startPos = stream.pos;
@@ -491,7 +501,7 @@ class Parser {
    * Find the EOD (end-of-data) marker '>' (i.e. GT) of the stream.
    * @returns {number} The inline stream length.
    */
-  findASCIIHexDecodeInlineStreamEnd(stream) {
+  findASCIIHexDecodeInlineStreamEnd(stream: BaseStream) {
     const GT = 0x3e;
     const startPos = stream.pos;
     let ch;
@@ -516,7 +526,7 @@ class Parser {
   /**
    * Skip over the /EI/ for streams where we search for an EOD marker.
    */
-  inlineStreamSkipEI(stream) {
+  inlineStreamSkipEI(stream: BaseStream) {
     const E = 0x45,
       I = 0x49;
     let state = 0,
@@ -532,7 +542,7 @@ class Parser {
     }
   }
 
-  makeInlineImage(cipherTransform) {
+  makeInlineImage(cipherTransform: CipherTransform | null) {
     const lexer = this.lexer;
     const stream = lexer.stream;
 
@@ -556,12 +566,12 @@ class Parser {
     }
 
     // Extract the name of the first (i.e. the current) image filter.
-    const filter = this.xref.fetchIfRef(dictMap.F || dictMap.Filter);
+    const filter = this.xref!.fetchIfRef(dictMap.F || dictMap.Filter);
     let filterName;
     if (filter instanceof Name) {
       filterName = filter.name;
     } else if (Array.isArray(filter)) {
-      const filterZero = this.xref.fetchIfRef(filter[0]);
+      const filterZero = this.xref!.fetchIfRef(filter[0]);
       if (filterZero instanceof Name) {
         filterName = filterZero.name;
       }
@@ -590,12 +600,12 @@ class Parser {
     // Cache all images below the MAX_LENGTH_TO_CACHE threshold by their
     // stringified content, to prevent possible hash collisions.
     let cacheKey;
-    if (length < MAX_LENGTH_TO_CACHE && dictLength > 0) {
+    if (length < MAX_LENGTH_TO_CACHE && dictLength! > 0) {
       const initialStreamPos = stream.pos;
       // Set the stream position to the beginning of the dictionary data...
       stream.pos = lexer.beginInlineImagePos;
       // ... and fetch the bytes of the dictionary *and* the inline image.
-      cacheKey = getInlineImageCacheKey(stream.getBytes(dictLength + length));
+      cacheKey = getInlineImageCacheKey(stream.getBytes(dictLength! + length));
       // Finally, don't forget to reset the stream position.
       stream.pos = initialStreamPos;
 
@@ -613,7 +623,7 @@ class Parser {
     for (const key in dictMap) {
       dict.set(<DictKey>key, dictMap[key]);
     }
-    let imageStream = stream.makeSubStream(startPos, length, dict);
+    let imageStream: Stream = <Stream>stream.makeSubStream(startPos, length, dict);
     if (cipherTransform) {
       imageStream = cipherTransform.createStream(imageStream, length);
     }
@@ -631,7 +641,7 @@ class Parser {
     return imageStream;
   }
 
-  #findStreamLength(startPos) {
+  #findStreamLength(startPos: number) {
     const { stream } = this.lexer;
     stream.pos = startPos;
 
@@ -708,7 +718,7 @@ class Parser {
     return -1;
   }
 
-  makeStream(dict, cipherTransform) {
+  makeStream(dict: Dict, cipherTransform: CipherTransform) {
     const lexer = this.lexer;
     let stream = lexer.stream;
 
@@ -717,7 +727,7 @@ class Parser {
     const startPos = stream.pos - 1;
 
     // Get the length.
-    let length = dict.get("Length");
+    let length = dict.getValue(DictKey.Length);
     if (!Number.isInteger(length)) {
       info(`Bad length "${length && length.toString()}" in stream.`);
       length = 0;
@@ -743,16 +753,16 @@ class Parser {
     }
     this.shift(); // 'endstream'
 
-    stream = stream.makeSubStream(startPos, length, dict);
+    stream = <Stream>stream.makeSubStream(startPos, length, dict);
     if (cipherTransform) {
-      stream = cipherTransform.createStream(stream, length);
+      stream = cipherTransform.createStream(<Stream>stream, length);
     }
     stream = this.filter(stream, dict, length);
     stream.dict = dict;
     return stream;
   }
 
-  filter(stream: Stream, dict: Dict, length) {
+  filter(stream: Stream, dict: Dict, length: number) {
     let filter = dict.getValueWithFallback(DictKey.F, DictKey.Filter);
     let params = dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
 
@@ -875,7 +885,7 @@ const specialChars = [
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  // fx
 ];
 
-function toHexDigit(ch) {
+function toHexDigit(ch: number) {
   if (ch >= /* '0' = */ 0x30 && ch /* '9' = */ <= 0x39) {
     return ch & 0x0f;
   }
@@ -896,11 +906,11 @@ class Lexer {
 
   protected currentChar: number;
 
-  protected knownCommands;
+  public knownCommands;
 
   protected _hexStringNumWarn = 0;
 
-  protected beginInlineImagePos = -1;
+  public beginInlineImagePos = -1;
 
   constructor(stream: BaseStream, knownCommands = null) {
 
@@ -1402,7 +1412,7 @@ export interface LinearizationInterface {
 class Linearization {
   static create(stream: Stream): LinearizationInterface | null {
     function getInt(linDict: Dict, name: string, allowZeroValue = false): number {
-      const obj = linDict.getValue(name);
+      const obj = <number>linDict.getValue(<DictKey>name);
       if (Number.isInteger(obj) && (allowZeroValue ? obj >= 0 : obj > 0)) {
         return obj;
       }
@@ -1433,10 +1443,7 @@ class Linearization {
       throw new Error("Hint array in the linearization dictionary is invalid.");
     }
 
-    const parser = new Parser({
-      lexer: new Lexer(stream),
-      xref: null,
-    });
+    const parser = new Parser(new Lexer(stream), null);
     const obj1 = parser.getObj();
     const obj2 = parser.getObj();
     const obj3 = parser.getObj();

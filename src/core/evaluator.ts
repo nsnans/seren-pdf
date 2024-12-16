@@ -5316,10 +5316,7 @@ class EvaluatorPreprocessor {
   constructor(stream: BaseStream, xref: XRef | null = null, stateManager = new StateManager()) {
     // TODO(mduan): pass array of knownCommands rather than this.opMap
     // dictionary
-    this.parser = new Parser({
-      lexer: new Lexer(stream, EvaluatorPreprocessor.opMap),
-      xref,
-    });
+    this.parser = new Parser(new Lexer(stream, EvaluatorPreprocessor.opMap), xref);
     this.stateManager = stateManager;
     this.nonProcessedArgs = [];
   }

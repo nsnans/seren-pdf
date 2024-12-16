@@ -14,7 +14,7 @@
  */
 
 import { warn } from "../../shared/util";
-import { XFAObject } from "./xfa_object";
+import { XFAObject, XmlObject } from "./xfa_object";
 
 const namePattern = /^[^.[]+/;
 const indexPattern = /^[^\]]+/;
@@ -59,7 +59,7 @@ function parseIndex(index) {
 // For now expressions containing .[...] or .(...) are not
 // evaluated so don't parse them.
 // TODO: implement that stuff and the remove the noExpr param.
-function parseExpression(expr: string, dotDotAllowed: boolean, noExpr = true) {
+function parseExpression(expr: string, dotDotAllowed: boolean = false, noExpr = true) {
   let match = expr.match(namePattern);
   if (!match) {
     return null;
@@ -154,8 +154,8 @@ function parseExpression(expr: string, dotDotAllowed: boolean, noExpr = true) {
 }
 
 function searchNode(
-  root,
-  container,
+  root: XFAObject | XFAObject[],
+  container: XFAObject,
   expr: string,
   dotDotAllowed = true,
   useCache = true
@@ -249,7 +249,7 @@ function searchNode(
   return root;
 }
 
-function createDataNode(root, container, expr) {
+function createDataNode(root: XmlObject, container, expr: string) {
   const parsed = parseExpression(expr);
   if (!parsed) {
     return null;
