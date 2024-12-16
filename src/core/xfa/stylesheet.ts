@@ -20,7 +20,7 @@ import { XFAAttributesObj, XFAObject } from "./xfa_object";
 const STYLESHEET_NS_ID = NamespaceIds.stylesheet.id;
 
 class Stylesheet extends XFAObject {
-  constructor() {
+  constructor(_attributes: XFAAttributesObj) {
     super(STYLESHEET_NS_ID, "stylesheet", /* hasChildren = */ true);
   }
 }

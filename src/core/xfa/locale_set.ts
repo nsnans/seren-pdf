@@ -28,9 +28,13 @@ const LOCALE_SET_NS_ID = NamespaceIds.localeSet.id;
 
 class CalendarSymbols extends XFAObject {
 
-  protected dayNames = new XFAObjectArray(2);
+  protected dayNames = new XFAObjectArray<DayNames>(2);
 
-  protected monthNames = new XFAObjectArray(2);
+  protected monthNames = new XFAObjectArray<MonthNames>(2);
+
+  protected eraNames: EraNames | null;
+
+  protected meridiemNames: MeridiemNames | null;
 
   protected name = "gregorian";
 
@@ -53,6 +57,9 @@ class CurrencySymbol extends StringObject {
 }
 
 class CurrencySymbols extends XFAObject {
+
+  protected currencySymbol: XFAObjectArray<CurrencySymbol>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "currencySymbols", /* hasChildren = */ true);
     this.currencySymbol = new XFAObjectArray(3);
@@ -72,6 +79,9 @@ class DatePattern extends StringObject {
 }
 
 class DatePatterns extends XFAObject {
+
+  protected datePattern: XFAObjectArray<DatePattern>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "datePatterns", /* hasChildren = */ true);
     this.datePattern = new XFAObjectArray(4);
@@ -93,6 +103,11 @@ class Day extends StringObject {
 }
 
 class DayNames extends XFAObject {
+
+  protected abbr: number;
+
+  protected day: XFAObjectArray<Day>;
+
   constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "dayNames", /* hasChildren = */ true);
     this.abbr = getInteger(
@@ -111,6 +126,9 @@ class Era extends StringObject {
 }
 
 class EraNames extends XFAObject {
+
+  protected era: XFAObjectArray<Era>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "eraNames", /* hasChildren = */ true);
     this.era = new XFAObjectArray(2);
@@ -118,6 +136,26 @@ class EraNames extends XFAObject {
 }
 
 class Locale extends XFAObject {
+
+  protected desc: string;
+
+  protected calendarSymbols: CalendarSymbols | null;
+
+  protected currencySymbols: CurrencySymbols | null;
+
+  protected datePatterns: DatePatterns | null;
+
+  protected dateTimeSymbols: DateTimeSymbols | null;
+
+  protected numberPatterns: NumberPatterns | null;
+
+  protected numberSymbols: NumberSymbols | null;
+
+  protected timePatterns: TimePatterns | null;
+
+  protected typeFaces: TypeFaces | null;
+
+
   constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "locale", /* hasChildren = */ true);
     this.desc = attributes.desc || "";
@@ -134,6 +172,9 @@ class Locale extends XFAObject {
 }
 
 class LocaleSet extends XFAObject {
+
+  protected locale: XFAObjectArray<Locale>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "localeSet", /* hasChildren = */ true);
     this.locale = new XFAObjectArray();
@@ -147,6 +188,9 @@ class Meridiem extends StringObject {
 }
 
 class MeridiemNames extends XFAObject {
+
+  protected meridiem: XFAObjectArray<Meridiem>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "meridiemNames", /* hasChildren = */ true);
     this.meridiem = new XFAObjectArray(2);
@@ -160,13 +204,14 @@ class Month extends StringObject {
 }
 
 class MonthNames extends XFAObject {
+
+  protected abbr: number;
+
+  protected month: XFAObjectArray<Month>;
+
   constructor(attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "monthNames", /* hasChildren = */ true);
-    this.abbr = getInteger(
-      attributes.abbr,
-      0,
-      x => x === 1,
-    );
+    this.abbr = getInteger(attributes.abbr, 0, x => x === 1);
     this.month = new XFAObjectArray(12);
   }
 }
@@ -184,6 +229,9 @@ class NumberPattern extends StringObject {
 }
 
 class NumberPatterns extends XFAObject {
+
+  protected numberPattern: XFAObjectArray<NumberPattern>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberPatterns", /* hasChildren = */ true);
     this.numberPattern = new XFAObjectArray(4);
@@ -204,6 +252,9 @@ class NumberSymbol extends StringObject {
 }
 
 class NumberSymbols extends XFAObject {
+
+  protected numberSymbol: XFAObjectArray<NumberSymbol>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "numberSymbols", /* hasChildren = */ true);
     this.numberSymbol = new XFAObjectArray(5);
@@ -223,6 +274,9 @@ class TimePattern extends StringObject {
 }
 
 class TimePatterns extends XFAObject {
+
+  protected timePattern: XFAObjectArray<TimePattern>;
+
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "timePatterns", /* hasChildren = */ true);
     this.timePattern = new XFAObjectArray(4);
@@ -237,6 +291,9 @@ class TypeFace extends XFAObject {
 }
 
 class TypeFaces extends XFAObject {
+
+  protected typeFace: XFAObjectArray<TypeFace>;
+  
   constructor(_attributes: XFAAttributesObj) {
     super(LOCALE_SET_NS_ID, "typeFaces", /* hasChildren = */ true);
     this.typeFace = new XFAObjectArray();

@@ -31,6 +31,7 @@ import { XfaText } from "./xfa_text";
  */
 
 class XfaLayer {
+  
   static setupStorage(html, id, element, storage, intent) {
     const storedData = storage.getValue(id, { value: null });
     switch (element.name) {

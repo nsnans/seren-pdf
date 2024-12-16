@@ -15,6 +15,7 @@
 
 import { AvailableSpace, RectType } from "../../display/display_utils";
 import { measureToString } from "./html_utils";
+import { ExclGroup, Subform } from "./template";
 
 // Subform and ExclGroup have a layout so they share these functions.
 
@@ -55,7 +56,7 @@ function createLine(node, children) {
   };
 }
 
-function flushHTML(node) {
+function flushHTML(node: Subform | ExclGroup) {
   if (!node.extra) {
     return null;
   }

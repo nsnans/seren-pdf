@@ -33,12 +33,17 @@ const CONFIG_NS_ID = NamespaceIds.config.id;
 
 class Acrobat extends XFAObject {
 
-  protected acrobat7: null;
-  protected autoSave: null;
-  protected common: null;
-  protected validate: null;
-  protected validateApprovalSignatures: null;
-  protected submitUrl: XFAObjectArray;
+  protected acrobat7: Acrobat7 | null;
+
+  protected autoSave: AutoSave | null;
+
+  protected common: Common | null;
+
+  protected validate: Validate | null;
+
+  protected validateApprovalSignatures: ValidateApprovalSignatures | null;
+
+  protected submitUrl: XFAObjectArray<SubmitUrl>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "acrobat", /* hasChildren = */ true);
@@ -96,7 +101,7 @@ class AdobeExtensionLevel extends IntegerObject {
 }
 
 class Agent extends XFAObject {
-  protected common: XFAObjectArray;
+  protected common: XFAObjectArray<Common>;
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "agent", /* hasChildren = */ true);
     this.name = attributes.name ? attributes.name.trim() : "";
@@ -195,7 +200,7 @@ class BehaviorOverride extends ContentObject {
 
 class Cache extends XFAObject {
 
-  protected templateCache: null;
+  protected templateCache: TemplateCache | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "cache", /* hasChildren = */ true);
@@ -211,23 +216,24 @@ class Change extends Option01 {
 
 class Common extends XFAObject {
 
-  protected data: null;
+  protected data: Data | null;
 
-  protected locale: null;
+  protected locale: Locale | null;
 
-  protected localeSet: null;
+  protected localeSet: LocaleSet | null;
 
-  protected messaging: null;
+  protected messaging: Messaging | null;
 
-  protected suppressBanner: null;
+  protected suppressBanner: SuppressBanner | null;
 
-  protected template: null;
+  // 有点问题
+  public template: null;
 
-  protected validationMessaging: null;
+  protected validationMessaging: ValidationMessaging | null;
 
-  protected versionControl: null;
+  protected versionControl: VersionControl | null;
 
-  protected log: XFAObjectArray;
+  protected log: XFAObjectArray<Log>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "common", /* hasChildren = */ true);
@@ -265,13 +271,13 @@ class CompressObjectStream extends Option10 {
 
 class Compression extends XFAObject {
 
-  protected compressLogicalStructure: null;
+  protected compressLogicalStructure: CompressLogicalStructure | null;
 
-  protected compressObjectStream: null;
+  protected compressObjectStream: CompressObjectStream | null;
 
-  protected level: null;
+  protected level: Level | null;
 
-  protected type: null;
+  protected type: Type | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "compression", /* hasChildren = */ true);
@@ -284,13 +290,13 @@ class Compression extends XFAObject {
 
 class Config extends XFAObject {
 
-  protected acrobat: null;
+  protected acrobat: Acrobat | null;
 
-  protected present: null;
+  protected present: Present | null;
 
-  protected trace: null;
+  protected trace: Trace | null;
 
-  protected agent: XFAObjectArray;
+  protected agent: XFAObjectArray<Agent>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "config", /* hasChildren = */ true);
@@ -333,29 +339,29 @@ class CurrentPage extends IntegerObject {
 
 class Data extends XFAObject {
 
-  protected excludeNS: XFAObjectArray;
+  protected excludeNS: XFAObjectArray<ExcludeNS>;
 
-  protected transform: XFAObjectArray;
+  protected transform: XFAObjectArray<Transform>;
 
-  protected adjustData: null;
+  protected adjustData: AdjustData | null;
 
-  protected attributes: null;
+  protected attributes: Attributes | null;
 
-  protected incrementalLoad: null;
+  protected incrementalLoad: IncrementalLoad | null;
 
-  protected outputXSL: null;
+  protected outputXSL: OutputXSL | null;
 
-  protected range: null;
+  protected range: Range | null;
 
-  protected record: null;
+  protected record: Record | null;
 
-  protected startNode: null;
+  protected startNode: StartNode | null;
 
-  protected uri: null;
+  protected uri: Uri | null;
 
-  protected window: null;
+  protected window: Window | null;
 
-  protected xsl: null;
+  protected xsl: Xsl | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "data", /* hasChildren = */ true);
@@ -428,9 +434,9 @@ class DocumentAssembly extends Option01 {
 
 class Driver extends XFAObject {
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "driver", /* hasChildren = */ true);
@@ -470,11 +476,11 @@ class Encrypt extends Option01 {
 
 class Encryption extends XFAObject {
 
-  protected encrypt: null;
+  protected encrypt: Encrypt | null;
 
-  protected encryptionLevel: null;
+  protected encryptionLevel: EncryptionLevel | null;
 
-  protected permissions: null;
+  protected permissions: Permissions | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "encryption", /* hasChildren = */ true);
@@ -595,17 +601,17 @@ class FlipLabel extends OptionObject {
 
 class FontInfo extends XFAObject {
 
-  protected alwaysEmbed: XFAObjectArray;
+  protected alwaysEmbed: XFAObjectArray<AlwaysEmbed>;
 
-  protected defaultTypeface: XFAObjectArray;
+  protected defaultTypeface: XFAObjectArray<DefaultTypeface>;
 
-  protected neverEmbed: XFAObjectArray;
+  protected neverEmbed: XFAObjectArray<NeverEmbed>;
 
-  protected embed: null;
+  protected embed: Embed | null;
 
-  protected map: null;
+  protected map: MapElement | null;
 
-  protected subsetBelow: null;
+  protected subsetBelow: SubsetBelow | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "fontInfo", /* hasChildren = */ true);
@@ -673,13 +679,13 @@ class Jog extends OptionObject {
 
 class LabelPrinter extends XFAObject {
 
-  protected batchOutput: null;
+  protected batchOutput: BatchOutput | null;
 
-  protected flipLabel: null;
+  protected flipLabel: FlipLabel | null;
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "labelPrinter", /* hasChildren = */ true);
@@ -723,13 +729,13 @@ class LocaleSet extends StringObject {
 
 class Log extends XFAObject {
 
-  protected mode: null;
+  protected mode: Mode | null;
 
-  protected threshold: null;
+  protected threshold: Threshold | null;
 
-  protected to: null;
+  protected to: To | null;
 
-  protected uri: null;
+  protected uri: Uri | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "log", /* hasChildren = */ true);
@@ -743,9 +749,9 @@ class Log extends XFAObject {
 // Renamed in MapElement to avoid confusion with usual js Map.
 class MapElement extends XFAObject {
 
-  protected equate: XFAObjectArray;
+  protected equate: XFAObjectArray<Equate>;
 
-  protected equateRange: XFAObjectArray;
+  protected equateRange: XFAObjectArray<EquateRange>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "map", /* hasChildren = */ true);
@@ -779,7 +785,7 @@ class Message extends XFAObject {
 
 class Messaging extends XFAObject {
 
-  protected message: XFAObjectArray;
+  protected message: XFAObjectArray<Message>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "messaging", /* hasChildren = */ true);
@@ -833,11 +839,11 @@ class OpenAction extends XFAObject {
 
 class Output extends XFAObject {
 
-  protected to: null;
+  protected to: To | null;
 
-  protected type: null;
+  protected type: Type | null;
 
-  protected uri: null;
+  protected uri: Uri | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "output", /* hasChildren = */ true);
@@ -954,21 +960,21 @@ class Part extends IntegerObject {
 
 class Pcl extends XFAObject {
 
-  protected batchOutput: null;
+  protected batchOutput: BatchOutput | null;
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected jog: null;
+  protected jog: Jog | null;
 
-  protected mediumInfo: null;
+  protected mediumInfo: MediumInfo | null;
 
-  protected outputBin: null;
+  protected outputBin: OutputBin | null;
 
-  protected pageOffset: null;
+  protected pageOffset: PageOffset | null;
 
-  protected staple: null;
+  protected staple: Staple | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pcl", /* hasChildren = */ true);
@@ -986,43 +992,43 @@ class Pcl extends XFAObject {
 
 class Pdf extends XFAObject {
 
-  protected adobeExtensionLevel: null;
+  protected adobeExtensionLevel: AdobeExtensionLevel | null;
 
-  protected batchOutput: null;
+  protected batchOutput: BatchOutput | null;
 
-  protected compression: null;
+  protected compression: Compression | null;
 
-  protected creator: null;
+  protected creator: Creator | null;
 
-  protected encryption: null;
+  protected encryption: Encryption | null;
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected interactive: null;
+  protected interactive: Interactive | null;
 
-  protected linearized: null;
+  protected linearized: Linearized | null;
 
-  protected openAction: null;
+  protected openAction: OpenAction | null;
 
-  protected pdfa: null;
+  protected pdfa: Pdfa | null;
 
-  protected producer: null;
+  protected producer: Producer | null;
 
-  protected renderPolicy: null;
+  protected renderPolicy: RenderPolicy | null;
 
-  protected scriptModel: null;
+  protected scriptModel: ScriptModel | null;
 
-  protected silentPrint: null;
+  protected silentPrint: SilentPrint | null;
 
-  protected submitFormat: null;
+  protected submitFormat: SubmitFormat | null;
 
-  protected tagged: null;
+  protected tagged: Tagged | null;
 
-  protected version: null;
+  protected version: Version | null;
 
-  protected viewerPreferences: null;
+  protected viewerPreferences: ViewerPreferences | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "pdf", /* hasChildren = */ true);
@@ -1072,21 +1078,21 @@ class Permissions extends XFAObject {
 
   protected accessibleContent: null;
 
-  protected change: null;
+  protected change: Change | null;
 
-  protected contentCopy: null;
+  protected contentCopy: ContentCopy | null;
 
-  protected documentAssembly: null;
+  protected documentAssembly: DocumentAssembly | null;
 
-  protected formFieldFilling: null;
+  protected formFieldFilling: FormFieldFilling | null;
 
-  protected modifyAnnots: null;
+  protected modifyAnnots: ModifyAnnots | null;
 
-  protected plaintextMetadata: null;
+  protected plaintextMetadata: PlaintextMetadata | null;
 
-  protected print: null;
+  protected print: Print | null;
 
-  protected printHighQuality: null;
+  protected printHighQuality: PrintHighQuality | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "permissions", /* hasChildren = */ true);
@@ -1137,49 +1143,49 @@ class Presence extends OptionObject {
 
 class Present extends XFAObject {
 
-  protected driver: XFAObjectArray;
+  protected driver: XFAObjectArray<Driver>;
 
-  protected labelPrinter: XFAObjectArray;
+  protected labelPrinter: XFAObjectArray<LabelPrinter>;
 
-  protected pcl: XFAObjectArray;
+  protected pcl: XFAObjectArray<Pcl>;
 
-  protected pdf: XFAObjectArray;
+  protected pdf: XFAObjectArray<Pdf>;
 
-  protected ps: XFAObjectArray;
+  protected ps: XFAObjectArray<Ps>;
 
-  protected submitUrl: XFAObjectArray;
+  protected submitUrl: XFAObjectArray<SubmitUrl>;
 
-  protected webClient: XFAObjectArray;
+  protected webClient: XFAObjectArray<WebClient>;
 
-  protected zpl: XFAObjectArray;
+  protected zpl: XFAObjectArray<Zpl>;
 
-  protected behaviorOverride: null;
+  protected behaviorOverride: BehaviorOverride | null;
 
-  protected cache: null;
+  protected cache: Cache | null;
 
-  protected common: null;
+  protected common: Common | null;
 
-  protected copies: null;
+  protected copies: Copies | null;
 
-  protected destination: null;
+  protected destination: Destination | null;
 
-  protected incrementalMerge: null;
+  protected incrementalMerge: IncrementalMerge | null;
 
-  protected layout: null;
+  protected layout: Layout | null;
 
-  protected output: null;
+  protected output: Output | null;
 
-  protected overprint: null;
+  protected overprint: Overprint | null;
 
-  protected pagination: null;
+  protected pagination: Pagination | null;
 
-  protected paginationOverride: null;
+  protected paginationOverride: PaginationOverride | null;
 
-  protected script: null;
+  protected script: Script | null;
 
-  protected validate: null;
+  protected validate: Validate | null;
 
-  protected xdp: null;
+  protected xdp: Xdp | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "present", /* hasChildren = */ true);
@@ -1240,19 +1246,19 @@ class Producer extends StringObject {
 
 class Ps extends XFAObject {
 
-  protected batchOutput: null;
+  protected batchOutput: BatchOutput | null;
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected jog: null;
+  protected jog: Jog | null;
 
-  protected mediumInfo: null;
+  protected mediumInfo: MediumInfo | null;
 
-  protected outputBin: null;
+  protected outputBin: OutputBin | null;
 
-  protected staple: null;
+  protected staple: Staple | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "ps", /* hasChildren = */ true);
@@ -1343,11 +1349,11 @@ class RunScripts extends OptionObject {
 
 class Script extends XFAObject {
 
-  protected currentPage: null;
+  protected currentPage: CurrentPage | null;
 
-  protected exclude: null;
+  protected exclude: Exclude | null;
 
-  protected runScripts: null;
+  protected runScripts: RunScripts | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "script", /* hasChildren = */ true);
@@ -1377,9 +1383,9 @@ class Severity extends OptionObject {
 
 class SilentPrint extends XFAObject {
 
-  protected addSilentPrint: null;
+  protected addSilentPrint: AddSilentPrint | null;
 
-  protected printerName: null;
+  protected printerName: PrinterName | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "silentPrint", /* hasChildren = */ true);
@@ -1450,15 +1456,15 @@ class Tagged extends Option01 {
 
 class Template extends XFAObject {
 
-  protected base: null;
+  protected base: Base | null;
 
-  protected relevant: null;
+  protected relevant: Relevant | null;
 
-  protected startPage: null;
+  protected startPage: StartPage | null;
 
-  protected uri: null;
+  protected uri: Uri | null;
 
-  protected xsl: null;
+  protected xsl: Xsl | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "template", /* hasChildren = */ true);
@@ -1510,7 +1516,7 @@ class TemplateCache extends XFAObject {
 
 class Trace extends XFAObject {
 
-  protected area: XFAObjectArray;
+  protected area: XFAObjectArray<Area>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "trace", /* hasChildren = */ true);
@@ -1520,19 +1526,19 @@ class Trace extends XFAObject {
 
 class Transform extends XFAObject {
 
-  protected groupParent: null;
+  protected groupParent: GroupParent | null;
 
-  protected ifEmpty: null;
+  protected ifEmpty: IfEmpty | null;
 
-  protected nameAttr: null;
+  protected nameAttr: NameAttr | null;
 
-  protected picture: null;
+  protected picture: Picture | null;
 
-  protected presence: null;
+  protected presence: Presence | null;
 
-  protected rename: null;
+  protected rename: Rename | null;
 
-  protected whitespace: null;
+  protected whitespace: Whitespace | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "transform", /* hasChildren = */ true);
@@ -1638,23 +1644,23 @@ class VersionControl extends XFAObject {
 
 class ViewerPreferences extends XFAObject {
 
-  protected ADBE_JSConsole: null;
+  protected ADBE_JSConsole: ADBE_JSConsole | null;
 
-  protected ADBE_JSDebugger: null;
+  protected ADBE_JSDebugger: ADBE_JSDebugger | null;
 
-  protected addViewerPreferences: null;
+  protected addViewerPreferences: AddViewerPreferences | null;
 
-  protected duplexOption: null;
+  protected duplexOption: DuplexOption | null;
 
-  protected enforce: null;
+  protected enforce: Enforce | null;
 
-  protected numberOfCopies: null;
+  protected numberOfCopies: NumberOfCopies | null;
 
-  protected pageRange: null;
+  protected pageRange: PageRange | null;
 
-  protected pickTrayByPDFSize: null;
+  protected pickTrayByPDFSize: PickTrayByPDFSize | null;
 
-  protected printScaling: null;
+  protected printScaling: PrintScaling | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "viewerPreferences", /* hasChildren = */ true);
@@ -1672,9 +1678,9 @@ class ViewerPreferences extends XFAObject {
 
 class WebClient extends XFAObject {
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "webClient", /* hasChildren = */ true);
@@ -1719,9 +1725,9 @@ class Window extends ContentObject {
 
 class Xdc extends XFAObject {
 
-  protected uri: XFAObjectArray;
+  protected uri: XFAObjectArray<Uri>;
 
-  protected xsl: XFAObjectArray;
+  protected xsl: XFAObjectArray<Xsl>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xdc", /* hasChildren = */ true);
@@ -1732,7 +1738,7 @@ class Xdc extends XFAObject {
 
 class Xdp extends XFAObject {
 
-  protected packets: null;
+  protected packets: Packets | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xdp", /* hasChildren = */ true);
@@ -1742,9 +1748,9 @@ class Xdp extends XFAObject {
 
 class Xsl extends XFAObject {
 
-  protected debug: null;
+  protected debug: Debug | null;
 
-  protected uri: null;
+  protected uri: Uri | null;
 
   constructor(_attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "xsl", /* hasChildren = */ true);
@@ -1755,13 +1761,13 @@ class Xsl extends XFAObject {
 
 class Zpl extends XFAObject {
 
-  protected batchOutput: null;
+  protected batchOutput: BatchOutput | null;
 
-  protected flipLabel: null;
+  protected flipLabel: FlipLabel | null;
 
-  protected fontInfo: null;
+  protected fontInfo: FontInfo | null;
 
-  protected xdc: null;
+  protected xdc: Xdc | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONFIG_NS_ID, "zpl", /* hasChildren = */ true);

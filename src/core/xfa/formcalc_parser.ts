@@ -17,7 +17,6 @@
 /*
  * 这个文件只在测试代码中被调用过 
  */
-import { isNumberObject } from "util/types";
 import { Lexer, Token, TOKEN } from "./formcalc_lexer";
 
 const Errors = {

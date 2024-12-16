@@ -20,9 +20,21 @@ import { XFAAttributesObj, XFAObject, XFAObjectArray } from "./xfa_object";
 const XDP_NS_ID = NamespaceIds.xdp.id;
 
 class Xdp extends XFAObject {
-  uuid: string;
-  timeStamp: string;
-  stylesheet: XFAObjectArray;
+
+  protected uuid: string;
+
+  protected timeStamp: string;
+
+  protected stylesheet: XFAObjectArray;
+
+  protected config: null;
+
+  protected connectionSet: null;
+
+  protected datasets: null;
+  
+  protected localeSet: null;
+  
   constructor(attributes: XFAAttributesObj) {
     super(XDP_NS_ID, "xdp", /* hasChildren = */ true);
     this.uuid = attributes.uuid || "";

@@ -19,13 +19,13 @@ import { StringObject, XFAAttributesObj, XFAObject, XFAObjectArray } from "./xfa
 
 const CONNECTION_SET_NS_ID = NamespaceIds.connectionSet.id;
 
-class ConnectionSet extends XFAObject {
+export class ConnectionSet extends XFAObject {
 
-  protected wsdlConnection = new XFAObjectArray();
+  protected wsdlConnection = new XFAObjectArray<WsdlConnection>();
 
-  protected xmlConnection = new XFAObjectArray();
+  protected xmlConnection = new XFAObjectArray<XmlConnection>();
 
-  protected xsdConnection = new XFAObjectArray();
+  protected xsdConnection = new XFAObjectArray<XsdConnection>();
 
   constructor() {
     super(CONNECTION_SET_NS_ID, "connectionSet", /* hasChildren = */ true);
@@ -122,18 +122,18 @@ class WsdlAddress extends StringObject {
 class WsdlConnection extends XFAObject {
 
   protected dataDescription: string;
-  
-  protected effectiveInputPolicy;
 
-  protected effectiveOutputPolicy;
+  protected effectiveInputPolicy: EffectiveInputPolicy | null;
 
-  protected operation;
-  
-  protected soapAction;
+  protected effectiveOutputPolicy: EffectiveOutputPolicy | null;
 
-  protected soapAddress;
-  
-  protected wsdlAddress;
+  protected operation: Operation | null;
+
+  protected soapAction: SoapAction | null;
+
+  protected soapAddress: SoapAddress | null;
+
+  protected wsdlAddress: WsdlAddress | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "wsdlConnection", /* hasChildren = */ true);
@@ -152,7 +152,7 @@ class XmlConnection extends XFAObject {
 
   protected dataDescription: string;
 
-  protected uri;
+  protected uri: Uri | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xmlConnection", /* hasChildren = */ true);
@@ -166,9 +166,9 @@ class XsdConnection extends XFAObject {
 
   protected dataDescription: string;
 
-  protected rootElement;
+  protected rootElement: RootElement | null;
 
-  protected uri;
+  protected uri: Uri | null;
 
   constructor(attributes: XFAAttributesObj) {
     super(CONNECTION_SET_NS_ID, "xsdConnection", /* hasChildren = */ true);

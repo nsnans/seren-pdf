@@ -16,6 +16,7 @@
 import { AvailableSpace, RectType } from "../../display/display_utils";
 import { fromBase64Util, Util, warn } from "../../shared/util";
 import { recoverJsURL } from "../core_utils";
+import { Builder } from "./builder";
 import { getMetrics } from "./fonts";
 import {
   computeBbox,
@@ -522,19 +523,19 @@ class Area extends XFAObject {
 
   protected extras: Extras | null;
 
-  protected area: XFAObjectArray;
+  protected area: XFAObjectArray<Area>;
 
-  protected draw: XFAObjectArray;
+  protected draw: XFAObjectArray<Draw>;
 
-  protected exObject: XFAObjectArray;
+  protected exObject: XFAObjectArray<ExObject>;
 
-  protected exclGroup: XFAObjectArray;
+  protected exclGroup: XFAObjectArray<ExclGroup>;
 
-  protected field: XFAObjectArray;
+  protected field: XFAObjectArray<Field>;
 
-  protected subform: XFAObjectArray;
+  protected subform: XFAObjectArray<Subform>;
 
-  protected subformSet: XFAObjectArray;
+  protected subformSet: XFAObjectArray<SubformSet>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "area", /* hasChildren = */ true);
@@ -910,9 +911,9 @@ class Border extends XFAObject {
 
   protected relevant: { excluded: boolean; viewname: string; }[];
 
-  protected corner: XFAObjectArray;
+  protected corner: XFAObjectArray<Corner>;
 
-  protected edge: XFAObjectArray;
+  protected edge: XFAObjectArray<Edge>;
 
   public extras: Extras | null;
 
@@ -1986,23 +1987,23 @@ class DefaultUi extends XFAObject {
 
 class Desc extends XFAObject {
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "desc", /* hasChildren = */ true);
@@ -2041,7 +2042,7 @@ class DigestMethods extends XFAObject {
 
   public type: string;
 
-  public digestMethod: XFAObjectArray;
+  public digestMethod: XFAObjectArray<DigestMethod>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "digestMethods", /* hasChildren = */ true);
@@ -2085,7 +2086,7 @@ class Draw extends XFAObject {
 
   public y: number;
 
-  public setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray<SetProperty>;
 
   public assist: Assist | null;
 
@@ -2388,7 +2389,7 @@ class Encodings extends XFAObject {
 
   protected type: string;
 
-  protected encoding: XFAObjectArray;
+  protected encoding: XFAObjectArray<Encoding>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encodings", /* hasChildren = */ true);
@@ -2437,7 +2438,7 @@ class Encryption extends XFAObject {
 
   public type: string;
 
-  public certificate: XFAObjectArray;
+  public certificate: XFAObjectArray<Certificate>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encryption", /* hasChildren = */ true);
@@ -2468,7 +2469,7 @@ class EncryptionMethods extends XFAObject {
 
   public type: string;
 
-  public encryptionMethod: XFAObjectArray;
+  public encryptionMethod: XFAObjectArray<EncryptionMethod>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "encryptionMethods", /* hasChildren = */ true);
@@ -2614,25 +2615,25 @@ class ExObject extends XFAObject {
 
   public codeType: string;
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public exObject: XFAObjectArray;
+  public exObject: XFAObjectArray<ExObject>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
   public extras: Extras | null;
 
@@ -2661,7 +2662,7 @@ class ExObject extends XFAObject {
   }
 }
 
-class ExclGroup extends XFAObject {
+export class ExclGroup extends XFAObject {
 
   public access: string;
 
@@ -2695,13 +2696,13 @@ class ExclGroup extends XFAObject {
 
   public y: number;
 
-  public connect: XFAObjectArray;
+  public connect: XFAObjectArray<Connect>;
 
-  public event: XFAObjectArray;
+  public event: XFAObjectArray<Event>;
 
-  public field: XFAObjectArray;
+  public field: XFAObjectArray<Field>;
 
-  public setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray<SetProperty>;
 
   data: any;
 
@@ -3066,25 +3067,25 @@ class Execute extends XFAObject {
 
 class Extras extends XFAObject {
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public extras: XFAObjectArray;
+  public extras: XFAObjectArray<Extras>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "extras", /* hasChildren = */ true);
@@ -3146,15 +3147,15 @@ class Field extends XFAObject {
 
   public y: number;
 
-  public items: XFAObjectArray;
+  public items: XFAObjectArray<Items>;
 
-  public bindItems: XFAObjectArray;
+  public bindItems: XFAObjectArray<BindItems>;
 
-  public connect: XFAObjectArray;
+  public connect: XFAObjectArray<Connect>;
 
-  public event: XFAObjectArray;
+  public event: XFAObjectArray<Event>;
 
-  public setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray<SetProperty>;
 
   public assist: Assist | null;
 
@@ -3187,9 +3188,6 @@ class Field extends XFAObject {
   public ui: Ui | null;
 
   public validate: Validate | null;
-
-  // TODO 不该是any类型
-  tabIndex: any;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "field", /* hasChildren = */ true);
@@ -3845,7 +3843,7 @@ class Font extends XFAObject {
     this.fill = null;
   }
 
-  clean(builder) {
+  clean(builder: Builder) {
     super.clean(builder);
     this.globalData.usedTypefaces.add(this.typeface);
   }
@@ -4141,7 +4139,7 @@ class Issuers extends XFAObject {
 
   public type: string;
 
-  public certificate: XFAObjectArray;
+  public certificate: XFAObjectArray<Certificate>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "issuers", /* hasChildren = */ true);
@@ -4161,23 +4159,23 @@ class Items extends XFAObject {
 
   public save: number;
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "items", /* hasChildren = */ true);
@@ -4424,7 +4422,7 @@ class Manifest extends XFAObject {
 
   public action: string;
 
-  public ref: XFAObjectArray;
+  public ref: XFAObjectArray<XFAObject>;
 
   public extras: Extras | null;
 
@@ -4677,7 +4675,7 @@ class Oids extends XFAObject {
 
   public type: string;
 
-  public oid: XFAObjectArray;
+  public oid: XFAObjectArray<Oid>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "oids", /* hasChildren = */ true);
@@ -4740,17 +4738,17 @@ class PageArea extends XFAObject {
 
   public relevant: { excluded: boolean; viewname: string; }[];
 
-  public area: XFAObjectArray;
+  public area: XFAObjectArray<Area>;
 
-  public contentArea: XFAObjectArray;
+  public contentArea: XFAObjectArray<ContentArea>;
 
-  public draw: XFAObjectArray;
+  public draw: XFAObjectArray<Draw>;
 
-  public exclGroup: XFAObjectArray;
+  public exclGroup: XFAObjectArray<ExclGroup>;
 
-  public field: XFAObjectArray;
+  public field: XFAObjectArray<Field>;
 
-  public subform: XFAObjectArray;
+  public subform: XFAObjectArray<Subform>;
 
   public desc: Desc | null;
 
@@ -4883,9 +4881,9 @@ class PageSet extends XFAObject {
 
   public relevant: { excluded: boolean; viewname: string; }[];
 
-  public pageArea: XFAObjectArray;
+  public pageArea: XFAObjectArray<PageArea>;
 
-  public pageSet: XFAObjectArray;
+  public pageSet: XFAObjectArray<PageSet>;
 
   public extras: Extras | null;
 
@@ -5179,221 +5177,221 @@ class Picture extends StringObject {
 
 class Proto extends XFAObject {
 
-  public appearanceFilter: XFAObjectArray;
+  public appearanceFilter: XFAObjectArray<AppearanceFilter>;
 
-  public arc: XFAObjectArray;
+  public arc: XFAObjectArray<Arc>;
 
-  public area: XFAObjectArray;
+  public area: XFAObjectArray<Area>;
 
-  public assist: XFAObjectArray;
+  public assist: XFAObjectArray<Assist>;
 
-  public barcode: XFAObjectArray;
+  public barcode: XFAObjectArray<Barcode>;
 
-  public bindItems: XFAObjectArray;
+  public bindItems: XFAObjectArray<BindItems>;
 
-  public bookend: XFAObjectArray;
+  public bookend: XFAObjectArray<Bookend>;
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public border: XFAObjectArray;
+  public border: XFAObjectArray<Border>;
 
-  public break: XFAObjectArray;
+  public break: XFAObjectArray<Break>;
 
-  public breakAfter: XFAObjectArray;
+  public breakAfter: XFAObjectArray<BreakAfter>;
 
-  public breakBefore: XFAObjectArray;
+  public breakBefore: XFAObjectArray<BreakBefore>;
 
-  public button: XFAObjectArray;
+  public button: XFAObjectArray<Button>;
 
-  public calculate: XFAObjectArray;
+  public calculate: XFAObjectArray<Calculate>;
 
-  public caption: XFAObjectArray;
+  public caption: XFAObjectArray<Caption>;
 
-  public certificate: XFAObjectArray;
+  public certificate: XFAObjectArray<Certificate>;
 
-  public certificates: XFAObjectArray;
+  public certificates: XFAObjectArray<Certificates>;
 
-  public checkButton: XFAObjectArray;
+  public checkButton: XFAObjectArray<CheckButton>;
 
-  public choiceList: XFAObjectArray;
+  public choiceList: XFAObjectArray<ChoiceList>;
 
-  public color: XFAObjectArray;
+  public color: XFAObjectArray<Color>;
 
-  public comb: XFAObjectArray;
+  public comb: XFAObjectArray<Comb>;
 
-  public connect: XFAObjectArray;
+  public connect: XFAObjectArray<Connect>;
 
-  public contentArea: XFAObjectArray;
+  public contentArea: XFAObjectArray<ContentArea>;
 
-  public corner: XFAObjectArray;
+  public corner: XFAObjectArray<Corner>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public dateTimeEdit: XFAObjectArray;
+  public dateTimeEdit: XFAObjectArray<DateTimeEdit>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public defaultUi: XFAObjectArray;
+  public defaultUi: XFAObjectArray<DefaultUi>;
 
-  public desc: XFAObjectArray;
+  public desc: XFAObjectArray<Desc>;
 
-  public digestMethod: XFAObjectArray;
+  public digestMethod: XFAObjectArray<DigestMethod>;
 
-  public digestMethods: XFAObjectArray;
+  public digestMethods: XFAObjectArray<DigestMethods>;
 
-  public draw: XFAObjectArray;
+  public draw: XFAObjectArray<Draw>;
 
-  public edge: XFAObjectArray;
+  public edge: XFAObjectArray<Edge>;
 
-  public encoding: XFAObjectArray;
+  public encoding: XFAObjectArray<Encoding>;
 
-  public encodings: XFAObjectArray;
+  public encodings: XFAObjectArray<Encodings>;
 
-  public encrypt: XFAObjectArray;
+  public encrypt: XFAObjectArray<Encrypt>;
 
-  public encryptData: XFAObjectArray;
+  public encryptData: XFAObjectArray<EncryptData>;
 
-  public encryption: XFAObjectArray;
+  public encryption: XFAObjectArray<Encryption>;
 
-  public encryptionMethod: XFAObjectArray;
+  public encryptionMethod: XFAObjectArray<EncryptionMethod>;
 
-  public encryptionMethods: XFAObjectArray;
+  public encryptionMethods: XFAObjectArray<EncryptionMethods>;
 
-  public event: XFAObjectArray;
+  public event: XFAObjectArray<Event>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public exObject: XFAObjectArray;
+  public exObject: XFAObjectArray<ExObject>;
 
-  public exclGroup: XFAObjectArray;
+  public exclGroup: XFAObjectArray<ExclGroup>;
 
-  public execute: XFAObjectArray;
+  public execute: XFAObjectArray<Execute>;
 
-  public extras: XFAObjectArray;
+  public extras: XFAObjectArray<Extras>;
 
-  public field: XFAObjectArray;
+  public field: XFAObjectArray<Field>;
 
-  public fill: XFAObjectArray;
+  public fill: XFAObjectArray<Fill>;
 
-  public filter: XFAObjectArray;
+  public filter: XFAObjectArray<Filter>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public font: XFAObjectArray;
+  public font: XFAObjectArray<Font>;
 
-  public format: XFAObjectArray;
+  public format: XFAObjectArray<Format>;
 
-  public handler: XFAObjectArray;
+  public handler: XFAObjectArray<Handler>;
 
-  public hyphenation: XFAObjectArray;
+  public hyphenation: XFAObjectArray<Hyphenation>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public imageEdit: XFAObjectArray;
+  public imageEdit: XFAObjectArray<ImageEdit>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public issuers: XFAObjectArray;
+  public issuers: XFAObjectArray<Issuers>;
 
-  public items: XFAObjectArray;
+  public items: XFAObjectArray<Items>;
 
-  public keep: XFAObjectArray;
+  public keep: XFAObjectArray<Keep>;
 
-  public keyUsage: XFAObjectArray;
+  public keyUsage: XFAObjectArray<KeyUsage>;
 
-  public line: XFAObjectArray;
+  public line: XFAObjectArray<Line>;
 
-  public linear: XFAObjectArray;
+  public linear: XFAObjectArray<Linear>;
 
-  public lockDocument: XFAObjectArray;
+  public lockDocument: XFAObjectArray<LockDocument>;
 
-  public manifest: XFAObjectArray;
+  public manifest: XFAObjectArray<Manifest>;
 
-  public margin: XFAObjectArray;
+  public margin: XFAObjectArray<Margin>;
 
-  public mdp: XFAObjectArray;
+  public mdp: XFAObjectArray<Mdp>;
 
-  public medium: XFAObjectArray;
+  public medium: XFAObjectArray<Medium>;
 
-  public message: XFAObjectArray;
+  public message: XFAObjectArray<Message>;
 
-  public numericEdit: XFAObjectArray;
+  public numericEdit: XFAObjectArray<NumericEdit>;
 
-  public occur: XFAObjectArray;
+  public occur: XFAObjectArray<Occur>;
 
-  public oid: XFAObjectArray;
+  public oid: XFAObjectArray<Oid>;
 
-  public oids: XFAObjectArray;
+  public oids: XFAObjectArray<Oids>;
 
-  public overflow: XFAObjectArray;
+  public overflow: XFAObjectArray<Overflow>;
 
-  public pageArea: XFAObjectArray;
+  public pageArea: XFAObjectArray<PageArea>;
 
-  public pageSet: XFAObjectArray;
+  public pageSet: XFAObjectArray<PageSet>;
 
-  public para: XFAObjectArray;
+  public para: XFAObjectArray<Para>;
 
-  public passwordEdit: XFAObjectArray;
+  public passwordEdit: XFAObjectArray<PasswordEdit>;
 
-  public pattern: XFAObjectArray;
+  public pattern: XFAObjectArray<Pattern>;
 
-  public picture: XFAObjectArray;
+  public picture: XFAObjectArray<Picture>;
 
-  public radial: XFAObjectArray;
+  public radial: XFAObjectArray<Radial>;
 
-  public reason: XFAObjectArray;
+  public reason: XFAObjectArray<Reason>;
 
-  public reasons: XFAObjectArray;
+  public reasons: XFAObjectArray<Reasons>;
 
-  public rectangle: XFAObjectArray;
+  public rectangle: XFAObjectArray<Rectangle>;
 
-  public ref: XFAObjectArray;
+  public ref: XFAObjectArray<XFAObject>;
 
-  public script: XFAObjectArray;
+  public script: XFAObjectArray<Script>;
 
-  public setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray<SetProperty>;
 
-  public signData: XFAObjectArray;
+  public signData: XFAObjectArray<SignData>;
 
-  public signature: XFAObjectArray;
+  public signature: XFAObjectArray<Signature>;
 
-  public signing: XFAObjectArray;
+  public signing: XFAObjectArray<Signing>;
 
-  public solid: XFAObjectArray;
+  public solid: XFAObjectArray<Solid>;
 
-  public speak: XFAObjectArray;
+  public speak: XFAObjectArray<Speak>;
 
-  public stipple: XFAObjectArray;
+  public stipple: XFAObjectArray<Stipple>;
 
-  public subform: XFAObjectArray;
+  public subform: XFAObjectArray<Subform>;
 
-  public subformSet: XFAObjectArray;
+  public subformSet: XFAObjectArray<SubformSet>;
 
-  public subjectDN: XFAObjectArray;
+  public subjectDN: XFAObjectArray<SubjectDN>;
 
-  public subjectDNs: XFAObjectArray;
+  public subjectDNs: XFAObjectArray<SubjectDNs>;
 
-  public submit: XFAObjectArray;
+  public submit: XFAObjectArray<Submit>;
 
-  public textEdit: XFAObjectArray;
+  public textEdit: XFAObjectArray<TextEdit>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
-  public timeStamp: XFAObjectArray;
+  public timeStamp: XFAObjectArray<TimeStamp>;
 
-  public toolTip: XFAObjectArray;
+  public toolTip: XFAObjectArray<ToolTip>;
 
-  public traversal: XFAObjectArray;
+  public traversal: XFAObjectArray<Traversal>;
 
-  public traverse: XFAObjectArray;
+  public traverse: XFAObjectArray<Traverse>;
 
-  public ui: XFAObjectArray;
+  public ui: XFAObjectArray<Ui>;
 
-  public validate: XFAObjectArray;
+  public validate: XFAObjectArray<Validate>;
 
-  public variables: XFAObjectArray;
+  public variables: XFAObjectArray<Variables>;
 
   constructor(_attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "proto", /* hasChildren = */ true);
@@ -5553,7 +5551,7 @@ class Reasons extends XFAObject {
 
   public type: string;
 
-  public reason: XFAObjectArray;
+  public reason: XFAObjectArray<Reason>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "reasons", /* hasChildren = */ true);
@@ -5569,9 +5567,9 @@ class Rectangle extends XFAObject {
 
   public hand: string;
 
-  public corner: XFAObjectArray;
+  public corner: XFAObjectArray<Corner>;
 
-  public edge: XFAObjectArray;
+  public edge: XFAObjectArray<Edge>;
 
   public fill: Fill | null;
 
@@ -5603,7 +5601,7 @@ class Rectangle extends XFAObject {
     style.stroke = edgeStyle.color;
 
     const corner = this.corner.children.length
-      ? <Corner>this.corner.children[0]
+      ? this.corner.children[0]
       : new Corner(EmptyXFAAttributesObj);
     const cornerStyle = corner.toStyle();
 
@@ -5764,7 +5762,7 @@ class Signing extends XFAObject {
 
   public type: string;
 
-  public certificate: XFAObjectArray;
+  public certificate: XFAObjectArray<Certificate>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "signing", /* hasChildren = */ true);
@@ -5932,31 +5930,31 @@ export class Subform extends XFAObject {
 
   public variables: Variables | null;
 
-  public area: XFAObjectArray;
+  public area: XFAObjectArray<Area>;
 
-  public breakAfter: XFAObjectArray;
+  public breakAfter: XFAObjectArray<BreakAfter>;
 
-  public breakBefore: XFAObjectArray;
+  public breakBefore: XFAObjectArray<BreakBefore>;
 
-  public connect: XFAObjectArray;
+  public connect: XFAObjectArray<Connect>;
 
-  public draw: XFAObjectArray;
+  public draw: XFAObjectArray<Draw>;
 
-  public event: XFAObjectArray;
+  public event: XFAObjectArray<Event>;
 
-  public exObject: XFAObjectArray;
+  public exObject: XFAObjectArray<ExObject>;
 
-  public exclGroup: XFAObjectArray;
+  public exclGroup: XFAObjectArray<ExclGroup>;
 
-  public field: XFAObjectArray;
+  public field: XFAObjectArray<Field>;
 
-  public proto: XFAObjectArray;
+  public proto: XFAObjectArray<Proto>;
 
-  public setProperty: XFAObjectArray;
+  public setProperty: XFAObjectArray<SetProperty>;
 
-  public subform: XFAObjectArray;
+  public subform: XFAObjectArray<Subform>;
 
-  public subformSet: XFAObjectArray;
+  public subformSet: XFAObjectArray<SubformSet>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "subform", /* hasChildren = */ true);
@@ -6441,13 +6439,13 @@ class SubformSet extends XFAObject {
 
   public overflow: Overflow | null;
 
-  public breakAfter: XFAObjectArray;
+  public breakAfter: XFAObjectArray<BreakAfter>;
 
-  public breakBefore: XFAObjectArray;
+  public breakBefore: XFAObjectArray<BreakBefore>;
 
-  public subform: XFAObjectArray;
+  public subform: XFAObjectArray<Subform>;
 
-  public subformSet: XFAObjectArray;
+  public subformSet: XFAObjectArray<SubformSet>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "subformSet", /* hasChildren = */ true);
@@ -6522,7 +6520,7 @@ class SubjectDNs extends XFAObject {
 
   public type: string;
 
-  public subjectDN: XFAObjectArray;
+  public subjectDN: XFAObjectArray<SubjectDN>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "subjectDNs", /* hasChildren = */ true);
@@ -6546,9 +6544,9 @@ class Submit extends XFAObject {
 
   public encrypt: Encrypt | null;
 
-  public encryptData: XFAObjectArray;
+  public encryptData: XFAObjectArray<EncryptData>;
 
-  public signData: XFAObjectArray;
+  public signData: XFAObjectArray<SignData>;
 
   public textEncoding: string;
 
@@ -6597,9 +6595,11 @@ class Template extends XFAObject {
 
   public extras: Extras | null;
 
-  public subform: XFAObjectArray;
+  public subform: XFAObjectArray<Subform>;
 
   public tabIndex: number | null = null;
+
+  public ids: Map<string | Symbol, XFAObject | null> = new Map();
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "template", /* hasChildren = */ true);
@@ -6676,23 +6676,23 @@ class Template extends XFAObject {
     let breakBefore: BreakBefore | Break | null = null;
     let breakBeforeTarget = null;
     if (root.breakBefore.children.length >= 1) {
-      breakBefore = <BreakBefore>root.breakBefore.children[0];
+      breakBefore = root.breakBefore.children[0];
       breakBeforeTarget = breakBefore.target;
     } else if (
       root.subform.children.length >= 1 &&
-      (<Subform>root.subform.children[0]).breakBefore.children.length >= 1
+      root.subform.children[0].breakBefore.children.length >= 1
     ) {
-      breakBefore = <BreakBefore>((<Subform>root.subform.children[0]).breakBefore.children[0]);
+      breakBefore = root.subform.children[0].breakBefore.children[0];
       breakBeforeTarget = breakBefore.target;
     } else if (root.break?.beforeTarget) {
       breakBefore = root.break;
       breakBeforeTarget = breakBefore!.beforeTarget;
     } else if (
       root.subform.children.length >= 1 &&
-      (<Subform>(root.subform.children[0])).break?.beforeTarget
+      root.subform.children[0].break?.beforeTarget
     ) {
-      breakBefore = (<Subform>(root.subform.children[0])).break;
-      breakBeforeTarget = (<Break>breakBefore!).beforeTarget;
+      breakBefore = root.subform.children[0].break;
+      breakBeforeTarget = breakBefore!.beforeTarget;
     }
 
     if (breakBefore) {
@@ -6715,7 +6715,7 @@ class Template extends XFAObject {
       numberOfUse: 1,
     };
 
-    const pageAreaParent = pageArea.getParent();
+    const pageAreaParent = <PageSet>pageArea.getParent();
     pageAreaParent.extra = {
       numberOfUse: 1,
       pageIndex: pageAreaParent.pageArea.children.indexOf(pageArea),
@@ -6748,13 +6748,13 @@ class Template extends XFAObject {
 
       if (leader) {
         this.extra.noLayoutFailure = true;
-        page.children.push(leader.toHTML(pageArea.extra.space).html);
+        page.children.push(leader.toHTML(pageArea.extra.space)!.html);
         leader = null;
       }
 
       if (trailer) {
         this.extra.noLayoutFailure = true;
-        page.children.push(trailer.toHTML(pageArea.extra.space).html);
+        page.children.push(trailer.toHTML(pageArea.extra.space)!.html);
         trailer = null;
       }
 
@@ -6781,12 +6781,12 @@ class Template extends XFAObject {
         startIndex = 0;
 
         if (leader) {
-          htmlContentAreas[i].children.push(leader.toHTML(space).html);
+          htmlContentAreas[i].children.push(leader.toHTML(space)!.html);
           leader = null;
         }
 
         if (trailer) {
-          htmlContentAreas[i].children.push(trailer.toHTML(space).html);
+          htmlContentAreas[i].children.push(trailer.toHTML(space)!.html);
           trailer = null;
         }
 
@@ -6916,7 +6916,7 @@ class Text extends ContentObject {
     return true;
   }
 
-  onChild(child) {
+  onChild(child: XFAObject) {
     if (child.namespaceId === NamespaceIds.xhtml.id) {
       this.content = child;
       return true;
@@ -7161,7 +7161,7 @@ class Traversal extends XFAObject {
 
   public extras: null;
 
-  public traverse: XFAObjectArray;
+  public traverse: XFAObjectArray<Traverse>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "traversal", /* hasChildren = */ true);
@@ -7330,9 +7330,9 @@ class Value extends XFAObject {
 
   public arc: Arc | null;
 
-  public boolean: null;
+  public boolean: BooleanElement | null;
 
-  public date: null;
+  public date: DateElement | null;
 
   public dateTime: DateTime | null;
 
@@ -7447,27 +7447,27 @@ class Value extends XFAObject {
 
 class Variables extends XFAObject {
 
-  public boolean: XFAObjectArray;
+  public boolean: XFAObjectArray<BooleanElement>;
 
-  public date: XFAObjectArray;
+  public date: XFAObjectArray<DateElement>;
 
-  public dateTime: XFAObjectArray;
+  public dateTime: XFAObjectArray<DateTime>;
 
-  public decimal: XFAObjectArray;
+  public decimal: XFAObjectArray<Decimal>;
 
-  public exData: XFAObjectArray;
+  public exData: XFAObjectArray<ExData>;
 
-  public float: XFAObjectArray;
+  public float: XFAObjectArray<Float>;
 
-  public image: XFAObjectArray;
+  public image: XFAObjectArray<Image>;
 
-  public integer: XFAObjectArray;
+  public integer: XFAObjectArray<Integer>;
 
-  public manifest: XFAObjectArray;
+  public manifest: XFAObjectArray<Manifest>;
 
-  public script: XFAObjectArray;
+  public script: XFAObjectArray<Script>;
 
-  public time: XFAObjectArray;
+  public time: XFAObjectArray<Time>;
 
   constructor(attributes: XFAAttributesObj) {
     super(TEMPLATE_NS_ID, "variables", /* hasChildren = */ true);

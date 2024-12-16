@@ -16,13 +16,14 @@
 import { AvailableSpace, RectType } from "../../display/display_utils";
 import { shadow, utf8StringToString, warn } from "../../shared/util";
 import { encodeToXmlString } from "../core_utils";
+import { Builder } from "./builder";
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { searchNode } from "./som";
 import {
   $root
 } from "./symbol_utils";
-import { Color, Subform } from "./template";
+import { Color, Subform, Template } from "./template";
 import { getInteger, getKeyword, HTMLResult } from "./utils";
 
 
@@ -71,7 +72,7 @@ export const EmptyXFAAttributesObj: XFAAttributesObj = {
 
 class XFAObject {
 
-  protected namespaceId: number;
+  public namespaceId: number;
 
   readonly nodeName: string;
 
@@ -85,9 +86,15 @@ class XFAObject {
 
   public content: any | null;
 
-  public _parent: XFAObject;
+  public _parent: XFAObject | null;
 
-  public cleanup;
+  public cleanup: {
+    hasNamespace: boolean,
+    prefixes: {
+      prefix: string;
+      value: string;
+    }[], nsAgnostic: boolean
+  } | null = null;
 
   protected name: string;
 
@@ -105,6 +112,7 @@ class XFAObject {
   value: any;
   oddOrEven: string;
   pagePosition: string;
+  public template: Template | null = null;
 
   constructor(nsId: number, name: string, hasChildren = false) {
     this.namespaceId = nsId;
@@ -262,11 +270,12 @@ class XFAObject {
 
   finalize() { }
 
-  clean(builder) {
+  clean(builder: Builder) {
     this._hasChildren = false;
     if (this.cleanup) {
       builder.clean(this.cleanup);
-      this.cleanup = undefined;
+      // undefined 改为 null
+      this.cleanup = null;
     }
   }
 
@@ -736,9 +745,9 @@ class XFAObject {
   }
 }
 
-class XFAObjectArray {
+class XFAObjectArray<T extends XFAObject> {
 
-  protected _children: XFAObject[];
+  protected _children: T[];
 
   protected _max: number;
 
@@ -755,7 +764,7 @@ class XFAObjectArray {
     return true;
   }
 
-  push(child: XFAObject) {
+  push(child: T) {
     const len = this._children.length;
     if (len <= this._max) {
       this._children.push(child);
@@ -1065,7 +1074,7 @@ class ContentObject extends XFAObject {
 
 class OptionObject extends ContentObject {
 
-  protected _options: string[];
+  protected _options: string[] | null;
 
   constructor(nsId: number, name: string, options: string[]) {
     super(nsId, name);
@@ -1073,16 +1082,17 @@ class OptionObject extends ContentObject {
   }
 
   finalize() {
-    this.content = getKeyword({
-      data: this.content,
-      defaultValue: this._options[0],
-      validate: k => this._options.includes(k),
-    });
+    this.content = getKeyword(
+      this.content,
+      this._options![0],
+      k => this._options!.includes(k),
+    );
   }
 
-  clean(builder) {
+  clean(builder: Builder) {
     super.clean(builder);
-    delete this._options;
+    // delete this._options;
+    this._options = null;
   }
 }
 
@@ -1096,7 +1106,7 @@ class IntegerObject extends ContentObject {
 
   protected _defaultValue: number | null;
 
-  protected _validator: ((n: number) => boolean);
+  protected _validator: ((n: number) => boolean) | null;
 
   constructor(nsId: number, name: string, defaultValue: number | null, validator: (n: number) => boolean) {
     super(nsId, name);
@@ -1108,11 +1118,11 @@ class IntegerObject extends ContentObject {
     this.content = getInteger(
       this.content,
       this._defaultValue!,
-      this._validator,
+      this._validator!,
     );
   }
 
-  clean(builder) {
+  clean(builder: Builder) {
     super.clean(builder);
     this._defaultValue = null;
     this._validator = null;

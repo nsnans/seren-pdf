@@ -28,7 +28,7 @@ export class Root extends XFAObject {
 
   public element: XFAObject | null;
 
-  protected ids: Map<Symbol | string, XFAObject | null>;
+  public ids: Map<Symbol | string, XFAObject | null>;
 
   constructor(ids: Map<Symbol | string, XFAObject | null>) {
     super(-1, "root", Object.create(null));
@@ -145,7 +145,7 @@ class Builder {
     if (hasNamespaceDef || prefixes || node.isNsAgnostic()) {
       node.cleanup = {
         hasNamespace: hasNamespaceDef,
-        prefixes,
+        prefixes: prefixes!,
         nsAgnostic: node.isNsAgnostic(),
       };
     }
@@ -179,7 +179,7 @@ class Builder {
     return ns;
   }
 
-  _addNamespacePrefix(prefixes) {
+  _addNamespacePrefix(prefixes: { prefix: string; value: string; }[]) {
     for (const { prefix, value } of prefixes) {
       const namespace = this._searchNamespace(value);
       let prefixStack = this._namespacePrefixes.get(prefix);
@@ -204,7 +204,9 @@ class Builder {
     return null;
   }
 
-  clean(data) {
+  clean(data: {
+    hasNamespace: boolean, prefixes: { prefix: string; value: string; }[], nsAgnostic: boolean
+  }) {
     const { hasNamespace, prefixes, nsAgnostic } = data;
     if (hasNamespace) {
       this._currentNamespace = this._namespaceStack.pop()!;

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Builder } from "./builder";
 import {
   fixTextIndent,
   fixURL,
@@ -208,7 +209,7 @@ class XhtmlObject extends XmlObject {
     this.style = attributes.style || "";
   }
 
-  clean(builder) {
+  clean(builder: Builder) {
     super.clean(builder);
     this.style = checkStyle(this);
   }

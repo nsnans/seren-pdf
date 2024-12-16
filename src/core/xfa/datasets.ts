@@ -29,23 +29,34 @@ class Data extends XmlObject {
   }
 }
 
-class Datasets extends XFAObject {
+export class Datasets extends XFAObject {
+
+  public Signature: XFAObject | null;
+
+  public data: Data | null;
+
   constructor(_attributes: XFAAttributesObj) {
     super(DATASETS_NS_ID, "datasets", /* hasChildren = */ true);
     this.data = null;
     this.Signature = null;
   }
 
-  onChild(child) {
+  onChild(child: XFAObject) {
     const name = child.nodeName;
     if (
       (name === "data" && child.namespaceId === DATASETS_NS_ID) ||
       (name === "Signature" &&
         child.namespaceId === NamespaceIds.signature.id)
     ) {
-      this[name] = child;
+      if (name === "data") {
+        this.data = <Data>child;
+      } else if (name === "Signature") {
+        this.Signature = child;
+      }
     }
     this.appendChild(child);
+    // 默认没有返回值，返回undefined相当于false
+    return false;
   }
 }
 
