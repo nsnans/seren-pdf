@@ -7969,6 +7969,7 @@ export {
   Template,
   TemplateNamespace,
   Text,
-  Value
+  Value,
+  Font as XfaFont
 };
 

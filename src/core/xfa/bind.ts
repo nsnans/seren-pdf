@@ -15,9 +15,10 @@
 
 import { warn } from "../../shared/util";
 import { Root } from "./builder";
+import { Datasets } from "./datasets";
 import { NamespaceIds } from "./namespaces";
 import { createDataNode, searchNode } from "./som";
-import { BindItems, Field, Items, SetProperty, Text } from "./template";
+import { BindItems, Field, Items, SetProperty, Template, Text } from "./template";
 import { EmptyXFAAttributesObj, XFAAttribute, XFAObjectArray, XmlObject } from "./xfa_object";
 
 const NS_DATASETS = NamespaceIds.datasets.id;
@@ -36,14 +37,19 @@ class Binder {
 
   protected root;
 
+  protected _mergeMode: boolean | undefined = undefined;
+
+  protected datasets: Datasets | null;
+
+  protected form: Template;
+
   constructor(root: Root) {
     this.root = root;
     this.datasets = root.datasets;
-    this.data =
-      root.datasets?.data || new XmlObject(NamespaceIds.datasets.id, "data");
+    this.data = root.datasets?.data || new XmlObject(NamespaceIds.datasets.id, "data");
     this.emptyMerge = this.data.getChildren().length === 0;
 
-    this.root.form = this.form = root.template.clone();
+    this.root.form = this.form = root.template!.clone();
   }
 
   _isConsumeData() {
@@ -351,7 +357,7 @@ class Binder {
         }
         const [valueNode] = valueNodes;
 
-        if (!valueNode.isDescendent(this.datasets)) {
+        if (!valueNode.isDescendent(this.datasets!)) {
           warn(`XFA - Invalid value: must be a datasets child.`);
           continue;
         }
@@ -462,7 +468,7 @@ class Binder {
     this._bindElement(formNode, dataNode);
   }
 
-  _bindElement(formNode, dataNode) {
+  _bindElement(formNode: Template, dataNode: XmlObject) {
     // Some nodes can be useless because min=0 so remove them
     // after the loop to avoid bad things.
 

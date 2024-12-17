@@ -1028,9 +1028,9 @@ class Font {
 
   public cMap: CMap;
 
-  protected name: string;
+  public name: string;
 
-  protected psName: string | null;
+  public psName: string | null;
 
   protected mimetype: string | null;
 
@@ -1042,7 +1042,7 @@ class Font {
 
   protected missingFile: boolean;
 
-  protected cssFontInfo: CssFontInfo | null;
+  public cssFontInfo: CssFontInfo | null;
 
   protected _charsCache: Record<string, Glyph[]>;
 
@@ -1078,7 +1078,7 @@ class Font {
 
   public descent: number;
 
-  protected lineHeight: number;
+  public lineHeight: number;
 
   public fontMatrix: TransformType;
 

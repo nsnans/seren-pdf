@@ -14,17 +14,29 @@
  */
 
 import { warn } from "../../shared/util";
+import { Font } from "../fonts";
+import { XfaFont } from "./template";
 import { stripQuotes } from "./utils";
+
+interface PdfFont {
+  bold: Font | null;
+  regular: Font | null;
+  italic: Font | null;
+  bolditalic: Font | null;
+}
 
 class FontFinder {
 
-  protected fonts = new Map();
+  protected fonts: Map<string, PdfFont>;
 
-  protected cache = new Map();
-  
-  protected warned = new Set();
-  
-  constructor(pdfFonts) {
+  protected cache: Map<string, PdfFont>;
+
+  protected warned: Set<string>;
+
+  protected defaultFont: PdfFont | null;
+
+  // 这里应该不要再处理ErrorFont了
+  constructor(pdfFonts: Font[]) {
     this.fonts = new Map();
     this.cache = new Map();
     this.warned = new Set();
@@ -32,7 +44,7 @@ class FontFinder {
     this.add(pdfFonts);
   }
 
-  add(pdfFonts, reallyMissingFonts = null) {
+  add(pdfFonts: Font[], reallyMissingFonts: Set<string> | null = null) {
     for (const pdfFont of pdfFonts) {
       this.addPdfFont(pdfFont);
     }
@@ -45,26 +57,26 @@ class FontFinder {
     if (!reallyMissingFonts || reallyMissingFonts.size === 0) {
       return;
     }
-    const myriad = this.fonts.get("PdfJS-Fallback-PdfJS-XFA");
+    const myriad = this.fonts.get("PdfJS-Fallback-PdfJS-XFA")!;
     for (const missing of reallyMissingFonts) {
       this.fonts.set(missing, myriad);
     }
   }
 
-  addPdfFont(pdfFont) {
-    const cssFontInfo = pdfFont.cssFontInfo;
+  addPdfFont(pdfFont: Font) {
+    const cssFontInfo = pdfFont.cssFontInfo!;
     const name = cssFontInfo.fontFamily;
     let font = this.fonts.get(name);
     if (!font) {
-      font = Object.create(null);
+      font = { bold: null, regular: null, italic: null, bolditalic: null };
       this.fonts.set(name, font);
       if (!this.defaultFont) {
         this.defaultFont = font;
       }
     }
     let property = "";
-    const fontWeight = parseFloat(cssFontInfo.fontWeight);
-    if (parseFloat(cssFontInfo.italicAngle) !== 0) {
+    const fontWeight = parseFloat(cssFontInfo.fontWeight.toString());
+    if (parseFloat(cssFontInfo.italicAngle.toString()) !== 0) {
       property = fontWeight >= 700 ? "bolditalic" : "italic";
     } else if (fontWeight >= 700) {
       property = "bold";
@@ -88,14 +100,30 @@ class FontFinder {
       property = "regular";
     }
 
-    font[property] = pdfFont;
+    // font[property] = pdfFont;
+    switch (property) {
+      case "bold":
+        font.bold = pdfFont;
+        break;
+      case "italic":
+        font.italic = pdfFont;
+        break;
+      case "bolditalic":
+        font.bolditalic = pdfFont;
+        break;
+      case "regular":
+        font.regular = pdfFont;
+        break;
+      default:
+        throw new Error("未知的字体属性类型")
+    }
   }
 
   getDefault() {
     return this.defaultFont;
   }
 
-  find(fontName, mustWarn = true) {
+  find(fontName: string, mustWarn = true) {
     let font = this.fonts.get(fontName) || this.cache.get(fontName);
     if (font) {
       return font;
@@ -120,7 +148,7 @@ class FontFinder {
     if (maybe.length === 0) {
       for (const [, pdfFont] of this.fonts.entries()) {
         if (
-          pdfFont.regular.name
+          pdfFont.regular!.name
             ?.replaceAll(pattern, "")
             .toLowerCase()
             .startsWith(name)
@@ -142,7 +170,7 @@ class FontFinder {
     if (maybe.length === 0) {
       for (const pdfFont of this.fonts.values()) {
         if (
-          pdfFont.regular.name
+          pdfFont.regular!.name
             ?.replaceAll(pattern, "")
             .toLowerCase()
             .startsWith(name)
@@ -168,7 +196,7 @@ class FontFinder {
   }
 }
 
-function selectFont(xfaFont, typeface) {
+function selectFont(xfaFont: XfaFont, typeface: PdfFont) {
   if (xfaFont.posture === "italic") {
     if (xfaFont.weight === "bold") {
       return typeface.bolditalic;
@@ -181,7 +209,7 @@ function selectFont(xfaFont, typeface) {
   return typeface.regular;
 }
 
-function getMetrics(xfaFont, real = false) {
+function getMetrics(xfaFont: XfaFont, real = false) {
   let pdfFont = null;
   if (xfaFont) {
     const name = stripQuotes(xfaFont.typeface);
@@ -201,7 +229,7 @@ function getMetrics(xfaFont, real = false) {
   const lineHeight = pdfFont.lineHeight
     ? Math.max(real ? 0 : 1.2, pdfFont.lineHeight)
     : 1.2;
-  const lineGap = pdfFont.lineGap === undefined ? 0.2 : pdfFont.lineGap;
+  const lineGap = pdfFont.lineGap === undefined ? 0.2 : pdfFont.lineGap!;
   return {
     lineHeight: lineHeight * size,
     lineGap: lineGap * size,

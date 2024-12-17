@@ -1280,7 +1280,7 @@ class PDFDocument {
     for (const key of keys) {
       const stream = xfaImagesDict.get(key);
       if (stream instanceof BaseStream) {
-        xfaImages.set(key, stream.getBytes());
+        xfaImages.set(key, <Uint8Array>stream.getBytes());
       }
     }
 
@@ -1329,7 +1329,7 @@ class PDFDocument {
         return pdfFonts.at(-1);
       },
       set font(font) {
-        pdfFonts.push(font);
+        pdfFonts.push(font!);
       },
       clone() {
         return this;
@@ -1389,7 +1389,7 @@ class PDFDocument {
     promises.length = 0;
     pdfFonts.length = 0;
 
-    const reallyMissingFonts = new Set();
+    const reallyMissingFonts = new Set<string>();
     for (const missing of missingFonts) {
       if (!getXfaFontName(`${missing}-Regular`)) {
         // No substitution available: we'll fallback on Myriad.
@@ -1439,7 +1439,7 @@ class PDFDocument {
     }
 
     await Promise.all(promises);
-    this.xfaFactory!.appendFonts(pdfFonts, reallyMissingFonts);
+    this.xfaFactory!.appendFonts(<Font[]>pdfFonts, reallyMissingFonts);
   }
 
   async serializeXfaData(annotationStorage: Map<string, object> | null) {

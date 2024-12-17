@@ -14,6 +14,7 @@
  */
 
 import { warn } from "../../shared/util";
+import { Datasets } from "./datasets";
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
 import { NamespaceSetUp } from "./setup";
@@ -29,6 +30,10 @@ export class Root extends XFAObject {
   public element: XFAObject | null;
 
   public ids: Map<Symbol | string, XFAObject | null>;
+
+  public datasets: Datasets | null = null;
+
+  public form: Template | null = null;
 
   constructor(ids: Map<Symbol | string, XFAObject | null>) {
     super(-1, "root", Object.create(null));

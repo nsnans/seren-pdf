@@ -37,6 +37,10 @@ class XFAParser extends XMLParserBase {
 
   protected _stack: XFAObject[];
 
+  protected _globalData: {
+    usedTypefaces: Set<string>
+  }
+
   constructor(rootNameSpace: Namespace | null = null, richText = false) {
     super();
     this._builder = new Builder(rootNameSpace);
@@ -61,7 +65,7 @@ class XFAParser extends XMLParserBase {
 
     this._current.finalize();
 
-    return this._current instanceof Root ? this._current.element : null;
+    return (<Root>this._current).element;
   }
 
   onText(text: string) {
@@ -176,7 +180,7 @@ class XFAParser extends XMLParserBase {
     if (node.isCDATAXml() && typeof node.content === "string") {
       const parser = new XFAParser();
       parser._globalData = this._globalData;
-      const root = parser.parse(node.content);
+      const root = parser.parse(node.content)!;
       node.content = null;
       node.onChild(root);
     }

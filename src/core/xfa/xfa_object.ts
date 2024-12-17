@@ -96,7 +96,7 @@ class XFAObject {
     }[], nsAgnostic: boolean
   } | null = null;
 
-  protected name: string;
+  public name: string;
 
   public extra;
 
@@ -343,11 +343,11 @@ class XFAObject {
     return false;
   }
 
-  getParent(): XFAObject {
+  getParent(): XFAObject | null {
     return this._parent;
   }
 
-  getSubformParent(): XFAObject | Subform {
+  getSubformParent(): XFAObject | Subform | null {
     return this.getParent();
   }
 

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { RectType } from "../../display/display_utils";
 import { warn } from "../../shared/util";
 import { ErrorFont, Font } from "../fonts";
 import { Binder } from "./bind";
@@ -20,6 +21,7 @@ import { Root } from "./builder";
 import { DataHandler } from "./data";
 import { FontFinder } from "./fonts";
 import { XFAParser } from "./parser";
+import { Template } from "./template";
 import { stripQuotes } from "./utils";
 import { EmptyXFAAttributesObj } from "./xfa_object";
 import { XhtmlNamespace } from "./xhtml";
@@ -28,9 +30,11 @@ class XFAFactory {
 
   protected root?;
 
-  protected form?;
+  protected form: Template | null;
 
   protected dataHandler?: DataHandler;
+
+  protected dims: RectType[] = [];
 
   constructor(data: Record<string, string>) {
     try {
@@ -38,7 +42,7 @@ class XFAFactory {
       const binder = new Binder(<Root>this.root);
       this.form = binder.bind();
       this.dataHandler = new DataHandler(this.root, binder.getData());
-      this.form.globalData.template = this.form;
+      this.form!.globalData.template = this.form;
     } catch (e) {
       warn(`XFA - an error occurred during parsing and binding: ${e}`);
     }
@@ -53,7 +57,7 @@ class XFAFactory {
    * into pages is made asynchronously.
    */
   _createPagesHelper() {
-    const iterator = this.form.toPages();
+    const iterator = this.form!.toPages();
     return new Promise((resolve, reject) => {
       const nextIteration = () => {
         try {
@@ -83,7 +87,7 @@ class XFAFactory {
     }
   }
 
-  getBoundingBox(pageIndex) {
+  getBoundingBox(pageIndex: number) {
     return this.dims[pageIndex];
   }
 
@@ -95,15 +99,15 @@ class XFAFactory {
   }
 
   setImages(images) {
-    this.form.globalData.images = images;
+    this.form!.globalData.images = images;
   }
 
   setFonts(fonts: (Font | ErrorFont)[]) {
-    this.form.globalData.fontFinder = new FontFinder(fonts);
+    this.form!.globalData.fontFinder = new FontFinder(<Font[]>fonts);
     const missingFonts = [];
-    for (let typeface of this.form.globalData.usedTypefaces) {
+    for (let typeface of this.form!.globalData.usedTypefaces) {
       typeface = stripQuotes(typeface);
-      const font = this.form.globalData.fontFinder.find(typeface);
+      const font = this.form!.globalData.fontFinder.find(typeface);
       if (!font) {
         missingFonts.push(typeface);
       }
@@ -116,8 +120,8 @@ class XFAFactory {
     return null;
   }
 
-  appendFonts(fonts, reallyMissingFonts) {
-    this.form.globalData.fontFinder.add(fonts, reallyMissingFonts);
+  appendFonts(fonts: Font[], reallyMissingFonts: Set<string>) {
+    this.form!.globalData.fontFinder.add(fonts, reallyMissingFonts);
   }
 
   async getPages() {
@@ -164,7 +168,7 @@ class XFAFactory {
       if (attributes) {
         if (attributes.class) {
           attributes.class = attributes.class.filter(
-            attr => !attr.startsWith("xfa")
+            (attr: string) => !attr.startsWith("xfa")
           );
         }
         attributes.dir = "auto";
