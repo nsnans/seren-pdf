@@ -142,7 +142,7 @@ export class FileSpec {
     return {
       rawFilename: this.filename,
       filename: stripPath(this.filename),
-      content: this.content,
+      content: <Uint8Array | null>this.content,
       description: this.description,
     };
   }

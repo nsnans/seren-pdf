@@ -15,6 +15,7 @@
 
 import { PlatformHelper } from "../platform/platform_helper";
 import { bytesToString, shadow, unreachable } from "../shared/util";
+import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
 
 export abstract class BaseStream {
@@ -51,14 +52,14 @@ export abstract class BaseStream {
 
   abstract getByte(): number;
 
-  abstract getBytes(_length?: number): Uint8Array | Uint8ClampedArray;
+  abstract getBytes(_length?: number, option?: JpxDecoderOptions | null): Uint8Array | Uint8ClampedArray;
 
   /**
    * NOTE: This method can only be used to get image-data that is guaranteed
    *       to be fully loaded, since otherwise intermittent errors may occur;
    *       note the `ObjectLoader` class.
    */
-  async getImageData(length: number, decoderOptions) {
+  async getImageData(length: number, decoderOptions: JpxDecoderOptions | null) {
     return this.getBytes(length, decoderOptions);
   }
 

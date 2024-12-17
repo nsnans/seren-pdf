@@ -220,7 +220,7 @@ const UnicodeRanges = [
   [0x1f030, 0x1f09f, 0x1f000, 0x1f02f], // 122 - Domino Tiles - Mahjong Tiles
 ];
 
-function getUnicodeRangeFor(value, lastPosition = -1) {
+function getUnicodeRangeFor(value: number, lastPosition = -1) {
   // TODO: create a map range => position, sort the ranges and cache it.
   // Then we can make a binary search for finding a range for a given unicode.
   if (lastPosition !== -1) {
@@ -243,9 +243,13 @@ function getUnicodeRangeFor(value, lastPosition = -1) {
 }
 
 const SpecialCharRegExp = new RegExp("^(\\s)|(\\p{Mn})|(\\p{Cf})$", "u");
-const CategoryCache = new Map();
+const CategoryCache = new Map<string, {
+  isWhitespace: boolean,
+  isZeroWidthDiacritic: boolean,
+  isInvisibleFormatMark: boolean,
+}>();
 
-function getCharUnicodeCategory(char) {
+function getCharUnicodeCategory(char: string) {
   const cachedCategory = CategoryCache.get(char);
   if (cachedCategory) {
     return cachedCategory;

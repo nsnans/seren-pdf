@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { AvailableSpace } from "../../display/display_utils";
 import { Builder } from "./builder";
 import {
   fixTextIndent,
@@ -22,8 +23,9 @@ import {
 } from "./html_utils";
 import { Namespace } from "./namespace";
 import { NamespaceIds } from "./namespaces";
+import { TextMeasure } from "./text";
 import { getMeasurement, HTMLResult, stripQuotes } from "./utils";
-import { XFAAttributesObj, XmlObject } from "./xfa_object";
+import { XFAAttributesObj, XFAObject, XmlObject } from "./xfa_object";
 
 const XHTML_NS_ID = NamespaceIds.xhtml.id;
 
@@ -103,7 +105,7 @@ const spacesRegExp = /\s+/g;
 const crlfRegExp = /[\r\n]+/g;
 const crlfForRichTextRegExp = /\r\n?/g;
 
-function mapStyle(styleStr: string, node, richText: boolean) {
+function mapStyle(styleStr: string, node: XmlObject, richText: boolean) {
   const style = Object.create(null);
   if (!styleStr) {
     return style;
@@ -174,7 +176,7 @@ function mapStyle(styleStr: string, node, richText: boolean) {
   return style;
 }
 
-function checkStyle(node) {
+function checkStyle(node: XhtmlObject) {
   if (!node.style) {
     return "";
   }
@@ -199,9 +201,9 @@ const NoWhites = new Set(["body", "html"]);
 
 class XhtmlObject extends XmlObject {
 
-  private richText: boolean;
+  public richText: boolean;
 
-  protected style: string;
+  public style: string;
 
   constructor(attributes: XFAAttributesObj, name: string) {
     super(XHTML_NS_ID, name);
@@ -233,7 +235,7 @@ class XhtmlObject extends XmlObject {
     }
   }
 
-  pushGlyphs(measure, mustPop = true) {
+  pushGlyphs(measure: TextMeasure, mustPop = true) {
     const xfaFont = Object.create(null);
     const margin = {
       top: NaN,
@@ -325,7 +327,7 @@ class XhtmlObject extends XmlObject {
     }
   }
 
-  toHTML(_availableSpace: Namespace) {
+  toHTML(_availableSpace: AvailableSpace) {
     const children = [];
     this.extra = {
       children,
@@ -373,7 +375,7 @@ class B extends XhtmlObject {
     super(attributes, "b");
   }
 
-  pushGlyphs(measure) {
+  pushGlyphs(measure: TextMeasure) {
     measure.pushFont({ weight: "bold" });
     super.pushGlyphs(measure);
     measure.popFont();
@@ -406,7 +408,7 @@ class Br extends XhtmlObject {
     return "\n";
   }
 
-  pushGlyphs(measure) {
+  pushGlyphs(measure: TextMeasure) {
     measure.addString("\n");
   }
 
@@ -463,7 +465,7 @@ class I extends XhtmlObject {
     super(attributes, "i");
   }
 
-  pushGlyphs(measure) {
+  pushGlyphs(measure: TextMeasure) {
     measure.pushFont({ posture: "italic" });
     super.pushGlyphs(measure);
     measure.popFont();
@@ -487,7 +489,7 @@ class P extends XhtmlObject {
     super(attributes, "p");
   }
 
-  pushGlyphs(measure) {
+  pushGlyphs(measure: TextMeasure) {
     super.pushGlyphs(measure, /* mustPop = */ false);
     measure.addString("\n");
     measure.addPara();
@@ -495,7 +497,7 @@ class P extends XhtmlObject {
   }
 
   text() {
-    const siblings = this.getParent().getChildren();
+    const siblings = this.getParent()!.getChildren();
     if (siblings.at(-1) === this) {
       return super.text();
     }

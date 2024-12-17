@@ -48,6 +48,10 @@ class App extends PDFObject {
 
   protected _timeoutCallbackIds: Map<number, string>;
 
+  protected _thermometer: Thermometer | null = null;
+
+  protected _proxyHandler: ProxyHandler<any>;
+
   constructor(data) {
     super(data);
 

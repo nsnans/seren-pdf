@@ -32,6 +32,7 @@ const MAX_ERROR = 128;
 // should be a way faster to create the bitmap.
 
 class ImageResizer {
+
   static #goodSquareLength = MIN_IMAGE_DIM;
 
   static #isChrome = false;
@@ -39,6 +40,7 @@ class ImageResizer {
   static _hasMaxArea = false;
 
   protected _imgData;
+
   protected _isMask: boolean;
 
   constructor(imgData, isMask: boolean) {

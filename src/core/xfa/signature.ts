@@ -20,7 +20,7 @@ import { XFAAttributesObj, XFAObject } from "./xfa_object";
 const SIGNATURE_NS_ID = NamespaceIds.signature.id;
 
 class Signature extends XFAObject {
-  constructor() {
+  constructor(_attributes: XFAAttributesObj) {
     super(SIGNATURE_NS_ID, "signature", /* hasChildren = */ true);
   }
 }
@@ -38,7 +38,7 @@ class SignatureNamespace implements Namespace {
     return undefined;
   }
 
-  signature(attributes: XFAAttributesObj){
+  signature(attributes: XFAAttributesObj) {
     return new Signature(attributes);
   }
 }

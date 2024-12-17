@@ -7970,6 +7970,9 @@ export {
   TemplateNamespace,
   Text,
   Value,
-  Font as XfaFont
+  Font as XfaFont,
+  Caption as XfaCaption,
+  Draw as XfaDraw,
+  Field as XfaField
 };
 

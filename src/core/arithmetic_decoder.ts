@@ -76,14 +76,21 @@ const QeTable = [
 class ArithmeticDecoder {
 
   public bp: number;
+
   public dataEnd: number;
+  
   public chigh: number;
+  
   public clow: number;
+  
   public ct: number = 0;
+  
   public a: number;
 
+  protected data: Uint8Array;
+
   // C.3.5 Initialisation of the decoder (INITDEC)
-  constructor(data, start: number, end: number) {
+  constructor(data: Uint8Array, start: number, end: number) {
     this.data = data;
     this.bp = start;
     this.dataEnd = end;

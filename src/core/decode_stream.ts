@@ -14,6 +14,7 @@
  */
 
 import { BaseStream } from "./base_stream";
+import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
 import { Stream } from "./stream";
 
@@ -51,7 +52,7 @@ abstract class DecodeStream extends BaseStream {
 
   get isEmpty(): boolean {
     while (!this.eof && this.bufferLength === 0) {
-      this.readBlock();
+      this.readBlock(null);
     }
     return this.bufferLength === 0;
   }
@@ -76,12 +77,12 @@ abstract class DecodeStream extends BaseStream {
       if (this.eof) {
         return -1;
       }
-      this.readBlock();
+      this.readBlock(null);
     }
     return this.buffer[this.pos++];
   }
 
-  getBytes(length: number, decoderOptions = null) {
+  getBytes(length: number, decoderOptions: JpxDecoderOptions | null = null) {
     const pos = this.pos;
     let end;
 
@@ -141,7 +142,7 @@ abstract class DecodeStream extends BaseStream {
     throw new Error("Unsupport Mehthod get lenght()")
   }
 
-  abstract readBlock(): void;
+  abstract readBlock(options: JpxDecoderOptions | null): void;
 }
 
 class StreamsSequenceStream extends DecodeStream {

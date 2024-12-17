@@ -98,6 +98,12 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
   return dest;
 }
 
+export interface JpxDecoderOptions {
+  numComponents: number,
+  isIndexedColormap: boolean,
+  smaskInData?: boolean;
+}
+
 class PDFImage {
 
   // 这个变量似乎没有用到
@@ -117,10 +123,7 @@ class PDFImage {
 
   protected colorSpace: ColorSpace | null = null;
 
-  protected jpxDecoderOptions: {
-    numComponents: number,
-    isIndexedColormap: boolean,
-  } | null = null;
+  protected jpxDecoderOptions: JpxDecoderOptions | null = null;
 
   protected numComps: number | null = null;
 
@@ -457,14 +460,7 @@ class PDFImage {
     if (isOffscreenCanvasSupported) {
       if (ImageResizer.needsToBeResized(width, height)) {
         const data = new Uint8ClampedArray(width * height * 4);
-        convertBlackAndWhiteToRGBA({
-          src: imgArray,
-          dest: data,
-          width,
-          height,
-          nonBlackColor: 0,
-          inverseDecode,
-        });
+        convertBlackAndWhiteToRGBA(imgArray, data, width, height, inverseDecode, 0);
         return ImageResizer.createImage({
           kind: ImageKind.RGBA_32BPP,
           data,
@@ -477,14 +473,8 @@ class PDFImage {
       const canvas = new OffscreenCanvas(width, height);
       const ctx = canvas.getContext("2d")!;
       const imgData = ctx.createImageData(width, height);
-      convertBlackAndWhiteToRGBA({
-        src: imgArray,
-        dest: imgData.data,
-        width,
-        height,
-        nonBlackColor: 0,
-        inverseDecode,
-      });
+
+      convertBlackAndWhiteToRGBA(imgArray, imgData.data, width, height, inverseDecode, 0);
 
       ctx.putImageData(imgData, 0, 0);
       const bitmap = canvas.transferToImageBitmap();
@@ -833,7 +823,7 @@ class PDFImage {
               this.needsDecode
             );
           }
-          return this.createBitmap(kind, originalWidth, originalHeight, data);
+          return this.createBitmap(kind, originalWidth, originalHeight, <Uint8ClampedArray>data);
         }
         imgData.kind = kind;
         imgData.data = data;
@@ -890,7 +880,7 @@ class PDFImage {
               ImageKind.RGBA_32BPP,
               drawWidth,
               drawHeight,
-              rgba
+              <Uint8ClampedArray>rgba
             );
           }
         } else {
@@ -1056,7 +1046,7 @@ class PDFImage {
   }
 
 
-  createBitmap(kind: number, width: number, height: number, src) {
+  createBitmap(kind: number, width: number, height: number, src: Uint8ClampedArray) {
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d")!;
     let imgData;
@@ -1064,14 +1054,14 @@ class PDFImage {
       imgData = new ImageData(src, width, height);
     } else {
       imgData = ctx.createImageData(width, height);
-      convertToRGBA({
+      convertToRGBA(
         kind,
         src,
-        dest: new Uint32Array(imgData.data.buffer),
+        new Uint32Array(imgData.data.buffer),
         width,
         height,
-        inverseDecode: this.needsDecode,
-      });
+        this.needsDecode,
+      );
     }
     ctx.putImageData(imgData, 0, 0);
     const bitmap = canvas.transferToImageBitmap();

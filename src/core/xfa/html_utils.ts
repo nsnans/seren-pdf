@@ -17,6 +17,7 @@ import { AvailableSpace, RectType } from "../../display/display_utils";
 import { createValidAbsoluteUrl, warn } from "../../shared/util";
 import { selectFont } from "./fonts";
 import { Namespace } from "./namespace";
+import { XfaCaption, XfaDraw, XfaField } from "./template";
 import { TextMeasure } from "./text";
 import { getMeasurement, stripQuotes } from "./utils";
 import { XFAObject } from "./xfa_object";
@@ -192,7 +193,7 @@ function layoutText(text, xfaFont, margin, lineHeight, fontFinder, width) {
   return measure.compute(width);
 }
 
-function layoutNode(node, availableSpace: AvailableSpace) {
+function layoutNode(node: XfaCaption | XfaDraw | XfaField, availableSpace: AvailableSpace) {
   let height = null;
   let width = null;
   let isBroken = false;

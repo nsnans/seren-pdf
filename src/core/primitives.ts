@@ -387,6 +387,9 @@ export enum DictKey {
   Alt = "Alt",
   E = "E",
   ActualText = "ActualText",
+  WhitePoint = "WhitePoint",
+  BlackPoint = "BlackPoint",
+  Gamma = "Gamma",
 }
 
 /**
@@ -692,6 +695,9 @@ type DictValueTypeMapping = {
   [DictKey.Alt]: string,
   [DictKey.E]: string,
   [DictKey.ActualText]: string,
+  [DictKey.WhitePoint]: [number, number, number],
+  [DictKey.BlackPoint]: [number, number, number],
+  [DictKey.Gamma]: number,
 }
 
 

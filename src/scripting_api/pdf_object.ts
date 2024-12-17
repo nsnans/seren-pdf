@@ -16,6 +16,8 @@
 class PDFObject {
 
   protected _send;
+  
+  protected _expandos: any;
 
   constructor(data) {
     this._expandos = Object.create(null);

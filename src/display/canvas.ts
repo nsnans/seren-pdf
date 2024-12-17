@@ -814,14 +814,7 @@ function putBinaryImageMask(ctx: CanvasRenderingContext2D, imgData) {
     // Expand the mask so it can be used by the canvas.  Any required
     // inversion has already been handled.
 
-    ({ srcPos } = convertBlackAndWhiteToRGBA({
-      src,
-      srcPos,
-      dest,
-      width,
-      height: thisChunkHeight,
-      nonBlackColor: 0,
-    }));
+    ({ srcPos } = convertBlackAndWhiteToRGBA(src, dest, width, thisChunkHeight, false, 0, srcPos));
 
     ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
   }

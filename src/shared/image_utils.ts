@@ -15,26 +15,33 @@
 
 import { FeatureTest, ImageKind } from "./util";
 
-function convertToRGBA(params) {
-  switch (params.kind) {
+function convertToRGBA(
+  kind: number,
+  src: Uint8ClampedArray,
+  dest: Uint32Array,
+  width: number,
+  height: number,
+  inverseDecode: boolean
+) {
+  switch (kind) {
     case ImageKind.GRAYSCALE_1BPP:
-      return convertBlackAndWhiteToRGBA(params);
+      return convertBlackAndWhiteToRGBA(src, dest, width, height, inverseDecode);
     case ImageKind.RGB_24BPP:
-      return convertRGBToRGBA(params);
+      return convertRGBToRGBA(src, dest, width, height);
   }
 
   return null;
 }
 
-function convertBlackAndWhiteToRGBA({
-  src,
-  srcPos = 0,
-  dest,
-  width,
-  height,
-  nonBlackColor = 0xffffffff,
+function convertBlackAndWhiteToRGBA(
+  src: Uint8Array | Uint8ClampedArray,
+  dest: Uint32Array | Uint8ClampedArray,
+  width: number,
+  height: number,
   inverseDecode = false,
-}) {
+  nonBlackColor = 0xffffffff,
+  srcPos = 0,
+) {
   const black = FeatureTest.isLittleEndian ? 0xff000000 : 0x000000ff;
   const [zeroMapping, oneMapping] = inverseDecode
     ? [nonBlackColor, black]
@@ -68,14 +75,10 @@ function convertBlackAndWhiteToRGBA({
   return { srcPos, destPos };
 }
 
-function convertRGBToRGBA({
-  src,
-  srcPos = 0,
-  dest,
-  destPos = 0,
-  width,
-  _height,
-}) {
+function convertRGBToRGBA(
+  src: Uint8ClampedArray, dest: Uint32Array, _width: number,
+  _height: number, srcPos = 0, destPos = 0,
+) {
   let i = 0;
   const len32 = src.length >> 2;
   const src32 = new Uint32Array(src.buffer, srcPos, len32);
@@ -119,7 +122,7 @@ function convertRGBToRGBA({
   return { srcPos, destPos };
 }
 
-function grayToRGBA(src, dest) {
+function grayToRGBA(src: Uint8ClampedArray, dest: Uint32Array) {
   if (FeatureTest.isLittleEndian) {
     for (let i = 0, ii = src.length; i < ii; i++) {
       dest[i] = (src[i] * 0x10101) | 0xff000000;

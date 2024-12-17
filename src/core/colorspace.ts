@@ -30,6 +30,8 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
+import { RectType } from "../display/display_utils";
+import { Stream } from "./stream";
 
 /**
  * Resizes an RGB image with 3 components.
@@ -492,23 +494,23 @@ class ColorSpace {
         case "DeviceCMYK":
           return this.singletons.cmyk;
         case "CalGray":
-          params = xref.fetchIfRef(cs[1]);
-          whitePoint = params.getArray("WhitePoint");
-          blackPoint = params.getArray("BlackPoint");
-          gamma = params.get("Gamma");
+          params = <Dict>xref.fetchIfRef(cs[1]);
+          whitePoint = params.getArrayValue(DictKey.WhitePoint);
+          blackPoint = params.getArrayValue(DictKey.BlackPoint);
+          gamma = params.getValue(DictKey.Gamma);
           return new CalGrayCS(whitePoint, blackPoint, gamma);
         case "CalRGB":
-          params = xref.fetchIfRef(cs[1]);
-          whitePoint = params.getArray("WhitePoint");
-          blackPoint = params.getArray("BlackPoint");
-          gamma = params.getArray("Gamma");
-          const matrix = params.getArray("Matrix");
+          params = <Dict>xref.fetchIfRef(cs[1]);
+          whitePoint = params.getArrayValue(DictKey.WhitePoint);
+          blackPoint = params.getArrayValue(DictKey.BlackPoint);
+          gamma = params.getArrayValue(DictKey.Gamma);
+          const matrix = params.getArrayValue(DictKey.Matrix);
           return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
         case "ICCBased":
-          const stream = xref.fetchIfRef(cs[1]);
-          const dict = stream.dict;
-          numComps = dict.get("N");
-          const alt = dict.get("Alternate");
+          const stream = <Stream>xref.fetchIfRef(cs[1]);
+          const dict = stream.dict!;
+          numComps = dict.getValue(DictKey.N);
+          const alt = dict.getValue(DictKey.Alternate);
           if (alt) {
             const altCS = this._parse(alt, xref, resources, pdfFunctionFactory);
             // Ensure that the number of components are correct,
@@ -546,10 +548,10 @@ class ColorSpace {
           const tintFn = pdfFunctionFactory.create(<Ref | Dict | BaseStream>cs[3]);
           return new AlternateCS(numComps, baseCS, tintFn);
         case "Lab":
-          params = xref.fetchIfRef(cs[1]);
-          whitePoint = params.getArray("WhitePoint");
-          blackPoint = params.getArray("BlackPoint");
-          const range = params.getArray("Range");
+          params = <Dict>xref.fetchIfRef(cs[1]);
+          whitePoint = params.getArrayValue(DictKey.WhitePoint);
+          blackPoint = params.getArray(DictKey.BlackPoint);
+          const range = <RectType>params.getArrayValue(DictKey.Range);
           return new LabCS(whitePoint, blackPoint, range);
         default:
           // Fallback to the default gray color space.
@@ -1493,7 +1495,7 @@ class LabCS extends ColorSpace {
   protected YB: number;
   protected ZB: number;
 
-  constructor(whitePoint: Float32Array, blackPoint: Float32Array, range) {
+  constructor(whitePoint: Number3Array, blackPoint: Number3Array, range: RectType) {
     super("Lab", 3);
 
     if (!whitePoint) {
