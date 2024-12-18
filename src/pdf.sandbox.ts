@@ -17,13 +17,14 @@ import ModuleLoader from "../external/quickjs/quickjs-eval.js";
 import { SandboxSupportBase } from "./pdf.sandbox.external.js";
 import { PlatformHelper } from "./platform/platform_helper.js";
 
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsVersion = PDFJSDev.eval("BUNDLE_VERSION");
-/* eslint-disable-next-line no-unused-vars */
-const pdfjsBuild = PDFJSDev.eval("BUNDLE_BUILD");
+/**
+ * 在此处移除了pdfjsVersion和pdfjsBuild等变量
+ * 因为我们不打算
+ */
 
 class SandboxSupport extends SandboxSupportBase {
-  exportValueToSandbox(val) {
+
+  exportValueToSandbox(val: any) {
     // The communication with the Quickjs sandbox is based on strings
     // So we use JSON.stringfy to serialize
     return JSON.stringify(val);
@@ -33,12 +34,17 @@ class SandboxSupport extends SandboxSupportBase {
     return val;
   }
 
-  createErrorForSandbox(errorMessage) {
+  createErrorForSandbox(errorMessage: string) {
     return new Error(errorMessage);
   }
 }
 
 class Sandbox {
+
+  protected support: SandboxSupport;
+  
+  protected _alertOnError: number;
+
   constructor(win: Window, module) {
     this.support = new SandboxSupport(win, this);
 

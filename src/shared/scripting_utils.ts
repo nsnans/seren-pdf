@@ -32,6 +32,7 @@ function scaleAndClamp(x: number) {
 
 // PDF specifications section 10.3
 class ColorConverters {
+
   static CMYK_G([c, y, m, k]: [number, number, number, number]) {
     return ["G", 1 - Math.min(1, 0.3 * c + 0.59 * m + 0.11 * y + k)];
   }

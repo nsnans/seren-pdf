@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
+
 // In mozilla-central, this file is loaded as non-module script,
 // so it mustn't have any dependencies.
 
 export class SandboxSupportBase {
 
   protected win: Window;
-  
+
+  protected timeoutIds: Map<number, number> | null;
 
   /**
    * @param {DOMWindow} - win
@@ -34,7 +36,7 @@ export class SandboxSupportBase {
 
   destroy() {
     this.commFun = null;
-    for (const id of this.timeoutIds.values()) {
+    for (const id of this.timeoutIds!.values()) {
       this.win.clearTimeout(id);
     }
     this.timeoutIds = null;
@@ -43,21 +45,21 @@ export class SandboxSupportBase {
   /**
    * @param {Object} val - Export a value in the sandbox.
    */
-  exportValueToSandbox(val) {
+  exportValueToSandbox(_val: unknown) {
     throw new Error("Not implemented");
   }
 
   /**
    * @param {Object} val - Import a value from the sandbox.
    */
-  importValueFromSandbox(val) {
+  importValueFromSandbox(_val: unknown) {
     throw new Error("Not implemented");
   }
 
   /**
    * @param {String} errorMessage - Create an error in the sandbox.
    */
-  createErrorForSandbox(errorMessage) {
+  createErrorForSandbox(_errorMessage: string) {
     throw new Error("Not implemented");
   }
 
@@ -65,7 +67,7 @@ export class SandboxSupportBase {
    * @param {String} name - Name of the function to call in the sandbox
    * @param {Array<Object>} args - Arguments of the function.
    */
-  callSandboxFunction(name, args) {
+  callSandboxFunction(name: string, args: any) {
     if (!this.commFun) {
       return;
     }
@@ -75,13 +77,14 @@ export class SandboxSupportBase {
     } catch (e) {
       this.win.console.error(e);
     }
+
   }
 
   createSandboxExternals() {
     // All the functions in externals object are called
     // from the sandbox.
     const externals = {
-      setTimeout: (callbackId, nMilliseconds) => {
+      setTimeout: (callbackId: number, nMilliseconds: number) => {
         if (
           typeof callbackId !== "number" ||
           typeof nMilliseconds !== "number"
@@ -92,23 +95,23 @@ export class SandboxSupportBase {
         if (callbackId === 0) {
           // This callbackId corresponds to the one used for userActivation.
           // So here, we cancel the last userActivation.
-          this.win.clearTimeout(this.timeoutIds.get(callbackId));
+          this.win.clearTimeout(this.timeoutIds!.get(callbackId));
         }
 
         const id = this.win.setTimeout(() => {
-          this.timeoutIds.delete(callbackId);
+          this.timeoutIds!.delete(callbackId);
           this.callSandboxFunction("timeoutCb", {
             callbackId,
             interval: false,
           });
         }, nMilliseconds);
-        this.timeoutIds.set(callbackId, id);
+        this.timeoutIds!.set(callbackId, id);
       },
-      clearTimeout: callbackId => {
-        this.win.clearTimeout(this.timeoutIds.get(callbackId));
-        this.timeoutIds.delete(callbackId);
+      clearTimeout: (callbackId: number) => {
+        this.win.clearTimeout(this.timeoutIds!.get(callbackId));
+        this.timeoutIds!.delete(callbackId);
       },
-      setInterval: (callbackId, nMilliseconds) => {
+      setInterval: (callbackId: number, nMilliseconds: number) => {
         if (
           typeof callbackId !== "number" ||
           typeof nMilliseconds !== "number"
@@ -121,25 +124,25 @@ export class SandboxSupportBase {
             interval: true,
           });
         }, nMilliseconds);
-        this.timeoutIds.set(callbackId, id);
+        this.timeoutIds!.set(callbackId, id);
       },
-      clearInterval: callbackId => {
-        this.win.clearInterval(this.timeoutIds.get(callbackId));
-        this.timeoutIds.delete(callbackId);
+      clearInterval: (callbackId: number) => {
+        this.win.clearInterval(this.timeoutIds!.get(callbackId));
+        this.timeoutIds!.delete(callbackId);
       },
-      alert: cMsg => {
+      alert: (cMsg: string) => {
         if (typeof cMsg !== "string") {
           return;
         }
         this.win.alert(cMsg);
       },
-      confirm: cMsg => {
+      confirm: (cMsg: string) => {
         if (typeof cMsg !== "string") {
           return false;
         }
         return this.win.confirm(cMsg);
       },
-      prompt: (cQuestion, cDefault) => {
+      prompt: (cQuestion: string, cDefault: string) => {
         if (typeof cQuestion !== "string" || typeof cDefault !== "string") {
           return null;
         }

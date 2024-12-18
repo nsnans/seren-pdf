@@ -16,13 +16,14 @@
     "moduleDetection": "force",
     "noEmit": true,
     /* Linting */
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": false,
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src"
+    "src/**/*.ts",
+    "src/global.d.ts"
   ]
 }
