@@ -22,11 +22,12 @@ import { ZoomType } from "./constants";
 const DOC_EXTERNAL = false;
 
 class InfoProxyHandler {
-  static get(obj, prop) {
+
+  static get<K extends keyof Doc>(obj: Doc, prop: K) {
     return obj[prop.toLowerCase()];
   }
 
-  static set(obj, prop, value) {
+  static set(_obj: any, prop: string, _value: any): boolean {
     throw new Error(`doc.info.${prop} is read-only`);
   }
 }

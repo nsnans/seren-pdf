@@ -17,6 +17,10 @@
 // so it mustn't have any dependencies.
 
 export class SandboxSupportBase {
+
+  protected win: Window;
+  
+
   /**
    * @param {DOMWindow} - win
    */

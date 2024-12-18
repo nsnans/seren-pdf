@@ -15,6 +15,7 @@
 
 import ModuleLoader from "../external/quickjs/quickjs-eval.js";
 import { SandboxSupportBase } from "./pdf.sandbox.external.js";
+import { PlatformHelper } from "./platform/platform_helper.js";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion = PDFJSDev.eval("BUNDLE_VERSION");
@@ -55,12 +56,12 @@ class Sandbox {
   }
 
   create(data) {
-    if (PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       this._module.ccall("nukeSandbox", null, []);
     }
     const code = [PDFJSDev.eval("PDF_SCRIPTING_JS_SOURCE")];
 
-    if (PDFJSDev.test("TESTING")) {
+    if (PlatformHelper.isTesting()) {
       code.push(
         `globalThis.sendResultForTesting = callExternalFunction.bind(null, "send");`
       );

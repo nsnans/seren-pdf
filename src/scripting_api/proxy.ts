@@ -14,6 +14,9 @@
  */
 
 class ProxyHandler {
+
+  protected nosend: Set<string>;
+
   constructor() {
     // Don't dispatch an event for those properties.
     //  - delay: allow to delay field redraw until delay is set to false.
