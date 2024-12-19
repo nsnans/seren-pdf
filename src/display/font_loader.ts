@@ -17,12 +17,11 @@ import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   FontRenderOps,
-  isNodeJS,
   shadow,
   string32,
   toBase64Util,
   unreachable,
-  warn,
+  warn
 } from "../shared/util";
 import { PDFObjects } from "./api";
 
@@ -194,10 +193,7 @@ class FontLoader {
 
     let supported = false;
     if (PlatformHelper.isChrome()) {
-      if (isNodeJS) {
-        // Node.js - we can pretend that sync font loading is supported.
-        supported = true;
-      } else if (
+      if (
         typeof navigator !== "undefined" &&
         typeof navigator?.userAgent === "string" &&
         // User agent string sniffing is bad, but there is no reliable way to

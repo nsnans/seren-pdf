@@ -23,7 +23,6 @@ import {
   getVerbosityLevel,
   info,
   InvalidPDFException,
-  isNodeJS,
   MissingPDFException,
   PasswordException,
   setVerbosityLevel,
@@ -31,7 +30,7 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   VerbosityLevel,
-  warn,
+  warn
 } from "../shared/util";
 import { AnnotationFactory } from "./annotation";
 import { clearGlobalCaches } from "./cleanup_helper";
@@ -842,12 +841,7 @@ function isMessagePort(maybePort) {
 }
 
 // Worker thread (and not Node.js)?
-if (
-  typeof window === "undefined" &&
-  !isNodeJS &&
-  typeof self !== "undefined" &&
-  isMessagePort(self)
-) {
+if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
   WorkerMessageHandler.initializeFromPort(self);
 }
 

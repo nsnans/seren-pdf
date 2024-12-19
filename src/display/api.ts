@@ -23,12 +23,7 @@ import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
 import {
-  NodeCanvasFactory,
-  NodeCMapReaderFactory,
-  NodeFilterFactory,
-  NodePackages,
-  NodeStandardFontDataFactory,
-  PDFNodeStream,
+  PDFNodeStream
 } from "../display/stubs";
 import { IPDFStream, IPDFStreamReader } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
@@ -43,7 +38,6 @@ import {
   getVerbosityLevel,
   info,
   InvalidPDFException,
-  isNodeJS,
   MAX_IMAGE_SIZE_TO_CACHE,
   MissingPDFException,
   PasswordException,
@@ -54,7 +48,7 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
-  warn,
+  warn
 } from "../shared/util";
 import { TypedArray } from "../types";
 import {
@@ -84,12 +78,10 @@ const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
 const DELAYED_CLEANUP_TIMEOUT = 5000; // ms
 
-const isGenericAndNode = PlatformHelper.isGeneric() && isNodeJS;
-
-const DefaultCanvasFactory = isGenericAndNode ? NodeCanvasFactory : DOMCanvasFactory;
-const DefaultCMapReaderFactory = isGenericAndNode ? NodeCMapReaderFactory : DOMCMapReaderFactory;
-const DefaultFilterFactory = isGenericAndNode ? NodeFilterFactory : DOMFilterFactory;
-const DefaultStandardFontDataFactory = isGenericAndNode ? NodeStandardFontDataFactory : DOMStandardFontDataFactory;
+const DefaultCanvasFactory = DOMCanvasFactory;
+const DefaultCMapReaderFactory = DOMCMapReaderFactory;
+const DefaultFilterFactory = DOMFilterFactory;
+const DefaultStandardFontDataFactory = DOMStandardFontDataFactory;
 
 type RefProxy = {
   num: number;
@@ -379,22 +371,15 @@ function getDocument(options: DocumentSrcType) {
       : -1;
 
   const isEvalSupported = src.isEvalSupported !== false;
-  const isOffscreenCanvasSupported =
-    typeof src.isOffscreenCanvasSupported === "boolean"
-      ? src.isOffscreenCanvasSupported
-      : !isNodeJS;
-  const isChrome =
-    typeof src.isChrome === "boolean"
-      ? src.isChrome
-      : PlatformHelper.isMozCental() &&
-      !FeatureTest.platform.isFirefox &&
-      typeof window !== "undefined" &&
-      !!(window as any)?.chrome;
-  const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes)
-    ? src.canvasMaxAreaInBytes
-    : -1;
-  const disableFontFace =
-    typeof src.disableFontFace === "boolean" ? src.disableFontFace : isNodeJS;
+  const isOffscreenCanvasSupported = !!src.isOffscreenCanvasSupported;
+  const isChrome = typeof src.isChrome === "boolean"
+    ? src.isChrome
+    : PlatformHelper.isMozCental() &&
+    !FeatureTest.platform.isFirefox &&
+    typeof window !== "undefined" &&
+    !!(window as any)?.chrome;
+  const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
+  const disableFontFace = !!src.disableFontFace;
   const fontExtraProperties = src.fontExtraProperties === true;
   const ownerDocument = src.ownerDocument || globalThis.document;
   const disableRange = src.disableRange === true;
@@ -407,10 +392,7 @@ function getDocument(options: DocumentSrcType) {
 
   // Parameters whose default values depend on other parameters.
   const length = rangeTransport ? rangeTransport.length : (src.length ?? NaN);
-  const useSystemFonts =
-    typeof src.useSystemFonts === "boolean"
-      ? src.useSystemFonts
-      : !isNodeJS && !disableFontFace;
+  const useSystemFonts = typeof src.useSystemFonts === "boolean" ? src.useSystemFonts : !disableFontFace;
   const useWorkerFetch =
     typeof src.useWorkerFetch === "boolean"
       ? src.useWorkerFetch
@@ -524,7 +506,7 @@ function getDocument(options: DocumentSrcType) {
         }
         let NetworkStream;
 
-        if (PlatformHelper.isGeneric() && isNodeJS) {
+        if (PlatformHelper.isGeneric()) {
           const isFetchSupported =
             typeof fetch !== "undefined" &&
             typeof Response !== "undefined" &&
@@ -587,9 +569,7 @@ function getUrlProp(val: URL | string): string | null {
     // The full path is required in the 'url' field.
     return new URL(val, window.location.href).href;
   } catch {
-    if (PlatformHelper.isGeneric() && isNodeJS && typeof val === "string") {
-      return val; // Use the url as-is in Node.js environments.
-    }
+    warn('can not create url')
   }
   throw new Error(
     "Invalid PDF url data: " +
@@ -600,7 +580,7 @@ function getUrlProp(val: URL | string): string | null {
 function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView | Buffer): Uint8Array {
   // Converting string or array-like data to Uint8Array.
   if (
-    PlatformHelper.isGeneric() && isNodeJS && typeof Buffer !== "undefined" && // eslint-disable-line no-undef
+    PlatformHelper.isGeneric() && typeof Buffer !== "undefined" && // eslint-disable-line no-undef
     val instanceof Buffer // eslint-disable-line no-undef
   ) {
     throw new Error(
@@ -2242,19 +2222,6 @@ class PDFWorker {
     );
   }
 
-  static {
-    if (PlatformHelper.isGeneric()) {
-      if (isNodeJS) {
-        // Workers aren't supported in Node.js, force-disabling them there.
-        this.#isWorkerDisabled = true;
-
-        GlobalWorkerOptions.workerSrc ||= PlatformHelper.testLib()
-          ? "../pdf.worker.js"
-          : "./pdf.worker.mjs";
-      }
-    }
-  }
-
   public destroyed = false;
 
   public _pendingDestroy?: boolean;
@@ -2299,10 +2266,6 @@ class PDFWorker {
    * @type {Promise<void>}
    */
   get promise() {
-    if (PlatformHelper.isGeneric() && isNodeJS) {
-      // Ensure that all Node.js packages/polyfills have loaded.
-      return Promise.all([NodePackages.promise, this._readyCapability.promise]);
-    }
     return this._readyCapability.promise;
   }
 

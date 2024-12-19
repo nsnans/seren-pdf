@@ -42,6 +42,7 @@ import { ColorConverters } from "../shared/scripting_utils";
 import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_types";
 import { PlatformHelper } from "../platform/platform_helper";
+import { AnnotationParameters } from "../core/annotation";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -71,7 +72,15 @@ function getRectDims(rect: number[]) {
  */
 
 export interface AnnotationElementParameters {
-  data: object;
+  data: {
+    annotationType: AnnotationType;
+    fieldType: "Tx" | "Btn" | "Ch" | "Sig" | null;
+    // 先按bool来算，实际运行的时候，可以再根据实际情况改
+    radioButton: boolean;
+    checkBox: boolean;
+    isTooltipOnly: boolean;
+    hasAppearance: boolean;
+  };
   layer: HTMLDivElement;
   linkService: IPDFLinkService;
   downloadManager: IDownloadManager;
@@ -91,6 +100,7 @@ class AnnotationElementFactory {
    * @returns {AnnotationElement}
    */
   static create(parameters: AnnotationElementParameters) {
+
     const subtype = parameters.data.annotationType;
 
     switch (subtype) {
@@ -172,36 +182,46 @@ class AnnotationElementFactory {
 }
 
 class AnnotationElement {
+
   #updates = null;
 
   #hasBorder = false;
 
   #popupElement = null;
 
-  protected isRenderable: boolean;
+  readonly isRenderable: boolean;
 
   protected data: any;
 
   protected layer: HTMLDivElement;
+
   protected linkService: IPDFLinkService;
+
   protected downloadManager: IDownloadManager;
+
   protected imageResourcesPath: string;
+
   protected renderForms: boolean;
+
   protected svgFactory: BaseSVGFactory;
+
   protected annotationStorage: AnnotationStorage;
+
   protected enableScripting: boolean;
+
   protected hasJSActions: boolean;
+
   protected _fieldObjects: object;
+
   protected parent;
+
   protected container: HTMLElement | null = null;
 
   constructor(
     parameters: AnnotationElementParameters,
-    {
-      isRenderable = false,
-      ignoreBorder = false,
-      createQuadrilaterals = false,
-    }
+    isRenderable = false,
+    ignoreBorder = false,
+    createQuadrilaterals = false,
   ) {
     this.isRenderable = isRenderable;
     this.data = parameters.data;
@@ -578,10 +598,10 @@ class AnnotationElement {
     }
 
     const { style } = this.container;
-    let svgBuffer;
+    let svgBuffer: string[] = [];
     if (this.#hasBorder) {
       const { borderColor, borderWidth } = style;
-      style.borderWidth = 0;
+      style.borderWidth = "0";
       svgBuffer = [
         "url('data:image/svg+xml;utf8,",
         `<svg xmlns="http://www.w3.org/2000/svg"`,
@@ -591,18 +611,14 @@ class AnnotationElement {
       this.container.classList.add("hasBorder");
     }
 
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
-      this.container.classList.add("hasClipPath");
-    }
-
     const width = rectTrX - rectBlX;
     const height = rectTrY - rectBlY;
 
     const { svgFactory } = this;
     const svg = svgFactory.createElement("svg");
     svg.classList.add("quadrilateralsContainer");
-    svg.setAttribute("width", 0);
-    svg.setAttribute("height", 0);
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
     const defs = svgFactory.createElement("defs");
     svg.append(defs);
     const clipPath = svgFactory.createElement("clipPath");
@@ -621,10 +637,10 @@ class AnnotationElement {
       const y = (rectTrY - trY) / height;
       const rectWidth = (trX - blX) / width;
       const rectHeight = (trY - blY) / height;
-      rect.setAttribute("x", x);
-      rect.setAttribute("y", y);
-      rect.setAttribute("width", rectWidth);
-      rect.setAttribute("height", rectHeight);
+      rect.setAttribute("x", x.toString());
+      rect.setAttribute("y", y.toString());
+      rect.setAttribute("width", rectWidth.toString());
+      rect.setAttribute("height", rectHeight.toString());
       clipPath.append(rect);
       svgBuffer?.push(
         `<rect vector-effect="non-scaling-stroke" x="${x}" y="${y}" width="${rectWidth}" height="${rectHeight}"/>`
@@ -675,7 +691,7 @@ class AnnotationElement {
    * @public
    * @memberof AnnotationElement
    */
-  render() {
+  render(): HTMLElement {
     unreachable("Abstract method `AnnotationElement.render` called");
   }
 
@@ -783,13 +799,11 @@ class AnnotationElement {
 }
 
 class LinkAnnotationElement extends AnnotationElement {
+
   protected isTooltipOnly: boolean;
-  constructor(parameters: AnnotationElementParameters, options = null) {
-    super(parameters, {
-      isRenderable: true,
-      ignoreBorder: !!options?.ignoreBorder,
-      createQuadrilaterals: true,
-    });
+
+  constructor(parameters: AnnotationElementParameters, ignoreBorder = false) {
+    super(parameters, true, ignoreBorder, true);
     this.isTooltipOnly = parameters.data.isTooltipOnly;
   }
 
@@ -841,7 +855,7 @@ class LinkAnnotationElement extends AnnotationElement {
       this.container.append(link);
     }
 
-    return this.container;
+    return this.container!;
   }
 
   #setInternalLink() {
@@ -1064,8 +1078,8 @@ class LinkAnnotationElement extends AnnotationElement {
 }
 
 class TextAnnotationElement extends AnnotationElement {
-  constructor(parameters) {
-    super(parameters, { isRenderable: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true);
   }
 
   render() {
@@ -1093,6 +1107,10 @@ class TextAnnotationElement extends AnnotationElement {
 }
 
 class WidgetAnnotationElement extends AnnotationElement {
+
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters);
+  }
   render() {
     // Show only the container for unsupported field types.
     return this.container;
@@ -1815,15 +1833,15 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
 }
 
 class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
-  constructor(parameters) {
-    super(parameters, { ignoreBorder: parameters.data.hasAppearance });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, parameters.data.hasAppearance);
   }
 
   render() {
     // The rendering and functionality of a push button widget annotation is
     // equal to that of a link annotation, but may have more functionality, such
     // as performing actions on form fields (resetting, submitting, et cetera).
-    const container = super.render();
+    const container = super.render()!;
     container.classList.add("buttonWidgetAnnotation", "pushButton");
 
     const linkElement = container.lastChild;
@@ -2091,7 +2109,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
 class PopupAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     const { data, elements } = parameters;
-    super(parameters, { isRenderable: AnnotationElement._hasPopupData(data) });
+    super(parameters, AnnotationElement._hasPopupData(data));
     this.elements = elements;
     this.popup = null;
   }
@@ -2518,8 +2536,8 @@ class PopupElement {
 }
 
 class FreeTextAnnotationElement extends AnnotationElement {
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
     this.textContent = parameters.data.textContent;
     this.textPosition = parameters.data.textPosition;
     this.annotationEditorType = AnnotationEditorType.FREETEXT;
@@ -2553,8 +2571,8 @@ class FreeTextAnnotationElement extends AnnotationElement {
 class LineAnnotationElement extends AnnotationElement {
   #line = null;
 
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
   }
 
   render() {
@@ -2608,8 +2626,8 @@ class LineAnnotationElement extends AnnotationElement {
 class SquareAnnotationElement extends AnnotationElement {
   #square = null;
 
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
   }
 
   render() {
@@ -2723,8 +2741,8 @@ class CircleAnnotationElement extends AnnotationElement {
 class PolylineAnnotationElement extends AnnotationElement {
   #polyline = null;
 
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
 
     this.containerClassName = "polylineAnnotation";
     this.svgElementName = "svg:polyline";
@@ -2803,8 +2821,8 @@ class PolygonAnnotationElement extends PolylineAnnotationElement {
 }
 
 class CaretAnnotationElement extends AnnotationElement {
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
   }
 
   render() {
@@ -2820,8 +2838,8 @@ class CaretAnnotationElement extends AnnotationElement {
 class InkAnnotationElement extends AnnotationElement {
   #polylines = [];
 
-  constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true);
 
     this.containerClassName = "inkAnnotation";
 
@@ -2895,12 +2913,9 @@ class InkAnnotationElement extends AnnotationElement {
 }
 
 class HighlightAnnotationElement extends AnnotationElement {
-  constructor(parameters) {
-    super(parameters, {
-      isRenderable: true,
-      ignoreBorder: true,
-      createQuadrilaterals: true,
-    });
+
+  constructor(parameters: AnnotationElementParameters) {
+    super(parameters, true, true, true);
     this.annotationEditorType = AnnotationEditorType.HIGHLIGHT;
   }
 
@@ -2918,11 +2933,7 @@ class HighlightAnnotationElement extends AnnotationElement {
 
 class UnderlineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, {
-      isRenderable: true,
-      ignoreBorder: true,
-      createQuadrilaterals: true,
-    });
+    super(parameters, true, true, true);
   }
 
   render() {
@@ -2937,11 +2948,7 @@ class UnderlineAnnotationElement extends AnnotationElement {
 
 class SquigglyAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, {
-      isRenderable: true,
-      ignoreBorder: true,
-      createQuadrilaterals: true,
-    });
+    super(parameters, true, true, true);
   }
 
   render() {
@@ -2956,11 +2963,7 @@ class SquigglyAnnotationElement extends AnnotationElement {
 
 class StrikeOutAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, {
-      isRenderable: true,
-      ignoreBorder: true,
-      createQuadrilaterals: true,
-    });
+    super(parameters, true, true, true);
   }
 
   render() {
@@ -2975,7 +2978,7 @@ class StrikeOutAnnotationElement extends AnnotationElement {
 
 class StampAnnotationElement extends AnnotationElement {
   constructor(parameters) {
-    super(parameters, { isRenderable: true, ignoreBorder: true });
+    super(parameters, true, true);
     this.annotationEditorType = AnnotationEditorType.STAMP;
   }
 
@@ -2996,7 +2999,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
   #trigger = null;
 
   constructor(parameters) {
-    super(parameters, { isRenderable: true });
+    super(parameters, true);
 
     const { file } = this.data;
     this.filename = file.filename;
@@ -3224,7 +3227,7 @@ class AnnotationLayer {
         }
       }
 
-      const rendered = element.render();
+      const rendered = element.render()!;
       if (data.hidden) {
         rendered.style.visibility = "hidden";
       }

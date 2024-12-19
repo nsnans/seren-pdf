@@ -23,13 +23,12 @@ import {
   IDENTITY_MATRIX,
   ImageKind,
   info,
-  isNodeJS,
   OPS,
   shadow,
   TextRenderingMode,
   unreachable,
   Util,
-  warn,
+  warn
 } from "../shared/util";
 import { PDFObjects } from "./api";
 import { CanvasAndContext, CanvasFactory } from "./canvas_factory";
@@ -859,7 +858,7 @@ function resetCtxToDefault(ctx: CanvasRenderingContext2D) {
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
   }
-  if (PlatformHelper.isMozCental() || !isNodeJS) {
+  if (PlatformHelper.isMozCental()) {
     const { filter } = ctx;
     if (filter !== "none" && filter !== "") {
       ctx.filter = "none";
@@ -3089,16 +3088,16 @@ class CanvasGraphics {
 
     this.save();
 
-    if (PlatformHelper.isMozCental() || !isNodeJS) {
-      // The filter, if any, will be applied in applyTransferMapsToBitmap.
-      // It must be applied to the image before rescaling else some artifacts
-      // could appear.
-      // The final restore will reset it to its value.
-      const { filter } = ctx;
-      if (filter !== "none" && filter !== "") {
-        ctx.filter = "none";
-      }
+
+    // The filter, if any, will be applied in applyTransferMapsToBitmap.
+    // It must be applied to the image before rescaling else some artifacts
+    // could appear.
+    // The final restore will reset it to its value.
+    const { filter } = ctx;
+    if (filter !== "none" && filter !== "") {
+      ctx.filter = "none";
     }
+
 
     // scale the image to the unit square
     ctx.scale(1 / width, -1 / height);

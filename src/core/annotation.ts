@@ -703,7 +703,7 @@ interface AnnotationData {
   titleObj?: { str: string; dir: string; };
   creationDate?: string | null;
   popupRef?: string | null;
-  annotationType?: number;
+  annotationType?: AnnotationType;
   // TODO 要再推断一下
   richText?: unknown;
   actions?: Record<string, string[]> | null;
