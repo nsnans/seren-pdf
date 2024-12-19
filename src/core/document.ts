@@ -1225,28 +1225,29 @@ class PDFDocument {
     return shadow(this, "xfaDatasets", null);
   }
 
-  get xfaData(): Record<string, string> | null {
+  get xfaData(): Map<string, string> {
     const streams = this._xfaStreams;
+    const empty = new Map<string, string>();
     if (!streams) {
-      return null;
+      return empty;
     }
-    const data: Record<string, string> = Object.create(null);
+    const data = new Map<string, string>();
     for (const [key, stream] of Object.entries(streams)) {
       if (!stream) {
         continue;
       }
       try {
-        data[key] = stringToUTF8String(stream.getString());
+        data.set(key, stringToUTF8String(stream.getString()));
       } catch {
         warn("XFA - Invalid utf-8 string.");
-        return null;
+        return empty;
       }
     }
     return data;
   }
 
   get xfaFactory() {
-    let data;
+    let data: Map<string, string> | null = null;
     if (
       this.pdfManager.enableXfa &&
       this.catalog!.needsRendering &&

@@ -28,6 +28,8 @@ class Util extends PDFObject {
   protected MILLISECONDS_IN_DAY: number;
 
   protected MILLISECONDS_IN_WEEK: number;
+  
+  protected _externalCall: any;
 
   constructor(data) {
     super(data);

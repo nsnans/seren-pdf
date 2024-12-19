@@ -173,7 +173,7 @@ abstract class XMLParserBase {
       if (ch === "<") {
         ++j;
         const ch2 = s[j];
-        let q;
+        let q: number;
         switch (ch2) {
           case "/":
             ++j;
