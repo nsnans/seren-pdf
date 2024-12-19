@@ -7,5 +7,4 @@ export declare global {
     name: string;
   }
 
-  var evt : Event;
 }

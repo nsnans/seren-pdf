@@ -27,7 +27,7 @@ import {
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { FreeTextAnnotationElement } from "../annotation_layer";
-import { AnnotationEditor } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import {
   AnnotationEditorUIManager,
   bindEvents,
@@ -141,7 +141,7 @@ class FreeTextEditor extends AnnotationEditor {
     this.#color =
       params.color ||
       FreeTextEditor._defaultColor ||
-      AnnotationEditor._defaultLineColor;
+      AnnotationEditorHelper._defaultLineColor;
     this.#fontSize = params.fontSize || FreeTextEditor._defaultFontSize;
   }
 
@@ -198,7 +198,7 @@ class FreeTextEditor extends AnnotationEditor {
       ],
       [
         AnnotationEditorParamsType.FREETEXT_COLOR,
-        FreeTextEditor._defaultColor || AnnotationEditor._defaultLineColor,
+        FreeTextEditor._defaultColor || AnnotationEditorHelper._defaultLineColor,
       ],
     ];
   }
@@ -834,7 +834,7 @@ class FreeTextEditor extends AnnotationEditor {
 
     const padding = FreeTextEditor._internalPadding * this.parentScale;
     const rect = this.getRect(padding, padding);
-    const color = AnnotationEditor._colorManager.convert(
+    const color = AnnotationEditorHelper._colorManager.convert(
       this.isAttachedToDOM
         ? getComputedStyle(this.editorDiv!).color
         : this.#color

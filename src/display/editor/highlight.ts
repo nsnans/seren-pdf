@@ -28,7 +28,7 @@ import {
   HighlightAnnotationElement,
   InkAnnotationElement,
 } from "../annotation_layer";
-import { AnnotationEditor } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { ColorPicker } from "./color_picker";
 import { noContextMenu } from "../display_utils";
 import { IL10n } from "../../viewer/common/component_types";
@@ -918,7 +918,7 @@ class HighlightEditor extends AnnotationEditor {
     }
 
     const rect = this.getRect(0, 0);
-    const color = AnnotationEditor._colorManager.convert(this.color);
+    const color = AnnotationEditorHelper._colorManager.convert(this.color);
 
     const serialized = {
       annotationType: AnnotationEditorType.HIGHLIGHT,

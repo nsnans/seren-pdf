@@ -582,6 +582,7 @@ class ColorManager {
  * some action like copy/paste, undo/redo, ...
  */
 class AnnotationEditorUIManager {
+  
   #abortController = new AbortController();
 
   #activeEditor = null;

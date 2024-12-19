@@ -19,7 +19,7 @@ import {
   assert,
   Util,
 } from "../../shared/util";
-import { AnnotationEditor } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { InkAnnotationElement } from "../annotation_layer";
 import { noContextMenu, RectType } from "../display_utils";
 import { AnnotationEditorUIManager, opacityToHex } from "./tools";
@@ -137,7 +137,7 @@ class InkEditor extends AnnotationEditor {
       [AnnotationEditorParamsType.INK_THICKNESS, InkEditor._defaultThickness],
       [
         AnnotationEditorParamsType.INK_COLOR,
-        InkEditor._defaultColor || AnnotationEditor._defaultLineColor,
+        InkEditor._defaultColor || AnnotationEditorHelper._defaultLineColor,
       ],
       [
         AnnotationEditorParamsType.INK_OPACITY,
@@ -157,7 +157,7 @@ class InkEditor extends AnnotationEditor {
         AnnotationEditorParamsType.INK_COLOR,
         this.color ||
         InkEditor._defaultColor ||
-        AnnotationEditor._defaultLineColor,
+        AnnotationEditorHelper._defaultLineColor,
       ],
       [
         AnnotationEditorParamsType.INK_OPACITY,
@@ -406,7 +406,7 @@ class InkEditor extends AnnotationEditor {
       this.#setCanvasDims();
       this.thickness ||= InkEditor._defaultThickness;
       this.color ||=
-        InkEditor._defaultColor || AnnotationEditor._defaultLineColor;
+        InkEditor._defaultColor || AnnotationEditorHelper._defaultLineColor;
       this.opacity ??= InkEditor._defaultOpacity;
     }
     this.currentPath.push([x, y]);
@@ -1228,7 +1228,7 @@ class InkEditor extends AnnotationEditor {
     }
 
     const rect = this.getRect(0, 0);
-    const color = AnnotationEditor._colorManager.convert(<string>this.ctx!.strokeStyle);
+    const color = AnnotationEditorHelper._colorManager.convert(<string>this.ctx!.strokeStyle);
 
     return {
       annotationType: AnnotationEditorType.INK,

@@ -16,19 +16,19 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
+import { FeatureTest, shadow, unreachable } from "../../shared/util";
+import { IL10n } from "../../viewer/common/component_types";
+import { noContextMenu, RectType } from "../display_utils";
+import { AltText } from "./alt_text";
+import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { AnnotationEditorState } from "./state/editor_state";
+import { EditorToolbar } from "./toolbar";
 import {
   AnnotationEditorUIManager,
   bindEvents,
   ColorManager,
   KeyboardManager,
 } from "./tools";
-import { FeatureTest, shadow, unreachable } from "../../shared/util";
-import { AltText } from "./alt_text";
-import { EditorToolbar } from "./toolbar";
-import { noContextMenu, RectType } from "../display_utils";
-import { PlatformHelper } from "../../platform/platform_helper";
-import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { IL10n } from "../../viewer/common/component_types";
 
 /**
  * @typedef {Object} AnnotationEditorParameters
@@ -47,10 +47,9 @@ interface AnnotationEditorParameters {
   name: string;
   isCentered: boolean;
 }
-/**
- * Base class for editors.
- */
-class AnnotationEditor {
+
+
+export class AnnotationEditorHelper {
 
   static _l10n: IL10n | null = null;
 
@@ -70,6 +69,14 @@ class AnnotationEditor {
   static _colorManager = new ColorManager();
 
   static _zIndex = 1;
+
+  static get _defaultLineColor() {
+    return shadow(
+      this,
+      "_defaultLineColor",
+      this._colorManager.getHexCode("CanvasText")
+    );
+  }
 
   // Time to wait (in ms) before sending the telemetry data.
   // We wait a bit to avoid sending too many requests when changing something
@@ -108,6 +115,13 @@ class AnnotationEditor {
       ])
     );
   }
+
+}
+
+
+class AnnotationEditor<T extends AnnotationEditorState> {
+
+  protected state: T;
 
   #accessibilityData = null;
 
@@ -148,7 +162,7 @@ class AnnotationEditor {
 
   #isDraggable = false;
 
-  #zIndex = AnnotationEditor._zIndex++;
+  #zIndex = AnnotationEditorHelper._zIndex++;
 
   _editToolbar: EditorToolbar | null = null;
 
@@ -186,7 +200,7 @@ class AnnotationEditor {
 
   protected div: HTMLDivElement | null;
 
-  protected annotationElementId: string | null;
+  public annotationElementId: string | null;
 
   protected _structTreeParentId: string | null;
 
@@ -202,10 +216,6 @@ class AnnotationEditor {
    * @param {AnnotationEditorParameters} parameters
    */
   constructor(parameters: AnnotationEditorParameters) {
-    if (PlatformHelper.isTesting() && this.constructor === AnnotationEditor) {
-      unreachable("Cannot initialize AnnotationEditor.");
-    }
-
     this.parent = parameters.parent;
     this.id = parameters.id;
     this.width = this.height = 0;
@@ -241,17 +251,9 @@ class AnnotationEditor {
     return Object.getPrototypeOf(this).constructor._type;
   }
 
-  static get _defaultLineColor() {
-    return shadow(
-      this,
-      "_defaultLineColor",
-      this._colorManager.getHexCode("CanvasText")
-    );
-  }
-
   static deleteAnnotationElement(editor: AnnotationEditor) {
     const fakeEditor = new FakeEditor({
-      id: editor.parent.getNextId(),
+      id: editor.parent!.getNextId(),
       parent: editor.parent,
       uiManager: editor._uiManager,
     });
@@ -265,9 +267,9 @@ class AnnotationEditor {
    * @param {Object} l10n
    */
   static initialize(l10n: IL10n, _uiManager: AnnotationEditorUIManager) {
-    AnnotationEditor._l10n ??= l10n;
+    AnnotationEditorHelper._l10n ??= l10n;
 
-    AnnotationEditor._l10nResizer ||= Object.freeze({
+    AnnotationEditorHelper._l10nResizer ||= Object.freeze({
       topLeft: "pdfjs-editor-resizer-top-left",
       topMiddle: "pdfjs-editor-resizer-top-middle",
       topRight: "pdfjs-editor-resizer-top-right",
@@ -278,11 +280,11 @@ class AnnotationEditor {
       middleLeft: "pdfjs-editor-resizer-middle-left",
     });
 
-    if (AnnotationEditor._borderLineWidth !== -1) {
+    if (AnnotationEditorHelper._borderLineWidth !== -1) {
       return;
     }
     const style = getComputedStyle(document.documentElement);
-    AnnotationEditor._borderLineWidth =
+    AnnotationEditorHelper._borderLineWidth =
       parseFloat(style.getPropertyValue("--outline-width")) || 0;
   }
 
@@ -567,7 +569,7 @@ class AnnotationEditor {
    */
   getBaseTranslation(): [number, number] {
     const [parentWidth, parentHeight] = this.parentDimensions;
-    const { _borderLineWidth } = AnnotationEditor;
+    const { _borderLineWidth } = AnnotationEditorHelper;
     const x = _borderLineWidth / parentWidth;
     const y = _borderLineWidth / parentHeight;
     switch (this.rotation) {
@@ -1045,7 +1047,7 @@ class AnnotationEditor {
     if (this.#altText) {
       return;
     }
-    AltText.initialize(AnnotationEditor._l10n);
+    AltText.initialize(AnnotationEditorHelper._l10n);
     this.#altText = new AltText(this);
     if (this.#accessibilityData) {
       this.#altText.data = this.#accessibilityData;
@@ -1538,7 +1540,7 @@ class AnnotationEditor {
         div.addEventListener("focus", this.#resizerFocus.bind(this, name), {
           signal,
         });
-        div.setAttribute("data-l10n-id", AnnotationEditor._l10nResizer![name]);
+        div.setAttribute("data-l10n-id", AnnotationEditorHelper._l10nResizer![name]);
       }
     }
 
@@ -1572,8 +1574,8 @@ class AnnotationEditor {
       let i = 0;
       for (const child of children) {
         const div = this.#allResizerDivs[i++];
-        const name = div.getAttribute("data-resizer-name");
-        child.setAttribute("data-l10n-id", AnnotationEditor._l10nResizer[name]);
+        const name = div.getAttribute("data-resizer-name")!;
+        child.setAttribute("data-l10n-id", AnnotationEditorHelper._l10nResizer[name]);
       }
     }
 
@@ -1788,7 +1790,7 @@ class AnnotationEditor {
         if (this.#telemetryTimeouts!.size === 0) {
           this.#telemetryTimeouts = null;
         }
-      }, AnnotationEditor._telemetryTimeout);
+      }, AnnotationEditorHelper._telemetryTimeout);
       this.#telemetryTimeouts.set(action, timeout);
       return;
     }

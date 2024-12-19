@@ -38,7 +38,7 @@ class AnnotationStorage {
 
   protected onResetModified: (() => void) | null;
 
-  protected onAnnotationEditor: ((type: string) => void) | null;
+  protected onAnnotationEditor: ((type: string | null) => void) | null;
 
   constructor() {
     // Callbacks to signal when the modification state is set or reset.
@@ -70,7 +70,7 @@ class AnnotationStorage {
    * @param {string} key
    * @returns {Object}
    */
-  getRawValue(key) {
+  getRawValue(key: string) {
     return this.#storage.get(key);
   }
 
@@ -78,7 +78,7 @@ class AnnotationStorage {
    * Remove a value from the storage.
    * @param {string} key
    */
-  remove(key) {
+  remove(key: string) {
     this.#storage.delete(key);
 
     if (this.#storage.size === 0) {
