@@ -73,8 +73,8 @@ class EventDispatcher {
     this._isCalculating = false;
   }
 
-  mergeChange(event) {
-    let value = event.value;
+  mergeChange(event: Event): string | string[] {
+    let value = event.value!;
     if (Array.isArray(value)) {
       return value;
     }
@@ -110,7 +110,7 @@ class EventDispatcher {
     if (!(id in this._objects)) {
       let event;
       if (id === "doc" || id === "page") {
-        event = globalThis.event = new Event(baseEvent);
+        event = globalThis.evt = new Event(baseEvent);
         event.source = event.target = this._document.wrapped;
         event.name = baseEvent.name;
       }
@@ -154,7 +154,7 @@ class EventDispatcher {
 
     const name = baseEvent.name;
     const source = this._objects[id];
-    const event = (globalThis.event = new Event(baseEvent));
+    const event = (globalThis.evt = new Event(baseEvent));
     let savedChange;
 
     this.userActivation();
@@ -256,7 +256,7 @@ class EventDispatcher {
 
   formatAll() {
     // Run format actions if any for all the fields.
-    const event = (globalThis.event = new Event({}));
+    const event = (globalThis.evt = new Event({}));
     for (const source of Object.values(this._objects)) {
       event.value = source.obj._getValue();
       this.runActions(source, source, event, "Format");
@@ -324,10 +324,10 @@ class EventDispatcher {
     this._isCalculating = true;
     const first = this._calculationOrder[0];
     const source = this._objects[first];
-    globalThis.event = new Event({});
+    globalThis.evt = new Event({});
 
     try {
-      this.runCalculate(source, globalThis.event);
+      this.runCalculate(source, globalThis.evt);
     } catch (error) {
       this._isCalculating = false;
       throw error;
@@ -336,7 +336,7 @@ class EventDispatcher {
     this._isCalculating = false;
   }
 
-  runCalculate(source, event) {
+  runCalculate(source, event: Event) {
     // _document.obj.calculate is equivalent to doc.calculate and can be
     // changed by a script to allow a future calculate or not.
     // This function is either called by calculateNow or when an action

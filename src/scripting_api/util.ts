@@ -28,7 +28,7 @@ class Util extends PDFObject {
   protected MILLISECONDS_IN_DAY: number;
 
   protected MILLISECONDS_IN_WEEK: number;
-  
+
   protected _externalCall: any;
 
   constructor(data) {
@@ -275,7 +275,7 @@ class Util extends PDFObject {
     });
   }
 
-  printx(cFormat: string[], cSource: string | null) {
+  printx(cFormat: string, cSource: string | null) {
     // case
     cSource = (cSource ?? "").toString();
     const handlers = [(x: string) => x, (x: string) => x.toUpperCase(), (x: string) => x.toLowerCase()];

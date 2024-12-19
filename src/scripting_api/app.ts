@@ -42,7 +42,7 @@ class App extends PDFObject {
 
   protected _toolbar: boolean;
 
-  protected _eventDispatcher: EventDispatcher;
+  public _eventDispatcher: EventDispatcher;
 
   protected _timeoutCallbackId: number;
 
