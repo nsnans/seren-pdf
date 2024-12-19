@@ -43,7 +43,6 @@ import {
   fetchData,
   getFilenameFromUrl,
   getPdfFilenameFromUrl,
-  getXfaPageViewport,
   isDataScheme,
   isPdfFile,
   noContextMenu,
@@ -62,7 +61,6 @@ import { DrawLayer } from "./display/draw_layer";
 import { GlobalWorkerOptions } from "./display/worker_options";
 import { HighlightOutliner } from "./display/editor/drawers/highlight";
 import { TextLayer } from "./display/text_layer";
-import { XfaLayer } from "./display/xfa_layer";
 import { PlatformHelper } from "./platform/platform_helper";
 
 
@@ -96,7 +94,6 @@ export {
   getDocument,
   getFilenameFromUrl,
   getPdfFilenameFromUrl,
-  getXfaPageViewport,
   GlobalWorkerOptions,
   ImageKind,
   InvalidPDFException,
@@ -120,6 +117,5 @@ export {
   UnexpectedResponseException,
   Util,
   VerbosityLevel,
-  version,
-  XfaLayer,
+  version
 };

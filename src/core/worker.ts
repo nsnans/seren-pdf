@@ -171,31 +171,13 @@ class WorkerMessageHandler {
       // `numPages` is correct, and fallback to walking the entire /Pages-tree.
       await pdfManager!.ensureDoc("checkLastPage", [recoveryMode]);
 
-      const isPureXfa = await pdfManager!.ensureDoc("isPureXfa");
-      if (isPureXfa) {
-        const task = new WorkerTask("loadXfaFonts");
-        startWorkerTask(task);
-        await Promise.all([
-          pdfManager!.loadXfaFonts(handler!, task)
-            .catch((_reason: any) => {
-              // Ignore errors, to allow the document to load.
-            })
-            .then(() => finishWorkerTask(task)),
-          pdfManager!.loadXfaImages(),
-        ]);
-      }
-
       const [numPages, fingerprints] = await Promise.all([
         pdfManager!.ensureDoc("numPages") as Promise<number>,
         pdfManager!.ensureDoc("fingerprints"),
       ]);
 
-      // Get htmlForXfa after numPages to avoid to create HTML twice.
-      const htmlForXfa = isPureXfa
-        ? await pdfManager!.ensureDoc("htmlForXfa")
-        : null;
 
-      return { numPages, fingerprints, htmlForXfa };
+      return { numPages, fingerprints };
     }
 
     function getPdfManager({
@@ -205,7 +187,6 @@ class WorkerMessageHandler {
       rangeChunkSize,
       length,
       docBaseUrl,
-      enableXfa,
       evaluatorOptions,
     }: DocParams): Promise<PDFManager> {
       const pdfManagerArgs: PDFManagerArgs = {
@@ -213,7 +194,6 @@ class WorkerMessageHandler {
         disableAutoFetch,
         docBaseUrl,
         docId,
-        enableXfa,
         evaluatorOptions,
         handler: handler!,
         length,
@@ -535,7 +515,7 @@ class WorkerMessageHandler {
 
     handler.on(
       "SaveDocument",
-      async function ({ isPureXfa, numPages, annotationStorage, filename }: SaveDocumentMessage) {
+      async function ({ numPages, annotationStorage, filename }: SaveDocumentMessage) {
         const globalPromises = [
           pdfManager!.requestLoadedStream(),
           pdfManager!.ensureCatalog("acroForm") as Promise<Dict>,
@@ -550,9 +530,7 @@ class WorkerMessageHandler {
           ];
         const promises = <Promise<any>[]>[];
 
-        const newAnnotationsByPage = !isPureXfa
-          ? getNewAnnotationsMap(annotationStorage)
-          : null;
+        const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
         const [
           streamResult,
           acroForm,
@@ -635,62 +613,33 @@ class WorkerMessageHandler {
           }
         }
 
-        if (isPureXfa) {
-          promises.push(pdfManager!.serializeXfaData(annotationStorage));
-        } else {
-          for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
-            promises.push(
-              pdfManager!.getPage(pageIndex).then(async function (page) {
-                const task = new WorkerTask(`Save: page ${pageIndex}`);
-                return page
-                  .save(handler!, task, annotationStorage)
-                  .finally(function () {
-                    finishWorkerTask(task);
-                  });
-              })
-            );
-          }
+
+        for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
+          promises.push(
+            pdfManager!.getPage(pageIndex).then(async function (page) {
+              const task = new WorkerTask(`Save: page ${pageIndex}`);
+              return page
+                .save(handler!, task, annotationStorage)
+                .finally(function () {
+                  finishWorkerTask(task);
+                });
+            })
+          );
         }
+
         const refs = await Promise.all(promises);
 
         let newRefs = [];
-        let xfaData = null;
-        if (isPureXfa) {
-          xfaData = refs[0];
-          if (!xfaData) {
-            return stream.bytes;
-          }
-        } else {
-          newRefs = refs.flat(2);
 
-          if (newRefs.length === 0) {
-            // No new refs so just return the initial bytes
-            return stream.bytes;
-          }
+        newRefs = refs.flat(2);
+
+        if (newRefs.length === 0) {
+          // No new refs so just return the initial bytes
+          return stream.bytes;
         }
 
         // 这类加了 双感叹号，判断Ref状况
-        const needAppearances: boolean =
-          !!acroFormRef && acroForm instanceof Dict &&
-          newRefs.some(ref => ref.needAppearances);
-
-        const xfa = (acroForm instanceof Dict && acroForm.getValue(DictKey.XFA)) || null;
-        let xfaDatasetsRef = null;
-        let hasXfaDatasetsEntry = false;
-        if (Array.isArray(xfa)) {
-          for (let i = 0, ii = xfa.length; i < ii; i += 2) {
-            if (xfa[i] === "datasets") {
-              xfaDatasetsRef = xfa[i + 1];
-              hasXfaDatasetsEntry = true;
-            }
-          }
-          if (xfaDatasetsRef === null) {
-            xfaDatasetsRef = xref.getNewTemporaryRef();
-          }
-        } else if (xfa) {
-          // TODO: Support XFA streams.
-          warn("Unsupported XFA type.");
-        }
+        const needAppearances: boolean = !!acroFormRef && acroForm instanceof Dict && newRefs.some(ref => ref.needAppearances);
 
         let newXrefInfo = Object.create(null);
         if (xref.trailer) {
@@ -724,13 +673,9 @@ class WorkerMessageHandler {
           xrefInfo: newXrefInfo,
           newRefs,
           xref,
-          hasXfa: !!xfa,
-          xfaDatasetsRef,
-          hasXfaDatasetsEntry,
           needAppearances,
           acroFormRef,
           acroForm,
-          xfaData,
           // Use the same kind of XRef as the previous one.
           useXrefStream: isDict(xref.topDict, "XRef"),
         }).finally(() => {
@@ -866,9 +811,6 @@ class WorkerMessageHandler {
     });
 
     if (PlatformHelper.isTesting()) {
-      handler.on("GetXFADatasets", function () {
-        return pdfManager!.ensureDoc("xfaDatasets");
-      });
       handler.on("GetXRefPrevValue", function () {
         return pdfManager!.ensureXRef("trailer")
           .then(trailer => trailer.get("Prev"));

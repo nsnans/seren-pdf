@@ -557,23 +557,6 @@ export class PDFDateString {
   }
 }
 
-/**
- * NOTE: This is (mostly) intended to support printing of XFA forms.
- */
-export function getXfaPageViewport(xfaPage, { scale = 1, rotation = 0 }) {
-  const { width, height } = xfaPage.attributes.style;
-  const viewBox: RectType = [0, 0, parseInt(width), parseInt(height)];
-
-  return new PageViewport({
-    viewBox,
-    scale,
-    rotation,
-    offsetX: 0,
-    offsetY: 0,
-    dontFlip: false
-  });
-}
-
 export function getRGB(color: string) {
   if (color.startsWith("#")) {
     const colorRGB = parseInt(color.slice(1), 16);

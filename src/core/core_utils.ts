@@ -287,26 +287,6 @@ function lookupNormalRect(arr: RectType, fallback: RectType | null): RectType | 
   return isNumberArray(arr, 4) ? Util.normalizeRect(arr) : fallback;
 }
 
-/**
- * AcroForm field names use an array like notation to refer to
- * repeated XFA elements e.g. foo.bar[nnn].
- * see: XFA Spec Chapter 3 - Repeated Elements
- *
- * @param {string} path - XFA path name.
- * @returns {Array} - Array of Objects with the name and pos of
- * each part of the path.
- */
-function parseXFAPath(path: string): { name: string, pos: number }[] {
-  const positionPattern = /(.+)\[(\d+)\]$/;
-  return path.split(".").map(component => {
-    const m = component.match(positionPattern);
-    if (m) {
-      return { name: m[1], pos: parseInt(m[2], 10) };
-    }
-    return { name: component, pos: 0 };
-  });
-}
-
 function escapePDFName(str: string) {
   const buffer = [];
   let start = 0;
@@ -715,7 +695,6 @@ export {
   MissingDataException,
   numberToString,
   ParserEOFException,
-  parseXFAPath,
   PDF_VERSION_REGEXP,
   readInt8,
   readUint16,

@@ -29,7 +29,6 @@ import {
   shadow,
   stringToBytes,
   stringToPDFString,
-  stringToUTF8String,
   toHexUtil,
   Util,
   warn
@@ -53,16 +52,13 @@ import {
   lookupNormalRect,
   MissingDataException,
   PDF_VERSION_REGEXP,
-  validateCSSFont,
   XRefEntryException,
-  XRefParseException,
+  XRefParseException
 } from "./core_utils";
 import { calculateMD5 } from "./crypto";
-import { DatasetReader } from "./dataset_reader";
 import { StreamsSequenceStream } from "./decode_stream";
-import { CssFontInfo, PartialEvaluator } from "./evaluator";
+import { PartialEvaluator } from "./evaluator";
 import { FontSubstitutionInfo } from "./font_substitutions";
-import { ErrorFont, Font } from "./fonts";
 import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 import { GlobalImageCache } from "./image_utils";
 import { ObjectLoader } from "./object_loader";
@@ -83,8 +79,6 @@ import { NullStream, Stream } from "./stream";
 import { StructTreePage, StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
-import { XFAFactory } from "./xfa/factory";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
 
 const DEFAULT_USER_UNIT = 1.0;
@@ -120,8 +114,6 @@ class Page {
 
   protected _localIdFactory: LocalIdFactory;
 
-  protected xfaFactory: XFAFactory | null;
-
   constructor(
     pdfManager: PDFManager,
     xref: XRef,
@@ -135,7 +127,6 @@ class Page {
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
     nonBlendModesSet: RefSet,
-    xfaFactory: XFAFactory | null,
   ) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
@@ -150,7 +141,6 @@ class Page {
     this.nonBlendModesSet = nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
-    this.xfaFactory = xfaFactory;
 
     const idCounters = {
       obj: 0,
@@ -195,9 +185,6 @@ class Page {
   }
 
   _getBoundingBox(name: string): number[] | null {
-    if (this.xfaData) {
-      return this.xfaData.bbox;
-    }
     const box = lookupNormalRect(
       this._getInheritableProperty(name, /* getArray = */ true),
       null
@@ -301,15 +288,6 @@ class Page {
     }) as Promise<BaseStream>;
   }
 
-  get xfaData() {
-    return shadow(
-      this,
-      "xfaData",
-      this.xfaFactory
-        ? { bbox: this.xfaFactory.getBoundingBox(this.pageIndex) }
-        : null
-    );
-  }
 
   async #replaceIdByRef(annotations: Record<string, any>[], deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet | null) {
     const promises = [];
@@ -352,9 +330,6 @@ class Page {
 
   async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[]
     , imagePromises: Map<string, Promise<CreateStampImageResult>> | null) {
-    if (this.xfaFactory) {
-      throw new Error("XFA: Cannot save new annotations.");
-    }
 
     const partialEvaluator = new PartialEvaluator(
       this.xref,
@@ -496,9 +471,7 @@ class Page {
       this.evaluatorOptions,
     );
 
-    const newAnnotsByPage = !this.xfaFactory
-      ? getNewAnnotationsMap(annotationStorage)
-      : null;
+    const newAnnotsByPage = getNewAnnotationsMap(annotationStorage)
     const newAnnots = newAnnotsByPage?.get(this.pageIndex);
     let newAnnotationsPromise: Promise<any> = Promise.resolve(null);
     let deletedAnnotations = null;
@@ -1112,9 +1085,6 @@ class PDFDocument {
     let num: number | Promise<number> = 0;
     if (this.catalog!.hasActualNumPages) {
       num = this.catalog!.numPages!;
-    } else if (this.xfaFactory) {
-      // num is a Promise.
-      num = this.xfaFactory.getNumPages()!;
     } else if (this.linearization) {
       num = this.linearization.numPages;
     } else {
@@ -1155,300 +1125,6 @@ class PDFDocument {
     });
   }
 
-  get _xfaStreams() {
-    const acroForm = this.catalog!.acroForm;
-    if (!acroForm) {
-      return null;
-    }
-
-    const xfa = acroForm.getValue(DictKey.XFA);
-    const entries: Record<string, any> = {
-      "xdp:xdp": "",
-      template: "",
-      datasets: "",
-      config: "",
-      connectionSet: "",
-      localeSet: "",
-      stylesheet: "",
-      "/xdp:xdp": "",
-    };
-    if (xfa instanceof BaseStream && !xfa.isEmpty) {
-      entries["xdp:xdp"] = xfa;
-      return entries;
-    }
-
-    if (!Array.isArray(xfa) || xfa.length === 0) {
-      return null;
-    }
-
-    for (let i = 0, ii = xfa.length; i < ii; i += 2) {
-      let name: string | Ref;
-      if (i === 0) {
-        name = "xdp:xdp";
-      } else if (i === ii - 2) {
-        name = "/xdp:xdp";
-      } else {
-        name = <string | Ref>xfa[i];
-      }
-
-      if (!entries.hasOwnProperty(<string>name)) {
-        continue;
-      }
-      const data = this.xref.fetchIfRef(<Ref | object>xfa[i + 1]);
-      if (!(data instanceof BaseStream) || data.isEmpty) {
-        continue;
-      }
-      entries[<string>name] = data;
-    }
-    return entries;
-  }
-
-  get xfaDatasets() {
-    const streams = this._xfaStreams;
-    if (!streams) {
-      return shadow(this, "xfaDatasets", null);
-    }
-    for (const key of ["datasets", "xdp:xdp"]) {
-      const stream = streams[key];
-      if (!stream) {
-        continue;
-      }
-      try {
-        const str = stringToUTF8String(stream.getString());
-        const data = { [key]: str };
-        return shadow(this, "xfaDatasets", new DatasetReader(data));
-      } catch {
-        warn("XFA - Invalid utf-8 string.");
-        break;
-      }
-    }
-    return shadow(this, "xfaDatasets", null);
-  }
-
-  get xfaData(): Map<string, string> {
-    const streams = this._xfaStreams;
-    const empty = new Map<string, string>();
-    if (!streams) {
-      return empty;
-    }
-    const data = new Map<string, string>();
-    for (const [key, stream] of Object.entries(streams)) {
-      if (!stream) {
-        continue;
-      }
-      try {
-        data.set(key, stringToUTF8String(stream.getString()));
-      } catch {
-        warn("XFA - Invalid utf-8 string.");
-        return empty;
-      }
-    }
-    return data;
-  }
-
-  get xfaFactory() {
-    let data: Map<string, string> | null = null;
-    if (
-      this.pdfManager.enableXfa &&
-      this.catalog!.needsRendering &&
-      this.formInfo.hasXfa &&
-      !this.formInfo.hasAcroForm
-    ) {
-      data = this.xfaData;
-    }
-    return shadow(this, "xfaFactory", data ? new XFAFactory(data) : null);
-  }
-
-  get isPureXfa() {
-    return this.xfaFactory ? this.xfaFactory.isValid() : false;
-  }
-
-  get htmlForXfa() {
-    return this.xfaFactory ? this.xfaFactory.getPages() : null;
-  }
-
-  async loadXfaImages() {
-    const xfaImagesDict = await <Promise<Dict | null>>this.pdfManager.ensureCatalog("xfaImages");
-    if (!xfaImagesDict) {
-      return;
-    }
-
-    const keys = xfaImagesDict.getKeys();
-    const objectLoader = new ObjectLoader(xfaImagesDict, keys, this.xref);
-    await objectLoader.load();
-
-    const xfaImages = new Map<DictKey, Uint8Array>();
-    for (const key of keys) {
-      const stream = xfaImagesDict.get(key);
-      if (stream instanceof BaseStream) {
-        xfaImages.set(key, <Uint8Array>stream.getBytes());
-      }
-    }
-
-    this.xfaFactory!.setImages(xfaImages);
-  }
-
-  async loadXfaFonts(handler: MessageHandler, task: WorkerTask) {
-    const acroForm = await <Promise<Dict | null>>this.pdfManager.ensureCatalog("acroForm");
-    if (!acroForm) {
-      return;
-    }
-    const resources = await acroForm.getAsyncValue(DictKey.DR);
-    if (!(resources instanceof Dict)) {
-      return;
-    }
-    const objectLoader = new ObjectLoader(resources, ["Font"], this.xref);
-    await objectLoader.load();
-
-    const fontRes = resources.getValue(DictKey.Font);
-    if (!(fontRes instanceof Dict)) {
-      return;
-    }
-
-    const options = Object.assign(
-      Object.create(null),
-      this.pdfManager.evaluatorOptions
-    );
-    options.useSystemFonts = false;
-
-    const partialEvaluator = new PartialEvaluator(
-      this.xref,
-      handler,
-      -1,
-      this._globalIdFactory,
-      this.catalog!.fontCache,
-      this.catalog!.builtInCMapCache,
-      this.catalog!.standardFontDataCache,
-      new GlobalImageCache(),
-      new Map(),
-      options,
-    );
-    const operatorList = new OperatorList();
-    const pdfFonts: (Font | ErrorFont)[] = [];
-    const initialState = {
-      get font() {
-        return pdfFonts.at(-1);
-      },
-      set font(font) {
-        pdfFonts.push(font!);
-      },
-      clone() {
-        return this;
-      },
-    };
-
-    const fonts = new Map();
-    fontRes.forEach((fontName, font) => {
-      fonts.set(fontName, font);
-    });
-    const promises = [];
-
-    for (const [fontName, font] of fonts) {
-      const descriptor = font.get("FontDescriptor");
-      if (!(descriptor instanceof Dict)) {
-        continue;
-      }
-      let fontFamily = descriptor.getValue(DictKey.FontFamily);
-      // For example, "Wingdings 3" is not a valid font name in the css specs.
-      fontFamily = fontFamily.replaceAll(/[ ]+(\d)/g, "$1");
-      const fontWeight = descriptor.getValue(DictKey.FontWeight);
-
-      // Angle is expressed in degrees counterclockwise in PDF
-      // when it's clockwise in CSS
-      // (see https://drafts.csswg.org/css-fonts-4/#valdef-font-style-oblique-angle)
-      const italicAngle = -descriptor.getValue(DictKey.ItalicAngle);
-      const cssFontInfo = { fontFamily, fontWeight, italicAngle };
-
-      if (!validateCSSFont(cssFontInfo)) {
-        continue;
-      }
-      promises.push(
-        partialEvaluator.handleSetFont(
-          resources,
-          [Name.get(fontName)!, 1],
-          /* fontRef = */ null,
-          operatorList,
-          task,
-          initialState,
-          /* fallbackFontDict = */ null,
-          /* cssFontInfo = */ cssFontInfo
-        ).catch(function (reason) {
-          warn(`loadXfaFonts: "${reason}".`);
-          return null;
-        })
-      );
-    }
-
-    await Promise.all(promises);
-    const missingFonts = this.xfaFactory!.setFonts(pdfFonts);
-
-    if (!missingFonts) {
-      return;
-    }
-
-    options.ignoreErrors = true;
-    promises.length = 0;
-    pdfFonts.length = 0;
-
-    const reallyMissingFonts = new Set<string>();
-    for (const missing of missingFonts) {
-      if (!getXfaFontName(`${missing}-Regular`)) {
-        // No substitution available: we'll fallback on Myriad.
-        reallyMissingFonts.add(missing);
-      }
-    }
-
-    if (reallyMissingFonts.size) {
-      missingFonts.push("PdfJS-Fallback");
-    }
-
-    for (const missing of missingFonts) {
-      if (reallyMissingFonts.has(missing)) {
-        continue;
-      }
-      for (const fontInfo of [
-        { name: "Regular", fontWeight: 400, italicAngle: 0 },
-        { name: "Bold", fontWeight: 700, italicAngle: 0 },
-        { name: "Italic", fontWeight: 400, italicAngle: 12 },
-        { name: "BoldItalic", fontWeight: 700, italicAngle: 12 },
-      ]) {
-        const name = `${missing}-${fontInfo.name}`;
-        const dict = getXfaFontDict(name);
-
-        promises.push(
-          partialEvaluator
-            .handleSetFont(
-              resources,
-              [Name.get(name)!, 1],
-              /* fontRef = */ null,
-              operatorList,
-              task,
-              initialState,
-              /* fallbackFontDict = */ dict,
-              /* cssFontInfo = */ <CssFontInfo>{
-                fontFamily: missing,
-                fontWeight: fontInfo.fontWeight,
-                italicAngle: fontInfo.italicAngle,
-              }
-            )
-            .catch(function (reason) {
-              warn(`loadXfaFonts: "${reason}".`);
-              return null;
-            })
-        );
-      }
-    }
-
-    await Promise.all(promises);
-    this.xfaFactory!.appendFonts(<Font[]>pdfFonts, reallyMissingFonts);
-  }
-
-  async serializeXfaData(annotationStorage: Map<string, object> | null) {
-    return this.xfaFactory
-      ? this.xfaFactory.serializeData(annotationStorage)
-      : null;
-  }
-
   /**
    * The specification states in section 7.5.2 that the version from
    * the catalog, if present, should overwrite the version from the header.
@@ -1461,7 +1137,6 @@ class PDFDocument {
     const formInfo = {
       hasFields: false,
       hasAcroForm: false,
-      hasXfa: false,
       hasSignatures: false,
     };
     const acroForm = this.catalog!.acroForm;
@@ -1473,13 +1148,6 @@ class PDFDocument {
       const fields = acroForm.getValue(DictKey.Fields);
       const hasFields = Array.isArray(fields) && fields.length > 0;
       formInfo.hasFields = hasFields; // Used by the `fieldObjects` getter.
-
-      // The document contains XFA data if the `XFA` entry is a non-empty
-      // array or stream.
-      const xfa = acroForm.getValue(DictKey.XFA);
-      formInfo.hasXfa =
-        (Array.isArray(xfa) && xfa.length > 0) ||
-        (xfa instanceof BaseStream && !xfa.isEmpty);
 
       // The document contains AcroForm data if the `Fields` entry is a
       // non-empty array and it doesn't consist of only document signatures.
@@ -1512,7 +1180,6 @@ class PDFDocument {
         : null,
       IsLinearized: !!this.linearization,
       IsAcroFormPresent: this.formInfo.hasAcroForm,
-      IsXFAPresent: this.formInfo.hasXfa,
       IsCollectionPresent: !!this.catalog!.collection,
       IsSignaturesPresent: this.formInfo.hasSignatures,
     };
@@ -1672,13 +1339,11 @@ class PDFDocument {
     if (cachedPromise) {
       return cachedPromise;
     }
-    const { linearization, xfaFactory } = this;
+    const { linearization } = this;
     const catalog = this.catalog!;
 
     let promise: Promise<any>;
-    if (xfaFactory) {
-      promise = Promise.resolve([Dict.empty, null]);
-    } else if (linearization?.pageFirst === pageIndex) {
+    if (linearization?.pageFirst === pageIndex) {
       promise = this._getLinearizationPage(pageIndex);
     } else {
       promise = catalog.getPageDict(pageIndex);
@@ -1699,7 +1364,6 @@ class PDFDocument {
         catalog.globalImageCache,
         catalog.systemFontCache,
         catalog.nonBlendModesSet,
-        xfaFactory,
       );
     });
 
@@ -1735,14 +1399,11 @@ class PDFDocument {
 
     try {
       await Promise.all([
-        pdfManager.ensureDoc("xfaFactory"),
         pdfManager.ensureDoc("linearization"),
         pdfManager.ensureCatalog("numPages"),
       ]);
 
-      if (this.xfaFactory) {
-        return; // The Page count is always calculated for XFA-documents.
-      } else if (this.linearization) {
+      if (this.linearization) {
         numPages = this.linearization.numPages;
       } else {
         numPages = catalog.numPages!;
@@ -1915,7 +1576,6 @@ class PDFDocument {
     const promise = (<Promise<{
       hasFields: boolean,
       hasAcroForm: boolean,
-      hasXfa: boolean,
       hasSignatures: boolean,
     }>>this.pdfManager.ensureDoc("formInfo"))
       .then(async (formInfo) => {

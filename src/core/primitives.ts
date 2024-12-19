@@ -157,7 +157,6 @@ export enum DictKey {
   Obj = "Obj",
   Filter = "Filter",
   DecodeParms = "DecodeParms",
-  XFA = "XFA",
   NeedAppearances = "NeedAppearances",
   Index = "Index",
   ID = "ID",
@@ -208,7 +207,7 @@ export enum DictKey {
   OpenAction = "OpenAction",
   Names = "Names",
   EmbeddedFiles = "EmbeddedFiles",
-  XFAImages = "XFAImages",
+
   JS = "JS",
   Base = "Base",
   Dest = "Dest",
@@ -588,8 +587,6 @@ type DictValueTypeMapping = {
   [DictKey.ViewerPreferences]: Dict,
   [DictKey.W]: number | number[], // number是推测的
   [DictKey.Width]: number,
-  [DictKey.XFAImages]: Ref,
-  [DictKey.XFA]: BaseStream | (string | BaseStream | Ref)[],
   [DictKey.XObject]: Dict,
   [DictKey.XRefStm]: number,
   [DictKey.LW]: "LW",

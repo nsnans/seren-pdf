@@ -89,7 +89,6 @@ import { Stream } from "./stream";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { getUnicodeForGlyph } from "./unicode";
 import { WorkerTask } from "./worker";
-import { getXfaFontDict, getXfaFontName } from "./xfa_fonts";
 import { XRef } from "./xref";
 
 export interface SeacMapValue {
@@ -4597,22 +4596,7 @@ class PartialEvaluator {
         length3 = fontFile.dict.get(DictKey.Length3);
       }
     } else if (cssFontInfo) {
-      // We've a missing XFA font.
-      const standardFontName = getXfaFontName(fontName.name);
-      if (standardFontName) {
-        cssFontInfo.fontFamily = `${cssFontInfo.fontFamily}-PdfJS-XFA`;
-        cssFontInfo.metrics = standardFontName.metrics || null;
-        glyphScaleFactors = standardFontName.factors || null;
-        fontFile = await this.fetchStandardFontData(standardFontName.name);
-        isInternalFont = !!fontFile;
-
-        // We're using a substitution font but for example widths (if any)
-        // are related to the glyph positions in the font.
-        // So we overwrite everything here to be sure that widths are
-        // correct.
-        baseDict = dict = getXfaFontDict(fontName.name);
-        composite = true;
-      }
+      // tomb for xfa
     } else if (!isType3Font) {
       const standardFontName = getStandardFontName(fontName.name);
       if (standardFontName) {

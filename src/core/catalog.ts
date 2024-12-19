@@ -1122,21 +1122,6 @@ export class Catalog {
     return shadow(this, "attachments", attachments);
   }
 
-  get xfaImages() {
-    const obj = this._catDict.getValue(DictKey.Names);
-    let xfaImages = null;
-
-    if (obj instanceof Dict && obj.has(DictKey.XFAImages)) {
-      const nameTree = new NameTree(obj.getRaw(DictKey.XFAImages), this.xref);
-      for (const [key, value] of nameTree.getAll()) {
-        if (!xfaImages) {
-          xfaImages = new Dict(this.xref);
-        }
-        xfaImages.set(<DictKey>stringToPDFString(key), value);
-      }
-    }
-    return shadow(this, "xfaImages", xfaImages);
-  }
 
   _collectJavaScript(): Map<string, string> | null {
     const obj = this._catDict.getValue(DictKey.Names);

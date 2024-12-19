@@ -61,7 +61,6 @@ import {
   stringToAsciiOrUTF16BE,
   stringToUTF16String,
 } from "./core_utils";
-import { DatasetReader } from "./dataset_reader";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,
@@ -82,7 +81,6 @@ import { Stream, StringStream } from "./stream";
 import { StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
-import { XFAFactory } from "./xfa/factory";
 import { XRef } from "./xref";
 
 export interface AnnotationParameters {
@@ -105,7 +103,6 @@ export interface AnnotationParameters {
 export interface AnnotationGlobals {
   pdfManager: PDFManager;
   acroForm: Dict;
-  xfaDatasets: DatasetReader | null;
   structTreeRoot: StructTreeRoot | null;
   baseUrl: string;
   attachments: Record<string, FileSpecSerializable> | null;
@@ -116,7 +113,6 @@ class AnnotationFactory {
   static createGlobals(pdfManager: PDFManager): Promise<AnnotationGlobals | null> {
     return Promise.all([
       pdfManager.ensureCatalog("acroForm") as Promise<Dict>,
-      pdfManager.ensureDoc("xfaDatasets") as Promise<DatasetReader | null>,
       pdfManager.ensureCatalog("structTreeRoot") as Promise<StructTreeRoot | null>,
       // Only necessary to prevent the `Catalog.baseUrl`-getter, used
       // with some Annotations, from throwing and thus breaking parsing:
@@ -126,11 +122,10 @@ class AnnotationFactory {
       pdfManager.ensureCatalog("attachments") as Promise<Record<string, FileSpecSerializable> | null>,
     ]).then(
       // eslint-disable-next-line arrow-body-style
-      ([acroForm, xfaDatasets, structTreeRoot, baseUrl, attachments]) => {
+      ([acroForm, structTreeRoot, baseUrl, attachments]) => {
         return {
           pdfManager,
           acroForm: acroForm instanceof Dict ? acroForm : Dict.empty,
-          xfaDatasets,
           structTreeRoot,
           baseUrl,
           attachments,
@@ -1823,10 +1818,6 @@ class MarkupAnnotation extends Annotation {
     }
 
     this.data.popupRef = popupRef instanceof Ref ? popupRef.toString() : null;
-
-    if (dict.has(DictKey.RC)) {
-      this.data.richText = XFAFactory.getRichTextAsHtml(dict.get(DictKey.RC));
-    }
   }
 
   /**
@@ -2003,8 +1994,6 @@ class MarkupAnnotation extends Annotation {
 
 class WidgetAnnotation extends Annotation {
 
-  protected _hasValueFromXFA: boolean = false;
-
   protected _hasText: boolean = false;
 
   protected _fieldResources: {
@@ -2038,15 +2027,6 @@ class WidgetAnnotation extends Annotation {
     );
     data.defaultFieldValue = this._decodeFormValue(defaultFieldValue);
 
-    if (fieldValue === undefined && annotationGlobals.xfaDatasets) {
-      // Try to figure out if we have something in the xfa dataset.
-      const path = this._title.str;
-      if (path) {
-        this._hasValueFromXFA = true;
-        data.fieldValue = fieldValue =
-          annotationGlobals.xfaDatasets.getValue(path);
-      }
-    }
 
     // When no "V" entry exists, let the fieldValue fallback to the "DV" entry
     // (fixes issue13823.pdf).
@@ -2313,7 +2293,6 @@ class WidgetAnnotation extends Annotation {
       rotation = storageEntry?.rotation;
     if (value === this.data.fieldValue || value === undefined) {
       if (
-        !this._hasValueFromXFA &&
         rotation === undefined &&
         flags === undefined
       ) {
@@ -2325,7 +2304,6 @@ class WidgetAnnotation extends Annotation {
     // Value can be an array (with choice list and multiple selections)
     if (
       rotation === undefined &&
-      !this._hasValueFromXFA &&
       Array.isArray(value) &&
       Array.isArray(this.data.fieldValue) &&
       isArrayEqual(value, this.data.fieldValue) &&
@@ -2384,11 +2362,6 @@ class WidgetAnnotation extends Annotation {
       }
     }
 
-    const xfa = {
-      path: this.data.fieldName,
-      value,
-    };
-
     dict.set(
       DictKey.V,
       Array.isArray(value)
@@ -2406,7 +2379,7 @@ class WidgetAnnotation extends Annotation {
     const changes = [
       // data for the original object
       // V field changed + reference for new AP
-      { ref: this.ref, data: "", xfa, needAppearances },
+      { ref: this.ref, data: "", needAppearances },
     ];
     if (appearance !== null) {
       const newRef = xref.getNewTemporaryRef();
@@ -2439,7 +2412,6 @@ class WidgetAnnotation extends Annotation {
         {
           ref: newRef,
           data: buffer.join(""),
-          xfa: null,
           needAppearances: false,
         }
       );
@@ -2471,7 +2443,7 @@ class WidgetAnnotation extends Annotation {
       value === undefined &&
       !this._needAppearances
     ) {
-      if (!this._hasValueFromXFA || this.appearance) {
+      if (this.appearance) {
         // The annotation hasn't been rendered so use the appearance.
         return null;
       }
@@ -3334,11 +3306,6 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       value = this.data.fieldValue === this.data.exportValue;
     }
 
-    const xfa = {
-      path: this.data.fieldName,
-      value: value ? this.data.exportValue : "",
-    };
-
     const name = Name.get(value ? this.data.exportValue! : "Off")!;
     dict.set(DictKey.V, name);
     dict.set(DictKey.AS, name);
@@ -3355,7 +3322,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     const buffer = <string[]>[];
     await writeObject(this.ref!, dict, buffer, evaluator.xref);
 
-    return [{ ref: this.ref, data: buffer.join(""), xfa }];
+    return [{ ref: this.ref, data: buffer.join("") }];
   }
 
   async _saveRadioButton(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
@@ -3392,11 +3359,6 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       rotation = this.rotation;
     }
 
-    const xfa = {
-      path: this.data.fieldName,
-      value: value ? this.data.buttonValue : "",
-    };
-
     const name = Name.get(value ? <string>this.data.buttonValue : "Off");
     const buffer = <string[]>[];
     let parentData = null;
@@ -3430,9 +3392,9 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     await writeObject(this.ref!, dict, buffer, evaluator.xref);
-    const newRefs = [{ ref: this.ref, data: buffer.join(""), xfa }];
+    const newRefs = [{ ref: this.ref, data: buffer.join("") }];
     if (parentData) {
-      newRefs.push({ ref: <Ref>this.parent, data: parentData, xfa: null });
+      newRefs.push({ ref: <Ref>this.parent, data: parentData });
     }
 
     return newRefs;
@@ -4082,10 +4044,6 @@ class PopupAnnotation extends Annotation {
 
     this.setContents(parentItem.get(DictKey.Contents));
     this.data.contentsObj = this._contents;
-
-    if (parentItem.has(DictKey.RC)) {
-      this.data.richText = XFAFactory.getRichTextAsHtml(parentItem.get(DictKey.RC));
-    }
 
     this.data.open = !!dict.getValue(DictKey.Open);
   }

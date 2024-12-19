@@ -379,14 +379,6 @@ class Doc extends PDFObject {
     throw new Error("doc.documentFileName is read-only");
   }
 
-  get dynamicXFAForm() {
-    return false;
-  }
-
-  set dynamicXFAForm(_) {
-    throw new Error("doc.dynamicXFAForm is read-only");
-  }
-
   get external() {
     // According to the specification this should be `true` in non-Acrobat
     // applications, however we ignore that to avoid bothering users with
@@ -731,22 +723,6 @@ class Doc extends PDFObject {
     throw new Error("doc.viewState is read-only");
   }
 
-  get xfa() {
-    return this._xfa;
-  }
-
-  set xfa(_) {
-    throw new Error("doc.xfa is read-only");
-  }
-
-  get XFAForeground() {
-    return false;
-  }
-
-  set XFAForeground(_) {
-    throw new Error("doc.XFAForeground is read-only");
-  }
-
   get zoomType() {
     return this._zoomType;
   }
@@ -916,10 +892,6 @@ class Doc extends PDFObject {
   }
 
   exportDataObject() {
-    /* Not implemented */
-  }
-
-  exportXFAData() {
     /* Not implemented */
   }
 
@@ -1149,10 +1121,6 @@ class Doc extends PDFObject {
   }
 
   importTextData() {
-    /* Not implemented */
-  }
-
-  importXFAData() {
     /* Not implemented */
   }
 

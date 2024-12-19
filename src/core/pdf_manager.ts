@@ -47,7 +47,6 @@ export interface PDFManagerArgs {
   disableAutoFetch: boolean;
   docBaseUrl: string | null;
   docId: string;
-  enableXfa: boolean;
   evaluatorOptions: DocParamEvaluatorOptions;
   handler: MessageHandler;
   length: number;
@@ -58,8 +57,6 @@ export interface PDFManagerArgs {
 interface PDFManager {
 
   docId: string;
-
-  enableXfa: boolean;
 
   password: string | null;
 
@@ -89,12 +86,6 @@ interface PDFManager {
 
   terminate(ex: AbortException): void;
 
-  loadXfaFonts(handler: MessageHandler, task: WorkerTask): Promise<void>;
-
-  loadXfaImages(): Promise<void>;
-
-  serializeXfaData(annotationStorage: Map<string, object> | null): Promise<string | null>;
-
   cleanup(manuallyTriggered?: boolean): Promise<void>;
 }
 
@@ -105,8 +96,6 @@ abstract class BasePDFManager implements PDFManager {
   protected _docBaseUrl: string | null;
 
   protected _password: string | null;
-
-  readonly enableXfa: boolean;
 
   evaluatorOptions: DocParamEvaluatorOptions;
 
@@ -120,7 +109,6 @@ abstract class BasePDFManager implements PDFManager {
     this._docBaseUrl = parseDocBaseUrl(args.docBaseUrl);
     this._docId = args.docId;
     this._password = args.password;
-    this.enableXfa = args.enableXfa;
 
     // Check `OffscreenCanvas` support once, rather than repeatedly throughout
     // the worker-thread code.
@@ -169,17 +157,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().fontFallback(id, handler);
   }
 
-  loadXfaFonts(handler: MessageHandler, task: WorkerTask) {
-    return this.getPDFDocument().loadXfaFonts(handler, task);
-  }
 
-  loadXfaImages() {
-    return this.getPDFDocument().loadXfaImages();
-  }
-
-  serializeXfaData(annotationStorage: Map<string, object> | null): Promise<string | null> {
-    return this.getPDFDocument().serializeXfaData(annotationStorage);
-  }
 
   cleanup(manuallyTriggered = false): Promise<void> {
     return this.getPDFDocument().cleanup(manuallyTriggered);

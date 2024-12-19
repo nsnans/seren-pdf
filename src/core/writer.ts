@@ -14,17 +14,15 @@
  */
 
 import { bytesToString, info, warn } from "../shared/util";
-import { Dict, DictKey, isName, Name, Ref } from "./primitives";
+import { BaseStream } from "./base_stream";
 import {
   escapePDFName,
   escapeString,
   getSizeInBytes,
-  numberToString,
-  parseXFAPath,
+  numberToString
 } from "./core_utils";
-import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
-import { BaseStream } from "./base_stream";
 import { calculateMD5, CipherTransform } from "./crypto";
+import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import { Stream } from "./stream";
 import { XRef } from "./xref";
 
@@ -193,44 +191,11 @@ function computeMD5(filesize: number, xrefInfo) {
   return bytesToString(calculateMD5(array));
 }
 
-function writeXFADataForAcroform(str: string, newRefs) {
-  const xml = new SimpleXMLParser(true).parseFromString(str)!;
-
-  // 这里似乎有点问题，好像属性对不上了，可能漏了几个属性？
-  for (const { xfa } of newRefs) {
-    if (!xfa) {
-      continue;
-    }
-    const { path, value } = xfa;
-    if (!path) {
-      continue;
-    }
-    const nodePath = parseXFAPath(path);
-    let node = xml.documentElement.searchNode(nodePath, 0);
-    if (!node && nodePath.length > 1) {
-      // If we're lucky the last element in the path will identify the node.
-      node = xml.documentElement.searchNode([nodePath.at(-1)!], 0);
-    }
-    if (node) {
-      node.childNodes = Array.isArray(value)
-        ? value.map(val => new SimpleDOMNode("value", val))
-        : [new SimpleDOMNode("#text", value)];
-    } else {
-      warn(`Node not found for path: ${path}`);
-    }
-  }
-  const buffer = [] as string[];
-  xml.documentElement.dump(buffer);
-  return buffer.join("");
-}
 
 interface UpdateAcroformParameter {
   xref: XRef | null;
   acroForm: Dict;
   acroFormRef: Ref | null;
-  hasXfa: boolean;
-  hasXfaDatasetsEntry: boolean;
-  xfaDatasetsRef: Ref | null;
   needAppearances: boolean;
   newRefs: { ref: Ref, data: string }[];
 }
@@ -239,32 +204,16 @@ async function updateAcroform({
   xref,
   acroForm,
   acroFormRef,
-  hasXfa,
-  hasXfaDatasetsEntry,
-  xfaDatasetsRef,
   needAppearances,
   newRefs,
 }: UpdateAcroformParameter) {
-  if (hasXfa && !hasXfaDatasetsEntry && !xfaDatasetsRef) {
-    warn("XFA - Cannot save it");
-  }
 
-  if (!needAppearances && (!hasXfa || !xfaDatasetsRef || hasXfaDatasetsEntry)) {
+
+  if (!needAppearances) {
     return;
   }
 
   const dict = acroForm.clone();
-
-  if (hasXfa && !hasXfaDatasetsEntry) {
-    // We've a XFA array which doesn't contain a datasets entry.
-    // So we'll update the AcroForm dictionary to have an XFA containing
-    // the datasets.
-    const newXfa = acroForm.getValue(DictKey.XFA).slice();
-    newXfa.splice(2, 0, "datasets");
-    newXfa.splice(3, 0, xfaDatasetsRef);
-
-    dict.set(DictKey.XFA, newXfa);
-  }
 
   if (needAppearances) {
     dict.set(DictKey.NeedAppearances, true);
@@ -276,37 +225,6 @@ async function updateAcroform({
   newRefs.push({ ref: acroFormRef!, data: buffer.join("") });
 }
 
-interface UpdateXFAParameters {
-  xfaData: string | null;
-  xfaDatasetsRef: Ref | null;
-  newRefs: {
-    ref: Ref;
-    data: string;
-  }[];
-  xref: XRef | null;
-}
-function updateXFA({ xfaData, xfaDatasetsRef, newRefs, xref }: UpdateXFAParameters) {
-  if (xfaData === null) {
-    const datasets = xref!.fetchIfRef(xfaDatasetsRef!);
-    xfaData = writeXFADataForAcroform(datasets.getString(), newRefs);
-  }
-
-  const encrypt = xref!.encrypt;
-  if (encrypt) {
-    const transform = encrypt.createCipherTransform(
-      xfaDatasetsRef!.num,
-      xfaDatasetsRef!.gen
-    );
-    xfaData = transform.encryptString(xfaData);
-  }
-  const data =
-    `${xfaDatasetsRef!.num} ${xfaDatasetsRef!.gen} obj\n` +
-    `<< /Type /EmbeddedFile /Length ${xfaData.length}>>\nstream\n` +
-    xfaData +
-    "\nendstream\nendobj\n";
-
-  newRefs.push({ ref: xfaDatasetsRef!, data });
-}
 
 async function getXRefTable(xrefInfo: IncrementalXRefInfo, baseOffset: number,
   newRefs: { ref: Ref, data: string }[],
@@ -437,14 +355,9 @@ export interface IncrementalUpdateParameter {
   xrefInfo: IncrementalXRefInfo;
   newRefs: { ref: Ref, data: string }[];
   xref: XRef | null;
-  hasXfa: boolean;
-  xfaDatasetsRef: Ref | null;
-  hasXfaDatasetsEntry: boolean;
   needAppearances: boolean;
   acroFormRef: Ref | null;
   acroForm: Dict;
-  // 应该是string类型，通过加密代码推断出来的
-  xfaData: string | null;
   useXrefStream: boolean;
 }
 
@@ -465,34 +378,18 @@ async function incrementalUpdate({
   xrefInfo,
   newRefs,
   xref/* = null*/,
-  hasXfa = false,
-  xfaDatasetsRef = null,
-  hasXfaDatasetsEntry = false,
   needAppearances,
   acroFormRef = null,
   acroForm /* = null*/,
-  xfaData = null,
   useXrefStream = false,
 }: IncrementalUpdateParameter) {
   await updateAcroform({
     xref,
     acroForm,
     acroFormRef,
-    hasXfa,
-    hasXfaDatasetsEntry,
-    xfaDatasetsRef,
     needAppearances,
     newRefs,
   });
-
-  if (hasXfa) {
-    updateXFA({
-      xfaData,
-      xfaDatasetsRef,
-      newRefs,
-      xref,
-    });
-  }
 
   const buffer = [];
   let baseOffset = originalData.length;

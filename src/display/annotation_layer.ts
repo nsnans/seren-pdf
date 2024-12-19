@@ -40,7 +40,6 @@ import { PDFDateString, setLayerDimensions } from "./display_utils";
 import { AnnotationStorage } from "./annotation_storage";
 import { ColorConverters } from "../shared/scripting_utils";
 import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
-import { XfaLayer } from "./xfa_layer";
 import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_types";
 import { PlatformHelper } from "../platform/platform_helper";
 
@@ -2281,14 +2280,7 @@ class PopupElement {
     }
 
     const html = this.#html;
-    if (html) {
-      XfaLayer.render({
-        xfaHtml: html,
-        intent: "richText",
-        div: popup,
-      });
-      popup.lastChild.classList.add("richText", "popupContent");
-    } else {
+    if (!html) {
       const contents = this._formatContents(this.#contentsObj);
       popup.append(contents);
     }

@@ -31,8 +31,6 @@ export interface CallbackWorkerMessage<T> extends WorkerBaseMessage {
 
 export interface SaveDocumentMessage {
 
-  isPureXfa: boolean;
-
   numPages: number | null;
 
   // string => Annotation初始化的参数

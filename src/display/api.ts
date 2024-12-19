@@ -17,6 +17,23 @@
  * @module pdfjsLib
  */
 
+import { StreamGetOperatorListParameters } from "../core/core_types";
+import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
+import { PDFFetchStream } from "../display/fetch_stream";
+import { PDFNetworkStream } from "../display/network";
+import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
+import {
+  NodeCanvasFactory,
+  NodeCMapReaderFactory,
+  NodeFilterFactory,
+  NodePackages,
+  NodeStandardFontDataFactory,
+  PDFNodeStream,
+} from "../display/stubs";
+import { IPDFStream, IPDFStreamReader } from "../interfaces";
+import { PlatformHelper } from "../platform/platform_helper";
+import { MessageHandler } from "../shared/message_handler";
+import { SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
   AnnotationMode,
@@ -39,11 +56,14 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
+import { TypedArray } from "../types";
 import {
   AnnotationStorage,
   PrintAnnotationStorage,
   SerializableEmpty,
 } from "./annotation_storage";
+import { CanvasGraphics } from "./canvas";
+import { CanvasFactory, DOMCanvasFactory } from "./canvas_factory";
 import {
   deprecated,
   isDataScheme,
@@ -52,34 +72,13 @@ import {
   RenderingCancelledException,
   StatTimer,
 } from "./display_utils";
-import { FontFaceObject, FontLoader } from "./font_loader";
-import {
-  NodeCanvasFactory,
-  NodeCMapReaderFactory,
-  NodeFilterFactory,
-  NodePackages,
-  NodeStandardFontDataFactory,
-} from "../display/stubs";
-import { CanvasGraphics } from "./canvas";
-import { DOMCanvasFactory, CanvasFactory as CanvasFactory } from "./canvas_factory";
-import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { DOMFilterFactory, FilterFactory } from "./filter_factory";
-import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
-import { GlobalWorkerOptions } from "./worker_options";
-import { MessageHandler } from "../shared/message_handler";
+import { FontFaceObject, FontLoader } from "./font_loader";
 import { Metadata } from "./metadata";
 import { OptionalContentConfig } from "./optional_content_config";
-import { PDFDataTransportStream } from "./transport_stream";
-import { PDFFetchStream } from "../display/fetch_stream";
-import { PDFNetworkStream } from "../display/network";
-import { PDFNodeStream } from "../display/stubs";
 import { TextLayer } from "./text_layer";
-import { XfaText } from "./xfa_text";
-import { PlatformHelper } from "../platform/platform_helper";
-import { IPDFStream, IPDFStreamReader } from "../interfaces";
-import { TypedArray } from "../types";
-import { SaveDocumentMessage } from "../shared/message_handler_types";
-import { StreamGetOperatorListParameters } from "../core/core_types";
+import { PDFDataTransportStream } from "./transport_stream";
+import { GlobalWorkerOptions } from "./worker_options";
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -239,9 +238,6 @@ class DocumentInitParameters {
    * */
   fontExtraProperties?: boolean;
 
-  /* Render Xfa forms if any. */
-  enableXfa?: boolean;
-
   /**
    * Specify an explicit document context to create elements with and to load resources, such as fonts, into.
    * Defaults to the current document.
@@ -329,7 +325,6 @@ export interface DocParams {
   rangeChunkSize: number;
   length: number;
   docBaseUrl: string | null;
-  enableXfa: boolean;
   evaluatorOptions: DocParamEvaluatorOptions;
 }
 
@@ -401,7 +396,6 @@ function getDocument(options: DocumentSrcType) {
   const disableFontFace =
     typeof src.disableFontFace === "boolean" ? src.disableFontFace : isNodeJS;
   const fontExtraProperties = src.fontExtraProperties === true;
-  const enableXfa = src.enableXfa === true;
   const ownerDocument = src.ownerDocument || globalThis.document;
   const disableRange = src.disableRange === true;
   const disableStream = src.disableStream === true;
@@ -482,7 +476,6 @@ function getDocument(options: DocumentSrcType) {
     rangeChunkSize,
     length,
     docBaseUrl,
-    enableXfa,
     evaluatorOptions: {
       maxImageSize,
       disableFontFace,
@@ -497,7 +490,7 @@ function getDocument(options: DocumentSrcType) {
       standardFontDataUrl: useWorkerFetch ? standardFontDataUrl : null,
     },
   };
-  const loadingParams = new WorkerTransportLoadingParameters(disableAutoFetch, enableXfa);
+  const loadingParams = new WorkerTransportLoadingParameters(disableAutoFetch);
   const transportParams = new WorkerTransportParameters(disableFontFace, fontExtraProperties
     , ownerDocument, pdfBug, styleElement, loadingParams);
 
@@ -901,14 +894,6 @@ class PDFDocumentProxy {
   }
 
   /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getXFADatasets() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this._transport.getXFADatasets();
-  }
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
   getXRefPrevValue() {
     if (!PlatformHelper.isTesting()) {
       throw new Error("该方法只有在测试环境下可以调用");
@@ -968,23 +953,6 @@ class PDFDocumentProxy {
    */
   get fingerprints() {
     return this._pdfInfo.fingerprints;
-  }
-
-  /**
-   * @type {boolean} True if only XFA form.
-   */
-  get isPureXfa() {
-    return shadow(this, "isPureXfa", !!this._transport._htmlForXfa);
-  }
-
-  /**
-   * NOTE: This is (mostly) intended to support printing of XFA forms.
-   *
-   * @type {Object | null} An object representing a HTML tree structure
-   *   to render the XFA, or `null` when no XFA form exists.
-   */
-  get allXfaHtml() {
-    return this._transport._htmlForXfa;
   }
 
   /**
@@ -1185,7 +1153,7 @@ class PDFDocumentProxy {
    * @returns {Promise} A promise that is resolved when clean-up has finished.
    */
   cleanup(keepLoadedFonts: boolean = false): Promise<void> {
-    return this._transport.startCleanup(keepLoadedFonts || this.isPureXfa);
+    return this._transport.startCleanup(keepLoadedFonts);
   }
 
   /**
@@ -1619,23 +1587,6 @@ export class PDFPageProxy {
   }
 
   /**
-   * @type {boolean} True if only XFA form.
-   */
-  get isPureXfa() {
-    return shadow(this, "isPureXfa", !!this._transport._htmlForXfa);
-  }
-
-  /**
-   * @returns {Promise<Object | null>} A promise that is resolved with
-   *   an {Object} with a fake DOM object (a tree structure where elements
-   *   are {Object} with a name, attributes (class, style, ...), value and
-   *   children, very similar to a HTML DOM tree), or `null` if no XFA exists.
-   */
-  async getXfa() {
-    return this._transport._htmlForXfa?.children[this._pageIndex] || null;
-  }
-
-  /**
    * Begins the process of rendering a page to the desired context.
    *
    * @param {RenderParameters} params - Page render parameters.
@@ -1878,11 +1829,7 @@ export class PDFPageProxy {
    *   {@link TextContent} object that represents the page's text content.
    */
   getTextContent(params: GetTextContentParameters): Promise<TextContent> {
-    if (this._transport._htmlForXfa) {
-      // TODO: We need to revisit this once the XFA foreground patch lands and
-      // only do this for non-foreground XFA.
-      return this.getXfa().then(xfa => XfaText.textContent(xfa));
-    }
+    // tomb 不再支持  
     const readableStream = this.streamTextContent(params);
 
     return new Promise(function (resolve, reject) {
@@ -2626,11 +2573,11 @@ class TransportFactory {
 }
 
 class WorkerTransportLoadingParameters {
+
   disableAutoFetch: boolean;
-  enableXfa: boolean;
-  constructor(disableAutoFetch: boolean, enableXfa: boolean) {
+
+  constructor(disableAutoFetch: boolean) {
     this.disableAutoFetch = disableAutoFetch;
-    this.enableXfa = enableXfa;
   }
 }
 
@@ -2714,8 +2661,6 @@ class WorkerTransport {
 
   protected _numPages: number | null = null;
 
-  public _htmlForXfa;
-
   constructor(messageHandler: MessageHandler, loadingTask: PDFDocumentLoadingTask,
     networkStream: IPDFStream, params: WorkerTransportParameters, factory: TransportFactory) {
     this.messageHandler = messageHandler;
@@ -2748,13 +2693,6 @@ class WorkerTransport {
     return this._networkStream?.constructor?.name || null;
   }
 
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getXFADatasets() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this.messageHandler!.sendWithPromise("GetXFADatasets", null);
-  }
 
   /* 为测试环境添加的方法，正式环境中不应当调用 */
   getXRefPrevValue() {
@@ -3043,8 +2981,6 @@ class WorkerTransport {
 
     messageHandler.on("GetDoc", ({ pdfInfo }) => {
       this._numPages = pdfInfo.numPages;
-      this._htmlForXfa = pdfInfo.htmlForXfa;
-      delete pdfInfo.htmlForXfa;
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
     });
 
@@ -3281,7 +3217,6 @@ class WorkerTransport {
       .sendWithPromise(
         "SaveDocument",
         {
-          isPureXfa: !!this._htmlForXfa,
           numPages: this._numPages,
           annotationStorage: map,
           filename: this._fullReader?.filename ?? null,
@@ -3932,5 +3867,6 @@ export {
   PDFDataRangeTransport,
   PDFDocumentProxy,
   PDFWorker,
-  RenderTask,
+  RenderTask
 };
+
