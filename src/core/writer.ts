@@ -188,7 +188,9 @@ function computeMD5(filesize: number, xrefInfo) {
     writeString(str, offset, array);
     offset += str.length;
   }
-  return bytesToString(calculateMD5(array));
+  // 参数呢？少两个参数，是不是这两个参数不需要了
+  // 如果这里报了错，再来做更改吧
+  return bytesToString(calculateMD5(array, offset, array.length));
 }
 
 

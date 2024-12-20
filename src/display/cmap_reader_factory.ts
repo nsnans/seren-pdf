@@ -17,11 +17,6 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { stringToBytes, unreachable } from "../shared/util";
 import { fetchData } from "./display_utils";
 
-type BaseCMapReaderFactoryOption = {
-  baseUrl: string | null,
-  isCompressed: boolean
-}
-
 export interface CMapReaderFactory {
 
   // 这个接口应该删掉
@@ -39,7 +34,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
 
   protected isCompressed: boolean;
 
-  constructor({ baseUrl = null, isCompressed = true }: BaseCMapReaderFactoryOption) {
+  constructor(baseUrl: string | null = null, isCompressed = true) {
     if (PlatformHelper.isTesting() && this.constructor === BaseCMapReaderFactory) {
       unreachable("Cannot initialize BaseCMapReaderFactory.");
     }
@@ -72,6 +67,11 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
 }
 
 export class DOMCMapReaderFactory extends BaseCMapReaderFactory {
+
+  constructor(baseUrl: string | null = null, isCompressed = true) {
+    super(baseUrl, isCompressed);
+  }
+
   /**
    * @ignore
    */

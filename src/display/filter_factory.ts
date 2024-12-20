@@ -79,7 +79,7 @@ class DOMFilterFactory extends BaseFilterFactory {
 
   #_defs;
 
-  #docId;
+  #docId: string;
 
   #document;
 
@@ -87,7 +87,7 @@ class DOMFilterFactory extends BaseFilterFactory {
 
   #id = 0;
 
-  constructor({ docId, ownerDocument = globalThis.document }) {
+  constructor(docId: string, ownerDocument = globalThis.document) {
     super();
     this.#docId = docId;
     this.#document = ownerDocument;

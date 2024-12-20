@@ -16,6 +16,7 @@
 import { BaseStream } from "./base_stream";
 import { stringToBytes } from "../shared/util";
 import { Dict } from "./primitives";
+import { Uint8TypedArray } from "../common/typed_array";
 
 class Stream extends BaseStream {
 
@@ -23,13 +24,14 @@ class Stream extends BaseStream {
 
   public end: number;
 
-  public bytes: Uint8Array;
+  public bytes: Uint8TypedArray;
 
   public dict: Dict | null;
 
   constructor(
-    arrayBuffer: Uint8Array | ArrayBufferLike,
-    start = 0, length: number | null = null,
+    arrayBuffer: Uint8Array<ArrayBuffer> | ArrayBuffer,
+    start = 0,
+    length: number | null = null,
     dict: Dict | null = null
   ) {
     super();
@@ -55,7 +57,7 @@ class Stream extends BaseStream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length?: number): Uint8Array {
+  getBytes(length?: number): Uint8TypedArray {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;

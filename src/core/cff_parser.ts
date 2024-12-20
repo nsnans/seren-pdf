@@ -17,6 +17,7 @@ import {
   bytesToString,
   FormatError,
   info,
+  numberArrayToString,
   shadow,
   stringToBytes,
   Util,
@@ -253,14 +254,14 @@ class CFFParser {
 
   protected properties: EvaluatorProperties;
 
-  protected bytes: Uint8Array;
+  protected bytes: Uint8Array<ArrayBuffer>;
 
   protected seacAnalysisEnabled: boolean;
 
   protected cff: CFF | null = null;
 
   constructor(file: Stream, properties: EvaluatorProperties, seacAnalysisEnabled: boolean) {
-    this.bytes = file.getBytes();
+    this.bytes = <Uint8Array<ArrayBuffer>>file.getBytes();
     this.properties = properties;
     this.seacAnalysisEnabled = !!seacAnalysisEnabled;
   }
@@ -500,7 +501,11 @@ class CFFParser {
     const names = [];
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const name = index.get(i);
-      names.push(bytesToString(<Uint8Array>name));
+      if (name != null && name instanceof Array) {
+        names.push(numberArrayToString(name));
+      } else if (name != null) {
+        names.push(bytesToString(name));
+      }
     }
     return names;
   }
@@ -509,7 +514,11 @@ class CFFParser {
     const strings = new CFFStrings();
     for (let i = 0, ii = index.count; i < ii; ++i) {
       const data = index.get(i);
-      strings.add(bytesToString(<Uint8Array>data));
+      if (data != null && data instanceof Array) {
+        strings.add(numberArrayToString(data));
+      } else if (data != null) {
+        strings.add(bytesToString(data));
+      }
     }
     return strings;
   }
@@ -1165,20 +1174,20 @@ class CFFIndex {
 
   protected length = 0;
 
-  public objects: (Uint8Array | number[])[];
+  public objects: (Uint8Array<ArrayBuffer> | number[])[];
 
   constructor() {
     this.objects = [];
     this.length = 0;
   }
 
-  add(data: Uint8Array | number[]) {
+  add(data: Uint8Array<ArrayBuffer> | number[]) {
     this.length += data.length;
     this.objects.push(data);
   }
 
   // data类型不是一个准确的推测
-  set(index: number, data: Uint8Array) {
+  set(index: number, data: Uint8Array<ArrayBuffer>) {
     this.length += data.length - this.objects[index].length;
     this.objects[index] = data;
   }

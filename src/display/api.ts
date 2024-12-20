@@ -88,10 +88,10 @@ type RefProxy = {
   gen: number;
 }
 
-class DocumentInitParameters {
+interface DocumentInitParameters {
 
   /* The URL of the PDF */
-  url?: string | URL;
+  url?: string | URL | null;
 
   /**
    * Binary PDF data.
@@ -122,7 +122,7 @@ class DocumentInitParameters {
    * Specify maximum number of bytes fetched per range request.
    * The default value is {@link DEFAULT_RANGE_CHUNK_SIZE}.
    * */
-  rangeChunkSize = DEFAULT_RANGE_CHUNK_SIZE;
+  rangeChunkSize?: number;
 
   /* The worker that will be used for loading and parsing the PDF data. */
   worker?: PDFWorker;
@@ -147,7 +147,7 @@ class DocumentInitParameters {
    * Providing a custom factory is useful for environments without Fetch API or `XMLHttpRequest` support, 
    * such as Node.js. The default value is {DOMCMapReaderFactory}.
    * */
-  CMapReaderFactory: new (...args: any[]) => CMapReaderFactory = DOMCMapReaderFactory;
+  CMapReaderFactory: new (baseUrl: string | null, isCompressed: boolean) => CMapReaderFactory;
 
   /** 
    * When `true`, fonts that aren't embedded in the PDF document will fallback to a system font.
@@ -165,7 +165,7 @@ class DocumentInitParameters {
    * Providing a custom factory is useful for environments without Fetch API or `XMLHttpRequest` support, such as Node.js.
    * The default value is {DOMStandardFontDataFactory}
    * */
-  StandardFontDataFactory: new (...args: any[]) => StandardFontDataFactory = DOMStandardFontDataFactory;
+  StandardFontDataFactory: new (standardFontDataUrl: string | null) => StandardFontDataFactory;
 
   /**
    * Enable using the Fetch API in the worker-thread when reading CMap and standard font files. 
@@ -186,7 +186,7 @@ class DocumentInitParameters {
    * Images above this value will not be rendered. Use -1 for no limit, 
    * which is also the default value.
    *  */
-  maxImageSize = -1;
+  maxImageSize: number;
 
   /**
    * Determines if we can evaluate strings
@@ -260,25 +260,23 @@ class DocumentInitParameters {
   pdfBug?: boolean;
 
   /* The factory that will be used when creating canvases. The default value is {DOMCanvasFactory}.*/
-  CanvasFactory: new (...args: any[]) => CanvasFactory = DOMCanvasFactory;
+  CanvasFactory: new (document: Document, enableHWA: boolean) => CanvasFactory;
 
-  @deprecated
   canvasFactory?: Object;
 
   /** 
    * The factory that will be used to create SVG filters when rendering some images on the main canvas.
    * The default value is {DOMFilterFactory}.
    * */
-  FilterFactory: new (...args: any[]) => FilterFactory = DOMFilterFactory;
+  FilterFactory: new (docId: string, document: Document) => FilterFactory;
 
-  @deprecated
   filterFactory?: Object;
 
   /* Enables hardware acceleration for rendering. The default value is `false`.*/
   enableHWA?: boolean;
 
   /* Parameters only intended for development/testing purposes.*/
-  styleElement: HTMLStyleElement | null = null;
+  styleElement?: HTMLStyleElement;
 }
 
 /**
@@ -294,45 +292,303 @@ class DocumentInitParameters {
  * @returns {PDFDocumentLoadingTask}
  */
 
-type DocumentSrcType = string | URL | TypedArray | ArrayBuffer | DocumentInitParameters;
-export interface DocParamEvaluatorOptions {
-  maxImageSize: number;
-  disableFontFace: boolean;
-  ignoreErrors: boolean;
-  isEvalSupported: boolean;
-  isOffscreenCanvasSupported: boolean;
-  isChrome: boolean;
-  canvasMaxAreaInBytes: number;
-  fontExtraProperties: boolean;
-  useSystemFonts: boolean;
-  cMapUrl: string | null;
-  standardFontDataUrl: string | null;
+export class DocumentParameterEvaluatorOptions {
+
+  readonly maxImageSize: number;
+
+  readonly disableFontFace: boolean;
+
+  readonly ignoreErrors: boolean;
+
+  readonly isEvalSupported: boolean;
+
+  readonly isOffscreenCanvasSupported: boolean;
+
+  readonly isChrome: boolean;
+
+  readonly canvasMaxAreaInBytes: number;
+
+  readonly fontExtraProperties: boolean;
+
+  readonly useSystemFonts: boolean;
+
+  readonly cMapUrl: string | null;
+
+  readonly standardFontDataUrl: string | null;
+
+  constructor(
+    maxImageSize: number,
+    disableFontFace: boolean,
+    ignoreErrors: boolean,
+    isEvalSupported: boolean,
+    isOffscreenCanvasSupported: boolean,
+    isChrome: boolean,
+    canvasMaxAreaInBytes: number,
+    fontExtraProperties: boolean,
+    useSystemFonts: boolean,
+    cMapUrl: string | null,
+    standardFontDataUrl: string | null,
+  ) {
+    this.maxImageSize = maxImageSize;
+    this.disableFontFace = disableFontFace;
+    this.ignoreErrors = ignoreErrors;
+    this.isEvalSupported = isEvalSupported;
+    this.isOffscreenCanvasSupported = isOffscreenCanvasSupported;
+    this.isChrome = isChrome;
+    this.canvasMaxAreaInBytes = canvasMaxAreaInBytes;
+    this.fontExtraProperties = fontExtraProperties;
+    this.useSystemFonts = useSystemFonts;
+    this.cMapUrl = cMapUrl;
+    this.standardFontDataUrl = standardFontDataUrl;
+  }
 }
-export interface DocParams {
-  docId: string;
-  apiVersion: string | null;
-  data: Uint8Array | null;
-  password: string | null;
-  disableAutoFetch: boolean;
-  rangeChunkSize: number;
-  length: number;
-  docBaseUrl: string | null;
-  evaluatorOptions: DocParamEvaluatorOptions;
+
+export class DocumentParameter {
+
+  readonly docId: string;
+
+  readonly apiVersion: string | null;
+
+  readonly data: Uint8Array | null;
+
+  readonly password: string | null;
+
+  readonly disableAutoFetch: boolean;
+
+  readonly rangeChunkSize: number;
+
+  readonly length: number;
+
+  readonly docBaseUrl: string | null;
+
+  readonly evaluatorOptions: DocumentParameterEvaluatorOptions;
+
+  constructor(
+    docId: string,
+    apiVersion: string | null,
+    data: Uint8Array | null,
+    password: string | null,
+    disableAutoFetch: boolean,
+    rangeChunkSize: number,
+    length: number,
+    docBaseUrl: string | null,
+    evaluatorOptions: DocumentParameterEvaluatorOptions
+  ) {
+    this.docId = docId;
+    this.apiVersion = apiVersion;
+    this.data = data;
+    this.password = password;
+    this.disableAutoFetch = disableAutoFetch;
+    this.rangeChunkSize = rangeChunkSize;
+    this.length = length;
+    this.docBaseUrl = docBaseUrl;
+    this.evaluatorOptions = evaluatorOptions;
+  }
 }
 
-function getDocument(options: DocumentSrcType) {
+class DocParameterEvaluatorOptionsBuilder {
 
-  let src = new DocumentInitParameters();
+  private _maxImageSize: number | null = null;
 
-  if (PlatformHelper.isGeneric()) {
-    if (typeof options === "string" || options instanceof URL) {
-      src.url = options;
-    } else if (options instanceof ArrayBuffer || ArrayBuffer.isView(options)) {
-      src.data = options;
+  private _disableFontFace: boolean | null = null;
+
+  private _ignoreErrors: boolean | null = null;
+
+  private _isEvalSupported: boolean | null = null;
+
+  private _isOffscreenCanvasSupported: boolean | null = null;
+
+  private _isChrome: boolean | null = null;
+
+  private _canvasMaxAreaInBytes: number | null = null;
+
+  private _fontExtraProperties: boolean | null = null;
+
+  private _useSystemFonts: boolean | null = null;
+
+  private _cMapUrl: string | null = null;
+
+  private _standardFontDataUrl: string | null = null;
+
+  build() {
+    if (this._maxImageSize === null) {
+      throw new Error("cannot build evaluation options because maxImageSzie is null");
     }
+    if (this._disableFontFace === null) {
+      throw new Error("cannot build evaluation options because disableFontFace is null");
+    }
+    if (this._ignoreErrors === null) {
+      throw new Error("cannot build evaluation options because ignoreErrors is null");
+    }
+    if (this._isEvalSupported === null) {
+      throw new Error("cannot build evaluation options because isEvalSupported is null");
+    }
+    if (this._isOffscreenCanvasSupported === null) {
+      throw new Error("cannot build evaluation options because isOffscreenCanvasSupported is null");
+    }
+    if (this._isChrome === null) {
+      throw new Error("cannot build evaluation options because isChrome is null");
+    }
+    if (this._canvasMaxAreaInBytes === null) {
+      throw new Error("cannot build evaluation options because canvasMaxAreaInBytes is null");
+    }
+    if (this._fontExtraProperties === null) {
+      throw new Error("cannot build evaluation options because fontExtraProperties is null");
+    }
+    if (this._useSystemFonts === null) {
+      throw new Error("cannot build evaluation options because useSystemFonts is null");
+    }
+    return new DocumentParameterEvaluatorOptions(
+      this._maxImageSize,
+      this._disableFontFace,
+      this._ignoreErrors,
+      this._isEvalSupported,
+      this._isOffscreenCanvasSupported,
+      this._isChrome,
+      this._canvasMaxAreaInBytes,
+      this._fontExtraProperties,
+      this._useSystemFonts,
+      this._cMapUrl,
+      this._standardFontDataUrl,
+    )
   }
 
+  set maxImageSize(maxImageSize: number) {
+    this._maxImageSize = maxImageSize;
+  }
+
+  set disableFontFace(disableFontFace: boolean) {
+    this._disableFontFace = disableFontFace;
+  }
+
+  set ignoreErrors(ignoreErrors: boolean) {
+    this._ignoreErrors = ignoreErrors;
+  }
+
+  set isEvalSupported(isEvalSupported: boolean) {
+    this._isEvalSupported = isEvalSupported;
+  }
+
+  set isOffscreenCanvasSupported(isOffscreenCanvasSupported: boolean) {
+    this._isOffscreenCanvasSupported = isOffscreenCanvasSupported;
+  }
+
+  set isChrome(isChrome: boolean) {
+    this._isChrome = isChrome;
+  }
+
+  set canvasMaxAreaInBytes(canvasMaxAreaInBytes: number) {
+    this._canvasMaxAreaInBytes = canvasMaxAreaInBytes;
+  }
+
+  set fontExtraProperties(fontExtraProperties: boolean) {
+    this._fontExtraProperties = fontExtraProperties;
+  }
+
+  set useSystemFonts(useSystemFonts: boolean) {
+    this._useSystemFonts = useSystemFonts;
+  }
+
+  set cMapUrl(cMapUrl: string | null) {
+    this._cMapUrl = cMapUrl;
+  }
+
+  set standardFontDataUrl(standardFontDataUrl: string | null) {
+    this._standardFontDataUrl = standardFontDataUrl;
+  }
+}
+
+class DocumentParameterBuilder {
+
+  private _docId: string | null = null;
+
+  private _apiVersion: string | null = null;
+
+  private _data: Uint8Array | null = null;
+
+  private _password: string | null = null;
+
+  private _disableAutoFetch: boolean | null = null;
+
+  private _rangeChunkSize: number | null = null;
+
+  private _length: number | null = null;
+
+  private _docBaseUrl: string | null = null;
+
+  private _evaluatorOptions: DocumentParameterEvaluatorOptions | null = null;
+
+  build() {
+    if (this._docId === null) {
+      throw new Error("cannot build document parameter because docId is null");
+    }
+    if (this._disableAutoFetch === null) {
+      throw new Error("cannot build document parameter because disableAutoFetch is null");
+    }
+    if (this._rangeChunkSize === null) {
+      throw new Error("cannot build document parameter because rangeChunkSize is null");
+    }
+    if (this._length === null) {
+      throw new Error("cannot build document parameter because length is null");
+    }
+    if (this._evaluatorOptions === null) {
+      throw new Error("cannot build document parameter because evaluatorOptions is null");
+    }
+    return new DocumentParameter(
+      this._docId,
+      this._apiVersion,
+      this._data,
+      this._password,
+      this._disableAutoFetch,
+      this._rangeChunkSize,
+      this._length,
+      this._docBaseUrl,
+      this._evaluatorOptions
+    );
+  }
+
+  set docId(docId: string) {
+    this._docId = docId;
+  }
+
+  set apiVersion(apiVersion: string | null) {
+    this._apiVersion = apiVersion;
+  }
+
+  set data(data: Uint8Array<ArrayBuffer> | null) {
+    this._data = data;
+  }
+
+  set password(password: string | null) {
+    this._password = password;
+  }
+
+  set disableAutoFetch(enable: boolean) {
+    this._disableAutoFetch = enable;
+  }
+
+  set rangeChunkSize(rangeChunkSize: number) {
+    this._rangeChunkSize = rangeChunkSize;
+  }
+
+  set length(length: number) {
+    this._length = length;
+  }
+
+  set docBaseUrl(docBaseUrl: string | null) {
+    this._docBaseUrl = docBaseUrl;
+  }
+
+  set evaluatorOptions(options: DocumentParameterEvaluatorOptions) {
+    this._evaluatorOptions = options;
+  }
+}
+
+// 只支持两种情况，一种是data数据，另一种是URL，如果
+function getDocument(src: DocumentInitParameters) {
+
   const task = new PDFDocumentLoadingTask();
+
   const { docId } = task;
 
   const url = src.url ? getUrlProp(src.url) : null;
@@ -340,44 +596,40 @@ function getDocument(options: DocumentSrcType) {
   const httpHeaders = src.httpHeaders || null;
   const withCredentials = src.withCredentials === true;
   const password = src.password ?? null;
-  const rangeTransport =
-    src.range instanceof PDFDataRangeTransport ? src.range : null;
-  const rangeChunkSize =
-    Number.isInteger(src.rangeChunkSize) && src.rangeChunkSize > 0
-      ? src.rangeChunkSize
-      : DEFAULT_RANGE_CHUNK_SIZE;
+  const rangeTransport = src.range instanceof PDFDataRangeTransport ? src.range : null;
+
+  const validChunkSize = Number.isInteger(src.rangeChunkSize) && <number>src.rangeChunkSize > 0;
+  const rangeChunkSize = validChunkSize ? src.rangeChunkSize : DEFAULT_RANGE_CHUNK_SIZE;
+
   let worker = src.worker instanceof PDFWorker ? src.worker : null;
-  const verbosity = src.verbosity;
+
+  const verbosity = src.verbosity || null;
+
   // Ignore "data:"-URLs, since they can't be used to recover valid absolute
   // URLs anyway. We want to avoid sending them to the worker-thread, since
   // they contain the *entire* PDF document and can thus be arbitrarily long.
-  const docBaseUrl =
-    typeof src.docBaseUrl === "string" && !isDataScheme(src.docBaseUrl)
-      ? src.docBaseUrl
-      : null;
+  const validDocBaseUrl = typeof src.docBaseUrl === "string" && !isDataScheme(src.docBaseUrl)
+  const docBaseUrl = validDocBaseUrl ? src.docBaseUrl : null;
   const cMapUrl = typeof src.cMapUrl === "string" ? src.cMapUrl : null;
   const cMapPacked = src.cMapPacked !== false;
   const CMapReaderFactory = src.CMapReaderFactory || DefaultCMapReaderFactory;
-  const standardFontDataUrl =
-    typeof src.standardFontDataUrl === "string"
-      ? src.standardFontDataUrl
-      : null;
+  const validFontDataUrl = typeof src.standardFontDataUrl === "string"
+  const standardFontDataUrl = validFontDataUrl ? src.standardFontDataUrl || null : null;
+
   const StandardFontDataFactory = src.StandardFontDataFactory || DefaultStandardFontDataFactory;
   const ignoreErrors = src.stopAtErrors !== true;
 
-  const maxImageSize =
-    Number.isInteger(src.maxImageSize) && src.maxImageSize > -1
-      ? src.maxImageSize
-      : -1;
+  const validMaxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize > -1;
+  const maxImageSize = validMaxImageSize ? src.maxImageSize : -1;
 
   const isEvalSupported = src.isEvalSupported !== false;
   const isOffscreenCanvasSupported = !!src.isOffscreenCanvasSupported;
-  const isChrome = typeof src.isChrome === "boolean"
-    ? src.isChrome
-    : PlatformHelper.isMozCental() &&
-    !FeatureTest.platform.isFirefox &&
-    typeof window !== "undefined" &&
-    !!(window as any)?.chrome;
+
+  const isSetChrome = typeof src.isChrome === "boolean"
+  const validChrome = PlatformHelper.isMozCental() && !FeatureTest.platform.isFirefox
+    && typeof window !== "undefined" && !!(window)?.chrome;
+  const isChrome = isSetChrome ? src.isChrome : validChrome;
+
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
   const disableFontFace = !!src.disableFontFace;
   const fontExtraProperties = src.fontExtraProperties === true;
@@ -392,30 +644,19 @@ function getDocument(options: DocumentSrcType) {
 
   // Parameters whose default values depend on other parameters.
   const length = rangeTransport ? rangeTransport.length : (src.length ?? NaN);
-  const useSystemFonts = typeof src.useSystemFonts === "boolean" ? src.useSystemFonts : !disableFontFace;
-  const useWorkerFetch =
-    typeof src.useWorkerFetch === "boolean"
-      ? src.useWorkerFetch
-      : (PlatformHelper.isMozCental()) ||
-      (CMapReaderFactory === DOMCMapReaderFactory &&
-        StandardFontDataFactory === DOMStandardFontDataFactory &&
-        cMapUrl &&
-        standardFontDataUrl &&
-        isValidFetchUrl(cMapUrl, document.baseURI) &&
-        isValidFetchUrl(standardFontDataUrl, document.baseURI));
+  const isSetUseSystemFonts = typeof src.useSystemFonts === "boolean";
+  const useSystemFonts = isSetUseSystemFonts ? src.useSystemFonts : !disableFontFace;
 
-  if (PlatformHelper.isGeneric()) {
-    if (src.canvasFactory) {
-      deprecated(
-        "`canvasFactory`-instance option, please use `CanvasFactory` instead."
-      );
-    }
-    if (src.filterFactory) {
-      deprecated(
-        "`filterFactory`-instance option, please use `FilterFactory` instead."
-      );
-    }
-  }
+  const isSetWorkerFetch = typeof src.useWorkerFetch === "boolean";
+  const calcWorkerFetch = (PlatformHelper.isMozCental()) ||
+    (CMapReaderFactory === DOMCMapReaderFactory &&
+      StandardFontDataFactory === DOMStandardFontDataFactory &&
+      !!cMapUrl &&
+      !!standardFontDataUrl &&
+      isValidFetchUrl(cMapUrl, document.baseURI) &&
+      isValidFetchUrl(standardFontDataUrl, document.baseURI));
+
+  const useWorkerFetch = isSetWorkerFetch ? !!src.useWorkerFetch : calcWorkerFetch;
 
   // Parameters only intended for development/testing purposes.
   const styleElement = PlatformHelper.isGeneric() ? src.styleElement : null;
@@ -427,57 +668,109 @@ function getDocument(options: DocumentSrcType) {
   // Ensure that the various factories can be initialized, when necessary,
   // since the user may provide *custom* ones.
   const transportFactory = new TransportFactory(
-    new CanvasFactory({ ownerDocument, enableHWA }),
-    new FilterFactory({ docId, ownerDocument }),
+    new CanvasFactory(ownerDocument, enableHWA),
+    new FilterFactory(docId, ownerDocument),
+    useWorkerFetch ?
+      null : new CMapReaderFactory(cMapUrl, cMapPacked),
     PlatformHelper.isMozCental() || useWorkerFetch ?
-      null : new CMapReaderFactory({ baseUrl: cMapUrl, isCompressed: cMapPacked }),
-    PlatformHelper.isMozCental() || useWorkerFetch ?
-      null : new StandardFontDataFactory({ baseUrl: standardFontDataUrl }),
+      null : new StandardFontDataFactory(standardFontDataUrl),
   );
 
   if (!worker) {
-    const workerParams = {
-      name: null,
-      verbosity,
-      port: GlobalWorkerOptions.workerPort,
-    };
+    const port = GlobalWorkerOptions.workerPort;
     // Worker was not provided -- creating and owning our own. If message port
     // is specified in global worker options, using it.
-    worker = workerParams.port
-      ? PDFWorker.fromPort(workerParams)
-      : new PDFWorker(workerParams);
+    worker = !!port ? PDFWorker.fromPort(null, port, verbosity || undefined) : new PDFWorker(null, port, verbosity || undefined);
     task._worker = worker;
   }
 
-  const docParams: DocParams = {
-    docId,
-    apiVersion: PlatformHelper.isTesting() ? PlatformHelper.bundleVersion() : null,
-    data,
-    password,
-    disableAutoFetch,
-    rangeChunkSize,
-    length,
-    docBaseUrl,
-    evaluatorOptions: {
-      maxImageSize,
-      disableFontFace,
-      ignoreErrors,
-      isEvalSupported,
-      isOffscreenCanvasSupported,
-      isChrome,
-      canvasMaxAreaInBytes,
-      fontExtraProperties,
-      useSystemFonts,
-      cMapUrl: useWorkerFetch ? cMapUrl : null,
-      standardFontDataUrl: useWorkerFetch ? standardFontDataUrl : null,
-    },
-  };
+  const optionBuilder = new DocParameterEvaluatorOptionsBuilder();
+  optionBuilder.maxImageSize = maxImageSize;
+  optionBuilder.disableFontFace = disableFontFace;
+  optionBuilder.ignoreErrors = ignoreErrors;
+  optionBuilder.isEvalSupported = isEvalSupported;
+  optionBuilder.isOffscreenCanvasSupported = isOffscreenCanvasSupported;
+  optionBuilder.isChrome = isChrome!;
+  optionBuilder.canvasMaxAreaInBytes = canvasMaxAreaInBytes!;
+  optionBuilder.fontExtraProperties = fontExtraProperties;
+  optionBuilder.useSystemFonts = useSystemFonts!;
+  optionBuilder.cMapUrl = useWorkerFetch ? cMapUrl : null;
+  optionBuilder.standardFontDataUrl = useWorkerFetch ? standardFontDataUrl : null;
+  const evaluatorOptions = optionBuilder.build();
+
+  const parameterBuilder = new DocumentParameterBuilder();
+  parameterBuilder.docId = docId;
+  parameterBuilder.apiVersion = PlatformHelper.isTesting() ? PlatformHelper.bundleVersion() : null;
+  parameterBuilder.data = data;
+  parameterBuilder.password = password;
+  parameterBuilder.rangeChunkSize = rangeChunkSize!;
+  parameterBuilder.length = length;
+  parameterBuilder.docBaseUrl = docBaseUrl!;
+  parameterBuilder.evaluatorOptions = evaluatorOptions;
+
+  const docParams = parameterBuilder.build();
+
   const loadingParams = new WorkerTransportLoadingParameters(disableAutoFetch);
   const transportParams = new WorkerTransportParameters(disableFontFace, fontExtraProperties
-    , ownerDocument, pdfBug, styleElement, loadingParams);
+    , ownerDocument, pdfBug, loadingParams);
 
-  worker!.promise
-    .then(function () {
+  worker!.promise.then(async () => {
+    if (task.destroyed) {
+      throw new Error("Loading aborted");
+    }
+    if (worker!.destroyed) {
+      throw new Error("Worker was destroyed");
+    }
+
+    const workerIdPromise = <Promise<string>>worker!.messageHandler!.sendWithPromise(
+      "GetDocRequest",
+      docParams,
+      data ? [data.buffer] : null
+    );
+
+    let networkStream: IPDFStream;
+    if (rangeTransport) {
+      networkStream = new PDFDataTransportStream(rangeTransport, {
+        disableRange,
+        disableStream,
+      });
+    } else if (!data) {
+      if (PlatformHelper.isMozCental()) {
+        throw new Error("Not implemented: NetworkStream");
+      }
+      if (!url) {
+        throw new Error("getDocument - no `url` parameter provided.");
+      }
+      let NetworkStream;
+
+      if (PlatformHelper.isGeneric()) {
+        const isFetchSupported =
+          typeof fetch !== "undefined" &&
+          typeof Response !== "undefined" &&
+          "body" in Response.prototype;
+
+        NetworkStream =
+          isFetchSupported && isValidFetchUrl(url)
+            ? PDFFetchStream
+            : PDFNodeStream;
+      } else {
+        NetworkStream = isValidFetchUrl(url)
+          ? PDFFetchStream
+          : PDFNetworkStream;
+      }
+
+      networkStream = new NetworkStream!({
+        url,
+        length,
+        httpHeaders,
+        withCredentials,
+        rangeChunkSize,
+        disableRange,
+        disableStream,
+      });
+    }
+
+    return workerIdPromise.then(workerId => {
       if (task.destroyed) {
         throw new Error("Loading aborted");
       }
@@ -485,75 +778,18 @@ function getDocument(options: DocumentSrcType) {
         throw new Error("Worker was destroyed");
       }
 
-      const workerIdPromise = <Promise<string>>worker!.messageHandler!.sendWithPromise(
-        "GetDocRequest",
-        docParams,
-        data ? [data.buffer] : null
+      const messageHandler = new MessageHandler(docId, workerId, worker!.port!);
+      const transport = new WorkerTransport(
+        messageHandler,
+        task,
+        networkStream,
+        transportParams,
+        transportFactory
       );
-
-      let networkStream: IPDFStream;
-      if (rangeTransport) {
-        networkStream = new PDFDataTransportStream(rangeTransport, {
-          disableRange,
-          disableStream,
-        });
-      } else if (!data) {
-        if (PlatformHelper.isMozCental()) {
-          throw new Error("Not implemented: NetworkStream");
-        }
-        if (!url) {
-          throw new Error("getDocument - no `url` parameter provided.");
-        }
-        let NetworkStream;
-
-        if (PlatformHelper.isGeneric()) {
-          const isFetchSupported =
-            typeof fetch !== "undefined" &&
-            typeof Response !== "undefined" &&
-            "body" in Response.prototype;
-
-          NetworkStream =
-            isFetchSupported && isValidFetchUrl(url)
-              ? PDFFetchStream
-              : PDFNodeStream;
-        } else {
-          NetworkStream = isValidFetchUrl(url)
-            ? PDFFetchStream
-            : PDFNetworkStream;
-        }
-
-        networkStream = new NetworkStream!({
-          url,
-          length,
-          httpHeaders,
-          withCredentials,
-          rangeChunkSize,
-          disableRange,
-          disableStream,
-        });
-      }
-
-      return workerIdPromise.then(workerId => {
-        if (task.destroyed) {
-          throw new Error("Loading aborted");
-        }
-        if (worker!.destroyed) {
-          throw new Error("Worker was destroyed");
-        }
-
-        const messageHandler = new MessageHandler(docId, workerId, worker!.port!);
-        const transport = new WorkerTransport(
-          messageHandler,
-          task,
-          networkStream,
-          transportParams,
-          transportFactory
-        );
-        task._transport = transport;
-        messageHandler.send("Ready", null);
-      });
-    })
-    .catch(task._capability.reject);
+      task._transport = transport;
+      messageHandler.send("Ready", null);
+    });
+  }).catch(task._capability.reject);
 
   return task;
 }
@@ -577,21 +813,13 @@ function getUrlProp(val: URL | string): string | null {
   );
 }
 
-function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView | Buffer): Uint8Array {
-  // Converting string or array-like data to Uint8Array.
-  if (
-    PlatformHelper.isGeneric() && typeof Buffer !== "undefined" && // eslint-disable-line no-undef
-    val instanceof Buffer // eslint-disable-line no-undef
-  ) {
-    throw new Error(
-      "Please provide binary data as `Uint8Array`, rather than `Buffer`."
-    );
-  }
+function getDataProp(val: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView): Uint8Array<ArrayBuffer> {
+  // ignore the support of Buffer,because of the unsupport of Node
   if (val instanceof Uint8Array && val.byteLength === val.buffer.byteLength) {
     // Use the data as-is when it's already a Uint8Array that completely
     // "utilizes" its underlying ArrayBuffer, to prevent any possible
     // issues when transferring it to the worker-thread.
-    return val;
+    return <Uint8Array<ArrayBuffer>>val;
   }
   if (typeof val === "string") {
     return stringToBytes(val);
@@ -2169,36 +2397,20 @@ class LoopbackPort {
 }
 
 /**
- * @typedef {Object} PDFWorkerParameters
- * @property {string} [name] - The name of the worker.
- * @property {Worker} [port] - The `workerPort` object. 此处是否存在问题？
- * @property {number} [verbosity] - Controls the logging level;
- *   the constants from {@link VerbosityLevel} should be used.
- */
-interface PDFWorkerParameters {
-  name: string | null;
-  port: LoopbackPort | null;
-  verbosity?: number;
-}
-/**
  * PDF.js web worker abstraction that controls the instantiation of PDF
  * documents. Message handlers are used to pass information from the main
  * thread to the worker thread and vice versa. If the creation of a web
  * worker is not possible, a "fake" worker will be used instead.
- *
- * @param {PDFWorkerParameters} params - The worker initialization parameters.
  */
 class PDFWorker {
+
   static #fakeWorkerId = 0;
 
   static #isWorkerDisabled = false;
 
-  static #workerPorts;
+  static #workerPorts: WeakMap<Worker, PDFWorker> | null;
 
   static _isSameOrigin(baseUrl: string, otherUrl: string) {
-    if (!PlatformHelper.isGeneric()) {
-      throw new Error("GENERIC条件下才可以使用");
-    }
     let base;
     try {
       base = new URL(baseUrl);
@@ -2232,23 +2444,20 @@ class PDFWorker {
 
   protected _readyCapability = Promise.withResolvers();
 
-  protected _port: Worker | null;
+  protected _port: Worker | null = null;
 
-  protected _webWorker;
+  protected _webWorker: Worker | null = null;
 
-  protected _messageHandler: MessageHandler | null;
+  protected _messageHandler: MessageHandler | null = null;
 
-  constructor({
-    name = null,
-    port = null,
-    verbosity = getVerbosityLevel(),
-  }: PDFWorkerParameters) {
+  constructor(
+    name: string | null = null,
+    port: Worker | null = null,
+    verbosity = getVerbosityLevel()
+  ) {
+
     this.name = name;
-
     this.verbosity = verbosity;
-    this._port = null;
-    this._webWorker = null;
-    this._messageHandler = null;
 
     if (PlatformHelper.isMozCental() && port) {
       if (PDFWorker.#workerPorts?.has(port)) {
@@ -2293,7 +2502,7 @@ class PDFWorker {
     return this._messageHandler;
   }
 
-  _initializeFromPort(port) {
+  _initializeFromPort(port: Worker) {
     if (PlatformHelper.isMozCental()) {
       throw new Error("Not implemented: _initializeFromPort");
     }
@@ -2458,14 +2667,18 @@ class PDFWorker {
   /**
    * @param {PDFWorkerParameters} params - The worker initialization parameters.
    */
-  static fromPort(params: PDFWorkerParameters) {
+  static fromPort(
+    name: string | null = null,
+    port: Worker | null = null,
+    verbosity = getVerbosityLevel()
+  ) {
     if (PlatformHelper.isMozCental()) {
       throw new Error("Not implemented: fromPort");
     }
-    if (!params?.port) {
+    if (!port) {
       throw new Error("PDFWorker.fromPort - invalid method signature.");
     }
-    const cachedPort = this.#workerPorts?.get(params.port);
+    const cachedPort = this.#workerPorts?.get(port);
     if (cachedPort) {
       if (cachedPort._pendingDestroy) {
         throw new Error(
@@ -2475,7 +2688,7 @@ class PDFWorker {
       }
       return cachedPort;
     }
-    return new PDFWorker(params);
+    return new PDFWorker(name, port, verbosity);
   }
 
   /**
@@ -2554,22 +2767,18 @@ class WorkerTransportParameters {
 
   pdfBug: boolean;
 
-  styleElement: HTMLStyleElement | null;
-
   loadingParams: WorkerTransportLoadingParameters;
 
   constructor(disableFontFace: boolean,
     fontExtraProperties: boolean,
     ownerDocument: HTMLDocument,
     pdfBug: boolean,
-    styleElement: HTMLStyleElement | null,
     loadingParams: WorkerTransportLoadingParameters
   ) {
     this.disableFontFace = disableFontFace;
     this.fontExtraProperties = fontExtraProperties;
     this.ownerDocument = ownerDocument;
     this.pdfBug = pdfBug;
-    this.styleElement = styleElement;
     this.loadingParams = loadingParams;
   }
 }
@@ -2628,10 +2837,7 @@ class WorkerTransport {
     networkStream: IPDFStream, params: WorkerTransportParameters, factory: TransportFactory) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
-    this.fontLoader = new FontLoader(
-      params.ownerDocument,
-      params.styleElement,
-    );
+    this.fontLoader = new FontLoader(params.ownerDocument);
     this.loadingParams = params.loadingParams;
     this._params = params;
 

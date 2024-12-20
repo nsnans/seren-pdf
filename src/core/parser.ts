@@ -13,38 +13,39 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
-  bytesToString,
   FormatError,
   info,
-  warn,
+  numberArrayToString,
+  warn
 } from "../shared/util";
-import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "./primitives";
+import { Ascii85Stream } from "./ascii_85_stream";
+import { AsciiHexStream } from "./ascii_hex_stream";
+import { BaseStream } from "./base_stream";
+import { CCITTFaxStream } from "./ccitt_stream";
 import {
   isWhiteSpace,
   MissingDataException,
   ParserEOFException,
 } from "./core_utils";
-import { NullStream, Stream } from "./stream";
-import { Ascii85Stream } from "./ascii_85_stream";
-import { AsciiHexStream } from "./ascii_hex_stream";
-import { CCITTFaxStream } from "./ccitt_stream";
+import { CipherTransform } from "./crypto";
 import { FlateStream } from "./flate_stream";
 import { Jbig2Stream } from "./jbig2_stream";
 import { JpegStream } from "./jpeg_stream";
 import { JpxStream } from "./jpx_stream";
 import { LZWStream } from "./lzw_stream";
 import { PredictorStream } from "./predictor_stream";
+import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "./primitives";
 import { RunLengthStream } from "./run_length_stream";
+import { NullStream, Stream } from "./stream";
 import { XRef } from "./xref";
-import { CipherTransform } from "./crypto";
-import { BaseStream } from "./base_stream";
-import { PlatformHelper } from "../platform/platform_helper";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
-function getInlineImageCacheKey(bytes: Uint8Array) {
+function getInlineImageCacheKey(bytes: Uint8TypedArray) {
   const strBuf = [],
     ii = bytes.length;
   let i = 0;
@@ -88,9 +89,9 @@ class Parser {
 
   protected _imageId = 0;
 
-  public buf1;
+  public buf1: string | number | boolean | symbol | Name | Cmd | null = null;
 
-  public buf2;
+  public buf2: string | number | boolean | symbol | Name | Cmd | null = null;
 
   constructor(lexer: Lexer, xref: XRef | null = null, allowStreams = false, recoveryMode = false) {
     this.lexer = lexer;
@@ -103,8 +104,8 @@ class Parser {
   }
 
   refill() {
-    this.buf1 = this.lexer.getObj();
-    this.buf2 = this.lexer.getObj();
+    this.buf1 = this.lexer.getObj() || null;
+    this.buf2 = this.lexer.getObj() || null;
   }
 
   shift() {
@@ -113,7 +114,7 @@ class Parser {
       this.buf2 = null;
     } else {
       this.buf1 = this.buf2;
-      this.buf2 = this.lexer.getObj();
+      this.buf2 = this.lexer.getObj() || null;
     }
   }
 
@@ -131,7 +132,9 @@ class Parser {
     }
   }
 
-  getObj(cipherTransform: CipherTransform | null = null) {
+
+  // 应该弄个token类型出来，不然这么多原始类型，不得搞死人啊
+  getObj(cipherTransform: CipherTransform | null = null): string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | (boolean | string | number | Ref | Dict | Cmd | BaseStream | Name | null)[] {
     const buf1 = this.buf1;
     this.shift();
 
@@ -140,9 +143,10 @@ class Parser {
         case "BI": // inline image
           return this.makeInlineImage(cipherTransform);
         case "[": // array
-          const array = [];
+          // 这里可能不准确，因为可能存在着多维数组的可能性。
+          const array: (string | number | Ref | Dict | Cmd | Name | BaseStream | null)[] = [];
           while (!isCmd(this.buf1, "]") && this.buf1 !== EOF) {
-            array.push(this.getObj(cipherTransform));
+            array.push(<string | number | Ref | Dict | Cmd | Name | BaseStream | null>this.getObj(cipherTransform));
           }
           if (this.buf1 === EOF) {
             if (this.recoveryMode) {
@@ -163,7 +167,7 @@ class Parser {
 
             const key = this.buf1.name;
             this.shift();
-            if (this.buf1 === EOF) {
+            if (<unknown>this.buf1 === EOF) {
               break;
             }
             dict.set(<DictKey>key, this.getObj(cipherTransform));
@@ -192,12 +196,12 @@ class Parser {
     if (Number.isInteger(buf1)) {
       // indirect reference or integer
       if (Number.isInteger(this.buf1) && isCmd(this.buf2, "R")) {
-        const ref = Ref.get(buf1, this.buf1);
+        const ref = Ref.get(<number>buf1, <number>this.buf1);
         this.shift();
         this.shift();
         return ref;
       }
-      return buf1;
+      return <number>buf1;
     }
 
     if (typeof buf1 === "string") {
@@ -556,7 +560,7 @@ class Parser {
       }
       const key = this.buf1.name;
       this.shift();
-      if (this.buf1 === EOF) {
+      if (<unknown>this.buf1 === EOF) {
         break;
       }
       dictMap[key] = this.getObj(cipherTransform);
@@ -611,7 +615,7 @@ class Parser {
 
       const cacheEntry = this.imageCache[cacheKey];
       if (cacheEntry !== undefined) {
-        this.buf2 = Cmd.get("EI");
+        this.buf2 = Cmd.get("EI") || null;
         this.shift();
 
         cacheEntry.reset();
@@ -635,7 +639,7 @@ class Parser {
       this.imageCache[cacheKey] = imageStream;
     }
 
-    this.buf2 = Cmd.get("EI");
+    this.buf2 = Cmd.get("EI") || null;
     this.shift();
 
     return imageStream;
@@ -697,7 +701,7 @@ class Parser {
               const lastByte = scanBytes[pos + j + k];
               if (isWhiteSpace(lastByte)) {
                 info(
-                  `Found "${bytesToString([...END_SIGNATURE, ...part])}" when ` +
+                  `Found "${numberArrayToString([...END_SIGNATURE, ...part])}" when ` +
                   "searching for endstream command."
                 );
                 found = true;
@@ -718,7 +722,7 @@ class Parser {
     return -1;
   }
 
-  makeStream(dict: Dict, cipherTransform: CipherTransform) {
+  makeStream(dict: Dict, cipherTransform: CipherTransform | null) {
     const lexer = this.lexer;
     let stream = lexer.stream;
 

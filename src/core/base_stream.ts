@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../platform/platform_helper";
+import { Uint8TypedArray } from "../common/typed_array";
 import { bytesToString, shadow, unreachable } from "../shared/util";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
@@ -28,18 +28,12 @@ export abstract class BaseStream {
 
   public end: number = 0;
 
-  public bytes = new Uint8Array(0);
+  public bytes: Uint8TypedArray = new Uint8Array(0);
 
   // 相当于是一个代理
   public str: BaseStream | null = null;
 
   constructor() {
-    if (
-      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
-      this.constructor === BaseStream
-    ) {
-      unreachable("Cannot initialize BaseStream.");
-    }
   }
 
   abstract get length(): number;
@@ -52,7 +46,7 @@ export abstract class BaseStream {
 
   abstract getByte(): number;
 
-  abstract getBytes(_length?: number, option?: JpxDecoderOptions | null): Uint8Array | Uint8ClampedArray;
+  abstract getBytes(_length?: number, option?: JpxDecoderOptions | null): Uint8TypedArray;
 
   /**
    * NOTE: This method can only be used to get image-data that is guaranteed
@@ -63,7 +57,7 @@ export abstract class BaseStream {
     return this.getBytes(length, decoderOptions);
   }
 
-  async asyncGetBytes(): Promise<Uint8Array | null> {
+  async asyncGetBytes(): Promise<Uint8TypedArray | null> {
     unreachable("Abstract method `asyncGetBytes` called");
   }
 

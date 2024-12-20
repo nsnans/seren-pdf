@@ -45,13 +45,12 @@ class FontLoader {
   disableFontFace: any;
 
   constructor(
-    ownerDocument: HTMLDocument = globalThis.document,
-    styleElement: HTMLStyleElement | null = null // For testing only.
+    ownerDocument: HTMLDocument = globalThis.document
   ) {
     this._document = ownerDocument;
 
     this.nativeFontFaces = new Set();
-    this.styleElement = PlatformHelper.isTesting() ? styleElement : null;
+    this.styleElement = null;
 
     if (PlatformHelper.isMozCental()) {
       this.loadingRequests = [];

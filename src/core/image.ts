@@ -99,9 +99,13 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
 }
 
 export interface JpxDecoderOptions {
+
   numComponents: number,
+
   isIndexedColormap: boolean,
+
   smaskInData?: boolean;
+  
 }
 
 class PDFImage {

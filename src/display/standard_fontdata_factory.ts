@@ -25,7 +25,7 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
 
   protected baseUrl: string | null;
 
-  constructor({ baseUrl = null }: { baseUrl: string | null }) {
+  constructor(baseUrl: string | null) {
     if (PlatformHelper.isTesting() && this.constructor === BaseStandardFontDataFactory) {
       unreachable("Cannot initialize BaseStandardFontDataFactory.");
     }
@@ -58,6 +58,11 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
 }
 
 class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
+
+  constructor(baseUrl: string | null) {
+    super(baseUrl);
+  }
+  
   /**
    * @ignore
    */

@@ -14,7 +14,7 @@
  */
 /* eslint-disable no-var */
 
-import { DocParamEvaluatorOptions } from "../display/api";
+import { DocumentParameterEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
@@ -161,7 +161,7 @@ export interface CssFontInfo {
   metrics: { lineHeight: number, lineGap: number }
 }
 
-const DefaultDocParamEvaluatorOptions: DocParamEvaluatorOptions = Object.freeze({
+const DefaultDocParamEvaluatorOptions: DocumentParameterEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
   disableFontFace: false,
   ignoreErrors: false,
@@ -318,7 +318,7 @@ class PartialEvaluator {
 
   protected _fetchBuiltInCMapBound;
 
-  public options: DocParamEvaluatorOptions;
+  public options: DocumentParameterEvaluatorOptions;
 
   public type3FontRefs: RefSet | null;
 
@@ -332,7 +332,7 @@ class PartialEvaluator {
     standardFontDataCache: Map<string, any>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
-    options: DocParamEvaluatorOptions | null = null,
+    options: DocumentParameterEvaluatorOptions | null = null,
   ) {
     this.xref = xref;
     this.handler = handler;
@@ -4714,7 +4714,7 @@ class PartialEvaluator {
     return new Font(fontName.name, <Stream>fontFile!, newProperties);
   }
 
-  static buildFontPaths(font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocParamEvaluatorOptions) {
+  static buildFontPaths(font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocumentParameterEvaluatorOptions) {
     function buildPath(fontChar: string) {
       const glyphName = `${font.loadedName}_path_${fontChar}`;
       try {
@@ -4777,7 +4777,7 @@ class TranslatedFont {
   protected _bbox: RectType | null = null;
 
   constructor(loadedName: string, font: Font | ErrorFont,
-    dict: Dict, evaluatorOptions: DocParamEvaluatorOptions) {
+    dict: Dict, evaluatorOptions: DocumentParameterEvaluatorOptions) {
     this.loadedName = loadedName;
     this.font = font;
     this.dict = dict;

@@ -14,6 +14,7 @@
  */
 /* globals process */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { ImageMask } from "../core/core_types";
 import { GroupOptions, ImageMaskXObject, OptionalContent } from "../core/image_utils";
 import { DictKey } from "../core/primitives";
@@ -440,7 +441,7 @@ const PasswordResponses = {
 
 let verbosity = VerbosityLevel.WARNINGS;
 
-function setVerbosityLevel(level?: number) {
+function setVerbosityLevel(level: number | null) {
   if (level != undefined && Number.isInteger(level)) {
     verbosity = level;
   }
@@ -626,9 +627,13 @@ class AbortException extends BaseException {
   }
 }
 
+export function numberArrayToString(bytes: number[]) {
+  return String.fromCharCode.apply(null, Array.from(bytes));
+}
+
 // 调用的地方很多，可能参数不止Uint8Array类型
 // 目前看到的都是Uint8Array
-function bytesToString(bytes: Uint8Array | Uint8ClampedArray | number[]) {
+function bytesToString(bytes: Uint8TypedArray) {
   if (typeof bytes !== "object" || bytes?.length === undefined) {
     unreachable("Invalid argument for bytesToString");
   }
@@ -641,19 +646,19 @@ function bytesToString(bytes: Uint8Array | Uint8ClampedArray | number[]) {
   const strBuf = [];
   for (let i = 0; i < length; i += MAX_ARGUMENT_COUNT) {
     const chunkEnd = Math.min(i + MAX_ARGUMENT_COUNT, length);
-    const chunk = (<Uint8Array | Uint8ClampedArray>bytes).subarray(i, chunkEnd);
+    const chunk = bytes.subarray(i, chunkEnd);
     // TODO 使用Array转换，是否可能会出现问题
     strBuf.push(String.fromCharCode.apply(null, Array.from(chunk)));
   }
   return strBuf.join("");
 }
 
-function stringToBytes(str: string): Uint8Array {
+function stringToBytes(str: string): Uint8Array<ArrayBuffer> {
   if (typeof str !== "string") {
     unreachable("Invalid argument for stringToBytes");
   }
   const length = str.length;
-  const bytes = new Uint8Array(length);
+  const bytes: Uint8Array<ArrayBuffer> = new Uint8Array(length);
   for (let i = 0; i < length; ++i) {
     bytes[i] = str.charCodeAt(i) & 0xff;
   }
@@ -1204,7 +1209,7 @@ function toHexUtil(arr: Uint8Array): string {
 }
 
 // TODO: Remove this once `Uint8Array.prototype.toBase64` is generally available.
-function toBase64Util(arr: Uint8Array) {
+function toBase64Util(arr: Uint8Array<ArrayBuffer>) {
   if ((Uint8Array as any).prototype.toBase64) {
     return (arr as any).toBase64();
   }

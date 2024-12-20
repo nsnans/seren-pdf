@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocParams } from "../display/api";
+import { DocumentParameter } from "../display/api";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
@@ -97,12 +97,12 @@ class WorkerMessageHandler {
       setVerbosityLevel(data.verbosity);
     });
 
-    handler.on("GetDocRequest", function (data: DocParams) {
+    handler.on("GetDocRequest", function (data: DocumentParameter) {
       return WorkerMessageHandler.createDocumentHandler(data, port);
     });
   }
 
-  static createDocumentHandler(docParams: DocParams | null, port) {
+  static createDocumentHandler(docParams: DocumentParameter | null, port) {
     // This context is actually holds references on pdfManager and handler,
     // until the latter is destroyed.
     let pdfManager: PDFManager | null;
@@ -187,7 +187,7 @@ class WorkerMessageHandler {
       length,
       docBaseUrl,
       evaluatorOptions,
-    }: DocParams): Promise<PDFManager> {
+    }: DocumentParameter): Promise<PDFManager> {
       const pdfManagerArgs: PDFManagerArgs = {
         source: <Uint8Array | null>null,
         disableAutoFetch,
@@ -308,7 +308,7 @@ class WorkerMessageHandler {
       return pdfManagerCapability.promise;
     }
 
-    function setupDoc(data: DocParams) {
+    function setupDoc(data: DocumentParameter) {
       function onSuccess(doc) {
         ensureNotTerminated();
         handler!.send("GetDoc", { pdfInfo: doc });

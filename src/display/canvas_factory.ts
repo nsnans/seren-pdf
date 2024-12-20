@@ -35,7 +35,7 @@ export abstract class BaseCanvasFactory implements CanvasFactory {
   // 硬件加速 hardware accelerate
   #enableHWA = false;
 
-  constructor({ enableHWA = false }) {
+  constructor(enableHWA = false) {
     if (PlatformHelper.isTesting() && this.constructor === BaseCanvasFactory) {
       unreachable("Cannot initialize BaseCanvasFactory.");
     }
@@ -88,8 +88,8 @@ export class DOMCanvasFactory extends BaseCanvasFactory {
 
   protected _document: Document;
 
-  constructor({ ownerDocument = globalThis.document, enableHWA = false }) {
-    super({ enableHWA });
+  constructor(ownerDocument = globalThis.document, enableHWA = false) {
+    super(enableHWA);
     this._document = ownerDocument;
   }
 

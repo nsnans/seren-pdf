@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { BaseStream } from "./base_stream";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
@@ -33,7 +34,7 @@ abstract class DecodeStream extends BaseStream {
 
   protected minBufferLength: number = 512;
 
-  public buffer: Uint8Array | Uint8ClampedArray = emptyBuffer;
+  public buffer: Uint8TypedArray = emptyBuffer;
 
   public _rawMinBufferLength: number;
 

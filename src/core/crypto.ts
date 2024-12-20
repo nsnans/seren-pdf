@@ -28,6 +28,7 @@ import { Dict, DictKey, isName, Name } from "./primitives";
 import { DecryptStream } from "./decrypt_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Stream } from "./stream";
+import { Uint8TypedArray } from "../common/typed_array";
 
 class ARCFourCipher implements StreamClipher, StringClipher {
 
@@ -83,6 +84,7 @@ class ARCFourCipher implements StreamClipher, StringClipher {
 }
 
 const calculateMD5 = (function calculateMD5Closure() {
+
   const r = new Uint8Array([
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5,
     9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11,
@@ -104,7 +106,7 @@ const calculateMD5 = (function calculateMD5Closure() {
     -145523070, -1120210379, 718787259, -343485551,
   ]);
 
-  function hash(data: Uint8Array, offset: number, length: number): Uint8Array {
+  function hash(data: Uint8Array<ArrayBuffer>, offset: number, length: number): Uint8Array<ArrayBuffer> {
     let h0 = 1732584193,
       h1 = -271733879,
       h2 = -1732584194,
@@ -1424,11 +1426,12 @@ class PDF20 {
 
 interface StringClipher {
 
-  encryptBlock(data: Uint8Array): Uint8Array;
+  encryptBlock(data: Uint8TypedArray): Uint8TypedArray;
 
-  decryptBlock(data: Uint8Array, finalize?: boolean): Uint8Array;
+  decryptBlock(data: Uint8TypedArray, finalize?: boolean): Uint8TypedArray;
 
-  encrypt(data: Uint8Array): Uint8Array;
+  encrypt(data: Uint8TypedArray): Uint8TypedArray;
+
 }
 
 export class CipherTransform {
@@ -1456,7 +1459,7 @@ export class CipherTransform {
   decryptString(s: string) {
     // TODO 这里原来是个new，但是实际上传进来的是一个函数，因此改成了函数，或许会导致问题？
     const cipher = this.StringCipherConstructor();
-    let data = stringToBytes(s);
+    let data: Uint8TypedArray = stringToBytes(s);
     data = cipher.decryptBlock(data, true);
     return bytesToString(data);
   }
@@ -1495,7 +1498,7 @@ export class CipherTransform {
       return bytesToString(buf);
     }
 
-    let data = stringToBytes(s);
+    let data: Uint8TypedArray = stringToBytes(s);
     data = cipher.encrypt(data);
     return bytesToString(data);
   }

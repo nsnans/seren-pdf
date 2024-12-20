@@ -18,8 +18,11 @@ import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 
 class Ascii85Stream extends DecodeStream {
+
   public eof: boolean = false;
+
   public input: Uint8Array;
+
   public str: Stream;
 
   constructor(str: Stream, maybeLength: number) {

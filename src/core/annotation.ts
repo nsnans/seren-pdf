@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocParamEvaluatorOptions } from "../display/api";
+import { DocumentParameterEvaluatorOptions } from "../display/api";
 import { PointType, RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
@@ -95,7 +95,7 @@ export interface AnnotationParameters {
   orphanFields: RefSetCache | null;
   needAppearances: boolean;
   pageIndex: number | null;
-  evaluatorOptions: DocParamEvaluatorOptions;
+  evaluatorOptions: DocumentParameterEvaluatorOptions;
   // TODO 这里需要再次验证
   pageRef: Ref | null;
 }
@@ -1960,7 +1960,7 @@ class MarkupAnnotation extends Annotation {
     params: {
       evaluator?: PartialEvaluator,
       image?: CreateStampImageResult | null,
-      evaluatorOptions: DocParamEvaluatorOptions
+      evaluatorOptions: DocumentParameterEvaluatorOptions
     }
   ) {
     const ap = await this.createNewAppearanceStream(annotation, xref, params);

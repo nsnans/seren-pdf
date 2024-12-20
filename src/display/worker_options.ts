@@ -19,25 +19,22 @@ class GlobalWorkerOptions {
 
   static #src = "";
 
-  /**
-   * @type {Worker | null}
-   */
-  static get workerPort() {
+  static get workerPort(): Worker | null {
     return this.#port;
   }
 
   /**
-   * @param {Worker | null} workerPort - Defines global port for worker process.
+   * @param workerPort - Defines global port for worker process.
    *   Overrides the `workerSrc` option.
    */
-  static set workerPort(val: Worker | null) {
+  static set workerPort(workerPort: Worker | null) {
     if (
-      !(typeof Worker !== "undefined" && val instanceof Worker) &&
-      val !== null
+      !(typeof Worker !== "undefined" && workerPort instanceof Worker) &&
+      workerPort !== null
     ) {
       throw new Error("Invalid `workerPort` type.");
     }
-    this.#port = val;
+    this.#port = workerPort;
   }
 
   /**
@@ -48,17 +45,16 @@ class GlobalWorkerOptions {
   }
 
   /**
-   * @param {string} workerSrc - A string containing the path and filename of
-   *   the worker file.
+   * @param workerSrc - A string containing the path and filename of the worker file.
    *
-   *   NOTE: The `workerSrc` option should always be set, in order to prevent
-   *         any issues when using the PDF.js library.
+   * NOTE: The `workerSrc` option should always be set, in order to prevent
+   *       any issues when using the PDF.js library.
    */
-  static set workerSrc(val) {
-    if (typeof val !== "string") {
+  static set workerSrc(workerSrc: string) {
+    if (typeof workerSrc !== "string") {
       throw new Error("Invalid `workerSrc` type.");
     }
-    this.#src = val;
+    this.#src = workerSrc;
   }
 }
 
