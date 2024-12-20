@@ -23,7 +23,7 @@ import { IL10n } from "../../viewer/common/component_types";
 import { StampAnnotationElement } from "../annotation_layer";
 import { OutputScale, PixelsPerInch } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { AnnotationEditor } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { AnnotationEditorUIManager } from "./tools";
 
 /**
@@ -65,7 +65,7 @@ class StampEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
-    AnnotationEditor.initialize(l10n, uiManager);
+    AnnotationEditorHelper.initialize(l10n, uiManager);
   }
 
   static get supportedTypes() {

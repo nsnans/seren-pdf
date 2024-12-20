@@ -26,13 +26,14 @@
 /** @typedef {import("../src/display/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationEditorType, FeatureTest } from "../../shared/util";
-import { AnnotationEditor } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { FreeTextEditor } from "./freetext";
 import { HighlightEditor } from "./highlight";
 import { InkEditor } from "./ink";
 import { setLayerDimensions } from "../display_utils";
 import { StampEditor } from "./stamp";
 import { DrawLayer } from "../draw_layer";
+import { AnnotationEditorState } from "./state/editor_state";
 
 /**
  * @typedef {Object} AnnotationEditorLayerOptions
@@ -499,14 +500,14 @@ class AnnotationEditorLayer {
    * being dragged and droped from a page to another.
    * @param {AnnotationEditor} editor
    */
-  changeParent(editor) {
+  changeParent(editor: AnnotationEditor<AnnotationEditorState>) {
     if (editor.parent === this) {
       return;
     }
 
     if (editor.parent && editor.annotationElementId) {
       this.#uiManager.addDeletedAnnotationElement(editor.annotationElementId);
-      AnnotationEditor.deleteAnnotationElement(editor);
+      AnnotationEditorHelper.deleteAnnotationElement(editor);
       editor.annotationElementId = null;
     }
 

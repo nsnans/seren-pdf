@@ -256,7 +256,7 @@ class HighlightEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
-    AnnotationEditor.initialize(l10n, uiManager);
+    AnnotationEditorHelper.initialize(l10n, uiManager);
     HighlightEditor._defaultColor ||=
       uiManager.highlightColors?.values().next().value || "#fff066";
   }

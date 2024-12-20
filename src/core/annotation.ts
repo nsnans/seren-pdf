@@ -1099,13 +1099,6 @@ class Annotation {
 
   /**
    * Check if a provided flag is set.
-   *
-   * @public
-   * @memberof Annotation
-   * @param {number} flag - Hexadecimal representation for an annotation
-   *                        characteristic
-   * @returns {boolean}
-   * @see {@link shared/util.js}
    */
   hasFlag(flag: number) {
     return this._hasFlag(this.flags, flag);

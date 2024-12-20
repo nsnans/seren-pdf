@@ -116,6 +116,126 @@ export class AnnotationEditorHelper {
     );
   }
 
+  static deleteAnnotationElement(editor: AnnotationEditor) {
+    const fakeEditor = new FakeEditor({
+      id: editor.parent!.getNextId(),
+      parent: editor.parent,
+      uiManager: editor._uiManager,
+    });
+    fakeEditor.annotationElementId = editor.annotationElementId;
+    fakeEditor.deleted = true;
+    fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
+  }
+
+  /**
+ * Initialize the l10n stuff for this type of editor.
+ * @param {Object} l10n
+ */
+  static initialize(l10n: IL10n, _uiManager: AnnotationEditorUIManager) {
+    AnnotationEditorHelper._l10n ??= l10n;
+
+    AnnotationEditorHelper._l10nResizer ||= Object.freeze({
+      topLeft: "pdfjs-editor-resizer-top-left",
+      topMiddle: "pdfjs-editor-resizer-top-middle",
+      topRight: "pdfjs-editor-resizer-top-right",
+      middleRight: "pdfjs-editor-resizer-middle-right",
+      bottomRight: "pdfjs-editor-resizer-bottom-right",
+      bottomMiddle: "pdfjs-editor-resizer-bottom-middle",
+      bottomLeft: "pdfjs-editor-resizer-bottom-left",
+      middleLeft: "pdfjs-editor-resizer-middle-left",
+    });
+
+    if (AnnotationEditorHelper._borderLineWidth !== -1) {
+      return;
+    }
+    const style = getComputedStyle(document.documentElement);
+    AnnotationEditorHelper._borderLineWidth =
+      parseFloat(style.getPropertyValue("--outline-width")) || 0;
+  }
+
+  static get MIN_SIZE() {
+    return 16;
+  }
+
+  /**
+   * Extract the data from the clipboard item and delegate the creation of the
+   * editor to the parent.
+   * @param {DataTransferItem} item
+   * @param {AnnotationEditorLayer} parent
+   */
+  static paste(_item, _parent: AnnotationEditorLayer) {
+    unreachable("Not implemented");
+  }
+
+  /**
+   * Update the default parameters for this type of editor.
+   * @param {number} _type
+   * @param {*} _value
+   */
+  static updateDefaultParams(_type: number, _value: any) { }
+
+  /**
+ * Check if this kind of editor is able to handle the given mime type for
+ * pasting.
+ * @param {string} mime
+ * @returns {boolean}
+ */
+  static isHandlingMimeForPasting(_mime: string) {
+    return false;
+  }
+
+  static rotatePoint(x: number, y: number, angle: number) {
+    switch (angle) {
+      case 90:
+        return [y, -x];
+      case 180:
+        return [-x, -y];
+      case 270:
+        return [-y, x];
+      default:
+        return [x, y];
+    }
+  }
+
+  /**
+ * Get the default properties to set in the UI for this type of editor.
+ * @returns {Array}
+ */
+  static get defaultPropertiesToUpdate() {
+    return [];
+  }
+
+  /**
+ * Deserialize the editor.
+ * The result of the deserialization is a new editor.
+ *
+ * @param {Object} data
+ * @param {AnnotationEditorLayer} parent
+ * @param {AnnotationEditorUIManager} uiManager
+ * @returns {Promise<AnnotationEditor | null>}
+ */
+  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
+    const editor = new this.prototype.constructor({
+      parent,
+      id: parent.getNextId(),
+      uiManager,
+    });
+    editor.rotation = data.rotation;
+    editor.#accessibilityData = data.accessibilityData;
+
+    const [pageWidth, pageHeight] = editor.pageDimensions;
+    const [x, y, width, height] = editor.getRectInCurrentCoords(
+      data.rect,
+      pageHeight
+    );
+
+    editor.x = x / pageWidth;
+    editor.y = y / pageHeight;
+    editor.width = width / pageWidth;
+    editor.height = height / pageHeight;
+
+    return editor;
+  }
 }
 
 
@@ -251,77 +371,9 @@ class AnnotationEditor<T extends AnnotationEditorState> {
     return Object.getPrototypeOf(this).constructor._type;
   }
 
-  static deleteAnnotationElement(editor: AnnotationEditor) {
-    const fakeEditor = new FakeEditor({
-      id: editor.parent!.getNextId(),
-      parent: editor.parent,
-      uiManager: editor._uiManager,
-    });
-    fakeEditor.annotationElementId = editor.annotationElementId;
-    fakeEditor.deleted = true;
-    fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
-  }
 
-  /**
-   * Initialize the l10n stuff for this type of editor.
-   * @param {Object} l10n
-   */
-  static initialize(l10n: IL10n, _uiManager: AnnotationEditorUIManager) {
-    AnnotationEditorHelper._l10n ??= l10n;
 
-    AnnotationEditorHelper._l10nResizer ||= Object.freeze({
-      topLeft: "pdfjs-editor-resizer-top-left",
-      topMiddle: "pdfjs-editor-resizer-top-middle",
-      topRight: "pdfjs-editor-resizer-top-right",
-      middleRight: "pdfjs-editor-resizer-middle-right",
-      bottomRight: "pdfjs-editor-resizer-bottom-right",
-      bottomMiddle: "pdfjs-editor-resizer-bottom-middle",
-      bottomLeft: "pdfjs-editor-resizer-bottom-left",
-      middleLeft: "pdfjs-editor-resizer-middle-left",
-    });
 
-    if (AnnotationEditorHelper._borderLineWidth !== -1) {
-      return;
-    }
-    const style = getComputedStyle(document.documentElement);
-    AnnotationEditorHelper._borderLineWidth =
-      parseFloat(style.getPropertyValue("--outline-width")) || 0;
-  }
-
-  /**
-   * Update the default parameters for this type of editor.
-   * @param {number} _type
-   * @param {*} _value
-   */
-  static updateDefaultParams(_type: number, _value: any) { }
-
-  /**
-   * Get the default properties to set in the UI for this type of editor.
-   * @returns {Array}
-   */
-  static get defaultPropertiesToUpdate() {
-    return [];
-  }
-
-  /**
-   * Check if this kind of editor is able to handle the given mime type for
-   * pasting.
-   * @param {string} mime
-   * @returns {boolean}
-   */
-  static isHandlingMimeForPasting(_mime: string) {
-    return false;
-  }
-
-  /**
-   * Extract the data from the clipboard item and delegate the creation of the
-   * editor to the parent.
-   * @param {DataTransferItem} item
-   * @param {AnnotationEditorLayer} parent
-   */
-  static paste(_item, _parent: AnnotationEditorLayer) {
-    unreachable("Not implemented");
-  }
 
   /**
    * Get the properties to update in the UI for this editor.
@@ -639,18 +691,7 @@ class AnnotationEditor<T extends AnnotationEditorState> {
     this.moveInDOM();
   }
 
-  static #rotatePoint(x: number, y: number, angle: number) {
-    switch (angle) {
-      case 90:
-        return [y, -x];
-      case 180:
-        return [-x, -y];
-      case 270:
-        return [-y, x];
-      default:
-        return [x, y];
-    }
-  }
+
 
   /**
    * Convert a screen translation into a page one.
@@ -658,7 +699,7 @@ class AnnotationEditor<T extends AnnotationEditorState> {
    * @param {number} y
    */
   screenToPageTranslation(x: number, y: number) {
-    return AnnotationEditor.#rotatePoint(x, y, this.parentRotation);
+    return AnnotationEditorHelper.rotatePoint(x, y, this.parentRotation);
   }
 
   /**
@@ -667,7 +708,7 @@ class AnnotationEditor<T extends AnnotationEditorState> {
    * @param {number} y
    */
   pageTranslationToScreen(x: number, y: number) {
-    return AnnotationEditor.#rotatePoint(x, y, 360 - this.parentRotation);
+    return AnnotationEditorHelper.rotatePoint(x, y, 360 - this.parentRotation);
   }
 
   #getRotationMatrix(rotation: number) {
@@ -872,8 +913,8 @@ class AnnotationEditor<T extends AnnotationEditorState> {
     const savedY = this.y;
     const savedWidth = this.width;
     const savedHeight = this.height;
-    const minWidth = AnnotationEditor.MIN_SIZE / parentWidth;
-    const minHeight = AnnotationEditor.MIN_SIZE / parentHeight;
+    const minWidth = AnnotationEditorHelper.MIN_SIZE / parentWidth;
+    const minHeight = AnnotationEditorHelper.MIN_SIZE / parentHeight;
 
     // 10000 because we multiply by 100 and use toFixed(2) in fixAndSetPosition.
     // Without rounding, the positions of the corners other than the top left
@@ -1407,37 +1448,7 @@ class AnnotationEditor<T extends AnnotationEditorState> {
     unreachable("An editor must be serializable");
   }
 
-  /**
-   * Deserialize the editor.
-   * The result of the deserialization is a new editor.
-   *
-   * @param {Object} data
-   * @param {AnnotationEditorLayer} parent
-   * @param {AnnotationEditorUIManager} uiManager
-   * @returns {Promise<AnnotationEditor | null>}
-   */
-  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
-    const editor = new this.prototype.constructor({
-      parent,
-      id: parent.getNextId(),
-      uiManager,
-    });
-    editor.rotation = data.rotation;
-    editor.#accessibilityData = data.accessibilityData;
 
-    const [pageWidth, pageHeight] = editor.pageDimensions;
-    const [x, y, width, height] = editor.getRectInCurrentCoords(
-      data.rect,
-      pageHeight
-    );
-
-    editor.x = x / pageWidth;
-    editor.y = y / pageHeight;
-    editor.width = width / pageWidth;
-    editor.height = height / pageHeight;
-
-    return editor;
-  }
 
   /**
    * Check if an existing annotation associated with this editor has been
@@ -1750,10 +1761,6 @@ class AnnotationEditor<T extends AnnotationEditorState> {
     const { style } = this.div!;
     style.aspectRatio = `${aspectRatio}`;
     style.height = "auto";
-  }
-
-  static get MIN_SIZE() {
-    return 16;
   }
 
   static canCreateNewEmptyEditor() {

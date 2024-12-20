@@ -147,7 +147,7 @@ class FreeTextEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
-    AnnotationEditor.initialize(l10n, uiManager);
+    AnnotationEditorHelper.initialize(l10n, uiManager);
     const style = getComputedStyle(document.documentElement);
 
     if (PlatformHelper.isTesting()) {

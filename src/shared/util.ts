@@ -21,9 +21,6 @@ import { PointType, RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { TypedArray } from "../types";
 
-// 移除对nodejs的支持
-const isNodeJS = false;
-
 const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];
 const FONT_IDENTITY_MATRIX: TransformType = [0.001, 0, 0, 0.001, 0, 0];
 
@@ -70,41 +67,41 @@ const AnnotationMode = {
 
 const AnnotationEditorPrefix = "pdfjs_internal_editor_";
 
-const AnnotationEditorType = {
-  DISABLE: -1,
-  NONE: 0,
-  FREETEXT: 3,
-  HIGHLIGHT: 9,
-  STAMP: 13,
-  INK: 15,
+enum AnnotationEditorType {
+  DISABLE = -1,
+  NONE = 0,
+  FREETEXT = 3,
+  HIGHLIGHT = 9,
+  STAMP = 13,
+  INK = 15,
 };
 
-const AnnotationEditorParamsType = {
-  RESIZE: 1,
-  CREATE: 2,
-  FREETEXT_SIZE: 11,
-  FREETEXT_COLOR: 12,
-  FREETEXT_OPACITY: 13,
-  INK_COLOR: 21,
-  INK_THICKNESS: 22,
-  INK_OPACITY: 23,
-  HIGHLIGHT_COLOR: 31,
-  HIGHLIGHT_DEFAULT_COLOR: 32,
-  HIGHLIGHT_THICKNESS: 33,
-  HIGHLIGHT_FREE: 34,
-  HIGHLIGHT_SHOW_ALL: 35,
+enum AnnotationEditorParamsType {
+  RESIZE = 1,
+  CREATE = 2,
+  FREETEXT_SIZE = 11,
+  FREETEXT_COLOR = 12,
+  FREETEXT_OPACITY = 13,
+  INK_COLOR = 21,
+  INK_THICKNESS = 22,
+  INK_OPACITY = 23,
+  HIGHLIGHT_COLOR = 31,
+  HIGHLIGHT_DEFAULT_COLOR = 32,
+  HIGHLIGHT_THICKNESS = 33,
+  HIGHLIGHT_FREE = 34,
+  HIGHLIGHT_SHOW_ALL = 35,
 };
 
 // Permission flags from Table 22, Section 7.6.3.2 of the PDF specification.
-const PermissionFlag: Record<string, number> = {
-  PRINT: 0x04,
-  MODIFY_CONTENTS: 0x08,
-  COPY: 0x10,
-  MODIFY_ANNOTATIONS: 0x20,
-  FILL_INTERACTIVE_FORMS: 0x100,
-  COPY_FOR_ACCESSIBILITY: 0x200,
-  ASSEMBLE: 0x400,
-  PRINT_HIGH_QUALITY: 0x800,
+enum PermissionFlag {
+  PRINT = 0x04,
+  MODIFY_CONTENTS = 0x08,
+  COPY = 0x10,
+  MODIFY_ANNOTATIONS = 0x20,
+  FILL_INTERACTIVE_FORMS = 0x100,
+  COPY_FOR_ACCESSIBILITY = 0x200,
+  ASSEMBLE = 0x400,
+  PRINT_HIGH_QUALITY = 0x800,
 };
 
 const TextRenderingMode = {
@@ -120,10 +117,10 @@ const TextRenderingMode = {
   ADD_TO_PATH_FLAG: 4,
 };
 
-const ImageKind = {
-  GRAYSCALE_1BPP: 1,
-  RGB_24BPP: 2,
-  RGBA_32BPP: 3,
+enum ImageKind {
+  GRAYSCALE_1BPP = 1,
+  RGB_24BPP = 2,
+  RGBA_32BPP = 3,
 };
 
 enum AnnotationType {
@@ -1255,7 +1252,6 @@ export {
   info,
   InvalidPDFException,
   isArrayEqual,
-  isNodeJS,
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
   MAX_IMAGE_SIZE_TO_CACHE,
