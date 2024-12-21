@@ -112,14 +112,14 @@ class AnnotationFactory {
 
   static createGlobals(pdfManager: PDFManager): Promise<AnnotationGlobals | null> {
     return Promise.all([
-      pdfManager.ensureCatalog("acroForm") as Promise<Dict>,
-      pdfManager.ensureCatalog("structTreeRoot") as Promise<StructTreeRoot | null>,
+      pdfManager.ensureCatalog(catalog => catalog.acroForm),
+      pdfManager.ensureCatalog(catalog => catalog.structTreeRoot),
       // Only necessary to prevent the `Catalog.baseUrl`-getter, used
       // with some Annotations, from throwing and thus breaking parsing:
-      pdfManager.ensureCatalog("baseUrl") as Promise<string>,
+      pdfManager.ensureCatalog(catalog => catalog.baseUrl),
       // Only necessary to prevent the `Catalog.attachments`-getter, used
       // with "GoToE" actions, from throwing and thus breaking parsing:
-      pdfManager.ensureCatalog("attachments") as Promise<Record<string, FileSpecSerializable> | null>,
+      pdfManager.ensureCatalog(catalog => catalog.attachments),
     ]).then(
       // eslint-disable-next-line arrow-body-style
       ([acroForm, structTreeRoot, baseUrl, attachments]) => {
@@ -162,20 +162,15 @@ class AnnotationFactory {
     orphanFields: RefSetCache,
     pageRef: Ref | null
   ): Promise<Annotation> {
-    const pageIndex = collectFields
-      ? await this._getPageIndex(xref, ref, annotationGlobals.pdfManager)
-      : null;
 
-    return <Promise<Annotation>>annotationGlobals.pdfManager.ensure(this, "_create", [
-      xref,
-      ref,
-      annotationGlobals,
-      idFactory,
-      collectFields,
-      orphanFields,
-      pageIndex,
-      pageRef,
-    ]);
+    const pdfManager = annotationGlobals.pdfManager;
+    const pageIndex = collectFields ? <number>await this._getPageIndex(xref, ref, pdfManager) : null;
+
+    const createFn = (factory: typeof AnnotationFactory) => factory._create(
+      xref, ref, annotationGlobals, idFactory!, collectFields, orphanFields, pageIndex, pageRef,
+    )!;
+
+    return pdfManager.ensure(AnnotationFactory, createFn);
   }
 
   /**
@@ -188,8 +183,8 @@ class AnnotationFactory {
     idFactory: LocalIdFactory,
     collectFields = false,
     orphanFields: RefSetCache | null = null,
-    pageIndex = null,
-    pageRef = null
+    pageIndex: number | null = null,
+    pageRef: Ref | null = null
   ) {
     const dict = xref.fetchIfRef(ref);
     if (!(dict instanceof Dict)) {
@@ -317,9 +312,8 @@ class AnnotationFactory {
       const pageRef = annotDict.getRaw(DictKey.P);
       if (pageRef instanceof Ref) {
         try {
-          const pageIndex = await pdfManager.ensureCatalog("getPageIndex", [
-            pageRef,
-          ]);
+          const promise = pdfManager.ensureCatalog(catalog => catalog.getPageIndex(pageRef));
+          const pageIndex = await promise;
           return pageIndex;
         } catch (ex) {
           info(`_getPageIndex -- not a valid page reference: "${ex}".`);
@@ -331,13 +325,13 @@ class AnnotationFactory {
       // Fallback to, potentially, checking the annotations of all pages.
       // PLEASE NOTE: This could force the *entire* PDF document to load,
       //              hence it absolutely cannot be done unconditionally.
-      const numPages = await pdfManager.ensureDoc("numPages") as number;
+      const numPages = await pdfManager.ensureDoc(doc => doc.numPages);
 
       for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
 
         const page = await pdfManager.getPage(pageIndex);
 
-        const annotations = <Ref[]>await pdfManager.ensure(page, "annotations");
+        const annotations = <Ref[]>await pdfManager.ensure(page, page => page.annotations);
 
         for (const annotRef of annotations) {
           if (annotRef instanceof Ref && isRefsEqual(annotRef, ref)) {

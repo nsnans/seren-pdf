@@ -22,13 +22,9 @@ import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_
 import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
-import {
-  PDFNodeStream
-} from "../display/stubs";
 import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
-import { ExplicitMessageHandler } from "../shared/message_handler_explicit";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
@@ -60,12 +56,11 @@ import {
 import { CanvasGraphics } from "./canvas";
 import { CanvasFactory, DOMCanvasFactory } from "./canvas_factory";
 import {
-  deprecated,
   isDataScheme,
   isValidFetchUrl,
   PageViewport,
   RenderingCancelledException,
-  StatTimer,
+  StatTimer
 } from "./display_utils";
 import { DOMFilterFactory, FilterFactory } from "./filter_factory";
 import { FontFaceObject, FontLoader } from "./font_loader";
@@ -724,10 +719,8 @@ function getDocument(src: DocumentInitParameters) {
       throw new Error("Worker was destroyed");
     }
 
-    const workerIdPromise = <Promise<string>>worker.messageHandler.sendWithPromise(
-      "GetDocRequest",
-      docParams,
-      data ? [data.buffer] : null
+    const workerIdPromise = worker.messageHandler.GetDocRequest(
+      docParams, data ? [data.buffer] : null
     );
 
     let networkStream: PDFStream;
@@ -741,7 +734,7 @@ function getDocument(src: DocumentInitParameters) {
         throw new Error("getDocument - no `url` parameter provided.");
       }
 
-      const pdfStreamSource: PDFStreamSource = {
+      const pss: PDFStreamSource = {
         url,
         length,
         httpHeaders,
@@ -752,7 +745,7 @@ function getDocument(src: DocumentInitParameters) {
       }
 
       const needFetch = isValidFetchUrl(url);
-      networkStream = needFetch ? new PDFFetchStream(pdfStreamSource) : new PDFNetworkStream(pdfStreamSource);
+      networkStream = needFetch ? new PDFFetchStream(pss) : new PDFNetworkStream(pss);
     }
 
     return workerIdPromise.then(workerId => {
@@ -766,6 +759,7 @@ function getDocument(src: DocumentInitParameters) {
       }
 
       const messageHandler = new MessageHandler(docId, workerId, worker.port!);
+
       const transport = new WorkerTransport(
         messageHandler,
         task,
@@ -774,7 +768,7 @@ function getDocument(src: DocumentInitParameters) {
         transportFactory
       );
       task._transport = transport;
-      messageHandler.send("Ready", null);
+      messageHandler.Ready();
     });
   }).catch(task._capability.reject);
 
@@ -2436,8 +2430,6 @@ class PDFWorker {
 
   protected _messageHandler: MessageHandler | null = null;
 
-  protected _explicitMessageHandler: ExplicitMessageHandler | null = null;
-
   constructor(
     name: string | null = null,
     port: Worker | null = null,
@@ -2469,9 +2461,7 @@ class PDFWorker {
   #resolve() {
     this._readyCapability.resolve(undefined);
     // Send global setting, e.g. verbosity level.
-    this._messageHandler!.send("configure", {
-      verbosity: this.verbosity,
-    });
+    this._messageHandler!.configure(this.verbosity);
   }
 
   /**
@@ -2490,17 +2480,12 @@ class PDFWorker {
     return this._messageHandler!;
   }
 
-  get explicitMessageHandler() {
-    return this._explicitMessageHandler!;
-  }
-
   _initializeFromPort(port: Worker) {
     if (PlatformHelper.isMozCental()) {
       throw new Error("Not implemented: _initializeFromPort");
     }
     this._port = port;
     this._messageHandler = new MessageHandler("main", "worker", port);
-    this._explicitMessageHandler = new ExplicitMessageHandler(this._messageHandler);
     this._messageHandler.on("ready", function () {
       // Ignoring "ready" event -- MessageHandler should already be initialized
       // and ready to accept messages.
@@ -2590,7 +2575,7 @@ class PDFWorker {
       const sendTest = () => {
         const testObj = new Uint8Array();
         // Ensure that we can use `postMessage` transfers.
-        messageHandler.send("test", testObj, [testObj.buffer]);
+        messageHandler.test(testObj, [testObj.buffer]);
       };
 
       // It might take time for the worker to initialize. We will try to send
@@ -2738,15 +2723,6 @@ class TransportFactory {
     this.filterFactory = filterFactory;
     this.cMapReaderFactory = cMapReaderFactory;
     this.standardFontDataFactory = standardFontDataFactory;
-  }
-}
-
-class WorkerTransportLoadingParameters {
-
-  disableAutoFetch: boolean;
-
-  constructor(disableAutoFetch: boolean) {
-    this.disableAutoFetch = disableAutoFetch;
   }
 }
 

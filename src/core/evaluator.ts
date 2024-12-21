@@ -17,7 +17,7 @@
 import { DocumentParameterEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler } from "../shared/message_handler_base";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,

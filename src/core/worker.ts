@@ -16,6 +16,7 @@
 import { DocumentParameter } from "../display/api";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
+import { MessagePoster } from "../shared/message_handler_base";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
@@ -81,28 +82,24 @@ class WorkerTask {
 }
 
 class WorkerMessageHandler {
-  static setup(handler: MessageHandler, port) {
+  static setup(handler: MessageHandler, port: MessagePoster) {
     let testMessageProcessed = false;
-    handler.on("test", function (data) {
+    handler.onTest((data) => {
       if (testMessageProcessed) {
         return; // we already processed 'test' message once
       }
       testMessageProcessed = true;
 
       // Ensure that `TypedArray`s can be sent to the worker.
-      handler.send("test", data instanceof Uint8Array);
+      handler.test(data instanceof Uint8Array);
     });
 
-    handler.on("configure", function (data) {
-      setVerbosityLevel(data.verbosity);
-    });
+    handler.onConfigure((data) => setVerbosityLevel(data.verbosity));
 
-    handler.on("GetDocRequest", function (data: DocumentParameter) {
-      return WorkerMessageHandler.createDocumentHandler(data, port);
-    });
+    handler.onGetDocRequest((data) => WorkerMessageHandler.createDocumentHandler(data, port));
   }
 
-  static createDocumentHandler(docParams: DocumentParameter | null, port) {
+  static createDocumentHandler(docParams: DocumentParameter, port: MessagePoster) {
     // This context is actually holds references on pdfManager and handler,
     // until the latter is destroyed.
     let pdfManager: PDFManager | null;
@@ -111,9 +108,8 @@ class WorkerMessageHandler {
     const WorkerTasks = new Set<WorkerTask>();
     const verbosity = getVerbosityLevel();
 
-    const { docId, apiVersion } = docParams!;
-    const workerVersion = !PlatformHelper.hasDefined() || PlatformHelper.isTesting()
-      ? PlatformHelper.bundleVersion() : null;
+    const { docId, apiVersion } = docParams;
+    const workerVersion = PlatformHelper.bundleVersion();
     if (apiVersion !== workerVersion) {
       throw new Error(
         `The API version "${apiVersion}" does not match ` +
@@ -133,14 +129,14 @@ class WorkerMessageHandler {
         enumerableProperties.push(property);
       }
       if (enumerableProperties.length) {
-        throw new Error(
-          "The `Array.prototype` contains unexpected enumerable properties: " +
+        const errorText = "The `Array.prototype` contains unexpected enumerable properties: " +
           enumerableProperties.join(", ") +
           "; thus breaking e.g. `for...in` iteration of `Array`s."
-        );
+        throw new Error(errorText);
       }
     }
     const workerHandlerName = docId + "_worker";
+
     let handler: MessageHandler | null = new MessageHandler(workerHandlerName, docId, port);
 
     function ensureNotTerminated() {
@@ -159,20 +155,22 @@ class WorkerMessageHandler {
     }
 
     async function loadDocument(recoveryMode: boolean) {
-      await pdfManager!.ensureDoc("checkHeader");
-      await pdfManager!.ensureDoc("parseStartXRef");
-      await pdfManager!.ensureDoc("parse", [recoveryMode]);
+
+      await pdfManager!.ensureDoc(doc => doc.checkHeader());
+      await pdfManager!.ensureDoc(doc => doc.parseStartXRef());
+      await pdfManager!.ensureDoc(doc => doc.parse(recoveryMode));
 
       // Check that at least the first page can be successfully loaded,
       // since otherwise the XRef table is definitely not valid.
-      await pdfManager!.ensureDoc("checkFirstPage", [recoveryMode]);
+      await pdfManager!.ensureDoc(doc => doc.checkFirstPage(recoveryMode));
+
       // Check that the last page can be successfully loaded, to ensure that
       // `numPages` is correct, and fallback to walking the entire /Pages-tree.
-      await pdfManager!.ensureDoc("checkLastPage", [recoveryMode]);
+      await pdfManager!.ensureDoc(doc => doc.checkLastPage(recoveryMode));
 
       const [numPages, fingerprints] = await Promise.all([
-        pdfManager!.ensureDoc("numPages") as Promise<number>,
-        pdfManager!.ensureDoc("fingerprints"),
+        pdfManager!.ensureDoc(doc => doc.numPages),
+        pdfManager!.ensureDoc(doc => doc.fingerprints),
       ]);
 
 
@@ -389,10 +387,10 @@ class WorkerMessageHandler {
     handler.on("GetPage", function (data) {
       return pdfManager!.getPage(data.pageIndex).then(function (page) {
         return Promise.all([
-          pdfManager!.ensure(page, "rotate"),
-          pdfManager!.ensure(page, "ref"),
-          pdfManager!.ensure(page, "userUnit"),
-          pdfManager!.ensure(page, "view"),
+          pdfManager!.ensure(page, page => page.rotate),
+          pdfManager!.ensure(page, page => page.ref),
+          pdfManager!.ensure(page, page => page.userUnit),
+          pdfManager!.ensure(page, page => page.view),
         ]).then(function ([rotate, ref, userUnit, view]) {
           return {
             rotate,
@@ -407,72 +405,72 @@ class WorkerMessageHandler {
 
     handler.on("GetPageIndex", function (data) {
       const pageRef = Ref.get(data.num, data.gen);
-      return pdfManager!.ensureCatalog("getPageIndex", [pageRef]);
+      return pdfManager!.ensureCatalog(catalog => catalog.getPageIndex(pageRef));
     });
 
     handler.on("GetDestinations", function () {
-      return pdfManager!.ensureCatalog("destinations");
+      return pdfManager!.ensureCatalog(catalog => catalog.destinations);
     });
 
     handler.on("GetDestination", function (data: { id: string }) {
-      return pdfManager!.ensureCatalog("getDestination", [data.id]);
+      return pdfManager!.ensureCatalog(catalog => catalog.getDestination(data.id));
     });
 
     handler.on("GetPageLabels", function () {
-      return pdfManager!.ensureCatalog("pageLabels");
+      return pdfManager!.ensureCatalog(catalog => catalog.pageLabels);
     });
 
     handler.on("GetPageLayout", function () {
-      return pdfManager!.ensureCatalog("pageLayout");
+      return pdfManager!.ensureCatalog(catalog => catalog.pageLayout);
     });
 
     handler.on("GetPageMode", function () {
-      return pdfManager!.ensureCatalog("pageMode");
+      return pdfManager!.ensureCatalog(catalog => catalog.pageMode);
     });
 
     handler.on("GetViewerPreferences", function () {
-      return pdfManager!.ensureCatalog("viewerPreferences");
+      return pdfManager!.ensureCatalog(catalog => catalog.viewerPreferences);
     });
 
     handler.on("GetOpenAction", function () {
-      return pdfManager!.ensureCatalog("openAction");
+      return pdfManager!.ensureCatalog(catalog => catalog.openAction);
     });
 
     handler.on("GetAttachments", function () {
-      return pdfManager!.ensureCatalog("attachments");
+      return pdfManager!.ensureCatalog(catalog => catalog.attachments);
     });
 
     handler.on("GetDocJSActions", function () {
-      return pdfManager!.ensureCatalog("jsActions");
+      return pdfManager!.ensureCatalog(catalog => catalog.jsActions);
     });
 
     handler.on("GetPageJSActions", function ({ pageIndex }) {
       return pdfManager!.getPage(pageIndex).then(function (page) {
-        return pdfManager!.ensure(page, "jsActions");
+        return pdfManager!.ensure(page, page => page.jsActions);
       });
     });
 
     handler.on("GetOutline", function () {
-      return pdfManager!.ensureCatalog("documentOutline");
+      return pdfManager!.ensureCatalog(catalog => catalog.documentOutline);
     });
 
     handler.on("GetOptionalContentConfig", function () {
-      return pdfManager!.ensureCatalog("optionalContentConfig");
+      return pdfManager!.ensureCatalog(catalog => catalog.optionalContentConfig);
     });
 
     handler.on("GetPermissions", function () {
-      return pdfManager!.ensureCatalog("permissions");
+      return pdfManager!.ensureCatalog(catalog => catalog.permissions);
     });
 
     handler.on("GetMetadata", function () {
       return Promise.all([
-        pdfManager!.ensureDoc("documentInfo"),
-        pdfManager!.ensureCatalog("metadata"),
+        pdfManager!.ensureDoc(doc => doc.documentInfo),
+        pdfManager!.ensureCatalog(catalog => catalog.metadata),
       ]);
     });
 
     handler.on("GetMarkInfo", function () {
-      return pdfManager!.ensureCatalog("markInfo");
+      return pdfManager!.ensureCatalog(catalog => catalog.markInfo);
     });
 
     handler.on("GetData", function () {
@@ -500,16 +498,16 @@ class WorkerMessageHandler {
     });
 
     handler.on("GetFieldObjects", function () {
-      return pdfManager!.ensureDoc("fieldObjects")
+      return pdfManager!.ensureDoc(doc => doc.fieldObjects)
         .then(fieldObjects => fieldObjects?.allFields || null);
     });
 
     handler.on("HasJSActions", function () {
-      return pdfManager!.ensureDoc("hasJSActions");
+      return pdfManager!.ensureDoc(doc => doc.hasJSActions);
     });
 
     handler.on("GetCalculationOrderIds", function () {
-      return pdfManager!.ensureDoc("calculationOrderIds");
+      return pdfManager!.ensureDoc(doc => doc.calculationOrderIds);
     });
 
     handler.on(
@@ -517,16 +515,13 @@ class WorkerMessageHandler {
       async function ({ numPages, annotationStorage, filename }: SaveDocumentMessage) {
         const globalPromises = [
           pdfManager!.requestLoadedStream(),
-          pdfManager!.ensureCatalog("acroForm") as Promise<Dict>,
-          pdfManager!.ensureCatalog("acroFormRef") as Promise<Ref | null>,
-          pdfManager!.ensureDoc("startXRef") as Promise<number>,
-          pdfManager!.ensureDoc("xref") as Promise<XRef>,
-          pdfManager!.ensureDoc("linearization") as Promise<LinearizationInterface | null>,
-          pdfManager!.ensureCatalog("structTreeRoot") as Promise<StructTreeRoot | null>,
-        ] as [
-            Promise<Stream>, Promise<Dict>, Promise<Ref | null>, Promise<number>,
-            Promise<XRef>, Promise<LinearizationInterface | null>, Promise<StructTreeRoot | null>
-          ];
+          pdfManager!.ensureCatalog(catalog => catalog.acroForm),
+          pdfManager!.ensureCatalog(catalog => catalog.acroFormRef),
+          pdfManager!.ensureDoc(doc => doc.startXRef),
+          pdfManager!.ensureDoc(doc => doc.xref),
+          pdfManager!.ensureDoc(doc => doc.linearization),
+          pdfManager!.ensureCatalog(catalog => catalog.structTreeRoot),
+        ] as const;
         const promises = <Promise<any>[]>[];
 
         const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
@@ -763,7 +758,7 @@ class WorkerMessageHandler {
 
     handler.on("GetStructTree", function (data) {
       return pdfManager!.getPage(data.pageIndex).then(function (page) {
-        return pdfManager!.ensure(page, "getStructTree");
+        return pdfManager!.ensure(page, page => page.getStructTree());
       });
     });
 
@@ -810,12 +805,11 @@ class WorkerMessageHandler {
     });
 
     if (PlatformHelper.isTesting()) {
-      handler.on("GetXRefPrevValue", function () {
-        return pdfManager!.ensureXRef("trailer")
-          .then(trailer => trailer.get("Prev"));
-      });
+      handler.on("GetXRefPrevValue", async () => pdfManager!.ensureXRef(xref => xref.trailer)
+        .then(trailer => trailer!.get(DictKey.Prev))
+      );
       handler.on("GetStartXRefPos", function () {
-        return pdfManager!.ensureDoc("startXRef");
+        return pdfManager!.ensureDoc(doc => doc.startXRef);
       });
       handler.on("GetAnnotArray", function (data: { pageIndex: number }) {
         return pdfManager!.getPage(data.pageIndex).then(function (page) {
@@ -828,7 +822,7 @@ class WorkerMessageHandler {
   }
 
   static initializeFromPort(port: Window & typeof globalThis) {
-    const handler = new MessageHandler("worker", "main", port);
+    const handler = new MessageHandler("worker", "main", <any>port);
     WorkerMessageHandler.setup(handler, port);
     handler.send("ready", null);
   }

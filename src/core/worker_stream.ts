@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler } from "../shared/message_handler_base";
 import { ReaderHeadersReadyResult } from "../shared/message_handler_types";
 import { assert } from "../shared/util";
 

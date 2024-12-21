@@ -1,5 +1,5 @@
 import { TransformType } from "../display/display_utils";
-import { StreamKind, wrapReason } from "../shared/message_handler";
+import { StreamKind, wrapReason } from "../shared/message_handler_base";
 import { assert } from "../shared/util";
 import { CssFontInfo } from "./evaluator";
 import { Dict, Name, Ref } from "./primitives";

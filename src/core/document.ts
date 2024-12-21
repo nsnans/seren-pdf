@@ -15,7 +15,7 @@
 
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler } from "../shared/message_handler_base";
 import {
   AnnotationEditorPrefix,
   assert,
@@ -273,19 +273,20 @@ class Page {
    * @returns {Promise<BaseStream>}
    */
   getContentStream(): Promise<BaseStream> {
-    return this.pdfManager.ensure(this, "content").then((content: BaseStream | ArrayLike<unknown> | unknown) => {
-      if (content instanceof BaseStream) {
-        return content;
-      }
-      if (Array.isArray(content)) {
-        return new StreamsSequenceStream(
-          content,
-          this._onSubStreamError.bind(this)
-        );
-      }
-      // Replace non-existent page content with empty content.
-      return new NullStream();
-    }) as Promise<BaseStream>;
+    return this.pdfManager.ensure(this, (page) => page.content)
+      .then((content: BaseStream | ArrayLike<unknown> | unknown) => {
+        if (content instanceof BaseStream) {
+          return content;
+        }
+        if (Array.isArray(content)) {
+          return new StreamsSequenceStream(
+            content,
+            this._onSubStreamError.bind(this)
+          );
+        }
+        // Replace non-existent page content with empty content.
+        return new NullStream();
+      }) as Promise<BaseStream>;
   }
 
 
@@ -430,7 +431,7 @@ class Page {
 
   loadResources(keys: string[]) {
     // TODO: add async `_getInheritableProperty` and remove this.
-    this.resourcesPromise ||= <Promise<Dict>>this.pdfManager.ensure(this, "resources");
+    this.resourcesPromise ||= <Promise<Dict>>this.pdfManager.ensure(this, (p) => p.resources);
 
     return this.resourcesPromise.then(() => {
       const objectLoader = new ObjectLoader(this.resources, keys, this.xref);
@@ -478,7 +479,7 @@ class Page {
 
     if (newAnnots) {
       const annotationGlobalsPromise =
-        this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>;
+        this.pdfManager.ensureDoc(doc => doc.annotationGlobals);
       let imagePromises;
 
       // An annotation can contain a reference to a bitmap, but this bitmap
@@ -675,7 +676,7 @@ class Page {
       "Properties",
       "XObject",
     ]);
-    const langPromise = <Promise<string | null>>this.pdfManager.ensureCatalog("lang");
+    const langPromise = this.pdfManager.ensureCatalog(catalog => catalog.lang);
 
     const [contentStream, , lang] = await Promise.all([
       contentStreamPromise,
@@ -713,7 +714,7 @@ class Page {
 
   async getStructTree() {
 
-    const structTreeRoot = <StructTreeRoot>await this.pdfManager.ensureCatalog("structTreeRoot");
+    const structTreeRoot = await this.pdfManager.ensureCatalog(catalog => catalog.structTreeRoot);
 
     if (!structTreeRoot) {
       return null;
@@ -721,10 +722,10 @@ class Page {
     // Ensure that the structTree will contain the page's annotations.
     await this._parsedAnnotations;
 
-    const structTree = await this.pdfManager.ensure(this, "_parseStructTree", [
-      structTreeRoot,
-    ]);
-    return this.pdfManager.ensure(structTree, "serializable");
+    const structTree = await this.pdfManager.ensure(
+      this, p => p._parseStructTree(structTreeRoot)
+    );
+    return this.pdfManager.ensure(structTree, t => t.serializable);
   }
 
   /**
@@ -798,18 +799,15 @@ class Page {
   }
 
   get _parsedAnnotations() {
-    const promise = (<Promise<Ref[]>>this.pdfManager.ensure(this, "annotations"))
+    const promise = (<Promise<Ref[]>>this.pdfManager.ensure(this, p => p.annotations))
       .then(async (annots: Ref[]) => {
         if (annots.length === 0) {
           return annots;
         }
 
         const [annotationGlobals, fieldObjects] = await Promise.all([
-          this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>,
-          this.pdfManager.ensureDoc("fieldObjects") as Promise<{
-            allFields: Map<string, FieldObject[]>,
-            orphanFields: RefSetCache,
-          }>,
+          this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
+          this.pdfManager.ensureDoc(doc => doc.fieldObjects),
         ]);
         if (!annotationGlobals) {
           return [];
@@ -952,16 +950,8 @@ class PDFDocument {
 
   constructor(pdfManager: PDFManager, stream: Stream) {
 
-    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-      assert(
-        stream instanceof BaseStream,
-        'PDFDocument: Invalid "stream" argument.'
-      );
-    }
     if (stream.length <= 0) {
-      throw new InvalidPDFException(
-        "The PDF file is empty, i.e. its size is zero bytes."
-      );
+      throw new InvalidPDFException("The PDF file is empty, i.e. its size is zero bytes.");
     }
 
     this.pdfManager = pdfManager;
@@ -1399,8 +1389,8 @@ class PDFDocument {
 
     try {
       await Promise.all([
-        pdfManager.ensureDoc("linearization"),
-        pdfManager.ensureCatalog("numPages"),
+        pdfManager.ensureDoc(doc => doc.linearization),
+        pdfManager.ensureCatalog(catalog => catalog.numPages),
       ]);
 
       if (this.linearization) {
@@ -1577,15 +1567,15 @@ class PDFDocument {
       hasFields: boolean,
       hasAcroForm: boolean,
       hasSignatures: boolean,
-    }>>this.pdfManager.ensureDoc("formInfo"))
+    }>>this.pdfManager.ensureDoc(doc => doc.formInfo))
       .then(async (formInfo) => {
         if (!formInfo.hasFields) {
           return null;
         }
 
         const [annotationGlobals, acroForm] = await Promise.all([
-          this.pdfManager.ensureDoc("annotationGlobals") as Promise<AnnotationGlobals | null>,
-          this.pdfManager.ensureCatalog("acroForm") as Promise<Dict | null>,
+          this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
+          this.pdfManager.ensureCatalog(catalog => catalog.acroForm),
         ]);
         if (!annotationGlobals) {
           return null;
@@ -1627,7 +1617,7 @@ class PDFDocument {
   }
 
   get hasJSActions() {
-    const promise = this.pdfManager.ensureDoc("_parseHasJSActions");
+    const promise = this.pdfManager.ensureDoc(doc => doc._parseHasJSActions());
     return shadow(this, "hasJSActions", promise);
   }
 
@@ -1636,11 +1626,8 @@ class PDFDocument {
    */
   async _parseHasJSActions() {
     const [catalogJsActions, fieldObjects] = await Promise.all([
-      this.pdfManager.ensureCatalog("jsActions"),
-      this.pdfManager.ensureDoc("fieldObjects") as Promise<{
-        allFields: Map<string, FieldObject[]>;
-        orphanFields: RefSetCache;
-      } | null>,
+      this.pdfManager.ensureCatalog(catalog => catalog.jsActions),
+      this.pdfManager.ensureDoc(doc => doc.fieldObjects),
     ]);
 
     if (catalogJsActions) {

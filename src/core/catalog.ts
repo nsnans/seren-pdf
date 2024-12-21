@@ -55,7 +55,7 @@ import { MetadataParser } from "./metadata_parser";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler } from "../shared/message_handler_base";
 import { FontSubstitutionInfo } from "./font_substitutions";
 
 function isValidExplicitDest(dest) {

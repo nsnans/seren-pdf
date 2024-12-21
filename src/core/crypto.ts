@@ -106,7 +106,7 @@ const calculateMD5 = (function calculateMD5Closure() {
     -145523070, -1120210379, 718787259, -343485551,
   ]);
 
-  function hash(data: Uint8Array<ArrayBuffer>, offset: number, length: number): Uint8Array<ArrayBuffer> {
+  function hash(data: Uint8TypedArray, offset: number, length: number): Uint8Array<ArrayBuffer> {
     let h0 = 1732584193,
       h1 = -271733879,
       h2 = -1732584194,

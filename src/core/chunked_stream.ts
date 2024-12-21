@@ -19,7 +19,7 @@ import { Stream } from "./stream";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { PDFNetworkStream } from "../display/network";
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler } from "../shared/message_handler_base";
 
 class ChunkedStream extends Stream {
 
