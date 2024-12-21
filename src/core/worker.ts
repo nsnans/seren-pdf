@@ -328,7 +328,7 @@ class WorkerMessageHandler {
             pdfManagerReady();
           }).catch(() => {
             finishWorkerTask(task);
-            handler!.send("DocException", ex);
+            handler!.DocException(ex);
           });
         } else if (
           ex instanceof InvalidPDFException ||
@@ -336,12 +336,9 @@ class WorkerMessageHandler {
           ex instanceof UnexpectedResponseException ||
           ex instanceof UnknownErrorException
         ) {
-          handler!.send("DocException", ex);
+          handler!.DocException(ex);
         } else {
-          handler!.send(
-            "DocException",
-            new UnknownErrorException(ex.message, ex.toString())
-          );
+          handler!.DocException(new UnknownErrorException(ex.message, ex.toString()));
         }
       }
 
@@ -378,7 +375,7 @@ class WorkerMessageHandler {
           pdfManager = newPdfManager;
 
           pdfManager.requestLoadedStream(/* noFetch = */ true).then(stream => {
-            handler!.send("DataLoaded", { length: stream.bytes.byteLength });
+            handler!.DataLoaded(stream.bytes.byteLength);
           });
         })
         .then(pdfManagerReady, onFailure);

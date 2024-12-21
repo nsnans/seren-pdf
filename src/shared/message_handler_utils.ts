@@ -14,4 +14,7 @@ export const MessageHandlerAction = {
   GetRangeReader: "GetRangeReader",
   GetDoc: "GetDoc",
   PasswordRequest: "PasswordRequest",
+  DocException: "DocException",
+  DataLoaded: "DataLoaded",
+  StartRenderPage: "StartRenderPage",
 }

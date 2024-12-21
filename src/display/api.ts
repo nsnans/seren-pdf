@@ -3116,7 +3116,7 @@ class WorkerTransport {
     });
 
     // 这里不一定是BaseException
-    messageHandler.on("DocException", function (ex: BaseException) {
+    messageHandler.onDocException(ex => {
       let reason;
       switch (ex.name) {
         case "PasswordException":
@@ -3164,18 +3164,14 @@ class WorkerTransport {
       return this.#passwordCapability.promise;
     });
 
-    messageHandler.on("DataLoaded", data => {
+    messageHandler.onDataLoaded(data => {
       // For consistency: Ensure that progress is always reported when the
       // entire PDF file has been loaded, regardless of how it was fetched.
-      loadingTask.onProgress?.({
-        loaded: data.length,
-        total: data.length,
-      });
-
+      loadingTask.onProgress?.(data.length, data.length);
       this.downloadInfoCapability.resolve(data);
     });
 
-    messageHandler.on("StartRenderPage", data => {
+    messageHandler.onStartRenderPage(data => {
       if (this.destroyed) {
         return; // Ignore any pending requests if the worker was terminated.
       }

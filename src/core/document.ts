@@ -544,14 +544,8 @@ class Page {
     ]).then(([contentStream]) => {
       const opList = new OperatorList(intent, sink);
 
-      handler.send("StartRenderPage", {
-        transparency: partialEvaluator.hasBlendModes(
-          this.resources,
-          this.nonBlendModesSet
-        ),
-        pageIndex: this.pageIndex,
-        cacheKey,
-      });
+      const hasBlendModes = partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet);
+      handler.StartRenderPage(hasBlendModes, this.pageIndex, cacheKey);
 
       return partialEvaluator
         .getOperatorList(contentStream, task, this.resources, opList)

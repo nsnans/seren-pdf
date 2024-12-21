@@ -5,11 +5,11 @@
  * */
 
 import { StreamSink } from "../core/core_types";
-import { DocumentParameter, PDFDocumentProxy, PDFDocumentProxyPdfInfo } from "../display/api";
+import { DocumentParameter } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
-import { ReaderHeadersReadyResult } from "./message_handler_types";
+import { GetDocMessage, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
-import { PasswordException } from "./util";
+import { BaseException, PasswordException } from "./util";
 
 export class MessageHandler extends AbstractMessageHandler {
 
@@ -82,10 +82,11 @@ export class MessageHandler extends AbstractMessageHandler {
 
   GetDoc(numPages: number, fingerprints: [string, string | null]) {
     const action = MessageHandlerAction.GetDoc;
-    super.send(action, { numPages, fingerprints });
+    const data: GetDocMessage = { numPages, fingerprints };
+    super.send(action, data);
   }
 
-  onGetDoc(fn: (param: { numPages: number, fingerprints: [string, string | null] }) => void) {
+  onGetDoc(fn: (param: GetDocMessage) => void) {
     const action = MessageHandlerAction.GetDoc;
     super.on(action, fn);
   }
@@ -97,6 +98,37 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onPasswordRequest(fn: (ex: PasswordException) => Promise<{ password: string | Error }>) {
     const action = MessageHandlerAction.PasswordRequest;
+    super.on(action, fn);
+  }
+
+  DocException(ex: BaseException) {
+    const action = MessageHandlerAction.DocException;
+    super.send(action, ex);
+  }
+
+  onDocException(fn: (ex: BaseException) => void) {
+    const action = MessageHandlerAction.DocException;
+    super.on(action, fn);
+  }
+
+  DataLoaded(length: number) {
+    const action = MessageHandlerAction.DataLoaded;
+    super.send(action, { length })
+  }
+
+  onDataLoaded(fn: (data: { length: number }) => void) {
+    const action = MessageHandlerAction.DataLoaded;
+    super.on(action, fn);
+  }
+
+  StartRenderPage(transparency: boolean, pageIndex: number, cacheKey: string) {
+    const action = MessageHandlerAction.StartRenderPage;
+    const data: StartRenderPageMessage = { transparency, pageIndex, cacheKey }
+    super.send(action, data);
+  }
+
+  onStartRenderPage(fn: (data: StartRenderPageMessage) => void) {
+    const action = MessageHandlerAction.StartRenderPage;
     super.on(action, fn);
   }
 

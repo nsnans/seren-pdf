@@ -39,3 +39,21 @@ export interface SaveDocumentMessage {
   filename: string | null;
 
 }
+
+export interface GetDocMessage {
+
+  numPages: number,
+
+  fingerprints: [string, string | null]
+
+}
+
+export interface StartRenderPageMessage {
+
+  transparency: boolean,
+
+  pageIndex: number,
+
+  cacheKey: string
+
+}
