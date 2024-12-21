@@ -4,9 +4,11 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
+import { StreamSink } from "../core/core_types";
 import { DocumentParameter } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
-import { MessageHandlerActions } from "./message_handler_utils";
+import { ReaderHeadersReadyResult } from "./message_handler_types";
+import { MessageHandlerAction } from "./message_handler_utils";
 
 export class MessageHandler extends AbstractMessageHandler {
 
@@ -15,37 +17,75 @@ export class MessageHandler extends AbstractMessageHandler {
   }
 
   GetDocRequest(docParams: DocumentParameter, data: ArrayBuffer[] | null): Promise<string> {
-    const action = MessageHandlerActions.GetDocRequest;
+    const action = MessageHandlerAction.GetDocRequest;
     return <Promise<string>>super.sendWithPromise(action, docParams, data);
   }
 
   onGetDocRequest(fn: (param: DocumentParameter) => string): void {
-    const action = MessageHandlerActions.GetDocRequest;
+    const action = MessageHandlerAction.GetDocRequest;
     super.on(action, fn);
   }
 
   test(data: Uint8Array<ArrayBuffer> | boolean, transfers: Transferable[] | null = null) {
-    const test = MessageHandlerActions.test;
+    const test = MessageHandlerAction.test;
     super.send(test, data, transfers);
   }
 
   onTest(fn: (data: Uint8Array<ArrayBuffer> | boolean, transfers: Transferable[] | null) => void): void {
-    const test = MessageHandlerActions.test;
+    const test = MessageHandlerAction.test;
     super.on(test, fn);
   }
 
   configure(verbosity: number) {
-    const configure = MessageHandlerActions.configure;
+    const configure = MessageHandlerAction.configure;
     super.send(configure, { verbosity });
   }
 
   onConfigure(fn: (verbosity: { verbosity: number }) => void): void {
-    const configure = MessageHandlerActions.configure;
+    const configure = MessageHandlerAction.configure;
     super.on(configure, fn);
   }
 
+  GetReader() {
+    const action = MessageHandlerAction.GetReader;
+    // 这里的data是null，onGetReader的data就是null
+    const data = null;
+    return super.sendWithStream(action, data)
+  }
+
+  onGetReader(fn: (data: null, sink: StreamSink) => void) {
+    const action = MessageHandlerAction.GetReader;
+    super.on(action, fn);
+  }
+
+  GetRangeReader(begin: number, end: number) {
+    const action = MessageHandlerAction.GetRangeReader;
+    return super.sendWithStream(action, { begin, end });
+  }
+
+  onGetRangeReader(fn: (data: { begin: number, end: number }, sink: StreamSink) => void) {
+    const action = MessageHandlerAction.GetRangeReader;
+    super.on(action, fn);
+  }
+
+  ReaderHeadersReady(): Promise<ReaderHeadersReadyResult> {
+    const action = MessageHandlerAction.ReaderHeadersReady;
+    // 这里的data是null，onReaderHeadersReady的data就是null
+    return super.sendWithPromise(action, null);
+  }
+
+  onReaderHeadersReady(fn: () => Promise<ReaderHeadersReadyResult>) {
+    const action = MessageHandlerAction.ReaderHeadersReady;
+    super.on(action, fn);
+  }
+
   Ready(): void {
-    const action = MessageHandlerActions.Ready;
+    const action = MessageHandlerAction.Ready;
     super.send(action, null)
+  }
+
+  onReady(fn: () => void) {
+    const action = MessageHandlerAction.Ready;
+    super.on(action, fn);
   }
 }

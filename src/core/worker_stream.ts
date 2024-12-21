@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { MessageHandler } from "../shared/message_handler_base";
+import { PDFStreamReader, WorkerStreamRangeReader, WorkerStreamReader } from "../interfaces";
+import { MessageHandler } from "../shared/message_handler";
 import { ReaderHeadersReadyResult } from "../shared/message_handler_types";
 import { assert } from "../shared/util";
 
@@ -59,10 +60,9 @@ class PDFWorkerStream {
   }
 }
 
-/** @implements {IPDFStreamReader} */
-class PDFWorkerStreamReader {
+class PDFWorkerStreamReader implements WorkerStreamReader {
 
-  protected _msgHandler: MessageHandler;
+  protected _messageHandler: MessageHandler;
 
   protected onProgress: null;
 
@@ -76,20 +76,20 @@ class PDFWorkerStreamReader {
 
   protected _headersReady: Promise<void>;
 
-  constructor(msgHandler: MessageHandler) {
-    this._msgHandler = msgHandler;
+  constructor(messageHandler: MessageHandler) {
+    this._messageHandler = messageHandler;
     this.onProgress = null;
 
     this._contentLength = null;
     this._isRangeSupported = false;
     this._isStreamingSupported = false;
 
-    const readableStream = this._msgHandler.sendWithStream("GetReader", null);
+    const readableStream = this._messageHandler.GetReader();
     this._reader = readableStream.getReader();
 
-    const sendWithPromise = this._msgHandler.sendWithPromise("ReaderHeadersReady", null);
-    const promise = <Promise<ReaderHeadersReadyResult>>sendWithPromise;
-    this._headersReady = promise.then((data: ReaderHeadersReadyResult) => {
+    const promise = this._messageHandler.ReaderHeadersReady();
+
+    this._headersReady = promise.then((data) => {
       this._isStreamingSupported = data.isStreamingSupported;
       this._isRangeSupported = data.isRangeSupported;
       this._contentLength = data.contentLength;
@@ -101,7 +101,7 @@ class PDFWorkerStreamReader {
   }
 
   get contentLength() {
-    return this._contentLength;
+    return this._contentLength!;
   }
 
   get isStreamingSupported() {
@@ -115,11 +115,11 @@ class PDFWorkerStreamReader {
   async read() {
     const { value, done } = await this._reader.read();
     if (done) {
-      return { value: undefined, done: true };
+      return { value: null, done: true };
     }
     // `value` is wrapped into Uint8Array, we need to
     // unwrap it to ArrayBuffer for further processing.
-    return { value: value.buffer, done: false };
+    return { value: <ArrayBuffer>value.buffer, done: false };
   }
 
   cancel(reason: any) {
@@ -128,23 +128,20 @@ class PDFWorkerStreamReader {
 }
 
 /** @implements {IPDFStreamRangeReader} */
-class PDFWorkerStreamRangeReader {
+class PDFWorkerStreamRangeReader implements WorkerStreamRangeReader {
 
-  protected _msgHandler: MessageHandler;
+  protected _messageHandler: MessageHandler;
 
-  protected _reader: ReadableStreamDefaultReader;
+  protected _reader: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>;
 
   protected onProgress: null;
 
-  constructor(begin: number, end: number, msgHandler: MessageHandler) {
-    this._msgHandler = msgHandler;
+  constructor(begin: number, end: number, messageHandler: MessageHandler) {
+    this._messageHandler = messageHandler;
     this.onProgress = null;
 
-    const readableStream = this._msgHandler.sendWithStream("GetRangeReader", {
-      begin,
-      end,
-    });
-    this._reader = readableStream.getReader();
+    const readableStream = this._messageHandler.GetRangeReader(begin, end);
+    this._reader = <ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>>readableStream.getReader();
   }
 
   get isStreamingSupported() {
@@ -154,9 +151,9 @@ class PDFWorkerStreamRangeReader {
   async read() {
     const { value, done } = await this._reader.read();
     if (done) {
-      return { value: undefined, done: true };
+      return { value: null, done: true };
     }
-    return { value: value.buffer, done: false };
+    return { value: <ArrayBuffer>value.buffer, done: false };
   }
 
   cancel(reason: any) {

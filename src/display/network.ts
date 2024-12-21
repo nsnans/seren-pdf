@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource } from "../interfaces";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource, ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { assert, BaseException, stringToBytes } from "../shared/util";
 import {
@@ -271,7 +271,6 @@ interface PDFReaderListeners {
   onProgress: (evt: ProgressEvent) => void;
 }
 
-/** @implements {IPDFStreamReader} */
 class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
 
   protected _manager: NetworkManager;
@@ -294,11 +293,11 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
 
   protected _done: boolean;
 
-  protected _requests: PromiseWithResolvers<unknown>[];
+  protected _requests: PromiseWithResolvers<ReadResult>[];
 
   protected _filename: string | null;
 
-  protected _cachedChunks: Uint8Array[];
+  protected _cachedChunks: Uint8Array<ArrayBuffer>[];
 
   protected _storedError: BaseException | undefined;
 
@@ -405,10 +404,7 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
   }
 
   _onProgress(evt: ProgressEvent) {
-    this.onProgress?.({
-      loaded: evt.loaded,
-      total: evt.lengthComputable ? evt.total : this._contentLength,
-    });
+    this.onProgress?.(evt.loaded, evt.lengthComputable ? evt.total : this._contentLength);
   }
 
   get filename() {
@@ -436,13 +432,13 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
       throw this._storedError;
     }
     if (this._cachedChunks.length > 0) {
-      const chunk = this._cachedChunks.shift();
-      return { value: chunk, done: false };
+      const chunk = this._cachedChunks.shift()!;
+      return { value: chunk.buffer, done: false };
     }
     if (this._done) {
-      return { value: undefined, done: true };
+      return { value: null, done: true };
     }
-    const requestCapability = Promise.withResolvers();
+    const requestCapability = Promise.withResolvers<ReadResult>();
     this._requests.push(requestCapability);
     return requestCapability.promise;
   }
@@ -451,7 +447,7 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
     this._done = true;
     this._headersCapability.reject(_reason);
     for (const requestCapability of this._requests) {
-      requestCapability.resolve({ value: undefined, done: true });
+      requestCapability.resolve({ value: null, done: true });
     }
     this._requests.length = 0;
     if (this._manager.isPendingRequest(this._fullRequestId)) {
@@ -477,9 +473,9 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
 
   public onClosed: ((reader: PDFNetworkStreamRangeRequestReader) => void) | null;
 
-  protected _requests: PromiseWithResolvers<unknown>[];
+  protected _requests: PromiseWithResolvers<ReadResult>[];
 
-  protected _queuedChunk: Uint8Array | null;
+  protected _queuedChunk: Uint8Array<ArrayBuffer> | null;
 
   protected _storedError: BaseException | undefined;
 
@@ -533,7 +529,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
 
   _onProgress(evt: ProgressEvent) {
     if (!this.isStreamingSupported) {
-      this.onProgress?.({ loaded: evt.loaded });
+      this.onProgress?.(evt.loaded);
     }
   }
 
@@ -548,12 +544,12 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
     if (this._queuedChunk !== null) {
       const chunk = this._queuedChunk;
       this._queuedChunk = null;
-      return { value: chunk, done: false };
+      return { value: chunk.buffer, done: false };
     }
     if (this._done) {
-      return { value: undefined, done: true };
+      return { value: null, done: true };
     }
-    const requestCapability = Promise.withResolvers();
+    const requestCapability = Promise.withResolvers<ReadResult>();
     this._requests.push(requestCapability);
     return requestCapability.promise;
   }
@@ -561,7 +557,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
   cancel(_reason: any) {
     this._done = true;
     for (const requestCapability of this._requests) {
-      requestCapability.resolve({ value: undefined, done: true });
+      requestCapability.resolve({ value: null, done: true });
     }
     this._requests.length = 0;
     if (this._manager.isPendingRequest(this._requestId)) {

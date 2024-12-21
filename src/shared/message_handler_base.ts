@@ -182,12 +182,6 @@ abstract class AbstractMessageHandler {
   }
 
   on(actionName: string, handler: (...args: any[]) => unknown) {
-    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-      assert(
-        typeof handler === "function",
-        'MessageHandler.on: Expected "handler" to be a function.'
-      );
-    }
     const ah = this.actionHandler;
     if (ah[actionName]) {
       throw new Error(`There is already an actionName called "${actionName}"`);
@@ -223,7 +217,7 @@ abstract class AbstractMessageHandler {
    * @param transfers - List of transfers/ArrayBuffers.
    * @returns Promise to be resolved with response data.
    */
-  sendWithPromise(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null): Promise<unknown> {
+  sendWithPromise<T>(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null): Promise<T> {
     const callbackId = this.callbackId++;
     const capability = Promise.withResolvers();
     this.callbackCapabilities[callbackId] = capability;

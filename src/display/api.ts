@@ -2486,7 +2486,7 @@ class PDFWorker {
     }
     this._port = port;
     this._messageHandler = new MessageHandler("main", "worker", port);
-    this._messageHandler.on("ready", function () {
+    this._messageHandler.onReady(() => {
       // Ignoring "ready" event -- MessageHandler should already be initialized
       // and ready to accept messages.
     });
@@ -2558,7 +2558,7 @@ class PDFWorker {
         this.#resolve();
       });
 
-      messageHandler.on("ready", data => {
+      messageHandler.onReady(() => {
         ac.abort();
         if (this.destroyed) {
           terminateEarly();
@@ -2997,44 +2997,35 @@ class WorkerTransport {
   }
 
   setupMessageHandler() {
+
     const { loadingTask } = this;
+
     const messageHandler = this.messageHandler!;
 
-    messageHandler.on("GetReader", (data, sink) => {
-      assert(
-        this._networkStream,
-        "GetReader - no `IPDFStream` instance available."
-      );
+    messageHandler.onGetReader((_data, sink) => {
+
+      assert(!!this._networkStream, "GetReader - no `IPDFStream` instance available.");
       this._fullReader = this._networkStream.getFullReader();
-      this._fullReader.onProgress = evt => {
-        this._lastProgress = {
-          loaded: evt.loaded,
-          total: evt.total,
-        };
-      };
+      this._fullReader.onProgress = (loaded, total) => this._lastProgress = { loaded, total };
+
       sink.onPull = () => {
-        (this._fullReader!.read() as Promise<{ value?: ArrayBuffer, done: false }>).then(function ({ value, done }) {
+        this._fullReader!.read().then(({ value, done }) => {
           if (done) {
             sink.close();
             return;
           }
-          assert(
-            value instanceof ArrayBuffer,
-            "GetReader - expected an ArrayBuffer."
-          );
+          assert(value instanceof ArrayBuffer, "GetReader - expected an ArrayBuffer.");
           // Enqueue data chunk into sink, and transfer it
           // to other side as `Transferable` object.
-          sink.enqueue(new Uint8Array(value as ArrayBuffer), 1, [value]);
-        })
-          .catch(reason => {
-            sink.error(reason);
-          });
+          sink.enqueue(new Uint8Array(value!), 1, [value]);
+        }).catch(reason => {
+          sink.error(reason);
+        });
       };
 
       sink.onCancel = (reason: Error) => {
         this._fullReader!.cancel(reason);
-
-        sink.ready.catch((readyReason: Error) => {
+        sink.ready!.catch(readyReason => {
           if (this.destroyed) {
             return; // Ignore any pending requests if the worker was terminated.
           }
@@ -3043,8 +3034,7 @@ class WorkerTransport {
       };
     });
 
-    // => 这种函数，this是自动绑定到class实例上的
-    messageHandler.on("ReaderHeadersReady", async data => {
+    messageHandler.onReaderHeadersReady(async () => {
       await this._fullReader!.headersReady;
 
       const { isStreamingSupported, isRangeSupported, contentLength } =
@@ -3054,28 +3044,23 @@ class WorkerTransport {
       // loading progress.
       if (!isStreamingSupported || !isRangeSupported) {
         if (this._lastProgress) {
-          loadingTask.onProgress?.(this._lastProgress);
+          const progress = this._lastProgress;
+          loadingTask.onProgress?.(progress.loaded, progress.total);
         }
-        this._fullReader!.onProgress = evt => {
-          loadingTask.onProgress?.({
-            loaded: evt.loaded,
-            total: evt.total,
-          });
+        this._fullReader!.onProgress = (loaded, total) => {
+          loadingTask.onProgress?.(loaded, total);
         };
       }
 
       return { isStreamingSupported, isRangeSupported, contentLength };
     });
 
-    messageHandler.on("GetRangeReader", (data, sink) => {
-      assert(
-        this._networkStream,
-        "GetRangeReader - no `IPDFStream` instance available."
-      );
-      const rangeReader = this._networkStream.getRangeReader(
-        data.begin,
-        data.end
-      );
+    messageHandler.onGetRangeReader((data, sink) => {
+
+      assert(!!this._networkStream, "GetRangeReader - no `IPDFStream` instance available.");
+
+      const begin = data.begin, end = data.end;
+      const rangeReader = this._networkStream.getRangeReader(begin, end);
 
       // When streaming is enabled, it's possible that the data requested here
       // has already been fetched via the `_fullRequestReader` implementation.
@@ -3093,19 +3078,17 @@ class WorkerTransport {
       }
 
       sink.onPull = () => {
-        rangeReader
-          .read()
-          .then(function ({ value, done }) {
-            if (done) {
-              sink.close();
-              return;
-            }
-            assert(
-              value instanceof ArrayBuffer,
-              "GetRangeReader - expected an ArrayBuffer."
-            );
-            sink.enqueue(new Uint8Array(value), 1, [value]);
-          })
+        rangeReader.read().then(({ value, done }) => {
+          if (done) {
+            sink.close();
+            return;
+          }
+          assert(
+            value instanceof ArrayBuffer,
+            "GetRangeReader - expected an ArrayBuffer."
+          );
+          sink.enqueue(new Uint8Array(value), 1, [value]);
+        })
           .catch(reason => {
             sink.error(reason);
           });

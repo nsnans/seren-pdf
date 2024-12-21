@@ -43,7 +43,7 @@ function createFetchOptions(headers: Headers, withCredentials: boolean, abortCon
 
 // 看了几处调用，val的类型似乎都是Uint8Array，但是考虑到可能会出现不是预期的值
 // 因此在这里还是不变更这边的代码
-function getArrayBuffer(val: Uint8Array): ArrayBufferLike {
+function getArrayBuffer(val: Uint8Array<ArrayBuffer>): ArrayBuffer {
   if (val instanceof Uint8Array) {
     return val.buffer;
   }
@@ -217,15 +217,12 @@ class PDFFetchStreamReader implements PDFStreamReader {
     await this._headersCapability.promise;
     const { value, done } = await this._reader!.read();
     if (done) {
-      return { value, done };
+      return { value: <ArrayBuffer>value!.buffer, done };
     }
     this._loaded += value.byteLength;
-    this.onProgress?.({
-      loaded: this._loaded,
-      total: this._contentLength,
-    });
+    this.onProgress?.(this._loaded, this._contentLength);
 
-    return { value: getArrayBuffer(value), done: false };
+    return { value: getArrayBuffer(<Uint8Array<ArrayBuffer>>value), done: false };
   }
 
   cancel(reason: Error) {
@@ -290,12 +287,12 @@ class PDFFetchStreamRangeReader implements PDFStreamRangeReader {
     await this._readCapability.promise;
     const { value, done } = await this._reader!.read();
     if (done) {
-      return { value, done };
+      return { value: <ArrayBuffer>value!.buffer, done };
     }
     this._loaded += value.byteLength;
-    this.onProgress?.({ loaded: this._loaded });
+    this.onProgress?.(this._loaded);
 
-    return { value: getArrayBuffer(value), done: false };
+    return { value: getArrayBuffer(<Uint8Array<ArrayBuffer>>value), done: false };
   }
 
   cancel(reason: Error) {

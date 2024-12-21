@@ -799,7 +799,7 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("Ready", function (_data) {
+    handler.onReady(() => {
       setupDoc(docParams!);
       docParams = null; // we don't need docParams anymore -- saving memory.
     });

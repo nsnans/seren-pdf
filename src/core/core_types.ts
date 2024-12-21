@@ -1,5 +1,5 @@
 import { TransformType } from "../display/display_utils";
-import { StreamKind, wrapReason } from "../shared/message_handler_base";
+import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
 import { assert } from "../shared/util";
 import { CssFontInfo } from "./evaluator";
 import { Dict, Name, Ref } from "./primitives";
@@ -34,18 +34,27 @@ export interface StreamGetOperatorListParameters {
 }
 
 export class StreamSink {
+
   public sinkCapability: PromiseWithResolvers<void>;
+
   public ready: Promise<void> | null = null;
-  public onPull: null = null;
-  public onCancel: null = null;
+
   public isCancelled: boolean = false;
+
   public desiredSize: number;
 
-  readonly comObj: Worker;
+  readonly comObj: MessagePoster;
 
   readonly sourceName: string;
+
   readonly targetName: string;
+
   readonly streamId: number;
+
+  public onPull: (() => void) | null = null;
+
+  public onCancel: ((reason: Error) => void) | null = null;
+
   readonly onClose: (streamId: number) => void;
 
   constructor(comObj: Worker, sourceName: string, targetName: string,

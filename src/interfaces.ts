@@ -52,6 +52,36 @@ export interface PDFStream {
   cancelAllRequests(reason: Error): void;
 }
 
+export interface ReadResult {
+  value: ArrayBuffer | null,
+  done: boolean,
+}
+
+export interface WorkerStreamRangeReader {
+
+  get isStreamingSupported(): boolean;
+
+  read(): Promise<ReadResult>;
+
+  cancel(reason: any): void;
+}
+
+export interface WorkerStreamReader {
+
+  get headersReady(): Promise<void>;
+
+  get contentLength(): number;
+
+  get isStreamingSupported(): boolean;
+
+  get isRangeSupported(): boolean;
+
+  read(): Promise<ReadResult>;
+
+  cancel(reason: any): void;
+
+}
+
 /**
  * Interface for a PDF binary data reader.
  *
@@ -112,7 +142,7 @@ export interface PDFStreamReader {
    * set to true.
    * @returns {Promise}
    */
-  read(): Promise<unknown>;
+  read(): Promise<ReadResult>;
 
   /**
    * Cancels all pending read requests and closes the stream.
@@ -149,7 +179,7 @@ export interface PDFStreamRangeReader {
    * set to true.
    * @returns {Promise}
    */
-  read(): Promise<unknown>;
+  read(): Promise<ReadResult>;
 
   /**
    * Cancels all pending read requests and closes the stream.
