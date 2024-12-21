@@ -5,10 +5,11 @@
  * */
 
 import { StreamSink } from "../core/core_types";
-import { DocumentParameter } from "../display/api";
+import { DocumentParameter, PDFDocumentProxy, PDFDocumentProxyPdfInfo } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import { ReaderHeadersReadyResult } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
+import { PasswordException } from "./util";
 
 export class MessageHandler extends AbstractMessageHandler {
 
@@ -76,6 +77,26 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onReaderHeadersReady(fn: () => Promise<ReaderHeadersReadyResult>) {
     const action = MessageHandlerAction.ReaderHeadersReady;
+    super.on(action, fn);
+  }
+
+  GetDoc(numPages: number, fingerprints: [string, string | null]) {
+    const action = MessageHandlerAction.GetDoc;
+    super.send(action, { numPages, fingerprints });
+  }
+
+  onGetDoc(fn: (param: { numPages: number, fingerprints: [string, string | null] }) => void) {
+    const action = MessageHandlerAction.GetDoc;
+    super.on(action, fn);
+  }
+
+  PasswordRequest(ex: PasswordException): Promise<{ password: string }> {
+    const action = MessageHandlerAction.PasswordRequest;
+    return super.sendWithPromise(action, ex);
+  }
+
+  onPasswordRequest(fn: (ex: PasswordException) => Promise<{ password: string | Error }>) {
+    const action = MessageHandlerAction.PasswordRequest;
     super.on(action, fn);
   }
 

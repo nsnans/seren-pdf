@@ -12,4 +12,6 @@ export const MessageHandlerAction = {
   GetReader: "GetReader",
   ReaderHeadersReady: "ReaderHeadersReady",
   GetRangeReader: "GetRangeReader",
+  GetDoc: "GetDoc",
+  PasswordRequest: "PasswordRequest",
 }

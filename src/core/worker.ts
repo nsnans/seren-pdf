@@ -99,7 +99,7 @@ class WorkerMessageHandler {
     handler.onGetDocRequest((data) => WorkerMessageHandler.createDocumentHandler(data, port));
   }
 
-  static createDocumentHandler(docParams: DocumentParameter, port: MessagePoster) {
+  static createDocumentHandler(docParams: DocumentParameter | null, port: MessagePoster) {
     // This context is actually holds references on pdfManager and handler,
     // until the latter is destroyed.
     let pdfManager: PDFManager | null;
@@ -108,7 +108,7 @@ class WorkerMessageHandler {
     const WorkerTasks = new Set<WorkerTask>();
     const verbosity = getVerbosityLevel();
 
-    const { docId, apiVersion } = docParams;
+    const { docId, apiVersion } = docParams!;
     const workerVersion = PlatformHelper.bundleVersion();
     if (apiVersion !== workerVersion) {
       throw new Error(
@@ -307,9 +307,12 @@ class WorkerMessageHandler {
     }
 
     function setupDoc(data: DocumentParameter) {
-      function onSuccess(doc) {
+      function onSuccess(doc: {
+        numPages: number;
+        fingerprints: [string, string | null];
+      }) {
         ensureNotTerminated();
-        handler!.send("GetDoc", { pdfInfo: doc });
+        handler!.GetDoc(doc.numPages, doc.fingerprints);
       }
 
       function onFailure(ex: any) {
@@ -319,16 +322,14 @@ class WorkerMessageHandler {
           const task = new WorkerTask(`PasswordException: response ${ex.code}`);
           startWorkerTask(task);
 
-          (handler!.sendWithPromise("PasswordRequest", ex) as Promise<{ password: string }>)
-            .then(function ({ password }: { password: string }) {
-              finishWorkerTask(task);
-              pdfManager!.updatePassword(password);
-              pdfManagerReady();
-            })
-            .catch(function () {
-              finishWorkerTask(task);
-              handler!.send("DocException", ex);
-            });
+          handler!.PasswordRequest(ex).then(({ password }) => {
+            finishWorkerTask(task);
+            pdfManager!.updatePassword(password);
+            pdfManagerReady();
+          }).catch(() => {
+            finishWorkerTask(task);
+            handler!.send("DocException", ex);
+          });
         } else if (
           ex instanceof InvalidPDFException ||
           ex instanceof MissingPDFException ||
@@ -357,7 +358,6 @@ class WorkerMessageHandler {
           }
           pdfManager!.requestLoadedStream().then(function () {
             ensureNotTerminated();
-
             loadDocument(true).then(onSuccess, onFailure);
           });
         });

@@ -1062,6 +1062,11 @@ interface MarkInfo {
   Suspects: boolean;
 }
 
+interface PdfInfo {
+  numPages: number,
+  fingerprints: [string, string | null]
+}
+
 /**
  * Proxy to a `PDFDocument` in the worker thread.
  */
@@ -1069,7 +1074,9 @@ class PDFDocumentProxy {
 
   protected _transport: WorkerTransport;
 
-  constructor(pdfInfo, transport: WorkerTransport) {
+  protected _pdfInfo: PdfInfo;
+
+  constructor(pdfInfo: PdfInfo, transport: WorkerTransport) {
     this._pdfInfo = pdfInfo;
     this._transport = transport;
   }
@@ -3083,11 +3090,8 @@ class WorkerTransport {
             sink.close();
             return;
           }
-          assert(
-            value instanceof ArrayBuffer,
-            "GetRangeReader - expected an ArrayBuffer."
-          );
-          sink.enqueue(new Uint8Array(value), 1, [value]);
+          assert(value instanceof ArrayBuffer, "GetRangeReader - expected an ArrayBuffer.");
+          sink.enqueue(new Uint8Array(value!), 1, [value]);
         })
           .catch(reason => {
             sink.error(reason);
@@ -3097,7 +3101,7 @@ class WorkerTransport {
       sink.onCancel = (reason: Error) => {
         rangeReader.cancel(reason);
 
-        sink.ready.catch((readyReason: Error) => {
+        sink.ready!.catch((readyReason: Error) => {
           if (this.destroyed) {
             return; // Ignore any pending requests if the worker was terminated.
           }
@@ -3106,7 +3110,7 @@ class WorkerTransport {
       };
     });
 
-    messageHandler.on("GetDoc", ({ pdfInfo }) => {
+    messageHandler.onGetDoc((pdfInfo) => {
       this._numPages = pdfInfo.numPages;
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
     });
@@ -3136,7 +3140,7 @@ class WorkerTransport {
       loadingTask._capability.reject(reason);
     });
 
-    messageHandler.on("PasswordRequest", exception => {
+    messageHandler.onPasswordRequest(exception => {
       this.#passwordCapability = Promise.withResolvers();
 
       if (loadingTask.onPassword) {
