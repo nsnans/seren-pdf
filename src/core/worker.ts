@@ -834,7 +834,7 @@ class WorkerMessageHandler {
   }
 }
 
-function isMessagePort(maybePort) {
+function isMessagePort(maybePort: typeof self) {
   return (
     typeof maybePort.postMessage === "function" && "onmessage" in maybePort
   );

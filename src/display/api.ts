@@ -25,9 +25,10 @@ import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/
 import {
   PDFNodeStream
 } from "../display/stubs";
-import { IPDFStream, IPDFStreamReader } from "../interfaces";
+import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
+import { ExplicitMessageHandler } from "../shared/message_handler_explicit";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
@@ -658,9 +659,6 @@ function getDocument(src: DocumentInitParameters) {
 
   const useWorkerFetch = isSetWorkerFetch ? !!src.useWorkerFetch : calcWorkerFetch;
 
-  // Parameters only intended for development/testing purposes.
-  const styleElement = PlatformHelper.isGeneric() ? src.styleElement : null;
-
   // Set the main-thread verbosity level.
   setVerbosityLevel(verbosity);
 
@@ -710,30 +708,31 @@ function getDocument(src: DocumentInitParameters) {
 
   const docParams = parameterBuilder.build();
 
-  const loadingParams = new WorkerTransportLoadingParameters(disableAutoFetch);
-  const transportParams = new WorkerTransportParameters(disableFontFace, fontExtraProperties
-    , ownerDocument, pdfBug, loadingParams);
+  const transportParams = new WorkerTransportParameters(
+    disableFontFace,
+    fontExtraProperties,
+    ownerDocument,
+    pdfBug,
+    disableAutoFetch
+  );
 
-  worker!.promise.then(async () => {
+  worker.promise.then(async () => {
     if (task.destroyed) {
       throw new Error("Loading aborted");
     }
-    if (worker!.destroyed) {
+    if (worker.destroyed) {
       throw new Error("Worker was destroyed");
     }
 
-    const workerIdPromise = <Promise<string>>worker!.messageHandler!.sendWithPromise(
+    const workerIdPromise = <Promise<string>>worker.messageHandler.sendWithPromise(
       "GetDocRequest",
       docParams,
       data ? [data.buffer] : null
     );
 
-    let networkStream: IPDFStream;
+    let networkStream: PDFStream;
     if (rangeTransport) {
-      networkStream = new PDFDataTransportStream(rangeTransport, {
-        disableRange,
-        disableStream,
-      });
+      networkStream = new PDFDataTransportStream(rangeTransport, disableRange, disableStream);
     } else if (!data) {
       if (PlatformHelper.isMozCental()) {
         throw new Error("Not implemented: NetworkStream");
@@ -741,44 +740,32 @@ function getDocument(src: DocumentInitParameters) {
       if (!url) {
         throw new Error("getDocument - no `url` parameter provided.");
       }
-      let NetworkStream;
 
-      if (PlatformHelper.isGeneric()) {
-        const isFetchSupported =
-          typeof fetch !== "undefined" &&
-          typeof Response !== "undefined" &&
-          "body" in Response.prototype;
-
-        NetworkStream =
-          isFetchSupported && isValidFetchUrl(url)
-            ? PDFFetchStream
-            : PDFNodeStream;
-      } else {
-        NetworkStream = isValidFetchUrl(url)
-          ? PDFFetchStream
-          : PDFNetworkStream;
-      }
-
-      networkStream = new NetworkStream!({
+      const pdfStreamSource: PDFStreamSource = {
         url,
         length,
         httpHeaders,
         withCredentials,
-        rangeChunkSize,
+        rangeChunkSize: rangeChunkSize!,
         disableRange,
         disableStream,
-      });
+      }
+
+      const needFetch = isValidFetchUrl(url);
+      networkStream = needFetch ? new PDFFetchStream(pdfStreamSource) : new PDFNetworkStream(pdfStreamSource);
     }
 
     return workerIdPromise.then(workerId => {
+
       if (task.destroyed) {
         throw new Error("Loading aborted");
       }
+
       if (worker!.destroyed) {
         throw new Error("Worker was destroyed");
       }
 
-      const messageHandler = new MessageHandler(docId, workerId, worker!.port!);
+      const messageHandler = new MessageHandler(docId, workerId, worker.port!);
       const transport = new WorkerTransport(
         messageHandler,
         task,
@@ -868,7 +855,7 @@ export class PDFDocumentLoadingTask {
 
   public _transport: WorkerTransport | null;
 
-  public onProgress: ((param: OnProgressParameters | null) => void) | null = null
+  public onProgress: ((loaded: number, total?: number) => void) | null = null;
 
   public onPassword: ((updateCallback: (password: string | Error) => void, reason: number) => void) | null;
 
@@ -900,7 +887,7 @@ export class PDFDocumentLoadingTask {
      * Callback to be able to monitor the loading progress of the PDF file
      * (necessary to implement e.g. a loading bar).
      * The callback receives an {@link OnProgressParameters} argument.
-     * @type {function}
+     * @type {function} (loaded: number, total?: number) => void;
      */
     this.onProgress = null;
   }
@@ -1380,11 +1367,10 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @type {DocumentInitParameters} A subset of the current
-   *   {DocumentInitParameters}, which are needed in the viewer.
+   * 只用到了disableAutoFetch，因此不需要整的那么复杂
    */
-  get loadingParams(): DocumentInitParameters {
-    return this._transport.loadingParams;
+  get disabelAutoFetch(): boolean {
+    return this._transport.disableAutoFetch;
   }
 
   /**
@@ -2404,11 +2390,11 @@ class LoopbackPort {
  */
 class PDFWorker {
 
-  static #fakeWorkerId = 0;
+  private static FAKE_WORKER_ID = 0;
 
-  static #isWorkerDisabled = false;
+  private static IS_WORKER_DISABLED = false;
 
-  static #workerPorts: WeakMap<Worker, PDFWorker> | null;
+  private static WORKER_PORTS: WeakMap<Worker, PDFWorker> | null;
 
   static _isSameOrigin(baseUrl: string, otherUrl: string) {
     let base;
@@ -2450,6 +2436,8 @@ class PDFWorker {
 
   protected _messageHandler: MessageHandler | null = null;
 
+  protected _explicitMessageHandler: ExplicitMessageHandler | null = null;
+
   constructor(
     name: string | null = null,
     port: Worker | null = null,
@@ -2460,10 +2448,10 @@ class PDFWorker {
     this.verbosity = verbosity;
 
     if (PlatformHelper.isMozCental() && port) {
-      if (PDFWorker.#workerPorts?.has(port)) {
+      if (PDFWorker.WORKER_PORTS?.has(port)) {
         throw new Error("Cannot use more than one PDFWorker per port.");
       }
-      (PDFWorker.#workerPorts ||= new WeakMap()).set(port, this);
+      (PDFWorker.WORKER_PORTS ||= new WeakMap()).set(port, this);
       this._initializeFromPort(port);
       return;
     }
@@ -2499,7 +2487,11 @@ class PDFWorker {
    * @type {MessageHandler}
    */
   get messageHandler() {
-    return this._messageHandler;
+    return this._messageHandler!;
+  }
+
+  get explicitMessageHandler() {
+    return this._explicitMessageHandler!;
   }
 
   _initializeFromPort(port: Worker) {
@@ -2508,6 +2500,7 @@ class PDFWorker {
     }
     this._port = port;
     this._messageHandler = new MessageHandler("main", "worker", port);
+    this._explicitMessageHandler = new ExplicitMessageHandler(this._messageHandler);
     this._messageHandler.on("ready", function () {
       // Ignoring "ready" event -- MessageHandler should already be initialized
       // and ready to accept messages.
@@ -2522,7 +2515,7 @@ class PDFWorker {
     // Right now, the requirement is, that an Uint8Array is still an
     // Uint8Array as it arrives on the worker.
     if (
-      PDFWorker.#isWorkerDisabled ||
+      PDFWorker.IS_WORKER_DISABLED ||
       PDFWorker.#mainThreadWorkerMessageHandler
     ) {
       this._setupFakeWorker();
@@ -2614,9 +2607,9 @@ class PDFWorker {
   }
 
   _setupFakeWorker() {
-    if (!PDFWorker.#isWorkerDisabled) {
+    if (!PDFWorker.IS_WORKER_DISABLED) {
       warn("Setting up fake worker.");
-      PDFWorker.#isWorkerDisabled = true;
+      PDFWorker.IS_WORKER_DISABLED = true;
     }
 
     PDFWorker._setupFakeWorkerGlobal
@@ -2629,7 +2622,7 @@ class PDFWorker {
         this._port = port;
 
         // All fake workers use the same port, making id unique.
-        const id = `fake${PDFWorker.#fakeWorkerId++}`;
+        const id = `fake${PDFWorker.FAKE_WORKER_ID++}`;
 
         // If the main thread is our worker, setup the handling for the
         // messages -- the main thread sends to it self.
@@ -2656,7 +2649,7 @@ class PDFWorker {
       this._webWorker.terminate();
       this._webWorker = null;
     }
-    PDFWorker.#workerPorts?.delete(this._port);
+    PDFWorker.WORKER_PORTS?.delete(this._port!);
     this._port = null;
     if (this._messageHandler) {
       this._messageHandler.destroy();
@@ -2678,7 +2671,7 @@ class PDFWorker {
     if (!port) {
       throw new Error("PDFWorker.fromPort - invalid method signature.");
     }
-    const cachedPort = this.#workerPorts?.get(port);
+    const cachedPort = this.WORKER_PORTS?.get(port);
     if (cachedPort) {
       if (cachedPort._pendingDestroy) {
         throw new Error(
@@ -2759,27 +2752,28 @@ class WorkerTransportLoadingParameters {
 
 class WorkerTransportParameters {
 
-  disableFontFace: boolean;
+  readonly disableFontFace: boolean;
 
-  fontExtraProperties: boolean;
+  readonly fontExtraProperties: boolean;
 
-  ownerDocument: HTMLDocument;
+  readonly ownerDocument: HTMLDocument;
 
-  pdfBug: boolean;
+  readonly pdfBug: boolean;
 
-  loadingParams: WorkerTransportLoadingParameters;
+  readonly disableAutoFetch: boolean;
 
-  constructor(disableFontFace: boolean,
+  constructor(
+    disableFontFace: boolean,
     fontExtraProperties: boolean,
     ownerDocument: HTMLDocument,
     pdfBug: boolean,
-    loadingParams: WorkerTransportLoadingParameters
+    disableAutoFetch: boolean
   ) {
     this.disableFontFace = disableFontFace;
     this.fontExtraProperties = fontExtraProperties;
     this.ownerDocument = ownerDocument;
     this.pdfBug = pdfBug;
-    this.loadingParams = loadingParams;
+    this.disableAutoFetch = disableAutoFetch;
   }
 }
 
@@ -2805,7 +2799,7 @@ class WorkerTransport {
 
   public downloadInfoCapability = Promise.withResolvers();
 
-  protected _networkStream: IPDFStream;
+  protected _networkStream: PDFStream;
 
   public loadingTask: PDFDocumentLoadingTask;
 
@@ -2819,7 +2813,7 @@ class WorkerTransport {
 
   public destroyed: boolean;
 
-  public loadingParams: WorkerTransportLoadingParameters;
+  public disableAutoFetch: boolean;
 
   protected _params: WorkerTransportParameters;
 
@@ -2827,18 +2821,23 @@ class WorkerTransport {
 
   #passwordCapability: PromiseWithResolvers<{ password: string | Error }> | null = null;
 
-  protected _fullReader: IPDFStreamReader | null = null;
+  protected _fullReader: PDFStreamReader | null = null;
 
   protected _lastProgress: OnProgressParameters | null = null;
 
   protected _numPages: number | null = null;
 
-  constructor(messageHandler: MessageHandler, loadingTask: PDFDocumentLoadingTask,
-    networkStream: IPDFStream, params: WorkerTransportParameters, factory: TransportFactory) {
+  constructor(
+    messageHandler: MessageHandler,
+    loadingTask: PDFDocumentLoadingTask,
+    networkStream: PDFStream,
+    params: WorkerTransportParameters,
+    factory: TransportFactory
+  ) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.fontLoader = new FontLoader(params.ownerDocument);
-    this.loadingParams = params.loadingParams;
+    this.disableAutoFetch = params.disableAutoFetch;
     this._params = params;
 
     this.canvasFactory = factory.canvasFactory;

@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-import { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader, PDFStreamSource } from "../interfaces";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { AbortException, assert, warn } from "../shared/util";
-import { OnProgressParameters } from "./api";
 import {
   createHeaders,
   createResponseStatusError,
@@ -55,7 +54,7 @@ function getArrayBuffer(val: Uint8Array): ArrayBufferLike {
   return new Uint8Array(val).buffer;
 }
 
-export class PDFFetchStream implements IPDFStream {
+export class PDFFetchStream implements PDFStream {
 
   public source: PDFStreamSource;
 
@@ -108,7 +107,7 @@ export class PDFFetchStream implements IPDFStream {
   }
 }
 
-class PDFFetchStreamReader implements IPDFStreamReader {
+class PDFFetchStreamReader implements PDFStreamReader {
 
   protected _stream: PDFFetchStream;
 
@@ -134,7 +133,7 @@ class PDFFetchStreamReader implements IPDFStreamReader {
 
   protected _isRangeSupported: boolean;
 
-  public onProgress: ((evt: OnProgressParameters) => void) | null;
+  public onProgress: ((loaded: number, total?: number) => void) | null;
 
   constructor(stream: PDFFetchStream) {
     this._stream = stream;
@@ -235,7 +234,7 @@ class PDFFetchStreamReader implements IPDFStreamReader {
   }
 }
 
-class PDFFetchStreamRangeReader implements IPDFStreamRangeReader {
+class PDFFetchStreamRangeReader implements PDFStreamRangeReader {
 
   protected _stream: PDFFetchStream;
 
@@ -251,7 +250,7 @@ class PDFFetchStreamRangeReader implements IPDFStreamRangeReader {
 
   protected _isStreamingSupported: boolean;
 
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   constructor(stream: PDFFetchStream, begin: number, end: number) {
     this._stream = stream;

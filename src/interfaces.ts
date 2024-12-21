@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-import { OnProgressParameters } from "./display/api";
-
-
 export interface PDFStreamSource {
   url: string;
   length: number;
@@ -33,20 +30,20 @@ export interface PDFStreamSource {
  *
  * @interface
  */
-export interface IPDFStream {
+export interface PDFStream {
   /**
    * Gets a reader for the entire PDF data.
-   * @returns {IPDFStreamReader}
+   * @returns {PDFStreamReader}
    */
-  getFullReader(): IPDFStreamReader;
+  getFullReader(): PDFStreamReader;
 
   /**
    * Gets a reader for the range of the PDF data.
    * @param {number} begin - the start offset of the data.
    * @param {number} end - the end offset of the data.
-   * @returns {IPDFStreamRangeReader}
+   * @returns {PDFStreamRangeReader}
    */
-  getRangeReader(begin: number, end: number): IPDFStreamRangeReader | null;
+  getRangeReader(begin: number, end: number): PDFStreamRangeReader | null;
 
   /**
    * Cancels all opened reader and closes all their opened requests.
@@ -60,7 +57,7 @@ export interface IPDFStream {
  *
  * @interface
  */
-export interface IPDFStreamReader {
+export interface PDFStreamReader {
 
   /**
      * Sets or gets the progress callback. The callback can be useful when the
@@ -68,7 +65,7 @@ export interface IPDFStreamReader {
      * The callback is called with one parameter: an object with the loaded and
      * total properties.
      */
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   /**
    * Gets a promise that is resolved when the headers and other metadata of
@@ -129,14 +126,14 @@ export interface IPDFStreamReader {
  *
  * @interface
  */
-export interface IPDFStreamRangeReader {
+export interface PDFStreamRangeReader {
   /**
    * Sets or gets the progress callback. The callback can be useful when the
    * isStreamingSupported property of the object is defined as false.
    * The callback is called with one parameter: an object with the loaded
    * property.
    */
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   /**
    * Gets ability of the stream to progressively load binary data.

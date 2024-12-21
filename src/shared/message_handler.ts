@@ -92,7 +92,10 @@ class MessageHandler {
 
   protected actionHandler: Record<string, (...arg: any[]) => unknown>;
 
-  constructor(sourceName: string, targetName: string, comObj: Worker) {
+  constructor(
+    sourceName: string, targetName: string,
+    /* 只需要由postMessage函数即可，不一定要是Worker类型*/ comObj: Worker
+  ) {
     this.sourceName = sourceName;
     this.targetName = targetName;
     this.comObj = comObj;

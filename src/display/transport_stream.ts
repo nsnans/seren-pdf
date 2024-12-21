@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import { IPDFStream, IPDFStreamRangeReader, IPDFStreamReader } from "../interfaces";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader } from "../interfaces";
 import { assert } from "../shared/util";
-import { OnProgressParameters, PDFDataRangeTransport } from "./api";
+import { PDFDataRangeTransport } from "./api";
 import { isPdfFile } from "./display_utils";
 
-class PDFDataTransportStream implements IPDFStream {
+class PDFDataTransportStream implements PDFStream {
 
   protected _queuedChunks: ArrayBufferLike[] | null;
 
@@ -38,7 +38,7 @@ class PDFDataTransportStream implements IPDFStream {
 
   public _contentLength: number;
 
-  constructor(pdfDataRangeTransport: PDFDataRangeTransport, { disableRange = false, disableStream = false }) {
+  constructor(pdfDataRangeTransport: PDFDataRangeTransport, disableRange = false, disableStream = false) {
 
     assert(
       !!pdfDataRangeTransport,
@@ -75,7 +75,7 @@ class PDFDataTransportStream implements IPDFStream {
     });
 
     pdfDataRangeTransport.addProgressListener((loaded, total) => {
-      this._onProgress({ loaded, total });
+      this._onProgress(loaded, total);
     });
 
     pdfDataRangeTransport.addProgressiveReadListener((chunk: Uint8Array | null) => {
@@ -123,15 +123,12 @@ class PDFDataTransportStream implements IPDFStream {
     return this._fullRequestReader?._loaded ?? 0;
   }
 
-  _onProgress(evt: OnProgressParameters) {
-    if (evt.total === undefined) {
+  _onProgress(loaded: number, total?: number) {
+    if (total === undefined) {
       // Reporting to first range reader, if it exists.
-      this._rangeReaders[0]?.onProgress?.({ loaded: evt.loaded });
+      this._rangeReaders[0]?.onProgress?.(loaded);
     } else {
-      this._fullRequestReader?.onProgress?.({
-        loaded: evt.loaded,
-        total: evt.total,
-      });
+      this._fullRequestReader?.onProgress?.(loaded, total);
     }
   }
 
@@ -182,12 +179,12 @@ class PDFDataTransportStream implements IPDFStream {
   }
 }
 
-/** @implements {IPDFStreamReader} */
-class PDFDataTransportStreamReader implements IPDFStreamReader {
+/** @implements {PDFStreamReader} */
+class PDFDataTransportStreamReader implements PDFStreamReader {
 
   public _loaded = 0;
 
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   protected _stream;
 
@@ -283,13 +280,13 @@ class PDFDataTransportStreamReader implements IPDFStreamReader {
   }
 }
 
-class PDFDataTransportStreamRangeReader implements IPDFStreamRangeReader {
+class PDFDataTransportStreamRangeReader implements PDFStreamRangeReader {
 
   public _begin: number;
 
   public _end: number;
 
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   protected _stream: PDFDataTransportStream;
 

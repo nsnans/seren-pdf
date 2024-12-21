@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-import { IPDFStream, IPDFStreamRangeReader, PDFStreamSource } from "../interfaces";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { assert, BaseException, stringToBytes } from "../shared/util";
-import { OnProgressParameters } from "./api";
 import {
   createHeaders,
   createResponseStatusError,
@@ -205,8 +204,8 @@ class NetworkManager {
   }
 }
 
-/** @implements {IPDFStream} */
-class PDFNetworkStream implements IPDFStream {
+/** @implements {PDFStream} */
+class PDFNetworkStream implements PDFStream {
 
   protected _source: PDFStreamSource;
 
@@ -217,6 +216,7 @@ class PDFNetworkStream implements IPDFStream {
   protected _rangeRequestReaders: PDFNetworkStreamRangeRequestReader[];
 
   protected _fullRequestReader: PDFNetworkStreamFullRequestReader | null;
+
   constructor(source: PDFStreamSource) {
     this._source = source;
     this._manager = new NetworkManager(source);
@@ -272,7 +272,7 @@ interface PDFReaderListeners {
 }
 
 /** @implements {IPDFStreamReader} */
-class PDFNetworkStreamFullRequestReader {
+class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
 
   protected _manager: NetworkManager;
 
@@ -302,7 +302,7 @@ class PDFNetworkStreamFullRequestReader {
 
   protected _storedError: BaseException | undefined;
 
-  public onProgress: ((param: { loaded: number, total: number }) => void) | null;
+  public onProgress: ((loaded: number, total?: number) => void) | null;
 
   constructor(manager: NetworkManager, source: PDFStreamSource) {
     this._manager = manager;
@@ -462,10 +462,10 @@ class PDFNetworkStreamFullRequestReader {
   }
 }
 
-/** @implements {IPDFStreamRangeReader} */
-class PDFNetworkStreamRangeRequestReader implements IPDFStreamRangeReader {
+/** @implements {PDFStreamRangeReader} */
+class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
 
-  onProgress: ((evt: OnProgressParameters) => void) | null;
+  onProgress: ((loaded: number, total?: number) => void) | null;
 
   protected _manager: NetworkManager;
 
