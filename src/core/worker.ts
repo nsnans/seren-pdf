@@ -41,7 +41,6 @@ import {
   getNewAnnotationsMap,
   XRefParseException,
 } from "./core_utils";
-import { LinearizationInterface } from "./parser";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
 import { Dict, DictKey, isDict, Ref } from "./primitives";
 import { Stream } from "./stream";
@@ -177,17 +176,13 @@ class WorkerMessageHandler {
       return { numPages, fingerprints };
     }
 
-    function getPdfManager({
-      data,
-      password,
-      disableAutoFetch,
-      rangeChunkSize,
-      length,
-      docBaseUrl,
-      evaluatorOptions,
-    }: DocumentParameter): Promise<PDFManager> {
+    function getPdfManager(param: DocumentParameter): Promise<PDFManager> {
+
+      const { data, password, disableAutoFetch, rangeChunkSize } = param;
+      const { length, docBaseUrl, evaluatorOptions } = param;
+
       const pdfManagerArgs: PDFManagerArgs = {
-        source: <Uint8Array | null>null,
+        source: <Uint8Array<ArrayBuffer> | null>null,
         disableAutoFetch,
         docBaseUrl,
         docId,
@@ -197,7 +192,8 @@ class WorkerMessageHandler {
         password,
         rangeChunkSize,
       };
-      const pdfManagerCapability = <PromiseWithResolvers<PDFManager>>Promise.withResolvers();
+
+      const pdfManagerCapability = Promise.withResolvers<PDFManager>();
       let newPdfManager: PDFManager | null;
 
       if (data) {
@@ -442,22 +438,22 @@ class WorkerMessageHandler {
       () => pdfManager!.ensureCatalog(catalog => catalog.permissions)
     );
 
-    handler.on("GetMetadata", function () {
-      return Promise.all([
+    handler.onGetMetadata(
+      () => Promise.all([
         pdfManager!.ensureDoc(doc => doc.documentInfo),
         pdfManager!.ensureCatalog(catalog => catalog.metadata),
-      ]);
-    });
+      ])
+    );
 
     handler.onGetMarkInfo(
       () => pdfManager!.ensureCatalog(catalog => catalog.markInfo)
     );
 
-    handler.on("GetData", function () {
-      return pdfManager!.requestLoadedStream().then(function (stream) {
-        return stream.bytes;
-      });
-    });
+    handler.onGetData(
+      () => pdfManager!.requestLoadedStream().then(
+        stream => <Uint8Array<ArrayBuffer>>stream.bytes
+      )
+    );
 
     handler.on("GetAnnotations", function ({ pageIndex, intent }: { pageIndex: number, intent: number }) {
       return pdfManager!.getPage(pageIndex).then(function (page) {
@@ -477,18 +473,19 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("GetFieldObjects", function () {
-      return pdfManager!.ensureDoc(doc => doc.fieldObjects)
-        .then(fieldObjects => fieldObjects?.allFields || null);
-    });
+    handler.onGetFieldObjects(
+      () => pdfManager!.ensureDoc(doc => doc.fieldObjects).then(
+        fieldObjects => fieldObjects?.allFields || null
+      )
+    );
 
-    handler.on("HasJSActions", function () {
-      return pdfManager!.ensureDoc(doc => doc.hasJSActions);
-    });
+    handler.onHasJSActions(
+      () => pdfManager!.ensureDoc(doc => doc.hasJSActions)
+    );
 
-    handler.on("GetCalculationOrderIds", function () {
-      return pdfManager!.ensureDoc(doc => doc.calculationOrderIds);
-    });
+    handler.onGetCalculationOrderIds(
+      () => pdfManager!.ensureDoc(doc => doc.calculationOrderIds)
+    );
 
     handler.on(
       "SaveDocument",
@@ -736,42 +733,40 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("GetStructTree", function (data) {
-      return pdfManager!.getPage(data.pageIndex).then(function (page) {
-        return pdfManager!.ensure(page, page => page.getStructTree());
-      });
-    });
+    // 这个比较复杂，先别急着解决
+    handler.onGetStructTree(
+      data => pdfManager!.getPage(data.pageIndex).then(
+        page => pdfManager!.ensure(page, page => page.getStructTree())
+      )
+    );
 
-    handler.on("FontFallback", function (data) {
-      return pdfManager!.fontFallback(data.id, handler);
-    });
+    handler.onFontFallback(
+      data => pdfManager!.fontFallback(data.id, handler!)
+    );
 
-    handler.on("Cleanup", function () {
-      return pdfManager!.cleanup(/* manuallyTriggered = */ true);
-    });
+    handler.onCleanup(() => pdfManager!.cleanup(true));
 
-    handler.on("Terminate", function () {
+    handler.onTerminate(async () => {
+
       terminated = true;
-
       const waitOn = [];
+
       if (pdfManager) {
         pdfManager.terminate(new AbortException("Worker was terminated."));
-
         const cleanupPromise = pdfManager!.cleanup();
         waitOn.push(cleanupPromise);
-
         pdfManager = null;
       } else {
         clearGlobalCaches();
       }
-      cancelXHRs?.(new AbortException("Worker was terminated."));
 
+      cancelXHRs?.(new AbortException("Worker was terminated."));
       for (const task of WorkerTasks) {
         waitOn.push(task.finished);
         task.terminate();
       }
 
-      return Promise.all(waitOn).then(function () {
+      return Promise.all(waitOn).then(() => {
         // Notice that even if we destroying handler, resolved response promise
         // must be sent back.
         handler!.destroy();
@@ -784,24 +779,10 @@ class WorkerMessageHandler {
       docParams = null; // we don't need docParams anymore -- saving memory.
     });
 
-    if (PlatformHelper.isTesting()) {
-      handler.on("GetXRefPrevValue", async () => pdfManager!.ensureXRef(xref => xref.trailer)
-        .then(trailer => trailer!.get(DictKey.Prev))
-      );
-      handler.on("GetStartXRefPos", function () {
-        return pdfManager!.ensureDoc(doc => doc.startXRef);
-      });
-      handler.on("GetAnnotArray", function (data: { pageIndex: number }) {
-        return pdfManager!.getPage(data.pageIndex).then(function (page) {
-          return page.annotations.map(a => a.toString());
-        });
-      });
-    }
-
     return workerHandlerName;
   }
 
-  static initializeFromPort(port: Window & typeof globalThis) {
+  static initializeFromPort(port: MessagePoster) {
     const handler = new MessageHandler("worker", "main", <any>port);
     WorkerMessageHandler.setup(handler, port);
     handler.send("ready", null);
@@ -816,7 +797,7 @@ function isMessagePort(maybePort: typeof self) {
 
 // Worker thread (and not Node.js)?
 if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
-  WorkerMessageHandler.initializeFromPort(self);
+  WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
 }
 
 export { WorkerMessageHandler, WorkerTask };

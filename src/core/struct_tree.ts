@@ -20,6 +20,8 @@ import { NumberTree } from "./name_number_tree";
 import { writeObject } from "./writer";
 import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
+import { StructTreeNode } from "../display/api";
+import { RectType } from "../display/display_utils";
 
 const MAX_DEPTH = 40;
 
@@ -31,7 +33,7 @@ const StructElementType = {
   ELEMENT: 5,
 };
 
-class StructTreeRoot {
+export class StructTreeRoot {
 
   public roleMap = new Map<string, string>();
 
@@ -591,7 +593,7 @@ class StructElementNode {
     const name = nameObj instanceof Name ? nameObj.name : "";
     const { root } = this.tree;
     if (root.roleMap.has(name)) {
-      return root.roleMap.get(name);
+      return root.roleMap.get(name)!;
     }
     return name;
   }
@@ -709,20 +711,31 @@ class StructElement {
   }
 }
 
-class Node {
+interface StructTreeSerialLeaf {
+  type: string;
+  id: string;
+}
+
+export class StructTreeSerialNode {
 
   public role: string;
 
-  public children: Node[] = []
+  public children: (StructTreeSerialNode | StructTreeSerialLeaf)[] = []
+
+  public alt: string | null = null;
+
+  public bbox: RectType | null = null;
+
+  public lang: string | null = null;
 
   constructor(role: string) {
     this.role = role;
   }
 }
 
-class StructTreePage {
+export class StructTreePage {
 
-  protected root: StructTreeRoot;
+  public root: StructTreeRoot;
 
   protected rootDict: Dict | null;
 
@@ -891,16 +904,19 @@ class StructTreePage {
   /**
    * Convert the tree structure into a simplified object literal that can
    * be sent to the main thread.
-   * @returns {Object}
    */
-  get serializable() {
-    function nodeToSerializable(node: StructElementNode, parent, level = 0) {
+  get serializable(): StructTreeSerialNode {
+
+    function nodeToSerializable(
+      node: StructElementNode,
+      parent: StructTreeSerialNode,
+      level = 0
+    ) {
       if (level > MAX_DEPTH) {
         warn("StructTree too deep to be fully serialized.");
         return;
       }
-      const obj = Object.create(null);
-      obj.role = node.role;
+      const obj = new StructTreeSerialNode(node.role);
       obj.children = [];
       parent.children.push(obj);
       let alt = node.dict.getValue(DictKey.Alt);
@@ -957,7 +973,7 @@ class StructTreePage {
         } else if (kid.type === StructElementType.OBJECT) {
           obj.children.push({
             type: "object",
-            id: kid.refObjId,
+            id: kid.refObjId!,
           });
         } else if (kid.type === StructElementType.ANNOTATION) {
           obj.children.push({
@@ -968,10 +984,7 @@ class StructTreePage {
       }
     }
 
-    const root = {
-      role: "Root",
-      children: []
-    };
+    const root = new StructTreeSerialNode("Root");
     for (const child of this.nodes) {
       if (!child) {
         continue;
@@ -982,4 +995,3 @@ class StructTreePage {
   }
 }
 
-export { StructTreePage, StructTreeRoot };

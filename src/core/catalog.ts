@@ -51,7 +51,7 @@ import { clearGlobalCaches } from "./cleanup_helper";
 import { ColorSpace } from "./colorspace";
 import { FileSpec, FileSpecSerializable } from "./file_spec";
 import { GlobalImageCache } from "./image_utils";
-import { MetadataParser } from "./metadata_parser";
+import { MetadataParser, PDFMetadataInfo } from "./metadata_parser";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
@@ -299,7 +299,7 @@ export class Catalog {
     return shadow(this, "acroFormRef", value instanceof Ref ? value : null);
   }
 
-  get metadata() {
+  get metadata(): PDFMetadataInfo | null {
     const streamRef = this._catDict.getRaw(DictKey.Metadata);
     if (!(streamRef instanceof Ref)) {
       return shadow(this, "metadata", null);
@@ -307,10 +307,8 @@ export class Catalog {
 
     let metadata = null;
     try {
-      const stream = this.xref.fetch(
-        streamRef,
-        /* suppressEncryption = */ !this.xref.encrypt?.encryptMetadata
-      );
+
+      const stream = this.xref.fetch(streamRef, !this.xref.encrypt?.encryptMetadata);
 
       if (stream instanceof BaseStream && stream.dict instanceof Dict) {
         const type = stream.dict.getValue(DictKey.Type);

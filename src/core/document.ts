@@ -77,7 +77,7 @@ import {
   RefSetCache,
 } from "./primitives";
 import { NullStream, Stream } from "./stream";
-import { StructTreePage, StructTreeRoot } from "./struct_tree";
+import { StructTreeSerialNode, StructTreePage, StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XRef } from "./xref";
@@ -707,7 +707,7 @@ class Page {
     );
   }
 
-  async getStructTree() {
+  async getStructTree(): Promise<StructTreeSerialNode | null> {
 
     const structTreeRoot = await this.pdfManager.ensureCatalog(catalog => catalog.structTreeRoot);
 
@@ -922,6 +922,26 @@ function find(stream: Stream, signature: Uint8Array, limit = 1024, backwards = f
     }
   }
   return false;
+}
+
+export class PDFDocumentInfo {
+  PDFFormatVersion: string | null = null;
+  Language: string | null = null;
+  EncryptFilterName: string | null = null;
+  IsLinearized: boolean = false;
+  IsAcroFormPresent: boolean = false;
+  IsCollectionPresent: boolean = false;
+  IsSignaturesPresent: boolean = false;
+  Title: string | null = null;
+  Author: string | null = null;
+  Subject: string | null = null;
+  Keywords: string | null = null;
+  Creator: string | null = null;
+  Producer: string | null = null;
+  CreationDate: string | null = null;
+  ModDate: string | null = null;
+  Trapped: Name | null = null;
+  Custom: Map<string, string | number | boolean | Name> = new Map();
 }
 
 /**
@@ -1156,18 +1176,18 @@ class PDFDocument {
     return shadow(this, "formInfo", formInfo);
   }
 
-  get documentInfo() {
-    const docInfo: Record<string, any> = {
-      PDFFormatVersion: this.version,
-      Language: this.catalog!.lang,
-      EncryptFilterName: this.xref.encrypt
-        ? this.xref.encrypt.filterName
-        : null,
-      IsLinearized: !!this.linearization,
-      IsAcroFormPresent: this.formInfo.hasAcroForm,
-      IsCollectionPresent: !!this.catalog!.collection,
-      IsSignaturesPresent: this.formInfo.hasSignatures,
-    };
+  get documentInfo(): PDFDocumentInfo {
+
+    const docInfo = new PDFDocumentInfo();
+    docInfo.PDFFormatVersion = this.version;
+    docInfo.Language = this.catalog!.lang;
+    const encrypt = this.xref.encrypt;
+    docInfo.EncryptFilterName = encrypt ? encrypt.filterName : null;
+    docInfo.IsLinearized = !!this.linearization;
+    docInfo.IsAcroFormPresent = this.formInfo.hasAcroForm;
+    docInfo.IsCollectionPresent = !!this.catalog!.collection;
+    docInfo.IsSignaturesPresent = this.formInfo.hasSignatures;
+
 
     let infoDict;
     try {
@@ -1229,10 +1249,7 @@ class PDFDocument {
             warn(`Bad value, for custom key "${key}", in Info: ${value}.`);
             continue;
           }
-          if (!docInfo.Custom) {
-            docInfo.Custom = Object.create(null);
-          }
-          docInfo.Custom[key] = customValue;
+          docInfo.Custom.set(key, customValue);
           continue;
       }
       warn(`Bad value, for key "${key}", in Info: ${value}.`);
@@ -1558,55 +1575,50 @@ class PDFDocument {
   }
 
   get fieldObjects() {
-    const promise = (<Promise<{
-      hasFields: boolean,
-      hasAcroForm: boolean,
-      hasSignatures: boolean,
-    }>>this.pdfManager.ensureDoc(doc => doc.formInfo))
-      .then(async (formInfo) => {
-        if (!formInfo.hasFields) {
-          return null;
-        }
+    const promise = this.pdfManager.ensureDoc(doc => doc.formInfo).then(async (formInfo) => {
+      if (!formInfo.hasFields) {
+        return null;
+      }
 
-        const [annotationGlobals, acroForm] = await Promise.all([
-          this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
-          this.pdfManager.ensureCatalog(catalog => catalog.acroForm),
-        ]);
-        if (!annotationGlobals) {
-          return null;
-        }
+      const [annotationGlobals, acroForm] = await Promise.all([
+        this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
+        this.pdfManager.ensureCatalog(catalog => catalog.acroForm),
+      ]);
+      if (!annotationGlobals) {
+        return null;
+      }
 
-        const visitedRefs = new RefSet();
-        const allFields = new Map<string, FieldObject[]>();
-        const fieldPromises = new Map<string, Promise<FieldObject | null>[]>();
-        const orphanFields = new RefSetCache();
-        for (const fieldRef of await acroForm!.getAsyncValue(DictKey.Fields)) {
-          await this.#collectFieldObjects(
-            "",
-            null,
-            fieldRef,
-            fieldPromises,
-            annotationGlobals,
-            visitedRefs,
-            orphanFields
-          );
-        }
+      const visitedRefs = new RefSet();
+      const allFields = new Map<string, FieldObject[]>();
+      const fieldPromises = new Map<string, Promise<FieldObject | null>[]>();
+      const orphanFields = new RefSetCache();
+      for (const fieldRef of await acroForm!.getAsyncValue(DictKey.Fields)) {
+        await this.#collectFieldObjects(
+          "",
+          null,
+          fieldRef,
+          fieldPromises,
+          annotationGlobals,
+          visitedRefs,
+          orphanFields
+        );
+      }
 
-        const allPromises = [];
-        for (const [name, promises] of fieldPromises) {
-          allPromises.push(
-            Promise.all(promises).then(fields => {
-              fields = fields.filter(field => !!field);
-              if (fields.length > 0) {
-                allFields.set(name, <FieldObject[]>fields);
-              }
-            })
-          );
-        }
+      const allPromises = [];
+      for (const [name, promises] of fieldPromises) {
+        allPromises.push(
+          Promise.all(promises).then(fields => {
+            fields = fields.filter(field => !!field);
+            if (fields.length > 0) {
+              allFields.set(name, <FieldObject[]>fields);
+            }
+          })
+        );
+      }
 
-        await Promise.all(allPromises);
-        return { allFields, orphanFields };
-      });
+      await Promise.all(allPromises);
+      return { allFields, orphanFields };
+    });
 
     return shadow(this, "fieldObjects", promise);
   }

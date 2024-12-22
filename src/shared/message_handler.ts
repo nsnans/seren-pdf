@@ -5,9 +5,12 @@
  * */
 
 import { CatalogMarkInfo, DestinationType, ViewerPreferenceKeys } from "../core/catalog";
-import { StreamSink } from "../core/core_types";
+import { FieldObject, StreamSink } from "../core/core_types";
+import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
-import { DocumentParameter, OnProgressParameters } from "../display/api";
+import { PDFMetadataInfo } from "../core/metadata_parser";
+import { StructTreeSerialNode } from "../core/struct_tree";
+import { DocumentParameter, OnProgressParameters, StructTreeNode } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import { FetchBuiltInCMapMessage as FetchBuiltInCMapResult, GetDocMessage, GetPageResult, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
@@ -300,6 +303,101 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onGetMarkInfo(fn: () => Promise<CatalogMarkInfo | null>) {
     const action = MessageHandlerAction.GetPermissions;
+    this.on(action, fn);
+  }
+
+  GetData(): Promise<Uint8Array<ArrayBuffer>> {
+    const action = MessageHandlerAction.GetData;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetData(fn: () => Promise<Uint8Array<ArrayBuffer>>) {
+    const action = MessageHandlerAction.GetData;
+    this.on(action, fn);
+  }
+
+  GetAnnotations(pageIndex: number, intent: number) {
+    const action = MessageHandlerAction.GetAnnotations;
+    return this.sendWithPromise(action, { pageIndex, intent });
+  }
+
+  GetFieldObjects(): Promise<Map<string, FieldObject[]> | null> {
+    const action = MessageHandlerAction.GetFieldObjects;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetFieldObjects(fn: () => Promise<Map<string, FieldObject[]> | null>) {
+    const action = MessageHandlerAction.GetFieldObjects;
+    this.on(action, fn);
+  }
+
+  HasJSActions(): Promise<boolean> {
+    const action = MessageHandlerAction.HasJSActions;
+    return this.sendWithPromise(action, null);
+  }
+
+  onHasJSActions(fn: () => Promise<boolean>) {
+    const action = MessageHandlerAction.HasJSActions;
+    this.on(action, fn);
+  }
+
+  GetCalculationOrderIds(): Promise<string[] | null> {
+    const action = MessageHandlerAction.GetCalculationOrderIds;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetCalculationOrderIds(fn: () => Promise<string[] | null>) {
+    const action = MessageHandlerAction.GetCalculationOrderIds;
+    this.on(action, fn);
+  }
+
+  GetStructTree(pageIndex: number): Promise<StructTreeNode | null> {
+    const action = MessageHandlerAction.GetStructTree;
+    return this.sendWithPromise(action, { pageIndex })
+  }
+
+  onGetStructTree(fn: (data: { pageIndex: number }) => Promise<StructTreeSerialNode | null>) {
+    const action = MessageHandlerAction.GetStructTree;
+    return this.on(action, fn);
+  }
+
+  FontFallback(id: string): Promise<void> {
+    const action = MessageHandlerAction.FontFallback;
+    return this.sendWithPromise(action, { id });
+  }
+
+  onFontFallback(fn: (data: { id: string }) => Promise<void>) {
+    const action = MessageHandlerAction.FontFallback;
+    this.on(action, fn);
+  }
+
+  Cleanup(): Promise<void> {
+    const action = MessageHandlerAction.Cleanup;
+    return this.sendWithPromise(action, null)
+  }
+
+  onCleanup(fn: () => Promise<void>) {
+    const action = MessageHandlerAction.Cleanup;
+    this.on(action, fn);
+  }
+
+  Terminate(): Promise<void> {
+    const action = MessageHandlerAction.Terminate;
+    return this.sendWithPromise(action, null);
+  }
+
+  onTerminate(fn: () => Promise<void>) {
+    const action = MessageHandlerAction.Terminate;
+    this.on(action, fn);
+  }
+
+  GetMetadata(): Promise<[PDFDocumentInfo, PDFMetadataInfo | null]> {
+    const action = MessageHandlerAction.GetMetadata;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetMetadata(fn: () => Promise<[PDFDocumentInfo, PDFMetadataInfo | null]>) {
+    const action = MessageHandlerAction.GetMetadata;
     this.on(action, fn);
   }
 

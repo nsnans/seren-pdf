@@ -44,7 +44,7 @@ function parseDocBaseUrl(url: string | null) {
 }
 
 export interface PDFManagerArgs {
-  source: PDFWorkerStream | Uint8Array | null;
+  source: PDFWorkerStream | Uint8Array<ArrayBuffer> | null;
   disableAutoFetch: boolean;
   docBaseUrl: string | null;
   docId: string;
@@ -71,9 +71,9 @@ interface PDFManager {
 
   updatePassword(password: string): void;
 
-  ensure<T, R>(obj: T, fn: (obj: T) => R): Promise<R>;
+  ensure<T, R>(obj: T, fn: (obj: T) => R | Promise<R>): Promise<R>;
 
-  ensureDoc<T>(fn: (doc: PDFDocument) => T): Promise<T>;
+  ensureDoc<T>(fn: (doc: PDFDocument) => T | Promise<T>): Promise<T>;
 
   ensureXRef<T>(fn: (xref: XRef) => T): Promise<T>;
 
@@ -89,7 +89,10 @@ interface PDFManager {
 
   cleanup(manuallyTriggered?: boolean): Promise<void>;
 
-  getDocument(): PDFDocument;
+  getPDFDocument(): PDFDocument;
+
+  fontFallback(id: string, handler: MessageHandler): Promise<void>;
+
 }
 
 export class PDFDocumentEnsurer {
@@ -114,12 +117,7 @@ abstract class BasePDFManager implements PDFManager {
   evaluatorOptions: DocumentParameterEvaluatorOptions;
 
   constructor(args: PDFManagerArgs) {
-    if (
-      (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
-      this.constructor === BasePDFManager
-    ) {
-      unreachable("Cannot initialize BasePdfManager.");
-    }
+    
     this._docBaseUrl = parseDocBaseUrl(args.docBaseUrl);
     this._docId = args.docId;
     this._password = args.password;
@@ -148,11 +146,11 @@ abstract class BasePDFManager implements PDFManager {
   }
 
   get catalog() {
-    return this.getPDFDocument().catalog;
+    return this.getPDFDocument().catalog!;
   }
 
 
-  ensureDoc<T>(fn: (doc: PDFDocument) => T): Promise<T> {
+  ensureDoc<T>(fn: (doc: PDFDocument) => T | Promise<T>): Promise<T> {
     return this.ensure(this.getPDFDocument(), fn);
   }
 
@@ -176,7 +174,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.getPDFDocument().cleanup(manuallyTriggered);
   }
 
-  abstract ensure<T, R>(obj: T, fn: (obj: T) => R): Promise<R>;
+  abstract ensure<T, R>(obj: T, fn: (obj: T) => R | Promise<R>): Promise<R>;
 
   abstract requestRange(begin: number, end: number): Promise<void>;
 
@@ -199,15 +197,14 @@ class LocalPDFManager extends BasePDFManager {
   constructor(args: PDFManagerArgs) {
     super(args);
 
-    const stream = new Stream(<Uint8Array>args.source);
+    const stream = new Stream(<Uint8Array<ArrayBuffer>>args.source);
     this.pdfDocument = new PDFDocument(this, stream);
     this._loadedStreamPromise = Promise.resolve(stream);
   }
 
-  async ensure<T, R>(obj: T, fn: (obj: T) => R) {
-    // 是不是要考虑一下，如果fn是一个异步函数
-    // 如果要考虑的话，需要做一些兼容性的事，原来的代码里并没有特殊处理
-    return fn(obj);
+  async ensure<T, R>(obj: T, fn: (obj: T) => R | Promise<R>) {
+    const result = fn(obj);
+    return result;
   }
 
   requestRange(_begin: number, _end: number) {
@@ -247,9 +244,12 @@ class NetworkPDFManager extends BasePDFManager {
     this.pdfDocument = new PDFDocument(this, this.streamManager.getStream());
   }
 
-  async ensure<T, R>(obj: T, fn: (obj: T) => R): Promise<R> {
+  async ensure<T, R>(obj: T, fn: (obj: T) => R | Promise<R>): Promise<R> {
     try {
-      const value = fn(obj);
+      let value = await fn(obj);
+      if (value instanceof Promise) {
+        value = await value;
+      }
       return value;
     } catch (ex) {
       if (!(ex instanceof MissingDataException)) {

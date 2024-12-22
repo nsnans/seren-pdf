@@ -39,7 +39,6 @@ export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike> {
 
   lastIndexOf(searchElement: number, fromIndex?: number): number;
 
-
   map(callbackfn: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => number, thisArg?: any): GenericTypedArray<TArrayBuffer>;
 
   reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => number): number;

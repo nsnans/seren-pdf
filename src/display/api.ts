@@ -19,6 +19,7 @@
 
 import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
 import { StreamGetOperatorListParameters } from "../core/core_types";
+import { PDFDocumentInfo } from "../core/document";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
@@ -299,7 +300,7 @@ export class DocumentParameterEvaluatorOptions {
 
   readonly isEvalSupported: boolean;
 
-  readonly isOffscreenCanvasSupported: boolean;
+  public isOffscreenCanvasSupported: boolean;
 
   readonly isChrome: boolean;
 
@@ -346,7 +347,7 @@ export class DocumentParameter {
 
   readonly apiVersion: string | null;
 
-  readonly data: Uint8Array | null;
+  readonly data: Uint8Array<ArrayBuffer> | null;
 
   readonly password: string | null;
 
@@ -363,7 +364,7 @@ export class DocumentParameter {
   constructor(
     docId: string,
     apiVersion: string | null,
-    data: Uint8Array | null,
+    data: Uint8Array<ArrayBuffer> | null,
     password: string | null,
     disableAutoFetch: boolean,
     rangeChunkSize: number,
@@ -1075,38 +1076,6 @@ class PDFDocumentProxy {
     this._transport = transport;
   }
 
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getNetworkStreamName() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this._transport.getNetworkStreamName();
-  }
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getXRefPrevValue() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this._transport.getXRefPrevValue();
-  }
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getStartXRefPos() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this._transport.getStartXRefPos();
-  }
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getAnnotArray(pageIndex: number) {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this._transport.getAnnotArray(pageIndex);
-  }
-
   /**
    * @type {AnnotationStorage} Storage for annotation data in forms.
    */
@@ -1286,13 +1255,12 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<{ info: Object, metadata: Metadata }>} A promise that is
-   *   resolved with an {Object} that has `info` and `metadata` properties.
+   * @returns A promise that is resolved with an {Object} that has `info` and `metadata` properties.
    *   `info` is an {Object} filled with anything available in the information
    *   dictionary and similarly `metadata` is a {Metadata} object with
    *   information from the metadata section of the PDF.
    */
-  getMetadata() {
+  getMetadata(): Promise<WorkerTransportMetadata> {
     return this._transport.getMetadata();
   }
 
@@ -1309,8 +1277,8 @@ class PDFDocumentProxy {
    * @returns {Promise<Uint8Array>} A promise that is resolved with a
    *   {Uint8Array} containing the raw data of the PDF document.
    */
-  getData(): Promise<Uint8Array> {
-    return <Promise<Uint8Array>>this._transport.getData();
+  getData(): Promise<Uint8Array<ArrayBuffer>> {
+    return this._transport.getData();
   }
 
   /**
@@ -1632,10 +1600,10 @@ interface StructTreeContent {
 /**
  * Structure tree node. The root node will have a role "Root".
  */
-interface StructTreeNode {
+export interface StructTreeNode {
 
   /* Array of {@link StructTreeNode} and {@link StructTreeContent} objects. */
-  children: Array<StructTreeNode | StructTreeContent>;
+  children: (StructTreeNode | StructTreeContent)[];
 
   /* element's role, already mapped if a role map exists in the PDF. */
   role: string;
@@ -2754,6 +2722,13 @@ class WorkerTransportParameters {
   }
 }
 
+export interface WorkerTransportMetadata {
+  info: PDFDocumentInfo;
+  metadata: Metadata | null;
+  contentDispositionFilename: string | null;
+  contentLength: number | null;
+}
+
 /**
  * For internal use only.
  * @ignore
@@ -2830,29 +2805,6 @@ class WorkerTransport {
     this._lastProgress = null;
 
     this.setupMessageHandler();
-  }
-
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getNetworkStreamName() {
-    return this._networkStream?.constructor?.name || null;
-  }
-
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getXRefPrevValue() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this.messageHandler!.sendWithPromise("GetXRefPrevValue", null)
-  }
-
-  /* 为测试环境添加的方法，正式环境中不应当调用 */
-  getStartXRefPos() {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this.messageHandler!.sendWithPromise("GetStartXRefPos", null);
   }
 
   getAnnotArray(pageIndex: number) {
@@ -2974,7 +2926,7 @@ class WorkerTransport {
       this.annotationStorage.resetModified();
     }
     // We also need to wait for the worker to finish its long running tasks.
-    const terminated = this.messageHandler!.sendWithPromise("Terminate", null);
+    const terminated = this.messageHandler!.Terminate();
     waitOn.push(terminated);
 
     Promise.all(waitOn).then(() => {
@@ -3204,7 +3156,7 @@ class WorkerTransport {
 
           this.fontLoader
             .bind(font)
-            .catch(() => messageHandler.sendWithPromise("FontFallback", { id }))
+            .catch(() => messageHandler.FontFallback(id))
             .finally(() => {
               if (!fontExtraProperties && font.data) {
                 // Immediately release the `font.data` property once the font
@@ -3286,7 +3238,7 @@ class WorkerTransport {
       loadingTask.onProgress?.(data.loaded, data.total);
     });
 
-    messageHandler.onFetchBuiltInCMap(async data => {
+    messageHandler.onFetchBuiltInCMap(data => {
       if (PlatformHelper.isMozCental()) {
         throw new Error("Not implemented: FetchBuiltInCMap");
       }
@@ -3298,7 +3250,7 @@ class WorkerTransport {
           "CMapReaderFactory not initialized, see the `useWorkerFetch` parameter."
         );
       }
-      return this.cMapReaderFactory.fetch(data);
+      return this.cMapReaderFactory.fetch(data.name);
     });
 
     messageHandler.onFetchStandardFontData(async data => {
@@ -3317,7 +3269,7 @@ class WorkerTransport {
   }
 
   getData() {
-    return this.messageHandler!.sendWithPromise("GetData", null);
+    return this.messageHandler!.GetData();
   }
 
   saveDocument() {
@@ -3392,15 +3344,19 @@ class WorkerTransport {
   }
 
   getFieldObjects() {
-    return this.#cacheSimpleMethod("GetFieldObjects");
+    const action = MessageHandlerAction.GetFieldObjects;
+    const handler = this.messageHandler!;
+    return this.#cacheSimpleMethod(action, () => handler.GetFieldObjects());
   }
 
   hasJSActions() {
-    return this.#cacheSimpleMethod("HasJSActions");
+    const action = MessageHandlerAction.HasJSActions;
+    const handler = this.messageHandler!;
+    return this.#cacheSimpleMethod(action, () => handler.HasJSActions());
   }
 
   getCalculationOrderIds() {
-    return this.messageHandler!.sendWithPromise("GetCalculationOrderIds", null);
+    return this.messageHandler!.GetCalculationOrderIds();
   }
 
   getDestinations() {
@@ -3468,20 +3424,18 @@ class WorkerTransport {
     return this.messageHandler!.GetPermissions();
   }
 
-  getMetadata() {
-    const name = "GetMetadata",
-      cachedPromise = this.#methodPromises.get(name);
+  getMetadata(): Promise<WorkerTransportMetadata> {
+    const name = MessageHandlerAction.GetMetadata;
+    const cachedPromise = <Promise<WorkerTransportMetadata>>this.#methodPromises.get(name);
     if (cachedPromise) {
       return cachedPromise;
     }
-    const promise = this.messageHandler!
-      .sendWithPromise(name, null)
-      .then(results => ({
-        info: results[0],
-        metadata: results[1] ? new Metadata(results[1]) : null,
-        contentDispositionFilename: this._fullReader?.filename ?? null,
-        contentLength: this._fullReader?.contentLength ?? null,
-      }));
+    const promise = this.messageHandler!.GetMetadata().then(results => ({
+      info: results[0],
+      metadata: results[1] ? new Metadata(results[1].parsedData, results[1].rawData) : null,
+      contentDispositionFilename: this._fullReader?.filename ?? null,
+      contentLength: this._fullReader?.contentLength ?? null,
+    }));
     this.#methodPromises.set(name, promise);
     return promise;
   }
@@ -3494,7 +3448,7 @@ class WorkerTransport {
     if (this.destroyed) {
       return; // No need to manually clean-up when destruction has started.
     }
-    await this.messageHandler!.sendWithPromise("Cleanup", null);
+    await this.messageHandler!.Cleanup();
 
     for (const page of this.#pageCache.values()) {
       const cleanupSuccessful = page.cleanup();

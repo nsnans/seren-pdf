@@ -22,8 +22,8 @@ export interface CMapReaderFactory {
   // 这个接口应该删掉
   _fetch(url: string): Promise<Uint8Array>;
 
-  fetch({ name }: { name: string; }): Promise<{
-    cMapData: Uint8Array;
+  fetch(name: string): Promise<{
+    cMapData: Uint8Array<ArrayBuffer>;
     isCompressed: boolean;
   }>;
 }
@@ -43,7 +43,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
   }
 
 
-  async fetch({ name }: { name: string }) {
+  async fetch(name: string) {
     if (!this.baseUrl) {
       throw new Error(
         "Ensure that the `cMapUrl` and `cMapPacked` API parameters are provided."
@@ -63,7 +63,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
       });
   }
 
-  abstract _fetch(url: any): Promise<Uint8Array>;
+  abstract _fetch(url: string): Promise<Uint8Array<ArrayBuffer>>;
 }
 
 export class DOMCMapReaderFactory extends BaseCMapReaderFactory {

@@ -15,9 +15,14 @@
 
 import { SimpleDOMNode, SimpleXMLParser } from "./xml_parser";
 
-class MetadataParser {
+export interface PDFMetadataInfo {
+  parsedData: Map<string, string | string[]>;
+  rawData: string;
+}
 
-  protected _metadataMap = new Map();
+export class MetadataParser {
+
+  protected _metadataMap = new Map<string, string | string[]>();
 
   protected _data: string;
 
@@ -140,12 +145,10 @@ class MetadataParser {
     }
   }
 
-  get serializable() {
+  get serializable(): PDFMetadataInfo {
     return {
       parsedData: this._metadataMap,
       rawData: this._data,
     };
   }
 }
-
-export { MetadataParser };

@@ -15,31 +15,30 @@
 
 import { objectFromMap } from "../shared/util";
 
-class Metadata {
-  #metadataMap;
+export class Metadata {
 
-  #data;
+  protected _metadataMap: Map<string, string | string[]>;
 
-  constructor({ parsedData, rawData }) {
-    this.#metadataMap = parsedData;
-    this.#data = rawData;
+  protected _data: string;
+
+  constructor(parsedData: Map<string, string | string[]>, rawData: string) {
+    this._metadataMap = parsedData;
+    this._data = rawData;
   }
 
   getRaw() {
-    return this.#data;
+    return this._data;
   }
 
   get(name: string) {
-    return this.#metadataMap.get(name) ?? null;
+    return this._metadataMap.get(name) ?? null;
   }
 
   getAll() {
-    return objectFromMap(this.#metadataMap);
+    return objectFromMap(this._metadataMap);
   }
 
   has(name: string) {
-    return this.#metadataMap.has(name);
+    return this._metadataMap.has(name);
   }
 }
-
-export { Metadata };
