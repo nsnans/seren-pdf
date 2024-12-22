@@ -17,4 +17,9 @@ export const MessageHandlerAction = {
   DocException: "DocException",
   DataLoaded: "DataLoaded",
   StartRenderPage: "StartRenderPage",
+  DocProgress: "DocProgress",
+  FetchBuiltInCMap: "FetchBuiltInCMap",
+  FetchStandardFontData: "FetchStandardFontData",
+  GetPage: "GetPage",
+  GetPageIndex: "GetPageIndex"
 }

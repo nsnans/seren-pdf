@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { RectType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
 import { MessageHandler } from "../shared/message_handler_base";
@@ -82,7 +83,7 @@ import { writeObject } from "./writer";
 import { XRef } from "./xref";
 
 const DEFAULT_USER_UNIT = 1.0;
-const LETTER_SIZE_MEDIABOX = [0, 0, 612, 792];
+const LETTER_SIZE_MEDIABOX: RectType = [0, 0, 612, 792];
 
 class Page {
 
@@ -184,7 +185,7 @@ class Page {
     );
   }
 
-  _getBoundingBox(name: string): number[] | null {
+  _getBoundingBox(name: string): RectType | null {
     const box = lookupNormalRect(
       this._getInheritableProperty(name, /* getArray = */ true),
       null
@@ -199,7 +200,7 @@ class Page {
     return null;
   }
 
-  get mediaBox(): number[] {
+  get mediaBox(): RectType {
     // Reset invalid media box to letter size.
     return shadow(
       this,
@@ -243,7 +244,7 @@ class Page {
   }
 
   get rotate() {
-    let rotate = this._getInheritableProperty("Rotate") || 0;
+    let rotate = <number>this._getInheritableProperty("Rotate") || 0;
 
     // Normalize rotation so it's a multiple of 90 and between 0 and 270.
     if (rotate % 90 !== 0) {

@@ -1,3 +1,5 @@
+import { Ref } from "../core/primitives";
+import { RectType } from "../display/display_utils";
 import { WorkerMessageHandler } from "../pdf.worker";
 
 export interface ReaderHeadersReadyResult {
@@ -56,4 +58,20 @@ export interface StartRenderPageMessage {
 
   cacheKey: string
 
+}
+
+export interface FetchBuiltInCMapMessage {
+
+  cMapData: Uint8Array<ArrayBuffer>;
+
+  isCompressed: boolean;
+
+}
+
+export interface GetPageResult {
+  rotate: number;
+  ref: Ref | null;
+  refStr: string | null;
+  userUnit: number;
+  view: RectType;
 }

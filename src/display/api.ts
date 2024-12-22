@@ -30,7 +30,6 @@ import {
   AbortException,
   AnnotationMode,
   assert,
-  BaseException,
   FeatureTest,
   getVerbosityLevel,
   info,
@@ -3092,10 +3091,9 @@ class WorkerTransport {
           }
           assert(value instanceof ArrayBuffer, "GetRangeReader - expected an ArrayBuffer.");
           sink.enqueue(new Uint8Array(value!), 1, [value]);
-        })
-          .catch(reason => {
-            sink.error(reason);
-          });
+        }).catch(reason => {
+          sink.error(reason);
+        });
       };
 
       sink.onCancel = (reason: Error) => {
@@ -3286,17 +3284,14 @@ class WorkerTransport {
       }
     });
 
-    messageHandler.on("DocProgress", (data: OnProgressParameters) => {
+    messageHandler.onDocProgress(data => {
       if (this.destroyed) {
         return; // Ignore any pending requests if the worker was terminated.
       }
-      loadingTask.onProgress?.({
-        loaded: data.loaded,
-        total: data.total,
-      });
+      loadingTask.onProgress?.(data.loaded, data.total);
     });
 
-    messageHandler.on("FetchBuiltInCMap", async data => {
+    messageHandler.onFetchBuiltInCMap(async data => {
       if (PlatformHelper.isMozCental()) {
         throw new Error("Not implemented: FetchBuiltInCMap");
       }
@@ -3311,7 +3306,7 @@ class WorkerTransport {
       return this.cMapReaderFactory.fetch(data);
     });
 
-    messageHandler.on("FetchStandardFontData", async data => {
+    messageHandler.onFetchStandardFontData(async data => {
       if (PlatformHelper.isMozCental()) {
         throw new Error("Not implemented: FetchStandardFontData");
       }
@@ -3319,11 +3314,10 @@ class WorkerTransport {
         throw new Error("Worker was destroyed.");
       }
       if (!this.standardFontDataFactory) {
-        throw new Error(
-          "StandardFontDataFactory not initialized, see the `useWorkerFetch` parameter."
-        );
+        const error = "StandardFontDataFactory not initialized, see the `useWorkerFetch` parameter."
+        throw new Error(error);
       }
-      return this.standardFontDataFactory.fetch(data);
+      return this.standardFontDataFactory.fetch(data.filename);
     });
   }
 
@@ -3333,10 +3327,9 @@ class WorkerTransport {
 
   saveDocument() {
     if (this.annotationStorage.size <= 0) {
-      warn(
-        "saveDocument called while `annotationStorage` is empty, " +
-        "please use the getData-method instead."
-      );
+      let warning = "saveDocument called while `annotationStorage` is empty, ";
+      warning += "please use the getData-method instead.";
+      warn(warning);
     }
     const { map, transfer } = this.annotationStorage.serializable;
 
@@ -3364,21 +3357,18 @@ class WorkerTransport {
       return Promise.reject(new Error("Invalid page request."));
     }
 
-    const pageIndex = pageNumber - 1,
-      cachedPromise = this.#pagePromises.get(pageIndex);
+    const pageIndex = pageNumber - 1;
+    const cachedPromise = this.#pagePromises.get(pageIndex);
     if (cachedPromise) {
       return cachedPromise;
     }
-    const promise = this.messageHandler!.sendWithPromise("GetPage", {
-      pageIndex,
-    }).then(pageInfo => {
+    const promise = this.messageHandler!.GetPage(pageIndex).then(pageInfo => {
       if (this.destroyed) {
         throw new Error("Transport destroyed");
       }
       if (pageInfo.refStr) {
         this.#pageRefCache.set(pageInfo.refStr, pageNumber);
       }
-
       const page = new PDFPageProxy(
         pageIndex,
         pageInfo,
@@ -3396,10 +3386,7 @@ class WorkerTransport {
     if (!isRefProxy(ref)) {
       return Promise.reject(new Error("Invalid pageIndex request."));
     }
-    return this.messageHandler!.sendWithPromise("GetPageIndex", {
-      num: ref.num,
-      gen: ref.gen,
-    });
+    return this.messageHandler!.GetPageIndex(ref.num, ref.gen);
   }
 
   getAnnotations(pageIndex: number, intent: number) {

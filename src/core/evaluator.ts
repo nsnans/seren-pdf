@@ -17,7 +17,7 @@
 import { DocumentParameterEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
-import { MessageHandler } from "../shared/message_handler_base";
+import { MessageHandler } from "../shared/message_handler";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,
@@ -298,7 +298,7 @@ class PartialEvaluator {
 
   readonly xref;
 
-  protected handler;
+  protected handler: MessageHandler;
 
   protected pageIndex;
 
@@ -511,10 +511,10 @@ class PartialEvaluator {
       // Only compressed CMaps are (currently) supported here.
       const url = `${this.options.cMapUrl}${name}.bcmap`;
       const response = await fetch(url);
+
       if (!response.ok) {
-        throw new Error(
-          `fetchBuiltInCMap: failed to fetch file "${url}" with "${response.statusText}".`
-        );
+        const error = `fetchBuiltInCMap: failed to fetch file "${url}" with "${response.statusText}".`
+        throw new Error(error);
       }
       data = {
         cMapData: new Uint8Array(await response.arrayBuffer()),
@@ -522,10 +522,7 @@ class PartialEvaluator {
       };
     } else {
       // Get the data on the main-thread instead.
-      data = await this.handler.sendWithPromise("FetchBuiltInCMap", { name }) as {
-        cMapData: Uint8Array;
-        isCompressed: boolean;
-      };
+      data = await this.handler.FetchBuiltInCMap(name);
     }
     // Cache the CMap data, to avoid fetching it repeatedly.
     this.builtInCMapCache.set(name, data);
@@ -549,30 +546,25 @@ class PartialEvaluator {
       return null;
     }
 
-    const standardFontNameToFileName = getFontNameToFileMap(),
-      filename = standardFontNameToFileName![name];
-    let data: Uint8Array | null = null;
+    const standardFontNameToFileName = getFontNameToFileMap();
+    const filename = standardFontNameToFileName![name];
+    
+    let data: Uint8Array<ArrayBuffer> | null = null;
 
     if (this.options.standardFontDataUrl !== null) {
       const url = `${this.options.standardFontDataUrl}${filename}`;
       const response = await fetch(url);
       if (!response.ok) {
-        warn(
-          `fetchStandardFontData: failed to fetch file "${url}" with "${response.statusText}".`
-        );
+        warn(`fetchStandardFontData: failed to fetch file "${url}" with "${response.statusText}".`);
       } else {
         data = new Uint8Array(await response.arrayBuffer());
       }
     } else {
       // Get the data on the main-thread instead.
       try {
-        data = await this.handler.sendWithPromise("FetchStandardFontData", {
-          filename,
-        }) as Uint8Array;
+        data = await this.handler.FetchStandardFontData(filename);
       } catch (e) {
-        warn(
-          `fetchStandardFontData: failed to fetch file "${filename}" with "${e}".`
-        );
+        warn(`fetchStandardFontData: failed to fetch file "${filename}" with "${e}".`);
       }
     }
 

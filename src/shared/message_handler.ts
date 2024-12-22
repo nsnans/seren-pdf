@@ -5,9 +5,9 @@
  * */
 
 import { StreamSink } from "../core/core_types";
-import { DocumentParameter } from "../display/api";
+import { DocumentParameter, OnProgressParameters } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
-import { GetDocMessage, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
+import { FetchBuiltInCMapMessage as FetchBuiltInCMapResult, GetDocMessage, GetPageResult, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
 import { BaseException, PasswordException } from "./util";
 
@@ -130,6 +130,56 @@ export class MessageHandler extends AbstractMessageHandler {
   onStartRenderPage(fn: (data: StartRenderPageMessage) => void) {
     const action = MessageHandlerAction.StartRenderPage;
     super.on(action, fn);
+  }
+
+  DocProgress(loaded: number, total: number) {
+    const action = MessageHandlerAction.DocProgress;
+    super.send(action, { loaded, total });
+  }
+
+  onDocProgress(fn: (data: OnProgressParameters) => void) {
+    const action = MessageHandlerAction.DocProgress;
+    super.on(action, fn);
+  }
+
+  FetchBuiltInCMap(name: string): Promise<FetchBuiltInCMapResult> {
+    const action = MessageHandlerAction.FetchBuiltInCMap;
+    return super.sendWithPromise(action, { name });
+  }
+
+  onFetchBuiltInCMap(fn: (data: { name: string }) => Promise<FetchBuiltInCMapResult>) {
+    const action = MessageHandlerAction.FetchBuiltInCMap;
+    this.on(action, fn);
+  }
+
+  FetchStandardFontData(filename: string): Promise<Uint8Array<ArrayBuffer>> {
+    const action = MessageHandlerAction.FetchStandardFontData;
+    return this.sendWithPromise(action, { filename });
+  }
+
+  onFetchStandardFontData(fn: (data: { filename: string }) => Promise<Uint8Array<ArrayBuffer>>) {
+    const action = MessageHandlerAction.FetchStandardFontData;
+    this.on(action, fn);
+  }
+
+  GetPage(pageIndex: number): Promise<GetPageResult> {
+    const action = MessageHandlerAction.GetPage;
+    return super.sendWithPromise(action, { pageIndex });
+  }
+
+  onGetPage(fn: (data: { pageIndex: number }) => Promise<GetPageResult>) {
+    const action = MessageHandlerAction.GetPage;
+    super.on(action, fn);
+  }
+
+  GetPageIndex(num: number, gen: number): Promise<number> {
+    const action = MessageHandlerAction.GetPageIndex;
+    return super.sendWithPromise(action, { num, gen })
+  }
+
+  onGetPageIndex(fn: (ref: { num: number, gen: number }) => Promise<number>) {
+    const action = MessageHandlerAction.GetPageIndex;
+    this.on(action, fn);
   }
 
   Ready(): void {

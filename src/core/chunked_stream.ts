@@ -19,7 +19,7 @@ import { Stream } from "./stream";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { PDFNetworkStream } from "../display/network";
-import { MessageHandler } from "../shared/message_handler_base";
+import { MessageHandler } from "../shared/message_handler";
 
 class ChunkedStream extends Stream {
 
@@ -333,7 +333,7 @@ class ChunkedStreamManager {
           loaded += value.byteLength;
 
           if (rangeReader.isStreamingSupported) {
-            this.onProgress({ loaded });
+            this.onProgress(loaded);
           }
 
           chunks.push(value);
@@ -479,11 +479,9 @@ class ChunkedStreamManager {
     return groupedChunks;
   }
 
-  onProgress(args: { loaded: number }) {
-    this.msgHandler.send("DocProgress", {
-      loaded: this.stream.numChunksLoaded * this.chunkSize + args.loaded,
-      total: this.length,
-    });
+  onProgress(_loaded: number) {
+    const loaded = this.stream.numChunksLoaded * this.chunkSize + _loaded;
+    this.msgHandler.DocProgress(loaded, this.length);
   }
 
   onReceiveData(args) {
@@ -557,10 +555,8 @@ class ChunkedStreamManager {
       capability.resolve();
     }
 
-    this.msgHandler.send("DocProgress", {
-      loaded: this.stream.numChunksLoaded * this.chunkSize,
-      total: this.length,
-    });
+    const loaded = this.stream.numChunksLoaded * this.chunkSize;
+    this.msgHandler.DocProgress(loaded, this.length);
   }
 
   onError(err: any) {

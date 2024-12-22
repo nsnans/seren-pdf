@@ -17,7 +17,7 @@ import { DocumentParameter } from "../display/api";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
-import { SaveDocumentMessage } from "../shared/message_handler_types";
+import { GetDocMessage, SaveDocumentMessage } from "../shared/message_handler_types";
 import {
   AbortException,
   assert,
@@ -277,10 +277,7 @@ class WorkerMessageHandler {
             loaded += value!.byteLength;
 
             if (!fullRequest.isStreamingSupported) {
-              handler!.send("DocProgress", {
-                loaded,
-                total: Math.max(loaded, fullRequest.contentLength || 0),
-              });
+              handler!.DocProgress(loaded, Math.max(loaded, fullRequest.contentLength || 0));
             }
 
             if (newPdfManager) {
@@ -307,17 +304,13 @@ class WorkerMessageHandler {
     }
 
     function setupDoc(data: DocumentParameter) {
-      function onSuccess(doc: {
-        numPages: number;
-        fingerprints: [string, string | null];
-      }) {
+      function onSuccess(doc: GetDocMessage) {
         ensureNotTerminated();
         handler!.GetDoc(doc.numPages, doc.fingerprints);
       }
 
       function onFailure(ex: any) {
         ensureNotTerminated();
-
         if (ex instanceof PasswordException) {
           const task = new WorkerTask(`PasswordException: response ${ex.code}`);
           startWorkerTask(task);
@@ -362,45 +355,35 @@ class WorkerMessageHandler {
 
       ensureNotTerminated();
 
-      getPdfManager(data)
-        .then(function (newPdfManager: PDFManager) {
-          if (terminated) {
-            // We were in a process of setting up the manager, but it got
-            // terminated in the middle.
-            newPdfManager!.terminate(
-              new AbortException("Worker was terminated.")
-            );
-            throw new Error("Worker was terminated");
-          }
-          pdfManager = newPdfManager;
+      getPdfManager(data).then(function (newPdfManager: PDFManager) {
+        if (terminated) {
+          // We were in a process of setting up the manager, but it got
+          // terminated in the middle.
+          newPdfManager!.terminate(new AbortException("Worker was terminated."));
+          throw new Error("Worker was terminated");
+        }
+        pdfManager = newPdfManager;
 
-          pdfManager.requestLoadedStream(/* noFetch = */ true).then(stream => {
-            handler!.DataLoaded(stream.bytes.byteLength);
-          });
-        })
-        .then(pdfManagerReady, onFailure);
+        pdfManager.requestLoadedStream(/* noFetch = */ true).then(
+          stream => handler!.DataLoaded(stream.bytes.byteLength)
+        );
+      }).then(pdfManagerReady, onFailure);
     }
 
-    handler.on("GetPage", function (data) {
-      return pdfManager!.getPage(data.pageIndex).then(function (page) {
+    handler.onGetPage(async data => {
+      return pdfManager!.getPage(data.pageIndex).then(async page => {
         return Promise.all([
           pdfManager!.ensure(page, page => page.rotate),
           pdfManager!.ensure(page, page => page.ref),
           pdfManager!.ensure(page, page => page.userUnit),
           pdfManager!.ensure(page, page => page.view),
         ]).then(function ([rotate, ref, userUnit, view]) {
-          return {
-            rotate,
-            ref,
-            refStr: ref?.toString() ?? null,
-            userUnit,
-            view,
-          };
+          return { rotate, ref, refStr: ref?.toString() ?? null, userUnit, view };
         });
       });
     });
 
-    handler.on("GetPageIndex", function (data) {
+    handler.onGetPageIndex((data) => {
       const pageRef = Ref.get(data.num, data.gen);
       return pdfManager!.ensureCatalog(catalog => catalog.getPageIndex(pageRef));
     });

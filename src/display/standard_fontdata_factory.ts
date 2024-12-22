@@ -19,9 +19,11 @@ import { PlatformHelper } from "../platform/platform_helper";
 
 interface StandardFontDataFactory {
 
+  fetch(filename: string): Promise<Uint8Array<ArrayBuffer>>;
+
 }
 
-class BaseStandardFontDataFactory implements StandardFontDataFactory {
+abstract class BaseStandardFontDataFactory implements StandardFontDataFactory {
 
   protected baseUrl: string | null;
 
@@ -32,7 +34,7 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
     this.baseUrl = baseUrl;
   }
 
-  async fetch({ filename }: { filename: string }) {
+  async fetch(filename: string) {
     if (!this.baseUrl) {
       throw new Error(
         "Ensure that the `standardFontDataUrl` API parameter is provided."
@@ -48,13 +50,8 @@ class BaseStandardFontDataFactory implements StandardFontDataFactory {
     });
   }
 
-  /**
-   * @ignore
-   * @returns {Promise<Uint8Array>}
-   */
-  async _fetch(_url: string): Promise<Uint8Array> {
-    unreachable("Abstract method `_fetch` called.");
-  }
+  abstract _fetch(_url: string): Promise<Uint8Array<ArrayBuffer>>;
+
 }
 
 class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
@@ -62,7 +59,7 @@ class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
   constructor(baseUrl: string | null) {
     super(baseUrl);
   }
-  
+
   /**
    * @ignore
    */

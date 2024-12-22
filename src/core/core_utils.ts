@@ -82,7 +82,7 @@ class XRefParseException extends BaseException {
  * @param {Array<ArrayBuffer>} arr - An array of ArrayBuffers.
  * @returns {Uint8Array}
  */
-function arrayBuffersToBytes(arr: Array<ArrayBuffer>): Uint8Array {
+function arrayBuffersToBytes(arr: Array<ArrayBuffer>): Uint8Array<ArrayBuffer> {
   if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     for (const item of arr) {
       assert(
