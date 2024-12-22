@@ -114,10 +114,10 @@ abstract class BasePDFManager implements PDFManager {
 
   protected _password: string | null;
 
-  evaluatorOptions: DocumentParameterEvaluatorOptions;
+  readonly evaluatorOptions: DocumentParameterEvaluatorOptions;
 
   constructor(args: PDFManagerArgs) {
-    
+
     this._docBaseUrl = parseDocBaseUrl(args.docBaseUrl);
     this._docId = args.docId;
     this._password = args.password;
@@ -192,7 +192,7 @@ class LocalPDFManager extends BasePDFManager {
 
   public pdfDocument: PDFDocument;
 
-  _loadedStreamPromise: Promise<Stream>;
+  protected _loadedStreamPromise: Promise<Stream>;
 
   constructor(args: PDFManagerArgs) {
     super(args);

@@ -295,7 +295,7 @@ class ChunkedStreamManager {
 
   protected aborted = false;
 
-  protected _loadedStreamCapability = <PromiseWithResolvers<ChunkedStream>>Promise.withResolvers()
+  protected _loadedStreamCapability = Promise.withResolvers<ChunkedStream>()
 
   protected msgHandler: MessageHandler;
 

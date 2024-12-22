@@ -1986,7 +1986,7 @@ export class PDFPageProxy {
    *   {@link TextContent} object that represents the page's text content.
    */
   getTextContent(params: GetTextContentParameters): Promise<TextContent> {
-    // tomb 不再支持  
+
     const readableStream = this.streamTextContent(params);
 
     return new Promise(function (resolve, reject) {

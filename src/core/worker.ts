@@ -704,36 +704,26 @@ class WorkerMessageHandler {
         // NOTE: Keep this condition in sync with the `info` helper function.
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
-        page.extractTextContent(
-          handler!, task, includeMarkedContent,
-          disableNormalization, sink,
-        ).then(
-          function () {
+        page.extractTextContent(handler!, task, includeMarkedContent, disableNormalization, sink)
+          .then(() => {
             finishWorkerTask(task);
-
             if (start) {
-              info(
-                `page=${pageIndex + 1} - getTextContent: time=` +
-                `${Date.now() - start}ms`
-              );
+              const msg = `page=${pageIndex + 1} - getTextContent: time=` + `${Date.now() - start}ms`;
+              info(msg);
             }
             sink.close();
-          },
-          function (reason) {
+          }, (reason) => {
             finishWorkerTask(task);
             if (task.terminated) {
               return; // ignoring errors from the terminated thread
             }
             sink.error(reason);
-
             // TODO: Should `reason` be re-thrown here (currently that casues
             //       "Uncaught exception: ..." messages in the console)?
-          }
-        );
+          });
       });
     });
 
-    // 这个比较复杂，先别急着解决
     handler.onGetStructTree(
       data => pdfManager!.getPage(data.pageIndex).then(
         page => pdfManager!.ensure(page, page => page.getStructTree())
@@ -783,7 +773,7 @@ class WorkerMessageHandler {
   }
 
   static initializeFromPort(port: MessagePoster) {
-    const handler = new MessageHandler("worker", "main", <any>port);
+    const handler = new MessageHandler("worker", "main", port);
     WorkerMessageHandler.setup(handler, port);
     handler.send("ready", null);
   }
