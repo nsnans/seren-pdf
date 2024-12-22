@@ -14,7 +14,7 @@
  */
 /* eslint-disable no-var */
 
-import { DocumentParameterEvaluatorOptions } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
@@ -161,7 +161,7 @@ export interface CssFontInfo {
   metrics: { lineHeight: number, lineGap: number }
 }
 
-const DefaultDocParamEvaluatorOptions: DocumentParameterEvaluatorOptions = Object.freeze({
+const DefaultDocParamEvaluatorOptions: DocumentEvaluatorOptions = Object.freeze({
   maxImageSize: -1,
   disableFontFace: false,
   ignoreErrors: false,
@@ -318,7 +318,7 @@ class PartialEvaluator {
 
   protected _fetchBuiltInCMapBound;
 
-  public options: DocumentParameterEvaluatorOptions;
+  public options: DocumentEvaluatorOptions;
 
   public type3FontRefs: RefSet | null;
 
@@ -332,7 +332,7 @@ class PartialEvaluator {
     standardFontDataCache: Map<string, any>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
-    options: DocumentParameterEvaluatorOptions | null = null,
+    options: DocumentEvaluatorOptions | null = null,
   ) {
     this.xref = xref;
     this.handler = handler;
@@ -548,7 +548,7 @@ class PartialEvaluator {
 
     const standardFontNameToFileName = getFontNameToFileMap();
     const filename = standardFontNameToFileName![name];
-    
+
     let data: Uint8Array<ArrayBuffer> | null = null;
 
     if (this.options.standardFontDataUrl !== null) {
@@ -675,17 +675,9 @@ class PartialEvaluator {
     const transfers = imgData ? [imgData.bitmap || imgData.data!.buffer] : null;
 
     if (this.parsingType3Font || cacheGlobally) {
-      return this.handler.send(
-        "commonobj",
-        [objId, "Image", imgData],
-        transfers
-      );
+      return this.handler.commonobj(objId, "Image", imgData, transfers);
     }
-    return this.handler.send(
-      "obj",
-      [objId, this.pageIndex, "Image", imgData],
-      transfers
-    );
+    return this.handler.obj(objId, this.pageIndex, "Image", imgData, transfers);
   }
 
   async buildPaintImageXObject(
@@ -941,11 +933,10 @@ class PartialEvaluator {
       // globally, check if the image is still cached locally on the main-thread
       // to avoid having to re-parse the image (since that can be slow).
       if (w * h > 250000 || dict.has(DictKey.SMask) || dict.has(DictKey.Mask)) {
-        const localLength = <number>await this.handler.sendWithPromise("commonobj", [
-          objId,
-          "CopyLocalImage",
-          { imageRef },
-        ]);
+
+        const handler = this.handler;
+
+        const localLength = await handler.commonobjPromise(objId, "CopyLocalImage", { imageRef });
 
         if (localLength) {
           this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
@@ -1657,9 +1648,9 @@ class PartialEvaluator {
     localShadingPatternCache.set(shading, id);
 
     if (this.parsingType3Font) {
-      this.handler.send("commonobj", [id, "Pattern", patternIR]);
+      this.handler.commonobj(id, "Pattern", patternIR);
     } else {
-      this.handler.send("obj", [id, this.pageIndex, "Pattern", patternIR]);
+      this.handler.obj(id, this.pageIndex, "Pattern", patternIR);
     }
     return id;
   }
@@ -4706,18 +4697,20 @@ class PartialEvaluator {
     return new Font(fontName.name, <Stream>fontFile!, newProperties);
   }
 
-  static buildFontPaths(font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocumentParameterEvaluatorOptions) {
+  static buildFontPaths(
+    font: Font,
+    glyphs: Glyph[],
+    handler: MessageHandler,
+    evaluatorOptions: DocumentEvaluatorOptions
+  ) {
     function buildPath(fontChar: string) {
       const glyphName = `${font.loadedName}_path_${fontChar}`;
       try {
         if (font.renderer.hasBuiltPath(fontChar)) {
           return;
         }
-        handler.send("commonobj", [
-          glyphName,
-          "FontPath",
-          font.renderer.getPathJs(fontChar),
-        ]);
+        const pathJs = font.renderer.getPathJs(fontChar);
+        handler.commonobj(glyphName, "FontPath", pathJs);
       } catch (reason) {
         if (evaluatorOptions.ignoreErrors) {
           warn(`buildFontPaths - ignoring ${glyphName} glyph: "${reason}".`);
@@ -4769,7 +4762,7 @@ class TranslatedFont {
   protected _bbox: RectType | null = null;
 
   constructor(loadedName: string, font: Font | ErrorFont,
-    dict: Dict, evaluatorOptions: DocumentParameterEvaluatorOptions) {
+    dict: Dict, evaluatorOptions: DocumentEvaluatorOptions) {
     this.loadedName = loadedName;
     this.font = font;
     this.dict = dict;
@@ -4783,12 +4776,8 @@ class TranslatedFont {
       return;
     }
     this.sent = true;
-
-    handler.send("commonobj", [
-      this.loadedName,
-      "Font",
-      this.font.exportData(this._evaluatorOptions.fontExtraProperties),
-    ]);
+    const exportData = this.font.exportData(this._evaluatorOptions.fontExtraProperties);
+    handler.commonobj(this.loadedName, "Font", exportData);
   }
 
   fallback(handler: MessageHandler) {

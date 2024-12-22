@@ -7,7 +7,9 @@
 export const MessageHandlerAction = {
   GetDocRequest: "GetDocRequest",
   test: "test",
+  // 注意，大小ready不一样
   Ready: "Ready",
+  ready: "ready",
   configure: "configure",
   GetReader: "GetReader",
   ReaderHeadersReady: "ReaderHeadersReady",
@@ -44,4 +46,6 @@ export const MessageHandlerAction = {
   Cleanup: "Cleanup",
   Terminate: "Terminate",
   GetMetadata: "GetMetadata",
+  commonobj: "commonobj",
+  obj: "obj"
 }

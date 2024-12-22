@@ -179,6 +179,30 @@ function fetchRemoteDest(action: Dict) {
   return null;
 }
 
+interface ParsedDestDictionary {
+  resetForm?: {
+    fields: string[];
+    refs: string[];
+    include: boolean;
+  };
+  newWindow?: boolean;
+  attachment?: FileSpecSerializable;
+  attachmentDest?: string;
+  action: string | null;
+  setOCGState?: {
+    state: string[];
+    preserveRB: boolean;
+  };
+  url: string | null;
+  unsafeUrl?: string;
+  dest: string | DestinationType | null;
+}
+
+export interface CatalogOpenAction {
+  dest: string | DestinationType | null,
+  action: string | null;
+}
+
 export class Catalog {
 
   protected pdfManager: PDFManager;
@@ -419,10 +443,7 @@ export class Catalog {
     return shadow(this, "documentOutline", obj);
   }
 
-  /**
-   * @private
-   */
-  _readDocumentOutline() {
+  private _readDocumentOutline() {
     let obj: Dict | Ref | number | string = this._catDict.getValue(DictKey.Outlines);
     if (!(obj instanceof Dict)) {
       return null;
@@ -450,7 +471,7 @@ export class Catalog {
         warn("Invalid outline item encountered.");
       }
 
-      const data: Record<string, any> = { url: null, dest: null, action: null };
+      const data: ParsedDestDictionary = { url: null, dest: null, action: null };
       Catalog.parseDestDictionary(
         outlineDict,
         data,
@@ -1131,15 +1152,18 @@ export class Catalog {
 
   get openAction() {
     const obj = this._catDict.getValue(DictKey.OpenAction);
-    const openAction = Object.create(null);
+    let openAction: CatalogOpenAction | null = null;
 
     if (obj instanceof Dict) {
+      openAction = {
+        dest: null, action: null
+      }
       // Convert the OpenAction dictionary into a format that works with
       // `parseDestDictionary`, to avoid having to re-implement those checks.
       const destDict = new Dict(this.xref);
       destDict.set(DictKey.A, obj);
 
-      const resultObj = { url: null, dest: null, action: null };
+      const resultObj: ParsedDestDictionary = { url: null, dest: null, action: null };
       Catalog.parseDestDictionary(destDict, resultObj);
 
       if (Array.isArray(resultObj.dest)) {
@@ -1148,13 +1172,11 @@ export class Catalog {
         openAction.action = resultObj.action;
       }
     } else if (Array.isArray(obj)) {
-      openAction.dest = obj;
+      openAction = {
+        dest: obj, action: null
+      }
     }
-    return shadow(
-      this,
-      "openAction",
-      objectSize(openAction) > 0 ? openAction : null
-    );
+    return shadow(this, "openAction", openAction);
   }
 
   // 这应该是处理附件的？
@@ -1647,9 +1669,9 @@ export class Catalog {
    */
   static parseDestDictionary(
     destDict: Dict,
-    resultObj: any, // 可能是多种多样的
+    resultObj: ParsedDestDictionary, // 可能是多种多样的
     docBaseUrl: string | null = null,
-    docAttachments: Record<string, FileSpecSerializable> | null = null,
+    docAttachments: Map<string, FileSpecSerializable> | null = null,
   ) {
     if (!(destDict instanceof Dict)) {
       warn("parseDestDictionary: `destDict` must be a dictionary.");
@@ -1858,7 +1880,7 @@ export class Catalog {
       if (typeof dest === "string") {
         resultObj.dest = stringToPDFString(dest);
       } else if (isValidExplicitDest(dest)) {
-        resultObj.dest = dest;
+        resultObj.dest = <DestinationType>dest;
       }
     }
   }

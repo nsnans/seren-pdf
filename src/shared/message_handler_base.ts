@@ -14,7 +14,6 @@
  */
 
 import { StreamSink } from "../core/core_types";
-import { PlatformHelper } from "../platform/platform_helper";
 import {
   AbortException,
   assert,
@@ -44,15 +43,9 @@ export const StreamKind = {
 };
 
 export function wrapReason(reason: any) {
-  if (
-    !(
-      reason instanceof Error ||
-      (typeof reason === "object" && reason !== null)
-    )
-  ) {
-    unreachable(
-      'wrapReason: Expected "reason" to be a (possibly cloned) Error.'
-    );
+  const valid = !(reason instanceof Error || (typeof reason === "object" && reason !== null));
+  if (valid) {
+    unreachable('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
   }
   switch (reason.name) {
     case "AbortException":

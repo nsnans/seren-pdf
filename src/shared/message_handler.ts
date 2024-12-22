@@ -4,7 +4,7 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
-import { CatalogMarkInfo, DestinationType, ViewerPreferenceKeys } from "../core/catalog";
+import { Catalog, CatalogMarkInfo, CatalogOpenAction, DestinationType, ViewerPreferenceKeys } from "../core/catalog";
 import { FieldObject, StreamSink } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
@@ -38,8 +38,8 @@ export class MessageHandler extends AbstractMessageHandler {
   }
 
   onTest(fn: (data: Uint8Array<ArrayBuffer> | boolean, transfers: Transferable[] | null) => void): void {
-    const test = MessageHandlerAction.test;
-    this.on(test, fn);
+    const action = MessageHandlerAction.test;
+    this.on(action, fn);
   }
 
   configure(verbosity: number) {
@@ -48,8 +48,8 @@ export class MessageHandler extends AbstractMessageHandler {
   }
 
   onConfigure(fn: (verbosity: { verbosity: number }) => void): void {
-    const configure = MessageHandlerAction.configure;
-    this.on(configure, fn);
+    const action = MessageHandlerAction.configure;
+    this.on(action, fn);
   }
 
   GetReader() {
@@ -248,12 +248,14 @@ export class MessageHandler extends AbstractMessageHandler {
   }
 
   // TODO GetOpenAction比较复杂，要确定类型
-  GetOpenAction() {
+  GetOpenAction(): Promise<CatalogOpenAction | null> {
     const action = MessageHandlerAction.GetOpenAction;
     return this.sendWithPromise(action, null);
   }
 
-  onGetOpenAction() {
+  onGetOpenAction(fn: () => Promise<CatalogOpenAction | null>) {
+    const action = MessageHandlerAction.GetOpenAction;
+    this.on(action, fn);
   }
 
   GetAttachments(): Promise<Map<string, FileSpecSerializable> | null> {
@@ -358,7 +360,7 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onGetStructTree(fn: (data: { pageIndex: number }) => Promise<StructTreeSerialNode | null>) {
     const action = MessageHandlerAction.GetStructTree;
-    return this.on(action, fn);
+    this.on(action, fn);
   }
 
   FontFallback(id: string): Promise<void> {
@@ -401,6 +403,33 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
+  // 这里的any是不得已而为之
+  obj(id: string, page: number, type: string, data: any, transfers: Transferable[] | null = null) {
+    const action = MessageHandlerAction.obj;
+    this.send(action, [id, page, type, data], transfers)
+  }
+
+  onObj(fn: (res: [string, number, string, any]) => void) {
+    const action = MessageHandlerAction.obj;
+    this.on(action, fn);
+  }
+
+  // 这里的any是不得已而为之
+  commonobj(id: string, type: string, data: any, transfers: Transferable[] | null = null) {
+    const action = MessageHandlerAction.commonobj;
+    this.send(action, [id, type, data], transfers);
+  }
+
+  commonobjPromise(id: string, type: string, data: any): Promise<number> {
+    const action = MessageHandlerAction.commonobj;
+    return this.sendWithPromise(action, [id, type, data]);
+  }
+
+  onCommonobj(fn: (res: [string, string, any]) => Promise<number | null>) {
+    const action = MessageHandlerAction.commonobj;
+    this.on(action, fn);
+  }
+
   Ready(): void {
     const action = MessageHandlerAction.Ready;
     this.send(action, null)
@@ -408,6 +437,16 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onReady(fn: () => void) {
     const action = MessageHandlerAction.Ready;
+    this.on(action, fn);
+  }
+
+  ready(): void {
+    const action = MessageHandlerAction.ready;
+    this.send(action, null)
+  }
+
+  onready(fn: () => void) {
+    const action = MessageHandlerAction.ready;
     this.on(action, fn);
   }
 }

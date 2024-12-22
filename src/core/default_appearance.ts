@@ -35,7 +35,7 @@ import { PDFFunctionFactory } from "./function";
 import { Stream, StringStream } from "./stream";
 import { XRef } from "./xref";
 import { PointType, RectType } from "../display/display_utils";
-import { DocumentParameterEvaluatorOptions } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/api";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str: string) {
@@ -107,9 +107,9 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
   protected resources: Dict | null;
 
-  protected evaluatorOptions: DocumentParameterEvaluatorOptions;
+  protected evaluatorOptions: DocumentEvaluatorOptions;
 
-  constructor(stream: Stream, evaluatorOptions: DocumentParameterEvaluatorOptions, xref: XRef) {
+  constructor(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRef) {
     super(stream);
     this.stream = stream;
     this.evaluatorOptions = evaluatorOptions;
@@ -224,7 +224,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
 // Parse appearance stream to extract font and color information.
 // It returns the font properties used to render the first text object.
-function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentParameterEvaluatorOptions, xref: XRef) {
+function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRef) {
   return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 

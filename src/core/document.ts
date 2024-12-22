@@ -16,7 +16,7 @@
 import { RectType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
-import { MessageHandler } from "../shared/message_handler_base";
+import { MessageHandler } from "../shared/message_handler";
 import {
   AnnotationEditorPrefix,
   assert,

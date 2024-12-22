@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocumentParameterEvaluatorOptions } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/api";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import {
@@ -48,7 +48,7 @@ export interface PDFManagerArgs {
   disableAutoFetch: boolean;
   docBaseUrl: string | null;
   docId: string;
-  evaluatorOptions: DocumentParameterEvaluatorOptions;
+  evaluatorOptions: DocumentEvaluatorOptions;
   handler: MessageHandler;
   length: number;
   password: string | null;
@@ -61,7 +61,7 @@ interface PDFManager {
 
   password: string | null;
 
-  evaluatorOptions: DocumentParameterEvaluatorOptions;
+  evaluatorOptions: DocumentEvaluatorOptions;
 
   docBaseUrl: string;
 
@@ -114,7 +114,7 @@ abstract class BasePDFManager implements PDFManager {
 
   protected _password: string | null;
 
-  readonly evaluatorOptions: DocumentParameterEvaluatorOptions;
+  readonly evaluatorOptions: DocumentEvaluatorOptions;
 
   constructor(args: PDFManagerArgs) {
 

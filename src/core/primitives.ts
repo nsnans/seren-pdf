@@ -521,7 +521,7 @@ type DictValueTypeMapping = {
   [DictKey.O]: string,
   [DictKey.Obj]: Ref,
   [DictKey.Off]: BaseStream,
-  [DictKey.OpenAction]: Dict,
+  [DictKey.OpenAction]: Dict | DestinationType,
   [DictKey.Open]: "Open",
   [DictKey.Ordering]: string,
   [DictKey.Outlines]: Dict,

@@ -408,9 +408,9 @@ class WorkerMessageHandler {
       () => pdfManager!.ensureCatalog(catalog => catalog.viewerPreferences)
     );
 
-    handler.on("GetOpenAction", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.openAction);
-    });
+    handler.onGetOpenAction(
+      () => pdfManager!.ensureCatalog(catalog => catalog.openAction)
+    );
 
     handler.onGetAttachments(
       () => pdfManager!.ensureCatalog(catalog => catalog.attachments)
@@ -775,7 +775,7 @@ class WorkerMessageHandler {
   static initializeFromPort(port: MessagePoster) {
     const handler = new MessageHandler("worker", "main", port);
     WorkerMessageHandler.setup(handler, port);
-    handler.send("ready", null);
+    handler.ready();
   }
 }
 

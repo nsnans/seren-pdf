@@ -290,7 +290,7 @@ interface DocumentInitParameters {
  * @returns {PDFDocumentLoadingTask}
  */
 
-export class DocumentParameterEvaluatorOptions {
+export class DocumentEvaluatorOptions {
 
   readonly maxImageSize: number;
 
@@ -359,7 +359,7 @@ export class DocumentParameter {
 
   readonly docBaseUrl: string | null;
 
-  readonly evaluatorOptions: DocumentParameterEvaluatorOptions;
+  readonly evaluatorOptions: DocumentEvaluatorOptions;
 
   constructor(
     docId: string,
@@ -370,7 +370,7 @@ export class DocumentParameter {
     rangeChunkSize: number,
     length: number,
     docBaseUrl: string | null,
-    evaluatorOptions: DocumentParameterEvaluatorOptions
+    evaluatorOptions: DocumentEvaluatorOptions
   ) {
     this.docId = docId;
     this.apiVersion = apiVersion;
@@ -436,7 +436,7 @@ class DocParameterEvaluatorOptionsBuilder {
     if (this._useSystemFonts === null) {
       throw new Error("cannot build evaluation options because useSystemFonts is null");
     }
-    return new DocumentParameterEvaluatorOptions(
+    return new DocumentEvaluatorOptions(
       this._maxImageSize,
       this._disableFontFace,
       this._ignoreErrors,
@@ -514,7 +514,7 @@ class DocumentParameterBuilder {
 
   private _docBaseUrl: string | null = null;
 
-  private _evaluatorOptions: DocumentParameterEvaluatorOptions | null = null;
+  private _evaluatorOptions: DocumentEvaluatorOptions | null = null;
 
   build() {
     if (this._docId === null) {
@@ -577,7 +577,7 @@ class DocumentParameterBuilder {
     this._docBaseUrl = docBaseUrl;
   }
 
-  set evaluatorOptions(options: DocumentParameterEvaluatorOptions) {
+  set evaluatorOptions(options: DocumentEvaluatorOptions) {
     this._evaluatorOptions = options;
   }
 }
@@ -2455,7 +2455,7 @@ class PDFWorker {
     }
     this._port = port;
     this._messageHandler = new MessageHandler("main", "worker", port);
-    this._messageHandler.onReady(() => {
+    this._messageHandler.onready(() => {
       // Ignoring "ready" event -- MessageHandler should already be initialized
       // and ready to accept messages.
     });
@@ -2514,7 +2514,7 @@ class PDFWorker {
         { signal: ac.signal }
       );
 
-      messageHandler.on("test", data => {
+      messageHandler.onTest(data => {
         ac.abort();
         if (this.destroyed || !data) {
           terminateEarly();
@@ -2527,7 +2527,7 @@ class PDFWorker {
         this.#resolve();
       });
 
-      messageHandler.onReady(() => {
+      messageHandler.onready(() => {
         ac.abort();
         if (this.destroyed) {
           terminateEarly();
@@ -3120,12 +3120,11 @@ class WorkerTransport {
       if (this.destroyed) {
         return; // Ignore any pending requests if the worker was terminated.
       }
-
       const page = this.#pageCache.get(data.pageIndex);
       page._startRenderPage(data.transparency, data.cacheKey);
     });
 
-    messageHandler.on("commonobj", ([id, type, exportedData]) => {
+    messageHandler.onCommonobj(([id, type, exportedData]) => {
       if (this.destroyed) {
         return null; // Ignore any pending requests if the worker was terminated.
       }
@@ -3137,7 +3136,6 @@ class WorkerTransport {
       switch (type) {
         case "Font":
           const { disableFontFace, fontExtraProperties, pdfBug } = this._params;
-
           if ("error" in exportedData) {
             const exportedError = exportedData.error;
             warn(`Error during font loading: ${exportedError}`);
@@ -3146,13 +3144,10 @@ class WorkerTransport {
           }
 
           const inspectFont =
-            pdfBug && (globalThis as any).FontInspector?.enabled
-              ? (font: FontFaceObject, url?: string) => (globalThis as any).FontInspector.fontAdded(font, url!)
+            pdfBug && globalThis.FontInspector?.enabled
+              ? (font: FontFaceObject, url?: string) => globalThis.FontInspector.fontAdded(font, url!)
               : null;
-          const font = new FontFaceObject(exportedData, {
-            disableFontFace,
-            inspectFont,
-          });
+          const font = new FontFaceObject(exportedData, { disableFontFace, inspectFont });
 
           this.fontLoader
             .bind(font)
@@ -3198,7 +3193,7 @@ class WorkerTransport {
       return null;
     });
 
-    messageHandler.on("obj", ([id, pageIndex, type, imageData]) => {
+    messageHandler.onObj(([id, pageIndex, type, imageData]) => {
       if (this.destroyed) {
         // Ignore any pending requests if the worker was terminated.
         return;
@@ -3387,7 +3382,7 @@ class WorkerTransport {
   }
 
   getOpenAction() {
-    return this.messageHandler!.sendWithPromise("GetOpenAction", null);
+    return this.messageHandler!.GetOpenAction();
   }
 
   getAttachments() {
