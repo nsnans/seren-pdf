@@ -383,7 +383,7 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
 }
 
 function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string>) {
-  const actions: Record<string, string[]> = Object.create(null);
+  const actions = new Map<string, string[]>();
   const additionalActionsDicts = getInheritableProperty(
     dict, "AA", false, false,
   );
@@ -408,7 +408,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
         const list = <string[]>[];
         _collectJS(actionDict, xref, list, parents);
         if (list.length > 0) {
-          actions[action] = list;
+          actions.set(action, list);
         }
       }
     }
@@ -420,7 +420,7 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
     const list = <string[]>[];
     _collectJS(actionDict, xref, list, parents);
     if (list.length > 0) {
-      actions.Action = list;
+      actions.set('Action', list);
     }
   }
   return objectSize(actions) > 0 ? actions : null;

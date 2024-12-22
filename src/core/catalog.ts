@@ -55,10 +55,62 @@ import { MetadataParser } from "./metadata_parser";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
-import { MessageHandler } from "../shared/message_handler_base";
+import { MessageHandler } from "../shared/message_handler";
 import { FontSubstitutionInfo } from "./font_substitutions";
 
-function isValidExplicitDest(dest) {
+export type DestinationType = [Ref, Name, ...number[]];
+
+export enum ViewerPreferenceKeys {
+  HideToolbar = "HideToolbar",
+  HideMenubar = "HideMenubar",
+  HideWindowUI = "HideWindowUI",
+  FitWindow = "FitWindow",
+  CenterWindow = "CenterWindow",
+  DisplayDocTitle = "DisplayDocTitle",
+  PickTrayByPDFSize = "PickTrayByPDFSize",
+  NonFullScreenPageMode = "NonFullScreenPageMode",
+  Direction = "Direction",
+  ViewArea = "ViewArea",
+  ViewClip = "ViewClip",
+  PrintArea = "PrintArea",
+  PrintClip = "PrintClip",
+  PrintScaling = "PrintScaling",
+  Duplex = "Duplex",
+  PrintPageRange = "PrintPageRange",
+  NumCopies = "NumCopies",
+}
+
+type ViewerPreferenceValueTypes = {
+  [ViewerPreferenceKeys.HideToolbar]: boolean,
+  [ViewerPreferenceKeys.HideMenubar]: boolean,
+  [ViewerPreferenceKeys.HideWindowUI]: boolean,
+  [ViewerPreferenceKeys.FitWindow]: boolean,
+  [ViewerPreferenceKeys.CenterWindow]: boolean,
+  [ViewerPreferenceKeys.DisplayDocTitle]: boolean,
+  [ViewerPreferenceKeys.PickTrayByPDFSize]: boolean,
+  [ViewerPreferenceKeys.NonFullScreenPageMode]: string,
+  [ViewerPreferenceKeys.Direction]: string,
+  [ViewerPreferenceKeys.ViewArea]: string,
+  [ViewerPreferenceKeys.ViewClip]: string,
+  [ViewerPreferenceKeys.PrintArea]: string,
+  [ViewerPreferenceKeys.PrintClip]: string,
+  [ViewerPreferenceKeys.PrintScaling]: string,
+  [ViewerPreferenceKeys.Duplex]: string,
+  [ViewerPreferenceKeys.PrintPageRange]: number[],
+  [ViewerPreferenceKeys.NumCopies]: number
+}
+
+/**
+ * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
+ */
+export class CatalogMarkInfo {
+  Marked = false;
+  UserProperties = false;
+  Suspects = false;
+}
+
+// 传进来的值可能是DestinationType，也可能是其它莫名其妙的类型
+function isValidExplicitDest(dest: DestinationType | unknown) {
   if (!Array.isArray(dest) || dest.length < 2) {
     return false;
   }
@@ -105,15 +157,15 @@ function isValidExplicitDest(dest) {
   return true;
 }
 
-function fetchDest(dest) {
+function fetchDest(dest: Dict | DestinationType | unknown) {
   if (dest instanceof Dict) {
-    dest = dest.getValue(DictKey.D);
+    dest = <DestinationType>dest.getValue(DictKey.D);
   }
-  return isValidExplicitDest(dest) ? dest : null;
+  return isValidExplicitDest(dest) ? <DestinationType>dest : null;
 }
 
 function fetchRemoteDest(action: Dict) {
-  let dest: Dict | Name | string | number[] = action.getValue(DictKey.D);
+  let dest: Dict | Name | string | number[] | DestinationType = action.getValue(DictKey.D);
   if (dest) {
     if (dest instanceof Name) {
       dest = dest.name;
@@ -300,18 +352,17 @@ export class Catalog {
   /**
    * @private
    */
-  _readMarkInfo() {
+  _readMarkInfo(): CatalogMarkInfo | null {
     const obj = this._catDict.getValue(DictKey.MarkInfo);
     if (!(obj instanceof Dict)) {
       return null;
     }
 
-    const markInfo = {
-      Marked: false,
-      UserProperties: false,
-      Suspects: false,
-    } as Record<string, boolean>;
-    for (const key in markInfo) {
+    const markInfo = new CatalogMarkInfo();
+
+    const keys = <(keyof CatalogMarkInfo)[]>Reflect.ownKeys(markInfo);
+
+    for (const key of keys) {
       const value = obj.getValue(<DictKey>key);
       if (typeof value === "boolean") {
         markInfo[key] = value;
@@ -738,20 +789,20 @@ export class Catalog {
   }
 
   get destinations() {
-    const obj = this._readDests(),
-      dests = Object.create(null);
+    const obj = this._readDests();
+    const dests = new Map<string, DestinationType>();
     if (obj instanceof NameTree) {
       for (const [key, value] of obj.getAll()) {
         const dest = fetchDest(value);
         if (dest) {
-          dests[stringToPDFString(key)] = dest;
+          dests.set(stringToPDFString(key), dest);
         }
       }
     } else if (obj instanceof Dict) {
       obj.forEach(function (key, value) {
         const dest = fetchDest(value);
         if (dest) {
-          dests[key] = dest;
+          dests.set(key, dest);
         }
       });
     }
@@ -767,7 +818,7 @@ export class Catalog {
       }
       // Fallback to checking the *entire* NameTree, in an attempt to handle
       // corrupt PDF documents with out-of-order NameTrees (fixes issue 10272).
-      const allDest = this.destinations[id];
+      const allDest = this.destinations.get(id);
       if (allDest) {
         warn(`Found "${id}" at an incorrect position in the NameTree.`);
         return allDest;
@@ -905,7 +956,7 @@ export class Catalog {
       pageLabels[i] = prefix + currentLabel;
       currentIndex++;
     }
-    return pageLabels;
+    return <string[]>pageLabels;
   }
 
   get pageLayout() {
@@ -947,16 +998,19 @@ export class Catalog {
     return shadow(this, "pageMode", pageMode);
   }
 
-  get viewerPreferences() {
+  get viewerPreferences(): Map<ViewerPreferenceKeys, ViewerPreferenceValueTypes[ViewerPreferenceKeys]> | null {
+
     const obj = this._catDict.getValue(DictKey.ViewerPreferences);
+
     if (!(obj instanceof Dict)) {
       return shadow(this, "viewerPreferences", null);
     }
-    let prefs = null;
+
+    let prefs: Map<ViewerPreferenceKeys, ViewerPreferenceValueTypes[ViewerPreferenceKeys]> | null = null;
 
     for (const key of obj.getKeys()) {
       const value = obj.getValue(key);
-      let prefValue;
+      let prefValue: string | boolean | number | number[] | undefined;
 
       switch (key) {
         case DictKey.HideToolbar:
@@ -1056,7 +1110,7 @@ export class Catalog {
           break;
         case DictKey.NumCopies:
           if (Number.isInteger(value) && <number>value > 0) {
-            prefValue = value;
+            prefValue = <number>value;
           }
           break;
         default:
@@ -1069,9 +1123,10 @@ export class Catalog {
         continue;
       }
       if (!prefs) {
-        prefs = Object.create(null);
+        prefs = new Map();
       }
-      prefs[key] = prefValue;
+      const str = <string>key;
+      prefs.set(<ViewerPreferenceKeys>str, prefValue);
     }
     return shadow(this, "viewerPreferences", prefs);
   }
@@ -1107,16 +1162,16 @@ export class Catalog {
   // 这应该是处理附件的？
   get attachments() {
     const obj = this._catDict.getValue(DictKey.Names);
-    let attachments: Record<string, FileSpecSerializable> | null = null;
+    let attachments: Map<string, FileSpecSerializable> | null = null;
 
     if (obj instanceof Dict && obj.has(DictKey.EmbeddedFiles)) {
       const nameTree = new NameTree(obj.getRaw(DictKey.EmbeddedFiles), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         const fs = new FileSpec(value, this.xref);
         if (!attachments) {
-          attachments = Object.create(null);
+          attachments = new Map();
         }
-        attachments![stringToPDFString(key)] = fs.serializable;
+        attachments.set(stringToPDFString(key), fs.serializable);
       }
     }
     return shadow(this, "attachments", attachments);
@@ -1172,13 +1227,13 @@ export class Catalog {
     );
 
     if (javaScript) {
-      actions ||= Object.create(null);
+      actions ||= new Map();
 
       for (const [key, val] of javaScript) {
-        if (key in actions!) {
-          actions![key].push(val);
+        if (actions.has(key)) {
+          actions.get(key)!.push(val);
         } else {
-          actions![key] = [val];
+          actions.set(key, [val]);
         }
       }
     }

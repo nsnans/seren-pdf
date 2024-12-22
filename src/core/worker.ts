@@ -388,47 +388,47 @@ class WorkerMessageHandler {
       return pdfManager!.ensureCatalog(catalog => catalog.getPageIndex(pageRef));
     });
 
-    handler.on("GetDestinations", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.destinations);
-    });
+    handler.onGetDestinations(
+      () => pdfManager!.ensureCatalog(catalog => catalog.destinations)
+    );
 
-    handler.on("GetDestination", function (data: { id: string }) {
-      return pdfManager!.ensureCatalog(catalog => catalog.getDestination(data.id));
-    });
+    handler.onGetDestination(
+      data => pdfManager!.ensureCatalog(catalog => catalog.getDestination(data.id))
+    );
 
-    handler.on("GetPageLabels", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.pageLabels);
-    });
+    handler.onGetPageLabels(
+      () => pdfManager!.ensureCatalog(catalog => catalog.pageLabels)
+    );
 
-    handler.on("GetPageLayout", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.pageLayout);
-    });
+    handler.onGetPageLayout(
+      () => pdfManager!.ensureCatalog(catalog => catalog.pageLayout)
+    );
 
-    handler.on("GetPageMode", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.pageMode);
-    });
+    handler.onGetPageMode(
+      () => pdfManager!.ensureCatalog(catalog => catalog.pageMode)
+    );
 
-    handler.on("GetViewerPreferences", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.viewerPreferences);
-    });
+    handler.onGetViewerPreferences(
+      () => pdfManager!.ensureCatalog(catalog => catalog.viewerPreferences)
+    );
 
     handler.on("GetOpenAction", function () {
       return pdfManager!.ensureCatalog(catalog => catalog.openAction);
     });
 
-    handler.on("GetAttachments", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.attachments);
-    });
+    handler.onGetAttachments(
+      () => pdfManager!.ensureCatalog(catalog => catalog.attachments)
+    );
 
-    handler.on("GetDocJSActions", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.jsActions);
-    });
+    handler.onGetDocJSActions(
+      () => pdfManager!.ensureCatalog(catalog => catalog.jsActions)
+    );
 
-    handler.on("GetPageJSActions", function ({ pageIndex }) {
-      return pdfManager!.getPage(pageIndex).then(function (page) {
-        return pdfManager!.ensure(page, page => page.jsActions);
-      });
-    });
+    handler.onGetPageJSActions(
+      data => pdfManager!.getPage(data.pageIndex).then(
+        page => pdfManager!.ensure(page, page => page.jsActions)
+      )
+    );
 
     handler.on("GetOutline", function () {
       return pdfManager!.ensureCatalog(catalog => catalog.documentOutline);
@@ -438,9 +438,9 @@ class WorkerMessageHandler {
       return pdfManager!.ensureCatalog(catalog => catalog.optionalContentConfig);
     });
 
-    handler.on("GetPermissions", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.permissions);
-    });
+    handler.onGetPermissions(
+      () => pdfManager!.ensureCatalog(catalog => catalog.permissions)
+    );
 
     handler.on("GetMetadata", function () {
       return Promise.all([
@@ -449,9 +449,9 @@ class WorkerMessageHandler {
       ]);
     });
 
-    handler.on("GetMarkInfo", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.markInfo);
-    });
+    handler.onGetMarkInfo(
+      () => pdfManager!.ensureCatalog(catalog => catalog.markInfo)
+    );
 
     handler.on("GetData", function () {
       return pdfManager!.requestLoadedStream().then(function (stream) {

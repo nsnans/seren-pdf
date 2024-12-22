@@ -17,6 +17,7 @@
  * @module pdfjsLib
  */
 
+import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
 import { StreamGetOperatorListParameters } from "../core/core_types";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
@@ -26,6 +27,7 @@ import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
+import { MessageHandlerAction } from "../shared/message_handler_utils";
 import {
   AbortException,
   AnnotationMode,
@@ -1052,14 +1054,7 @@ interface OutlineNode {
   items: Array<OutlineNode>;
 }
 
-/**
- * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
- */
-interface MarkInfo {
-  Marked: boolean;
-  UserProperties: boolean;
-  Suspects: boolean;
-}
+
 
 interface PdfInfo {
   numPages: number,
@@ -1302,12 +1297,12 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<MarkInfo | null>} A promise that is resolved with
-   *   a {MarkInfo} object that contains the MarkInfo flags for the PDF
+   * @returns A promise that is resolved with
+   *   a {CatalogMarkInfo} object that contains the MarkInfo flags for the PDF
    *   document, or `null` when no MarkInfo values are present in the PDF file.
    */
-  getMarkInfo(): Promise<MarkInfo | null> {
-    return <Promise<MarkInfo | null>>this._transport.getMarkInfo();
+  getMarkInfo(): Promise<CatalogMarkInfo | null> {
+    return this._transport.getMarkInfo();
   }
 
   /**
@@ -2765,7 +2760,7 @@ class WorkerTransportParameters {
  */
 class WorkerTransport {
 
-  #methodPromises = new Map<string, any>();
+  #methodPromises = new Map<string, Promise<any>>();
 
   #pageCache = new Map();
 
@@ -2867,12 +2862,12 @@ class WorkerTransport {
     return this.messageHandler!.sendWithPromise("GetAnnotArray", { pageIndex });
   }
 
-  #cacheSimpleMethod(name: string, data = null) {
+  #cacheSimpleMethod(name: string, fn: () => Promise<any>) {
     const cachedPromise = this.#methodPromises.get(name);
     if (cachedPromise) {
       return cachedPromise;
     }
-    const promise = this.messageHandler!.sendWithPromise(name, data);
+    const promise = fn();
 
     this.#methodPromises.set(name, promise);
     return promise;
@@ -3409,16 +3404,14 @@ class WorkerTransport {
   }
 
   getDestinations() {
-    return this.messageHandler!.sendWithPromise("GetDestinations", null);
+    return this.messageHandler!.GetDestinations();
   }
 
   getDestination(id: string) {
     if (typeof id !== "string") {
       return Promise.reject(new Error("Invalid destination request."));
     }
-    return this.messageHandler!.sendWithPromise("GetDestination", {
-      id,
-    });
+    return this.messageHandler!.GetDestination(id);
   }
 
   getPageLabels() {
@@ -3426,15 +3419,15 @@ class WorkerTransport {
   }
 
   getPageLayout() {
-    return this.messageHandler!.sendWithPromise("GetPageLayout", null);
+    return this.messageHandler!.GetPageLayout();
   }
 
   getPageMode() {
-    return this.messageHandler!.sendWithPromise("GetPageMode", null);
+    return this.messageHandler!.GetPageMode();
   }
 
   getViewerPreferences() {
-    return this.messageHandler!.sendWithPromise("GetViewerPreferences", null);
+    return this.messageHandler!.GetViewerPreferences();
   }
 
   getOpenAction() {
@@ -3442,17 +3435,17 @@ class WorkerTransport {
   }
 
   getAttachments() {
-    return this.messageHandler!.sendWithPromise("GetAttachments", null);
+    return this.messageHandler!.GetAttachments();
   }
 
   getDocJSActions() {
-    return this.#cacheSimpleMethod("GetDocJSActions");
+    const handler = this.messageHandler!;
+    const action = MessageHandlerAction.GetDocJSActions;
+    return this.#cacheSimpleMethod(action, () => handler.GetDocJSActions());
   }
 
   getPageJSActions(pageIndex: number) {
-    return this.messageHandler!.sendWithPromise("GetPageJSActions", {
-      pageIndex,
-    });
+    return this.messageHandler!.GetPageJSActions(pageIndex);
   }
 
   getStructTree(pageIndex: number) {
@@ -3472,7 +3465,7 @@ class WorkerTransport {
   }
 
   getPermissions() {
-    return this.messageHandler!.sendWithPromise("GetPermissions", null);
+    return this.messageHandler!.GetPermissions();
   }
 
   getMetadata() {
@@ -3494,7 +3487,7 @@ class WorkerTransport {
   }
 
   getMarkInfo() {
-    return this.messageHandler!.sendWithPromise("GetMarkInfo", null);
+    return this.messageHandler!.GetMarkInfo();
   }
 
   async startCleanup(keepLoadedFonts = false) {

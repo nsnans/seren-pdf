@@ -219,7 +219,7 @@ abstract class AbstractMessageHandler {
    */
   sendWithPromise<T>(actionName: string, data: Record<string, any> | null, transfers?: Transferable[] | null): Promise<T> {
     const callbackId = this.callbackId++;
-    const capability = Promise.withResolvers();
+    const capability = Promise.withResolvers<T>();
     this.callbackCapabilities[callbackId] = capability;
     const message = {
       sourceName: this.sourceName,

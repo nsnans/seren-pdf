@@ -21,5 +21,17 @@ export const MessageHandlerAction = {
   FetchBuiltInCMap: "FetchBuiltInCMap",
   FetchStandardFontData: "FetchStandardFontData",
   GetPage: "GetPage",
-  GetPageIndex: "GetPageIndex"
+  GetPageIndex: "GetPageIndex",
+  GetDestinations: "GetDestinations",
+  GetDestination: "GetDestination",
+  GetPageLabels: "GetPageLabels",
+  GetPageLayout: "GetPageLayout",
+  GetPageMode: "GetPageMode",
+  GetViewerPreferences: "GetViewerPreferences",
+  GetOpenAction: "GetOpenAction",
+  GetAttachments: "GetAttachments",
+  GetDocJSActions: "GetDocJSActions",
+  GetPageJSActions: "GetPageJSActions",
+  GetPermissions: "GetPermissions",
+  GetMarkInfo: "GetMarkInfo",
 }

@@ -4,7 +4,9 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
+import { CatalogMarkInfo, DestinationType, ViewerPreferenceKeys } from "../core/catalog";
 import { StreamSink } from "../core/core_types";
+import { FileSpecSerializable } from "../core/file_spec";
 import { DocumentParameter, OnProgressParameters } from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import { FetchBuiltInCMapMessage as FetchBuiltInCMapResult, GetDocMessage, GetPageResult, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
@@ -19,132 +21,132 @@ export class MessageHandler extends AbstractMessageHandler {
 
   GetDocRequest(docParams: DocumentParameter, data: ArrayBuffer[] | null): Promise<string> {
     const action = MessageHandlerAction.GetDocRequest;
-    return <Promise<string>>super.sendWithPromise(action, docParams, data);
+    return this.sendWithPromise(action, docParams, data);
   }
 
   onGetDocRequest(fn: (param: DocumentParameter) => string): void {
     const action = MessageHandlerAction.GetDocRequest;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   test(data: Uint8Array<ArrayBuffer> | boolean, transfers: Transferable[] | null = null) {
     const test = MessageHandlerAction.test;
-    super.send(test, data, transfers);
+    this.send(test, data, transfers);
   }
 
   onTest(fn: (data: Uint8Array<ArrayBuffer> | boolean, transfers: Transferable[] | null) => void): void {
     const test = MessageHandlerAction.test;
-    super.on(test, fn);
+    this.on(test, fn);
   }
 
   configure(verbosity: number) {
     const configure = MessageHandlerAction.configure;
-    super.send(configure, { verbosity });
+    this.send(configure, { verbosity });
   }
 
   onConfigure(fn: (verbosity: { verbosity: number }) => void): void {
     const configure = MessageHandlerAction.configure;
-    super.on(configure, fn);
+    this.on(configure, fn);
   }
 
   GetReader() {
     const action = MessageHandlerAction.GetReader;
     // 这里的data是null，onGetReader的data就是null
     const data = null;
-    return super.sendWithStream(action, data)
+    return this.sendWithStream(action, data)
   }
 
   onGetReader(fn: (data: null, sink: StreamSink) => void) {
     const action = MessageHandlerAction.GetReader;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   GetRangeReader(begin: number, end: number) {
     const action = MessageHandlerAction.GetRangeReader;
-    return super.sendWithStream(action, { begin, end });
+    return this.sendWithStream(action, { begin, end });
   }
 
   onGetRangeReader(fn: (data: { begin: number, end: number }, sink: StreamSink) => void) {
     const action = MessageHandlerAction.GetRangeReader;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   ReaderHeadersReady(): Promise<ReaderHeadersReadyResult> {
     const action = MessageHandlerAction.ReaderHeadersReady;
     // 这里的data是null，onReaderHeadersReady的data就是null
-    return super.sendWithPromise(action, null);
+    return this.sendWithPromise(action, null);
   }
 
   onReaderHeadersReady(fn: () => Promise<ReaderHeadersReadyResult>) {
     const action = MessageHandlerAction.ReaderHeadersReady;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   GetDoc(numPages: number, fingerprints: [string, string | null]) {
     const action = MessageHandlerAction.GetDoc;
     const data: GetDocMessage = { numPages, fingerprints };
-    super.send(action, data);
+    this.send(action, data);
   }
 
   onGetDoc(fn: (param: GetDocMessage) => void) {
     const action = MessageHandlerAction.GetDoc;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   PasswordRequest(ex: PasswordException): Promise<{ password: string }> {
     const action = MessageHandlerAction.PasswordRequest;
-    return super.sendWithPromise(action, ex);
+    return this.sendWithPromise(action, ex);
   }
 
   onPasswordRequest(fn: (ex: PasswordException) => Promise<{ password: string | Error }>) {
     const action = MessageHandlerAction.PasswordRequest;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   DocException(ex: BaseException) {
     const action = MessageHandlerAction.DocException;
-    super.send(action, ex);
+    this.send(action, ex);
   }
 
   onDocException(fn: (ex: BaseException) => void) {
     const action = MessageHandlerAction.DocException;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   DataLoaded(length: number) {
     const action = MessageHandlerAction.DataLoaded;
-    super.send(action, { length })
+    this.send(action, { length })
   }
 
   onDataLoaded(fn: (data: { length: number }) => void) {
     const action = MessageHandlerAction.DataLoaded;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   StartRenderPage(transparency: boolean, pageIndex: number, cacheKey: string) {
     const action = MessageHandlerAction.StartRenderPage;
     const data: StartRenderPageMessage = { transparency, pageIndex, cacheKey }
-    super.send(action, data);
+    this.send(action, data);
   }
 
   onStartRenderPage(fn: (data: StartRenderPageMessage) => void) {
     const action = MessageHandlerAction.StartRenderPage;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   DocProgress(loaded: number, total: number) {
     const action = MessageHandlerAction.DocProgress;
-    super.send(action, { loaded, total });
+    this.send(action, { loaded, total });
   }
 
   onDocProgress(fn: (data: OnProgressParameters) => void) {
     const action = MessageHandlerAction.DocProgress;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   FetchBuiltInCMap(name: string): Promise<FetchBuiltInCMapResult> {
     const action = MessageHandlerAction.FetchBuiltInCMap;
-    return super.sendWithPromise(action, { name });
+    return this.sendWithPromise(action, { name });
   }
 
   onFetchBuiltInCMap(fn: (data: { name: string }) => Promise<FetchBuiltInCMapResult>) {
@@ -164,17 +166,17 @@ export class MessageHandler extends AbstractMessageHandler {
 
   GetPage(pageIndex: number): Promise<GetPageResult> {
     const action = MessageHandlerAction.GetPage;
-    return super.sendWithPromise(action, { pageIndex });
+    return this.sendWithPromise(action, { pageIndex });
   }
 
   onGetPage(fn: (data: { pageIndex: number }) => Promise<GetPageResult>) {
     const action = MessageHandlerAction.GetPage;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 
   GetPageIndex(num: number, gen: number): Promise<number> {
     const action = MessageHandlerAction.GetPageIndex;
-    return super.sendWithPromise(action, { num, gen })
+    return this.sendWithPromise(action, { num, gen })
   }
 
   onGetPageIndex(fn: (ref: { num: number, gen: number }) => Promise<number>) {
@@ -182,13 +184,132 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
+  GetDestinations(): Promise<Map<string, DestinationType>> {
+    const action = MessageHandlerAction.GetDestinations;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetDestinations(fn: () => Promise<Map<string, DestinationType>>) {
+    const action = MessageHandlerAction.GetDestinations;
+    this.on(action, fn);
+  }
+
+  GetDestination(id: string): Promise<DestinationType | null> {
+    const action = MessageHandlerAction.GetDestination;
+    return this.sendWithPromise(action, { id });
+  }
+
+  onGetDestination(fn: (data: { id: string }) => Promise<DestinationType | null>) {
+    const action = MessageHandlerAction.GetDestination;
+    this.on(action, fn);
+  }
+
+  GetPageLabels(): Promise<string[] | null> {
+    const action = MessageHandlerAction.GetPageLabels;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetPageLabels(fn: () => Promise<string[] | null>) {
+    const action = MessageHandlerAction.GetPageLabels;
+    this.on(action, fn);
+  }
+
+  GetPageLayout(): Promise<string> {
+    const action = MessageHandlerAction.GetPageLayout;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetPageLayout(fn: () => Promise<string>) {
+    const action = MessageHandlerAction.GetPageLayout;
+    this.on(action, fn);
+  }
+
+  GetPageMode(): Promise<string> {
+    const action = MessageHandlerAction.GetPageMode;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetPageMode(fn: () => Promise<string>) {
+    const action = MessageHandlerAction.GetPageMode;
+    this.on(action, fn);
+  }
+
+  GetViewerPreferences(): Promise<Map<ViewerPreferenceKeys, string | number | boolean | number[]> | null> {
+    const action = MessageHandlerAction.GetViewerPreferences;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetViewerPreferences(fn: () => Promise<Map<ViewerPreferenceKeys, string | number | boolean | number[]> | null>) {
+    const action = MessageHandlerAction.GetViewerPreferences;
+    this.on(action, fn);
+  }
+
+  // TODO GetOpenAction比较复杂，要确定类型
+  GetOpenAction() {
+    const action = MessageHandlerAction.GetOpenAction;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetOpenAction() {
+  }
+
+  GetAttachments(): Promise<Map<string, FileSpecSerializable> | null> {
+    const action = MessageHandlerAction.GetAttachments;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetAttachments(fn: () => Promise<Map<string, FileSpecSerializable> | null>) {
+    const action = MessageHandlerAction.GetAttachments;
+    this.on(action, fn);
+  }
+
+  GetDocJSActions(): Promise<Map<string, string[]> | null> {
+    const action = MessageHandlerAction.GetDocJSActions;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetDocJSActions(fn: () => Promise<Map<string, string[]> | null>) {
+    const action = MessageHandlerAction.GetDocJSActions;
+    this.on(action, fn);
+  }
+
+  GetPageJSActions(pageIndex: number): Promise<Map<string, string[]> | null> {
+    const action = MessageHandlerAction.GetPageJSActions;
+    return this.sendWithPromise(action, { pageIndex })
+  }
+
+  onGetPageJSActions(fn: (data: { pageIndex: number }) => Promise<Map<string, string[]> | null>) {
+    const action = MessageHandlerAction.GetPageJSActions;
+    this.on(action, fn);
+  }
+
+  GetPermissions(): Promise<string[] | null> {
+    const action = MessageHandlerAction.GetPermissions;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetPermissions(fn: () => Promise<string[] | null>) {
+    const action = MessageHandlerAction.GetPermissions;
+    this.on(action, fn);
+  }
+
+  GetMarkInfo(): Promise<CatalogMarkInfo | null> {
+    const action = MessageHandlerAction.GetPermissions;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetMarkInfo(fn: () => Promise<CatalogMarkInfo | null>) {
+    const action = MessageHandlerAction.GetPermissions;
+    this.on(action, fn);
+  }
+
   Ready(): void {
     const action = MessageHandlerAction.Ready;
-    super.send(action, null)
+    this.send(action, null)
   }
 
   onReady(fn: () => void) {
     const action = MessageHandlerAction.Ready;
-    super.on(action, fn);
+    this.on(action, fn);
   }
 }

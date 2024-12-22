@@ -18,6 +18,7 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { assert, shadow, unreachable } from "../shared/util";
 import { TypedArray } from "../types";
 import { BaseStream } from "./base_stream";
+import { DestinationType } from "./catalog";
 import { StringStream } from "./stream";
 import { XRef } from "./xref";
 
@@ -435,7 +436,7 @@ type DictValueTypeMapping = {
   [DictKey.DP]: "DP",
   [DictKey.DR]: Dict,
   [DictKey.DW]: number,
-  [DictKey.D]: number[] | Dict | Name,
+  [DictKey.D]: number[] | Dict | Name | DestinationType,
   [DictKey.DecodeParms]: "DecodeParms",
   [DictKey.Decode]: number[],
   [DictKey.Desc]: string,
