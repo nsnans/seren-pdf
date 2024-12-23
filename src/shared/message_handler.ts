@@ -4,7 +4,12 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
-import { Catalog, CatalogMarkInfo, CatalogOpenAction, DestinationType, ViewerPreferenceKeys } from "../core/catalog";
+import {
+  CatalogMarkInfo,
+  CatalogOpenAction,
+  DestinationType,
+  ViewerPreferenceKeys
+} from "../core/catalog";
 import { FieldObject, StreamSink } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
