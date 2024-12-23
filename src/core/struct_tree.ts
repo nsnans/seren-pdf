@@ -84,15 +84,11 @@ export class StructTreeRoot {
     });
   }
 
-  static async canCreateStructureTree({
-    catalogRef,
-    pdfManager,
-    newAnnotationsByPage,
-  }: {
+  static async canCreateStructureTree(
     catalogRef: Ref | object,
     pdfManager: PDFManager,
     newAnnotationsByPage: Map<number, Record<string, any>[]>
-  }) {
+  ) {
     if (!(catalogRef instanceof Ref)) {
       warn("Cannot save the struct tree: no catalog reference.");
       return false;

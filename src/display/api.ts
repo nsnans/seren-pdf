@@ -1283,11 +1283,11 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<Uint8Array>} A promise that is resolved with a
+   * @returns  A promise that is resolved with a
    *   {Uint8Array} containing the full data of the saved document.
    */
-  saveDocument(): Promise<Uint8Array> {
-    return <Promise<Uint8Array>>this._transport.saveDocument();
+  saveDocument() {
+    return this._transport.saveDocument();
   }
 
   /**
@@ -3258,7 +3258,7 @@ class WorkerTransport {
     return this.messageHandler!.GetData();
   }
 
-  saveDocument() {
+  async saveDocument() {
 
     if (this.annotationStorage.size <= 0) {
       let warning = "saveDocument called while `annotationStorage` is empty, ";
@@ -3267,16 +3267,10 @@ class WorkerTransport {
     }
 
     const { map, transfer } = this.annotationStorage.serializable;
+    const numPages = this._numPages;
+    const filename = this._fullReader?.filename ?? null;
 
-    return this.messageHandler!.sendWithPromise(
-      "SaveDocument",
-      {
-        numPages: this._numPages,
-        annotationStorage: map,
-        filename: this._fullReader?.filename ?? null,
-      } as SaveDocumentMessage,
-      transfer
-    ).finally(() => {
+    return this.messageHandler!.saveDocument(numPages, map, filename, transfer).finally(() => {
       this.annotationStorage.resetModified();
     });
   }

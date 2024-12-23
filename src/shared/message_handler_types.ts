@@ -1,5 +1,6 @@
 import { Ref } from "../core/primitives";
 import { RectType } from "../display/display_utils";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { WorkerMessageHandler } from "../pdf.worker";
 
 export interface ReaderHeadersReadyResult {
@@ -36,7 +37,7 @@ export interface SaveDocumentMessage {
   numPages: number | null;
 
   // string => Annotation初始化的参数
-  annotationStorage: Map<string, Record<string, any>> | null;
+  annotationStorage: Map<string, AnnotationEditorSerial> | null;
 
   filename: string | null;
 

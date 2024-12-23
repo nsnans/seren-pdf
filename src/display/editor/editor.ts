@@ -21,6 +21,7 @@ import { IL10n } from "../../viewer/common/component_types";
 import { noContextMenu, RectType } from "../display_utils";
 import { AltText } from "./alt_text";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import { EditorToolbar } from "./toolbar";
 import {
@@ -239,7 +240,10 @@ export class AnnotationEditorHelper {
 }
 
 
-class AnnotationEditor<T extends AnnotationEditorState> {
+class AnnotationEditor<
+  /* 核心属性 */ T extends AnnotationEditorState,
+  /* 序列化结果 */ S extends AnnotationEditorSerial
+> {
 
   protected state: T;
 
@@ -1444,7 +1448,7 @@ class AnnotationEditor<T extends AnnotationEditorState> {
    * @param {Object | null} [context]
    * @returns {Object | null}
    */
-  serialize(_isForCopying = false, _context = null) {
+  serialize(_isForCopying = false, _context = null): S {
     unreachable("An editor must be serializable");
   }
 

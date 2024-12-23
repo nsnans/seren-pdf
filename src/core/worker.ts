@@ -487,172 +487,163 @@ class WorkerMessageHandler {
       () => pdfManager!.ensureDoc(doc => doc.calculationOrderIds)
     );
 
-    handler.on(
-      "SaveDocument",
-      async function ({ numPages, annotationStorage, filename }: SaveDocumentMessage) {
-        const globalPromises = [
-          pdfManager!.requestLoadedStream(),
-          pdfManager!.ensureCatalog(catalog => catalog.acroForm),
-          pdfManager!.ensureCatalog(catalog => catalog.acroFormRef),
-          pdfManager!.ensureDoc(doc => doc.startXRef),
-          pdfManager!.ensureDoc(doc => doc.xref),
-          pdfManager!.ensureDoc(doc => doc.linearization),
-          pdfManager!.ensureCatalog(catalog => catalog.structTreeRoot),
-        ] as const;
-        const promises = <Promise<any>[]>[];
+    handler.onSaveDocument(async data => {
+      const { numPages, annotationStorage, filename } = data;
+      const globalPromises = [
+        pdfManager!.requestLoadedStream(),
+        pdfManager!.ensureCatalog(catalog => catalog.acroForm),
+        pdfManager!.ensureCatalog(catalog => catalog.acroFormRef),
+        pdfManager!.ensureDoc(doc => doc.startXRef),
+        pdfManager!.ensureDoc(doc => doc.xref),
+        pdfManager!.ensureDoc(doc => doc.linearization),
+        pdfManager!.ensureCatalog(catalog => catalog.structTreeRoot),
+      ] as const;
+      const promises = <Promise<any>[]>[];
 
-        const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
-        const [
-          streamResult,
-          acroForm,
-          acroFormRef,
-          startXRef,
-          xrefResult,
-          linearization,
-          _structTreeRoot,
-        ] = await Promise.all(globalPromises);
-        const xref = <XRef>xrefResult;
-        const stream = <Stream>streamResult;
-        const catalogRef = xref.trailer!.getRaw(DictKey.Root) || null;
-        let structTreeRoot: StructTreeRoot | null = null;
+      const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
+      const [
+        streamResult,
+        acroForm,
+        acroFormRef,
+        startXRef,
+        xrefResult,
+        linearization,
+        _structTreeRoot,
+      ] = await Promise.all(globalPromises);
+      const xref = xrefResult;
+      const stream = streamResult;
+      const catalogRef = xref.trailer!.getRaw(DictKey.Root) || null;
+      let structTreeRoot: StructTreeRoot | null = null;
 
-        if (newAnnotationsByPage) {
-          if (!_structTreeRoot) {
-            if (
-              await StructTreeRoot.canCreateStructureTree({
-                catalogRef,
-                pdfManager: pdfManager!,
-                newAnnotationsByPage,
-              })
-            ) {
-              structTreeRoot = null;
-            }
-          } else if (
-            await _structTreeRoot.canUpdateStructTree(
-              pdfManager!,
-              xref,
-              newAnnotationsByPage,
-            )
-          ) {
-            structTreeRoot = _structTreeRoot;
+      if (newAnnotationsByPage) {
+        if (!_structTreeRoot) {
+          const canCreate = await StructTreeRoot.canCreateStructureTree(
+            catalogRef, pdfManager!, newAnnotationsByPage
+          )
+          if (canCreate) {
+            structTreeRoot = null;
           }
-
-          const imagePromises = AnnotationFactory.generateImages(
-            annotationStorage!.values(),
+        } else if (
+          await _structTreeRoot.canUpdateStructTree(
+            pdfManager!,
             xref,
-            pdfManager!.evaluatorOptions.isOffscreenCanvasSupported
-          );
-          const newAnnotationPromises =
-            structTreeRoot === undefined ? promises : [];
-          for (const [pageIndex, annotations] of newAnnotationsByPage) {
-            newAnnotationPromises.push(
-              pdfManager!.getPage(pageIndex).then(page => {
-                const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
-                return page
-                  .saveNewAnnotations(handler!, task, annotations, imagePromises)
-                  .finally(function () {
-                    finishWorkerTask(task);
-                  });
-              })
-            );
-          }
-          if (structTreeRoot === null) {
-            // No structTreeRoot exists, so we need to create one.
-            promises.push(
-              Promise.all(newAnnotationPromises).then(async newRefs => {
-                await StructTreeRoot.createStructureTree(
-                  newAnnotationsByPage,
-                  xref,
-                  catalogRef,
-                  pdfManager!,
-                  newRefs,
-                );
-                return newRefs;
-              })
-            );
-          } else if (structTreeRoot) {
-            promises.push(
-              Promise.all(newAnnotationPromises).then(async newRefs => {
-                await structTreeRoot!.updateStructureTree(
-                  newAnnotationsByPage,
-                  pdfManager!,
-                  newRefs,
-                );
-                return newRefs;
-              })
-            );
-          }
+            newAnnotationsByPage,
+          )
+        ) {
+          structTreeRoot = _structTreeRoot;
         }
 
-
-        for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
-          promises.push(
-            pdfManager!.getPage(pageIndex).then(async function (page) {
-              const task = new WorkerTask(`Save: page ${pageIndex}`);
-              return page
-                .save(handler!, task, annotationStorage)
-                .finally(function () {
-                  finishWorkerTask(task);
-                });
+        const imagePromises = AnnotationFactory.generateImages(
+          annotationStorage!.values(),
+          xref,
+          pdfManager!.evaluatorOptions.isOffscreenCanvasSupported
+        );
+        const newAnnotationPromises = structTreeRoot === undefined ? promises : [];
+        for (const [pageIndex, annotations] of newAnnotationsByPage) {
+          newAnnotationPromises.push(
+            pdfManager!.getPage(pageIndex).then(async page => {
+              const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
+              return page.saveNewAnnotations(handler!, task, annotations, imagePromises).finally(() => {
+                finishWorkerTask(task);
+              });
             })
           );
         }
-
-        const refs = await Promise.all(promises);
-
-        let newRefs = [];
-
-        newRefs = refs.flat(2);
-
-        if (newRefs.length === 0) {
-          // No new refs so just return the initial bytes
-          return stream.bytes;
+        if (structTreeRoot === null) {
+          // No structTreeRoot exists, so we need to create one.
+          promises.push(
+            Promise.all(newAnnotationPromises).then(async newRefs => {
+              await StructTreeRoot.createStructureTree(
+                newAnnotationsByPage,
+                xref,
+                catalogRef,
+                pdfManager!,
+                newRefs,
+              );
+              return newRefs;
+            })
+          );
+        } else if (structTreeRoot) {
+          promises.push(
+            Promise.all(newAnnotationPromises).then(async newRefs => {
+              await structTreeRoot!.updateStructureTree(
+                newAnnotationsByPage,
+                pdfManager!,
+                newRefs,
+              );
+              return newRefs;
+            })
+          );
         }
-
-        // 这类加了 双感叹号，判断Ref状况
-        const needAppearances: boolean = !!acroFormRef && acroForm instanceof Dict && newRefs.some(ref => ref.needAppearances);
-
-        let newXrefInfo = Object.create(null);
-        if (xref.trailer) {
-          // Get string info from Info in order to compute fileId.
-          const infoObj = Object.create(null) as Record<string, string>;
-          const xrefInfo = xref.trailer.getValue(DictKey.Info) || null;
-          if (xrefInfo instanceof Dict) {
-            xrefInfo.forEach((key, value) => {
-              if (typeof value === "string") {
-                infoObj[key] = stringToPDFString(value);
-              }
-            });
-          }
-
-          newXrefInfo = {
-            rootRef: catalogRef,
-            encryptRef: xref.trailer.getRaw(DictKey.Encrypt) || null,
-            newRef: xref.getNewTemporaryRef(),
-            infoRef: xref.trailer.getRaw(DictKey.Info) || null,
-            info: infoObj,
-            fileIds: xref.trailer.getValue(DictKey.ID) || null,
-            startXRef: linearization
-              ? startXRef
-              : (xref.lastXRefStreamPos ?? startXRef),
-            filename,
-          };
-        }
-
-        return incrementalUpdate({
-          originalData: stream.bytes,
-          xrefInfo: newXrefInfo,
-          newRefs,
-          xref,
-          needAppearances,
-          acroFormRef,
-          acroForm,
-          // Use the same kind of XRef as the previous one.
-          useXrefStream: isDict(xref.topDict, "XRef"),
-        }).finally(() => {
-          xref.resetNewTemporaryRef();
-        });
       }
+
+
+      for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
+        promises.push(
+          pdfManager!.getPage(pageIndex).then(async function (page) {
+            const task = new WorkerTask(`Save: page ${pageIndex}`);
+            return page
+              .save(handler!, task, annotationStorage)
+              .finally(function () {
+                finishWorkerTask(task);
+              });
+          })
+        );
+      }
+
+      const refs = await Promise.all(promises);
+      let newRefs = [];
+      newRefs = refs.flat(2);
+      if (newRefs.length === 0) {
+        // No new refs so just return the initial bytes
+        return stream.bytes;
+      }
+
+      // 这类加了 双感叹号，判断Ref状况
+      const needAppearances: boolean = !!acroFormRef
+        && acroForm instanceof Dict && newRefs.some(ref => ref.needAppearances);
+
+      let newXrefInfo = Object.create(null);
+      if (xref.trailer) {
+        // Get string info from Info in order to compute fileId.
+        const infoObj = Object.create(null) as Record<string, string>;
+        const xrefInfo = xref.trailer.getValue(DictKey.Info) || null;
+        if (xrefInfo instanceof Dict) {
+          xrefInfo.forEach((key, value) => {
+            if (typeof value === "string") {
+              infoObj[key] = stringToPDFString(value);
+            }
+          });
+        }
+
+        newXrefInfo = {
+          rootRef: catalogRef,
+          encryptRef: xref.trailer.getRaw(DictKey.Encrypt) || null,
+          newRef: xref.getNewTemporaryRef(),
+          infoRef: xref.trailer.getRaw(DictKey.Info) || null,
+          info: infoObj,
+          fileIds: xref.trailer.getValue(DictKey.ID) || null,
+          startXRef: linearization
+            ? startXRef
+            : (xref.lastXRefStreamPos ?? startXRef),
+          filename,
+        };
+      }
+
+      return incrementalUpdate({
+        originalData: stream.bytes,
+        xrefInfo: newXrefInfo,
+        newRefs,
+        xref,
+        needAppearances,
+        acroFormRef,
+        acroForm,
+        // Use the same kind of XRef as the previous one.
+        useXrefStream: isDict(xref.topDict, "XRef"),
+      }).finally(() => {
+        xref.resetNewTemporaryRef();
+      });
+    }
     );
 
     handler.on("GetOperatorList", function (data: StreamGetOperatorListParameters, sink: StreamSink) {

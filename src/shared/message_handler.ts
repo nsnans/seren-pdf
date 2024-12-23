@@ -4,6 +4,7 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import {
   CatalogMarkInfo,
   CatalogOpenAction,
@@ -21,6 +22,7 @@ import {
   OnProgressParameters,
   StructTreeNode
 } from "../display/api";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import {
   FetchBuiltInCMapMessage,
@@ -28,6 +30,7 @@ import {
   GetPageResult,
   GetTextContentMessage,
   ReaderHeadersReadyResult,
+  SaveDocumentMessage,
   StartRenderPageMessage
 } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
@@ -474,6 +477,22 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onGetOptionalContentConfig(fn: () => Promise<CatalogOptionalContentConfig | null>) {
     const action = MessageHandlerAction.GetOptionalContentConfig;
+    this.on(action, fn);
+  }
+
+  saveDocument(
+    numPages: number | null,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null,
+    filename: string | null,
+    transfers: Transferable[] | null
+  ): Promise<Uint8TypedArray> {
+    const action = MessageHandlerAction.SaveDocument;
+    const data: SaveDocumentMessage = { numPages, annotationStorage, filename };
+    return this.sendWithPromise(action, data, transfers)
+  }
+
+  onSaveDocument(fn: (data: SaveDocumentMessage) => Promise<Uint8TypedArray>) {
+    const action = MessageHandlerAction.SaveDocument;
     this.on(action, fn);
   }
 
