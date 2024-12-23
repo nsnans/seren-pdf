@@ -203,13 +203,34 @@ export interface CatalogOpenAction {
   action: string | null;
 }
 
-export interface OptionalContentConfig {
+export interface OptionalContentOrder {
+  name: string | null;
+  order: (string | OptionalContentOrder)[];
+}
+
+export interface OptionalContentGroup {
+  id: string;
+  name: string | null;
+  intent: string[] | null;
+  usage: {
+    print: {
+      printState: "ON" | "OFF";
+    } | null;
+    view: {
+      viewState: "ON" | "OFF";
+    } | null;
+  };
+  rbGroups: Set<string>[];
+}
+
+export interface CatalogOptionalContentConfig {
   name: string | null;
   creator: string | null;
   baseState: string | null;
   on: string[];
   off: string[];
-
+  order: (string | OptionalContentOrder)[] | null;
+  groups: OptionalContentGroup[];
 }
 
 export class Catalog {
@@ -589,7 +610,7 @@ export class Catalog {
       if (!Array.isArray(groupsData)) {
         return shadow(this, "optionalContentConfig", null);
       }
-      const groupRefCache = new RefSetCache();
+      const groupRefCache = new RefSetCache<Ref, OptionalContentGroup>();
       // Ensure all the optional content groups are valid.
       for (const groupRef of groupsData) {
         if (!(groupRef instanceof Ref) || groupRefCache.has(groupRef)) {
@@ -609,13 +630,13 @@ export class Catalog {
 
   #readOptionalContentGroup(groupRef: Ref) {
     const group: Dict = this.xref.fetch(groupRef);
-    const obj = {
+    const obj: OptionalContentGroup = {
       id: groupRef.toString(),
-      name: <string | null>null,
-      intent: <string[] | null>null,
+      name: null,
+      intent: null,
       usage: {
-        print: <{ printState: "ON" | "OFF"; } | null>null,
-        view: <{ viewState: "ON" | "OFF"; } | null>null,
+        print: null,
+        view: null,
       },
       rbGroups: [],
     };
@@ -666,7 +687,7 @@ export class Catalog {
     return obj;
   }
 
-  #readOptionalContentConfig(config: Dict, groupRefCache: RefSetCache) {
+  #readOptionalContentConfig(config: Dict, groupRefCache: RefSetCache<Ref, OptionalContentGroup>) {
     function parseOnOff(refs: Ref[]) {
       const onParsed = [];
       if (Array.isArray(refs)) {
@@ -686,10 +707,7 @@ export class Catalog {
       if (!Array.isArray(refs)) {
         return null;
       }
-      const order = <(string | {
-        name: string | null;
-        order: any[];
-      } | null)[]>[];
+      const order: (OptionalContentOrder | string)[] = [];
 
       for (const value of refs) {
         if (value instanceof Ref && groupRefCache.has(value)) {
@@ -722,7 +740,7 @@ export class Catalog {
       return order;
     }
 
-    function parseNestedOrder(ref: Ref, nestedLevels: number) {
+    function parseNestedOrder(ref: Ref, nestedLevels: number): OptionalContentOrder | null {
       if (++nestedLevels > MAX_NESTED_LEVELS) {
         warn("parseNestedOrder - reached MAX_NESTED_LEVELS.");
         return null;
@@ -752,7 +770,7 @@ export class Catalog {
         if (!Array.isArray(rbGroup) || !rbGroup.length) {
           continue;
         }
-        const parsedRbGroup = new Set();
+        const parsedRbGroup = new Set<string>();
 
         for (const ref of rbGroup) {
           if (
@@ -762,19 +780,19 @@ export class Catalog {
           ) {
             parsedRbGroup.add(ref.toString());
             // Keep a record of which RB groups the current OCG belongs to.
-            groupRefCache.get(ref).rbGroups.push(parsedRbGroup);
+            groupRefCache.get(ref)!.rbGroups.push(parsedRbGroup);
           }
         }
       }
     }
 
-    const xref = this.xref,
-      parsedOrderRefs = new RefSet(),
-      MAX_NESTED_LEVELS = 10;
+    const xref = this.xref;
+    const parsedOrderRefs = new RefSet();
+    const MAX_NESTED_LEVELS = 10;
 
     parseRBGroups(config.getValue(DictKey.RBGroups));
 
-    return <OptionalContentConfig>{
+    return <CatalogOptionalContentConfig>{
       name:
         typeof config.getValue(DictKey.Name) === "string"
           ? stringToPDFString(<string>config.getValue(DictKey.Name))

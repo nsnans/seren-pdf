@@ -7,6 +7,7 @@
 import {
   CatalogMarkInfo,
   CatalogOpenAction,
+  CatalogOptionalContentConfig,
   DestinationType,
   ViewerPreferenceKeys
 } from "../core/catalog";
@@ -463,6 +464,16 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onGetTextContent(fn: (data: GetTextContentMessage, sink: StreamSink) => void) {
     const action = MessageHandlerAction.GetTextContent;
+    this.on(action, fn);
+  }
+
+  GetOptionalContentConfig(): Promise<CatalogOptionalContentConfig | null> {
+    const action = MessageHandlerAction.GetOptionalContentConfig;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetOptionalContentConfig(fn: () => Promise<CatalogOptionalContentConfig | null>) {
+    const action = MessageHandlerAction.GetOptionalContentConfig;
     this.on(action, fn);
   }
 

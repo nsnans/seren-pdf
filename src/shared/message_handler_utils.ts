@@ -48,5 +48,6 @@ export const MessageHandlerAction = {
   GetMetadata: "GetMetadata",
   commonobj: "commonobj",
   obj: "obj",
-  GetTextContent: "GetTextContent"
+  GetTextContent: "GetTextContent",
+  GetOptionalContentConfig: "GetOptionalContentConfig",
 }

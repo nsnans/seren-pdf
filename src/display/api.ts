@@ -2805,7 +2805,7 @@ class WorkerTransport {
     this.setupMessageHandler();
   }
 
-  #cacheSimpleMethod(name: string, fn: () => Promise<any>) {
+  #cacheSimpleMethod<T>(name: string, fn: () => Promise<T>): Promise<T> {
     const cachedPromise = this.#methodPromises.get(name);
     if (cachedPromise) {
       return cachedPromise;
@@ -3398,8 +3398,10 @@ class WorkerTransport {
     return this.messageHandler!.sendWithPromise("GetOutline", null);
   }
 
-  getOptionalContentConfig(renderingIntent: number) {
-    return this.#cacheSimpleMethod("GetOptionalContentConfig").then(
+  async getOptionalContentConfig(renderingIntent: number): Promise<OptionalContentConfig> {
+    const action = MessageHandlerAction.GetOptionalContentConfig;
+    const handler = this.messageHandler!;
+    return this.#cacheSimpleMethod(action, () => handler.GetOptionalContentConfig()).then(
       data => new OptionalContentConfig(data, renderingIntent)
     );
   }
@@ -3581,13 +3583,6 @@ class RenderTask {
      * @type {function}
      */
     this.onContinue = null;
-
-    if (PlatformHelper.isTesting()) {
-      // For testing purposes.
-      Object.defineProperty(this, "getOperatorList", {
-        value: () => this.#internalRenderTask.operatorList,
-      });
-    }
   }
 
   /**

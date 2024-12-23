@@ -430,9 +430,9 @@ class WorkerMessageHandler {
       return pdfManager!.ensureCatalog(catalog => catalog.documentOutline);
     });
 
-    handler.on("GetOptionalContentConfig", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.optionalContentConfig);
-    });
+    handler.onGetOptionalContentConfig(
+      () => pdfManager!.ensureCatalog(catalog => catalog.optionalContentConfig)
+    );
 
     handler.onGetPermissions(
       () => pdfManager!.ensureCatalog(catalog => catalog.permissions)

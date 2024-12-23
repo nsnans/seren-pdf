@@ -1046,19 +1046,22 @@ export class RefSet {
   }
 }
 
-export class RefSetCache {
+export class RefSetCache<K extends { toString(): string }, V> {
 
-  protected _map = new Map<string, any>();
+  protected _map = new Map<string, V>();
+
+  constructor() {
+  }
 
   get size() {
     return this._map.size;
   }
 
-  get(ref: Ref | string) {
-    return this._map.get(ref.toString());
+  get(ref: K): V | null {
+    return this._map.get(ref.toString()) || null;
   }
 
-  has(ref: Ref | string) {
+  has(ref: K) {
     return this._map.has(ref.toString());
   }
 
@@ -1066,12 +1069,12 @@ export class RefSetCache {
   // 这也是为什么这里要用toString() 而不是直接塞
 
   // 目前还是要用any作为对象类型，实际上应该要限制any的类型，不能无限制的配置
-  put(ref: Ref | string, obj: any) {
+  put(ref: K, obj: V) {
     this._map.set(ref.toString(), obj);
   }
 
-  putAlias(ref: Ref, aliasRef: Ref) {
-    this._map.set(ref.toString(), this.get(aliasRef));
+  putAlias(ref: K, aliasRef: K) {
+    this._map.set(ref.toString(), this.get(aliasRef)!);
   }
 
   [Symbol.iterator]() {
@@ -1084,7 +1087,7 @@ export class RefSetCache {
 
   *items() {
     for (const [ref, value] of this._map) {
-      yield [Ref.fromString(ref), value];
+      yield [Ref.fromString(ref)!, value] as const;
     }
   }
 }
