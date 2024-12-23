@@ -1291,12 +1291,12 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<{ length: number }>} A promise that is resolved when the
+   * @returns A promise that is resolved when the
    *   document's data is loaded. It is resolved with an {Object} that contains
    *   the `length` property that indicates size of the PDF data in bytes.
    */
   getDownloadInfo(): Promise<{ length: number }> {
-    return <Promise<{ length: number }>>this._transport.downloadInfoCapability.promise;
+    return this._transport.downloadInfoCapability.promise;
   }
 
   /**
@@ -1726,7 +1726,7 @@ export class PDFPageProxy {
    */
   getAnnotations({ intent = "display" }: GetAnnotationsParameters): Promise<Array<any>> {
     const { renderingIntent } = this._transport.getRenderingIntent(intent);
-    return <Promise<Array<any>>>this._transport.getAnnotations(this._pageIndex, renderingIntent);
+    return <Promise>this._transport.getAnnotations(this._pageIndex, renderingIntent);
   }
 
   /**
@@ -2747,7 +2747,7 @@ class WorkerTransport {
 
   protected fontLoader: FontLoader;
 
-  public downloadInfoCapability = Promise.withResolvers();
+  public downloadInfoCapability = Promise.withResolvers<{ length: number }>();
 
   protected _networkStream: PDFStream;
 

@@ -62,11 +62,8 @@ export interface StartRenderPageMessage {
 }
 
 export interface FetchBuiltInCMapMessage {
-
   cMapData: Uint8Array<ArrayBuffer>;
-
   isCompressed: boolean;
-
 }
 
 export interface GetPageResult {
@@ -81,4 +78,9 @@ export interface GetTextContentMessage {
   pageIndex: number;
   includeMarkedContent: boolean;
   disableNormalization: boolean;
+}
+
+export interface GetAnnotationsMessage {
+  pageIndex: number,
+  intent: number
 }

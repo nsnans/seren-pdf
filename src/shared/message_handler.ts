@@ -5,6 +5,7 @@
  * */
 
 import { Uint8TypedArray } from "../common/typed_array";
+import { AnnotationData } from "../core/annotation";
 import {
   CatalogMarkInfo,
   CatalogOpenAction,
@@ -26,6 +27,7 @@ import { AnnotationEditorSerial } from "../display/editor/state/editor_serializa
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import {
   FetchBuiltInCMapMessage,
+  GetAnnotationsMessage,
   GetDocMessage,
   GetPageResult,
   GetTextContentMessage,
@@ -340,7 +342,13 @@ export class MessageHandler extends AbstractMessageHandler {
 
   GetAnnotations(pageIndex: number, intent: number) {
     const action = MessageHandlerAction.GetAnnotations;
-    return this.sendWithPromise(action, { pageIndex, intent });
+    const data: GetAnnotationsMessage = { pageIndex, intent };
+    return this.sendWithPromise(action, data);
+  }
+
+  onGetAnnotations(fn: (data: GetAnnotationsMessage) => Promise<AnnotationData[]>) {
+    const aciton = MessageHandlerAction.GetAnnotations;
+    this.on(aciton, fn);
   }
 
   GetFieldObjects(): Promise<Map<string, FieldObject[]> | null> {

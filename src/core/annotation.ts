@@ -660,7 +660,7 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
 }
 
 // 这个对象可能要拆分成多个子类
-interface AnnotationData {
+export interface AnnotationData {
   annotationFlags: number;
   borderStyle: AnnotationBorderStyle;
   // TODO 要再推断一下

@@ -36,6 +36,7 @@ import {
 } from "../shared/util";
 import {
   Annotation,
+  AnnotationData,
   AnnotationFactory,
   AnnotationGlobals,
   PopupAnnotation,
@@ -733,13 +734,14 @@ class Page {
   }
 
   async getAnnotationsData(handler: MessageHandler, task: WorkerTask, intent: number) {
+    const annotationsData: AnnotationData[] = [];
     const annotations = await this._parsedAnnotations;
     if (annotations.length === 0) {
-      return annotations;
+      // 返回空数组
+      return annotationsData;
     }
 
-    const annotationsData = [],
-      textContentPromises = [];
+    const textContentPromises = [];
     let partialEvaluator;
 
     const intentAny = !!(intent & RenderingIntentFlag.ANY),

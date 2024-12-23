@@ -455,11 +455,11 @@ class WorkerMessageHandler {
       )
     );
 
-    handler.on("GetAnnotations", function ({ pageIndex, intent }: { pageIndex: number, intent: number }) {
+    handler.onGetAnnotations(async data => {
+      const { pageIndex, intent } = data;
       return pdfManager!.getPage(pageIndex).then(function (page) {
         const task = new WorkerTask(`GetAnnotations: page ${pageIndex}`);
         startWorkerTask(task);
-
         return page.getAnnotationsData(handler!, task, intent).then(
           data => {
             finishWorkerTask(task);
