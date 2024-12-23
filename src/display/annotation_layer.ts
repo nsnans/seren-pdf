@@ -24,6 +24,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
+import { PlatformHelper } from "../platform/platform_helper";
+import { ColorConverters } from "../shared/scripting_utils";
 import {
   AnnotationBorderStyleType,
   AnnotationEditorType,
@@ -36,13 +38,10 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { PDFDateString, setLayerDimensions } from "./display_utils";
-import { AnnotationStorage } from "./annotation_storage";
-import { ColorConverters } from "../shared/scripting_utils";
-import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { IDownloadManager, IPDFLinkService } from "../viewer/common/component_types";
-import { PlatformHelper } from "../platform/platform_helper";
-import { AnnotationParameters } from "../core/annotation";
+import { AnnotationStorage } from "./annotation_storage";
+import { PDFDateString, setLayerDimensions } from "./display_utils";
+import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -3297,5 +3296,5 @@ export {
   FreeTextAnnotationElement,
   HighlightAnnotationElement,
   InkAnnotationElement,
-  StampAnnotationElement,
+  StampAnnotationElement
 };

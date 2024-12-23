@@ -244,7 +244,7 @@ abstract class AbstractMessageHandler {
    * @returns {ReadableStream} ReadableStream to read data in chunks.
    */
   sendWithStream(actionName: string, data: Record<string, any> | null
-    , queueingStrategy?: QueuingStrategy, transfers?: Transferable[] | null): ReadableStream<Uint8Array> {
+    , queueingStrategy?: QueuingStrategy, transfers?: Transferable[] | null): ReadableStream<Uint8Array<ArrayBuffer>> {
     const streamId = this.streamId++,
       sourceName = this.sourceName,
       targetName = this.targetName,

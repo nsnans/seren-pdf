@@ -47,5 +47,6 @@ export const MessageHandlerAction = {
   Terminate: "Terminate",
   GetMetadata: "GetMetadata",
   commonobj: "commonobj",
-  obj: "obj"
+  obj: "obj",
+  GetTextContent: "GetTextContent"
 }

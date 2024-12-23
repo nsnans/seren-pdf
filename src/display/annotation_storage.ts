@@ -197,17 +197,17 @@ class AnnotationStorage {
     if (this.#storage.size === 0) {
       return SerializableEmpty;
     }
-    const map = new Map<string, Record<string, any>>(),
-      hash = new MurmurHash3_64(),
-      transfer = [];
+
+    const map = new Map<string, Record<string, any>>();
+    const hash = new MurmurHash3_64();
+    const transfer = [];
+
     const context = Object.create(null);
     let hasBitmap = false;
 
     for (const [key, val] of this.#storage) {
-      const serialized =
-        val instanceof AnnotationEditor
-          ? val.serialize(/* isForCopying = */ false, context)
-          : val;
+      
+      const serialized = val instanceof AnnotationEditor ? val.serialize(false, context) : val;
       if (serialized) {
         map.set(key, serialized);
 

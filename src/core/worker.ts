@@ -694,33 +694,32 @@ class WorkerMessageHandler {
       });
     });
 
-    handler.on("GetTextContent", function (data, sink: StreamSink) {
+    handler.onGetTextContent((data, sink) => {
       const { pageIndex, includeMarkedContent, disableNormalization } = data;
 
-      pdfManager!.getPage(pageIndex).then(function (page) {
+      pdfManager!.getPage(pageIndex).then(page => {
         const task = new WorkerTask("GetTextContent: page " + pageIndex);
         startWorkerTask(task);
 
         // NOTE: Keep this condition in sync with the `info` helper function.
         const start = verbosity >= VerbosityLevel.INFOS ? Date.now() : 0;
 
-        page.extractTextContent(handler!, task, includeMarkedContent, disableNormalization, sink)
-          .then(() => {
-            finishWorkerTask(task);
-            if (start) {
-              const msg = `page=${pageIndex + 1} - getTextContent: time=` + `${Date.now() - start}ms`;
-              info(msg);
-            }
-            sink.close();
-          }, (reason) => {
-            finishWorkerTask(task);
-            if (task.terminated) {
-              return; // ignoring errors from the terminated thread
-            }
-            sink.error(reason);
-            // TODO: Should `reason` be re-thrown here (currently that casues
-            //       "Uncaught exception: ..." messages in the console)?
-          });
+        page.extractTextContent(handler!, task, includeMarkedContent, disableNormalization, sink).then(() => {
+          finishWorkerTask(task);
+          if (start) {
+            const msg = `page=${pageIndex + 1} - getTextContent: time=` + `${Date.now() - start}ms`;
+            info(msg);
+          }
+          sink.close();
+        }, (reason) => {
+          finishWorkerTask(task);
+          if (task.terminated) {
+            return; // ignoring errors from the terminated thread
+          }
+          sink.error(reason);
+          // TODO: Should `reason` be re-thrown here (currently that casues
+          //       "Uncaught exception: ..." messages in the console)?
+        });
       });
     });
 

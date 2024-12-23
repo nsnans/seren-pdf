@@ -203,6 +203,15 @@ export interface CatalogOpenAction {
   action: string | null;
 }
 
+export interface OptionalContentConfig {
+  name: string | null;
+  creator: string | null;
+  baseState: string | null;
+  on: string[];
+  off: string[];
+
+}
+
 export class Catalog {
 
   protected pdfManager: PDFManager;
@@ -765,7 +774,7 @@ export class Catalog {
 
     parseRBGroups(config.getValue(DictKey.RBGroups));
 
-    return {
+    return <OptionalContentConfig>{
       name:
         typeof config.getValue(DictKey.Name) === "string"
           ? stringToPDFString(<string>config.getValue(DictKey.Name))
@@ -780,7 +789,7 @@ export class Catalog {
           : null,
       on: parseOnOff(config.getValue(DictKey.ON)),
       off: parseOnOff(config.getValue(DictKey.OFF)),
-      order: parseOrder(config.getValue(DictKey.Order)),
+      order: parseOrder(<Ref[]>config.getValue(DictKey.Order)),
       groups: [...groupRefCache],
     };
   }

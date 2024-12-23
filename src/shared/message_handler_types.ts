@@ -75,3 +75,9 @@ export interface GetPageResult {
   userUnit: number;
   view: RectType;
 }
+
+export interface GetTextContentMessage {
+  pageIndex: number;
+  includeMarkedContent: boolean;
+  disableNormalization: boolean;
+}

@@ -15,9 +15,20 @@ import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
 import { PDFMetadataInfo } from "../core/metadata_parser";
 import { StructTreeSerialNode } from "../core/struct_tree";
-import { DocumentParameter, OnProgressParameters, StructTreeNode } from "../display/api";
+import {
+  DocumentParameter,
+  OnProgressParameters,
+  StructTreeNode
+} from "../display/api";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
-import { FetchBuiltInCMapMessage as FetchBuiltInCMapResult, GetDocMessage, GetPageResult, ReaderHeadersReadyResult, StartRenderPageMessage } from "./message_handler_types";
+import {
+  FetchBuiltInCMapMessage,
+  GetDocMessage,
+  GetPageResult,
+  GetTextContentMessage,
+  ReaderHeadersReadyResult,
+  StartRenderPageMessage
+} from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
 import { BaseException, PasswordException } from "./util";
 
@@ -152,12 +163,12 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  FetchBuiltInCMap(name: string): Promise<FetchBuiltInCMapResult> {
+  FetchBuiltInCMap(name: string): Promise<FetchBuiltInCMapMessage> {
     const action = MessageHandlerAction.FetchBuiltInCMap;
     return this.sendWithPromise(action, { name });
   }
 
-  onFetchBuiltInCMap(fn: (data: { name: string }) => Promise<FetchBuiltInCMapResult>) {
+  onFetchBuiltInCMap(fn: (data: { name: string }) => Promise<FetchBuiltInCMapMessage>) {
     const action = MessageHandlerAction.FetchBuiltInCMap;
     this.on(action, fn);
   }
@@ -358,7 +369,7 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetStructTree(pageIndex: number): Promise<StructTreeNode | null> {
+  GetStructTree(pageIndex: number): Promise<StructTreeSerialNode | null> {
     const action = MessageHandlerAction.GetStructTree;
     return this.sendWithPromise(action, { pageIndex })
   }
@@ -432,6 +443,26 @@ export class MessageHandler extends AbstractMessageHandler {
 
   onCommonobj(fn: (res: [string, string, any]) => Promise<number | null>) {
     const action = MessageHandlerAction.commonobj;
+    this.on(action, fn);
+  }
+
+  GetTextContent<T>(
+    pageIndex: number,
+    includeMarkedContent: boolean,
+    disableNormalization: boolean,
+    queueingStrategy: QueuingStrategy<T>
+  ): ReadableStream<Uint8Array<ArrayBuffer>> {
+    const action = MessageHandlerAction.GetTextContent;
+    const data: GetTextContentMessage = {
+      pageIndex,
+      includeMarkedContent,
+      disableNormalization
+    };
+    return this.sendWithStream(action, data, queueingStrategy)
+  }
+
+  onGetTextContent(fn: (data: GetTextContentMessage, sink: StreamSink) => void) {
+    const action = MessageHandlerAction.GetTextContent;
     this.on(action, fn);
   }
 

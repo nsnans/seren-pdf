@@ -20,6 +20,7 @@
 import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
 import { StreamGetOperatorListParameters } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
+import { StructTreeSerialNode } from "../core/struct_tree";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
@@ -1961,13 +1962,10 @@ export class PDFPageProxy {
   }: GetTextContentParameters): ReadableStream {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
 
-    return this._transport.messageHandler!.sendWithStream(
-      "GetTextContent",
-      {
-        pageIndex: this._pageIndex,
-        includeMarkedContent: includeMarkedContent === true,
-        disableNormalization: disableNormalization === true,
-      },
+    return this._transport.messageHandler!.GetTextContent(
+      this._pageIndex,
+      includeMarkedContent === true,
+      disableNormalization === true,
       {
         highWaterMark: TEXT_CONTENT_CHUNK_SIZE,
         size(textContent: TextContent) {
@@ -2018,7 +2016,7 @@ export class PDFPageProxy {
    *   {@link StructTreeNode} object that represents the page's structure tree,
    *   or `null` when no structure tree is present for the current page.
    */
-  getStructTree(): Promise<StructTreeNode> {
+  getStructTree(): Promise<StructTreeSerialNode | null> {
     return this._transport.getStructTree(this._pageIndex);
   }
 
@@ -2807,13 +2805,6 @@ class WorkerTransport {
     this.setupMessageHandler();
   }
 
-  getAnnotArray(pageIndex: number) {
-    if (!PlatformHelper.isTesting()) {
-      throw new Error("该方法只有在测试环境下可以调用");
-    }
-    return this.messageHandler!.sendWithPromise("GetAnnotArray", { pageIndex });
-  }
-
   #cacheSimpleMethod(name: string, fn: () => Promise<any>) {
     const cachedPromise = this.#methodPromises.get(name);
     if (cachedPromise) {
@@ -3268,26 +3259,26 @@ class WorkerTransport {
   }
 
   saveDocument() {
+
     if (this.annotationStorage.size <= 0) {
       let warning = "saveDocument called while `annotationStorage` is empty, ";
       warning += "please use the getData-method instead.";
       warn(warning);
     }
+
     const { map, transfer } = this.annotationStorage.serializable;
 
-    return this.messageHandler!
-      .sendWithPromise(
-        "SaveDocument",
-        {
-          numPages: this._numPages,
-          annotationStorage: map,
-          filename: this._fullReader?.filename ?? null,
-        } as SaveDocumentMessage,
-        transfer
-      )
-      .finally(() => {
-        this.annotationStorage.resetModified();
-      });
+    return this.messageHandler!.sendWithPromise(
+      "SaveDocument",
+      {
+        numPages: this._numPages,
+        annotationStorage: map,
+        filename: this._fullReader?.filename ?? null,
+      } as SaveDocumentMessage,
+      transfer
+    ).finally(() => {
+      this.annotationStorage.resetModified();
+    });
   }
 
   getPage(pageNumber: number) {
@@ -3366,7 +3357,7 @@ class WorkerTransport {
   }
 
   getPageLabels() {
-    return this.messageHandler!.sendWithPromise("GetPageLabels", null);
+    return this.messageHandler!.GetPageLabels();
   }
 
   getPageLayout() {
@@ -3399,10 +3390,8 @@ class WorkerTransport {
     return this.messageHandler!.GetPageJSActions(pageIndex);
   }
 
-  getStructTree(pageIndex: number) {
-    return this.messageHandler!.sendWithPromise("GetStructTree", {
-      pageIndex,
-    }) as Promise<StructTreeNode>;
+  getStructTree(pageIndex: number): Promise<StructTreeSerialNode | null> {
+    return this.messageHandler!.GetStructTree(pageIndex)
   }
 
   getOutline() {
