@@ -1720,13 +1720,13 @@ export class PDFPageProxy {
   }
 
   /**
-   * @param {GetAnnotationsParameters} [params] - Annotation parameters.
-   * @returns {Promise<Array<any>>} A promise that is resolved with an
+   * @param Annotation parameters.
+   * @returns A promise that is resolved with an
    *   {Array} of the annotation objects.
    */
-  getAnnotations({ intent = "display" }: GetAnnotationsParameters): Promise<Array<any>> {
+  getAnnotations(intent = "display") {
     const { renderingIntent } = this._transport.getRenderingIntent(intent);
-    return <Promise>this._transport.getAnnotations(this._pageIndex, renderingIntent);
+    return this._transport.getAnnotations(this._pageIndex, renderingIntent);
   }
 
   /**
@@ -3317,10 +3317,7 @@ class WorkerTransport {
   }
 
   getAnnotations(pageIndex: number, intent: number) {
-    return this.messageHandler!.sendWithPromise("GetAnnotations", {
-      pageIndex,
-      intent,
-    });
+    return this.messageHandler!.GetAnnotations(pageIndex, intent);
   }
 
   getFieldObjects() {

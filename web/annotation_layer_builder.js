@@ -111,7 +111,7 @@ class AnnotationLayerBuilder {
     }
 
     const [annotations, hasJSActions, fieldObjects] = await Promise.all([
-      this.pdfPage.getAnnotations({ intent }),
+      this.pdfPage.getAnnotations(intent),
       this._hasJSActionsPromise,
       this._fieldObjectsPromise,
     ]);
