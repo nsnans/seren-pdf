@@ -488,8 +488,8 @@ export class Catalog {
     // To avoid recursion, keep track of the already processed items.
     const processed = new RefSet();
     processed.put(obj);
-    const xref = this.xref,
-      blackColor = new Uint8ClampedArray(3);
+    const xref = this.xref;
+      const blackColor = new Uint8ClampedArray(3);
 
     while (queue.length > 0) {
       const i = queue.shift()!;

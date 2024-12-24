@@ -20,8 +20,7 @@ import { PDFMetadataInfo } from "../core/metadata_parser";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import {
   DocumentParameter,
-  OnProgressParameters,
-  StructTreeNode
+  OnProgressParameters
 } from "../display/api";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
