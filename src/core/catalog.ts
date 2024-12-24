@@ -489,7 +489,7 @@ export class Catalog {
     const processed = new RefSet();
     processed.put(obj);
     const xref = this.xref;
-      const blackColor = new Uint8ClampedArray(3);
+    const blackColor = new Uint8ClampedArray(3);
 
     while (queue.length > 0) {
       const i = queue.shift()!;
