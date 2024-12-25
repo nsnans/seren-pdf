@@ -51,4 +51,6 @@ export const MessageHandlerAction = {
   GetTextContent: "GetTextContent",
   GetOptionalContentConfig: "GetOptionalContentConfig",
   SaveDocument: "SaveDocument",
+  GetOutline: "GetOutline",
+  GetOperatorList: "GetOperatorList",
 }

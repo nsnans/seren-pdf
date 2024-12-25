@@ -2163,17 +2163,10 @@ export class PDFPageProxy {
 
     // 起初怀疑这里有问题，但是随着调查annotationStorageSerializable的值是SerializableEmpty后
     // 就感觉这里应该没有问题了
-    const readableStream = this._transport.messageHandler!.sendWithStream(
-      "GetOperatorList",
-      <StreamGetOperatorListParameters>{
-        pageIndex: this._pageIndex,
-        intent: renderingIntent,
-        cacheKey,
-        annotationStorage: map,
-        modifiedIds,
-      },
-      transfer
+    const readableStream = this._transport.messageHandler!.GetOperatorList(
+      this._pageIndex, renderingIntent, cacheKey, map, modifiedIds, transfer
     );
+    
     const reader = readableStream.getReader();
 
     const intentState = this._intentStates.get(cacheKey);
@@ -3386,7 +3379,7 @@ class WorkerTransport {
   }
 
   getOutline() {
-    return this.messageHandler!.sendWithPromise("GetOutline", null);
+    return this.messageHandler!.GetOutline();
   }
 
   async getOptionalContentConfig(renderingIntent: number): Promise<OptionalContentConfig> {

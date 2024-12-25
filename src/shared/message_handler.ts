@@ -7,13 +7,15 @@
 import { Uint8TypedArray } from "../common/typed_array";
 import { AnnotationData } from "../core/annotation";
 import {
+  Catalog,
   CatalogMarkInfo,
   CatalogOpenAction,
   CatalogOptionalContentConfig,
+  CatalogOutlineItem,
   DestinationType,
   ViewerPreferenceKeys
 } from "../core/catalog";
-import { FieldObject, StreamSink } from "../core/core_types";
+import { FieldObject, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
 import { PDFMetadataInfo } from "../core/metadata_parser";
@@ -389,6 +391,38 @@ export class MessageHandler extends AbstractMessageHandler {
     const action = MessageHandlerAction.GetStructTree;
     this.on(action, fn);
   }
+
+  GetOutline(): Promise<CatalogOutlineItem | null> {
+    const action = MessageHandlerAction.GetOutline;
+    return this.sendWithPromise(action, null);
+  }
+
+  onGetOutline(fn: () => Promise<CatalogOutlineItem[] | null>) {
+    const action = MessageHandlerAction.GetOutline;
+    this.on(action, fn);
+  }
+
+  GetOperatorList(
+    pageIndex: number,
+    intent: number,
+    cacheKey: string,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null,
+    modifiedIds: Set<string>,
+    transfers: Transferable[] | null
+  ): ReadableStream<Uint8Array<ArrayBuffer>> {
+    const action = MessageHandlerAction.GetOperatorList;
+    const data: StreamGetOperatorListParameters = {
+      pageIndex, intent, cacheKey, annotationStorage, modifiedIds
+    }
+    // 这里大概是有问题的，transefers的参数为什么在queuingStrategy上
+    return this.sendWithStream(action, data, undefined, transfers);
+  }
+
+  onGetOperatorList(fn: (data: StreamGetOperatorListParameters, sink: StreamSink) => void) {
+    const action = MessageHandlerAction.GetOperatorList;
+    this.on(action, fn);
+  }
+
 
   FontFallback(id: string): Promise<void> {
     const action = MessageHandlerAction.FontFallback;

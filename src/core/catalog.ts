@@ -233,6 +233,25 @@ export interface CatalogOptionalContentConfig {
   groups: OptionalContentGroup[];
 }
 
+export interface CatalogOutlineItem {
+  action: string | null;
+  attachment: FileSpecSerializable | null;
+  dest: string | DestinationType | null;
+  url: string | null;
+  unsafeUrl: string | null;
+  newWindow: boolean | null;
+  setOCGState: {
+    state: string[];
+    preserveRB: boolean;
+  } | null;
+  title: string;
+  color: Uint8ClampedArray<ArrayBuffer>;
+  count: number;
+  bold: boolean;
+  italic: boolean;
+  items: CatalogOutlineItem[];
+}
+
 export class Catalog {
 
   protected pdfManager: PDFManager;
@@ -483,8 +502,11 @@ export class Catalog {
       return null;
     }
 
-    const root = { items: [] };
-    const queue = [{ obj, parent: root }];
+    const root = { items: <CatalogOutlineItem[]>[] };
+    const queue: {
+      obj: object,
+      parent: { items: CatalogOutlineItem[] }
+    }[] = [{ obj, parent: root }];
     // To avoid recursion, keep track of the already processed items.
     const processed = new RefSet();
     processed.put(obj);
@@ -522,17 +544,17 @@ export class Catalog {
         rgbColor = ColorSpace.singletons.rgb.getRgb(color, 0);
       }
 
-      const outlineItem = {
+      const outlineItem: CatalogOutlineItem = {
         action: data.action,
-        attachment: data.attachment,
+        attachment: data.attachment ?? null,
         dest: data.dest,
         url: data.url,
-        unsafeUrl: data.unsafeUrl,
-        newWindow: data.newWindow,
-        setOCGState: data.setOCGState,
+        unsafeUrl: data.unsafeUrl ?? null,
+        newWindow: data.newWindow ?? null,
+        setOCGState: data.setOCGState ?? null,
         title: typeof title === "string" ? stringToPDFString(title) : "",
         color: rgbColor,
-        count: Number.isInteger(count) ? count : undefined,
+        count: Number.isInteger(count) ? count : null,
         bold: !!(flags & 2),
         italic: !!(flags & 1),
         items: [],

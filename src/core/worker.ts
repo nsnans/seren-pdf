@@ -426,9 +426,9 @@ class WorkerMessageHandler {
       )
     );
 
-    handler.on("GetOutline", function () {
-      return pdfManager!.ensureCatalog(catalog => catalog.documentOutline);
-    });
+    handler.onGetOutline(
+      () => pdfManager!.ensureCatalog(catalog => catalog.documentOutline)
+    );
 
     handler.onGetOptionalContentConfig(
       () => pdfManager!.ensureCatalog(catalog => catalog.optionalContentConfig)
@@ -646,7 +646,7 @@ class WorkerMessageHandler {
     }
     );
 
-    handler.on("GetOperatorList", function (data: StreamGetOperatorListParameters, sink: StreamSink) {
+    handler.onGetOperatorList((data, sink) => {
       const pageIndex = data.pageIndex;
       pdfManager!.getPage(pageIndex).then(function (page) {
         const task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
@@ -659,28 +659,25 @@ class WorkerMessageHandler {
         page.getOperatorList(
           handler!, sink, task, data.intent, data.cacheKey,
           data.annotationStorage, data.modifiedIds
-        ).then(
-          function (operatorListInfo) {
-            finishWorkerTask(task);
-
-            if (start) {
-              info(
-                `page=${pageIndex + 1} - getOperatorList: time=` +
-                `${Date.now() - start}ms, len=${operatorListInfo.length}`
-              );
-            }
-            sink.close();
-          },
-          function (reason) {
-            finishWorkerTask(task);
-            if (task.terminated) {
-              return; // ignoring errors from the terminated thread
-            }
-            sink.error(reason);
-
-            // TODO: Should `reason` be re-thrown here (currently that casues
-            //       "Uncaught exception: ..." messages in the console)?
+        ).then(operatorListInfo => {
+          finishWorkerTask(task);
+          if (start) {
+            info(
+              `page=${pageIndex + 1} - getOperatorList: time=` +
+              `${Date.now() - start}ms, len=${operatorListInfo.length}`
+            );
           }
+          sink.close();
+        }, reason => {
+          finishWorkerTask(task);
+          if (task.terminated) {
+            return; // ignoring errors from the terminated thread
+          }
+          sink.error(reason);
+
+          // TODO: Should `reason` be re-thrown here (currently that casues
+          //       "Uncaught exception: ..." messages in the console)?
+        }
         );
       });
     });

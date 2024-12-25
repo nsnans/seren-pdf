@@ -1,4 +1,5 @@
 import { TransformType } from "../display/display_utils";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
 import { assert } from "../shared/util";
 import { CssFontInfo } from "./evaluator";
@@ -29,7 +30,7 @@ export interface StreamGetOperatorListParameters {
   pageIndex: number;
   intent: number;
   cacheKey: string;
-  annotationStorage: Map<string, Record<string, any>> | null;
+  annotationStorage: Map<string, AnnotationEditorSerial> | null;
   modifiedIds: Set<string>;
 }
 
