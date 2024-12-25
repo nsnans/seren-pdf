@@ -392,29 +392,22 @@ class FontFaceObject {
 
   systemFontInfo: any;
 
-  public data: Uint8Array | null = null;
+  public data: Uint8Array<ArrayBuffer> | null = null;
 
   cssFontInfo: any;
 
-  _inspectFont: ((obj: FontFaceObject, url?: string) => void) | null;
-
   mimetype: any;
 
-  constructor(translatedData,
-    {
-      disableFontFace = false,
-      inspectFont = null
-    }: {
-      disableFontFace: boolean
-      inspectFont: ((obj: FontFaceObject, url?: string) => void) | null
-    }) {
+  constructor(
+    translatedData,
+    disableFontFace = false
+  ) {
     this.compiledGlyphs = new Map();
     // importing translated data
     for (const i in translatedData) {
       this[i] = translatedData[i];
     }
     this.disableFontFace = disableFontFace === true;
-    this._inspectFont = inspectFont;
   }
 
   createNativeFontFace() {
@@ -438,7 +431,6 @@ class FontFaceObject {
       );
     }
 
-    this._inspectFont?.(this);
     return nativeFontFace;
   }
 
@@ -459,7 +451,6 @@ class FontFaceObject {
       rule = `@font-face {font-family:"${this.cssFontInfo.fontFamily}";${css}src:${url}}`;
     }
 
-    this._inspectFont?.(this, url);
     return rule;
   }
 

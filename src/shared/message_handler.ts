@@ -7,7 +7,6 @@
 import { Uint8TypedArray } from "../common/typed_array";
 import { AnnotationData } from "../core/annotation";
 import {
-  Catalog,
   CatalogMarkInfo,
   CatalogOpenAction,
   CatalogOptionalContentConfig,

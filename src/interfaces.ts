@@ -102,7 +102,7 @@ export interface PDFStreamReader {
    * the PDF data stream are available.
    * @type {Promise}
    */
-  get headersReady(): Promise<unknown>;
+  get headersReady(): Promise<void>;
 
   /**
    * Gets the Content-Disposition filename. It is defined after the headersReady

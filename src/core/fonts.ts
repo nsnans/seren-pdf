@@ -82,48 +82,6 @@ const PRIVATE_USE_AREAS = [
 // except for Type 3 fonts
 const PDF_GLYPH_SPACE_UNITS = 1000;
 
-const EXPORT_DATA_PROPERTIES = [
-  "ascent",
-  "bbox",
-  "black",
-  "bold",
-  "charProcOperatorList",
-  "composite",
-  "cssFontInfo",
-  "data",
-  "defaultVMetrics",
-  "defaultWidth",
-  "descent",
-  "fallbackName",
-  "fontMatrix",
-  "isInvalidPDFjsFont",
-  "isType3Font",
-  "italic",
-  "loadedName",
-  "mimetype",
-  "missingFile",
-  "name",
-  "remeasure",
-  "subtype",
-  "systemFontInfo",
-  "type",
-  "vertical",
-];
-
-const EXPORT_DATA_EXTRA_PROPERTIES = [
-  "cMap",
-  "defaultEncoding",
-  "differences",
-  "isMonospace",
-  "isSerifFont",
-  "isSymbolicFont",
-  "seacMap",
-  "toFontChar",
-  "toUnicode",
-  "vmetrics",
-  "widths",
-];
-
 function adjustWidths(properties: EvaluatorProperties) {
   if (!properties.fontMatrix) {
     return;
@@ -1020,100 +978,148 @@ interface TTContext {
   hintsValid: boolean;
 }
 
+const exportKeys: string[] = []
+const extraExportKeys: string[] = []
+
+function ExportProperty(normal = true) {
+  return function (_target: Font, propertyKey: string) {
+    exportKeys.push(propertyKey);
+    if (!normal) {
+      // 非normal就是extra，额外的
+      extraExportKeys.push(propertyKey);
+    }
+  }
+}
+
 /**
  * 'Font' is the class the outside world should use, it encapsulate all the font
  * decoding logics whatever type it is (assuming the font type is supported).
  */
 class Font {
 
+  @ExportProperty(false)
   public cMap: CMap;
 
+  @ExportProperty()
   public name: string;
 
   public psName: string | null;
 
+  @ExportProperty()
   protected mimetype: string | null;
 
   public disableFontFace: boolean;
 
+  @ExportProperty()
   public loadedName: string | null;
 
+  @ExportProperty()
   public isType3Font: boolean;
 
+  @ExportProperty()
   protected missingFile: boolean;
 
+  @ExportProperty()
   public cssFontInfo: CssFontInfo | null;
 
   protected _charsCache: Record<string, Glyph[]>;
 
   protected _glyphCache: Record<number, Glyph>;
 
+  @ExportProperty(false)
   protected isSerifFont: boolean;
 
   protected isSymbolicFont: boolean;
 
+  @ExportProperty(false)
   protected isMonospace: boolean;
 
+  @ExportProperty()
   protected type: string;
 
+  @ExportProperty()
   protected subtype: string | null;
 
+  @ExportProperty()
   public systemFontInfo: FontSubstitutionInfo | null;
 
+  @ExportProperty()
   protected isInvalidPDFjsFont: boolean;
 
+  @ExportProperty()
   public fallbackName: string;
 
+  @ExportProperty(false)
   protected differences: string[];
 
+  @ExportProperty(false)
   protected widths: number[];
 
+  @ExportProperty()
   protected defaultWidth: number;
 
+  @ExportProperty()
   protected composite: boolean;
 
   protected capHeight: number;
 
+  @ExportProperty()
   public ascent: number;
 
+  @ExportProperty()
   public descent: number;
 
   public lineHeight: number;
 
+  @ExportProperty()
   public fontMatrix: TransformType;
 
+  @ExportProperty()
   public bbox: RectType | null;
 
+  @ExportProperty(false)
   protected defaultEncoding: string[];
 
+  @ExportProperty(false)
   protected toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
 
+  @ExportProperty(false)
   protected toFontChar: (number | string)[];
 
   protected cidEncoding: string | null = null;
 
+  @ExportProperty()
   public vertical: boolean | null = null;
 
+  @ExportProperty(false)
   protected vmetrics: number[][] | null = null;
 
+  @ExportProperty()
   protected defaultVMetrics: number[] | null = null;
 
   protected isOpenType: boolean | null = null;
 
-  public data: Uint8Array | null = null;
+  @ExportProperty()
+  public data: Uint8Array<ArrayBuffer> | null = null;
 
+  @ExportProperty(false)
   protected seacMap: Record<number, SeacMapValue> = Object.create(null);
 
+  @ExportProperty()
   protected bold: boolean | null = null;
 
+  @ExportProperty()
   protected italic: boolean | null = null;
 
+  @ExportProperty()
   protected black: boolean | null = null;
 
+  @ExportProperty()
   protected remeasure: boolean | null = null;
 
   public isCharBBox: boolean | null = null;
 
+  @ExportProperty()
   public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
 
   // 暂时先是null吧，具体啥值，需要等到后面处理的比较完整的时候才知道
@@ -1296,16 +1302,17 @@ class Font {
 
   exportData(extraProperties = false) {
     const exportDataProperties = extraProperties
-      ? [...EXPORT_DATA_PROPERTIES, ...EXPORT_DATA_EXTRA_PROPERTIES]
-      : EXPORT_DATA_PROPERTIES;
+      ? [...exportKeys, ...extraExportKeys] : exportKeys;
 
-    const data = Object.create(null);
+    // 放弃使用写死的字段来处理这些基本的值，而是采用装饰器使得属性名称和值更加清晰
+    const record: Record<string, any> = this;
+    const data = new Map<string, any>();
     let property, value;
     for (property of exportDataProperties) {
-      value = this[property];
+      value = record[property];
       // Ignore properties that haven't been explicitly set.
       if (value !== undefined) {
-        data[property] = value;
+        data.set(property, value);
       }
     }
     return data;

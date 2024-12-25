@@ -846,7 +846,7 @@ export class PDFDocumentLoadingTask {
 
   public _worker: PDFWorker | null = null;
 
-  public _capability = Promise.withResolvers();
+  public _capability = Promise.withResolvers<PDFDocumentProxy>();
 
   public destroyed = false;
 
@@ -2166,7 +2166,7 @@ export class PDFPageProxy {
     const readableStream = this._transport.messageHandler!.GetOperatorList(
       this._pageIndex, renderingIntent, cacheKey, map, modifiedIds, transfer
     );
-    
+
     const reader = readableStream.getReader();
 
     const intentState = this._intentStates.get(cacheKey);
@@ -3119,7 +3119,7 @@ class WorkerTransport {
 
       switch (type) {
         case "Font":
-          const { disableFontFace, fontExtraProperties, pdfBug } = this._params;
+          const { disableFontFace, fontExtraProperties } = this._params;
           if ("error" in exportedData) {
             const exportedError = exportedData.error;
             warn(`Error during font loading: ${exportedError}`);
@@ -3127,11 +3127,8 @@ class WorkerTransport {
             break;
           }
 
-          const inspectFont =
-            pdfBug && globalThis.FontInspector?.enabled
-              ? (font: FontFaceObject, url?: string) => globalThis.FontInspector.fontAdded(font, url!)
-              : null;
-          const font = new FontFaceObject(exportedData, { disableFontFace, inspectFont });
+          // FontInspector 既然只在调试环境下有，那就删除了吧
+          const font = new FontFaceObject(exportedData, disableFontFace);
 
           this.fontLoader
             .bind(font)
