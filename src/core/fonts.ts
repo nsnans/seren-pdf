@@ -978,16 +978,88 @@ interface TTContext {
   hintsValid: boolean;
 }
 
-const exportKeys: string[] = []
-const extraExportKeys: string[] = []
+export class FontExportData {
+  ascent: number;
+  bbox: RectType | null;
+  black: boolean | null;
+  bold: boolean | null;
+  charProcOperatorList: Map<DictKey, OperatorListIR> | null;
+  composite: boolean;
+  cssFontInfo: CssFontInfo | null;
+  data: Uint8Array<ArrayBuffer> | null;
+  defaultVMetrics: number[] | null;
+  defaultWidth: number;
+  descent: number;
+  fallbackName: string;
+  fontMatrix: TransformType;
+  isInvalidPDFjsFont: boolean;
+  isType3Font: boolean;
+  italic: boolean | null;
+  loadedName: string | null;
+  mimetype: string | null;
+  missingFile: boolean;
+  name: string;
+  remeasure: boolean | null;
+  subtype: string | null;
+  systemFontInfo: FontSubstitutionInfo | null;
+  type: string;
+  vertical: boolean | null;
 
-function ExportProperty(normal = true) {
-  return function (_target: Font, propertyKey: string) {
-    exportKeys.push(propertyKey);
-    if (!normal) {
-      // 非normal就是extra，额外的
-      extraExportKeys.push(propertyKey);
-    }
+  constructor(font: Font) {
+    this.ascent = font.ascent;
+    this.bbox = font.bbox;
+    this.black = font.black;
+    this.bold = font.bold;
+    this.charProcOperatorList = font.charProcOperatorList;
+    this.composite = font.composite;
+    this.cssFontInfo = font.cssFontInfo;
+    this.data = font.data;
+    this.defaultVMetrics = font.defaultVMetrics;
+    this.defaultWidth = font.defaultWidth;
+    this.descent = font.descent;
+    this.fallbackName = font.fallbackName;
+    this.fontMatrix = font.fontMatrix;
+    this.isInvalidPDFjsFont = font.isInvalidPDFjsFont;
+    this.isType3Font = font.isType3Font;
+    this.italic = font.italic;
+    this.loadedName = font.loadedName;
+    this.mimetype = font.mimetype;
+    this.missingFile = font.missingFile;
+    this.name = font.name;
+    this.remeasure = font.remeasure;
+    this.subtype = font.subtype;
+    this.systemFontInfo = font.systemFontInfo;
+    this.type = font.type;
+    this.vertical = font.vertical;
+  }
+}
+
+export class FontExportExtraData extends FontExportData {
+  cMap: CMap;
+  defaultEncoding: string[];
+  differences: string[];
+  isMonospace: boolean;
+  isSerifFont: boolean;
+  isSymbolicFont: boolean;
+  seacMap: Map<number, SeacMapValue>;
+  toFontChar: (number | string)[];
+  toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
+  vmetrics: number[][] | null;
+  widths: number[];
+
+  constructor(font: Font) {
+    super(font);
+    this.cMap = font.cMap;
+    this.defaultEncoding = font.defaultEncoding;
+    this.differences = font.differences;
+    this.isMonospace = font.isMonospace;
+    this.isSerifFont = font.isSerifFont;
+    this.isSymbolicFont = font.isSymbolicFont;
+    this.seacMap = font.seacMap;
+    this.toFontChar = font.toFontChar;
+    this.toUnicode = font.toUnicode;
+    this.vmetrics = font.vmetrics;
+    this.widths = font.widths;
   }
 }
 
@@ -997,130 +1069,95 @@ function ExportProperty(normal = true) {
  */
 class Font {
 
-  @ExportProperty(false)
   public cMap: CMap;
 
-  @ExportProperty()
   public name: string;
 
   public psName: string | null;
 
-  @ExportProperty()
-  protected mimetype: string | null;
+  public mimetype: string | null;
 
   public disableFontFace: boolean;
 
-  @ExportProperty()
   public loadedName: string | null;
 
-  @ExportProperty()
   public isType3Font: boolean;
 
-  @ExportProperty()
-  protected missingFile: boolean;
+  public missingFile: boolean;
 
-  @ExportProperty()
   public cssFontInfo: CssFontInfo | null;
 
   protected _charsCache: Record<string, Glyph[]>;
 
   protected _glyphCache: Record<number, Glyph>;
 
-  @ExportProperty(false)
-  protected isSerifFont: boolean;
+  public isSerifFont: boolean;
 
-  protected isSymbolicFont: boolean;
+  public isSymbolicFont: boolean;
 
-  @ExportProperty(false)
-  protected isMonospace: boolean;
+  public isMonospace: boolean;
 
-  @ExportProperty()
-  protected type: string;
+  public type: string;
 
-  @ExportProperty()
-  protected subtype: string | null;
+  public subtype: string | null;
 
-  @ExportProperty()
   public systemFontInfo: FontSubstitutionInfo | null;
 
-  @ExportProperty()
-  protected isInvalidPDFjsFont: boolean;
+  public isInvalidPDFjsFont: boolean;
 
-  @ExportProperty()
   public fallbackName: string;
 
-  @ExportProperty(false)
-  protected differences: string[];
+  public differences: string[];
 
-  @ExportProperty(false)
-  protected widths: number[];
+  public widths: number[];
 
-  @ExportProperty()
-  protected defaultWidth: number;
+  public defaultWidth: number;
 
-  @ExportProperty()
-  protected composite: boolean;
+  public composite: boolean;
 
   protected capHeight: number;
 
-  @ExportProperty()
   public ascent: number;
 
-  @ExportProperty()
   public descent: number;
 
   public lineHeight: number;
 
-  @ExportProperty()
   public fontMatrix: TransformType;
 
-  @ExportProperty()
   public bbox: RectType | null;
 
-  @ExportProperty(false)
-  protected defaultEncoding: string[];
+  public defaultEncoding: string[];
 
-  @ExportProperty(false)
-  protected toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
+  public toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
 
-  @ExportProperty(false)
-  protected toFontChar: (number | string)[];
+  public toFontChar: (number | string)[];
 
   protected cidEncoding: string | null = null;
 
-  @ExportProperty()
   public vertical: boolean | null = null;
 
-  @ExportProperty(false)
-  protected vmetrics: number[][] | null = null;
+  public vmetrics: number[][] | null = null;
 
-  @ExportProperty()
-  protected defaultVMetrics: number[] | null = null;
+  public defaultVMetrics: number[] | null = null;
 
   protected isOpenType: boolean | null = null;
 
-  @ExportProperty()
   public data: Uint8Array<ArrayBuffer> | null = null;
 
-  @ExportProperty(false)
-  protected seacMap: Record<number, SeacMapValue> = Object.create(null);
+  public seacMap: Map<number, SeacMapValue> = new Map();
 
-  @ExportProperty()
-  protected bold: boolean | null = null;
+  public bold: boolean | null = null;
 
-  @ExportProperty()
-  protected italic: boolean | null = null;
+  public italic: boolean | null = null;
 
-  @ExportProperty()
-  protected black: boolean | null = null;
+  public black: boolean | null = null;
 
-  @ExportProperty()
-  protected remeasure: boolean | null = null;
+  public remeasure: boolean | null = null;
 
   public isCharBBox: boolean | null = null;
 
-  @ExportProperty()
-  public charProcOperatorList: Record<DictKey, OperatorListIR> | null = null;
+  public charProcOperatorList: Map<DictKey, OperatorListIR> | null = null;
 
   // 暂时先是null吧，具体啥值，需要等到后面处理的比较完整的时候才知道
   public glyphNameMap: null = null;
@@ -1301,21 +1338,7 @@ class Font {
   }
 
   exportData(extraProperties = false) {
-    const exportDataProperties = extraProperties
-      ? [...exportKeys, ...extraExportKeys] : exportKeys;
-
-    // 放弃使用写死的字段来处理这些基本的值，而是采用装饰器使得属性名称和值更加清晰
-    const record: Record<string, any> = this;
-    const data = new Map<string, any>();
-    let property, value;
-    for (property of exportDataProperties) {
-      value = record[property];
-      // Ignore properties that haven't been explicitly set.
-      if (value !== undefined) {
-        data.set(property, value);
-      }
-    }
-    return data;
+    return extraProperties ? new FontExportExtraData(this) : new FontExportData(this);
   }
 
   fallbackToSystemFont(properties: EvaluatorProperties) {
@@ -3602,9 +3625,9 @@ class Font {
     }
 
     let accent = null;
-    if (this.seacMap?.[charcode]) {
+    if (this.seacMap.has(charcode)) {
       isInFont = true;
-      const seac = this.seacMap[charcode];
+      const seac = this.seacMap.get(charcode)!;
       fontCharCode = seac.baseFontCharCode;
       accent = {
         fontChar: String.fromCodePoint(seac.accentFontCharCode),

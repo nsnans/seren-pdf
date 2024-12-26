@@ -6,7 +6,7 @@ import { CssFontInfo } from "./evaluator";
 import { Dict, Name, Ref } from "./primitives";
 
 export interface ImageMask {
-  data: Uint8Array | null;
+  data: Uint8Array<ArrayBuffer> | null;
   width: number;
   height: number;
   interpolate: number[];

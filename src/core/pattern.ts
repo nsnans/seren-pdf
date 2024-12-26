@@ -118,6 +118,11 @@ class BaseShading {
   }
 }
 
+export type RadialAxialShadingIR = [
+  "RadialAxial", string, RectType | null, [number, string][],
+  number[], number[], number | null, number | null
+]
+
 // shading 着色
 // Radial and axial shading have very similar implementations
 // If needed, the implementations can be broken into two classes.
@@ -305,7 +310,7 @@ class RadialAxialShading extends BaseShading {
     this.colorStops = colorStops;
   }
 
-  getIR() {
+  getIR(): RadialAxialShadingIR {
     const { coordsArr, shadingType } = this;
     let type, p0, p1, r0, r1;
     if (shadingType === ShadingType.AXIAL) {

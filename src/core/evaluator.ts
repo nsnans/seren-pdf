@@ -17,7 +17,7 @@
 import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
-import { MessageHandler } from "../shared/message_handler";
+import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,
@@ -101,7 +101,7 @@ export interface SeacMapValue {
 }
 export interface EvaluatorProperties {
   glyphNames: string[];
-  seacMap: Record<number, SeacMapValue>;
+  seacMap: Map<number, SeacMapValue>;
   ascentScaled: boolean;
   builtInEncoding: (string | number)[];
   type: string;
@@ -675,7 +675,7 @@ class PartialEvaluator {
     const transfers = imgData ? [imgData.bitmap || imgData.data!.buffer] : null;
 
     if (this.parsingType3Font || cacheGlobally) {
-      return this.handler.commonobj(objId, "Image", imgData, transfers);
+      return this.handler.commonobj(objId, CommonObjType.Image, imgData, transfers);
     }
     return this.handler.obj(objId, this.pageIndex, "Image", imgData, transfers);
   }
@@ -1648,7 +1648,7 @@ class PartialEvaluator {
     localShadingPatternCache.set(shading, id);
 
     if (this.parsingType3Font) {
-      this.handler.commonobj(id, "Pattern", patternIR);
+      this.handler.commonobj(id, CommonObjType.Pattern, patternIR);
     } else {
       this.handler.obj(id, this.pageIndex, "Pattern", patternIR);
     }
@@ -4710,7 +4710,7 @@ class PartialEvaluator {
           return;
         }
         const pathJs = font.renderer.getPathJs(fontChar);
-        handler.commonobj(glyphName, "FontPath", pathJs);
+        handler.commonobj(glyphName, CommonObjType.FontPath, pathJs);
       } catch (reason) {
         if (evaluatorOptions.ignoreErrors) {
           warn(`buildFontPaths - ignoring ${glyphName} glyph: "${reason}".`);
@@ -4777,7 +4777,7 @@ class TranslatedFont {
     }
     this.sent = true;
     const exportData = this.font.exportData(this._evaluatorOptions.fontExtraProperties);
-    handler.commonobj(this.loadedName, "Font", exportData);
+    handler.commonobj(this.loadedName, CommonObjType.Font, exportData);
   }
 
   fallback(handler: MessageHandler) {
@@ -4823,7 +4823,7 @@ class TranslatedFont {
     let loadCharProcsPromise = Promise.resolve();
     const charProcs: Dict = this.dict.getValue(DictKey.CharProcs);
     const fontResources = this.dict.getValue(DictKey.Resources) || resources;
-    const charProcOperatorList: Record<DictKey, OperatorListIR> = Object.create(null);
+    const charProcOperatorList: Map<DictKey, OperatorListIR> = new Map();
 
     const fontBBox = Util.normalizeRect(translatedFont.bbox || [0, 0, 0, 0]),
       width = fontBBox[2] - fontBBox[0],
@@ -4851,7 +4851,7 @@ class TranslatedFont {
             if (operatorList.fnArray[0] === OPS.setCharWidthAndBounds) {
               this._removeType3ColorOperators(operatorList, fontBBoxSize);
             }
-            charProcOperatorList[key] = operatorList.getIR();
+            charProcOperatorList.set(key, operatorList.getIR());
 
             for (const dependency of operatorList.dependencies) {
               type3Dependencies!.add(dependency);
@@ -4860,7 +4860,7 @@ class TranslatedFont {
           .catch(function (_reason: unknown) {
             warn(`Type3 font resource "${key}" is not available.`);
             const dummyOperatorList = new OperatorList();
-            charProcOperatorList[key] = dummyOperatorList.getIR();
+            charProcOperatorList.set(key, dummyOperatorList.getIR());
           });
       });
     }

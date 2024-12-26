@@ -14,16 +14,19 @@ import {
   DestinationType,
   ViewerPreferenceKeys
 } from "../core/catalog";
-import { FieldObject, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
+import { FieldObject, ImageMask, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
+import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { PDFMetadataInfo } from "../core/metadata_parser";
+import { RadialAxialShadingIR } from "../core/pattern";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import {
   DocumentParameter,
   OnProgressParameters
 } from "../display/api";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
+import { MeshShadingPatternIR } from "../display/pattern_helper";
 import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
 import {
   FetchBuiltInCMapMessage,
@@ -37,6 +40,20 @@ import {
 } from "./message_handler_types";
 import { MessageHandlerAction } from "./message_handler_utils";
 import { BaseException, PasswordException } from "./util";
+
+export enum CommonObjType {
+  Font = "Font",
+  Image = "Image",
+  Pattern = "Pattern",
+  FontPath = "FontPath",
+}
+
+type CommonObjDataType = {
+  [CommonObjType.Font]: FontExportData | FontExportExtraData | { error: any }
+  [CommonObjType.Image]: ImageMask | null
+  [CommonObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR
+  [CommonObjType.FontPath]: number[]
+}
 
 export class MessageHandler extends AbstractMessageHandler {
 
@@ -475,7 +492,7 @@ export class MessageHandler extends AbstractMessageHandler {
   }
 
   // 这里的any是不得已而为之
-  commonobj(id: string, type: string, data: any, transfers: Transferable[] | null = null) {
+  commonobj<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T], transfers: Transferable[] | null = null) {
     const action = MessageHandlerAction.commonobj;
     this.send(action, [id, type, data], transfers);
   }

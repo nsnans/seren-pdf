@@ -14,7 +14,7 @@
  */
 
 import { OperatorListIR } from "../core/operator_list";
-import { FigureType, TilingPatternIR } from "../core/pattern";
+import { FigureType, RadialAxialShadingIR, TilingPatternIR } from "../core/pattern";
 import { PlatformHelper } from "../platform/platform_helper";
 import { FormatError, info, unreachable, Util } from "../shared/util";
 import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
@@ -50,9 +50,6 @@ export class BaseShadingPattern {
   }
 }
 
-export type RadialAxialIR = [string, string, RectType | null, [number, string][],
-  number[], number[], number | null, number | null]
-
 class RadialAxialShadingPattern extends BaseShadingPattern {
 
   protected _type: string;
@@ -71,7 +68,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
 
   protected matrix: TransformType | null;
 
-  constructor(IR: RadialAxialIR) {
+  constructor(IR: RadialAxialShadingIR) {
     super();
     this._type = IR[1];
     this._bbox = IR[2];
@@ -497,10 +494,10 @@ class DummyShadingPattern extends BaseShadingPattern {
   }
 }
 
-function getShadingPattern(IR: RadialAxialIR | MeshShadingPatternIR | ["Dummy"]): BaseShadingPattern {
+function getShadingPattern(IR: RadialAxialShadingIR | MeshShadingPatternIR | ["Dummy"]): BaseShadingPattern {
   switch (IR[0]) {
     case "RadialAxial":
-      return new RadialAxialShadingPattern(<RadialAxialIR>IR);
+      return new RadialAxialShadingPattern(<RadialAxialShadingIR>IR);
     case "Mesh":
       return new MeshShadingPattern(<MeshShadingPatternIR>IR);
     case "Dummy":
