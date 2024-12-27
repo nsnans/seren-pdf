@@ -21,6 +21,7 @@ import { CatalogMarkInfo, CatalogOutlineItem } from "../core/catalog";
 import { ImageMask } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
+import { OpertaorListChunk } from "../core/operator_list";
 import { Ref } from "../core/primitives";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
@@ -2066,7 +2067,7 @@ export class PDFPageProxy {
   /**
    * @private
    */
-  _renderPageChunk(operatorListChunk, intentState) {
+  _renderPageChunk(operatorListChunk: OpertaorListChunk, intentState) {
     // Add the new chunk to the current operator list.
     for (let i = 0, ii = operatorListChunk.length; i < ii; i++) {
       intentState.operatorList.fnArray.push(operatorListChunk.fnArray[i]);

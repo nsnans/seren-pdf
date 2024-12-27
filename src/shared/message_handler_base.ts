@@ -73,8 +73,8 @@ export interface MessagePoster {
 
 }
 
-interface StreamController {
-  controller: ReadableStreamController<Uint8Array<ArrayBuffer>>;
+interface StreamController<T> {
+  controller: ReadableStreamController<T>;
   startCall: PromiseWithResolvers<void> | null;
   cancelCall: PromiseWithResolvers<void> | null;
   pullCall: PromiseWithResolvers<void> | null;
@@ -95,9 +95,9 @@ abstract class AbstractMessageHandler {
 
   protected streamId = 1;
 
-  protected streamSinks: Map<number, StreamSink>;
+  protected streamSinks: Map<number, StreamSink<unknown>>;
 
-  protected streamControllers: Map<number, StreamController>;
+  protected streamControllers: Map<number, StreamController<unknown>>;
 
   /** 泛型的具体参数类型，由action决定，不同的action是不同的泛型参数 */
   protected callbackCapabilities: Map<number, PromiseWithResolvers<unknown>>;
@@ -151,9 +151,7 @@ abstract class AbstractMessageHandler {
       const sourceName = this.sourceName;
       const targetName = data.sourceName;
       const comObj = this.comObj;
-      new Promise((resolve) =>
-        resolve(action(data.data))
-      ).then(result => {
+      new Promise(resolve => resolve(action(data.data))).then(result => {
         const msg = {
           sourceName,
           targetName,
@@ -254,22 +252,26 @@ abstract class AbstractMessageHandler {
    * @param transfers - List of transfers/ArrayBuffers.
    * @returns ReadableStream to read data in chunks.
    */
-  protected sendWithStream(
+  protected sendWithStream<T>(
     actionName: string,
     data: unknown, // data的类型应该和actionName起相对应的关系，不同的参数有不同的类型
     queueingStrategy?: QueuingStrategy,
     transfers?: Transferable[] | null
-  ): ReadableStream<Uint8Array<ArrayBuffer>> {
+  ): ReadableStream<T> {
 
     const streamId = this.streamId++;
     const sourceName = this.sourceName;
     const targetName = this.targetName;
     const comObj = this.comObj;
 
-    return new ReadableStream<Uint8Array<ArrayBuffer>>({
+    return new ReadableStream<T>({
+      /**
+       * controller是一个非常重要的对象，程序可以通过controller.enqueue的方式向ReadableStream中写入数据
+       * controller.enqueue写完数据之后，ReadableStream.read()就会获取到相关的数据，进行处理了。
+       */
       start: controller => {
         const startCapability = Promise.withResolvers<void>();
-        const streamController: StreamController = {
+        const streamController: StreamController<T> = {
           controller,
           startCall: startCapability,
           pullCall: null,
@@ -378,7 +380,7 @@ abstract class AbstractMessageHandler {
     const targetName = data.sourceName;
     const comObj = this.comObj;
 
-    const streamController = this.streamControllers.get(streamId);
+    const streamController = this.streamControllers.get(streamId)!;
     const streamSink = this.streamSinks.get(streamId);
 
     switch (data.stream) {
@@ -399,13 +401,14 @@ abstract class AbstractMessageHandler {
       case StreamKind.PULL:
         // Ignore any pull after close is called.
         if (!streamSink) {
-          comObj.postMessage({
+          const msg = {
             sourceName,
             targetName,
             stream: StreamKind.PULL_COMPLETE,
             streamId,
             success: true,
-          });
+          }
+          comObj.postMessage(msg);
           break;
         }
         // Pull increases the desiredSize property of sink, so when it changes
@@ -441,6 +444,7 @@ abstract class AbstractMessageHandler {
         if (streamController.isClosed) {
           break;
         }
+        // 通向sendWithStream.read的关键
         streamController.controller.enqueue(data.chunk);
         break;
       case StreamKind.CLOSE:

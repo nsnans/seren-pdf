@@ -639,7 +639,7 @@ export interface OpertaorListChunk {
   length: number;
 }
 
-class OperatorList {
+export class OperatorList {
 
   static CHUNK_SIZE = 1000;
 
@@ -802,5 +802,3 @@ class OperatorList {
     this.optimizer.reset();
   }
 }
-
-export { OperatorList };

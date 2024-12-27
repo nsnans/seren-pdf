@@ -438,7 +438,7 @@ export class MessageHandler extends AbstractMessageHandler {
     annotationStorage: Map<string, AnnotationEditorSerial> | null,
     modifiedIds: Set<string>,
     transfers: Transferable[] | null
-  ): ReadableStream<Uint8Array<ArrayBuffer>> {
+  ): ReadableStream<OpertaorListChunk> {
     const action = MessageHandlerAction.GetOperatorList;
     const data: StreamGetOperatorListParameters = {
       pageIndex, intent, cacheKey, annotationStorage, modifiedIds
@@ -447,11 +447,11 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, data, undefined, transfers);
   }
 
+  // on是没有问题的，问题出在sendWithStream上
   onGetOperatorList(fn: (data: StreamGetOperatorListParameters, sink: StreamSink<OpertaorListChunk>) => void) {
     const action = MessageHandlerAction.GetOperatorList;
     this.on(action, fn);
   }
-
 
   FontFallback(id: string): Promise<void> {
     const action = MessageHandlerAction.FontFallback;

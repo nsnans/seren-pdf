@@ -40,6 +40,10 @@ export interface StreamSink<Chunk> {
 
   desiredSize: number;
 
+  /**
+   * 这是一个非常关键的函数，生产者通过这个函数向Stream队列里传递数据
+   * 而ReadableStream.read()会从这里面来进行数据的调用
+   */
   enqueue(chunk: Chunk, size: number, transfers?: Transferable[]): void;
 
   close(): void;
@@ -82,7 +86,7 @@ export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
   close() { }
 
   error(_reason: any) { }
-  
+
 }
 
 export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
