@@ -40,7 +40,7 @@ import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { CMap, CMapFactory, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
-import { DefaultTextContentItem, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem } from "./core_types";
+import { DefaultTextContentItem, EvaluatorTextContent, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem, TextContentSinkProxy } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { DecodeStream } from "./decode_stream";
 import {
@@ -2452,7 +2452,7 @@ class PartialEvaluator {
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict | null,
-    sink: StreamSink,
+    sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],
     includeMarkedContent = false,
     keepWhiteSpace = false,
@@ -2471,9 +2471,9 @@ class PartialEvaluator {
       markedContentData ||= { level: 0 };
     }
 
-    const textContent = {
-      items: <(TextContentItem | SimpleTextContentItem)[]>[],
-      styles: Object.create(null),
+    const textContent: EvaluatorTextContent = {
+      items: [],
+      styles: new Map(),
       lang,
     };
 
@@ -2642,17 +2642,21 @@ class PartialEvaluator {
       const font = textState!.font!;
       const loadedName = textState!.loadedName!;
       if (!seenStyles.has(loadedName)) {
+        const validFont = <Font>font;
         seenStyles.add(loadedName);
-        textContent.styles[loadedName] = {
-          fontFamily: (<Font>font).fallbackName,
-          ascent: (<Font>font).ascent,
-          descent: (<Font>font).descent,
-          vertical: (<Font>font).vertical,
-        };
-        if (self.options.fontExtraProperties && (<Font>font).systemFontInfo) {
-          const style = textContent.styles[loadedName];
-          style.fontSubstitution = (<Font>font).systemFontInfo!.css;
-          style.fontSubstitutionLoadedName = (<Font>font).systemFontInfo!.loadedName;
+        const style = {
+          fontFamily: (validFont).fallbackName,
+          ascent: (validFont).ascent,
+          descent: (validFont).descent,
+          vertical: (validFont).vertical,
+          fontSubstitution: null,
+          fontSubstitutionLoadedName: null,
+        }
+        textContent.styles.set(loadedName, style);
+        if (self.options.fontExtraProperties && (validFont).systemFontInfo) {
+          const style = textContent.styles.get(loadedName)!;
+          style.fontSubstitution = (validFont).systemFontInfo!.css;
+          style.fontSubstitutionLoadedName = (validFont).systemFontInfo!.loadedName;
         }
       }
       textContentItem.fontName = loadedName;
@@ -3182,7 +3186,7 @@ class PartialEvaluator {
     return new Promise(function promiseBody(resolve, reject) {
       const next = function (promise: Promise<unknown>) {
         enqueueChunk(/* batch = */ true);
-        Promise.all([promise, sink.ready]).then(function () {
+        Promise.all([promise, sink.ready]).then(() => {
           try {
             promiseBody(resolve, reject);
           } catch (ex) {
@@ -3352,111 +3356,91 @@ class PartialEvaluator {
               break;
             }
 
-            next(
-              new Promise(function (resolveXObject, rejectXObject) {
-                if (!isValidName) {
-                  throw new FormatError("XObject must be referred to by name.");
-                }
-
-                let xobj = xobjs!.getRaw(name);
-                if (xobj instanceof Ref) {
-                  if (emptyXObjectCache.getByRef(xobj)) {
-                    resolveXObject(undefined);
-                    return;
-                  }
-
-                  const globalImage = self.globalImageCache.getData(
-                    xobj,
-                    self.pageIndex
-                  );
-                  if (globalImage) {
-                    resolveXObject(undefined);
-                    return;
-                  }
-
-                  xobj = xref.fetch(xobj);
-                }
-
-                if (!(xobj instanceof BaseStream)) {
-                  throw new FormatError("XObject should be a stream");
-                }
-
-                const type = xobj.dict!.getValue(DictKey.Subtype);
-                if (!(type instanceof Name)) {
-                  throw new FormatError("XObject should have a Name subtype");
-                }
-
-                if (type.name !== "Form") {
-                  emptyXObjectCache.set(name, xobj.dict!.objId, true);
-
+            next(new Promise((resolveXObject, rejectXObject) => {
+              if (!isValidName) {
+                throw new FormatError("XObject must be referred to by name.");
+              }
+              let xobj = xobjs!.getRaw(name);
+              if (xobj instanceof Ref) {
+                if (emptyXObjectCache.getByRef(xobj)) {
                   resolveXObject(undefined);
                   return;
                 }
-
-                // Use a new `StateManager` to prevent incorrect positioning
-                // of textItems *after* the Form XObject, since errors in the
-                // data can otherwise prevent `restore` operators from
-                // executing.
-                // NOTE: Only an issue when `options.ignoreErrors === true`.
-                const currentState = stateManager.state.clone();
-                const xObjStateManager = new StateManager(currentState);
-
-                const matrix = <TransformType | null>lookupMatrix(xobj.dict!.getArrayValue(DictKey.Matrix), null);
-                if (matrix) {
-                  xObjStateManager.transform(matrix!);
-                }
-
-                // Enqueue the `textContent` chunk before parsing the /Form
-                // XObject.
-                enqueueChunk();
-                const sinkWrapper = {
-                  enqueueInvoked: false,
-
-                  enqueue(chunk, size: number) {
-                    this.enqueueInvoked = true;
-                    sink.enqueue(chunk, size);
-                  },
-
-                  get desiredSize() {
-                    return sink.desiredSize;
-                  },
-
-                  get ready() {
-                    return sink.ready;
-                  },
-                };
-
-                self.getTextContent(
+                const globalImage = self.globalImageCache.getData(
                   xobj,
-                  task,
-                  xobj.dict!.getValue(DictKey.Resources) || resources,
-                  sinkWrapper,
-                  viewBox,
-                  includeMarkedContent,
-                  keepWhiteSpace,
-                  seenStyles,
-                  xObjStateManager,
-                  lang,
-                  markedContentData,
-                  disableNormalization,
-                ).then(function () {
-                  if (!sinkWrapper.enqueueInvoked) {
-                    emptyXObjectCache.set(name, xobj.dict!.objId, true);
-                  }
+                  self.pageIndex
+                );
+                if (globalImage) {
                   resolveXObject(undefined);
-                }, rejectXObject);
-              }).catch(function (reason) {
-                if (reason instanceof AbortException) {
                   return;
                 }
-                if (self.options.ignoreErrors) {
-                  // Error(s) in the XObject -- allow text-extraction to
-                  // continue.
-                  warn(`getTextContent - ignoring XObject: "${reason}".`);
-                  return;
+                xobj = xref.fetch(xobj);
+              }
+
+              if (!(xobj instanceof BaseStream)) {
+                throw new FormatError("XObject should be a stream");
+              }
+              const type = xobj.dict!.getValue(DictKey.Subtype);
+              if (!(type instanceof Name)) {
+                throw new FormatError("XObject should have a Name subtype");
+              }
+
+              if (type.name !== "Form") {
+                emptyXObjectCache.set(name, xobj.dict!.objId, true);
+                resolveXObject(undefined);
+                return;
+              }
+
+              // Use a new `StateManager` to prevent incorrect positioning
+              // of textItems *after* the Form XObject, since errors in the
+              // data can otherwise prevent `restore` operators from
+              // executing.
+              // NOTE: Only an issue when `options.ignoreErrors === true`.
+              const currentState = stateManager.state.clone();
+              const xObjStateManager = new StateManager(currentState);
+
+              const matrix = <TransformType | null>lookupMatrix(xobj.dict!.getArrayValue(DictKey.Matrix), null);
+              if (matrix) {
+                xObjStateManager.transform(matrix!);
+              }
+
+              // Enqueue the `textContent` chunk before parsing the /Form
+              // XObject.
+              enqueueChunk();
+
+              const sinkWrapper = new TextContentSinkProxy(sink);
+
+              self.getTextContent(
+                xobj,
+                task,
+                xobj.dict!.getValue(DictKey.Resources) || resources,
+                sinkWrapper,
+                viewBox,
+                includeMarkedContent,
+                keepWhiteSpace,
+                seenStyles,
+                xObjStateManager,
+                lang,
+                markedContentData,
+                disableNormalization,
+              ).then(() => {
+                if (!sinkWrapper.enqueueInvoked) {
+                  emptyXObjectCache.set(name, xobj.dict!.objId, true);
                 }
-                throw reason;
-              })
+                resolveXObject(undefined);
+              }, rejectXObject);
+            }).catch(reason => {
+              if (reason instanceof AbortException) {
+                return;
+              }
+              if (self.options.ignoreErrors) {
+                // Error(s) in the XObject -- allow text-extraction to
+                // continue.
+                warn(`getTextContent - ignoring XObject: "${reason}".`);
+                return;
+              }
+              throw reason;
+            })
             );
             return;
           case OPS.setGState:
@@ -3467,52 +3451,48 @@ class PartialEvaluator {
               break;
             }
 
-            next(
-              new Promise(function (resolveGState, rejectGState) {
-                if (!isValidName) {
-                  throw new FormatError("GState must be referred to by name.");
-                }
+            next(new Promise((resolveGState, rejectGState) => {
+              if (!isValidName) {
+                throw new FormatError("GState must be referred to by name.");
+              }
 
-                const extGState = resources.getValue(DictKey.ExtGState);
-                if (!(extGState instanceof Dict)) {
-                  throw new FormatError("ExtGState should be a dictionary.");
-                }
+              const extGState = resources.getValue(DictKey.ExtGState);
+              if (!(extGState instanceof Dict)) {
+                throw new FormatError("ExtGState should be a dictionary.");
+              }
 
-                const gState = extGState.getValue(name);
-                // TODO: Attempt to lookup cached GStates by reference as well,
-                //       if and only if there are PDF documents where doing so
-                //       would significantly improve performance.
-                if (!(gState instanceof Dict)) {
-                  throw new FormatError("GState should be a dictionary.");
-                }
+              const gState = extGState.getValue(name);
+              // TODO: Attempt to lookup cached GStates by reference as well,
+              //       if and only if there are PDF documents where doing so
+              //       would significantly improve performance.
+              if (!(gState instanceof Dict)) {
+                throw new FormatError("GState should be a dictionary.");
+              }
 
-                const gStateFont = <[Ref, number]>gState.getValue(DictKey.Font);
-                if (!gStateFont) {
-                  emptyGStateCache.set(name, gState.objId!, true);
+              const gStateFont = <[Ref, number]>gState.getValue(DictKey.Font);
+              if (!gStateFont) {
+                emptyGStateCache.set(name, gState.objId!, true);
+                resolveGState(undefined);
+                return;
+              }
 
-                  resolveGState(undefined);
-                  return;
-                }
-                flushTextContentItem();
+              flushTextContentItem();
 
-                textState!.fontName = null;
-                textState!.fontSize = gStateFont[1];
-                handleSetFont(null, gStateFont[0]).then(
-                  resolveGState,
-                  rejectGState
-                );
-              }).catch(function (reason) {
-                if (reason instanceof AbortException) {
-                  return;
-                }
-                if (self.options.ignoreErrors) {
-                  // Error(s) in the ExtGState -- allow text-extraction to
-                  // continue.
-                  warn(`getTextContent - ignoring ExtGState: "${reason}".`);
-                  return;
-                }
-                throw reason;
-              })
+              textState!.fontName = null;
+              textState!.fontSize = gStateFont[1];
+              handleSetFont(null, gStateFont[0]).then(resolveGState, rejectGState);
+            }).catch(function (reason) {
+              if (reason instanceof AbortException) {
+                return;
+              }
+              if (self.options.ignoreErrors) {
+                // Error(s) in the ExtGState -- allow text-extraction to
+                // continue.
+                warn(`getTextContent - ignoring ExtGState: "${reason}".`);
+                return;
+              }
+              throw reason;
+            })
             );
             return;
           case OPS.beginMarkedContent:

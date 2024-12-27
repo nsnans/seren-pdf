@@ -14,11 +14,12 @@ import {
   DestinationType,
   ViewerPreferenceKeys
 } from "../core/catalog";
-import { FieldObject, ImageMask, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
+import { EvaluatorTextContent, FieldObject, ImageMask, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FileSpecSerializable } from "../core/file_spec";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { PDFMetadataInfo } from "../core/metadata_parser";
+import { OpertaorListChunk } from "../core/operator_list";
 import { RadialAxialShadingIR } from "../core/pattern";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import {
@@ -110,7 +111,7 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, data)
   }
 
-  onGetReader(fn: (data: null, sink: StreamSink) => void) {
+  onGetReader(fn: (data: null, sink: StreamSink<Uint8Array<ArrayBuffer>>) => void) {
     const action = MessageHandlerAction.GetReader;
     this.on(action, fn);
   }
@@ -120,7 +121,7 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, { begin, end });
   }
 
-  onGetRangeReader(fn: (data: { begin: number, end: number }, sink: StreamSink) => void) {
+  onGetRangeReader(fn: (data: { begin: number, end: number }, sink: StreamSink<Uint8Array<ArrayBuffer>>) => void) {
     const action = MessageHandlerAction.GetRangeReader;
     this.on(action, fn);
   }
@@ -446,7 +447,7 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, data, undefined, transfers);
   }
 
-  onGetOperatorList(fn: (data: StreamGetOperatorListParameters, sink: StreamSink) => void) {
+  onGetOperatorList(fn: (data: StreamGetOperatorListParameters, sink: StreamSink<OpertaorListChunk>) => void) {
     const action = MessageHandlerAction.GetOperatorList;
     this.on(action, fn);
   }
@@ -532,7 +533,7 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, data, queueingStrategy)
   }
 
-  onGetTextContent(fn: (data: GetTextContentMessage, sink: StreamSink) => void) {
+  onGetTextContent(fn: (data: GetTextContentMessage, sink: StreamSink<EvaluatorTextContent>) => void) {
     const action = MessageHandlerAction.GetTextContent;
     this.on(action, fn);
   }

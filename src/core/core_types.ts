@@ -34,7 +34,58 @@ export interface StreamGetOperatorListParameters {
   modifiedIds: Set<string>;
 }
 
-export class StreamSink {
+export interface StreamSink<Chunk> {
+
+  ready: Promise<void> | null;
+
+  desiredSize: number;
+
+  enqueue(chunk: Chunk, size: number, transfers?: Transferable[]): void;
+
+  close(): void;
+
+  error(reason: any): void;
+
+  onCancel: ((reason: Error) => void) | null;
+
+  onPull: (() => void) | null;
+
+}
+
+export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
+
+  protected sink: StreamSink<EvaluatorTextContent>;
+
+  public enqueueInvoked = false;
+
+  public onCancel: ((reason: Error) => void) | null = null;
+
+  public onPull: (() => void) | null = null;
+
+  constructor(sink: StreamSink<EvaluatorTextContent>) {
+    this.sink = sink;
+  }
+
+  get ready() {
+    return this.sink.ready;
+  }
+
+  get desiredSize() {
+    return this.sink.desiredSize;
+  }
+
+  enqueue(chunk: EvaluatorTextContent, size: number): void {
+    this.enqueueInvoked = true;
+    this.sink.enqueue(chunk, size);
+  }
+
+  close() { }
+
+  error(_reason: any) { }
+  
+}
+
+export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
 
   public sinkCapability: PromiseWithResolvers<void>;
 
@@ -69,7 +120,7 @@ export class StreamSink {
     this.onClose = onClose;
   }
 
-  enqueue(chunk, size = 1, transfers?: Transferable[]) {
+  enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
     if (this.isCancelled) {
       return;
     }
@@ -99,12 +150,13 @@ export class StreamSink {
       return;
     }
     this.isCancelled = true;
-    this.comObj.postMessage({
+    const msg = {
       sourceName: this.sourceName,
       targetName: this.streamId,
       stream: StreamKind.CLOSE,
       streamId: this.streamId,
-    });
+    };
+    this.comObj.postMessage(msg);
     this.onClose(this.streamId);
   }
 
@@ -183,4 +235,22 @@ export interface DefaultTextContentItem {
   transform: TransformType | null;
   fontName: string | null;
   hasEOL: boolean;
+}
+
+export function isFullTextContentItem(obj: SimpleTextContentItem | TextContentItem): obj is TextContentItem {
+  const record = obj as any;
+  return record.str != undefined;
+}
+
+export interface EvaluatorTextContent {
+  items: (TextContentItem | SimpleTextContentItem)[];
+  styles: Map<string, {
+    fontFamily: string,
+    ascent: number,
+    descent: number,
+    vertical: boolean | null,
+    fontSubstitution: string | null,
+    fontSubstitutionLoadedName: string | null,
+  }>;
+  lang: string | null;
 }

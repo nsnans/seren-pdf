@@ -47,7 +47,7 @@ import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { Catalog } from "./catalog";
 import { ColorSpace } from "./colorspace";
-import { FieldObject } from "./core_types";
+import { EvaluatorTextContent, FieldObject, isFullTextContentItem, StreamSink } from "./core_types";
 import {
   collectActions,
   escapeString,
@@ -1397,7 +1397,7 @@ class Annotation {
   ): Promise<void> {
     if (!this.appearance) {
       return;
-    } 
+    }
 
     const resources = await this.loadResources(
       ["ExtGState", "Font", "Properties", "XObject"],
@@ -1407,16 +1407,19 @@ class Annotation {
     const text = <string[]>[];
     const buffer = <string[]>[];
     let firstPosition = null;
-    const sink = {
+
+    const sink: StreamSink<EvaluatorTextContent> = {
       desiredSize: Infinity,
-      ready: true,
+      // TODO TODO 原来是true，但是这段代码必须改，不然就是在瞎搞
+      // 不过改完可能会有bug，需要特别研究一下
+      ready: Promise.resolve(),
 
       enqueue(chunk, _size: number) {
         for (const item of chunk.items) {
-          if (item.str === undefined) {
+          if (!isFullTextContentItem(item)) {
             continue;
           }
-          firstPosition ||= item.transform.slice(-2);
+          firstPosition ||= item.transform!.slice(-2);
           buffer.push(item.str);
           if (item.hasEOL) {
             text.push(buffer.join("").trimEnd());
@@ -1424,6 +1427,10 @@ class Annotation {
           }
         }
       },
+      close: () => { },
+      error: (_reason: any) => { },
+      onPull: null,
+      onCancel: null,
     };
 
     await evaluator.getTextContent(

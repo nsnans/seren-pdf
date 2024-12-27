@@ -45,7 +45,7 @@ import {
 import { BaseStream } from "./base_stream";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "./cleanup_helper";
-import { FieldObject, StreamSink } from "./core_types";
+import { EvaluatorTextContent, FieldObject, StreamSink } from "./core_types";
 import {
   collectActions,
   getInheritableProperty,
@@ -64,7 +64,7 @@ import { FontSubstitutionInfo } from "./font_substitutions";
 import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 import { GlobalImageCache } from "./image_utils";
 import { ObjectLoader } from "./object_loader";
-import { OperatorList } from "./operator_list";
+import { OperatorList, OpertaorListChunk } from "./operator_list";
 import { Linearization, LinearizationInterface } from "./parser";
 import { PDFManager } from "./pdf_manager";
 import {
@@ -441,9 +441,9 @@ class Page {
     });
   }
 
-  getOperatorList(
+  async getOperatorList(
     handler: MessageHandler,
-    sink: StreamSink,
+    sink: StreamSink<OpertaorListChunk>,
     task: WorkerTask,
     intent: number,
     cacheKey: string,
@@ -663,7 +663,7 @@ class Page {
     task: WorkerTask,
     includeMarkedContent: boolean,
     disableNormalization: boolean,
-    sink: StreamSink
+    sink: StreamSink<EvaluatorTextContent>
   ) {
     const contentStreamPromise = this.getContentStream();
     const resources = ["ExtGState", "Font", "Properties", "XObject"]

@@ -628,6 +628,17 @@ export interface OperatorListIR {
 
 }
 
+export interface OpertaorListChunk {
+  fnArray: OPS[];
+  argsArray: (any[] | null)[];
+  lastChunk: boolean;
+  separateAnnots: {
+    form: boolean;
+    canvas: boolean;
+  } | null;
+  length: number;
+}
+
 class OperatorList {
 
   static CHUNK_SIZE = 1000;
@@ -642,7 +653,7 @@ class OperatorList {
   // TODO NullOptimizer应该抽象出来的，但是此处没做抽象，后续需要补一下
   protected optimizer: NullOptimizer;
 
-  protected _streamSink: StreamSink | null;
+  protected _streamSink: StreamSink<OpertaorListChunk> | null;
 
   // TODO dependencies理论上来说应该是Set<string>，但是会不会有其他类型，值得商榷
   public dependencies: Set<string>;
@@ -653,7 +664,7 @@ class OperatorList {
 
   protected _resolved: Promise<void> | null;
 
-  constructor(intent = 0, streamSink: StreamSink | null = null) {
+  constructor(intent = 0, streamSink: StreamSink<OpertaorListChunk> | null = null) {
     this._streamSink = streamSink;
     this.fnArray = [];
     this.argsArray = [];
@@ -775,17 +786,14 @@ class OperatorList {
     const length = this.length;
     this._totalLength += length;
 
-    this._streamSink!.enqueue(
-      {
-        fnArray: this.fnArray,
-        argsArray: this.argsArray,
-        lastChunk,
-        separateAnnots,
-        length,
-      },
-      1,
-      this._transfers
-    );
+    const chunk: OpertaorListChunk = {
+      fnArray: this.fnArray,
+      argsArray: this.argsArray,
+      lastChunk,
+      separateAnnots,
+      length,
+    }
+    this._streamSink!.enqueue(chunk, 1, this._transfers);
 
     this.dependencies.clear();
     this.fnArray.length = 0;

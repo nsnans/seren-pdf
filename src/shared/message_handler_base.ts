@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { StreamSink } from "../core/core_types";
+import { GeneralStreamSink, StreamSink } from "../core/core_types";
 import {
   AbortException,
   assert,
@@ -297,13 +297,14 @@ abstract class AbstractMessageHandler {
       pull: controller => {
         const pullCapability = Promise.withResolvers<void>();
         this.streamControllers.get(streamId)!.pullCall = pullCapability;
-        comObj.postMessage({
+        const msg = {
           sourceName,
           targetName,
           stream: StreamKind.PULL,
           streamId,
           desiredSize: controller.desiredSize,
-        });
+        };
+        comObj.postMessage(msg);
         // Returning Promise will not call "pull"
         // again until current pull is resolved.
         return pullCapability.promise;
@@ -340,7 +341,7 @@ abstract class AbstractMessageHandler {
     const self = this;
     const action = this.actionHandler.get(data.action)!;
 
-    const streamSink = new StreamSink(
+    const streamSink = new GeneralStreamSink(
       this.comObj, sourceName, targetName, streamId, data.desiredSize,
       (_id) => self.streamSinks.delete(_id)
     );
