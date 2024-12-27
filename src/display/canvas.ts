@@ -2158,7 +2158,7 @@ class CanvasGraphics {
     const isAddToPathSet = !!(
       textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG
     );
-    const patternFill = current.patternFill && !font.missingFile;
+    const patternFill = current.patternFill && !font.translated.missingFile;
 
     let addToPath = null;
     if (font.disableFontFace || isAddToPathSet || patternFill) {

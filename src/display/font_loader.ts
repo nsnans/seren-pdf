@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { FontSubstitutionInfo } from "../core/font_substitutions";
+import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
@@ -27,7 +29,7 @@ import { PDFObjects } from "./api";
 
 class FontLoader {
 
-  #systemFonts = new Set();
+  protected _systemFonts = new Set();
 
   protected _document: HTMLDocument;
 
@@ -84,7 +86,7 @@ class FontLoader {
       this._document.fonts.delete(nativeFontFace);
     }
     this.nativeFontFaces.clear();
-    this.#systemFonts.clear();
+    this._systemFonts.clear();
 
     if (this.styleElement) {
       // Note: ChildNode.remove doesn't throw if the parentNode is undefined.
@@ -93,8 +95,8 @@ class FontLoader {
     }
   }
 
-  async loadSystemFont({ systemFontInfo: info, _inspectFont }: FontFaceObject) {
-    if (!info || this.#systemFonts.has(info.loadedName)) {
+  async loadSystemFont(info: FontSubstitutionInfo | null) {
+    if (!info || this._systemFonts.has(info.loadedName)) {
       return;
     }
     assert(
@@ -104,12 +106,11 @@ class FontLoader {
 
     if (this.isFontLoadingAPISupported) {
       const { loadedName, src, style } = info;
-      const fontFace = new FontFace(loadedName, src, style);
+      const fontFace = new FontFace(loadedName, src, style ?? undefined);
       this.addNativeFontFace(fontFace);
       try {
         await fontFace.load();
-        this.#systemFonts.add(loadedName);
-        _inspectFont?.(info);
+        this._systemFonts.add(loadedName);
       } catch {
         warn(
           `Cannot load system font: ${info.baseFontName}, installing it could help to improve PDF rendering.`
@@ -127,13 +128,14 @@ class FontLoader {
 
   async bind(font: FontFaceObject) {
     // Add the font to the DOM only once; skip if the font is already loaded.
-    if (font.attached || (font.missingFile && !font.systemFontInfo)) {
+    const translated = font.translated;
+    if (font.attached || (translated.missingFile && !translated.systemFontInfo)) {
       return;
     }
     font.attached = true;
 
-    if (font.systemFontInfo) {
-      await this.loadSystemFont(font);
+    if (font.translated.systemFontInfo) {
+      await this.loadSystemFont(font.translated.systemFontInfo);
       return;
     }
 
@@ -361,10 +363,10 @@ class FontLoader {
     div.style.position = "absolute";
     div.style.top = div.style.left = "0px";
 
-    for (const name of [font.loadedName, loadTestFontId]) {
+    for (const name of [font.translated.loadedName, loadTestFontId]) {
       const span = this._document.createElement("span");
       span.textContent = "Hi";
-      span.style.fontFamily = name;
+      span.style.fontFamily = name!;
       div.append(span);
     }
     this._document.body.append(div);
@@ -383,50 +385,39 @@ class FontFaceObject {
 
   protected compiledGlyphs: Map<string, (ctx: CanvasRenderingContext2D, size?: number) => void>;
 
-  // 没有初始值，给了个默认值 空字符串
-  public loadedName: string = "";
-
-  attached: any;
-
-  missingFile: boolean;
+  public attached = false;
 
   systemFontInfo: any;
 
-  public data: Uint8Array<ArrayBuffer> | null = null;
-
-  cssFontInfo: any;
-
-  mimetype: any;
+  readonly translated: FontExportData | FontExportExtraData;
 
   constructor(
-    translatedData,
+    translatedData: FontExportData | FontExportExtraData,
     disableFontFace = false
   ) {
     this.compiledGlyphs = new Map();
     // importing translated data
-    for (const i in translatedData) {
-      this[i] = translatedData[i];
-    }
+    this.translated = translatedData;
     this.disableFontFace = disableFontFace === true;
   }
 
   createNativeFontFace() {
-    if (!this.data || this.disableFontFace) {
+    if (!this.translated.data || this.disableFontFace) {
       return null;
     }
     let nativeFontFace;
-    if (!this.cssFontInfo) {
-      nativeFontFace = new FontFace(this.loadedName, this.data, {});
+    if (!this.translated.cssFontInfo) {
+      nativeFontFace = new FontFace(this.translated.loadedName!, this.translated.data, {});
     } else {
       const css: FontFaceDescriptors = {
-        weight: this.cssFontInfo.fontWeight,
+        weight: this.translated.cssFontInfo.fontWeight.toString(),
       };
-      if (this.cssFontInfo.italicAngle) {
-        css.style = `oblique ${this.cssFontInfo.italicAngle}deg`;
+      if (this.translated.cssFontInfo.italicAngle) {
+        css.style = `oblique ${this.translated.cssFontInfo.italicAngle}deg`;
       }
       nativeFontFace = new FontFace(
-        this.cssFontInfo.fontFamily,
-        this.data,
+        this.translated.cssFontInfo.fontFamily,
+        this.translated.data,
         css
       );
     }
@@ -435,20 +426,20 @@ class FontFaceObject {
   }
 
   createFontFaceRule() {
-    if (!this.data || this.disableFontFace) {
+    if (!this.translated.data || this.disableFontFace) {
       return null;
     }
     // Add the @font-face rule to the document.
-    const url = `url(data:${this.mimetype};base64,${toBase64Util(this.data)});`;
+    const url = `url(data:${this.translated.mimetype};base64,${toBase64Util(this.translated.data)});`;
     let rule;
-    if (!this.cssFontInfo) {
-      rule = `@font-face {font-family:"${this.loadedName}";src:${url}}`;
+    if (!this.translated.cssFontInfo) {
+      rule = `@font-face {font-family:"${this.translated.loadedName}";src:${url}}`;
     } else {
-      let css = `font-weight: ${this.cssFontInfo.fontWeight};`;
-      if (this.cssFontInfo.italicAngle) {
-        css += `font-style: oblique ${this.cssFontInfo.italicAngle}deg;`;
+      let css = `font-weight: ${this.translated.cssFontInfo.fontWeight};`;
+      if (this.translated.cssFontInfo.italicAngle) {
+        css += `font-style: oblique ${this.translated.cssFontInfo.italicAngle}deg;`;
       }
-      rule = `@font-face {font-family:"${this.cssFontInfo.fontFamily}";${css}src:${url}}`;
+      rule = `@font-face {font-family:"${this.translated.cssFontInfo.fontFamily}";${css}src:${url}}`;
     }
 
     return rule;
@@ -461,7 +452,7 @@ class FontFaceObject {
 
     let cmds;
     try {
-      cmds = objs.get(this.loadedName + "_path_" + character);
+      cmds = objs.get(this.translated.loadedName + "_path_" + character);
     } catch (ex) {
       warn(`getPathGenerator - ignoring character: "${ex}".`);
     }

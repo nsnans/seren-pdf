@@ -471,7 +471,7 @@ function unreachable(msg: string): never {
   throw new Error(msg);
 }
 
-function assert(cond: boolean, msg: string) {
+function assert(cond: boolean, msg: string): asserts cond {
   if (!cond) {
     unreachable(msg);
   }

@@ -46,6 +46,7 @@ export enum CommonObjType {
   Image = "Image",
   Pattern = "Pattern",
   FontPath = "FontPath",
+  CopyLocalImage = "CopyLocalImage",
 }
 
 type CommonObjDataType = {
@@ -53,6 +54,7 @@ type CommonObjDataType = {
   [CommonObjType.Image]: ImageMask | null
   [CommonObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR
   [CommonObjType.FontPath]: number[]
+  [CommonObjType.CopyLocalImage]: { imageRef: string }
 }
 
 export class MessageHandler extends AbstractMessageHandler {
@@ -491,18 +493,17 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  // 这里的any是不得已而为之
   commonobj<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T], transfers: Transferable[] | null = null) {
     const action = MessageHandlerAction.commonobj;
     this.send(action, [id, type, data], transfers);
   }
 
-  commonobjPromise(id: string, type: string, data: any): Promise<number> {
+  commonobjPromise<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T]): Promise<number> {
     const action = MessageHandlerAction.commonobj;
     return this.sendWithPromise(action, [id, type, data]);
   }
 
-  onCommonobj(fn: (res: [string, string, any]) => Promise<number | null>) {
+  onCommonobj<T extends CommonObjType>(fn: (res: [string, T, CommonObjDataType[T]]) => Promise<number | null>) {
     const action = MessageHandlerAction.commonobj;
     this.on(action, fn);
   }

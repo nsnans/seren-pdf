@@ -936,7 +936,7 @@ class PartialEvaluator {
 
         const handler = this.handler;
 
-        const localLength = await handler.commonobjPromise(objId, "CopyLocalImage", { imageRef });
+        const localLength = await handler.commonobjPromise(objId, CommonObjType.CopyLocalImage, { imageRef: imageRef! });
 
         if (localLength) {
           this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{

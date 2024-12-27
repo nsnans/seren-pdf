@@ -20,6 +20,7 @@
 import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
 import { StreamGetOperatorListParameters } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
+import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
@@ -503,7 +504,7 @@ class DocumentParameterBuilder {
 
   private _apiVersion: string | null = null;
 
-  private _data: Uint8Array | null = null;
+  private _data: Uint8Array<ArrayBuffer> | null = null;
 
   private _password: string | null = null;
 
@@ -1627,9 +1628,9 @@ interface PDFOperatorList {
  */
 export class PDFPageProxy {
 
-  #delayedCleanupTimeout: NodeJS.Timeout | null = null;
+  protected _delayedCleanupTimeout: number | null = null;
 
-  #pendingCleanup = false;
+  protected _pendingCleanup = false;
 
   protected _pageIndex: number;
 
@@ -1637,11 +1638,11 @@ export class PDFPageProxy {
 
   protected _stats: StatTimer | null;
 
-  protected objs: PDFObjects = new PDFObjects();
+  public objs: PDFObjects = new PDFObjects();
 
-  protected _maybeCleanupAfterRender: boolean = false;
+  public _maybeCleanupAfterRender: boolean = false;
 
-  protected _intentStates = new Map();
+  public _intentStates = new Map();
 
   protected destroyed = false;
 
@@ -1775,9 +1776,9 @@ export class PDFPageProxy {
     const { renderingIntent, cacheKey } = intentArgs;
     // If there was a pending destroy, cancel it so no cleanup happens during
     // this call to render...
-    this.#pendingCleanup = false;
+    this._pendingCleanup = false;
     // ... and ensure that a delayed cleanup is always aborted.
-    this.#abortDelayedCleanup();
+    this._abortDelayedCleanup();
 
     optionalContentConfigPromise ||=
       this._transport.getOptionalContentConfig(renderingIntent);
@@ -1817,7 +1818,7 @@ export class PDFPageProxy {
       // Attempt to reduce memory usage during *printing*, by always running
       // cleanup immediately once rendering has finished.
       if (this._maybeCleanupAfterRender || intentPrint) {
-        this.#pendingCleanup = true;
+        this._pendingCleanup = true;
       }
       this.#tryCleanup(/* delayed = */ !intentPrint);
 
@@ -2045,8 +2046,8 @@ export class PDFPageProxy {
       }
     }
     this.objs.clear();
-    this.#pendingCleanup = false;
-    this.#abortDelayedCleanup();
+    this._pendingCleanup = false;
+    this._abortDelayedCleanup();
 
     return Promise.all(waitOn);
   }
@@ -2059,7 +2060,7 @@ export class PDFPageProxy {
    * @returns {boolean} Indicates if clean-up was successfully run.
    */
   cleanup(resetStats: boolean = false): boolean {
-    this.#pendingCleanup = true;
+    this._pendingCleanup = true;
     const success = this.#tryCleanup(/* delayed = */ false);
 
     if (resetStats && success) {
@@ -2076,14 +2077,14 @@ export class PDFPageProxy {
    * @returns {boolean} Indicates if clean-up was successfully run.
    */
   #tryCleanup(delayed: boolean = false): boolean {
-    this.#abortDelayedCleanup();
+    this._abortDelayedCleanup();
 
-    if (!this.#pendingCleanup || this.destroyed) {
+    if (!this._pendingCleanup || this.destroyed) {
       return false;
     }
     if (delayed) {
-      this.#delayedCleanupTimeout = setTimeout(() => {
-        this.#delayedCleanupTimeout = null;
+      this._delayedCleanupTimeout = setTimeout(() => {
+        this._delayedCleanupTimeout = null;
         this.#tryCleanup(/* delayed = */ false);
       }, DELAYED_CLEANUP_TIMEOUT);
 
@@ -2096,21 +2097,18 @@ export class PDFPageProxy {
     }
     this._intentStates.clear();
     this.objs.clear();
-    this.#pendingCleanup = false;
+    this._pendingCleanup = false;
     return true;
   }
 
-  #abortDelayedCleanup() {
-    if (this.#delayedCleanupTimeout) {
-      clearTimeout(this.#delayedCleanupTimeout);
-      this.#delayedCleanupTimeout = null;
+  protected _abortDelayedCleanup() {
+    if (this._delayedCleanupTimeout) {
+      clearTimeout(this._delayedCleanupTimeout);
+      this._delayedCleanupTimeout = null;
     }
   }
 
-  /**
-   * @private
-   */
-  _startRenderPage(transparency, cacheKey) {
+  _startRenderPage(transparency: boolean, cacheKey: string) {
     const intentState = this._intentStates.get(cacheKey);
     if (!intentState) {
       return; // Rendering was cancelled.
@@ -2726,23 +2724,39 @@ export interface WorkerTransportMetadata {
  */
 class WorkerTransport {
 
-  #methodPromises = new Map<string, Promise<any>>();
+  protected _methodPromises = new Map<string, Promise<unknown>>();
 
-  #pageCache = new Map();
+  protected _pageCache = new Map<number, PDFPageProxy>();
 
-  #pagePromises = new Map();
+  protected _pagePromises = new Map<number, Promise<PDFPageProxy>>();
 
-  #pageRefCache = new Map();
+  protected _pageRefCache = new Map<string, number>();
+
+  protected fontLoader: FontLoader;
+
+  protected _networkStream: PDFStream;
+
+  protected cMapReaderFactory: CMapReaderFactory | null;
+
+  protected standardFontDataFactory: StandardFontDataFactory | null;
+
+  protected _params: WorkerTransportParameters;
+
+  protected destroyCapability: PromiseWithResolvers<unknown> | null = null;
+
+  protected _passwordCapability: PromiseWithResolvers<{ password: string | Error }> | null = null;
+
+  protected _fullReader: PDFStreamReader | null = null;
+
+  protected _lastProgress: OnProgressParameters | null = null;
+
+  protected _numPages: number | null = null;
 
   public messageHandler: MessageHandler | null;
 
   public commonObjs = new PDFObjects();
 
-  protected fontLoader: FontLoader;
-
   public downloadInfoCapability = Promise.withResolvers<{ length: number }>();
-
-  protected _networkStream: PDFStream;
 
   public loadingTask: PDFDocumentLoadingTask;
 
@@ -2750,25 +2764,9 @@ class WorkerTransport {
 
   public filterFactory: FilterFactory;
 
-  protected cMapReaderFactory: CMapReaderFactory | null;
-
-  protected standardFontDataFactory: StandardFontDataFactory | null;
-
   public destroyed: boolean;
 
   public disableAutoFetch: boolean;
-
-  protected _params: WorkerTransportParameters;
-
-  protected destroyCapability: PromiseWithResolvers<unknown> | null = null;
-
-  #passwordCapability: PromiseWithResolvers<{ password: string | Error }> | null = null;
-
-  protected _fullReader: PDFStreamReader | null = null;
-
-  protected _lastProgress: OnProgressParameters | null = null;
-
-  protected _numPages: number | null = null;
 
   constructor(
     messageHandler: MessageHandler,
@@ -2798,14 +2796,14 @@ class WorkerTransport {
     this.setupMessageHandler();
   }
 
-  #cacheSimpleMethod<T>(name: string, fn: () => Promise<T>): Promise<T> {
-    const cachedPromise = this.#methodPromises.get(name);
+  protected _cacheSimpleMethod<T>(name: string, fn: () => Promise<T>): Promise<T> {
+    const cachedPromise = <Promise<T>>this._methodPromises.get(name);
     if (cachedPromise) {
       return cachedPromise;
     }
     const promise = fn();
 
-    this.#methodPromises.set(name, promise);
+    this._methodPromises.set(name, promise);
     return promise;
   }
 
@@ -2892,19 +2890,19 @@ class WorkerTransport {
     this.destroyed = true;
     this.destroyCapability = Promise.withResolvers();
 
-    this.#passwordCapability?.reject(
+    this._passwordCapability?.reject(
       new Error("Worker was destroyed during onPassword callback")
     );
 
     const waitOn = [];
     // We need to wait for all renderings to be completed, e.g.
     // timeout/rAF can take a long time.
-    for (const page of this.#pageCache.values()) {
+    for (const page of this._pageCache.values()) {
       waitOn.push(page._destroy());
     }
-    this.#pageCache.clear();
-    this.#pagePromises.clear();
-    this.#pageRefCache.clear();
+    this._pageCache.clear();
+    this._pagePromises.clear();
+    this._pageRefCache.clear();
     // Allow `AnnotationStorage`-related clean-up when destroying the document.
     if (this.hasOwnProperty("annotationStorage")) {
       this.annotationStorage.resetModified();
@@ -2916,7 +2914,7 @@ class WorkerTransport {
     Promise.all(waitOn).then(() => {
       this.commonObjs.clear();
       this.fontLoader.clear();
-      this.#methodPromises.clear();
+      this._methodPromises.clear();
       this.filterFactory.destroy(false);
       TextLayer.cleanup();
 
@@ -3070,27 +3068,27 @@ class WorkerTransport {
     });
 
     messageHandler.onPasswordRequest(exception => {
-      this.#passwordCapability = Promise.withResolvers();
+      this._passwordCapability = Promise.withResolvers();
 
       if (loadingTask.onPassword) {
         const updatePassword = (password: string | Error) => {
           if (password instanceof Error) {
-            this.#passwordCapability!.reject(password);
+            this._passwordCapability!.reject(password);
           } else {
-            this.#passwordCapability!.resolve({ password });
+            this._passwordCapability!.resolve({ password });
           }
         };
         try {
           loadingTask.onPassword(updatePassword, exception.code);
         } catch (ex) {
-          this.#passwordCapability.reject(ex);
+          this._passwordCapability.reject(ex);
         }
       } else {
-        this.#passwordCapability.reject(
+        this._passwordCapability.reject(
           new PasswordException(exception.message, exception.code)
         );
       }
-      return this.#passwordCapability.promise;
+      return this._passwordCapability.promise;
     });
 
     messageHandler.onDataLoaded(data => {
@@ -3104,7 +3102,7 @@ class WorkerTransport {
       if (this.destroyed) {
         return; // Ignore any pending requests if the worker was terminated.
       }
-      const page = this.#pageCache.get(data.pageIndex);
+      const page = this._pageCache.get(data.pageIndex)!;
       page._startRenderPage(data.transparency, data.cacheKey);
     });
 
@@ -3120,7 +3118,7 @@ class WorkerTransport {
       switch (type) {
         case "Font":
           const { disableFontFace, fontExtraProperties } = this._params;
-          if ("error" in exportedData) {
+          if ("error" in exportedData!) {
             const exportedError = exportedData.error;
             warn(`Error during font loading: ${exportedError}`);
             this.commonObjs.resolve(id, exportedError);
@@ -3128,28 +3126,29 @@ class WorkerTransport {
           }
 
           // FontInspector 既然只在调试环境下有，那就删除了吧
-          const font = new FontFaceObject(exportedData, disableFontFace);
+          const fontExportData = <FontExportData | FontExportExtraData>exportedData;
+          const font = new FontFaceObject(fontExportData, disableFontFace);
 
           this.fontLoader
             .bind(font)
             .catch(() => messageHandler.FontFallback(id))
             .finally(() => {
-              if (!fontExtraProperties && font.data) {
+              if (!fontExtraProperties && font.translated.data) {
                 // Immediately release the `font.data` property once the font
                 // has been attached to the DOM, since it's no longer needed,
                 // rather than waiting for a `PDFDocumentProxy.cleanup` call.
                 // Since `font.data` could be very large, e.g. in some cases
                 // multiple megabytes, this will help reduce memory usage.
-                font.data = null;
+                font.translated.data = null;
               }
               this.commonObjs.resolve(id, font);
             });
           break;
         case "CopyLocalImage":
-          const { imageRef } = exportedData;
-          assert(imageRef, "The imageRef must be defined.");
+          const { imageRef } = <{ imageRef: string }>exportedData!;
+          assert(!!imageRef, "The imageRef must be defined.");
 
-          for (const pageProxy of this.#pageCache.values()) {
+          for (const pageProxy of this._pageCache.values()) {
             for (const [, data] of pageProxy.objs) {
               if (data?.ref !== imageRef) {
                 continue;
@@ -3180,7 +3179,7 @@ class WorkerTransport {
         return;
       }
 
-      const pageProxy = this.#pageCache.get(pageIndex);
+      const pageProxy = this._pageCache.get(pageIndex)!;
       if (pageProxy.objs.has(id)) {
         return;
       }
@@ -3275,7 +3274,7 @@ class WorkerTransport {
     }
 
     const pageIndex = pageNumber - 1;
-    const cachedPromise = this.#pagePromises.get(pageIndex);
+    const cachedPromise = this._pagePromises.get(pageIndex);
     if (cachedPromise) {
       return cachedPromise;
     }
@@ -3284,18 +3283,14 @@ class WorkerTransport {
         throw new Error("Transport destroyed");
       }
       if (pageInfo.refStr) {
-        this.#pageRefCache.set(pageInfo.refStr, pageNumber);
+        this._pageRefCache.set(pageInfo.refStr, pageNumber);
       }
-      const page = new PDFPageProxy(
-        pageIndex,
-        pageInfo,
-        this,
-        this._params.pdfBug
-      );
-      this.#pageCache.set(pageIndex, page);
+      const pdfBug = this._params.pdfBug;
+      const page = new PDFPageProxy(pageIndex, pageInfo, this, pdfBug);
+      this._pageCache.set(pageIndex, page);
       return page;
     });
-    this.#pagePromises.set(pageIndex, promise);
+    this._pagePromises.set(pageIndex, promise);
     return promise;
   }
 
@@ -3313,13 +3308,13 @@ class WorkerTransport {
   getFieldObjects() {
     const action = MessageHandlerAction.GetFieldObjects;
     const handler = this.messageHandler!;
-    return this.#cacheSimpleMethod(action, () => handler.GetFieldObjects());
+    return this._cacheSimpleMethod(action, () => handler.GetFieldObjects());
   }
 
   hasJSActions() {
     const action = MessageHandlerAction.HasJSActions;
     const handler = this.messageHandler!;
-    return this.#cacheSimpleMethod(action, () => handler.HasJSActions());
+    return this._cacheSimpleMethod(action, () => handler.HasJSActions());
   }
 
   getCalculationOrderIds() {
@@ -3364,7 +3359,7 @@ class WorkerTransport {
   getDocJSActions() {
     const handler = this.messageHandler!;
     const action = MessageHandlerAction.GetDocJSActions;
-    return this.#cacheSimpleMethod(action, () => handler.GetDocJSActions());
+    return this._cacheSimpleMethod(action, () => handler.GetDocJSActions());
   }
 
   getPageJSActions(pageIndex: number) {
@@ -3382,7 +3377,7 @@ class WorkerTransport {
   async getOptionalContentConfig(renderingIntent: number): Promise<OptionalContentConfig> {
     const action = MessageHandlerAction.GetOptionalContentConfig;
     const handler = this.messageHandler!;
-    return this.#cacheSimpleMethod(action, () => handler.GetOptionalContentConfig()).then(
+    return this._cacheSimpleMethod(action, () => handler.GetOptionalContentConfig()).then(
       data => new OptionalContentConfig(data, renderingIntent)
     );
   }
@@ -3393,9 +3388,9 @@ class WorkerTransport {
 
   getMetadata(): Promise<WorkerTransportMetadata> {
     const name = MessageHandlerAction.GetMetadata;
-    const cachedPromise = <Promise<WorkerTransportMetadata>>this.#methodPromises.get(name);
+    const cachedPromise = this._methodPromises.get(name);
     if (cachedPromise) {
-      return cachedPromise;
+      return <Promise<WorkerTransportMetadata>>cachedPromise;
     }
     const promise = this.messageHandler!.GetMetadata().then(results => ({
       info: results[0],
@@ -3403,7 +3398,7 @@ class WorkerTransport {
       contentDispositionFilename: this._fullReader?.filename ?? null,
       contentLength: this._fullReader?.contentLength ?? null,
     }));
-    this.#methodPromises.set(name, promise);
+    this._methodPromises.set(name, promise);
     return promise;
   }
 
@@ -3417,7 +3412,7 @@ class WorkerTransport {
     }
     await this.messageHandler!.Cleanup();
 
-    for (const page of this.#pageCache.values()) {
+    for (const page of this._pageCache.values()) {
       const cleanupSuccessful = page.cleanup();
 
       if (!cleanupSuccessful) {
@@ -3430,7 +3425,7 @@ class WorkerTransport {
     if (!keepLoadedFonts) {
       this.fontLoader.clear();
     }
-    this.#methodPromises.clear();
+    this._methodPromises.clear();
     this.filterFactory.destroy(/* keepHCM = */ true);
     TextLayer.cleanup();
   }
@@ -3440,7 +3435,7 @@ class WorkerTransport {
       return null;
     }
     const refStr = ref.gen === 0 ? `${ref.num}R` : `${ref.num}R${ref.gen}`;
-    return this.#pageRefCache.get(refStr) ?? null;
+    return this._pageRefCache.get(refStr) ?? null;
   }
 }
 

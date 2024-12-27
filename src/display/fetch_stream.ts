@@ -113,15 +113,13 @@ class PDFFetchStreamReader implements PDFStreamReader {
 
   protected _reader: ReadableStreamDefaultReader<Uint8Array> | null;
 
-  public _loaded = 0;
-
   protected _filename: string | null = null;
 
   protected _withCredentials: boolean;
 
   protected _contentLength: number;
 
-  protected _headersCapability = Promise.withResolvers();
+  protected _headersCapability = Promise.withResolvers<void>();
 
   protected _disableRange: boolean;
 
@@ -132,6 +130,8 @@ class PDFFetchStreamReader implements PDFStreamReader {
   protected _isStreamingSupported: boolean;
 
   protected _isRangeSupported: boolean;
+
+  public _loaded = 0;
 
   public onProgress: ((loaded: number, total?: number) => void) | null;
 

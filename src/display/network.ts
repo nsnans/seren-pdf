@@ -32,12 +32,24 @@ if (PlatformHelper.isMozCental()) {
 const OK_RESPONSE = 200;
 const PARTIAL_CONTENT_RESPONSE = 206;
 
-function getArrayBuffer(xhr: XMLHttpRequest) {
+function getArrayBuffer(xhr: XMLHttpRequest): ArrayBuffer {
   const data = xhr.response;
   if (typeof data !== "string") {
     return data;
   }
   return stringToBytes(data).buffer;
+}
+
+const EMPTY_FUNCTION = () => { };
+
+interface PendingRequest {
+  onHeadersReceived?: (() => void);
+  onProgress: (evt: ProgressEvent) => void;
+  onError: (status: number) => void;
+  onDone: (begin: number, chunk: ArrayBuffer) => void;
+  xhr: XMLHttpRequest,
+  expectedStatus: number;
+
 }
 
 class NetworkManager {
@@ -52,7 +64,7 @@ class NetworkManager {
 
   protected currXhrId: number;
 
-  protected pendingRequests: Record<number, any>;
+  protected pendingRequests: Map<number, PendingRequest>;
 
   constructor({ url, httpHeaders, withCredentials }: PDFStreamSource) {
     this.url = url;
@@ -61,38 +73,36 @@ class NetworkManager {
     this.withCredentials = withCredentials || false;
 
     this.currXhrId = 0;
-    this.pendingRequests = Object.create(null);
+    this.pendingRequests = new Map();
   }
 
-  requestRange(begin: number, end: number, listeners: PDFReaderListeners) {
-    const args: Record<string, any> = {
-      begin,
-      end,
-    };
-
-    // TODO 这里做过改写，可能将来会出现问题
-    for (const prop in listeners as Record<string, any>) {
-      args[prop] = (listeners as Record<string, any>)[prop];
-    }
-    return this.request(args);
+  requestRange(listeners: PDFReaderListeners, begin: number, end: number) {
+    return this.request(listeners, begin, end);
   }
 
   requestFull(listeners: PDFReaderListeners) {
     return this.request(listeners);
   }
 
-  request(args: Record<string, any> | PDFReaderListeners) {
+  request(args: PDFReaderListeners, begin: number | null = null, end: number | null = null) {
     const xhr = new XMLHttpRequest();
     const xhrId = this.currXhrId++;
-    const pendingRequest: Record<string, any> = (this.pendingRequests[xhrId] = { xhr });
+    const pendingRequest: PendingRequest = {
+      xhr,
+      onProgress: EMPTY_FUNCTION,
+      onError: EMPTY_FUNCTION,
+      onDone: EMPTY_FUNCTION,
+      expectedStatus: 0
+    };
+    this.pendingRequests.set(xhrId, pendingRequest);
 
     xhr.open("GET", this.url);
     xhr.withCredentials = this.withCredentials;
     for (const [key, val] of this.headers) {
       xhr.setRequestHeader(key, val);
     }
-    if (this.isHttp && "begin" in args && "end" in args) {
-      xhr.setRequestHeader("Range", `bytes=${args.begin}-${args.end - 1}`);
+    if (this.isHttp && begin != null && end != null) {
+      xhr.setRequestHeader("Range", `bytes=${begin}-${end - 1}`);
       pendingRequest.expectedStatus = PARTIAL_CONTENT_RESPONSE;
     } else {
       pendingRequest.expectedStatus = OK_RESPONSE;
@@ -118,7 +128,7 @@ class NetworkManager {
   }
 
   onProgress(xhrId: number, evt: ProgressEvent) {
-    const pendingRequest = this.pendingRequests[xhrId];
+    const pendingRequest = this.pendingRequests.get(xhrId) ?? null;
     if (!pendingRequest) {
       return; // Maybe abortRequest was called...
     }
@@ -126,7 +136,7 @@ class NetworkManager {
   }
 
   onStateChange(xhrId: number, _evt: Event) {
-    const pendingRequest = this.pendingRequests[xhrId];
+    const pendingRequest = this.pendingRequests.get(xhrId) ?? null;
     if (!pendingRequest) {
       return; // Maybe abortRequest was called...
     }
@@ -147,7 +157,7 @@ class NetworkManager {
       return;
     }
 
-    delete this.pendingRequests[xhrId];
+    this.pendingRequests.delete(xhrId);
 
     // Success status == 0 can be on ftp, file and other protocols.
     if (xhr.status === 0 && this.isHttp) {
@@ -173,33 +183,27 @@ class NetworkManager {
 
     const chunk = getArrayBuffer(xhr);
     if (xhrStatus === PARTIAL_CONTENT_RESPONSE) {
-      const rangeHeader = xhr.getResponseHeader("Content-Range");
+      const rangeHeader = xhr.getResponseHeader("Content-Range")!;
       const matches = /bytes (\d+)-(\d+)\/(\d+)/.exec(rangeHeader)!;
-      pendingRequest.onDone({
-        begin: parseInt(matches[1], 10),
-        chunk,
-      });
+      pendingRequest.onDone(parseInt(matches[1], 10), chunk);
     } else if (chunk) {
-      pendingRequest.onDone({
-        begin: 0,
-        chunk,
-      });
+      pendingRequest.onDone(0, chunk);
     } else {
       pendingRequest.onError?.(xhr.status);
     }
   }
 
   getRequestXhr(xhrId: number): XMLHttpRequest {
-    return this.pendingRequests[xhrId].xhr;
+    return this.pendingRequests.get(xhrId)!.xhr;
   }
 
   isPendingRequest(xhrId: number): boolean {
-    return xhrId in this.pendingRequests;
+    return this.pendingRequests.has(xhrId);
   }
 
   abortRequest(xhrId: number) {
-    const xhr = this.pendingRequests[xhrId].xhr;
-    delete this.pendingRequests[xhrId];
+    const xhr = this.pendingRequests.get(xhrId)!.xhr;
+    this.pendingRequests.delete(xhrId);
     xhr.abort();
   }
 }
@@ -266,7 +270,7 @@ class PDFNetworkStream implements PDFStream {
 
 interface PDFReaderListeners {
   onHeadersReceived?: () => void;
-  onDone: (data: { begin: number, chunk: Uint8Array }) => void;
+  onDone: (begin: number, chunk: ArrayBuffer) => void;
   onError: (status: number) => void;
   onProgress: (evt: ProgressEvent) => void;
 }
@@ -297,7 +301,7 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
 
   protected _filename: string | null;
 
-  protected _cachedChunks: Uint8Array<ArrayBuffer>[];
+  protected _cachedChunks: ArrayBuffer[];
 
   protected _storedError: BaseException | undefined;
 
@@ -374,21 +378,21 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
     this._headersCapability.resolve();
   }
 
-  _onDone(data: { begin: number, chunk: Uint8Array }) {
-    if (data) {
-      if (this._requests.length > 0) {
-        const requestCapability = this._requests.shift()!;
-        requestCapability.resolve({ value: data.chunk, done: false });
-      } else {
-        this._cachedChunks.push(data.chunk);
-      }
+  _onDone(_begin: number, chunk: ArrayBuffer) {
+
+    if (this._requests.length > 0) {
+      const requestCapability = this._requests.shift()!;
+      requestCapability.resolve({ value: chunk, done: false });
+    } else {
+      this._cachedChunks.push(chunk);
     }
+
     this._done = true;
     if (this._cachedChunks.length > 0) {
       return;
     }
     for (const requestCapability of this._requests) {
-      requestCapability.resolve({ value: undefined, done: true });
+      requestCapability.resolve({ value: null, done: true });
     }
     this._requests.length = 0;
   }
@@ -433,7 +437,7 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
     }
     if (this._cachedChunks.length > 0) {
       const chunk = this._cachedChunks.shift()!;
-      return { value: chunk.buffer, done: false };
+      return { value: chunk, done: false };
     }
     if (this._done) {
       return { value: null, done: true };
@@ -475,7 +479,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
 
   protected _requests: PromiseWithResolvers<ReadResult>[];
 
-  protected _queuedChunk: Uint8Array<ArrayBuffer> | null;
+  protected _queuedChunk: ArrayBuffer | null;
 
   protected _storedError: BaseException | undefined;
 
@@ -488,7 +492,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
       onProgress: this._onProgress.bind(this),
     };
     this._url = manager.url;
-    this._requestId = manager.requestRange(begin, end, args);
+    this._requestId = manager.requestRange(args, begin, end);
     this._requests = [];
     this._queuedChunk = null;
     this._done = false;
@@ -502,8 +506,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
     this.onClosed?.(this);
   }
 
-  _onDone(data: { begin: number, chunk: Uint8Array }) {
-    const chunk = data.chunk;
+  _onDone(_begin: number, chunk: ArrayBuffer) {
     if (this._requests.length > 0) {
       const requestCapability = this._requests.shift()!;
       requestCapability.resolve({ value: chunk, done: false });
@@ -512,7 +515,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
     }
     this._done = true;
     for (const requestCapability of this._requests) {
-      requestCapability.resolve({ value: undefined, done: true });
+      requestCapability.resolve({ value: null, done: true });
     }
     this._requests.length = 0;
     this._close();
@@ -544,7 +547,7 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
     if (this._queuedChunk !== null) {
       const chunk = this._queuedChunk;
       this._queuedChunk = null;
-      return { value: chunk.buffer, done: false };
+      return { value: chunk, done: false };
     }
     if (this._done) {
       return { value: null, done: true };
