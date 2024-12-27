@@ -58,7 +58,7 @@ export class StreamSink {
 
   readonly onClose: (streamId: number) => void;
 
-  constructor(comObj: Worker, sourceName: string, targetName: string,
+  constructor(comObj: MessagePoster, sourceName: string, targetName: string,
     streamId: number, desiredSize: number, onClose: (id: number) => void) {
     this.comObj = comObj;
     this.sinkCapability = Promise.withResolvers();
