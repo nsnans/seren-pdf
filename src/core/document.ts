@@ -543,7 +543,7 @@ class Page {
     const pageListPromise = Promise.all([
       contentStreamPromise,
       resourcesPromise,
-    ]).then(([contentStream]) => {
+    ]).then(async ([contentStream]) => {
       const opList = new OperatorList(intent, sink);
 
       const hasBlendModes = partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet);
@@ -666,12 +666,8 @@ class Page {
     sink: StreamSink
   ) {
     const contentStreamPromise = this.getContentStream();
-    const resourcesPromise = this.loadResources([
-      "ExtGState",
-      "Font",
-      "Properties",
-      "XObject",
-    ]);
+    const resources = ["ExtGState", "Font", "Properties", "XObject"]
+    const resourcesPromise = this.loadResources(resources);
     const langPromise = this.pdfManager.ensureCatalog(catalog => catalog.lang);
 
     const [contentStream, , lang] = await Promise.all([

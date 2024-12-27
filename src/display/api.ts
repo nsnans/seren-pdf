@@ -17,10 +17,11 @@
  * @module pdfjsLib
  */
 
-import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
-import { ImageMask, StreamGetOperatorListParameters } from "../core/core_types";
+import { CatalogMarkInfo, CatalogOutlineItem } from "../core/catalog";
+import { ImageMask } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
+import { Ref } from "../core/primitives";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
@@ -28,8 +29,7 @@ import { PDFNetworkStream } from "../display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
 import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
-import { MessageHandler, ObjType } from "../shared/message_handler";
-import { SaveDocumentMessage } from "../shared/message_handler_types";
+import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
 import { MessageHandlerAction } from "../shared/message_handler_utils";
 import {
   AbortException,
@@ -63,6 +63,7 @@ import {
   isDataScheme,
   isValidFetchUrl,
   PageViewport,
+  RectType,
   RenderingCancelledException,
   StatTimer
 } from "./display_utils";
@@ -753,17 +754,14 @@ function getDocument(src: DocumentInitParameters) {
     }
 
     return workerIdPromise.then(workerId => {
-
       if (task.destroyed) {
         throw new Error("Loading aborted");
       }
-
       if (worker!.destroyed) {
         throw new Error("Worker was destroyed");
       }
 
       const messageHandler = new MessageHandler(docId, workerId, worker.port!);
-
       const transport = new WorkerTransport(
         messageHandler,
         task,
@@ -771,6 +769,7 @@ function getDocument(src: DocumentInitParameters) {
         transportParams,
         transportFactory
       );
+
       task._transport = transport;
       messageHandler.Ready();
     });
@@ -1033,32 +1032,6 @@ abstract class PDFDataRangeTransport {
   abort() { }
 }
 
-interface OutlineNode {
-
-  title: string;
-
-  bold: boolean;
-
-  italic: boolean;
-
-  /** The color in RGB format to use for display purposes. */
-  colod: Uint8ClampedArray;
-
-  dest: string | Array<any> | null;
-
-  url: string | null;
-
-  unsafeUrl: string | undefined;
-
-  newWindow: boolean | undefined;
-
-  count: number | undefined;
-
-  items: Array<OutlineNode>;
-}
-
-
-
 interface PdfInfo {
   numPages: number,
   fingerprints: [string, string | null]
@@ -1079,36 +1052,35 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @type {AnnotationStorage} Storage for annotation data in forms.
+   * Storage for annotation data in forms.
    */
   get annotationStorage() {
     return this._transport.annotationStorage;
   }
 
   /**
-   * @type {Object} The canvas factory instance.
+   * The canvas factory instance.
    */
   get canvasFactory() {
     return this._transport.canvasFactory;
   }
 
   /**
-   * @type {Object} The filter factory instance.
+   * The filter factory instance.
    */
   get filterFactory() {
     return this._transport.filterFactory;
   }
 
   /**
-   * @type {number} Total number of pages in the PDF file.
+   * Total number of pages in the PDF file.
    */
-  get numPages() {
+  get numPages(): number {
     return this._pdfInfo.numPages;
   }
 
   /**
-   * @type {Array<string, string|null>} A (not guaranteed to be) unique ID to
-   *   identify the PDF document.
+   * @type A (not guaranteed to be) unique ID to identify the PDF document.
    *   NOTE: The first element will always be defined for all PDF documents,
    *   whereas the second element is only defined for *modified* PDF documents.
    */
@@ -1117,25 +1089,24 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @param {number} pageNumber - The page number to get. The first page is 1.
-   * @returns {Promise<PDFPageProxy>} A promise that is resolved with
-   *   a {@link PDFPageProxy} object.
+   * @param pageNumber - The page number to get. The first page is 1.
+   * @returns A promise that is resolved with a {@link PDFPageProxy} object.
    */
   getPage(pageNumber: number): Promise<PDFPageProxy> {
     return this._transport.getPage(pageNumber);
   }
 
   /**
-   * @param {RefProxy} ref - The page reference.
-   * @returns {Promise<number>} A promise that is resolved with the page index,
+   * @param ref - The page reference.
+   * @returns A promise that is resolved with the page index,
    *   starting from zero, that is associated with the reference.
    */
-  getPageIndex(ref: RefProxy): Promise<number> {
-    return <Promise<number>>this._transport.getPageIndex(ref);
+  getPageIndex(ref: RefProxy) {
+    return this._transport.getPageIndex(ref);
   }
 
   /**
-   * @returns {Promise<Object<string, Array<any>>>} A promise that is resolved
+   * @returns A promise that is resolved
    *   with a mapping from named destinations to references.
    *
    * This can be slow for large documents. Use `getDestination` instead.
@@ -1145,17 +1116,17 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @param {string} id - The named destination to get.
-   * @returns {Promise<Array<any> | null>} A promise that is resolved with all
+   * @param id - The named destination to get.
+   * @returns A promise that is resolved with all
    *   information of the given named destination, or `null` when the named
    *   destination is not present in the PDF file.
    */
-  getDestination(id: string): Promise<Array<any> | null> {
-    return <Promise<Array<any> | null>>this._transport.getDestination(id);
+  getDestination(id: string) {
+    return this._transport.getDestination(id);
   }
 
   /**
-   * @returns {Promise<Array<string> | null>} A promise that is resolved with
+   * @returns  A promise that is resolved with
    *   an {Array} containing the page labels that correspond to the page
    *   indexes, or `null` when no page labels are present in the PDF file.
    */
@@ -1164,7 +1135,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<string>} A promise that is resolved with a {string}
+   * @returns A promise that is resolved with a {string}
    *   containing the page layout name.
    */
   getPageLayout() {
@@ -1172,7 +1143,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<string>} A promise that is resolved with a {string}
+   * @returns A promise that is resolved with a {string}
    *   containing the page mode name.
    */
   getPageMode() {
@@ -1180,7 +1151,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<Object | null>} A promise that is resolved with an
+   * @returns  A promise that is resolved with an
    *   {Object} containing the viewer preferences, or `null` when no viewer
    *   preferences are present in the PDF file.
    */
@@ -1189,7 +1160,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<any | null>} A promise that is resolved with an {Array}
+   * @returns A promise that is resolved with an {Array}
    *   containing the destination, or `null` when no open action is present
    *   in the PDF.
    */
@@ -1198,7 +1169,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<any>} A promise that is resolved with a lookup table
+   * @returns A promise that is resolved with a lookup table
    *   for mapping named attachments to their content.
    */
   getAttachments() {
@@ -1206,7 +1177,7 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<Object | null>} A promise that is resolved with
+   * @returns A promise that is resolved with
    *   an {Object} with the JavaScript actions:
    *     - from the name tree.
    *     - from A or AA entries in the catalog dictionary.
@@ -1217,11 +1188,11 @@ class PDFDocumentProxy {
   }
 
   /**
-   * @returns {Promise<Array<OutlineNode>>} A promise that is resolved with an
+   * @returns A promise that is resolved with an
    *   {Array} that is a tree outline (if it has one) of the PDF file.
    */
-  getOutline(): Promise<Array<OutlineNode>> {
-    return <Promise<Array<OutlineNode>>>this._transport.getOutline();
+  getOutline(): Promise<CatalogOutlineItem[] | null> {
+    return this._transport.getOutline();
   }
 
   /**
@@ -1372,28 +1343,6 @@ class PDFDocumentProxy {
   }
 }
 
-
-/**
- * Page getViewport parameters.
- * */
-interface GetViewportParameters {
-
-  /* The desired scale of the viewport. */
-  scale: number,
-
-  /* The desired rotation, in degrees, of the viewport. If omitted it defaults to the page rotation. */
-  rotation: number;
-
-  /* The horizontal, i.e. x-axis, offset.The default value is `0`. */
-  offsetX: number;
-
-  /* The vertical, i.e. y-axis, offset. The default value is `0`. */
-  offsetY: number;
-
-  /* If true, the y-axis will not be flipped. The default value is `false` */
-  dontFlip: boolean;
-}
-
 /**
  * Page getTextContent parameters.
  * */
@@ -1481,17 +1430,6 @@ export interface TextContent {
 
   /** The document /Lang attribute. */
   lang: string | null;
-}
-
-/**
- * Page annotation parameters.
- * */
-interface GetAnnotationsParameters {
-  /** Determines the annotations that are fetched, can be 'display' (viewable annotations), 
-   * 'print' (printable annotations),
-   * or 'any' (all annotations). The default value is 'display'.
-   * */
-  intent: string;
 }
 
 /**
@@ -1623,6 +1561,14 @@ interface PDFOperatorList {
   argsArray: Array<any>;
 }
 
+export interface PageInfo {
+  rotate: number;
+  ref: Ref | null;
+  refStr: string | null;
+  userUnit: number;
+  view: RectType;
+}
+
 /**
  * Proxy to a `PDFPage` in the worker thread.
  */
@@ -1638,8 +1584,6 @@ export class PDFPageProxy {
 
   protected _stats: StatTimer | null;
 
-  public objs: PDFObjects = new PDFObjects();
-
   public _maybeCleanupAfterRender: boolean = false;
 
   public _intentStates = new Map();
@@ -1650,74 +1594,75 @@ export class PDFPageProxy {
 
   protected commonObjs: PDFObjects;
 
-  constructor(pageIndex: number, pageInfo, transport: WorkerTransport, pdfBug = false) {
+  protected _pageInfo: PageInfo;
+
+  public objs: PDFObjects = new PDFObjects();
+
+  constructor(pageIndex: number, pageInfo: PageInfo, transport: WorkerTransport, pdfBug = false) {
     this._pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
     this._stats = pdfBug ? new StatTimer() : null;
     this._pdfBug = pdfBug;
-    /** @type {PDFObjects} */
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
-
   }
 
   /**
-   * @type {number} Page number of the page. First page is 1.
+   * Page number of the page. First page is 1.
    */
   get pageNumber() {
     return this._pageIndex + 1;
   }
 
   /**
-   * @type {number} The number of degrees the page is rotated clockwise.
+   * The number of degrees the page is rotated clockwise.
    */
   get rotate() {
     return this._pageInfo.rotate;
   }
 
   /**
-   * @type {RefProxy | null} The reference that points to this page.
+   * The reference that points to this page.
    */
   get ref() {
     return this._pageInfo.ref;
   }
 
   /**
-   * @type {number} The default size of units in 1/72nds of an inch.
+   * The default size of units in 1/72nds of an inch.
    */
   get userUnit() {
     return this._pageInfo.userUnit;
   }
 
   /**
-   * @type {Array<number>} An array of the visible portion of the PDF page in
-   *   user space units [x1, y1, x2, y2].
+   * An array of the visible portion of the PDF page in user space units [x1, y1, x2, y2].
    */
   get view() {
     return this._pageInfo.view;
   }
 
   /**
-   * @param {GetViewportParameters} params - Viewport parameters.
+   * @param params - Viewport parameters.
    * @returns {PageViewport} Contains 'width' and 'height' properties
    *   along with transforms required for rendering.
    */
-  getViewport({
-    scale,
+  getViewport(
+    scale: number,
     rotation = this.rotate,
     offsetX = 0,
     offsetY = 0,
     dontFlip = false,
-  }: GetViewportParameters): PageViewport {
-    return new PageViewport({
-      viewBox: this.view,
+  ): PageViewport {
+    return new PageViewport(
+      this.view,
       scale,
       rotation,
       offsetX,
       offsetY,
       dontFlip,
-    });
+    );
   }
 
   /**
@@ -1731,11 +1676,11 @@ export class PDFPageProxy {
   }
 
   /**
-   * @returns {Promise<Object>} A promise that is resolved with an
+   * @returns A promise that is resolved with an
    *   {Object} with JS actions.
    */
-  getJSActions(): Promise<Object> {
-    return <Promise<Object>>this._transport.getPageJSActions(this._pageIndex);
+  getJSActions() {
+    return this._transport.getPageJSActions(this._pageIndex);
   }
 
   /**
@@ -1870,27 +1815,25 @@ export class PDFPageProxy {
     Promise.all([
       intentState.displayReadyCapability.promise,
       optionalContentConfigPromise,
-    ])
-      .then(([transparency, optionalContentConfig]) => {
-        if (this.destroyed) {
-          complete(undefined);
-          return;
-        }
-        this._stats?.time("Rendering");
+    ]).then(([transparency, optionalContentConfig]) => {
+      if (this.destroyed) {
+        complete(undefined);
+        return;
+      }
+      this._stats?.time("Rendering");
 
-        if (!(optionalContentConfig!.renderingIntent & renderingIntent)) {
-          throw new Error(
-            "Must use the same `intent`-argument when calling the `PDFPageProxy.render` " +
-            "and `PDFDocumentProxy.getOptionalContentConfig` methods."
-          );
-        }
-        internalRenderTask.initializeGraphics({
-          transparency,
-          optionalContentConfig,
-        });
-        internalRenderTask.operatorListChanged();
-      })
-      .catch(complete);
+      if (!(optionalContentConfig!.renderingIntent & renderingIntent)) {
+        throw new Error(
+          "Must use the same `intent`-argument when calling the `PDFPageProxy.render` " +
+          "and `PDFDocumentProxy.getOptionalContentConfig` methods."
+        );
+      }
+      internalRenderTask.initializeGraphics({
+        transparency,
+        optionalContentConfig,
+      });
+      internalRenderTask.operatorListChanged();
+    }).catch(complete);
 
     return renderTask;
   }
@@ -2865,8 +2808,7 @@ class WorkerTransport {
       renderingIntent += RenderingIntentFlag.OPLIST;
     }
 
-    const { ids: modifiedIds, hash: modifiedIdsHash } =
-      annotationStorage.modifiedIds;
+    const { ids: modifiedIds, hash: modifiedIdsHash } = annotationStorage.modifiedIds;
 
     const cacheKeyBuf = [
       renderingIntent,
@@ -2938,7 +2880,6 @@ class WorkerTransport {
     const messageHandler = this.messageHandler!;
 
     messageHandler.onGetReader((_data, sink) => {
-
       assert(!!this._networkStream, "GetReader - no `IPDFStream` instance available.");
       this._fullReader = this._networkStream.getFullReader();
       this._fullReader.onProgress = (loaded, total) => this._lastProgress = { loaded, total };
@@ -2952,7 +2893,7 @@ class WorkerTransport {
           assert(value instanceof ArrayBuffer, "GetReader - expected an ArrayBuffer.");
           // Enqueue data chunk into sink, and transfer it
           // to other side as `Transferable` object.
-          sink.enqueue(new Uint8Array(value!), 1, [value]);
+          sink.enqueue(new Uint8Array<ArrayBuffer>(value!), 1, [value]);
         }).catch(reason => {
           sink.error(reason);
         });
@@ -2971,10 +2912,7 @@ class WorkerTransport {
 
     messageHandler.onReaderHeadersReady(async () => {
       await this._fullReader!.headersReady;
-
-      const { isStreamingSupported, isRangeSupported, contentLength } =
-        this._fullReader!;
-
+      const { isStreamingSupported, isRangeSupported, contentLength } = this._fullReader!;
       // If stream or range are disabled, it's our only way to report
       // loading progress.
       if (!isStreamingSupported || !isRangeSupported) {
@@ -2986,14 +2924,11 @@ class WorkerTransport {
           loadingTask.onProgress?.(loaded, total);
         };
       }
-
       return { isStreamingSupported, isRangeSupported, contentLength };
     });
 
     messageHandler.onGetRangeReader((data, sink) => {
-
       assert(!!this._networkStream, "GetRangeReader - no `IPDFStream` instance available.");
-
       const begin = data.begin, end = data.end;
       const rangeReader = this._networkStream.getRangeReader(begin, end);
 
@@ -3019,7 +2954,7 @@ class WorkerTransport {
             return;
           }
           assert(value instanceof ArrayBuffer, "GetRangeReader - expected an ArrayBuffer.");
-          sink.enqueue(new Uint8Array(value!), 1, [value]);
+          sink.enqueue(new Uint8Array<ArrayBuffer>(value!), 1, [value]);
         }).catch(reason => {
           sink.error(reason);
         });
@@ -3116,7 +3051,7 @@ class WorkerTransport {
       }
 
       switch (type) {
-        case "Font":
+        case CommonObjType.Font:
           const { disableFontFace, fontExtraProperties } = this._params;
           if ("error" in exportedData!) {
             const exportedError = exportedData.error;
@@ -3144,7 +3079,7 @@ class WorkerTransport {
               this.commonObjs.resolve(id, font);
             });
           break;
-        case "CopyLocalImage":
+        case CommonObjType.CopyLocalImage:
           const { imageRef } = <{ imageRef: string }>exportedData!;
           assert(!!imageRef, "The imageRef must be defined.");
 
@@ -3161,9 +3096,9 @@ class WorkerTransport {
             }
           }
           break;
-        case "FontPath":
-        case "Image":
-        case "Pattern":
+        case CommonObjType.FontPath:
+        case CommonObjType.Image:
+        case CommonObjType.Pattern:
           this.commonObjs.resolve(id, exportedData);
           break;
         default:

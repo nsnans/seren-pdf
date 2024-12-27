@@ -1392,10 +1392,12 @@ class Annotation {
     return false;
   }
 
-  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType) {
+  async extractTextContent(
+    evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType
+  ): Promise<void> {
     if (!this.appearance) {
       return;
-    }
+    } 
 
     const resources = await this.loadResources(
       ["ExtGState", "Font", "Properties", "XObject"],
@@ -1424,8 +1426,9 @@ class Annotation {
       },
     };
 
-    await evaluator.getTextContent(this.appearance, task, resources as Dict | null, sink
-      , viewBox, true, true);
+    await evaluator.getTextContent(
+      this.appearance, task, resources as Dict | null, sink, viewBox, true, true
+    );
 
     this.reset();
 

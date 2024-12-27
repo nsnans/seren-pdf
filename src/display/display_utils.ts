@@ -159,17 +159,15 @@ export class PageViewport {
   protected width: number;
 
   protected height: number;
-  /**
-   * @param {PageViewportParameters}
-   */
-  constructor({
-    viewBox,
-    scale,
-    rotation,
+
+  constructor(
+    viewBox: RectType,
+    scale: number,
+    rotation: number,
     offsetX = 0,
     offsetY = 0,
     dontFlip = false,
-  }: PageViewportParameters) {
+  ) {
     this.viewBox = viewBox;
     this.scale = scale;
     this.rotation = rotation;

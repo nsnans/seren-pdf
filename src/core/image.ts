@@ -105,7 +105,7 @@ export interface JpxDecoderOptions {
   isIndexedColormap: boolean,
 
   smaskInData?: boolean;
-  
+
 }
 
 class PDFImage {
@@ -401,7 +401,7 @@ class PDFImage {
   }
 
   static createRawMask(
-    imgArray: Uint8Array,
+    imgArray: Uint8Array<ArrayBuffer>,
     width: number,
     height: number,
     imageIsFromDecodeStream: boolean,

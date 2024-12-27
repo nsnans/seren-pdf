@@ -23,7 +23,8 @@ import { RadialAxialShadingIR } from "../core/pattern";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import {
   DocumentParameter,
-  OnProgressParameters
+  OnProgressParameters,
+  PageInfo
 } from "../display/api";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { MeshShadingPatternIR } from "../display/pattern_helper";
@@ -32,7 +33,6 @@ import {
   FetchBuiltInCMapMessage,
   GetAnnotationsMessage,
   GetDocMessage,
-  GetPageResult,
   GetTextContentMessage,
   ReaderHeadersReadyResult,
   SaveDocumentMessage,
@@ -218,12 +218,12 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetPage(pageIndex: number): Promise<GetPageResult> {
+  GetPage(pageIndex: number): Promise<PageInfo> {
     const action = MessageHandlerAction.GetPage;
     return this.sendWithPromise(action, { pageIndex });
   }
 
-  onGetPage(fn: (data: { pageIndex: number }) => Promise<GetPageResult>) {
+  onGetPage(fn: (data: { pageIndex: number }) => Promise<PageInfo>) {
     const action = MessageHandlerAction.GetPage;
     this.on(action, fn);
   }
@@ -420,7 +420,7 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetOutline(): Promise<CatalogOutlineItem | null> {
+  GetOutline(): Promise<CatalogOutlineItem[] | null> {
     const action = MessageHandlerAction.GetOutline;
     return this.sendWithPromise(action, null);
   }

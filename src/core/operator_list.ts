@@ -753,7 +753,7 @@ class OperatorList {
   }
 
   get _transfers() {
-    const transfers = [];
+    const transfers: ArrayBuffer[] = [];
     const { fnArray, argsArray, length } = this;
     for (let i = 0; i < length; i++) {
       switch (fnArray[i]) {

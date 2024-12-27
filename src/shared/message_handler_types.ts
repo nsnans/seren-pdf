@@ -66,14 +66,6 @@ export interface FetchBuiltInCMapMessage {
   isCompressed: boolean;
 }
 
-export interface GetPageResult {
-  rotate: number;
-  ref: Ref | null;
-  refStr: string | null;
-  userUnit: number;
-  view: RectType;
-}
-
 export interface GetTextContentMessage {
   pageIndex: number;
   includeMarkedContent: boolean;

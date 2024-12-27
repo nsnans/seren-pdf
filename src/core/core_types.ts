@@ -69,7 +69,7 @@ export class StreamSink {
     this.onClose = onClose;
   }
 
-  enqueue(chunk, size = 1, transfers?) {
+  enqueue(chunk, size = 1, transfers?: Transferable[]) {
     if (this.isCancelled) {
       return;
     }
@@ -82,16 +82,16 @@ export class StreamSink {
       this.sinkCapability = Promise.withResolvers();
       this.ready = this.sinkCapability.promise;
     }
-    this.comObj.postMessage(
-      {
-        sourceName: this.sourceName,
-        targetName: this.targetName,
-        stream: StreamKind.ENQUEUE,
-        streamId: this.streamId,
-        chunk,
-      },
-      transfers
-    );
+    const msg = {
+      sourceName: this.sourceName,
+      targetName: this.targetName,
+      stream: StreamKind.ENQUEUE,
+      streamId: this.streamId,
+      chunk,
+    }
+    const post = this.comObj.postMessage;
+    // 兼容性写法，主要针对TypeScript报错
+    !!transfers ? post(msg, transfers) : post(msg);
   }
 
   close() {
