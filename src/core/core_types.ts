@@ -1,3 +1,4 @@
+import { TextItem, TextMarkedContent, TextStyle } from "../display/api";
 import { TransformType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
@@ -205,21 +206,6 @@ export interface PreEvaluatedFont {
   cssFontInfo: CssFontInfo | null;
 }
 
-export interface TextContentItem {
-  str: string;
-  dir: string;
-  width: number;
-  height: number;
-  transform: TransformType | null;
-  fontName: string | null;
-  hasEOL: boolean;
-}
-
-export interface SimpleTextContentItem {
-  type: string;
-  id?: string | null;
-  tag?: string | null;
-}
 
 export interface DefaultTextContentItem {
   initialized: boolean;
@@ -241,20 +227,13 @@ export interface DefaultTextContentItem {
   hasEOL: boolean;
 }
 
-export function isFullTextContentItem(obj: SimpleTextContentItem | TextContentItem): obj is TextContentItem {
+export function isFullTextContentItem(obj: TextMarkedContent | TextItem): obj is TextItem {
   const record = obj as any;
   return record.str != undefined;
 }
 
 export interface EvaluatorTextContent {
-  items: (TextContentItem | SimpleTextContentItem)[];
-  styles: Map<string, {
-    fontFamily: string,
-    ascent: number,
-    descent: number,
-    vertical: boolean | null,
-    fontSubstitution: string | null,
-    fontSubstitutionLoadedName: string | null,
-  }>;
+  items: (TextItem | TextMarkedContent)[];
+  styles: Map<string, TextStyle>;
   lang: string | null;
 }

@@ -72,7 +72,7 @@ class PDFWorkerStreamReader implements WorkerStreamReader {
 
   protected _isStreamingSupported: boolean;
 
-  protected _reader: ReadableStreamDefaultReader<Uint8Array>;
+  protected _reader: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>;
 
   protected _headersReady: Promise<void>;
 

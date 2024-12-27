@@ -104,7 +104,7 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetReader() {
+  GetReader(): ReadableStream<Uint8Array<ArrayBuffer>> {
     const action = MessageHandlerAction.GetReader;
     // 这里的data是null，onGetReader的data就是null
     const data = null;
@@ -116,7 +116,7 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetRangeReader(begin: number, end: number) {
+  GetRangeReader(begin: number, end: number): ReadableStream<Uint8Array<ArrayBuffer>> {
     const action = MessageHandlerAction.GetRangeReader;
     return this.sendWithStream(action, { begin, end });
   }
@@ -447,7 +447,6 @@ export class MessageHandler extends AbstractMessageHandler {
     return this.sendWithStream(action, data, undefined, transfers);
   }
 
-  // on是没有问题的，问题出在sendWithStream上
   onGetOperatorList(fn: (data: StreamGetOperatorListParameters, sink: StreamSink<OpertaorListChunk>) => void) {
     const action = MessageHandlerAction.GetOperatorList;
     this.on(action, fn);
@@ -523,7 +522,7 @@ export class MessageHandler extends AbstractMessageHandler {
     includeMarkedContent: boolean,
     disableNormalization: boolean,
     queueingStrategy: QueuingStrategy<T>
-  ): ReadableStream<Uint8Array<ArrayBuffer>> {
+  ): ReadableStream<EvaluatorTextContent> {
     const action = MessageHandlerAction.GetTextContent;
     const data: GetTextContentMessage = {
       pageIndex,

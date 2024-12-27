@@ -40,7 +40,7 @@ import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { CMap, CMapFactory, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
-import { DefaultTextContentItem, EvaluatorTextContent, ImageMask, PreEvaluatedFont, SimpleTextContentItem, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentItem, TextContentSinkProxy } from "./core_types";
+import { DefaultTextContentItem, EvaluatorTextContent, ImageMask, PreEvaluatedFont, SingleOpaquePixelImageMask, SMaskOptions, StreamSink, TextContentSinkProxy } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { DecodeStream } from "./decode_stream";
 import {
@@ -2737,7 +2737,7 @@ class PartialEvaluator {
         width: Math.abs(textChunk.totalWidth),
         height: Math.abs(textChunk.totalHeight),
         transform: textChunk.transform,
-        fontName: textChunk.fontName,
+        fontName: textChunk.fontName!,
         hasEOL: textChunk.hasEOL,
       };
     }
@@ -3111,7 +3111,7 @@ class PartialEvaluator {
           width: 0,
           height: 0,
           transform: getCurrentTextTransform(),
-          fontName: textState!.loadedName,
+          fontName: textState!.loadedName!,
           hasEOL: true,
         });
       }
@@ -3178,7 +3178,7 @@ class PartialEvaluator {
       }
       sink.enqueue(textContent, length);
       textContent.items = [];
-      textContent.styles = Object.create(null);
+      textContent.styles = new Map();
     }
 
     const timeSlotManager = new TimeSlotManager();
@@ -3502,6 +3502,7 @@ class PartialEvaluator {
 
               textContent.items.push({
                 type: "beginMarkedContent",
+                id: null,
                 tag: args[0] instanceof Name ? args[0].name : null,
               });
             }
@@ -3535,6 +3536,7 @@ class PartialEvaluator {
               markedContentData!.level--;
 
               textContent.items.push({
+                id: null, tag: null,
                 type: "endMarkedContent",
               });
             }

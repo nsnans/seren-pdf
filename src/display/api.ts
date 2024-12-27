@@ -18,7 +18,7 @@
  */
 
 import { CatalogMarkInfo, CatalogOutlineItem } from "../core/catalog";
-import { ImageMask } from "../core/core_types";
+import { EvaluatorTextContent, ImageMask } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { OpertaorListChunk } from "../core/operator_list";
@@ -66,7 +66,8 @@ import {
   PageViewport,
   RectType,
   RenderingCancelledException,
-  StatTimer
+  StatTimer,
+  TransformType
 } from "./display_utils";
 import { DOMFilterFactory, FilterFactory } from "./filter_factory";
 import { FontFaceObject, FontLoader } from "./font_loader";
@@ -1344,18 +1345,6 @@ class PDFDocumentProxy {
   }
 }
 
-/**
- * Page getTextContent parameters.
- * */
-interface GetTextContentParameters {
-
-  /* When true include marked content items in the items array of TextContent. The default is `false`. */
-  includeMarkedContent: boolean | null;
-
-  /* When true the text is *not* normalized in the worker-thread. The default is `false`. */
-  disableNormalization: boolean | null;
-
-}
 
 /**
  * Page text content part.
@@ -1369,7 +1358,7 @@ export interface TextItem {
   dir: string;
 
   /** Transformation matrix.*/
-  transform: Array<any>;
+  transform: TransformType | null;
 
   /** Width in device space.*/
   width: number;
@@ -1393,7 +1382,9 @@ export interface TextMarkedContent {
   type: string;
 
   /** The marked content identifier. Only used for type 'beginMarkedContentProps'. */
-  id: string;
+  id: string | null;
+
+  tag: string | null;
 }
 
 
@@ -1413,6 +1404,10 @@ export interface TextStyle {
 
   /** The possible font family.*/
   fontFamily: string;
+
+  fontSubstitution: string | null,
+
+  fontSubstitutionLoadedName: string | null,
 }
 
 
@@ -1427,7 +1422,7 @@ export interface TextContent {
   items: Array<TextItem | TextMarkedContent>;
 
   /** {@link TextStyle} objects, indexed by font name. */
-  styles: Record<string, TextStyle>;
+  styles: Map<string, TextStyle>;
 
   /** The document /Lang attribute. */
   lang: string | null;
@@ -1895,16 +1890,27 @@ export class PDFPageProxy {
   }
 
   /**
+ * Page getTextContent parameters.
+
+  When true include marked content items in the items array of TextContent. The default is `false`.
+  includeMarkedContent: boolean | null;
+
+   When true the text is *not* normalized in the worker-thread. The default is `false`. 
+  disableNormalization: boolean | null;
+*/
+
+  /**
    * NOTE: All occurrences of whitespace will be replaced by
    * standard spaces (0x20).
    *
-   * @param {getTextContentParameters} params - getTextContent parameters.
-   * @returns {ReadableStream} Stream for reading text content chunks.
+   * @param includeMarkedContent When true include marked content items in the items array of TextContent. The default is `false`.
+   * @param disableNormalization When true the text is *not* normalized in the worker-thread. The default is `false`. 
+   * @returns Stream for reading text content chunks.
    */
-  streamTextContent({
+  streamTextContent(
     includeMarkedContent = false,
     disableNormalization = false,
-  }: GetTextContentParameters): ReadableStream {
+  ): ReadableStream<EvaluatorTextContent> {
     const TEXT_CONTENT_CHUNK_SIZE = 100;
 
     return this._transport.messageHandler!.GetTextContent(
@@ -1924,13 +1930,16 @@ export class PDFPageProxy {
    * NOTE: All occurrences of whitespace will be replaced by
    * standard spaces (0x20).
    *
-   * @param {GetTextContentParameters} params - getTextContent parameters.
-   * @returns {Promise<TextContent>} A promise that is resolved with a
-   *   {@link TextContent} object that represents the page's text content.
+   * @param includeMarkedContent When true include marked content items in the items array of TextContent. The default is `false`.
+   * @param disableNormalization When true the text is *not* normalized in the worker-thread. The default is `false`. 
+   * @returns A promise that is resolved with a {@link TextContent} object that represents the page's text content.
    */
-  getTextContent(params: GetTextContentParameters): Promise<TextContent> {
+  getTextContent(
+    includeMarkedContent = false,
+    disableNormalization = false
+  ): Promise<TextContent> {
 
-    const readableStream = this.streamTextContent(params);
+    const readableStream = this.streamTextContent(includeMarkedContent, disableNormalization);
 
     return new Promise(function (resolve, reject) {
       function pump() {
@@ -1940,16 +1949,18 @@ export class PDFPageProxy {
             return;
           }
           textContent.lang ??= value.lang;
-          Object.assign(textContent.styles, value.styles);
+          value.styles.forEach((v, k) => {
+            textContent.styles.set(k, v);
+          })
           textContent.items.push(...value.items);
           pump();
         }, reject);
       }
 
       const reader = readableStream.getReader();
-      const textContent = {
+      const textContent: TextContent = {
         items: [],
-        styles: Object.create(null),
+        styles: new Map(),
         lang: null,
       };
       pump();
