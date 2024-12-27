@@ -18,7 +18,7 @@
  */
 
 import { CatalogMarkInfo, ViewerPreferenceKeys } from "../core/catalog";
-import { StreamGetOperatorListParameters } from "../core/core_types";
+import { ImageMask, StreamGetOperatorListParameters } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { StructTreeSerialNode } from "../core/struct_tree";
@@ -28,7 +28,7 @@ import { PDFNetworkStream } from "../display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
 import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
-import { MessageHandler } from "../shared/message_handler";
+import { MessageHandler, ObjType } from "../shared/message_handler";
 import { SaveDocumentMessage } from "../shared/message_handler_types";
 import { MessageHandlerAction } from "../shared/message_handler_utils";
 import {
@@ -3185,20 +3185,24 @@ class WorkerTransport {
       }
       // Don't store data *after* cleanup has successfully run, see bug 1854145.
       if (pageProxy._intentStates.size === 0) {
-        imageData?.bitmap?.close(); // Release any `ImageBitmap` data.
+        if (type === ObjType.Image) {
+          const tmp = <ImageMask | null>imageData;
+          tmp?.bitmap?.close(); // Release any `ImageBitmap` data.
+        }
         return;
       }
 
       switch (type) {
-        case "Image":
-          pageProxy.objs.resolve(id, imageData);
+        case ObjType.Image:
+          const tmp = <ImageMask | null>imageData;
+          pageProxy.objs.resolve(id, tmp);
 
           // Heuristic that will allow us not to store large data.
-          if (imageData?.dataLen > MAX_IMAGE_SIZE_TO_CACHE) {
+          if (tmp?.dataLen! > MAX_IMAGE_SIZE_TO_CACHE) {
             pageProxy._maybeCleanupAfterRender = true;
           }
           break;
-        case "Pattern":
+        case ObjType.Pattern:
           pageProxy.objs.resolve(id, imageData);
           break;
         default:

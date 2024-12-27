@@ -41,6 +41,11 @@ import {
 import { MessageHandlerAction } from "./message_handler_utils";
 import { BaseException, PasswordException } from "./util";
 
+export enum ObjType {
+  Image = "Image",
+  Pattern = "Pattern",
+}
+
 export enum CommonObjType {
   Font = "Font",
   Image = "Image",
@@ -49,8 +54,13 @@ export enum CommonObjType {
   CopyLocalImage = "CopyLocalImage",
 }
 
+type ObjDataType = {
+  [ObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR,
+  [ObjType.Image]: ImageMask | null,
+}
+
 type CommonObjDataType = {
-  [CommonObjType.Font]: FontExportData | FontExportExtraData | { error: any }
+  [CommonObjType.Font]: FontExportData | FontExportExtraData | { error: string }
   [CommonObjType.Image]: ImageMask | null
   [CommonObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR
   [CommonObjType.FontPath]: number[]
@@ -482,13 +492,12 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  // 这里的any是不得已而为之
-  obj(id: string, page: number, type: string, data: any, transfers: Transferable[] | null = null) {
+  obj<T extends ObjType>(id: string, page: number, type: T, data: ObjDataType[T], transfers: Transferable[] | null = null) {
     const action = MessageHandlerAction.obj;
     this.send(action, [id, page, type, data], transfers)
   }
 
-  onObj(fn: (res: [string, number, string, any]) => void) {
+  onObj<T extends ObjType>(fn: (res: [string, number, T, ObjDataType[T]]) => void) {
     const action = MessageHandlerAction.obj;
     this.on(action, fn);
   }

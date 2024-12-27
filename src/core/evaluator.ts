@@ -17,7 +17,7 @@
 import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
-import { CommonObjType, MessageHandler } from "../shared/message_handler";
+import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import {
   AbortException,
@@ -677,7 +677,7 @@ class PartialEvaluator {
     if (this.parsingType3Font || cacheGlobally) {
       return this.handler.commonobj(objId, CommonObjType.Image, imgData, transfers);
     }
-    return this.handler.obj(objId, this.pageIndex, "Image", imgData, transfers);
+    return this.handler.obj(objId, this.pageIndex, ObjType.Image, imgData, transfers);
   }
 
   async buildPaintImageXObject(
@@ -1650,7 +1650,7 @@ class PartialEvaluator {
     if (this.parsingType3Font) {
       this.handler.commonobj(id, CommonObjType.Pattern, patternIR);
     } else {
-      this.handler.obj(id, this.pageIndex, "Pattern", patternIR);
+      this.handler.obj(id, this.pageIndex, ObjType.Pattern, patternIR);
     }
     return id;
   }
