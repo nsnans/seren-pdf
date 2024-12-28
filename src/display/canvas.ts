@@ -43,6 +43,7 @@ import {
 } from "./display_utils";
 import { FilterFactory } from "./filter_factory";
 import { FontFaceObject } from "./font_loader";
+import { OptionalContentConfig } from "./optional_content_config";
 import {
   BaseShadingPattern,
   getShadingPattern,
@@ -82,8 +83,7 @@ const FULL_CHUNK_HEIGHT = 16;
  * @param {Object} destCtx - The 2d canvas context that will receive the
  *   forwarded calls.
  */
-type DecoratedCanvasRenderingContext2D = CanvasRenderingContext2D & Record<string, any>;
-function mirrorContextOperations(ctx: DecoratedCanvasRenderingContext2D, destCtx: DecoratedCanvasRenderingContext2D) {
+function mirrorContextOperations(ctx: CanvasRenderingContext2D, destCtx: CanvasRenderingContext2D) {
   if (ctx._removeMirroring) {
     throw new Error("Context is already forwarding operations.");
   }
@@ -104,98 +104,104 @@ function mirrorContextOperations(ctx: DecoratedCanvasRenderingContext2D, destCtx
   ctx.__originalBeginPath = ctx.beginPath;
 
   ctx._removeMirroring = () => {
-    ctx.save = ctx.__originalSave;
-    ctx.restore = ctx.__originalRestore;
-    ctx.rotate = ctx.__originalRotate;
-    ctx.scale = ctx.__originalScale;
-    ctx.translate = ctx.__originalTranslate;
-    ctx.transform = ctx.__originalTransform;
-    ctx.setTransform = ctx.__originalSetTransform;
-    ctx.resetTransform = ctx.__originalResetTransform;
+    ctx.save = ctx.__originalSave!;
+    ctx.restore = ctx.__originalRestore!;
+    ctx.rotate = ctx.__originalRotate!;
+    ctx.scale = ctx.__originalScale!;
+    ctx.translate = ctx.__originalTranslate!;
+    ctx.transform = ctx.__originalTransform!;
+    ctx.setTransform = ctx.__originalSetTransform!;
+    ctx.resetTransform = ctx.__originalResetTransform!;
 
-    ctx.clip = ctx.__originalClip;
-    ctx.moveTo = ctx.__originalMoveTo;
-    ctx.lineTo = ctx.__originalLineTo;
-    ctx.bezierCurveTo = ctx.__originalBezierCurveTo;
-    ctx.rect = ctx.__originalRect;
-    ctx.closePath = ctx.__originalClosePath;
-    ctx.beginPath = ctx.__originalBeginPath;
+    ctx.clip = ctx.__originalClip!;
+    ctx.moveTo = ctx.__originalMoveTo!;
+    ctx.lineTo = ctx.__originalLineTo!;
+    ctx.bezierCurveTo = ctx.__originalBezierCurveTo!;
+    ctx.rect = ctx.__originalRect!;
+    ctx.closePath = ctx.__originalClosePath!;
+    ctx.beginPath = ctx.__originalBeginPath!;
     delete ctx._removeMirroring;
   };
 
   ctx.save = function ctxSave() {
     destCtx.save();
-    this.__originalSave();
+    this.__originalSave?.();
   };
 
   ctx.restore = function ctxRestore() {
     destCtx.restore();
-    this.__originalRestore();
+    this.__originalRestore?.();
   };
 
   ctx.translate = function ctxTranslate(x: number, y: number) {
     destCtx.translate(x, y);
-    this.__originalTranslate(x, y);
+    this.__originalTranslate?.(x, y);
   };
 
   ctx.scale = function ctxScale(x: number, y: number) {
     destCtx.scale(x, y);
-    this.__originalScale(x, y);
+    this.__originalScale?.(x, y);
   };
 
   ctx.transform = function ctxTransform(a: number, b: number, c: number, d: number, e: number, f: number) {
     destCtx.transform(a, b, c, d, e, f);
-    this.__originalTransform(a, b, c, d, e, f);
+    this.__originalTransform?.(a, b, c, d, e, f);
   };
 
-  ctx.setTransform = function (a: number, b: number, c: number, d: number, e: number, f: number) {
-    destCtx.setTransform(a, b, c, d, e, f);
-    this.__originalSetTransform(a, b, c, d, e, f);
+  ctx.setTransform = function (a?: number | DOMMatrix2DInit, b?: number, c?: number, d?: number, e?: number, f?: number) {
+    if (typeof a === 'object') {
+      throw new Error('cannot set transform, because of wronging invoke.')
+    }
+    destCtx.setTransform(a!, b!, c!, d!, e!, f!);
+    this.__originalSetTransform?.(a!, b!, c!, d!, e!, f!);
   };
 
   ctx.resetTransform = function ctxResetTransform() {
     destCtx.resetTransform();
-    this.__originalResetTransform();
+    this.__originalResetTransform?.();
   };
 
   ctx.rotate = function ctxRotate(angle) {
     destCtx.rotate(angle);
-    this.__originalRotate(angle);
+    this.__originalRotate?.(angle);
   };
 
-  ctx.clip = function ctxRotate(rule) {
+  ctx.clip = function ctxRotate(rule?: CanvasFillRule | Path2D) {
+    if (rule instanceof Path2D) {
+      throw new Error('Unsupport Invoke,beacuse rule can only be type CanvasFillRule.')
+    }
     destCtx.clip(rule);
-    this.__originalClip(rule);
+    this.__originalClip?.(rule);
   };
 
   ctx.moveTo = function (x, y) {
     destCtx.moveTo(x, y);
-    this.__originalMoveTo(x, y);
+    this.__originalMoveTo?.(x, y);
   };
 
   ctx.lineTo = function (x, y) {
     destCtx.lineTo(x, y);
-    this.__originalLineTo(x, y);
+    this.__originalLineTo?.(x, y);
   };
 
   ctx.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
     destCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
-    this.__originalBezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+    this.__originalBezierCurveTo?.(cp1x, cp1y, cp2x, cp2y, x, y);
   };
 
   ctx.rect = function (x, y, width, height) {
     destCtx.rect(x, y, width, height);
-    this.__originalRect(x, y, width, height);
+    this.__originalRect?.(x, y, width, height);
   };
 
   ctx.closePath = function () {
     destCtx.closePath();
-    this.__originalClosePath();
+    this.__originalClosePath?.();
   };
 
   ctx.beginPath = function () {
     destCtx.beginPath();
-    this.__originalBeginPath();
+    this.__originalBeginPath?.();
   };
 }
 
@@ -203,50 +209,42 @@ export class CachedCanvases {
 
   protected canvasFactory: CanvasFactory;
 
-  protected cache: Record<string, any>;
+  protected cache: Map<string, CanvasAndContext>;
 
   constructor(canvasFactory: CanvasFactory) {
     this.canvasFactory = canvasFactory;
-    this.cache = Object.create(null);
+    this.cache = new Map();
   }
 
-  getCanvas(id: string, width: number, height: number): { canvas: HTMLCanvasElement, context: CanvasRenderingContext2D } {
+  getCanvas(id: string, width: number, height: number): CanvasAndContext {
     let canvasEntry;
-    if (this.cache[id] !== undefined) {
-      canvasEntry = this.cache[id];
+    if (this.cache.has(id)) {
+      canvasEntry = this.cache.get(id)!;
       this.canvasFactory.reset(canvasEntry, width, height);
     } else {
       canvasEntry = this.canvasFactory.create(width, height);
-      this.cache[id] = canvasEntry;
+      this.cache.set(id, canvasEntry);
     }
     return canvasEntry;
   }
 
   delete(id: string) {
-    delete this.cache[id];
+    this.cache.delete(id);
   }
 
   clear() {
-    for (const id in this.cache) {
-      const canvasEntry = this.cache[id];
+    for (const [_k, canvasEntry] of this.cache) {
       this.canvasFactory.destroy(canvasEntry);
-      delete this.cache[id];
     }
+    this.cache.clear();
   }
 }
 
 function drawImageAtIntegerCoords(
-  ctx: CanvasRenderingContext2D,
-  srcImg,
-  srcX: number,
-  srcY: number,
-  srcW: number,
-  srcH: number,
-  destX: number,
-  destY: number,
-  destW: number,
-  destH: number
-) {
+  ctx: CanvasRenderingContext2D, srcImg: CanvasImageSource,
+  srcX: number, srcY: number, srcW: number, srcH: number,
+  destX: number, destY: number, destW: number, destH: number
+): number[] {
   const [a, b, c, d, tx, ty] = getCurrentTransform(ctx);
   if (b === 0 && c === 0) {
     // top-left corner is at (X, Y) and
@@ -820,24 +818,26 @@ function putBinaryImageMask(ctx: CanvasRenderingContext2D, imgData) {
 }
 
 function copyCtxState(sourceCtx: CanvasRenderingContext2D, destCtx: CanvasRenderingContext2D) {
-  const properties = [
-    "strokeStyle",
-    "fillStyle",
-    "fillRule",
-    "globalAlpha",
-    "lineWidth",
-    "lineCap",
-    "lineJoin",
-    "miterLimit",
-    "globalCompositeOperation",
-    "font",
-    "filter",
-  ];
-  for (const property of properties) {
-    if (sourceCtx[property] !== undefined) {
-      destCtx[property] = sourceCtx[property];
+
+  function copyIfNotNull<T>(valFn: () => T | undefined, setFn: (data: T) => void) {
+    const val = valFn();
+    if (!!val) {
+      setFn(val);
     }
   }
+
+  copyIfNotNull(() => sourceCtx.strokeStyle, v => destCtx.strokeStyle = v);
+  copyIfNotNull(() => sourceCtx.fillStyle, v => destCtx.fillStyle = v);
+  copyIfNotNull(() => sourceCtx.fillRule, v => destCtx.fillRule = v);
+  copyIfNotNull(() => sourceCtx.globalAlpha, v => destCtx.globalAlpha = v);
+  copyIfNotNull(() => sourceCtx.lineWidth, v => destCtx.lineWidth = v);
+  copyIfNotNull(() => sourceCtx.lineCap, v => destCtx.lineCap = v);
+  copyIfNotNull(() => sourceCtx.lineJoin, v => destCtx.lineJoin = v);
+  copyIfNotNull(() => sourceCtx.miterLimit, v => destCtx.miterLimit = v);
+  copyIfNotNull(() => sourceCtx.globalCompositeOperation, v => destCtx.globalCompositeOperation = v);
+  copyIfNotNull(() => sourceCtx.font, v => destCtx.font = v);
+  copyIfNotNull(() => sourceCtx.filter, v => destCtx.filter = v);
+
   if (sourceCtx.setLineDash !== undefined) {
     destCtx.setLineDash(sourceCtx.getLineDash());
     destCtx.lineDashOffset = sourceCtx.lineDashOffset;
@@ -895,7 +895,17 @@ export interface CanvasGraphicsFactory {
   createCanvasGraphics(ctx: CanvasRenderingContext2D): CanvasGraphics;
 }
 
+interface PositionTransformType {
+  transform: TransformType,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+}
+
 class CanvasGraphics {
+
+  public static operatorMap = new Map<OPS, any>;
 
   public ctx: CanvasRenderingContext2D;
 
@@ -953,7 +963,7 @@ class CanvasGraphics {
 
   protected pendingClip: typeof NORMAL_CLIP | typeof EO_CLIP | null = null;
 
-  protected markedContentStack: { visible: boolean }[];
+  protected markedContentStack: { visiable: boolean }[];
 
   protected pendingTextPaths: {
     transform: TransformType;
@@ -965,13 +975,16 @@ class CanvasGraphics {
 
   public pageColors: { background: string; foreground: string; } | null;
 
+  public optionalContentConfig: OptionalContentConfig;
+
   constructor(
     canvasCtx: CanvasRenderingContext2D,
     commonObjs: PDFObjects,
     objs: PDFObjects,
     canvasFactory: CanvasFactory,
     filterFactory: FilterFactory,
-    { optionalContentConfig, markedContentStack = null },
+    optionalContentConfig: OptionalContentConfig,
+    markedContentStack: { visiable: boolean }[] | null = null,
     annotationCanvasMap: Map<string, HTMLCanvasElement> | null = null,
     pageColors: { background: string; foreground: string; } | null = null
   ) {
@@ -1052,7 +1065,7 @@ class CanvasGraphics {
       );
       this.compositeCtx = this.ctx;
       this.transparentCanvas = transparentCanvas.canvas;
-      this.ctx = transparentCanvas.context;
+      this.ctx = transparentCanvas.context!;
       this.ctx.save();
       // The transform can be applied before rendering, transferring it to
       // the new canvas.
@@ -1105,7 +1118,7 @@ class CanvasGraphics {
         // eslint-disable-next-line prefer-spread
         this[fnId].apply(this, argsArray[i]);
       } else {
-        for (const depObjId of argsArray[i]) {
+        for (const depObjId of argsArray![i]) {
           const objsPool = depObjId.startsWith("g_") ? commonObjs : objs;
 
           // If the promise isn't resolved yet, add the continueCallback
@@ -1317,7 +1330,7 @@ class CanvasGraphics {
 
     if (!scaled) {
       maskCanvas = this.cachedCanvases.getCanvas("maskCanvas", width, height);
-      putBinaryImageMask(maskCanvas.context, img);
+      putBinaryImageMask(maskCanvas.context!, img);
     }
 
     // Create the mask canvas at the size it will be drawn at and also set
@@ -1325,14 +1338,8 @@ class CanvasGraphics {
     // patterns applied they will be applied relative to the correct
     // transform.
 
-    let maskToCanvas = Util.transform(currentTransform, [
-      1 / width,
-      0,
-      0,
-      -1 / height,
-      0,
-      0,
-    ]);
+    const nt = [1 / width, 0, 0, -1 / height, 0, 0]
+    let maskToCanvas = Util.transform(currentTransform, nt);
     maskToCanvas = Util.transform(maskToCanvas, [1, 0, 0, 1, 0, -height]);
     const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox(
       [0, 0, width, height],
@@ -1345,7 +1352,7 @@ class CanvasGraphics {
       drawnWidth,
       drawnHeight
     );
-    const fillCtx = fillCanvas.context;
+    const fillCtx = fillCanvas.context!;
 
     // The offset will be the top-left cordinate mask.
     // If objToCanvas is [a,b,c,d,e,f] then:
@@ -1374,16 +1381,7 @@ class CanvasGraphics {
     );
 
     drawImageAtIntegerCoords(
-      fillCtx,
-      scaled,
-      0,
-      0,
-      scaled.width,
-      scaled.height,
-      0,
-      0,
-      width,
-      height
+      fillCtx, scaled, 0, 0, scaled.width, scaled.height, 0, 0, width, height
     );
     fillCtx.globalCompositeOperation = "source-in";
 
@@ -2499,10 +2497,8 @@ class CanvasGraphics {
             this.objs,
             this.canvasFactory,
             this.filterFactory,
-            {
-              optionalContentConfig: this.optionalContentConfig,
-              markedContentStack: this.markedContentStack,
-            }
+            this.optionalContentConfig,
+            this.markedContentStack,
           ),
       };
       pattern = new TilingPattern(
@@ -2992,7 +2988,7 @@ class CanvasGraphics {
       ctx.scale(1, -1);
       drawImageAtIntegerCoords(
         ctx,
-        maskCanvas.canvas,
+        maskCanvas.canvas!,
         0,
         0,
         width,
@@ -3032,7 +3028,7 @@ class CanvasGraphics {
 
     const width = imgData.width;
     const height = imgData.height;
-    const map = [];
+    const map: PositionTransformType[] = [];
     for (let i = 0, ii = positions.length; i < ii; i += 2) {
       map.push({
         transform: [scaleX, 0, 0, scaleY, positions[i], positions[i + 1]],
@@ -3111,7 +3107,7 @@ class CanvasGraphics {
         width,
         height
       );
-      const tmpCtx = tmpCanvas.context;
+      const tmpCtx = tmpCanvas.context!;
       putBinaryImageData(tmpCtx, imgData);
       imgToPaint = this.applyTransferMapsToCanvas(tmpCtx);
     }
@@ -3126,22 +3122,14 @@ class CanvasGraphics {
     );
 
     drawImageAtIntegerCoords(
-      ctx,
-      scaled.img,
-      0,
-      0,
-      scaled.paintWidth,
-      scaled.paintHeight,
-      0,
-      -height,
-      width,
-      height
+      ctx, scaled.img, 0, 0, scaled.paintWidth
+      , scaled.paintHeight, 0, -height, width, height
     );
     this.compose();
     this.restore();
   }
 
-  paintInlineImageXObjectGroup(imgData, map) {
+  paintInlineImageXObjectGroup(imgData, map: PositionTransformType[]) {
     if (!this.contentVisible) {
       return;
     }
@@ -3154,7 +3142,7 @@ class CanvasGraphics {
       const h = imgData.height;
 
       const tmpCanvas = this.cachedCanvases.getCanvas("inlineImage", w, h);
-      const tmpCtx = tmpCanvas.context;
+      const tmpCtx = tmpCanvas.context!;
       putBinaryImageData(tmpCtx, imgData);
       imgToPaint = this.applyTransferMapsToCanvas(tmpCtx);
     }
@@ -3164,16 +3152,7 @@ class CanvasGraphics {
       ctx.transform(...entry.transform);
       ctx.scale(1, -1);
       drawImageAtIntegerCoords(
-        ctx,
-        imgToPaint,
-        entry.x,
-        entry.y,
-        entry.w,
-        entry.h,
-        0,
-        -1,
-        1,
-        1
+        ctx, imgToPaint, entry.x, entry.y, entry.w, entry.h, 0, -1, 1, 1
       );
       ctx.restore();
     }
@@ -3333,7 +3312,7 @@ class CanvasGraphics {
 
   // Rescale before stroking in order to have a final lineWidth
   // with both thicknesses greater or equal to 1.
-  rescaleAndStroke(saveRestore) {
+  rescaleAndStroke(saveRestore: boolean) {
     const { ctx } = this;
     const { lineWidth } = this.current;
     const [scaleX, scaleY] = this.getScaleForStroking();
@@ -3382,10 +3361,13 @@ class CanvasGraphics {
   }
 }
 
-for (const op in OPS) {
-  if (CanvasGraphics.prototype[op] !== undefined) {
-    CanvasGraphics.prototype[OPS[op]] = CanvasGraphics.prototype[op];
-  }
+// 一段糟糕的代码，尝试用策略模式改写，但是怎么改，还是要好好想想
+for (const _op in OPS) {
+  const ops = OPS[_op]
+  if (CanvasGraphics.operatorMap.has(op))
+    if (CanvasGraphics.prototype[op] !== undefined) {
+      CanvasGraphics.prototype[OPS[op]] = CanvasGraphics.prototype[op];
+    }
 }
 
 export { CanvasGraphics };

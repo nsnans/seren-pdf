@@ -3739,7 +3739,8 @@ class InternalRenderTask {
       this.objs,
       this.canvasFactory,
       this.filterFactory,
-      { optionalContentConfig },
+      optionalContentConfig,
+      null,
       this.annotationCanvasMap,
       this.pageColors
     );
@@ -3816,7 +3817,6 @@ class InternalRenderTask {
       if (this.operatorList.lastChunk) {
         this.gfx!.endDrawing();
         InternalRenderTask.#canvasInUse.delete(this._canvas);
-
         this.callback();
       }
     }

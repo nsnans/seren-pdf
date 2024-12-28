@@ -33,13 +33,13 @@ export interface CanvasFactory {
 export abstract class BaseCanvasFactory implements CanvasFactory {
 
   // 硬件加速 hardware accelerate
-  #enableHWA = false;
+  protected _enableHWA = false;
 
   constructor(enableHWA = false) {
     if (PlatformHelper.isTesting() && this.constructor === BaseCanvasFactory) {
       unreachable("Cannot initialize BaseCanvasFactory.");
     }
-    this.#enableHWA = enableHWA;
+    this._enableHWA = enableHWA;
   }
 
   create(width: number, height: number) {
@@ -50,7 +50,7 @@ export abstract class BaseCanvasFactory implements CanvasFactory {
     return {
       canvas,
       context: canvas.getContext("2d", {
-        willReadFrequently: !this.#enableHWA,
+        willReadFrequently: !this._enableHWA,
       })!,
     };
   }
