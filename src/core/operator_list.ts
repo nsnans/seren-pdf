@@ -549,8 +549,8 @@ class QueueOptimizer extends NullOptimizer {
   _optimize() {
     // Process new fnArray item(s) chunk.
     const fnArray = this.queue.fnArray;
-    let i = this.lastProcessed,
-      ii = fnArray.length;
+    let i = this.lastProcessed;
+    let ii = fnArray.length;
     let state = this.state;
     let match = this.match;
     if (!state && !match && i + 1 === ii && !InitialState[fnArray[i]]) {

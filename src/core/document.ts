@@ -545,15 +545,9 @@ class Page {
       resourcesPromise,
     ]).then(async ([contentStream]) => {
       const opList = new OperatorList(intent, sink);
-
       const hasBlendModes = partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet);
       handler.StartRenderPage(hasBlendModes, this.pageIndex, cacheKey);
-
-      return partialEvaluator
-        .getOperatorList(contentStream, task, this.resources, opList)
-        .then(function () {
-          return opList;
-        });
+      return partialEvaluator.getOperatorList(contentStream, task, this.resources, opList).then(() => opList);
     });
 
     // Fetch the page's annotations and add their operator lists to the
@@ -689,18 +683,8 @@ class Page {
     );
 
     return partialEvaluator.getTextContent(
-      contentStream,
-      task,
-      this.resources,
-      sink,
-      this.view,
-      includeMarkedContent,
-      false,
-      new Set<string>(),
-      null,
-      lang,
-      null,
-      disableNormalization,
+      contentStream, task, this.resources, sink, this.view, includeMarkedContent,
+      false, new Set(), null, lang, null, disableNormalization
     );
   }
 

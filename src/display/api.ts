@@ -1793,7 +1793,7 @@ export class PDFPageProxy {
       if (this._maybeCleanupAfterRender || intentPrint) {
         this._pendingCleanup = true;
       }
-      this.#tryCleanup(/* delayed = */ !intentPrint);
+      this.#tryCleanup(!intentPrint);
 
       if (error) {
         internalRenderTask.capability.reject(error);
@@ -1860,17 +1860,27 @@ export class PDFPageProxy {
   }
 
   /**
-   * @param {GetOperatorListParameters} params - Page getOperatorList
-   *   parameters.
-   * @returns {Promise<PDFOperatorList>} A promise resolved with an
-   *   {@link PDFOperatorList} object that represents the page's operator list.
+   * @param intent Rendering intent, can be 'display', 'print', or 'any'. The default value is 'display'.
+   * @param annotationMode Controls which annotations are included in the operatorList, for annotations with appearance-data; 
+   * the values from {@link AnnotationMode} should be used. The following values are supported:
+   *   - `AnnotationMode.DISABLE`, which disables all annotations.
+   *   - `AnnotationMode.ENABLE`, which includes all possible annotations (thus
+   *     it also depends on the `intent`-option, see above).
+   *   - `AnnotationMode.ENABLE_FORMS`, which excludes annotations that contain
+   *     interactive form elements (those will be rendered in the display layer).
+   *   - `AnnotationMode.ENABLE_STORAGE`, which includes all possible annotations
+   *     (as above) but where interactive form elements are updated with data
+   *     from the {@link AnnotationStorage}-instance; useful e.g. for printing.
+   * The default value is `AnnotationMode.ENABLE`. 
+   * @param isEditing Render the page in editing mode.
+   * @returns A promise resolved with an {@link PDFOperatorList} object that represents the page's operator list.
    */
-  getOperatorList({
+  getOperatorList(
     intent = "display",
     annotationMode = AnnotationMode.ENABLE,
-    printAnnotationStorage = null,
+    printAnnotationStorage: PrintAnnotationStorage | null = null,
     isEditing = false,
-  }: GetOperatorListParameters): Promise<PDFOperatorList> {
+  ): Promise<PDFOperatorList> {
     if (PlatformHelper.isGeneric()) {
       throw new Error("Not implemented: getOperatorList");
     }
@@ -1878,17 +1888,12 @@ export class PDFPageProxy {
       assert(intentState != null, 'intent state cannot be null')
       if (intentState.operatorList!.lastChunk) {
         intentState.opListReadCapability!.resolve(intentState.operatorList!);
-
         intentState.renderTasks!.delete(opListTask!);
       }
     }
 
     const intentArgs = this._transport.getRenderingIntent(
-      intent,
-      annotationMode,
-      printAnnotationStorage,
-      isEditing,
-      /* isOpList = */ true
+      intent, annotationMode, printAnnotationStorage, isEditing, true
     );
     let intentState = this._intentStates.get(intentArgs.cacheKey);
     if (!intentState) {
@@ -2047,7 +2052,7 @@ export class PDFPageProxy {
    */
   cleanup(resetStats: boolean = false): boolean {
     this._pendingCleanup = true;
-    const success = this.#tryCleanup(/* delayed = */ false);
+    const success = this.#tryCleanup(false);
 
     if (resetStats && success) {
       this._stats &&= new StatTimer();
@@ -2071,7 +2076,7 @@ export class PDFPageProxy {
     if (delayed) {
       this._delayedCleanupTimeout = setTimeout(() => {
         this._delayedCleanupTimeout = null;
-        this.#tryCleanup(/* delayed = */ false);
+        this.#tryCleanup(false);
       }, DELAYED_CLEANUP_TIMEOUT);
 
       return false;
@@ -2124,7 +2129,7 @@ export class PDFPageProxy {
     }
 
     if (operatorListChunk.lastChunk) {
-      this.#tryCleanup(/* delayed = */ true);
+      this.#tryCleanup(true);
     }
   }
 
@@ -2157,43 +2162,40 @@ export class PDFPageProxy {
     intentState.streamReader = reader;
 
     const pump = () => {
-      reader.read().then(
-        ({ value, done }) => {
-          if (done) {
-            intentState.streamReader = null;
-            return;
-          }
-          if (this._transport.destroyed) {
-            return; // Ignore any pending requests if the worker was terminated.
-          }
-          this._renderPageChunk(value, intentState);
-          pump();
-        },
-        reason => {
+      reader.read().then(({ value, done }) => {
+        if (done) {
           intentState.streamReader = null;
-
-          if (this._transport.destroyed) {
-            return; // Ignore any pending requests if the worker was terminated.
-          }
-          if (intentState.operatorList) {
-            // Mark operator list as complete.
-            intentState.operatorList.lastChunk = true;
-
-            for (const internalRenderTask of intentState.renderTasks!) {
-              internalRenderTask.operatorListChanged();
-            }
-            this.#tryCleanup(/* delayed = */ true);
-          }
-
-          if (intentState.displayReadyCapability) {
-            intentState.displayReadyCapability.reject(reason);
-          } else if (intentState.opListReadCapability) {
-            intentState.opListReadCapability.reject(reason);
-          } else {
-            throw reason;
-          }
+          return;
         }
-      );
+        if (this._transport.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+        this._renderPageChunk(value, intentState);
+        pump();
+      }, reason => {
+        intentState.streamReader = null;
+
+        if (this._transport.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+        if (intentState.operatorList) {
+          // Mark operator list as complete.
+          intentState.operatorList.lastChunk = true;
+
+          for (const internalRenderTask of intentState.renderTasks!) {
+            internalRenderTask.operatorListChanged();
+          }
+          this.#tryCleanup(true);
+        }
+
+        if (intentState.displayReadyCapability) {
+          intentState.displayReadyCapability.reject(reason);
+        } else if (intentState.opListReadCapability) {
+          intentState.opListReadCapability.reject(reason);
+        } else {
+          throw reason;
+        }
+      });
     };
     pump();
   }
@@ -2832,11 +2834,8 @@ class WorkerTransport {
         warn(`getRenderingIntent - invalid intent: ${intent}`);
     }
 
-    const annotationStorage =
-      renderingIntent & RenderingIntentFlag.PRINT &&
-        printAnnotationStorage instanceof PrintAnnotationStorage
-        ? printAnnotationStorage
-        : this.annotationStorage;
+    const annotationStorage = renderingIntent & RenderingIntentFlag.PRINT && printAnnotationStorage instanceof PrintAnnotationStorage
+      ? printAnnotationStorage : this.annotationStorage;
 
     switch (annotationMode) {
       case AnnotationMode.DISABLE:
@@ -2865,17 +2864,10 @@ class WorkerTransport {
 
     const { ids: modifiedIds, hash: modifiedIdsHash } = annotationStorage.modifiedIds;
 
-    const cacheKeyBuf = [
-      renderingIntent,
-      annotationStorageSerializable.hash,
-      modifiedIdsHash,
-    ];
+    const cacheKeyBuf = [renderingIntent, annotationStorageSerializable.hash, modifiedIdsHash];
 
     return {
-      renderingIntent,
-      cacheKey: cacheKeyBuf.join("_"),
-      annotationStorageSerializable,
-      modifiedIds,
+      renderingIntent, cacheKey: cacheKeyBuf.join("_"), annotationStorageSerializable, modifiedIds
     };
   }
 

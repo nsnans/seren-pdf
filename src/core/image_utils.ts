@@ -217,15 +217,17 @@ class RegionalImageCache extends BaseLocalCache<ImageCacheData> {
 }
 
 class GlobalImageCache {
+
   static NUM_PAGES_THRESHOLD = 2;
 
   static MIN_IMAGES_TO_CACHE = 10;
 
   static MAX_BYTE_SIZE = 5 * MAX_IMAGE_SIZE_TO_CACHE;
 
-  #decodeFailedSet = new RefSet();
+  protected _decodeFailedSet = new RefSet();
 
-  protected _refCache = new RefSetCache();
+  protected _refCache = new RefSetCache<string | Ref, Set<number>>();
+
   protected _imageCache = new RefSetCache();
 
   constructor() {
@@ -255,7 +257,7 @@ class GlobalImageCache {
     return true;
   }
 
-  shouldCache(ref: Ref | string, pageIndex: number) {
+  shouldCache(ref: string, pageIndex: number) {
     let pageIndexSet = this._refCache.get(ref);
     if (!pageIndexSet) {
       pageIndexSet = new Set();
@@ -273,11 +275,11 @@ class GlobalImageCache {
   }
 
   addDecodeFailed(ref: string | Ref) {
-    this.#decodeFailedSet.put(ref);
+    this._decodeFailedSet.put(ref);
   }
 
   hasDecodeFailed(ref: string | Ref) {
-    return this.#decodeFailedSet.has(ref);
+    return this._decodeFailedSet.has(ref);
   }
 
   /**
@@ -330,7 +332,7 @@ class GlobalImageCache {
 
   clear(onlyData = false) {
     if (!onlyData) {
-      this.#decodeFailedSet.clear();
+      this._decodeFailedSet.clear();
       this._refCache.clear();
     }
     this._imageCache.clear();

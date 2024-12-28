@@ -1829,7 +1829,7 @@ class PartialEvaluator {
     return null;
   }
 
-  getOperatorList(
+  async getOperatorList(
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict,
@@ -1868,9 +1868,11 @@ class PartialEvaluator {
       }
     }
 
-    return new Promise(function promiseBody(resolve, reject) {
+    // 这里是一个较为复杂的递归调用，一个promise调用结束后，从头开始执行promiseBody方法
+    // 遇见next就知道要从头开始嵌套调用了
+    return new Promise<void>(function promiseBody(resolve, reject) {
       const next = function (promise: Promise<any> | undefined) {
-        Promise.all([promise, operatorList.ready]).then(function () {
+        Promise.all([promise, operatorList.ready]).then(() => {
           try {
             promiseBody(resolve, reject);
           } catch (ex) {
@@ -1911,118 +1913,110 @@ class PartialEvaluator {
               }
             }
 
-            next(
-              new Promise(function (resolveXObject, rejectXObject) {
-                if (!isValidName) {
-                  throw new FormatError("XObject must be referred to by name.");
+            next(new Promise<void>(function (resolveXObject, rejectXObject) {
+              if (!isValidName) {
+                throw new FormatError("XObject must be referred to by name.");
+              }
+
+              let xobj = xobjs.getRaw(<DictKey>name!);
+              if (xobj instanceof Ref) {
+                const localImage =
+                  localImageCache.getByRef(xobj) ||
+                  self._regionalImageCache.getByRef(xobj);
+                if (localImage) {
+                  addLocallyCachedImageOps(operatorList, localImage);
+                  resolveXObject();
+                  return;
                 }
 
-                let xobj = xobjs.getRaw(<DictKey>name!);
-                if (xobj instanceof Ref) {
-                  const localImage =
-                    localImageCache.getByRef(xobj) ||
-                    self._regionalImageCache.getByRef(xobj);
-                  if (localImage) {
-                    addLocallyCachedImageOps(operatorList, localImage);
-                    resolveXObject(undefined);
-                    return;
-                  }
-
-                  const globalImage = self.globalImageCache.getData(
-                    xobj,
-                    self.pageIndex
+                const globalImage = self.globalImageCache.getData(
+                  xobj,
+                  self.pageIndex
+                );
+                if (globalImage) {
+                  operatorList.addDependency(globalImage.objId);
+                  operatorList.addImageOps(
+                    globalImage.fn,
+                    globalImage.args,
+                    globalImage.optionalContent
                   );
-                  if (globalImage) {
-                    operatorList.addDependency(globalImage.objId);
-                    operatorList.addImageOps(
-                      globalImage.fn,
-                      globalImage.args,
-                      globalImage.optionalContent
-                    );
 
-                    resolveXObject(undefined);
-                    return;
-                  }
-
-                  xobj = xref.fetch(xobj);
-                }
-
-                if (!(xobj instanceof BaseStream)) {
-                  throw new FormatError("XObject should be a stream");
-                }
-
-                const type = xobj.dict!.getValue(DictKey.Subtype);
-                if (!(type instanceof Name)) {
-                  throw new FormatError("XObject should have a Name subtype");
-                }
-
-                if (type.name === "Form") {
-                  stateManager.save();
-                  self.buildFormXObject(
-                    resources,
-                    xobj,
-                    null,
-                    operatorList,
-                    task,
-                    stateManager.state.clone(),
-                    localColorSpaceCache
-                  ).then(function () {
-                    stateManager.restore();
-                    resolveXObject(undefined);
-                  }, rejectXObject);
-                  return;
-                } else if (type.name === "Image") {
-                  self.buildPaintImageXObject(
-                    resources,
-                    xobj,
-                    false,
-                    operatorList,
-                    name,
-                    localImageCache,
-                    localColorSpaceCache,
-                  ).then(resolveXObject, rejectXObject);
-                  return;
-                } else if (type.name === "PS") {
-                  // PostScript XObjects are unused when viewing documents.
-                  // See section 4.7.1 of Adobe's PDF reference.
-                  info("Ignored XObject subtype PS");
-                } else {
-                  throw new FormatError(
-                    `Unhandled XObject subtype ${type.name}`
-                  );
-                }
-                resolveXObject(undefined);
-              }).catch(function (reason) {
-                if (reason instanceof AbortException) {
+                  resolveXObject();
                   return;
                 }
-                if (self.options.ignoreErrors) {
-                  warn(`getOperatorList - ignoring XObject: "${reason}".`);
-                  return;
-                }
-                throw reason;
-              })
-            );
+
+                xobj = xref.fetch(xobj);
+              }
+
+              if (!(xobj instanceof BaseStream)) {
+                throw new FormatError("XObject should be a stream");
+              }
+
+              const type = xobj.dict!.getValue(DictKey.Subtype);
+              if (!(type instanceof Name)) {
+                throw new FormatError("XObject should have a Name subtype");
+              }
+
+              if (type.name === "Form") {
+                stateManager.save();
+                self.buildFormXObject(
+                  resources,
+                  xobj,
+                  null,
+                  operatorList,
+                  task,
+                  stateManager.state.clone(),
+                  localColorSpaceCache
+                ).then(function () {
+                  stateManager.restore();
+                  resolveXObject(undefined);
+                }, rejectXObject);
+                return;
+              } else if (type.name === "Image") {
+                self.buildPaintImageXObject(
+                  resources,
+                  xobj,
+                  false,
+                  operatorList,
+                  name,
+                  localImageCache,
+                  localColorSpaceCache,
+                ).then(resolveXObject, rejectXObject);
+                return;
+              } else if (type.name === "PS") {
+                // PostScript XObjects are unused when viewing documents.
+                // See section 4.7.1 of Adobe's PDF reference.
+                info("Ignored XObject subtype PS");
+              } else {
+                throw new FormatError(`Unhandled XObject subtype ${type.name}`);
+              }
+              resolveXObject();
+            }).catch(function (reason) {
+              if (reason instanceof AbortException) {
+                return;
+              }
+              if (self.options.ignoreErrors) {
+                warn(`getOperatorList - ignoring XObject: "${reason}".`);
+                return;
+              }
+              throw reason;
+            }));
             return;
           case OPS.setFont:
             var fontSize = args[1];
             // eagerly collect all fonts
-            next(
-              self
-                .handleSetFont(
-                  resources,
-                  <[Name | string, number]>args,
-                  null,
-                  operatorList,
-                  task,
-                  stateManager.state,
-                  fallbackFontDict
-                )
-                .then(function (loadedName) {
-                  operatorList.addDependency(loadedName);
-                  operatorList.addOp(OPS.setFont, [loadedName, <number>fontSize]);
-                })
-            );
+            next(self.handleSetFont(
+              resources,
+              <[Name | string, number]>args,
+              null,
+              operatorList,
+              task,
+              stateManager.state,
+              fallbackFontDict
+            ).then(function (loadedName) {
+              operatorList.addDependency(loadedName);
+              operatorList.addOp(OPS.setFont, [loadedName, <number>fontSize]);
+            }));
             return;
           case OPS.beginText:
             parsingText = true;
@@ -2040,17 +2034,15 @@ class PartialEvaluator {
                 continue;
               }
             }
-            next(
-              self.buildPaintImageXObject(
-                resources,
-                args[0],
-                true,
-                operatorList,
-                cacheKey,
-                localImageCache,
-                localColorSpaceCache,
-              )
-            );
+            next(self.buildPaintImageXObject(
+              resources,
+              args[0],
+              true,
+              operatorList,
+              cacheKey,
+              localImageCache,
+              localColorSpaceCache,
+            ));
             return;
           case OPS.showText:
             if (!stateManager.state.font) {
@@ -2111,39 +2103,33 @@ class PartialEvaluator {
               continue;
             }
 
-            next(
-              self.parseColorSpace(
-                args[0],
-                resources,
-                localColorSpaceCache,
-              ).then(function (colorSpace) {
-                stateManager.state.fillColorSpace =
-                  colorSpace || ColorSpace.singletons.gray;
-              })
-            );
+            next(self.parseColorSpace(
+              args[0],
+              resources,
+              localColorSpaceCache,
+            ).then(colorSpace => {
+              stateManager.state.fillColorSpace =
+                colorSpace || ColorSpace.singletons.gray;
+            }));
             return;
           }
           case OPS.setStrokeColorSpace: {
             const cachedColorSpace = ColorSpace.getCached(
-              args[0],
-              xref,
-              localColorSpaceCache
+              args[0], xref, localColorSpaceCache
             );
             if (cachedColorSpace) {
               stateManager.state.strokeColorSpace = cachedColorSpace;
               continue;
             }
 
-            next(
-              self.parseColorSpace(
-                args[0],
-                resources,
-                localColorSpaceCache,
-              ).then(function (colorSpace) {
-                stateManager.state.strokeColorSpace =
-                  colorSpace || ColorSpace.singletons.gray;
-              })
-            );
+            next(self.parseColorSpace(
+              args[0],
+              resources,
+              localColorSpaceCache,
+            ).then(colorSpace => {
+              stateManager.state.strokeColorSpace =
+                colorSpace || ColorSpace.singletons.gray;
+            }));
             return;
           }
           case OPS.setFillColor:
@@ -2197,20 +2183,18 @@ class PartialEvaluator {
               break;
             }
             if (cs.name === "Pattern") {
-              next(
-                self.handleColorN(
-                  operatorList,
-                  OPS.setFillColorN,
-                  args,
-                  cs,
-                  patterns,
-                  resources,
-                  task,
-                  localColorSpaceCache,
-                  localTilingPatternCache,
-                  localShadingPatternCache
-                )
-              );
+              next(self.handleColorN(
+                operatorList,
+                OPS.setFillColorN,
+                args,
+                cs,
+                patterns,
+                resources,
+                task,
+                localColorSpaceCache,
+                localTilingPatternCache,
+                localShadingPatternCache
+              ));
               return;
             }
             args = cs.getRgb(args as unknown as TypedArray, 0);
@@ -2229,20 +2213,18 @@ class PartialEvaluator {
               break;
             }
             if (cs.name === "Pattern") {
-              next(
-                self.handleColorN(
-                  operatorList,
-                  OPS.setStrokeColorN,
-                  args,
-                  cs,
-                  patterns,
-                  resources,
-                  task,
-                  localColorSpaceCache,
-                  localTilingPatternCache,
-                  localShadingPatternCache
-                )
-              );
+              next(self.handleColorN(
+                operatorList,
+                OPS.setStrokeColorN,
+                args,
+                cs,
+                patterns,
+                resources,
+                task,
+                localColorSpaceCache,
+                localTilingPatternCache,
+                localShadingPatternCache
+              ));
               return;
             }
             args = cs.getRgb(args as unknown as TypedArray, 0);
@@ -2298,47 +2280,44 @@ class PartialEvaluator {
               }
             }
 
-            next(
-              new Promise(function (resolveGState, rejectGState) {
-                if (!isValidName) {
-                  throw new FormatError("GState must be referred to by name.");
-                }
+            next(new Promise(function (resolveGState, rejectGState) {
+              if (!isValidName) {
+                throw new FormatError("GState must be referred to by name.");
+              }
 
-                const extGState = resources.getValue(DictKey.ExtGState);
-                if (!(extGState instanceof Dict)) {
-                  throw new FormatError("ExtGState should be a dictionary.");
-                }
+              const extGState = resources.getValue(DictKey.ExtGState);
+              if (!(extGState instanceof Dict)) {
+                throw new FormatError("ExtGState should be a dictionary.");
+              }
 
-                const gState = extGState.getValue(<DictKey>name!);
-                // TODO: Attempt to lookup cached GStates by reference as well,
-                //       if and only if there are PDF documents where doing so
-                //       would significantly improve performance.
-                if (!(gState instanceof Dict)) {
-                  throw new FormatError("GState should be a dictionary.");
-                }
+              const gState = extGState.getValue(<DictKey>name!);
+              // TODO: Attempt to lookup cached GStates by reference as well,
+              //       if and only if there are PDF documents where doing so
+              //       would significantly improve performance.
+              if (!(gState instanceof Dict)) {
+                throw new FormatError("GState should be a dictionary.");
+              }
 
-                self
-                  .setGState(
-                    resources,
-                    gState,
-                    operatorList,
-                    name,
-                    task,
-                    stateManager,
-                    localGStateCache,
-                    localColorSpaceCache,
-                  )
-                  .then(resolveGState, rejectGState);
-              }).catch(function (reason) {
-                if (reason instanceof AbortException) {
-                  return;
-                }
-                if (self.options.ignoreErrors) {
-                  warn(`getOperatorList - ignoring ExtGState: "${reason}".`);
-                  return;
-                }
-                throw reason;
-              })
+              self.setGState(
+                resources,
+                gState,
+                operatorList,
+                name,
+                task,
+                stateManager,
+                localGStateCache,
+                localColorSpaceCache,
+              ).then(resolveGState, rejectGState);
+            }).catch(function (reason) {
+              if (reason instanceof AbortException) {
+                return;
+              }
+              if (self.options.ignoreErrors) {
+                warn(`getOperatorList - ignoring ExtGState: "${reason}".`);
+                return;
+              }
+              throw reason;
+            })
             );
             return;
           case OPS.moveTo:
@@ -2368,32 +2347,19 @@ class PartialEvaluator {
               continue;
             }
             if (args[0].name === "OC") {
-              next(
-                self
-                  .parseMarkedContentProps(args[1], resources)
-                  .then(data => {
-                    operatorList.addOp(OPS.beginMarkedContentProps, [
-                      "OC",
-                      data,
-                    ]);
-                  })
-                  .catch(reason => {
-                    if (reason instanceof AbortException) {
-                      return;
-                    }
-                    if (self.options.ignoreErrors) {
-                      warn(
-                        `getOperatorList - ignoring beginMarkedContentProps: "${reason}".`
-                      );
-                      operatorList.addOp(OPS.beginMarkedContentProps, [
-                        "OC",
-                        null,
-                      ]);
-                      return;
-                    }
-                    throw reason;
-                  })
-              );
+              next(self.parseMarkedContentProps(args[1], resources).then(
+                data => operatorList.addOp(OPS.beginMarkedContentProps, ["OC", data,])
+              ).catch(reason => {
+                if (reason instanceof AbortException) {
+                  return;
+                }
+                if (self.options.ignoreErrors) {
+                  warn(`getOperatorList - ignoring beginMarkedContentProps: "${reason}".`);
+                  operatorList.addOp(OPS.beginMarkedContentProps, ["OC", null]);
+                  return;
+                }
+                throw reason;
+              }));
               return;
             }
             // Other marked content types aren't supported yet.
@@ -2401,7 +2367,6 @@ class PartialEvaluator {
               args[0].name,
               args[1] instanceof Dict ? args[1].getValue(DictKey.MCID) : null,
             ];
-
             break;
           case OPS.beginMarkedContent:
           case OPS.endMarkedContent:
@@ -2430,7 +2395,7 @@ class PartialEvaluator {
       // Some PDFs don't close all restores inside object/form.
       // Closing those for them.
       closePendingRestoreOPS();
-      resolve(undefined);
+      resolve();
     }).catch(reason => {
       if (reason instanceof AbortException) {
         return;
@@ -2448,7 +2413,7 @@ class PartialEvaluator {
     });
   }
 
-  getTextContent(
+  async getTextContent(
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict | null,
@@ -2589,19 +2554,16 @@ class PartialEvaluator {
 
     let textState: TextState | null = null;
 
-    function pushWhitespace({
-      width = 0,
-      height = 0,
-      transform = textContentItem.prevTransform,
-      fontName = textContentItem.fontName,
-    }) {
+    function pushWhitespace(
+      width = 0, height = 0, transform = textContentItem.prevTransform, fontName = textContentItem.fontName,
+    ) {
       textContent.items.push({
         str: " ",
         dir: "ltr",
         width,
         height,
         transform,
-        fontName,
+        fontName: fontName!,
         hasEOL: false,
       });
     }
@@ -2609,14 +2571,10 @@ class PartialEvaluator {
     function getCurrentTextTransform() {
       // 9.4.4 Text Space Details
       const font = textState!.font!;
-      const tsm = [
-        textState!.fontSize * textState!.textHScale,
-        0,
-        0,
-        textState!.fontSize,
-        0,
-        textState!.textRise,
-      ];
+      const fontSize = textState!.fontSize;
+      const textHScale = textState!.textHScale;
+      const textRise = textState!.textRise;
+      const tsm = [fontSize * textHScale, 0, 0, fontSize, 0, textRise];
 
       if (
         font.isType3Font &&
@@ -2630,8 +2588,7 @@ class PartialEvaluator {
       }
 
       return Util.transform(
-        textState!.ctm,
-        Util.transform(textState!.textMatrix, tsm)
+        textState!.ctm, Util.transform(textState!.textMatrix, tsm)
       );
     }
 
@@ -2648,7 +2605,7 @@ class PartialEvaluator {
           fontFamily: (validFont).fallbackName,
           ascent: (validFont).ascent,
           descent: (validFont).descent,
-          vertical: (validFont).vertical,
+          vertical: (validFont).vertical!,
           fontSubstitution: null,
           fontSubstitutionLoadedName: null,
         }
@@ -2664,24 +2621,18 @@ class PartialEvaluator {
       const trm = (textContentItem.transform = getCurrentTextTransform());
       if (!font.vertical) {
         textContentItem.width = textContentItem.totalWidth = 0;
-        textContentItem.height = textContentItem.totalHeight = Math.hypot(
-          trm[2],
-          trm[3]
-        );
+        textContentItem.height = textContentItem.totalHeight = Math.hypot(trm[2], trm[3]);
         textContentItem.vertical = false;
       } else {
-        textContentItem.width = textContentItem.totalWidth = Math.hypot(
-          trm[0],
-          trm[1]
-        );
+        textContentItem.width = textContentItem.totalWidth = Math.hypot(trm[0], trm[1]);
         textContentItem.height = textContentItem.totalHeight = 0;
         textContentItem.vertical = true;
       }
 
       const scaleLineX = Math.hypot(
-        textState!.textLineMatrix[0],
-        textState!.textLineMatrix[1]
+        textState!.textLineMatrix[0], textState!.textLineMatrix[1]
       );
+
       const scaleCtmX = Math.hypot(textState!.ctm[0], textState!.ctm[1]);
       textContentItem.textAdvanceScale = scaleCtmX * scaleLineX;
 
@@ -2890,7 +2841,7 @@ class PartialEvaluator {
             // layer.
             resetLastChars();
             flushTextContentItem();
-            pushWhitespace({ height: Math.abs(advanceY) });
+            pushWhitespace(0, Math.abs(advanceY));
           } else {
             textContentItem.height += advanceY;
           }
@@ -2903,7 +2854,7 @@ class PartialEvaluator {
         ) {
           if (textContentItem.str.length === 0) {
             resetLastChars();
-            pushWhitespace({ height: Math.abs(advanceY) });
+            pushWhitespace(0, Math.abs(advanceY));
           } else {
             textContentItem.height += advanceY;
           }
@@ -2956,7 +2907,7 @@ class PartialEvaluator {
           // layer.
           resetLastChars();
           flushTextContentItem();
-          pushWhitespace({ width: Math.abs(advanceX) });
+          pushWhitespace(Math.abs(advanceX));
         } else {
           textContentItem.width += advanceX;
         }
@@ -2965,7 +2916,7 @@ class PartialEvaluator {
       ) {
         if (textContentItem.str.length === 0) {
           resetLastChars();
-          pushWhitespace({ width: Math.abs(advanceX) });
+          pushWhitespace(Math.abs(advanceX));
         } else {
           textContentItem.width += advanceX;
         }
@@ -3139,12 +3090,9 @@ class PartialEvaluator {
 
       flushTextContentItem();
       resetLastChars();
-      pushWhitespace({
-        width: Math.abs(width),
-        height: Math.abs(height),
-        transform: transf || getCurrentTextTransform(),
-        fontName,
-      });
+      pushWhitespace(
+        Math.abs(width), Math.abs(height), transf || getCurrentTextTransform(), fontName
+      );
 
       return true;
     }
@@ -3185,7 +3133,7 @@ class PartialEvaluator {
 
     return new Promise(function promiseBody(resolve, reject) {
       const next = function (promise: Promise<unknown>) {
-        enqueueChunk(/* batch = */ true);
+        enqueueChunk(true);
         Promise.all([promise, sink.ready]).then(() => {
           try {
             promiseBody(resolve, reject);
@@ -3198,8 +3146,8 @@ class PartialEvaluator {
       timeSlotManager.reset();
 
       const operation: { fn?: OPS, args?: any[] } = {};
-      let stop,
-        args = <any[]>[];
+      let stop;
+      let args = <any[]>[];
       while (!(stop = timeSlotManager.check())) {
         // The arguments parsed by read() are not used beyond this loop, so
         // we can reuse the same array on every iteration, thus avoiding
@@ -3256,22 +3204,8 @@ class PartialEvaluator {
             textState.carriageReturn();
             break;
           case OPS.setTextMatrix:
-            textState.setTextMatrix(
-              args[0],
-              args[1],
-              args[2],
-              args[3],
-              args[4],
-              args[5]
-            );
-            textState.setTextLineMatrix(
-              args[0],
-              args[1],
-              args[2],
-              args[3],
-              args[4],
-              args[5]
-            );
+            textState.setTextMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
+            textState.setTextLineMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
             updateAdvanceScale();
             break;
           case OPS.setCharSpacing:
@@ -3356,22 +3290,19 @@ class PartialEvaluator {
               break;
             }
 
-            next(new Promise((resolveXObject, rejectXObject) => {
+            next(new Promise<void>((resolveXObject, rejectXObject) => {
               if (!isValidName) {
                 throw new FormatError("XObject must be referred to by name.");
               }
               let xobj = xobjs!.getRaw(name);
               if (xobj instanceof Ref) {
                 if (emptyXObjectCache.getByRef(xobj)) {
-                  resolveXObject(undefined);
+                  resolveXObject();
                   return;
                 }
-                const globalImage = self.globalImageCache.getData(
-                  xobj,
-                  self.pageIndex
-                );
+                const globalImage = self.globalImageCache.getData(xobj, self.pageIndex);
                 if (globalImage) {
-                  resolveXObject(undefined);
+                  resolveXObject();
                   return;
                 }
                 xobj = xref.fetch(xobj);
@@ -3387,7 +3318,7 @@ class PartialEvaluator {
 
               if (type.name !== "Form") {
                 emptyXObjectCache.set(name, xobj.dict!.objId, true);
-                resolveXObject(undefined);
+                resolveXObject();
                 return;
               }
 
@@ -3440,8 +3371,7 @@ class PartialEvaluator {
                 return;
               }
               throw reason;
-            })
-            );
+            }));
             return;
           case OPS.setGState:
             isValidName = args[0] instanceof Name;
@@ -3492,8 +3422,7 @@ class PartialEvaluator {
                 return;
               }
               throw reason;
-            })
-            );
+            }));
             return;
           case OPS.beginMarkedContent:
             flushTextContentItem();
