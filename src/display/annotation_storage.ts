@@ -19,11 +19,17 @@ import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { AnnotationEditorSerial } from "./editor/state/editor_serializable";
 import { hasOwnBitmap } from "./editor/utils";
 
-const SerializableEmpty = Object.freeze({
+const SerializableEmpty: AnnotationStorageSerializable = Object.freeze({
   map: null,
   hash: "",
   transfer: null,
 });
+
+export interface AnnotationStorageSerializable {
+  map: Map<string, AnnotationEditorSerial> | null;
+  hash: string;
+  transfer: Transferable[] | null
+}
 
 /**
  * Key/value storage for annotation data in forms.
@@ -191,11 +197,7 @@ class AnnotationStorage {
    * PLEASE NOTE: Only intended for usage within the API itself.
    * @ignore
    */
-  get serializable(): {
-    map: Map<string, AnnotationEditorSerial> | null;
-    hash: string;
-    transfer: Transferable[] | null;
-  } {
+  get serializable(): AnnotationStorageSerializable {
     if (this.#storage.size === 0) {
       return SerializableEmpty;
     }
@@ -327,7 +329,7 @@ class PrintAnnotationStorage extends AnnotationStorage {
    * PLEASE NOTE: Only intended for usage within the API itself.
    * @ignore
    */
-  get serializable() {
+  get serializable(): AnnotationStorageSerializable {
     return this.#serializable;
   }
 

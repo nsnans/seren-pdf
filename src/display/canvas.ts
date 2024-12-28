@@ -30,7 +30,7 @@ import {
   Util,
   warn
 } from "../shared/util";
-import { PDFObjects } from "./api";
+import { IntentStateOperatorList, PDFObjects } from "./api";
 import { CanvasAndContext, CanvasFactory } from "./canvas_factory";
 import {
   getCurrentTransform,
@@ -963,6 +963,8 @@ class CanvasGraphics {
     addToPath: ((ctx: CanvasRenderingContext2D, size?: number) => void) | null;
   }[] | null = null;
 
+  public pageColors: { background: string; foreground: string; } | null;
+
   constructor(
     canvasCtx: CanvasRenderingContext2D,
     commonObjs: PDFObjects,
@@ -971,7 +973,7 @@ class CanvasGraphics {
     filterFactory: FilterFactory,
     { optionalContentConfig, markedContentStack = null },
     annotationCanvasMap: Map<string, HTMLCanvasElement> | null = null,
-    pageColors = null
+    pageColors: { background: string; foreground: string; } | null = null
   ) {
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState(
@@ -1023,15 +1025,12 @@ class CanvasGraphics {
     return fallback;
   }
 
-  beginDrawing({
-    transform,
-    viewport,
-    transparency = false,
-    background = null,
-  }: {
+  beginDrawing(
+    transform: TransformType | null,
     viewport: PageViewport,
-    transparency: boolean
-  }) {
+    transparency = false,
+    background: string | CanvasGradient | CanvasPattern | null = null
+  ) {
     // For pdfs that use blend modes we have to clear the canvas else certain
     // blend modes can look wrong since we'd be blending with a white
     // backdrop. The problem with a transparent backdrop though is we then
@@ -1074,10 +1073,9 @@ class CanvasGraphics {
   }
 
   executeOperatorList(
-    operatorList,
-    executionStartIdx = null,
+    operatorList: IntentStateOperatorList,
+    executionStartIdx: number | null = null,
     continueCallback: (() => void) | null = null,
-    stepper = null
   ) {
     const argsArray = operatorList.argsArray;
     const fnArray = operatorList.fnArray;
@@ -1100,10 +1098,6 @@ class CanvasGraphics {
     let fnId;
 
     while (true) {
-      if (stepper !== undefined && i === stepper.nextBreakPoint) {
-        stepper.breakIt(i, continueCallback);
-        return i;
-      }
 
       fnId = fnArray[i];
 

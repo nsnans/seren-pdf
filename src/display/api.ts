@@ -24,6 +24,7 @@ import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { OpertaorListChunk } from "../core/operator_list";
 import { Ref } from "../core/primitives";
 import { StructTreeSerialNode } from "../core/struct_tree";
+import { WorkerMessageHandler } from "../core/worker";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
@@ -31,6 +32,7 @@ import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/
 import { PDFStream, PDFStreamReader, PDFStreamSource } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
+import { MessagePoster } from "../shared/message_handler_base";
 import { MessageHandlerAction } from "../shared/message_handler_utils";
 import {
   AbortException,
@@ -42,6 +44,7 @@ import {
   InvalidPDFException,
   MAX_IMAGE_SIZE_TO_CACHE,
   MissingPDFException,
+  OPS,
   PasswordException,
   RenderingIntentFlag,
   setVerbosityLevel,
@@ -55,6 +58,7 @@ import {
 import { TypedArray } from "../types";
 import {
   AnnotationStorage,
+  AnnotationStorageSerializable,
   PrintAnnotationStorage,
   SerializableEmpty,
 } from "./annotation_storage";
@@ -1458,7 +1462,7 @@ interface RenderParameters {
   annotationMode: number;
 
   /* Additional transform, applied just before viewport transform. */
-  transform: Array<any> | null;
+  transform: TransformType | null;
 
   /**
    * Background to use for the canvas.
@@ -1473,7 +1477,7 @@ interface RenderParameters {
   /** 
    * Overwrites background and foreground colors with user defined ones in order to 
    * improve readability in high contrast mode. */
-  pageColors: object | null;
+  pageColors: { background: string, foreground: string } | null;
 
   /**
    * A promise that should resolve with an {@link OptionalContentConfig} 
@@ -1565,6 +1569,25 @@ export interface PageInfo {
   view: RectType;
 }
 
+export interface IntentStateOperatorList {
+  fnArray: OPS[];
+  argsArray: (any[] | null)[];
+  lastChunk: boolean;
+  separateAnnots: {
+    form: boolean;
+    canvas: boolean;
+  } | null;
+}
+
+interface IntentState {
+  streamReader: ReadableStreamDefaultReader<OpertaorListChunk> | null;
+  renderTasks: Set<{ operatorListChanged: () => void; }> | null;
+  opListReadCapability: PromiseWithResolvers<IntentStateOperatorList> | null;
+  streamReaderCancelTimeout: number | null;
+  displayReadyCapability: PromiseWithResolvers<boolean> | null;
+  operatorList: IntentStateOperatorList | null;
+}
+
 /**
  * Proxy to a `PDFPage` in the worker thread.
  */
@@ -1582,7 +1605,7 @@ export class PDFPageProxy {
 
   public _maybeCleanupAfterRender: boolean = false;
 
-  public _intentStates = new Map();
+  public _intentStates = new Map<string, IntentState>();
 
   protected destroyed = false;
 
@@ -1689,9 +1712,8 @@ export class PDFPageProxy {
   /**
    * Begins the process of rendering a page to the desired context.
    *
-   * @param {RenderParameters} params - Page render parameters.
-   * @returns {RenderTask} An object that contains a promise that is
-   *   resolved when the page finishes rendering.
+   * @param params - Page render parameters.
+   * @returns An object that contains a promise that is resolved when the page finishes rendering.
    */
   render({
     canvasContext,
@@ -1724,10 +1746,17 @@ export class PDFPageProxy {
     optionalContentConfigPromise ||=
       this._transport.getOptionalContentConfig(renderingIntent);
 
-    let intentState = this._intentStates.get(cacheKey);
+    let intentState = this._intentStates.get(cacheKey) ?? null;
     if (!intentState) {
-      intentState = Object.create(null);
-      this._intentStates.set(cacheKey, intentState);
+      intentState = {
+        streamReaderCancelTimeout: null,
+        displayReadyCapability: null,
+        operatorList: null,
+        renderTasks: null,
+        opListReadCapability: null,
+        streamReader: null,
+      };
+      this._intentStates.set(cacheKey, intentState!);
     }
 
     // Ensure that a pending `streamReader` cancel timeout is always aborted.
@@ -1750,11 +1779,14 @@ export class PDFPageProxy {
       };
 
       this._stats?.time("Page Request");
-      this._pumpOperatorList(intentArgs);
+      const args = intentArgs;
+      this._pumpOperatorList(
+        args.renderingIntent, args.cacheKey, args.annotationStorageSerializable, args.modifiedIds
+      );
     }
 
     const complete = (error?: Error) => {
-      intentState.renderTasks.delete(internalRenderTask);
+      intentState!.renderTasks!.delete(internalRenderTask);
 
       // Attempt to reduce memory usage during *printing*, by always running
       // cleanup immediately once rendering has finished.
@@ -1766,10 +1798,8 @@ export class PDFPageProxy {
       if (error) {
         internalRenderTask.capability.reject(error);
 
-        this._abortOperatorList({
-          intentState,
-          reason: error instanceof Error ? error : new Error(error),
-        });
+        const reason = error instanceof Error ? error : new Error(error);
+        this._abortOperatorList(intentState, reason);
       } else {
         internalRenderTask.capability.resolve(undefined);
       }
@@ -1784,32 +1814,27 @@ export class PDFPageProxy {
       }
     };
 
-    const internalRenderTask = new InternalRenderTask({
-      callback: complete,
+    const internalRenderTask = new InternalRenderTask(
+      complete,
       // Only include the required properties, and *not* the entire object.
-      params: {
-        canvasContext,
-        viewport,
-        transform,
-        background,
-      },
-      objs: this.objs,
-      commonObjs: this.commonObjs,
+      { canvasContext, viewport, transform, background },
+      this.objs,
+      this.commonObjs,
       annotationCanvasMap,
-      operatorList: intentState.operatorList,
-      pageIndex: this._pageIndex,
-      canvasFactory: this._transport.canvasFactory,
-      filterFactory: this._transport.filterFactory,
-      useRequestAnimationFrame: !intentPrint,
-      pdfBug: this._pdfBug,
+      intentState!.operatorList!,
+      this._pageIndex,
+      this._transport.canvasFactory,
+      this._transport.filterFactory,
+      !intentPrint,
+      this._pdfBug,
       pageColors,
-    });
+    );
 
-    (intentState.renderTasks ||= new Set()).add(internalRenderTask);
+    (intentState!.renderTasks ||= new Set()).add(internalRenderTask);
     const renderTask = internalRenderTask.task;
 
     Promise.all([
-      intentState.displayReadyCapability.promise,
+      intentState!.displayReadyCapability.promise,
       optionalContentConfigPromise,
     ]).then(([transparency, optionalContentConfig]) => {
       if (this.destroyed) {
@@ -1824,10 +1849,10 @@ export class PDFPageProxy {
           "and `PDFDocumentProxy.getOptionalContentConfig` methods."
         );
       }
-      internalRenderTask.initializeGraphics({
+      internalRenderTask.initializeGraphics(
         transparency,
         optionalContentConfig,
-      });
+      );
       internalRenderTask.operatorListChanged();
     }).catch(complete);
 
@@ -1850,10 +1875,11 @@ export class PDFPageProxy {
       throw new Error("Not implemented: getOperatorList");
     }
     function operatorListChanged() {
-      if (intentState.operatorList.lastChunk) {
-        intentState.opListReadCapability.resolve(intentState.operatorList);
+      assert(intentState != null, 'intent state cannot be null')
+      if (intentState.operatorList!.lastChunk) {
+        intentState.opListReadCapability!.resolve(intentState.operatorList!);
 
-        intentState.renderTasks.delete(opListTask);
+        intentState.renderTasks!.delete(opListTask!);
       }
     }
 
@@ -1866,14 +1892,25 @@ export class PDFPageProxy {
     );
     let intentState = this._intentStates.get(intentArgs.cacheKey);
     if (!intentState) {
-      intentState = Object.create(null);
+      intentState = {
+        streamReaderCancelTimeout: null,
+        displayReadyCapability: null,
+        operatorList: null,
+        renderTasks: null,
+        opListReadCapability: null,
+        streamReader: null,
+      };
       this._intentStates.set(intentArgs.cacheKey, intentState);
     }
-    let opListTask;
+
+    assert(intentState != null, 'intent state cannot be null')
+
+    let opListTask: { operatorListChanged: () => void; } | null = null;
 
     if (!intentState.opListReadCapability) {
-      opListTask = Object.create(null);
-      opListTask.operatorListChanged = operatorListChanged;
+      opListTask = {
+        operatorListChanged: operatorListChanged
+      }
       intentState.opListReadCapability = Promise.withResolvers();
       (intentState.renderTasks ||= new Set()).add(opListTask);
       intentState.operatorList = {
@@ -1884,20 +1921,13 @@ export class PDFPageProxy {
       };
 
       this._stats?.time("Page Request");
-      this._pumpOperatorList(intentArgs);
+      const args = intentArgs;
+      this._pumpOperatorList(
+        args.renderingIntent, args.cacheKey, args.annotationStorageSerializable, args.modifiedIds
+      );
     }
     return intentState.opListReadCapability.promise;
   }
-
-  /**
- * Page getTextContent parameters.
-
-  When true include marked content items in the items array of TextContent. The default is `false`.
-  includeMarkedContent: boolean | null;
-
-   When true the text is *not* normalized in the worker-thread. The default is `false`. 
-  disableNormalization: boolean | null;
-*/
 
   /**
    * NOTE: All occurrences of whitespace will be replaced by
@@ -1985,19 +2015,20 @@ export class PDFPageProxy {
 
     const waitOn = [];
     for (const intentState of this._intentStates.values()) {
-      this._abortOperatorList({
-        intentState,
-        reason: new Error("Page was destroyed."),
-        force: true,
-      });
+      const error = new Error("Page was destroyed.")
+      this._abortOperatorList(intentState, error, true);
 
       if (intentState.opListReadCapability) {
         // Avoid errors below, since the renderTasks are just stubs.
         continue;
       }
-      for (const internalRenderTask of intentState.renderTasks) {
-        waitOn.push(internalRenderTask.completed);
-        internalRenderTask.cancel();
+      for (const internalRenderTask of intentState.renderTasks!) {
+        if (internalRenderTask instanceof InternalRenderTask) {
+          waitOn.push(internalRenderTask.completed);
+          internalRenderTask.cancel();
+        } else {
+          throw new Error("interalRenderTask属性值不应当包含opListTask");
+        }
       }
     }
     this.objs.clear();
@@ -2046,7 +2077,7 @@ export class PDFPageProxy {
       return false;
     }
     for (const { renderTasks, operatorList } of this._intentStates.values()) {
-      if (renderTasks.size > 0 || !operatorList.lastChunk) {
+      if (renderTasks!.size > 0 || !operatorList!.lastChunk) {
         return false;
       }
     }
@@ -2078,17 +2109,17 @@ export class PDFPageProxy {
   /**
    * @private
    */
-  _renderPageChunk(operatorListChunk: OpertaorListChunk, intentState) {
+  _renderPageChunk(operatorListChunk: OpertaorListChunk, intentState: IntentState) {
     // Add the new chunk to the current operator list.
     for (let i = 0, ii = operatorListChunk.length; i < ii; i++) {
-      intentState.operatorList.fnArray.push(operatorListChunk.fnArray[i]);
-      intentState.operatorList.argsArray.push(operatorListChunk.argsArray[i]);
+      intentState.operatorList!.fnArray.push(operatorListChunk.fnArray[i]);
+      intentState.operatorList!.argsArray.push(operatorListChunk.argsArray[i]);
     }
-    intentState.operatorList.lastChunk = operatorListChunk.lastChunk;
-    intentState.operatorList.separateAnnots = operatorListChunk.separateAnnots;
+    intentState.operatorList!.lastChunk = operatorListChunk.lastChunk;
+    intentState.operatorList!.separateAnnots = operatorListChunk.separateAnnots;
 
     // Notify all the rendering tasks there are more operators to be consumed.
-    for (const internalRenderTask of intentState.renderTasks) {
+    for (const internalRenderTask of intentState.renderTasks!) {
       internalRenderTask.operatorListChanged();
     }
 
@@ -2100,12 +2131,12 @@ export class PDFPageProxy {
   /**
    * @private
    */
-  _pumpOperatorList({
-    renderingIntent,
-    cacheKey,
-    annotationStorageSerializable,
-    modifiedIds,
-  }) {
+  private _pumpOperatorList(
+    renderingIntent: number,
+    cacheKey: string,
+    annotationStorageSerializable: AnnotationStorageSerializable,
+    modifiedIds: Set<string>,
+  ) {
     if (PlatformHelper.isTesting()) {
       assert(
         Number.isInteger(renderingIntent) && renderingIntent > 0,
@@ -2122,7 +2153,7 @@ export class PDFPageProxy {
 
     const reader = readableStream.getReader();
 
-    const intentState = this._intentStates.get(cacheKey);
+    const intentState = this._intentStates.get(cacheKey)!;
     intentState.streamReader = reader;
 
     const pump = () => {
@@ -2148,7 +2179,7 @@ export class PDFPageProxy {
             // Mark operator list as complete.
             intentState.operatorList.lastChunk = true;
 
-            for (const internalRenderTask of intentState.renderTasks) {
+            for (const internalRenderTask of intentState.renderTasks!) {
               internalRenderTask.operatorListChanged();
             }
             this.#tryCleanup(/* delayed = */ true);
@@ -2170,7 +2201,7 @@ export class PDFPageProxy {
   /**
    * @private
    */
-  _abortOperatorList({ intentState, reason, force = false }) {
+  _abortOperatorList(intentState: IntentState, reason: Error, force = false) {
     if (PlatformHelper.isTesting()) {
       assert(
         reason instanceof Error,
@@ -2190,7 +2221,7 @@ export class PDFPageProxy {
     if (!force) {
       // Ensure that an Error occurring in *only* one `InternalRenderTask`, e.g.
       // multiple render() calls on the same canvas, won't break all rendering.
-      if (intentState.renderTasks.size > 0) {
+      if (intentState.renderTasks!.size > 0) {
         return;
       }
       // Don't immediately abort parsing on the worker-thread when rendering is
@@ -2205,7 +2236,7 @@ export class PDFPageProxy {
 
         intentState.streamReaderCancelTimeout = setTimeout(() => {
           intentState.streamReaderCancelTimeout = null;
-          this._abortOperatorList({ intentState, reason, force: true });
+          this._abortOperatorList(intentState, reason, true);
         }, delay);
         return;
       }
@@ -2241,26 +2272,38 @@ export class PDFPageProxy {
   }
 }
 
-class LoopbackPort {
-  #listeners = new Map();
+// 一个本地实现的MessagePoster
+class LoopbackPort implements MessagePoster {
 
-  #deferred = Promise.resolve();
+  protected _listeners = new Map();
 
-  postMessage(obj, transfer) {
+  protected _deferred = Promise.resolve();
+
+  postMessage(obj: any, options?: StructuredSerializeOptions | Transferable[]) {
+    let transfer = null;
+    if (options instanceof Array) {
+      transfer = { transfer: options }
+    } else if (options?.transfer) {
+      transfer = { transfer: options!.transfer! }
+    }
     const event = {
-      data: structuredClone(obj, transfer ? { transfer } : null),
+      data: structuredClone(obj, transfer ?? undefined),
     };
 
-    this.#deferred.then(() => {
-      for (const [listener] of this.#listeners) {
+    this._deferred.then(() => {
+      for (const [listener] of this._listeners) {
         listener.call(this, event);
       }
     });
   }
 
-  addEventListener(name, listener, options = null) {
+  addEventListener<K extends keyof WorkerEventMap>(
+    name: K,
+    listener: (this: Worker, ev: WorkerEventMap[K]) => any,
+    options: boolean | AddEventListenerOptions | null = null
+  ) {
     let rmAbort = null;
-    if (options?.signal instanceof AbortSignal) {
+    if (typeof options === 'object' && options?.signal instanceof AbortSignal) {
       const { signal } = options;
       if (signal.aborted) {
         warn("LoopbackPort - cannot use an `aborted` signal.");
@@ -2271,21 +2314,23 @@ class LoopbackPort {
 
       signal.addEventListener("abort", onAbort);
     }
-    this.#listeners.set(listener, rmAbort);
+    this._listeners.set(listener, rmAbort);
   }
 
-  removeEventListener(name, listener) {
-    const rmAbort = this.#listeners.get(listener);
+  removeEventListener<K extends keyof WorkerEventMap>(
+    _name: K, listener: (this: Worker, ev: WorkerEventMap[K]) => any
+  ) {
+    const rmAbort = this._listeners.get(listener);
     rmAbort?.();
 
-    this.#listeners.delete(listener);
+    this._listeners.delete(listener);
   }
 
   terminate() {
-    for (const [, rmAbort] of this.#listeners) {
+    for (const [, rmAbort] of this._listeners) {
       rmAbort?.();
     }
-    this.#listeners.clear();
+    this._listeners.clear();
   }
 }
 
@@ -2301,7 +2346,7 @@ class PDFWorker {
 
   private static IS_WORKER_DISABLED = false;
 
-  private static WORKER_PORTS: WeakMap<Worker, PDFWorker> | null;
+  private static WORKER_PORTS: WeakMap<MessagePoster, PDFWorker> | null;
 
   static _isSameOrigin(baseUrl: string, otherUrl: string) {
     let base;
@@ -2337,7 +2382,7 @@ class PDFWorker {
 
   protected _readyCapability = Promise.withResolvers();
 
-  protected _port: Worker | null = null;
+  protected _port: MessagePoster | null = null;
 
   protected _webWorker: Worker | null = null;
 
@@ -2608,11 +2653,9 @@ class PDFWorker {
         // The worker was already loaded using e.g. a `<script>` tag.
         return this.#mainThreadWorkerMessageHandler;
       }
-      const worker =
-        typeof PDFJSDev === "undefined"
-          ? await import("pdfjs/pdf.worker.js")
-          : await __non_webpack_import__(this.workerSrc);
-      return worker.WorkerMessageHandler;
+      // 根据测试和正式环境，决定使用不同的WorkerMessageHandler
+      // 此处去掉了判断，直接去正式环境的
+      return WorkerMessageHandler;
     };
 
     return shadow(this, "_setupFakeWorkerGlobal", loader());
@@ -2774,7 +2817,7 @@ class WorkerTransport {
     isOpList = false
   ) {
     let renderingIntent = RenderingIntentFlag.DISPLAY; // Default value.
-    let annotationStorageSerializable = SerializableEmpty;
+    let annotationStorageSerializable: AnnotationStorageSerializable = SerializableEmpty;
 
     switch (intent) {
       case "any":
@@ -3496,12 +3539,13 @@ export class PDFObjects {
  * Allows controlling of the rendering tasks.
  */
 class RenderTask {
-  #internalRenderTask: InternalRenderTask;
+
+  protected _internalRenderTask: InternalRenderTask;
 
   onContinue: ((fn: () => void) => void) | null;
 
   constructor(internalRenderTask: InternalRenderTask) {
-    this.#internalRenderTask = internalRenderTask;
+    this._internalRenderTask = internalRenderTask;
 
     /**
      * Callback for incremental rendering -- a function that will be called
@@ -3517,7 +3561,7 @@ class RenderTask {
    * @type {Promise<void>}
    */
   get promise() {
-    return this.#internalRenderTask.capability.promise;
+    return this._internalRenderTask.capability.promise;
   }
 
   /**
@@ -3528,7 +3572,7 @@ class RenderTask {
    * @param {number} [extraDelay]
    */
   cancel(extraDelay: number = 0) {
-    this.#internalRenderTask.cancel(/* error = */ null, extraDelay);
+    this._internalRenderTask.cancel(/* error = */ null, extraDelay);
   }
 
   /**
@@ -3536,14 +3580,14 @@ class RenderTask {
    * @type {boolean}
    */
   get separateAnnots() {
-    const { separateAnnots } = this.#internalRenderTask.operatorList;
+    const { separateAnnots } = this._internalRenderTask.operatorList;
     if (!separateAnnots) {
       return false;
     }
-    const { annotationCanvasMap } = this.#internalRenderTask;
+    const { annotationCanvasMap } = this._internalRenderTask;
     return (
       separateAnnots.form ||
-      (separateAnnots.canvas && annotationCanvasMap?.size > 0)
+      (separateAnnots.canvas && annotationCanvasMap && annotationCanvasMap.size > 0)
     );
   }
 }
@@ -3554,37 +3598,9 @@ interface InternalRenderTaskParameter {
 
   viewport: PageViewport;
 
-  transform: Array<any> | null;
+  transform: TransformType | null;
 
   background: CanvasGradient | CanvasPattern | string | null;
-
-}
-
-interface InternalRenderTaskOption {
-
-  callback: (err?: Error) => void;
-
-  params: InternalRenderTaskParameter;
-
-  objs: PDFObjects;
-
-  commonObjs: PDFObjects;
-
-  annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
-
-  operatorList;
-
-  pageIndex: number;
-
-  canvasFactory: CanvasFactory,
-
-  filterFactory: FilterFactory,
-
-  useRequestAnimationFrame: boolean,
-
-  pdfBug: boolean,
-
-  pageColors: Object | null,
 
 }
 
@@ -3606,11 +3622,11 @@ class InternalRenderTask {
 
   protected commonObjs: PDFObjects;
 
-  protected annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
+  public annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
 
-  protected operatorListIdx;
+  protected operatorListIdx: number | null = null;
 
-  protected operatorList;
+  public operatorList: IntentStateOperatorList;
 
   protected _pageIndex: number;
 
@@ -3620,7 +3636,7 @@ class InternalRenderTask {
 
   protected _pdfBug: boolean;
 
-  protected pageColors: object | null;
+  protected pageColors: { background: string; foreground: string; } | null;
 
   protected running = false;
 
@@ -3648,20 +3664,20 @@ class InternalRenderTask {
 
   protected gfx: CanvasGraphics | null = null;
 
-  constructor({
-    callback,
-    params,
-    objs,
-    commonObjs,
-    annotationCanvasMap,
-    operatorList,
-    pageIndex,
-    canvasFactory,
-    filterFactory,
+  constructor(
+    callback: (err?: Error) => void,
+    params: InternalRenderTaskParameter,
+    objs: PDFObjects,
+    commonObjs: PDFObjects,
+    annotationCanvasMap: Map<string, HTMLCanvasElement> | null,
+    operatorList: IntentStateOperatorList,
+    pageIndex: number,
+    canvasFactory: CanvasFactory,
+    filterFactory: FilterFactory,
     useRequestAnimationFrame = false,
     pdfBug = false,
-    pageColors = null,
-  }: InternalRenderTaskOption) {
+    pageColors: { background: string; foreground: string; } | null = null,
+  ) {
     this.callback = callback;
     this.params = params;
     this.objs = objs;
@@ -3700,7 +3716,7 @@ class InternalRenderTask {
     });
   }
 
-  initializeGraphics({ transparency = false, optionalContentConfig }) {
+  initializeGraphics(transparency: boolean, optionalContentConfig: OptionalContentConfig) {
     if (this.cancelled) {
       return;
     }
@@ -3715,11 +3731,6 @@ class InternalRenderTask {
       InternalRenderTask.#canvasInUse.add(this._canvas);
     }
 
-    if (this._pdfBug && globalThis.StepperManager?.enabled) {
-      this.stepper = globalThis.StepperManager.create(this._pageIndex);
-      this.stepper.init(this.operatorList);
-      this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
-    }
     const { canvasContext, viewport, transform, background } = this.params;
 
     this.gfx = new CanvasGraphics(
@@ -3732,12 +3743,7 @@ class InternalRenderTask {
       this.annotationCanvasMap,
       this.pageColors
     );
-    this.gfx.beginDrawing({
-      transform,
-      viewport,
-      transparency,
-      background,
-    });
+    this.gfx.beginDrawing(transform, viewport, transparency, background);
     this.operatorListIdx = 0;
     this.graphicsReady = true;
     this.graphicsReadyCallback?.();
@@ -3767,8 +3773,6 @@ class InternalRenderTask {
       this.graphicsReadyCallback ||= this._continueBound;
       return;
     }
-    this.stepper?.updateOperatorList(this.operatorList);
-
     if (this.running) {
       return;
     }
@@ -3804,9 +3808,8 @@ class InternalRenderTask {
     }
     this.operatorListIdx = this.gfx!.executeOperatorList(
       this.operatorList,
-      this.operatorListIdx,
-      this._continueBound,
-      this.stepper
+      this.operatorListIdx!,
+      this._continueBound
     );
     if (this.operatorListIdx === this.operatorList.argsArray.length) {
       this.running = false;
@@ -3819,10 +3822,6 @@ class InternalRenderTask {
     }
   }
 }
-
-export const version: string = PlatformHelper.bundleVersion();
-
-export const build: string = PlatformHelper.bundleBuild();
 
 export {
   DefaultCanvasFactory,

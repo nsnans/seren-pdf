@@ -76,13 +76,16 @@ class OptionalContentGroup {
 }
 
 class OptionalContentConfig {
-  #cachedGetHash = null;
 
-  #groups = new Map();
+  protected _cachedGetHash = null;
 
-  #initialHash: string | null = null;
+  protected _groups = new Map();
 
-  #order = null;
+  protected _initialHash: string | null = null;
+
+  protected _order = null;
+
+  public renderingIntent: number;
 
   constructor(data, renderingIntent = RenderingIntentFlag.DISPLAY) {
     this.renderingIntent = renderingIntent;
@@ -95,30 +98,30 @@ class OptionalContentConfig {
     }
     this.name = data.name;
     this.creator = data.creator;
-    this.#order = data.order;
+    this._order = data.order;
     for (const group of data.groups) {
-      this.#groups.set(
+      this._groups.set(
         group.id,
         new OptionalContentGroup(renderingIntent, group)
       );
     }
 
     if (data.baseState === "OFF") {
-      for (const group of this.#groups.values()) {
+      for (const group of this._groups.values()) {
         group._setVisible(INTERNAL, false);
       }
     }
 
     for (const on of data.on) {
-      this.#groups.get(on)._setVisible(INTERNAL, true);
+      this._groups.get(on)._setVisible(INTERNAL, true);
     }
 
     for (const off of data.off) {
-      this.#groups.get(off)._setVisible(INTERNAL, false);
+      this._groups.get(off)._setVisible(INTERNAL, false);
     }
 
     // The following code must always run *last* in the constructor.
-    this.#initialHash = this.getHash();
+    this._initialHash = this.getHash();
   }
 
   #evaluateVisibilityExpression(array) {
@@ -132,8 +135,8 @@ class OptionalContentConfig {
       let state;
       if (Array.isArray(element)) {
         state = this.#evaluateVisibilityExpression(element);
-      } else if (this.#groups.has(element)) {
-        state = this.#groups.get(element).visible;
+      } else if (this._groups.has(element)) {
+        state = this._groups.get(element).visible;
       } else {
         warn(`Optional content group not found: ${element}`);
         return true;
@@ -159,7 +162,7 @@ class OptionalContentConfig {
   }
 
   isVisible(group) {
-    if (this.#groups.size === 0) {
+    if (this._groups.size === 0) {
       return true;
     }
     if (!group) {
@@ -167,11 +170,11 @@ class OptionalContentConfig {
       return true;
     }
     if (group.type === "OCG") {
-      if (!this.#groups.has(group.id)) {
+      if (!this._groups.has(group.id)) {
         warn(`Optional content group not found: ${group.id}`);
         return true;
       }
-      return this.#groups.get(group.id).visible;
+      return this._groups.get(group.id).visible;
     } else if (group.type === "OCMD") {
       // Per the spec, the expression should be preferred if available.
       if (group.expression) {
@@ -180,44 +183,44 @@ class OptionalContentConfig {
       if (!group.policy || group.policy === "AnyOn") {
         // Default
         for (const id of group.ids) {
-          if (!this.#groups.has(id)) {
+          if (!this._groups.has(id)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (this.#groups.get(id).visible) {
+          if (this._groups.get(id).visible) {
             return true;
           }
         }
         return false;
       } else if (group.policy === "AllOn") {
         for (const id of group.ids) {
-          if (!this.#groups.has(id)) {
+          if (!this._groups.has(id)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (!this.#groups.get(id).visible) {
+          if (!this._groups.get(id).visible) {
             return false;
           }
         }
         return true;
       } else if (group.policy === "AnyOff") {
         for (const id of group.ids) {
-          if (!this.#groups.has(id)) {
+          if (!this._groups.has(id)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (!this.#groups.get(id).visible) {
+          if (!this._groups.get(id).visible) {
             return true;
           }
         }
         return false;
       } else if (group.policy === "AllOff") {
         for (const id of group.ids) {
-          if (!this.#groups.has(id)) {
+          if (!this._groups.has(id)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (this.#groups.get(id).visible) {
+          if (this._groups.get(id).visible) {
             return false;
           }
         }
@@ -231,7 +234,7 @@ class OptionalContentConfig {
   }
 
   setVisibility(id, visible = true, preserveRB = true) {
-    const group = this.#groups.get(id);
+    const group = this._groups.get(id);
     if (!group) {
       warn(`Optional content group not found: ${id}`);
       return;
@@ -244,7 +247,7 @@ class OptionalContentConfig {
       for (const rbGroup of group.rbGroups) {
         for (const otherId of rbGroup) {
           if (otherId !== id) {
-            this.#groups.get(otherId)?._setVisible(INTERNAL, false, true);
+            this._groups.get(otherId)?._setVisible(INTERNAL, false, true);
           }
         }
       }
@@ -252,7 +255,7 @@ class OptionalContentConfig {
 
     group._setVisible(INTERNAL, !!visible, /* userSet = */ true);
 
-    this.#cachedGetHash = null;
+    this._cachedGetHash = null;
   }
 
   setOCGState({ state, preserveRB }) {
@@ -267,7 +270,7 @@ class OptionalContentConfig {
           continue;
       }
 
-      const group = this.#groups.get(elem);
+      const group = this._groups.get(elem);
       if (!group) {
         continue;
       }
@@ -284,41 +287,41 @@ class OptionalContentConfig {
       }
     }
 
-    this.#cachedGetHash = null;
+    this._cachedGetHash = null;
   }
 
   get hasInitialVisibility() {
-    return this.#initialHash === null || this.getHash() === this.#initialHash;
+    return this._initialHash === null || this.getHash() === this._initialHash;
   }
 
   getOrder() {
-    if (!this.#groups.size) {
+    if (!this._groups.size) {
       return null;
     }
-    if (this.#order) {
-      return this.#order.slice();
+    if (this._order) {
+      return this._order.slice();
     }
-    return [...this.#groups.keys()];
+    return [...this._groups.keys()];
   }
 
   getGroups() {
-    return this.#groups.size > 0 ? objectFromMap(this.#groups) : null;
+    return this._groups.size > 0 ? objectFromMap(this._groups) : null;
   }
 
   getGroup(id) {
-    return this.#groups.get(id) || null;
+    return this._groups.get(id) || null;
   }
 
   getHash() {
-    if (this.#cachedGetHash !== null) {
-      return this.#cachedGetHash;
+    if (this._cachedGetHash !== null) {
+      return this._cachedGetHash;
     }
     const hash = new MurmurHash3_64();
 
-    for (const [id, group] of this.#groups) {
+    for (const [id, group] of this._groups) {
       hash.update(`${id}:${group.visible}`);
     }
-    return (this.#cachedGetHash = hash.hexdigest());
+    return (this._cachedGetHash = hash.hexdigest());
   }
 }
 
