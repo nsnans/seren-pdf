@@ -1495,36 +1495,6 @@ interface RenderParameters {
   isEditing: boolean;
 }
 
-
-/**
- * Page getOperatorList parameters.
- */
-interface GetOperatorListParameters {
-
-  /* Rendering intent, can be 'display', 'print', or 'any'. The default value is 'display'.*/
-  intent: string;
-
-  /**
-   * Controls which annotations are included in the operatorList, for annotations with appearance-data; 
-   * the values from {@link AnnotationMode} should be used. The following values are supported:
-   *   - `AnnotationMode.DISABLE`, which disables all annotations.
-   *   - `AnnotationMode.ENABLE`, which includes all possible annotations (thus
-   *     it also depends on the `intent`-option, see above).
-   *   - `AnnotationMode.ENABLE_FORMS`, which excludes annotations that contain
-   *     interactive form elements (those will be rendered in the display layer).
-   *   - `AnnotationMode.ENABLE_STORAGE`, which includes all possible annotations
-   *     (as above) but where interactive form elements are updated with data
-   *     from the {@link AnnotationStorage}-instance; useful e.g. for printing.
-   * The default value is `AnnotationMode.ENABLE`. 
-   * */
-  annotationMode: number;
-
-  printAnnotationStorage: PrintAnnotationStorage | null;
-
-  /* Render the page in editing mode. */
-  isEditing: boolean
-}
-
 /**
  * Structure tree content.
  */

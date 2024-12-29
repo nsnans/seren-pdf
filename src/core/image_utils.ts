@@ -83,7 +83,7 @@ export interface ImageMaskXObject {
 }
 
 export interface ImageCacheData {
-  objId?: string | null;
+  objId: string | null;
   fn: OPS;
   args: ImageMask[] | ImageMaskXObject[] | (string | number)[];
   optionalContent: OptionalContent | null;
@@ -228,7 +228,7 @@ class GlobalImageCache {
 
   protected _refCache = new RefSetCache<string | Ref, Set<number>>();
 
-  protected _imageCache = new RefSetCache();
+  protected _imageCache = new RefSetCache<string, GlobalImageCacheData>();
 
   constructor() {
     if (PlatformHelper.isTesting()) {
@@ -304,7 +304,7 @@ class GlobalImageCache {
     if (pageIndexSet.size < GlobalImageCache.NUM_PAGES_THRESHOLD) {
       return null;
     }
-    const imageData = this._imageCache.get(ref);
+    const imageData = this._imageCache.get(ref.toString());
     if (!imageData) {
       return null;
     }

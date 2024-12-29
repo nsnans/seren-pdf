@@ -267,7 +267,8 @@ function addLocallyCachedImageOps(opList: OperatorList, data: ImageCacheData) {
 }
 
 // Trying to minimize Date.now() usage and check every 100 time.
-class TimeSlotManager {
+export class TimeSlotManager {
+
   static TIME_SLOT_DURATION_MS = 20;
 
   static CHECK_TIME_EVERY = 100;
@@ -1813,10 +1814,8 @@ class PartialEvaluator {
         return {
           type: optionalContentType,
           ids: groupIds,
-          policy:
-            optionalContent.get(DictKey.P) instanceof Name
-              ? optionalContent.get(DictKey.P).name
-              : null,
+          policy: optionalContent.get(DictKey.P) instanceof Name
+            ? optionalContent.get(DictKey.P).name : null,
           expression: null,
         };
       } else if (optionalContentGroups instanceof Ref) {
@@ -1884,6 +1883,7 @@ class PartialEvaluator {
       timeSlotManager.reset();
 
       const operation: { fn?: OPS, args?: any[] | null } = {};
+      // 复用对象，可以节省资源
       let stop, i, ii, cs, name: string | null;
       let isValidName: boolean | null = null;
       while (!(stop = timeSlotManager.check())) {
@@ -1929,12 +1929,10 @@ class PartialEvaluator {
                   return;
                 }
 
-                const globalImage = self.globalImageCache.getData(
-                  xobj,
-                  self.pageIndex
-                );
+                const globalImage = self.globalImageCache.getData(xobj, self.pageIndex);
+
                 if (globalImage) {
-                  operatorList.addDependency(globalImage.objId);
+                  operatorList.addDependency(globalImage.objId!);
                   operatorList.addImageOps(
                     globalImage.fn,
                     globalImage.args,
@@ -2556,7 +2554,7 @@ class PartialEvaluator {
 
     function pushWhitespace(
       width = 0, height = 0, transform = textContentItem.prevTransform, fontName = textContentItem.fontName,
-    ) {
+    ): void {
       textContent.items.push({
         str: " ",
         dir: "ltr",
@@ -2777,12 +2775,7 @@ class PartialEvaluator {
           [lastPosX, lastPosY] = [lastPosY, lastPosX];
           break;
         case 180:
-          [posX, posY, lastPosX, lastPosY] = [
-            -posX,
-            -posY,
-            -lastPosX,
-            -lastPosY,
-          ];
+          [posX, posY, lastPosX, lastPosY] = [-posX, -posY, -lastPosX, -lastPosY];
           break;
         case 270:
           [posX, posY] = [-posY, -posX];
@@ -2796,9 +2789,7 @@ class PartialEvaluator {
           // a whitespace.
           [posX, posY] = applyInverseRotation(posX, posY, currentTransform);
           [lastPosX, lastPosY] = applyInverseRotation(
-            lastPosX,
-            lastPosY,
-            textContentItem.prevTransform
+            lastPosX, lastPosY, textContentItem.prevTransform
           );
       }
 
@@ -2810,10 +2801,8 @@ class PartialEvaluator {
         // then we're writing from bottom to top.
         const textOrientation = Math.sign(textContentItem.height);
         if (advanceY < textOrientation * textContentItem.negativeSpaceMax) {
-          if (
-            Math.abs(advanceX) >
-            0.5 * textContentItem.width /* not the same column */
-          ) {
+          /* not the same column */
+          if (Math.abs(advanceX) > 0.5 * textContentItem.width) {
             appendEOL();
             return true;
           }
@@ -2845,13 +2834,7 @@ class PartialEvaluator {
           } else {
             textContentItem.height += advanceY;
           }
-        } else if (
-          !addFakeSpaces(
-            advanceY,
-            textContentItem.prevTransform,
-            textOrientation
-          )
-        ) {
+        } else if (!addFakeSpaces(advanceY, textContentItem.prevTransform, textOrientation)) {
           if (textContentItem.str.length === 0) {
             resetLastChars();
             pushWhitespace(0, Math.abs(advanceY));
@@ -2874,10 +2857,8 @@ class PartialEvaluator {
       // then we're writing from right to left.
       const textOrientation = Math.sign(textContentItem.width);
       if (advanceX < textOrientation * textContentItem.negativeSpaceMax) {
-        if (
-          Math.abs(advanceY) >
-          0.5 * textContentItem.height /* not the same line */
-        ) {
+        /* not the same line */
+        if (Math.abs(advanceY) > 0.5 * textContentItem.height) {
           appendEOL();
           return true;
         }
@@ -2911,9 +2892,7 @@ class PartialEvaluator {
         } else {
           textContentItem.width += advanceX;
         }
-      } else if (
-        !addFakeSpaces(advanceX, textContentItem.prevTransform, textOrientation)
-      ) {
+      } else if (!addFakeSpaces(advanceX, textContentItem.prevTransform, textOrientation)) {
         if (textContentItem.str.length === 0) {
           resetLastChars();
           pushWhitespace(Math.abs(advanceX));
@@ -2936,10 +2915,7 @@ class PartialEvaluator {
         const charSpacing = textState!.charSpacing + extraSpacing;
         if (charSpacing) {
           if (!font!.vertical) {
-            textState!.translateTextMatrix(
-              charSpacing * textState!.textHScale,
-              0
-            );
+            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
           } else {
             textState!.translateTextMatrix(0, -charSpacing);
           }
@@ -2962,8 +2938,7 @@ class PartialEvaluator {
         if (category.isInvisibleFormatMark) {
           continue;
         }
-        let charSpacing =
-          textState!.charSpacing + (i + 1 === ii ? extraSpacing : 0);
+        let charSpacing = textState!.charSpacing + (i + 1 === ii ? extraSpacing : 0);
 
         let glyphWidth = glyph.width;
         if (font!.vertical) {
@@ -2979,10 +2954,7 @@ class PartialEvaluator {
           // This way we can merge real spaces and spaces due to cursor moves.
           if (!font!.vertical) {
             charSpacing += scaledDim + textState!.wordSpacing;
-            textState!.translateTextMatrix(
-              charSpacing * textState!.textHScale,
-              0
-            );
+            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
           } else {
             charSpacing += -scaledDim + textState!.wordSpacing;
             textState!.translateTextMatrix(0, -charSpacing);
@@ -2991,10 +2963,7 @@ class PartialEvaluator {
           continue;
         }
 
-        if (
-          !category.isZeroWidthDiacritic &&
-          !compareWithLastPosition(scaledDim)
-        ) {
+        if (!category.isZeroWidthDiacritic && !compareWithLastPosition(scaledDim)) {
           // The glyph is not in page so just skip it but move the cursor.
           if (!font!.vertical) {
             textState!.translateTextMatrix(scaledDim * textState!.textHScale, 0);
@@ -3039,10 +3008,7 @@ class PartialEvaluator {
 
         if (charSpacing) {
           if (!font!.vertical) {
-            textState!.translateTextMatrix(
-              charSpacing * textState!.textHScale,
-              0
-            );
+            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
           } else {
             textState!.translateTextMatrix(0, -charSpacing);
           }
@@ -3131,7 +3097,7 @@ class PartialEvaluator {
 
     const timeSlotManager = new TimeSlotManager();
 
-    return new Promise(function promiseBody(resolve, reject) {
+    return new Promise<void>(function promiseBody(resolve, reject) {
       const next = function (promise: Promise<unknown>) {
         enqueueChunk(true);
         Promise.all([promise, sink.ready]).then(() => {
@@ -4872,7 +4838,7 @@ class TranslatedFont {
   }
 }
 
-class StateManager {
+export class StateManager {
 
   public state: State;
 
@@ -4987,7 +4953,7 @@ class TextState implements State {
   }
 }
 
-interface State {
+export interface State {
   font: Font | ErrorFont | null;
   ctm: Float32Array | number[];
   textRenderingMode: number | null;
@@ -4998,7 +4964,7 @@ interface State {
   clone(): State;
 }
 
-class EvalState implements State {
+export class EvalState implements State {
 
   public ctm: Float32Array;
 
@@ -5222,7 +5188,7 @@ class EvaluatorPreprocessor {
   // These two modes are present because this function is very hot and so
   // avoiding allocations where possible is worthwhile.
   //
-  read(operation: { fn?: OPS, args?: any[] | null }) {
+  read(operation: { fn: OPS | null, args: any[] | null }) {
     let args = operation.args;
     while (true) {
       const obj = this.parser.getObj();
