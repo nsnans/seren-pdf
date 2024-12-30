@@ -253,7 +253,7 @@ function isBooleanArray(arr: unknown, len: number | null): boolean {
  * @param {number | null} len
  * @returns {boolean}
  */
-function isNumberArray(arr: unknown, len: number | null) {
+function isNumberArray(arr: unknown, len: number | null): arr is number[] {
   if (Array.isArray(arr)) {
     return (
       (len === null || arr.length === len) &&

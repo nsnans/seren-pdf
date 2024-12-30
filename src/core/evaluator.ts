@@ -255,7 +255,7 @@ function normalizeBlendMode(value: Name | Name[], parsingArray = false): string 
   return "source-over";
 }
 
-function addLocallyCachedImageOps(opList: OperatorList, data: ImageCacheData) {
+export function addLocallyCachedImageOps(opList: OperatorList, data: ImageCacheData) {
   if (data.objId) {
     opList.addDependency(data.objId);
   }

@@ -700,7 +700,7 @@ export class OperatorList {
   }
 
   // args为某种类型的数组或null
-  addOp(fn: OPS, args: OPSArgsType[OPS]) {
+  addOp(fn: OPS, args: any[]) {
     this.optimizer.push(fn, args);
     this.weight++;
     if (this._streamSink) {
@@ -716,7 +716,7 @@ export class OperatorList {
     }
   }
 
-  addImageOps(fn: OPS, args: OPSArgsType[OPS], optionalContent: OptionalContent | null) {
+  addImageOps(fn: OPS, args: any[], optionalContent: OptionalContent | null) {
     if (optionalContent !== undefined) {
       this.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
