@@ -28,7 +28,7 @@ import { Dict, DictKey, Ref, RefSet, RefSetCache } from "./primitives";
 
 abstract class BaseLocalCache<T> {
 
-  protected _imageCache = new RefSetCache();
+  protected _imageCache = new RefSetCache<Ref | string, T>();
 
   constructor() {
     if (PlatformHelper.isTesting() && this.constructor === BaseLocalCache) {
@@ -36,7 +36,7 @@ abstract class BaseLocalCache<T> {
     }
   }
 
-  getByRef(ref: Ref | string) {
+  getByRef(ref: Ref | string): T | null {
     return this._imageCache.get(ref) || null;
   }
 
@@ -49,8 +49,8 @@ abstract class NameLocalCache<DATA> extends BaseLocalCache<DATA> {
 
   protected _imageMap: Map<string | null, DATA> = new Map();
 
-  getByName(name: string | null) {
-    const ref = this._nameRefMap.get(name);
+  getByName(name: string | null): DATA | null {
+    const ref = this._nameRefMap.get(name) ?? null;
     if (ref) {
       return this.getByRef(ref);
     }
@@ -83,7 +83,7 @@ export interface ImageMaskXObject {
 }
 
 export interface ImageCacheData {
-  objId: string | null;
+  objId?: string | null;
   fn: OPS;
   args: ImageMask[] | ImageMaskXObject[] | (string | number)[];
   optionalContent: OptionalContent | null;
@@ -93,9 +93,9 @@ export interface GlobalImageCacheData extends ImageCacheData {
   byteSize: number;
 }
 
-class LocalImageCache extends NameLocalCache<ImageCacheData | boolean> {
+class LocalImageCache extends NameLocalCache<ImageCacheData> {
 
-  set(name: string, ref: string | null, data: ImageCacheData | boolean) {
+  set(name: string, ref: string | null, data: ImageCacheData) {
     if (typeof name !== "string") {
       throw new Error('LocalImageCache.set - expected "name" argument.');
     }
@@ -229,15 +229,6 @@ class GlobalImageCache {
   protected _refCache = new RefSetCache<string | Ref, Set<number>>();
 
   protected _imageCache = new RefSetCache<string, GlobalImageCacheData>();
-
-  constructor() {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        GlobalImageCache.NUM_PAGES_THRESHOLD > 1,
-        "GlobalImageCache - invalid NUM_PAGES_THRESHOLD constant."
-      );
-    }
-  }
 
   get #byteSize() {
     let byteSize = 0;

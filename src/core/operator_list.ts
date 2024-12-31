@@ -700,7 +700,7 @@ export class OperatorList {
   }
 
   // args为某种类型的数组或null
-  addOp(fn: OPS, args: any[]) {
+  addOp(fn: OPS, args: any[] | null) {
     this.optimizer.push(fn, args);
     this.weight++;
     if (this._streamSink) {

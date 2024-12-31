@@ -194,7 +194,7 @@ const TEXT_CHUNK_BATCH_SIZE = 10;
 const deferred = Promise.resolve();
 
 // Convert PDF blend mode names to HTML5 blend mode names.
-function normalizeBlendMode(value: Name | Name[], parsingArray = false): string | null {
+export function normalizeBlendMode(value: Name | Name[], parsingArray = false): string | null {
   if (Array.isArray(value)) {
     // Use the first *supported* BM value in the Array (fixes issue11279.pdf).
     for (const val of value) {
@@ -540,9 +540,7 @@ class PartialEvaluator {
     // The symbol fonts are not consistent across platforms, always load the
     // standard font data for them.
     if (
-      this.options.useSystemFonts &&
-      name !== "Symbol" &&
-      name !== "ZapfDingbats"
+      this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats"
     ) {
       return null;
     }
@@ -4620,7 +4618,7 @@ class PartialEvaluator {
   }
 }
 
-class TranslatedFont {
+export class TranslatedFont {
 
   protected sent = false;
 
