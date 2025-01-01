@@ -752,12 +752,14 @@ class PDFImage {
     };
 
     const numComps = this.numComps!;
-    const originalWidth = this.width;
-    const originalHeight = this.height;
+    // original width
+    const oriWidth = this.width;
+    // original height
+    const oriHeight = this.height;
     const bpc = this.bpc;
 
     // Rows start at byte boundary.
-    const rowBytes = (originalWidth * numComps * bpc + 7) >> 3;
+    const rowBytes = (oriWidth * numComps * bpc + 7) >> 3;
     const mustBeResized =
       isOffscreenCanvasSupported &&
       ImageResizer.needsToBeResized(drawWidth, drawHeight);
@@ -765,8 +767,7 @@ class PDFImage {
     if (!this.smask && !this.mask && this.colorSpace!.name === "DeviceRGBA") {
       imgData.kind = ImageKind.RGBA_32BPP;
       const imgArray = (imgData.data = await this.getImageBytes(
-        originalHeight * originalWidth * 4,
-        {}
+        oriHeight * oriWidth * 4,
       ));
 
       if (isOffscreenCanvasSupported) {
@@ -806,14 +807,14 @@ class PDFImage {
         kind &&
         !this.smask &&
         !this.mask &&
-        drawWidth === originalWidth &&
-        drawHeight === originalHeight
+        drawWidth === oriWidth &&
+        drawHeight === oriHeight
       ) {
-        const image = await this.#getImage(originalWidth, originalHeight);
+        const image = await this.#getImage(oriWidth, oriHeight);
         if (image) {
           return image;
         }
-        const data = await this.getImageBytes(originalHeight * rowBytes, {});
+        const data = await this.getImageBytes(oriHeight * rowBytes, {});
         if (isOffscreenCanvasSupported) {
           if (mustBeResized) {
             return ImageResizer.createImage(
@@ -827,7 +828,7 @@ class PDFImage {
               this.needsDecode
             );
           }
-          return this.createBitmap(kind, originalWidth, originalHeight, <Uint8ClampedArray>data);
+          return this.createBitmap(kind, oriWidth, oriHeight, <Uint8ClampedArray>data);
         }
         imgData.kind = kind;
         imgData.data = data;
@@ -851,7 +852,7 @@ class PDFImage {
         !this.mask &&
         !this.needsDecode
       ) {
-        let imageLength = originalHeight * rowBytes;
+        let imageLength = oriHeight * rowBytes;
         if (isOffscreenCanvasSupported && !mustBeResized) {
           let isHandled = false;
           switch (this.colorSpace!.name) {
@@ -910,12 +911,12 @@ class PDFImage {
       }
     }
 
-    const imgArray = await this.getImageBytes(originalHeight * rowBytes, {
+    const imgArray = await this.getImageBytes(oriHeight * rowBytes, {
       internal: true,
     });
     // imgArray can be incomplete (e.g. after CCITT fax encoding).
     const actualHeight =
-      0 | (((imgArray.length / rowBytes) * drawHeight) / originalHeight);
+      0 | (((imgArray.length / rowBytes) * drawHeight) / oriHeight);
 
     const comps = this.getComponents(imgArray);
 
@@ -923,12 +924,12 @@ class PDFImage {
     // more compact RGB_24BPP form if allowable.
     let alpha01, maybeUndoPreblend;
 
-    let canvas, ctx, canvasImgData, data;
+    let canvas, ctx, canvasImgData, data: Uint8ClampedArray<ArrayBuffer>;
     if (isOffscreenCanvasSupported && !mustBeResized) {
       canvas = new OffscreenCanvas(drawWidth, drawHeight);
       ctx = canvas.getContext("2d")!;
       canvasImgData = ctx.createImageData(drawWidth, drawHeight);
-      data = canvasImgData.data;
+      data =<Uint8ClampedArray<ArrayBuffer>>canvasImgData.data;
     }
 
     imgData.kind = ImageKind.RGBA_32BPP;
@@ -961,8 +962,8 @@ class PDFImage {
     }
     this.colorSpace!.fillRgb(
       data!,
-      originalWidth,
-      originalHeight,
+      oriWidth,
+      oriHeight,
       drawWidth,
       drawHeight,
       actualHeight,

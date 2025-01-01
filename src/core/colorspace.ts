@@ -35,7 +35,7 @@ import { Stream } from "./stream";
 
 /**
  * Resizes an RGB image with 3 components.
- * @param src - The source buffer.
+ * @param src - The source buffer. 专用的函数，可以考虑不要用MutableArray<number>
  * @param dest - The destination buffer.
  * @param w1 - Original width.
  * @param h1 - Original height.
@@ -69,6 +69,7 @@ function resizeRgbImage(src: MutableArray<number>, dest: MutableArray<number>, w
   }
 }
 
+// 专用的函数，可以考虑不要用MutableArray<number>
 function resizeRgbaImage(
   src: MutableArray<number>, dest: MutableArray<number>,
   w1: number, h1: number, w2: number, h2: number, alpha01: number
@@ -210,7 +211,7 @@ class ColorSpace {
    * 0 (RGB array) or 1 (RGBA array).
    */
   fillRgb(
-    dest: MutableArray<number>, oriWidth: number, oriHeight: number,
+    dest: Uint8ClampedArray<ArrayBuffer>, oriWidth: number, oriHeight: number,
     width: number, height: number, actualHeight: number, bpc: number,
     comps: MutableArray<number>, alpha01: number
   ) {
@@ -872,7 +873,7 @@ class DeviceRgbaCS extends ColorSpace {
   }
 
   fillRgb(
-    dest: MutableArray<number>,
+    dest: Uint8ClampedArray,
     originalWidth: number,
     originalHeight: number,
     width: number,
@@ -920,7 +921,7 @@ class DeviceCmykCS extends ColorSpace {
   // from CMYK US Web Coated (SWOP) colorspace, and f_i is the corresponding
   // CMYK color conversion using the estimation below:
   //   f(A, B,.. N) = Acc+Bcm+Ccy+Dck+c+Fmm+Gmy+Hmk+Im+Jyy+Kyk+Ly+Mkk+Nk+255
-  #toRgb(src: TypedArray, srcOffset: number, srcScale: number, dest: TypedArray, destOffset: number) {
+  #toRgb(src: MutableArray<number>, srcOffset: number, srcScale: number, dest: MutableArray<number>, destOffset: number) {
     const c = src[srcOffset] * srcScale;
     const m = src[srcOffset + 1] * srcScale;
     const y = src[srcOffset + 2] * srcScale;
@@ -989,14 +990,10 @@ class DeviceCmykCS extends ColorSpace {
     this.#toRgb(src, srcOffset, 1, dest, destOffset);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'DeviceCmykCS.getRgbBuffer: Unsupported "dest" type.'
-      );
-    }
+  getRgbBuffer(
+    src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number
+  ) {
     const scale = 1 / ((1 << bits) - 1);
     for (let i = 0; i < count; i++) {
       this.#toRgb(src, srcOffset, scale, dest, destOffset);
@@ -1070,7 +1067,7 @@ class CalGrayCS extends ColorSpace {
     }
   }
 
-  #toRgb(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number, scale: number) {
+  #toRgb(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number, scale: number) {
     // A represents a gray component of a calibrated gray space.
     // A <---> AG in the spec
     const A = src[srcOffset] * scale;
@@ -1087,7 +1084,7 @@ class CalGrayCS extends ColorSpace {
     dest[destOffset + 2] = val;
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -1097,14 +1094,10 @@ class CalGrayCS extends ColorSpace {
     this.#toRgb(src, srcOffset, dest, destOffset, 1);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'CalGrayCS.getRgbBuffer: Unsupported "dest" type.'
-      );
-    }
+  getRgbBuffer(
+    src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number
+  ) {
     const scale = 1 / ((1 << bits) - 1);
 
     for (let i = 0; i < count; ++i) {
