@@ -26,8 +26,9 @@ import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
 import { XRef } from "./xref";
+import { MutableArray } from "../types";
 
-export type ParserConstructFunction = (src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) => void;
+export type ParserConstructFunction = (src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) => void;
 
 class PDFFunctionFactory {
 
@@ -40,7 +41,7 @@ class PDFFunctionFactory {
     this.isEvalSupported = isEvalSupported !== false;
   }
 
-  create(fn: Ref | Dict | BaseStream) {
+  create(fn: Ref | Dict | BaseStream): ParserConstructFunction {
     const cachedFunction = this.getCached(fn);
     if (cachedFunction) {
       return cachedFunction;
@@ -95,7 +96,7 @@ class PDFFunctionFactory {
   /**
    * @private
    */
-  _cache(cacheKey: Ref | Dict | BaseStream, parsedFunction: Function) {
+  _cache(cacheKey: Ref | Dict | BaseStream, parsedFunction: ParserConstructFunction) {
     if (!parsedFunction) {
       throw new Error(
         'PDFFunctionFactory._cache - expected "parsedFunction" argument.'
@@ -118,7 +119,7 @@ class PDFFunctionFactory {
    * @private
    */
   get _localFunctionCache() {
-    return shadow(this, "_localFunctionCache", new LocalFunctionCache());
+    return shadow(this, "_localFunctionCache", new LocalFunctionCache<ParserConstructFunction>());
   }
 }
 
@@ -195,16 +196,19 @@ class PDFFunction {
         this.parse(xref, isEvalSupported, xref.fetchIfRef(fn))
       );
     }
-    return function (src: Float32Array, srcOffset: number,
-      dest: Float32Array, destOffset: number) {
+    return (
+      src: MutableArray<number>, srcOffset: number,
+      dest: MutableArray<number>, destOffset: number
+    ) => {
       for (let i = 0, ii = fnArray.length; i < ii; i++) {
         fnArray[i](src, srcOffset, dest, destOffset + i);
       }
     };
   }
 
-  static constructSampled(_xref: XRef, _isEvalSupported: boolean, fn: BaseStream, dict: Dict)
-    : ParserConstructFunction {
+  static constructSampled(
+    _xref: XRef, _isEvalSupported: boolean, fn: BaseStream, dict: Dict
+  ): ParserConstructFunction {
     function toMultiArray(arr: number[]) {
       const inputLength = arr.length;
       const out: [number, number][] = [];
@@ -375,8 +379,11 @@ class PDFFunction {
     const encode = toNumberArray(dict.getArrayValue(DictKey.Encode))!;
     const tmpBuf = new Float32Array(1);
 
-    return function constructStichedFn(src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) {
-      const clip = function constructStichedFromIRClip(v: number, min: number, max: number) {
+    return (
+      src: MutableArray<number>, srcOffset: number,
+      dest: MutableArray<number>, destOffset: number
+    ) => {
+      const clip = (v: number, min: number, max: number) {
         if (v > max) {
           v = max;
         } else if (v < min) {
@@ -462,7 +469,7 @@ class PDFFunction {
     let cache_available = MAX_CACHE_SIZE;
     const tmpBuf = new Float32Array(numInputs);
 
-    return function constructPostScriptFn(src, srcOffset, dest, destOffset) {
+    return (src, srcOffset, dest, destOffset) => {
       let i, value;
       let key = "";
       const input = tmpBuf;

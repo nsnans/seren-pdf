@@ -1,12 +1,18 @@
-import { RectType } from "../display/display_utils";
+import { DocumentEvaluatorOptions } from "../display/api";
+import { RectType, TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
-import { AbortException, FormatError, info, warn } from "../shared/util";
+import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
+import { AbortException, FormatError, info, TextRenderingMode, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
-import { isNumberArray } from "./core_utils";
-import { addLocallyCachedImageOps, EvalState, EvaluatorPreprocessor, normalizeBlendMode, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
-import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "./image_utils";
+import { ImageMask } from "./core_types";
+import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
+import { addLocallyCachedImageOps, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
+import { ErrorFont } from "./fonts";
+import { PDFImage } from "./image";
+import { GlobalImageCache, GroupOptions, ImageCacheData, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, OptionalContent, RegionalImageCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
+import { getTilingPatternIR, Pattern } from "./pattern";
 import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import { WorkerTask } from "./worker";
 import { XRef } from "./xref";
@@ -36,12 +42,6 @@ const OVER = 2;
 
 class Operator {
 
-  protected next: (promise: Promise<unknown>) => void;
-
-  constructor(next: (promise: Promise<unknown>) => void) {
-    this.next = next;
-  }
-
   static buildOperatorMap() {
     const map = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
     for (const [k, v] of MethodMap) {
@@ -53,8 +53,6 @@ class Operator {
     }
     return map;
   }
-
-
 
   @handle(OPS.paintXObject)
   static paintXObject(ctx: ProcessContext) {
@@ -109,13 +107,13 @@ class Operator {
 
       if (type.name === "Form") {
         ctx.stateManager.save();
-        Operator.buildFormXObject(ctx).then(() => {
+        this.buildFormXObject(ctx).then(() => {
           ctx.stateManager.restore();
           resolve();
         }, reject);
         return;
       } else if (type.name === "Image") {
-        Operator.buildPaintImageXObject(ctx).then(resolve, reject);
+        this.buildPaintImageXObject(ctx).then(resolve, reject);
         return;
       } else if (type.name === "PS") {
         // PostScript XObjects are unused when viewing documents.
@@ -143,9 +141,7 @@ class Operator {
   @handle(OPS.setFont)
   static setFont(ctx: ProcessContext) {
     const fontSize = ctx.args![1];
-    ctx.next(Operator.handleSetFont(
-
-    ).then(loadedName => {
+    ctx.next(this.handleSetFont(ctx).then(loadedName => {
       ctx.operatorList.addDependency(loadedName);
       ctx.operatorList.addOp(OPS.setFont, [loadedName, fontSize])
     }));
@@ -171,7 +167,7 @@ class Operator {
         return
       }
     }
-    ctx.next(Operator.buildPaintImageXObject(ctx))
+    ctx.next(this.buildPaintImageXObject(ctx))
     return OVER
   }
 
@@ -181,9 +177,7 @@ class Operator {
       Operator.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
-    ctx.args![0] = Operator.handleText(
-      ctx.args![0], ctx.stateManager.state
-    );
+    ctx.args![0] = this.handleText(ctx, ctx.args![0], ctx.stateManager.state);
   }
 
   @handle(OPS.showSpacedText)
@@ -195,7 +189,7 @@ class Operator {
     const combinedGlyphs = [];
     for (const arrItem of ctx.args![0]) {
       if (typeof arrItem === "string") {
-        combinedGlyphs.push(...Operator.handleText(arrItem, state));
+        combinedGlyphs.push(...this.handleText(ctx, arrItem, ctx.stateManager.state));
       } else if (typeof arrItem === "number") {
         combinedGlyphs.push(arrItem);
       }
@@ -211,7 +205,7 @@ class Operator {
       return SKIP
     }
     ctx.operatorList.addOp(OPS.nextLine, null);
-    ctx.args![0] = Operator.handleText(ctx.args![0], ctx.stateManager.state);
+    ctx.args![0] = this.handleText(ctx, ctx.args![0], ctx.stateManager.state);
     ctx.fn = OPS.showText;
   }
 
@@ -224,7 +218,7 @@ class Operator {
     ctx.operatorList.addOp(OPS.nextLine, null);
     ctx.operatorList.addOp(OPS.setWordSpacing, [ctx.args!.shift()]);
     ctx.operatorList.addOp(OPS.setCharSpacing, [ctx.args!.shift()]);
-    ctx.args![0] = Operator.handleText(ctx.args![0], ctx.stateManager.state);
+    ctx.args![0] = this.handleText(ctx, ctx.args![0], ctx.stateManager.state);
     ctx.fn = OPS.showText;
   }
 
@@ -388,7 +382,7 @@ class Operator {
       }
       throw reason;
     }
-    const patternId = Operator.parseShading(ctx, shading);
+    const patternId = this.parseShading(ctx, shading);
     if (!patternId) {
       return SKIP
     }
@@ -542,7 +536,7 @@ class Operator {
     }
   }
 
-  static async handleSetFont(): Promise<string> {
+  static async handleSetFont(ctx: ProcessContext): Promise<string> {
     const fontName = fontArgs?.[0] instanceof Name ? fontArgs[0].name : null;
 
     let translated = await this.loadFont(
@@ -576,6 +570,169 @@ class Operator {
   }
 
   loadFont(
+    fontName: string | null,
+    font: Ref | Dict | null,
+    resources: Dict,
+    fallbackFontDict: Dict | null = null,
+    cssFontInfo: CssFontInfo | null = null
+  ): Promise<TranslatedFont> {
+    // eslint-disable-next-line arrow-body-style
+    const errorFont = async () => {
+      return new TranslatedFont(
+        "g_font_error",
+        new ErrorFont(`Font "${fontName}" is not available.`),
+        <Dict>font,
+        this.options,
+      );
+    };
+
+    let fontRef: Ref | null = null;
+    if (font) {
+      // Loading by ref.
+      if (font instanceof Ref) {
+        fontRef = font;
+      }
+    } else {
+      // Loading by name.
+      const fontRes = resources.getValue(DictKey.Font);
+      if (fontRes) {
+        fontRef = <Ref>(<Dict>fontRes).getRaw(<DictKey>fontName);
+      }
+    }
+    if (fontRef) {
+      if (this.type3FontRefs?.has(fontRef)) {
+        return errorFont();
+      }
+
+      if (this.fontCache.has(fontRef)) {
+        return this.fontCache.get(fontRef);
+      }
+
+      try {
+        font = this.xref.fetchIfRef(fontRef);
+      } catch (ex) {
+        warn(`loadFont - lookup failed: "${ex}".`);
+      }
+    }
+
+    if (!(font instanceof Dict)) {
+      if (!this.options.ignoreErrors && !this.parsingType3Font) {
+        warn(`Font "${fontName}" is not available.`);
+        return errorFont();
+      }
+      warn(
+        `Font "${fontName}" is not available -- attempting to fallback to a default font.`
+      );
+
+      // Falling back to a default font to avoid completely broken rendering,
+      // but note that there're no guarantees that things will look "correct".
+      font = fallbackFontDict || PartialEvaluator.fallbackFontDict;
+    }
+
+    // We are holding `font.cacheKey` references only for `fontRef`s that
+    // are not actually `Ref`s, but rather `Dict`s. See explanation below.
+    if (font.cacheKey && this.fontCache.has(font.cacheKey)) {
+      return this.fontCache.get(font.cacheKey);
+    }
+
+    const { promise, resolve } = <PromiseWithResolvers<TranslatedFont>>Promise.withResolvers();
+
+    let preEvaluatedFont;
+    try {
+      preEvaluatedFont = this.preEvaluateFont(font);
+      preEvaluatedFont.cssFontInfo = cssFontInfo;
+    } catch (reason) {
+      warn(`loadFont - preEvaluateFont failed: "${reason}".`);
+      return errorFont();
+    }
+    const { descriptor, hash } = preEvaluatedFont;
+
+    const fontRefIsRef = fontRef instanceof Ref;
+    let fontID;
+
+    if (hash && descriptor instanceof Dict) {
+      const fontAliases = (descriptor.fontAliases ||= Object.create(null));
+
+      if (fontAliases[hash]) {
+        const aliasFontRef = fontAliases[hash].aliasRef;
+        if (fontRefIsRef && aliasFontRef && this.fontCache.has(aliasFontRef)) {
+          this.fontCache.putAlias(fontRef!, aliasFontRef);
+          return this.fontCache.get(fontRef!);
+        }
+      } else {
+        fontAliases[hash] = {
+          fontID: this.idFactory.createFontId(),
+        };
+      }
+
+      if (fontRefIsRef) {
+        fontAliases[hash].aliasRef = fontRef;
+      }
+      fontID = fontAliases[hash].fontID;
+    } else {
+      fontID = this.idFactory.createFontId();
+    }
+    assert(
+      fontID?.startsWith("f"),
+      'The "fontID" must be (correctly) defined.'
+    );
+
+    // Workaround for bad PDF generators that reference fonts incorrectly,
+    // where `fontRef` is a `Dict` rather than a `Ref` (fixes bug946506.pdf).
+    // In this case we cannot put the font into `this.fontCache` (which is
+    // a `RefSetCache`), since it's not possible to use a `Dict` as a key.
+    //
+    // However, if we don't cache the font it's not possible to remove it
+    // when `cleanup` is triggered from the API, which causes issues on
+    // subsequent rendering operations (see issue7403.pdf) and would force us
+    // to unnecessarily load the same fonts over and over.
+    //
+    // Instead, we cheat a bit by using a modified `fontID` as a key in
+    // `this.fontCache`, to allow the font to be cached.
+    // NOTE: This works because `RefSetCache` calls `toString()` on provided
+    //       keys. Also, since `fontRef` is used when getting cached fonts,
+    //       we'll not accidentally match fonts cached with the `fontID`.
+    if (fontRefIsRef) {
+      this.fontCache.put(fontRef!, promise);
+    } else {
+      font.cacheKey = `cacheKey_${fontID}`;
+      this.fontCache.put(font.cacheKey, promise);
+    }
+
+    // Keep track of each font we translated so the caller can
+    // load them asynchronously before calling display on a page.
+    font.loadedName = `${this.idFactory.getDocId()}_${fontID}`;
+
+    this.translateFont(preEvaluatedFont)
+      .then(translatedFont => {
+        resolve(
+          new TranslatedFont(
+            font.loadedName!,
+            translatedFont,
+            font,
+            this.options,
+          )
+        );
+      })
+      .catch(reason => {
+        // TODO reject?
+        warn(`loadFont - translateFont failed: "${reason}".`);
+
+        resolve(
+          new TranslatedFont(
+            font.loadedName!,
+            new ErrorFont(
+              reason instanceof Error ? reason.message : reason
+            ),
+            font,
+            this.options,
+          )
+        );
+      });
+    return promise;
+  }
+
+  static loadFont(
     fontName: string | null,
     font: Ref | Dict | null,
     resources: Dict,
@@ -912,7 +1069,7 @@ class Operator {
     }
   }
 
-  async buildFormXObject(ctx: ProcessContext) {
+  static async buildFormXObject(ctx: ProcessContext) {
     const dict = xobj.dict!;
     const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
     const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
@@ -920,21 +1077,16 @@ class Operator {
     let optionalContent, groupOptions: GroupOptions | null = null;
     if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
-        dict.getValue(DictKey.OC),
-        resources
+        dict.getValue(DictKey.OC), ctx.resources
       );
     }
     if (optionalContent !== undefined) {
-      operatorList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
+      ctx.operatorList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
     const group = dict.getValue(DictKey.Group);
     if (group) {
       groupOptions = {
-        matrix,
-        bbox,
-        smask,
-        isolated: false,
-        knockout: false,
+        matrix, bbox, smask, isolated: false, knockout: false
       };
 
       const groupSubtype = group.get(DictKey.S);
@@ -946,17 +1098,13 @@ class Operator {
           const cs = group.getRaw(DictKey.CS);
 
           const cachedColorSpace = ColorSpace.getCached(
-            cs,
-            this.xref,
-            localColorSpaceCache
+            cs, ctx.xref, ctx.localColorSpaceCache
           );
           if (cachedColorSpace) {
             colorSpace = cachedColorSpace;
           } else {
             colorSpace = await this.parseColorSpace(
-              cs,
-              resources,
-              localColorSpaceCache,
+              cs, ctx.resources, ctx.localColorSpaceCache,
             );
           }
         }
@@ -967,31 +1115,686 @@ class Operator {
         smask.backdrop = colorSpace.getRgb(smask.backdrop, 0);
       }
 
-      operatorList.addOp(OPS.beginGroup, [groupOptions]);
+      ctx.operatorList.addOp(OPS.beginGroup, [groupOptions]);
     }
 
     // If it's a group, a new canvas will be created that is the size of the
     // bounding box and translated to the correct position so we don't need to
     // apply the bounding box to it.
     const args: [TransformType | null, RectType | null] = group ? [matrix, null] : [matrix, bbox];
-    operatorList.addOp(OPS.paintFormXObjectBegin, args);
+    ctx.operatorList.addOp(OPS.paintFormXObjectBegin, args);
 
-    await this.getOperatorList(
-      xobj,
-      task,
-      dict.getValue(DictKey.Resources) || resources,
-      operatorList,
-      initialState,
-    );
-    operatorList.addOp(OPS.paintFormXObjectEnd, []);
+    await ctx.handle();
+    ctx.operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
     if (group) {
-      operatorList.addOp(OPS.endGroup, [groupOptions!]);
+      ctx.operatorList.addOp(OPS.endGroup, [groupOptions!]);
     }
 
     if (optionalContent !== undefined) {
-      operatorList.addOp(OPS.endMarkedContent, []);
+      ctx.operatorList.addOp(OPS.endMarkedContent, []);
     }
+  }
+
+  static async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null): Promise<OptionalContent | null> {
+    let optionalContent: Dict;
+    if (contentProperties instanceof Name) {
+      const properties = resources!.getValue(DictKey.Properties);
+      optionalContent = properties.get(<DictKey>contentProperties.name);
+    } else if (contentProperties instanceof Dict) {
+      optionalContent = contentProperties;
+    } else {
+      throw new FormatError("Optional content properties malformed.");
+    }
+
+    const optionalContentType = optionalContent.get(DictKey.Type)?.name;
+    if (optionalContentType === "OCG") {
+      return {
+        type: optionalContentType,
+        id: optionalContent.objId,
+      };
+    } else if (optionalContentType === "OCMD") {
+      const expression = optionalContent.get(DictKey.VE);
+      if (Array.isArray(expression)) {
+        const result = [] as (string | string[])[];
+        this._parseVisibilityExpression(expression, 0, result);
+        if (result.length > 0) {
+          return {
+            type: "OCMD",
+            expression: result,
+          };
+        }
+      }
+
+      const optionalContentGroups = optionalContent.get(DictKey.OCGs);
+      if (
+        Array.isArray(optionalContentGroups) ||
+        optionalContentGroups instanceof Dict
+      ) {
+        const groupIds: (string | null)[] = [];
+        if (Array.isArray(optionalContentGroups)) {
+          for (const ocg of optionalContentGroups) {
+            groupIds.push(ocg.toString());
+          }
+        } else {
+          // Dictionary, just use the obj id.
+          groupIds.push(optionalContentGroups.objId);
+        }
+
+        return {
+          type: optionalContentType,
+          ids: groupIds,
+          policy: optionalContent.get(DictKey.P) instanceof Name
+            ? optionalContent.get(DictKey.P).name : null,
+          expression: null,
+        };
+      } else if (optionalContentGroups instanceof Ref) {
+        return {
+          type: optionalContentType,
+          id: optionalContentGroups.toString(),
+        };
+      }
+    }
+    return null;
+  }
+
+  static _parseVisibilityExpression(array: any[], nestingCounter: number, currentResult: (string | string[])[]) {
+    const MAX_NESTING = 10;
+    if (++nestingCounter > MAX_NESTING) {
+      warn("Visibility expression is too deeply nested");
+      return;
+    }
+    const length = array.length;
+    const operator = this.xref.fetchIfRef(array[0]);
+    if (length < 2 || !(operator instanceof Name)) {
+      warn("Invalid visibility expression");
+      return;
+    }
+    switch (operator.name) {
+      case "And":
+      case "Or":
+      case "Not":
+        currentResult.push(operator.name);
+        break;
+      default:
+        warn(`Invalid operator ${operator.name} in visibility expression`);
+        return;
+    }
+    for (let i = 1; i < length; i++) {
+      const raw = array[i];
+      const object = this.xref.fetchIfRef(raw);
+      if (Array.isArray(object)) {
+        const nestedResult = <string[]>[];
+        currentResult.push(nestedResult);
+        // Recursively parse a subarray.
+        this._parseVisibilityExpression(object, nestingCounter, nestedResult);
+      } else if (raw instanceof Ref) {
+        // Reference to an OCG dictionary.
+        currentResult.push(raw.toString());
+      }
+    }
+  }
+
+  static async parseColorSpace(cs: Name | Ref | (Ref | Name)[], resources: Dict | null
+    , localColorSpaceCache: LocalColorSpaceCache) {
+    return ColorSpace.parseAsync(
+      cs, this.xref, resources, this._pdfFunctionFactory, localColorSpaceCache,
+    ).catch(reason => {
+      if (reason instanceof AbortException) {
+        return null;
+      }
+      if (this.options.ignoreErrors) {
+        warn(`parseColorSpace - ignoring ColorSpace: "${reason}".`);
+        return null;
+      }
+      throw reason;
+    });
+  }
+
+  static async buildPaintImageXObject(
+    ctx: ProcessContext,
+    image: BaseStream,
+    isInline: boolean,
+    cacheKey: string | null
+  ) {
+    const dict = image.dict!;
+    const imageRef = dict.objId;
+    const w = dict.getValueWithFallback(DictKey.W, DictKey.Width);
+    const h = dict.getValueWithFallback(DictKey.H, DictKey.Height);
+
+    if (!(w && typeof w === "number") || !(h && typeof h === "number")) {
+      warn("Image dimensions are missing, or not numbers.");
+      return;
+    }
+    const maxImageSize = ctx.options.maxImageSize;
+    if (maxImageSize !== -1 && w * h > maxImageSize) {
+      const msg = "Image exceeded maximum allowed size and was removed.";
+
+      if (this.options.ignoreErrors) {
+        warn(msg);
+        return;
+      }
+      throw new Error(msg);
+    }
+
+    let optionalContent = null;
+    if (dict.has(DictKey.OC)) {
+      optionalContent = await this.parseMarkedContentProps(
+        dict.getValue(DictKey.OC),
+        resources
+      );
+    }
+
+    const imageMask = dict.getValueWithFallback(DictKey.IM, DictKey.ImageMask) || false;
+    let imgData: ImageMask, args;
+    if (imageMask) {
+      // This depends on a tmpCanvas being filled with the
+      // current fillStyle, such that processing the pixel
+      // data can't be done here. Instead of creating a
+      // complete PDFImage, only read the information needed
+      // for later.
+      const interpolate = dict.getValueWithFallback(DictKey.I, DictKey.Interpolate);
+      const bitStrideLength = (w + 7) >> 3;
+      const imgArray = image.getBytes(bitStrideLength * h);
+      const decode = <number[]>dict.getArrayWithFallback(DictKey.D, DictKey.Decode);
+
+      if (this.parsingType3Font) {
+        imgData = PDFImage.createRawMask(
+          imgArray,
+          w,
+          h,
+          image instanceof DecodeStream,
+          decode?.[0] > 0,
+          interpolate,
+        );
+
+        imgData.cached = !!cacheKey;
+        args = [imgData];
+
+        operatorList.addImageOps(
+          OPS.paintImageMaskXObject,
+          <[ImageMask]>args,
+          <OptionalContent | null>optionalContent
+        );
+
+        if (cacheKey) {
+          const cacheData = {
+            fn: OPS.paintImageMaskXObject,
+            args,
+            optionalContent,
+          };
+          localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
+
+          if (imageRef) {
+            this._regionalImageCache.set(
+              /* name = */ null,
+              imageRef,
+              <ImageCacheData>cacheData
+            );
+          }
+        }
+        return;
+      }
+
+      const result = await PDFImage.createMask(
+        imgArray,
+        w,
+        h,
+        image instanceof DecodeStream,
+        decode?.[0] > 0,
+        interpolate,
+        this.options.isOffscreenCanvasSupported,
+      );
+
+      if ((<SingleOpaquePixelImageMask>result).isSingleOpaquePixel) {
+        // Handles special case of mainly LaTeX documents which use image
+        // masks to draw lines with the current fill style.
+        operatorList.addImageOps(
+          OPS.paintSolidColorImageMask,
+          [],
+          optionalContent
+        );
+
+        if (cacheKey) {
+          const cacheData = {
+            fn: OPS.paintSolidColorImageMask,
+            args: [],
+            optionalContent,
+          };
+          localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
+
+          if (imageRef) {
+            this._regionalImageCache.set(
+              /* name = */ null,
+              imageRef,
+              <ImageCacheData>cacheData
+            );
+          }
+        }
+        return;
+      }
+
+      imgData = <ImageMask>result;
+
+      const objId = `mask_${this.idFactory.createObjId()}`;
+      operatorList.addDependency(objId);
+      imgData.dataLen = imgData.bitmap
+        ? imgData.width * imgData.height * 4
+        : imgData.data!.length;
+      this._sendImgData(objId, imgData);
+
+      args = [
+        {
+          data: objId,
+          width: imgData.width,
+          height: imgData.height,
+          interpolate: imgData.interpolate,
+          count: 1,
+        },
+      ];
+      operatorList.addImageOps(
+        OPS.paintImageMaskXObject,
+        <[ImageMaskXObject]>args,
+        optionalContent
+      );
+
+      if (cacheKey) {
+        const cacheData = {
+          objId,
+          fn: OPS.paintImageMaskXObject,
+          args,
+          optionalContent,
+        };
+        localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
+
+        if (imageRef) {
+          this._regionalImageCache.set(/* name = */ null, imageRef, <ImageCacheData>cacheData);
+        }
+      }
+      return;
+    }
+
+    const SMALL_IMAGE_DIMENSIONS = 200;
+    // Inlining small images into the queue as RGB data
+    if (
+      isInline &&
+      w + h < SMALL_IMAGE_DIMENSIONS &&
+      !dict.has(DictKey.SMask) &&
+      !dict.has(DictKey.Mask)
+    ) {
+      try {
+        const imageObj = new PDFImage(
+          this.xref,
+          resources,
+          image,
+          isInline,
+          null,
+          null,
+          false,
+          this._pdfFunctionFactory,
+          localColorSpaceCache,
+        );
+        // We force the use of RGBA_32BPP images here, because we can't handle
+        // any other kind.
+        imgData = await imageObj.createImageData(
+          /* forceRGBA = */ true,
+          /* isOffscreenCanvasSupported = */ false
+        );
+        operatorList.isOffscreenCanvasSupported =
+          this.options.isOffscreenCanvasSupported;
+        operatorList.addImageOps(
+          OPS.paintInlineImageXObject,
+          [imgData],
+          optionalContent
+        );
+      } catch (reason) {
+        const msg = `Unable to decode inline image: "${reason}".`;
+
+        if (!this.options.ignoreErrors) {
+          throw new Error(msg);
+        }
+        warn(msg);
+      }
+      return;
+    }
+
+    // If there is no imageMask, create the PDFImage and a lot
+    // of image processing can be done here.
+    let objId = `img_${this.idFactory.createObjId()}`,
+      cacheGlobally = false;
+
+    if (this.parsingType3Font) {
+      objId = `${this.idFactory.getDocId()}_type3_${objId}`;
+    } else if (cacheKey && imageRef) {
+      cacheGlobally = this.globalImageCache.shouldCache(
+        imageRef,
+        this.pageIndex
+      );
+
+      if (cacheGlobally) {
+        assert(!isInline, "Cannot cache an inline image globally.");
+
+        objId = `${this.idFactory.getDocId()}_${objId}`;
+      }
+    }
+
+    // Ensure that the dependency is added before the image is decoded.
+    operatorList.addDependency(objId);
+    args = <[string, number, number]>[objId, w, h];
+    operatorList.addImageOps(OPS.paintImageXObject, args, optionalContent);
+
+    if (cacheGlobally) {
+      if (this.globalImageCache.hasDecodeFailed(imageRef!)) {
+        this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+          objId,
+          fn: OPS.paintImageXObject,
+          args,
+          optionalContent,
+          byteSize: 0, // Data is `null`, since decoding failed previously.
+        });
+
+        this._sendImgData(objId, /* imgData = */ null, cacheGlobally);
+        return;
+      }
+
+      // For large (at least 500x500) or more complex images that we'll cache
+      // globally, check if the image is still cached locally on the main-thread
+      // to avoid having to re-parse the image (since that can be slow).
+      if (w * h > 250000 || dict.has(DictKey.SMask) || dict.has(DictKey.Mask)) {
+
+        const handler = this.handler;
+
+        const localLength = await handler.commonobjPromise(objId, CommonObjType.CopyLocalImage, { imageRef: imageRef! });
+
+        if (localLength) {
+          this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+            objId,
+            fn: OPS.paintImageXObject,
+            args,
+            optionalContent,
+            byteSize: 0, // Temporary entry, to avoid `setData` returning early.
+          });
+          this.globalImageCache.addByteSize(imageRef!, localLength);
+          return;
+        }
+      }
+    }
+
+    PDFImage.buildImage({
+      xref: this.xref,
+      res: resources,
+      image,
+      isInline,
+      pdfFunctionFactory: this._pdfFunctionFactory,
+      localColorSpaceCache,
+    })
+      .then(async imageObj => {
+        imgData = await imageObj.createImageData(
+          /* forceRGBA = */ false,
+          /* isOffscreenCanvasSupported = */ this.options
+            .isOffscreenCanvasSupported
+        );
+        imgData.dataLen = imgData.bitmap
+          ? imgData.width * imgData.height * 4
+          : imgData.data!.length;
+        imgData.ref = imageRef;
+
+        if (cacheGlobally) {
+          this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
+        }
+        return this._sendImgData(objId, imgData, cacheGlobally);
+      })
+      .catch(reason => {
+        warn(`Unable to decode image "${objId}": "${reason}".`);
+
+        if (imageRef) {
+          this.globalImageCache.addDecodeFailed(imageRef);
+        }
+        return this._sendImgData(objId, /* imgData = */ null, cacheGlobally);
+      });
+
+    if (cacheKey) {
+      const cacheData = {
+        objId,
+        fn: OPS.paintImageXObject,
+        args,
+        optionalContent,
+      };
+      localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
+
+      if (imageRef) {
+        this._regionalImageCache.set(/* name = */ null, imageRef, <ImageCacheData>cacheData);
+
+        if (cacheGlobally) {
+          this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+            objId,
+            fn: OPS.paintImageXObject,
+            args,
+            optionalContent,
+            byteSize: 0, // Temporary entry, note `addByteSize` above.
+          });
+        }
+      }
+    }
+  }
+
+  static _sendImgData(objId: string, imgData: ImageMask | null, cacheGlobally = false) {
+
+    const transfers = imgData ? [imgData.bitmap || imgData.data!.buffer] : null;
+
+    if (this.parsingType3Font || cacheGlobally) {
+      return this.handler.commonobj(objId, CommonObjType.Image, imgData, transfers);
+    }
+    return this.handler.obj(objId, this.pageIndex, ObjType.Image, imgData, transfers);
+  }
+
+  static ensureStateFont(state: State) {
+    if (state.font) {
+      return;
+    }
+    const reason = new FormatError(
+      "Missing setFont (Tf) operator before text rendering operator."
+    );
+
+    if (this.options.ignoreErrors) {
+      warn(`ensureStateFont: "${reason}".`);
+      return;
+    }
+    throw reason;
+  }
+
+  static handleText(ctx: ProcessContext, chars: string, state: State) {
+    const font = state.font;
+    const glyphs = font!.charsToGlyphs(chars);
+
+    if (font!.data) {
+      const isAddToPathSet = !!(state.textRenderingMode! & TextRenderingMode.ADD_TO_PATH_FLAG);
+      if (
+        isAddToPathSet ||
+        state.fillColorSpace!.name === "Pattern" ||
+        font!.disableFontFace ||
+        ctx.options.disableFontFace
+      ) {
+        PartialEvaluator.buildFontPaths(
+          font!, glyphs, ctx.handler, ctx.options
+        );
+      }
+    }
+    return glyphs;
+  }
+
+  static handleColorN(
+    operatorList: OperatorList,
+    fn: OPS, // 值应当是OPS.setFillColorN | OPS.setFillColorN,
+    args: any[],
+    cs: ColorSpace,
+    patterns: Dict,
+    resources: Dict,
+    task: WorkerTask,
+    localColorSpaceCache: LocalColorSpaceCache,
+    localTilingPatternCache: LocalTilingPatternCache,
+    localShadingPatternCache: Map<Dict, string | null>
+  ) {
+    // compile tiling patterns
+    const patternName = args.pop();
+    // SCN/scn applies patterns along with normal colors
+    if (patternName instanceof Name) {
+      const rawPattern = <Ref | BaseStream | Dict>patterns.getRaw(<DictKey>patternName.name);
+
+      const localTilingPattern =
+        rawPattern instanceof Ref &&
+        localTilingPatternCache.getByRef(rawPattern);
+      if (localTilingPattern) {
+        try {
+          const color = cs.base ? cs.base.getRgb(args as unknown as TypedArray, 0) : null;
+          const tilingPatternIR = getTilingPatternIR(
+            localTilingPattern.operatorListIR,
+            localTilingPattern.dict,
+            color
+          );
+          operatorList.addOp(fn, <any>tilingPatternIR);
+          return undefined;
+        } catch {
+          // Handle any errors during normal TilingPattern parsing.
+        }
+      }
+
+      const pattern = this.xref.fetchIfRef(rawPattern);
+      if (pattern) {
+        const dict: Dict = pattern instanceof BaseStream ? pattern.dict : pattern;
+        const typeNum = dict.get(DictKey.PatternType);
+
+        if (typeNum === PatternType.TILING) {
+          const color = cs.base ? cs.base.getRgb(args as unknown as TypedArray, 0) : null;
+          return this.handleTilingType(
+            fn,
+            color,
+            resources,
+            pattern,
+            dict,
+            operatorList,
+            task,
+            localTilingPatternCache
+          );
+        } else if (typeNum === PatternType.SHADING) {
+          const shading = dict.getValue(DictKey.Shading);
+          const objId = this.parseShading(
+            shading,
+            resources,
+            localColorSpaceCache,
+            localShadingPatternCache,
+          );
+          if (objId) {
+            const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
+            operatorList.addOp(fn, <any>["Shading", objId, matrix]);
+          }
+          return undefined;
+        }
+        throw new FormatError(`Unknown PatternType: ${typeNum}`);
+      }
+    }
+    throw new FormatError(`Unknown PatternName: ${patternName}`);
+  }
+
+  static parseShading(
+    shading: Dict,
+    resources: Dict,
+    localColorSpaceCache: LocalColorSpaceCache,
+    localShadingPatternCache: Map<Dict, string | null>,
+  ) {
+    // Shadings and patterns may be referenced by the same name but the resource
+    // dictionary could be different so we can't use the name for the cache key.
+    let id = localShadingPatternCache.get(shading);
+    if (id) {
+      return id;
+    }
+    let patternIR;
+
+    try {
+      const shadingFill = Pattern.parseShading(
+        shading, this.xref, resources, this._pdfFunctionFactory, localColorSpaceCache
+      );
+      patternIR = shadingFill.getIR();
+    } catch (reason) {
+      if (reason instanceof AbortException) {
+        return null;
+      }
+      if (this.options.ignoreErrors) {
+        warn(`parseShading - ignoring shading: "${reason}".`);
+
+        localShadingPatternCache.set(shading, null);
+        return null;
+      }
+      throw reason;
+    }
+
+    id = `pattern_${this.idFactory.createObjId()}`;
+    if (this.parsingType3Font) {
+      id = `${this.idFactory.getDocId()}_type3_${id}`;
+    }
+    localShadingPatternCache.set(shading, id);
+
+    if (this.parsingType3Font) {
+      this.handler.commonobj(id, CommonObjType.Pattern, patternIR);
+    } else {
+      this.handler.obj(id, this.pageIndex, ObjType.Pattern, patternIR);
+    }
+    return id;
+  }
+
+  handleTilingType(
+    fn: OPS,
+    color: Uint8ClampedArray | null,
+    resources: Dict,
+    pattern: BaseStream,
+    patternDict: Dict,
+    operatorList: OperatorList,
+    task: WorkerTask,
+    localTilingPatternCache: LocalTilingPatternCache
+  ) {
+    // Create an IR of the pattern code.
+    const tilingOpList = new OperatorList();
+    // Merge the available resources, to prevent issues when the patternDict
+    // is missing some /Resources entries (fixes issue6541.pdf).
+    const patternResources = Dict.merge({
+      xref: this.xref,
+      dictArray: [patternDict.get(DictKey.Resources), resources],
+      mergeSubDicts: false
+    });
+
+    return this.getOperatorList(
+      pattern,
+      task,
+      patternResources,
+      tilingOpList,
+    ).then(function () {
+      const operatorListIR = tilingOpList.getIR();
+      const tilingPatternIR = getTilingPatternIR(
+        operatorListIR,
+        patternDict,
+        color
+      );
+      // Add the dependencies to the parent operator list so they are
+      // resolved before the sub operator list is executed synchronously.
+      operatorList.addDependencies(tilingOpList.dependencies);
+      operatorList.addOp(fn, <any>tilingPatternIR);
+
+      if (patternDict.objId) {
+        localTilingPatternCache.set(/* name = */ null, patternDict.objId, {
+          operatorListIR,
+          dict: patternDict,
+        });
+      }
+    }).catch(reason => {
+      if (reason instanceof AbortException) {
+        return;
+      }
+      if (this.options.ignoreErrors) {
+        warn(`handleTilingType - ignoring pattern: "${reason}".`);
+        return;
+      }
+      throw reason;
+    });
   }
 }
 
@@ -1022,6 +1825,8 @@ interface ProcessOperation {
 // 所有的处理都围绕着ProcessContext来，包括next方法
 // 所有的处理方法都是静态函数，避免大量的创建对象
 interface ProcessContext extends ProcessOperation {
+  handler: MessageHandler;
+  options: DocumentEvaluatorOptions;
   xref: XRef;
   pageIndex: number;
   xobjs: Dict;
@@ -1117,7 +1922,8 @@ export class GetOperatorListHandler {
               reject(ex);
             }
           }, reject);
-        }
+        },
+        handle: this.handle
       }
       this.process(resolve, reject, context);
     });

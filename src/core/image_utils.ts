@@ -142,7 +142,7 @@ class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
   }
 }
 
-class LocalFunctionCache extends BaseLocalCache<Function> {
+class LocalFunctionCache<Function> extends BaseLocalCache<Function> {
 
   set(_name: string | null, ref: Ref | string, data: Function) {
     if (!ref) {

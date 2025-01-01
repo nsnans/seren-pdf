@@ -960,7 +960,7 @@ class PDFImage {
       this.decodeBuffer(comps);
     }
     this.colorSpace!.fillRgb(
-      data,
+      data!,
       originalWidth,
       originalHeight,
       drawWidth,

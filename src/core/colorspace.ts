@@ -25,7 +25,7 @@ import {
 import { Dict, DictKey, Name, Ref } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
-import { TypedArray } from "../types";
+import { MutableArray, TypedArray } from "../types";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";
@@ -35,15 +35,15 @@ import { Stream } from "./stream";
 
 /**
  * Resizes an RGB image with 3 components.
- * @param {TypedArray} src - The source buffer.
- * @param {TypedArray} dest - The destination buffer.
- * @param {number} w1 - Original width.
- * @param {number} h1 - Original height.
- * @param {number} w2 - New width.
- * @param {number} h2 - New height.
- * @param {number} alpha01 - Size reserved for the alpha channel.
+ * @param src - The source buffer.
+ * @param dest - The destination buffer.
+ * @param w1 - Original width.
+ * @param h1 - Original height.
+ * @param w2 - New width.
+ * @param h2 - New height.
+ * @param alpha01 - Size reserved for the alpha channel.
  */
-function resizeRgbImage(src: TypedArray, dest: TypedArray, w1: number, h1: number,
+function resizeRgbImage(src: MutableArray<number>, dest: MutableArray<number>, w1: number, h1: number,
   w2: number, h2: number, alpha01: number) {
   const COMPONENTS = 3;
   alpha01 = alpha01 !== 1 ? 0 : alpha01;
@@ -69,8 +69,10 @@ function resizeRgbImage(src: TypedArray, dest: TypedArray, w1: number, h1: numbe
   }
 }
 
-function resizeRgbaImage(src: TypedArray, dest: TypedArray, w1: number, h1: number,
-  w2: number, h2: number, alpha01: number) {
+function resizeRgbaImage(
+  src: MutableArray<number>, dest: MutableArray<number>,
+  w1: number, h1: number, w2: number, h2: number, alpha01: number
+) {
   const xRatio = w1 / w2;
   const yRatio = h1 / h2;
   let newIndex = 0;
@@ -80,8 +82,8 @@ function resizeRgbaImage(src: TypedArray, dest: TypedArray, w1: number, h1: numb
     for (let i = 0; i < w2; i++) {
       xScaled[i] = Math.floor(i * xRatio);
     }
-    const src32 = new Uint32Array(src.buffer);
-    const dest32 = new Uint32Array(dest.buffer);
+    const src32 = new Uint32Array(src.buffer!);
+    const dest32 = new Uint32Array(dest.buffer!);
     const rgbMask = FeatureTest.isLittleEndian ? 0x00ffffff : 0xffffff00;
     for (let i = 0; i < h2; i++) {
       const buf = src32.subarray(Math.floor(i * yRatio) * w1);
@@ -96,7 +98,7 @@ function resizeRgbaImage(src: TypedArray, dest: TypedArray, w1: number, h1: numb
       xScaled[i] = Math.floor(i * xRatio) * COMPONENTS;
     }
     for (let i = 0; i < h2; i++) {
-      const buf = src.subarray(Math.floor(i * yRatio) * w1Scanline);
+      const buf = src.subarray!(Math.floor(i * yRatio) * w1Scanline);
       for (let j = 0; j < w2; j++) {
         const oldIndex = xScaled[j];
         dest[newIndex++] = buf[oldIndex];
@@ -150,7 +152,7 @@ class ColorSpace {
    * located in the src array starting from the srcOffset. Returns the array
    * of the rgb components, each value ranging from [0,255].
    */
-  getRgb(src: TypedArray, srcOffset: number) {
+  getRgb(src: MutableArray<number>, srcOffset: number) {
     const rgb = new Uint8ClampedArray(3);
     this.getRgbItem(src, srcOffset, rgb, 0);
     return rgb;
@@ -160,7 +162,7 @@ class ColorSpace {
    * Converts the color value to the RGB color, similar to the getRgb method.
    * The result placed into the dest array starting from the destOffset.
    */
-  getRgbItem(_src: TypedArray, _srcOffset: number, _dest: TypedArray, _destOffset: number) {
+  getRgbItem(_src: MutableArray<number>, _srcOffset: number, _dest: MutableArray<number>, _destOffset: number) {
     unreachable("Should not call ColorSpace.getRgbItem");
   }
 
@@ -173,8 +175,8 @@ class ColorSpace {
    * there are in the dest array; it will be either 0 (RGB array) or 1 (RGBA
    * array).
    */
-  getRgbBuffer(_src: TypedArray, _srcOffset: number, _count: number
-    , _dest: TypedArray, _destOffset: number, _bits: number, _alpha01: number) {
+  getRgbBuffer(_src: MutableArray<number>, _srcOffset: number, _count: number
+    , _dest: MutableArray<number>, _destOffset: number, _bits: number, _alpha01: number) {
     unreachable("Should not call ColorSpace.getRgbBuffer");
   }
 
@@ -198,7 +200,7 @@ class ColorSpace {
    * Refer to the static `ColorSpace.isDefaultDecode` method below.
    * bpc: bitsPerComponent
    */
-  isDefaultDecode(decodeMap: TypedArray, _bpc: number) {
+  isDefaultDecode(decodeMap: MutableArray<number>, _bpc: number) {
     return ColorSpace.isDefaultDecode(decodeMap, this.numComps!);
   }
 
@@ -208,34 +210,21 @@ class ColorSpace {
    * 0 (RGB array) or 1 (RGBA array).
    */
   fillRgb(
-    dest: TypedArray,
-    originalWidth: number,
-    originalHeight: number,
-    width: number,
-    height: number,
-    actualHeight: number,
-    bpc: number,
-    comps: TypedArray,
-    alpha01: number
+    dest: MutableArray<number>, oriWidth: number, oriHeight: number,
+    width: number, height: number, actualHeight: number, bpc: number,
+    comps: MutableArray<number>, alpha01: number
   ) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'ColorSpace.fillRgb: Unsupported "dest" type.'
-      );
-    }
-    const count = originalWidth * originalHeight;
+
+    const count = oriWidth * oriHeight;
     let rgbBuf = null;
     const numComponentColors = 1 << bpc;
-    const needsResizing = originalHeight !== height || originalWidth !== width;
+    const needsResizing = oriHeight !== height || oriWidth !== width;
 
     if (this.isPassthrough(bpc)) {
       rgbBuf = comps;
     } else if (
-      this.numComps === 1 &&
-      count > numComponentColors &&
-      this.name !== "DeviceGray" &&
-      this.name !== "DeviceRGB"
+      this.numComps === 1 && count > numComponentColors &&
+      this.name !== "DeviceGray" && this.name !== "DeviceRGB"
     ) {
       // Optimization: create a color map when there is just one component and
       // we are converting more colors than the size of the color map. We
@@ -246,22 +235,13 @@ class ColorSpace {
       // TODO it may be worth while to cache the color map. While running
       // testing I never hit a cache so I will leave that out for now (perhaps
       // we are reparsing colorspaces too much?).
-      const allColors =
-        bpc <= 8
-          ? new Uint8Array(numComponentColors)
-          : new Uint16Array(numComponentColors);
+      const allColors = bpc <= 8 ? new Uint8Array(numComponentColors) : new Uint16Array(numComponentColors);
       for (let i = 0; i < numComponentColors; i++) {
         allColors[i] = i;
       }
       const colorMap = new Uint8ClampedArray(numComponentColors * 3);
       this.getRgbBuffer(
-        allColors,
-        0,
-        numComponentColors,
-        colorMap,
-        0,
-        bpc,
-        /* alpha01 = */ 0
+        allColors, 0, numComponentColors, colorMap, 0, bpc, 0
       );
 
       if (!needsResizing) {
@@ -294,18 +274,10 @@ class ColorSpace {
 
     if (rgbBuf) {
       if (needsResizing) {
-        resizeRgbImage(
-          rgbBuf,
-          dest,
-          originalWidth,
-          originalHeight,
-          width,
-          height,
-          alpha01
-        );
+        resizeRgbImage(rgbBuf, dest, oriWidth, oriHeight,width, height, alpha01);
       } else {
-        let destPos = 0,
-          rgbPos = 0;
+        let destPos = 0;
+          let rgbPos = 0;
         for (let i = 0, ii = width * actualHeight; i < ii; i++) {
           dest[destPos++] = rgbBuf[rgbPos++];
           dest[destPos++] = rgbBuf[rgbPos++];
@@ -573,7 +545,7 @@ class ColorSpace {
    * @param {Array} decode - Decode map (usually from an image).
    * @param {number} numComps - Number of components the color space has.
    */
-  static isDefaultDecode(decode: TypedArray, numComps: number) {
+  static isDefaultDecode(decode: MutableArray<number>, numComps: number) {
     if (!Array.isArray(decode)) {
       return true;
     }
@@ -620,17 +592,17 @@ class AlternateCS extends ColorSpace {
   protected tmpBuf: Float32Array;
 
   // 最后一个参数不知道是做什么用的
-  protected tintFn: (src: TypedArray, srcOffset: number, tmpBuf: Float32Array, _unknow: number) => void;
+  protected tintFn: (src: MutableArray<number>, srcOffset: number, tmpBuf: MutableArray<number>, _unknow: number) => void;
 
   constructor(numComps: number, base: ColorSpace
-    , tintFn: (src: TypedArray, srcOffset: number, tmpBuf: Float32Array, _unknow: number) => void) {
+    , tintFn: (src: MutableArray<number>, srcOffset: number, tmpBuf: MutableArray<number>, _unknow: number) => void) {
     super("Alternate", numComps);
     this.base = base;
     this.tintFn = tintFn;
     this.tmpBuf = new Float32Array(base.numComps!);
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: TypedArray, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -642,14 +614,8 @@ class AlternateCS extends ColorSpace {
     this.base!.getRgbItem(tmpBuf, 0, dest, destOffset);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'AlternateCS.getRgbBuffer: Unsupported "dest" type.'
-      );
-    }
+  getRgbBuffer(src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number) {
     const tintFn = this.tintFn;
     const base = this.base!;
     const scale = 1 / ((1 << bits) - 1);
@@ -659,8 +625,7 @@ class AlternateCS extends ColorSpace {
       (base.isPassthrough(8) || !usesZeroToOneRange) && alpha01 === 0;
     let pos = isPassthrough ? destOffset : 0;
     const baseBuf = isPassthrough
-      ? dest
-      : new Uint8ClampedArray(baseNumComps * count);
+      ? dest : new Uint8ClampedArray(baseNumComps * count);
     const numComps = this.numComps!;
 
     const scaled = new Float32Array(numComps);
@@ -704,7 +669,7 @@ class PatternCS extends ColorSpace {
     this.base = baseCS;
   }
 
-  isDefaultDecode(_decodeMap: TypedArray, _bpc: number): boolean {
+  isDefaultDecode(_decodeMap: MutableArray<number>, _bpc: number): boolean {
     unreachable("Should not call PatternCS.isDefaultDecode");
   }
 }
@@ -749,8 +714,10 @@ class IndexedCS extends ColorSpace {
     this.base.getRgbBuffer(this.lookup, start, 1, dest, destOffset, 8, 0);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, _bits: number, alpha01: number) {
+  getRgbBuffer(
+    src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, _bits: number, alpha01: number
+  ) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -773,7 +740,7 @@ class IndexedCS extends ColorSpace {
     return this.base.getOutputLength(inputLength * this.base.numComps!, alpha01);
   }
 
-  isDefaultDecode(decodeMap: TypedArray, bpc: number) {
+  isDefaultDecode(decodeMap: MutableArray<number>, bpc: number) {
     if (!Array.isArray(decodeMap)) {
       return true;
     }
@@ -800,7 +767,7 @@ class DeviceGrayCS extends ColorSpace {
     super("DeviceGray", 1);
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -811,17 +778,13 @@ class DeviceGrayCS extends ColorSpace {
     dest[destOffset] = dest[destOffset + 1] = dest[destOffset + 2] = c;
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'DeviceGrayCS.getRgbBuffer: Unsupported "dest" type.'
-      );
-    }
+  getRgbBuffer(
+    src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number
+  ) {
     const scale = 255 / ((1 << bits) - 1);
-    let j = srcOffset,
-      q = destOffset;
+    let j = srcOffset;
+    let q = destOffset;
     for (let i = 0; i < count; ++i) {
       const c = scale * src[j++];
       dest[q++] = c;
@@ -846,7 +809,7 @@ class DeviceRgbCS extends ColorSpace {
     super("DeviceRGB", 3);
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -858,8 +821,8 @@ class DeviceRgbCS extends ColorSpace {
     dest[destOffset + 2] = src[srcOffset + 2] * 255;
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
+  getRgbBuffer(src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -867,7 +830,7 @@ class DeviceRgbCS extends ColorSpace {
       );
     }
     if (bits === 8 && alpha01 === 0) {
-      dest.set(src.subarray(srcOffset, srcOffset + count * 3), destOffset);
+      dest.set!(src.subarray!(srcOffset, srcOffset + count * 3), destOffset);
       return;
     }
     const scale = 255 / ((1 << bits) - 1);
@@ -909,14 +872,14 @@ class DeviceRgbaCS extends ColorSpace {
   }
 
   fillRgb(
-    dest: TypedArray,
+    dest: MutableArray<number>,
     originalWidth: number,
     originalHeight: number,
     width: number,
     height: number,
     _actualHeight: number,
     _bpc: number,
-    comps: TypedArray,
+    comps: MutableArray<number>,
     alpha01: number
   ) {
     if (PlatformHelper.isTesting()) {
@@ -1016,7 +979,7 @@ class DeviceCmykCS extends ColorSpace {
       k * (-22.33816807309886 * k - 180.12613974708367);
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -1193,8 +1156,8 @@ class CalRGBCS extends ColorSpace {
 
   static #DECODE_L_CONSTANT = ((8 + 16) / 116) ** 3 / 8.0;
 
-  protected whitePoint: Float32Array;
-  protected blackPoint: Float32Array;
+  protected whitePoint: MutableArray<number>;
+  protected blackPoint: MutableArray<number>;
 
   protected GR: number;
   protected GG: number;
@@ -1210,7 +1173,10 @@ class CalRGBCS extends ColorSpace {
   protected MYC: number;
   protected MZC: number;
 
-  constructor(whitePoint: Float32Array, blackPoint: Float32Array, gamma: Number3Array | null, matrix: Number9Array) {
+  constructor(
+    whitePoint: MutableArray<number>, blackPoint: MutableArray<number>,
+    gamma: Number3Array | null, matrix: Number9Array
+  ) {
     super("CalRGB", 3);
 
     if (!whitePoint) {
@@ -1260,19 +1226,19 @@ class CalRGBCS extends ColorSpace {
     }
   }
 
-  #matrixProduct(a: Float32Array, b: Float32Array, result: Float32Array) {
+  #matrixProduct(a: MutableArray<number>, b: MutableArray<number>, result: MutableArray<number>) {
     result[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     result[1] = a[3] * b[0] + a[4] * b[1] + a[5] * b[2];
     result[2] = a[6] * b[0] + a[7] * b[1] + a[8] * b[2];
   }
 
-  #toFlat(sourceWhitePoint: Float32Array, LMS: Float32Array, result: Float32Array) {
+  #toFlat(sourceWhitePoint: MutableArray<number>, LMS: MutableArray<number>, result: MutableArray<number>) {
     result[0] = (LMS[0] * 1) / sourceWhitePoint[0];
     result[1] = (LMS[1] * 1) / sourceWhitePoint[1];
     result[2] = (LMS[2] * 1) / sourceWhitePoint[2];
   }
 
-  #toD65(sourceWhitePoint: Float32Array, LMS: Float32Array, result: Float32Array) {
+  #toD65(sourceWhitePoint: MutableArray<number>, LMS: MutableArray<number>, result: MutableArray<number>) {
     const D65X = 0.95047;
     const D65Y = 1;
     const D65Z = 1.08883;
@@ -1313,7 +1279,7 @@ class CalRGBCS extends ColorSpace {
     return L * CalRGBCS.#DECODE_L_CONSTANT;
   }
 
-  #compensateBlackPoint(sourceBlackPoint: Float32Array, XYZ_Flat: Float32Array, result: Float32Array) {
+  #compensateBlackPoint(sourceBlackPoint: MutableArray<number>, XYZ_Flat: MutableArray<number>, result: Float32Array) {
     // In case the blackPoint is already the default blackPoint then there is
     // no need to do compensation.
     if (
@@ -1356,7 +1322,7 @@ class CalRGBCS extends ColorSpace {
     result[2] = XYZ_Flat[2] * Z_Scale + Z_Offset;
   }
 
-  #normalizeWhitePointToFlat(sourceWhitePoint: Float32Array, XYZ_In: Float32Array, result: Float32Array) {
+  #normalizeWhitePointToFlat(sourceWhitePoint: MutableArray<number>, XYZ_In: Float32Array, result: Float32Array) {
     // In case the whitePoint is already flat then there is no need to do
     // normalization.
     if (sourceWhitePoint[0] === 1 && sourceWhitePoint[2] === 1) {
@@ -1393,7 +1359,7 @@ class CalRGBCS extends ColorSpace {
     );
   }
 
-  #toRgb(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number, scale: number) {
+  #toRgb(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number, scale: number) {
     // A, B and C represent a red, green and blue components of a calibrated
     // rgb space.
     const A = this.#adjustToRange(0, 1, src[srcOffset] * scale);
@@ -1443,7 +1409,7 @@ class CalRGBCS extends ColorSpace {
     dest[destOffset + 2] = this.#sRGBTransferFunction(SRGB[2]) * 255;
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -1453,7 +1419,7 @@ class CalRGBCS extends ColorSpace {
     this.#toRgb(src, srcOffset, dest, destOffset, 1);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number, dest: TypedArray,
+  getRgbBuffer(src: MutableArray<number>, srcOffset: number, count: number, dest: MutableArray<number>,
     destOffset: number, bits: number, alpha01: number) {
     if (PlatformHelper.isTesting()) {
       assert(
@@ -1546,7 +1512,7 @@ class LabCS extends ColorSpace {
   // If decoding is needed maxVal should be 2^bits per component - 1.
   // 这里maxVal的写法不太好，它只能是值 false或者number，在值为false的时候不是number，值不能为true
   // 因此这里maxVal的类型是false|number而非boolean|number
-  #toRgb(src: TypedArray, srcOffset: number, maxVal: false | number, dest: TypedArray, destOffset: number) {
+  #toRgb(src: MutableArray<number>, srcOffset: number, maxVal: number | null, dest: MutableArray<number>, destOffset: number) {
     // XXX: Lab input is in the range of [0, 100], [amin, amax], [bmin, bmax]
     // not the usual [0, 1]. If a command like setFillColor is used the src
     // values will already be within the correct range. However, if we are
@@ -1556,7 +1522,7 @@ class LabCS extends ColorSpace {
     let Ls = src[srcOffset];
     let as = src[srcOffset + 1];
     let bs = src[srcOffset + 2];
-    if (maxVal !== false) {
+    if (maxVal !== null) {
       Ls = this.#decode(Ls, maxVal, 0, 100);
       as = this.#decode(as, maxVal, this.amin, this.amax);
       bs = this.#decode(bs, maxVal, this.bmin, this.bmax);
@@ -1603,18 +1569,12 @@ class LabCS extends ColorSpace {
     dest[destOffset + 2] = Math.sqrt(b) * 255;
   }
 
-  getRgbItem(src: TypedArray, srcOffset: number, dest: TypedArray, destOffset: number) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        dest instanceof Uint8ClampedArray,
-        'LabCS.getRgbItem: Unsupported "dest" type.'
-      );
-    }
-    this.#toRgb(src, srcOffset, false, dest, destOffset);
+  getRgbItem(src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) {
+    this.#toRgb(src, srcOffset, null, dest, destOffset);
   }
 
-  getRgbBuffer(src: TypedArray, srcOffset: number, count: number,
-    dest: TypedArray, destOffset: number, bits: number, alpha01: number) {
+  getRgbBuffer(src: MutableArray<number>, srcOffset: number, count: number,
+    dest: MutableArray<number>, destOffset: number, bits: number, alpha01: number) {
     if (PlatformHelper.isTesting()) {
       assert(
         dest instanceof Uint8ClampedArray,
@@ -1633,7 +1593,7 @@ class LabCS extends ColorSpace {
     return ((inputLength * (3 + alpha01)) / 3) | 0;
   }
 
-  isDefaultDecode(_decodeMap: TypedArray, _bpc: number) {
+  isDefaultDecode(_decodeMap: MutableArray<number>, _bpc: number) {
     // XXX: Decoding is handled with the lab conversion because of the strange
     // ranges that are used.
     return true;
