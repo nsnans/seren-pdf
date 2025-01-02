@@ -889,7 +889,7 @@ class JpegImage {
     this._colorTransform = colorTransform;
   }
 
-  static canUseImageDecoder(data: Uint8Array, colorTransform = -1) {
+  static canUseImageDecoder(data: Uint8Array<ArrayBuffer>, colorTransform = -1) {
     let offset = 0;
     let numComponents = null;
     let fileMarker = readUint16(data, offset);
@@ -931,7 +931,7 @@ class JpegImage {
     return true;
   }
 
-  parse(data: Uint8Array, { dnlScanLines }: { dnlScanLines: number | null } = { dnlScanLines: null }): undefined {
+  parse(data: Uint8Array<ArrayBuffer>, { dnlScanLines }: { dnlScanLines: number | null } = { dnlScanLines: null }): undefined {
     let offset = 0;
     let jfif = null;
     let adobe = null;

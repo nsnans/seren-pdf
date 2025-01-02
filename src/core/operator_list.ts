@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, OPSArgsType, RenderingIntentFlag, warn } from "../shared/util";
+import { ImageKind, OPS, OPArg, RenderingIntentFlag, warn } from "../shared/util";
 import { StreamSink } from "./core_types";
 import { OptionalContent } from "./image_utils";
 
@@ -500,7 +500,7 @@ class NullOptimizer {
 
   _optimize() { }
 
-  push(fn: OPS, args: OPSArgsType[OPS]) {
+  push(fn: OPS, args: OPArg[OPS]) {
     this.queue.fnArray.push(fn);
     this.queue.argsArray.push(<(any[] | null)>args);
     this._optimize();

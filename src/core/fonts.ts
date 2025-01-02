@@ -408,8 +408,9 @@ function applyStandardFontGlyphMap(map: number[], glyphMap: Record<number, numbe
   }
 }
 
-function buildToFontChar(encoding: string[], glyphsUnicodeMap: Record<string, number>
-  , differences: string[]): number[] {
+function buildToFontChar(
+  encoding: string[], glyphsUnicodeMap: Record<string, number>, differences: string[]
+): number[] {
   const toFontChar = [];
   let unicode;
   for (let i = 0, ii = encoding.length; i < ii; i++) {
@@ -1441,9 +1442,7 @@ class Font {
       );
     } else if (/Dingbats/i.test(fontName)) {
       this.toFontChar = buildToFontChar(
-        ZapfDingbatsEncoding,
-        getDingbatsGlyphsUnicode()!,
-        this.differences
+        ZapfDingbatsEncoding, getDingbatsGlyphsUnicode(), this.differences
       );
     } else if (isStandardFont || isMappedToStandardFont) {
       const map = buildToFontChar(
@@ -3645,7 +3644,8 @@ class Font {
     }
 
     if (this.missingFile && this.vertical && fontChar.length === 1) {
-      const vertical = getVerticalPresentationForm()![fontChar.charCodeAt(0)];
+      const lookup: Record<number, number> = getVerticalPresentationForm();
+      const vertical = lookup[fontChar.charCodeAt(0)];
       if (vertical) {
         fontChar = unicode = String.fromCharCode(vertical);
       }

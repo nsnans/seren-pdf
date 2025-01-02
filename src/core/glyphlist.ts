@@ -15,4543 +15,4547 @@
 
 import { getLookupTableFactory } from "./core_utils";
 
-const getGlyphsUnicode = getLookupTableFactory(function (t) {
-  t.A = 0x0041;
-  t.AE = 0x00c6;
-  t.AEacute = 0x01fc;
-  t.AEmacron = 0x01e2;
-  t.AEsmall = 0xf7e6;
-  t.Aacute = 0x00c1;
-  t.Aacutesmall = 0xf7e1;
-  t.Abreve = 0x0102;
-  t.Abreveacute = 0x1eae;
-  t.Abrevecyrillic = 0x04d0;
-  t.Abrevedotbelow = 0x1eb6;
-  t.Abrevegrave = 0x1eb0;
-  t.Abrevehookabove = 0x1eb2;
-  t.Abrevetilde = 0x1eb4;
-  t.Acaron = 0x01cd;
-  t.Acircle = 0x24b6;
-  t.Acircumflex = 0x00c2;
-  t.Acircumflexacute = 0x1ea4;
-  t.Acircumflexdotbelow = 0x1eac;
-  t.Acircumflexgrave = 0x1ea6;
-  t.Acircumflexhookabove = 0x1ea8;
-  t.Acircumflexsmall = 0xf7e2;
-  t.Acircumflextilde = 0x1eaa;
-  t.Acute = 0xf6c9;
-  t.Acutesmall = 0xf7b4;
-  t.Acyrillic = 0x0410;
-  t.Adblgrave = 0x0200;
-  t.Adieresis = 0x00c4;
-  t.Adieresiscyrillic = 0x04d2;
-  t.Adieresismacron = 0x01de;
-  t.Adieresissmall = 0xf7e4;
-  t.Adotbelow = 0x1ea0;
-  t.Adotmacron = 0x01e0;
-  t.Agrave = 0x00c0;
-  t.Agravesmall = 0xf7e0;
-  t.Ahookabove = 0x1ea2;
-  t.Aiecyrillic = 0x04d4;
-  t.Ainvertedbreve = 0x0202;
-  t.Alpha = 0x0391;
-  t.Alphatonos = 0x0386;
-  t.Amacron = 0x0100;
-  t.Amonospace = 0xff21;
-  t.Aogonek = 0x0104;
-  t.Aring = 0x00c5;
-  t.Aringacute = 0x01fa;
-  t.Aringbelow = 0x1e00;
-  t.Aringsmall = 0xf7e5;
-  t.Asmall = 0xf761;
-  t.Atilde = 0x00c3;
-  t.Atildesmall = 0xf7e3;
-  t.Aybarmenian = 0x0531;
-  t.B = 0x0042;
-  t.Bcircle = 0x24b7;
-  t.Bdotaccent = 0x1e02;
-  t.Bdotbelow = 0x1e04;
-  t.Becyrillic = 0x0411;
-  t.Benarmenian = 0x0532;
-  t.Beta = 0x0392;
-  t.Bhook = 0x0181;
-  t.Blinebelow = 0x1e06;
-  t.Bmonospace = 0xff22;
-  t.Brevesmall = 0xf6f4;
-  t.Bsmall = 0xf762;
-  t.Btopbar = 0x0182;
-  t.C = 0x0043;
-  t.Caarmenian = 0x053e;
-  t.Cacute = 0x0106;
-  t.Caron = 0xf6ca;
-  t.Caronsmall = 0xf6f5;
-  t.Ccaron = 0x010c;
-  t.Ccedilla = 0x00c7;
-  t.Ccedillaacute = 0x1e08;
-  t.Ccedillasmall = 0xf7e7;
-  t.Ccircle = 0x24b8;
-  t.Ccircumflex = 0x0108;
-  t.Cdot = 0x010a;
-  t.Cdotaccent = 0x010a;
-  t.Cedillasmall = 0xf7b8;
-  t.Chaarmenian = 0x0549;
-  t.Cheabkhasiancyrillic = 0x04bc;
-  t.Checyrillic = 0x0427;
-  t.Chedescenderabkhasiancyrillic = 0x04be;
-  t.Chedescendercyrillic = 0x04b6;
-  t.Chedieresiscyrillic = 0x04f4;
-  t.Cheharmenian = 0x0543;
-  t.Chekhakassiancyrillic = 0x04cb;
-  t.Cheverticalstrokecyrillic = 0x04b8;
-  t.Chi = 0x03a7;
-  t.Chook = 0x0187;
-  t.Circumflexsmall = 0xf6f6;
-  t.Cmonospace = 0xff23;
-  t.Coarmenian = 0x0551;
-  t.Csmall = 0xf763;
-  t.D = 0x0044;
-  t.DZ = 0x01f1;
-  t.DZcaron = 0x01c4;
-  t.Daarmenian = 0x0534;
-  t.Dafrican = 0x0189;
-  t.Dcaron = 0x010e;
-  t.Dcedilla = 0x1e10;
-  t.Dcircle = 0x24b9;
-  t.Dcircumflexbelow = 0x1e12;
-  t.Dcroat = 0x0110;
-  t.Ddotaccent = 0x1e0a;
-  t.Ddotbelow = 0x1e0c;
-  t.Decyrillic = 0x0414;
-  t.Deicoptic = 0x03ee;
-  t.Delta = 0x2206;
-  t.Deltagreek = 0x0394;
-  t.Dhook = 0x018a;
-  t.Dieresis = 0xf6cb;
-  t.DieresisAcute = 0xf6cc;
-  t.DieresisGrave = 0xf6cd;
-  t.Dieresissmall = 0xf7a8;
-  t.Digammagreek = 0x03dc;
-  t.Djecyrillic = 0x0402;
-  t.Dlinebelow = 0x1e0e;
-  t.Dmonospace = 0xff24;
-  t.Dotaccentsmall = 0xf6f7;
-  t.Dslash = 0x0110;
-  t.Dsmall = 0xf764;
-  t.Dtopbar = 0x018b;
-  t.Dz = 0x01f2;
-  t.Dzcaron = 0x01c5;
-  t.Dzeabkhasiancyrillic = 0x04e0;
-  t.Dzecyrillic = 0x0405;
-  t.Dzhecyrillic = 0x040f;
-  t.E = 0x0045;
-  t.Eacute = 0x00c9;
-  t.Eacutesmall = 0xf7e9;
-  t.Ebreve = 0x0114;
-  t.Ecaron = 0x011a;
-  t.Ecedillabreve = 0x1e1c;
-  t.Echarmenian = 0x0535;
-  t.Ecircle = 0x24ba;
-  t.Ecircumflex = 0x00ca;
-  t.Ecircumflexacute = 0x1ebe;
-  t.Ecircumflexbelow = 0x1e18;
-  t.Ecircumflexdotbelow = 0x1ec6;
-  t.Ecircumflexgrave = 0x1ec0;
-  t.Ecircumflexhookabove = 0x1ec2;
-  t.Ecircumflexsmall = 0xf7ea;
-  t.Ecircumflextilde = 0x1ec4;
-  t.Ecyrillic = 0x0404;
-  t.Edblgrave = 0x0204;
-  t.Edieresis = 0x00cb;
-  t.Edieresissmall = 0xf7eb;
-  t.Edot = 0x0116;
-  t.Edotaccent = 0x0116;
-  t.Edotbelow = 0x1eb8;
-  t.Efcyrillic = 0x0424;
-  t.Egrave = 0x00c8;
-  t.Egravesmall = 0xf7e8;
-  t.Eharmenian = 0x0537;
-  t.Ehookabove = 0x1eba;
-  t.Eightroman = 0x2167;
-  t.Einvertedbreve = 0x0206;
-  t.Eiotifiedcyrillic = 0x0464;
-  t.Elcyrillic = 0x041b;
-  t.Elevenroman = 0x216a;
-  t.Emacron = 0x0112;
-  t.Emacronacute = 0x1e16;
-  t.Emacrongrave = 0x1e14;
-  t.Emcyrillic = 0x041c;
-  t.Emonospace = 0xff25;
-  t.Encyrillic = 0x041d;
-  t.Endescendercyrillic = 0x04a2;
-  t.Eng = 0x014a;
-  t.Enghecyrillic = 0x04a4;
-  t.Enhookcyrillic = 0x04c7;
-  t.Eogonek = 0x0118;
-  t.Eopen = 0x0190;
-  t.Epsilon = 0x0395;
-  t.Epsilontonos = 0x0388;
-  t.Ercyrillic = 0x0420;
-  t.Ereversed = 0x018e;
-  t.Ereversedcyrillic = 0x042d;
-  t.Escyrillic = 0x0421;
-  t.Esdescendercyrillic = 0x04aa;
-  t.Esh = 0x01a9;
-  t.Esmall = 0xf765;
-  t.Eta = 0x0397;
-  t.Etarmenian = 0x0538;
-  t.Etatonos = 0x0389;
-  t.Eth = 0x00d0;
-  t.Ethsmall = 0xf7f0;
-  t.Etilde = 0x1ebc;
-  t.Etildebelow = 0x1e1a;
-  t.Euro = 0x20ac;
-  t.Ezh = 0x01b7;
-  t.Ezhcaron = 0x01ee;
-  t.Ezhreversed = 0x01b8;
-  t.F = 0x0046;
-  t.Fcircle = 0x24bb;
-  t.Fdotaccent = 0x1e1e;
-  t.Feharmenian = 0x0556;
-  t.Feicoptic = 0x03e4;
-  t.Fhook = 0x0191;
-  t.Fitacyrillic = 0x0472;
-  t.Fiveroman = 0x2164;
-  t.Fmonospace = 0xff26;
-  t.Fourroman = 0x2163;
-  t.Fsmall = 0xf766;
-  t.G = 0x0047;
-  t.GBsquare = 0x3387;
-  t.Gacute = 0x01f4;
-  t.Gamma = 0x0393;
-  t.Gammaafrican = 0x0194;
-  t.Gangiacoptic = 0x03ea;
-  t.Gbreve = 0x011e;
-  t.Gcaron = 0x01e6;
-  t.Gcedilla = 0x0122;
-  t.Gcircle = 0x24bc;
-  t.Gcircumflex = 0x011c;
-  t.Gcommaaccent = 0x0122;
-  t.Gdot = 0x0120;
-  t.Gdotaccent = 0x0120;
-  t.Gecyrillic = 0x0413;
-  t.Ghadarmenian = 0x0542;
-  t.Ghemiddlehookcyrillic = 0x0494;
-  t.Ghestrokecyrillic = 0x0492;
-  t.Gheupturncyrillic = 0x0490;
-  t.Ghook = 0x0193;
-  t.Gimarmenian = 0x0533;
-  t.Gjecyrillic = 0x0403;
-  t.Gmacron = 0x1e20;
-  t.Gmonospace = 0xff27;
-  t.Grave = 0xf6ce;
-  t.Gravesmall = 0xf760;
-  t.Gsmall = 0xf767;
-  t.Gsmallhook = 0x029b;
-  t.Gstroke = 0x01e4;
-  t.H = 0x0048;
-  t.H18533 = 0x25cf;
-  t.H18543 = 0x25aa;
-  t.H18551 = 0x25ab;
-  t.H22073 = 0x25a1;
-  t.HPsquare = 0x33cb;
-  t.Haabkhasiancyrillic = 0x04a8;
-  t.Hadescendercyrillic = 0x04b2;
-  t.Hardsigncyrillic = 0x042a;
-  t.Hbar = 0x0126;
-  t.Hbrevebelow = 0x1e2a;
-  t.Hcedilla = 0x1e28;
-  t.Hcircle = 0x24bd;
-  t.Hcircumflex = 0x0124;
-  t.Hdieresis = 0x1e26;
-  t.Hdotaccent = 0x1e22;
-  t.Hdotbelow = 0x1e24;
-  t.Hmonospace = 0xff28;
-  t.Hoarmenian = 0x0540;
-  t.Horicoptic = 0x03e8;
-  t.Hsmall = 0xf768;
-  t.Hungarumlaut = 0xf6cf;
-  t.Hungarumlautsmall = 0xf6f8;
-  t.Hzsquare = 0x3390;
-  t.I = 0x0049;
-  t.IAcyrillic = 0x042f;
-  t.IJ = 0x0132;
-  t.IUcyrillic = 0x042e;
-  t.Iacute = 0x00cd;
-  t.Iacutesmall = 0xf7ed;
-  t.Ibreve = 0x012c;
-  t.Icaron = 0x01cf;
-  t.Icircle = 0x24be;
-  t.Icircumflex = 0x00ce;
-  t.Icircumflexsmall = 0xf7ee;
-  t.Icyrillic = 0x0406;
-  t.Idblgrave = 0x0208;
-  t.Idieresis = 0x00cf;
-  t.Idieresisacute = 0x1e2e;
-  t.Idieresiscyrillic = 0x04e4;
-  t.Idieresissmall = 0xf7ef;
-  t.Idot = 0x0130;
-  t.Idotaccent = 0x0130;
-  t.Idotbelow = 0x1eca;
-  t.Iebrevecyrillic = 0x04d6;
-  t.Iecyrillic = 0x0415;
-  t.Ifraktur = 0x2111;
-  t.Igrave = 0x00cc;
-  t.Igravesmall = 0xf7ec;
-  t.Ihookabove = 0x1ec8;
-  t.Iicyrillic = 0x0418;
-  t.Iinvertedbreve = 0x020a;
-  t.Iishortcyrillic = 0x0419;
-  t.Imacron = 0x012a;
-  t.Imacroncyrillic = 0x04e2;
-  t.Imonospace = 0xff29;
-  t.Iniarmenian = 0x053b;
-  t.Iocyrillic = 0x0401;
-  t.Iogonek = 0x012e;
-  t.Iota = 0x0399;
-  t.Iotaafrican = 0x0196;
-  t.Iotadieresis = 0x03aa;
-  t.Iotatonos = 0x038a;
-  t.Ismall = 0xf769;
-  t.Istroke = 0x0197;
-  t.Itilde = 0x0128;
-  t.Itildebelow = 0x1e2c;
-  t.Izhitsacyrillic = 0x0474;
-  t.Izhitsadblgravecyrillic = 0x0476;
-  t.J = 0x004a;
-  t.Jaarmenian = 0x0541;
-  t.Jcircle = 0x24bf;
-  t.Jcircumflex = 0x0134;
-  t.Jecyrillic = 0x0408;
-  t.Jheharmenian = 0x054b;
-  t.Jmonospace = 0xff2a;
-  t.Jsmall = 0xf76a;
-  t.K = 0x004b;
-  t.KBsquare = 0x3385;
-  t.KKsquare = 0x33cd;
-  t.Kabashkircyrillic = 0x04a0;
-  t.Kacute = 0x1e30;
-  t.Kacyrillic = 0x041a;
-  t.Kadescendercyrillic = 0x049a;
-  t.Kahookcyrillic = 0x04c3;
-  t.Kappa = 0x039a;
-  t.Kastrokecyrillic = 0x049e;
-  t.Kaverticalstrokecyrillic = 0x049c;
-  t.Kcaron = 0x01e8;
-  t.Kcedilla = 0x0136;
-  t.Kcircle = 0x24c0;
-  t.Kcommaaccent = 0x0136;
-  t.Kdotbelow = 0x1e32;
-  t.Keharmenian = 0x0554;
-  t.Kenarmenian = 0x053f;
-  t.Khacyrillic = 0x0425;
-  t.Kheicoptic = 0x03e6;
-  t.Khook = 0x0198;
-  t.Kjecyrillic = 0x040c;
-  t.Klinebelow = 0x1e34;
-  t.Kmonospace = 0xff2b;
-  t.Koppacyrillic = 0x0480;
-  t.Koppagreek = 0x03de;
-  t.Ksicyrillic = 0x046e;
-  t.Ksmall = 0xf76b;
-  t.L = 0x004c;
-  t.LJ = 0x01c7;
-  t.LL = 0xf6bf;
-  t.Lacute = 0x0139;
-  t.Lambda = 0x039b;
-  t.Lcaron = 0x013d;
-  t.Lcedilla = 0x013b;
-  t.Lcircle = 0x24c1;
-  t.Lcircumflexbelow = 0x1e3c;
-  t.Lcommaaccent = 0x013b;
-  t.Ldot = 0x013f;
-  t.Ldotaccent = 0x013f;
-  t.Ldotbelow = 0x1e36;
-  t.Ldotbelowmacron = 0x1e38;
-  t.Liwnarmenian = 0x053c;
-  t.Lj = 0x01c8;
-  t.Ljecyrillic = 0x0409;
-  t.Llinebelow = 0x1e3a;
-  t.Lmonospace = 0xff2c;
-  t.Lslash = 0x0141;
-  t.Lslashsmall = 0xf6f9;
-  t.Lsmall = 0xf76c;
-  t.M = 0x004d;
-  t.MBsquare = 0x3386;
-  t.Macron = 0xf6d0;
-  t.Macronsmall = 0xf7af;
-  t.Macute = 0x1e3e;
-  t.Mcircle = 0x24c2;
-  t.Mdotaccent = 0x1e40;
-  t.Mdotbelow = 0x1e42;
-  t.Menarmenian = 0x0544;
-  t.Mmonospace = 0xff2d;
-  t.Msmall = 0xf76d;
-  t.Mturned = 0x019c;
-  t.Mu = 0x039c;
-  t.N = 0x004e;
-  t.NJ = 0x01ca;
-  t.Nacute = 0x0143;
-  t.Ncaron = 0x0147;
-  t.Ncedilla = 0x0145;
-  t.Ncircle = 0x24c3;
-  t.Ncircumflexbelow = 0x1e4a;
-  t.Ncommaaccent = 0x0145;
-  t.Ndotaccent = 0x1e44;
-  t.Ndotbelow = 0x1e46;
-  t.Nhookleft = 0x019d;
-  t.Nineroman = 0x2168;
-  t.Nj = 0x01cb;
-  t.Njecyrillic = 0x040a;
-  t.Nlinebelow = 0x1e48;
-  t.Nmonospace = 0xff2e;
-  t.Nowarmenian = 0x0546;
-  t.Nsmall = 0xf76e;
-  t.Ntilde = 0x00d1;
-  t.Ntildesmall = 0xf7f1;
-  t.Nu = 0x039d;
-  t.O = 0x004f;
-  t.OE = 0x0152;
-  t.OEsmall = 0xf6fa;
-  t.Oacute = 0x00d3;
-  t.Oacutesmall = 0xf7f3;
-  t.Obarredcyrillic = 0x04e8;
-  t.Obarreddieresiscyrillic = 0x04ea;
-  t.Obreve = 0x014e;
-  t.Ocaron = 0x01d1;
-  t.Ocenteredtilde = 0x019f;
-  t.Ocircle = 0x24c4;
-  t.Ocircumflex = 0x00d4;
-  t.Ocircumflexacute = 0x1ed0;
-  t.Ocircumflexdotbelow = 0x1ed8;
-  t.Ocircumflexgrave = 0x1ed2;
-  t.Ocircumflexhookabove = 0x1ed4;
-  t.Ocircumflexsmall = 0xf7f4;
-  t.Ocircumflextilde = 0x1ed6;
-  t.Ocyrillic = 0x041e;
-  t.Odblacute = 0x0150;
-  t.Odblgrave = 0x020c;
-  t.Odieresis = 0x00d6;
-  t.Odieresiscyrillic = 0x04e6;
-  t.Odieresissmall = 0xf7f6;
-  t.Odotbelow = 0x1ecc;
-  t.Ogoneksmall = 0xf6fb;
-  t.Ograve = 0x00d2;
-  t.Ogravesmall = 0xf7f2;
-  t.Oharmenian = 0x0555;
-  t.Ohm = 0x2126;
-  t.Ohookabove = 0x1ece;
-  t.Ohorn = 0x01a0;
-  t.Ohornacute = 0x1eda;
-  t.Ohorndotbelow = 0x1ee2;
-  t.Ohorngrave = 0x1edc;
-  t.Ohornhookabove = 0x1ede;
-  t.Ohorntilde = 0x1ee0;
-  t.Ohungarumlaut = 0x0150;
-  t.Oi = 0x01a2;
-  t.Oinvertedbreve = 0x020e;
-  t.Omacron = 0x014c;
-  t.Omacronacute = 0x1e52;
-  t.Omacrongrave = 0x1e50;
-  t.Omega = 0x2126;
-  t.Omegacyrillic = 0x0460;
-  t.Omegagreek = 0x03a9;
-  t.Omegaroundcyrillic = 0x047a;
-  t.Omegatitlocyrillic = 0x047c;
-  t.Omegatonos = 0x038f;
-  t.Omicron = 0x039f;
-  t.Omicrontonos = 0x038c;
-  t.Omonospace = 0xff2f;
-  t.Oneroman = 0x2160;
-  t.Oogonek = 0x01ea;
-  t.Oogonekmacron = 0x01ec;
-  t.Oopen = 0x0186;
-  t.Oslash = 0x00d8;
-  t.Oslashacute = 0x01fe;
-  t.Oslashsmall = 0xf7f8;
-  t.Osmall = 0xf76f;
-  t.Ostrokeacute = 0x01fe;
-  t.Otcyrillic = 0x047e;
-  t.Otilde = 0x00d5;
-  t.Otildeacute = 0x1e4c;
-  t.Otildedieresis = 0x1e4e;
-  t.Otildesmall = 0xf7f5;
-  t.P = 0x0050;
-  t.Pacute = 0x1e54;
-  t.Pcircle = 0x24c5;
-  t.Pdotaccent = 0x1e56;
-  t.Pecyrillic = 0x041f;
-  t.Peharmenian = 0x054a;
-  t.Pemiddlehookcyrillic = 0x04a6;
-  t.Phi = 0x03a6;
-  t.Phook = 0x01a4;
-  t.Pi = 0x03a0;
-  t.Piwrarmenian = 0x0553;
-  t.Pmonospace = 0xff30;
-  t.Psi = 0x03a8;
-  t.Psicyrillic = 0x0470;
-  t.Psmall = 0xf770;
-  t.Q = 0x0051;
-  t.Qcircle = 0x24c6;
-  t.Qmonospace = 0xff31;
-  t.Qsmall = 0xf771;
-  t.R = 0x0052;
-  t.Raarmenian = 0x054c;
-  t.Racute = 0x0154;
-  t.Rcaron = 0x0158;
-  t.Rcedilla = 0x0156;
-  t.Rcircle = 0x24c7;
-  t.Rcommaaccent = 0x0156;
-  t.Rdblgrave = 0x0210;
-  t.Rdotaccent = 0x1e58;
-  t.Rdotbelow = 0x1e5a;
-  t.Rdotbelowmacron = 0x1e5c;
-  t.Reharmenian = 0x0550;
-  t.Rfraktur = 0x211c;
-  t.Rho = 0x03a1;
-  t.Ringsmall = 0xf6fc;
-  t.Rinvertedbreve = 0x0212;
-  t.Rlinebelow = 0x1e5e;
-  t.Rmonospace = 0xff32;
-  t.Rsmall = 0xf772;
-  t.Rsmallinverted = 0x0281;
-  t.Rsmallinvertedsuperior = 0x02b6;
-  t.S = 0x0053;
-  t.SF010000 = 0x250c;
-  t.SF020000 = 0x2514;
-  t.SF030000 = 0x2510;
-  t.SF040000 = 0x2518;
-  t.SF050000 = 0x253c;
-  t.SF060000 = 0x252c;
-  t.SF070000 = 0x2534;
-  t.SF080000 = 0x251c;
-  t.SF090000 = 0x2524;
-  t.SF100000 = 0x2500;
-  t.SF110000 = 0x2502;
-  t.SF190000 = 0x2561;
-  t.SF200000 = 0x2562;
-  t.SF210000 = 0x2556;
-  t.SF220000 = 0x2555;
-  t.SF230000 = 0x2563;
-  t.SF240000 = 0x2551;
-  t.SF250000 = 0x2557;
-  t.SF260000 = 0x255d;
-  t.SF270000 = 0x255c;
-  t.SF280000 = 0x255b;
-  t.SF360000 = 0x255e;
-  t.SF370000 = 0x255f;
-  t.SF380000 = 0x255a;
-  t.SF390000 = 0x2554;
-  t.SF400000 = 0x2569;
-  t.SF410000 = 0x2566;
-  t.SF420000 = 0x2560;
-  t.SF430000 = 0x2550;
-  t.SF440000 = 0x256c;
-  t.SF450000 = 0x2567;
-  t.SF460000 = 0x2568;
-  t.SF470000 = 0x2564;
-  t.SF480000 = 0x2565;
-  t.SF490000 = 0x2559;
-  t.SF500000 = 0x2558;
-  t.SF510000 = 0x2552;
-  t.SF520000 = 0x2553;
-  t.SF530000 = 0x256b;
-  t.SF540000 = 0x256a;
-  t.Sacute = 0x015a;
-  t.Sacutedotaccent = 0x1e64;
-  t.Sampigreek = 0x03e0;
-  t.Scaron = 0x0160;
-  t.Scarondotaccent = 0x1e66;
-  t.Scaronsmall = 0xf6fd;
-  t.Scedilla = 0x015e;
-  t.Schwa = 0x018f;
-  t.Schwacyrillic = 0x04d8;
-  t.Schwadieresiscyrillic = 0x04da;
-  t.Scircle = 0x24c8;
-  t.Scircumflex = 0x015c;
-  t.Scommaaccent = 0x0218;
-  t.Sdotaccent = 0x1e60;
-  t.Sdotbelow = 0x1e62;
-  t.Sdotbelowdotaccent = 0x1e68;
-  t.Seharmenian = 0x054d;
-  t.Sevenroman = 0x2166;
-  t.Shaarmenian = 0x0547;
-  t.Shacyrillic = 0x0428;
-  t.Shchacyrillic = 0x0429;
-  t.Sheicoptic = 0x03e2;
-  t.Shhacyrillic = 0x04ba;
-  t.Shimacoptic = 0x03ec;
-  t.Sigma = 0x03a3;
-  t.Sixroman = 0x2165;
-  t.Smonospace = 0xff33;
-  t.Softsigncyrillic = 0x042c;
-  t.Ssmall = 0xf773;
-  t.Stigmagreek = 0x03da;
-  t.T = 0x0054;
-  t.Tau = 0x03a4;
-  t.Tbar = 0x0166;
-  t.Tcaron = 0x0164;
-  t.Tcedilla = 0x0162;
-  t.Tcircle = 0x24c9;
-  t.Tcircumflexbelow = 0x1e70;
-  t.Tcommaaccent = 0x0162;
-  t.Tdotaccent = 0x1e6a;
-  t.Tdotbelow = 0x1e6c;
-  t.Tecyrillic = 0x0422;
-  t.Tedescendercyrillic = 0x04ac;
-  t.Tenroman = 0x2169;
-  t.Tetsecyrillic = 0x04b4;
-  t.Theta = 0x0398;
-  t.Thook = 0x01ac;
-  t.Thorn = 0x00de;
-  t.Thornsmall = 0xf7fe;
-  t.Threeroman = 0x2162;
-  t.Tildesmall = 0xf6fe;
-  t.Tiwnarmenian = 0x054f;
-  t.Tlinebelow = 0x1e6e;
-  t.Tmonospace = 0xff34;
-  t.Toarmenian = 0x0539;
-  t.Tonefive = 0x01bc;
-  t.Tonesix = 0x0184;
-  t.Tonetwo = 0x01a7;
-  t.Tretroflexhook = 0x01ae;
-  t.Tsecyrillic = 0x0426;
-  t.Tshecyrillic = 0x040b;
-  t.Tsmall = 0xf774;
-  t.Twelveroman = 0x216b;
-  t.Tworoman = 0x2161;
-  t.U = 0x0055;
-  t.Uacute = 0x00da;
-  t.Uacutesmall = 0xf7fa;
-  t.Ubreve = 0x016c;
-  t.Ucaron = 0x01d3;
-  t.Ucircle = 0x24ca;
-  t.Ucircumflex = 0x00db;
-  t.Ucircumflexbelow = 0x1e76;
-  t.Ucircumflexsmall = 0xf7fb;
-  t.Ucyrillic = 0x0423;
-  t.Udblacute = 0x0170;
-  t.Udblgrave = 0x0214;
-  t.Udieresis = 0x00dc;
-  t.Udieresisacute = 0x01d7;
-  t.Udieresisbelow = 0x1e72;
-  t.Udieresiscaron = 0x01d9;
-  t.Udieresiscyrillic = 0x04f0;
-  t.Udieresisgrave = 0x01db;
-  t.Udieresismacron = 0x01d5;
-  t.Udieresissmall = 0xf7fc;
-  t.Udotbelow = 0x1ee4;
-  t.Ugrave = 0x00d9;
-  t.Ugravesmall = 0xf7f9;
-  t.Uhookabove = 0x1ee6;
-  t.Uhorn = 0x01af;
-  t.Uhornacute = 0x1ee8;
-  t.Uhorndotbelow = 0x1ef0;
-  t.Uhorngrave = 0x1eea;
-  t.Uhornhookabove = 0x1eec;
-  t.Uhorntilde = 0x1eee;
-  t.Uhungarumlaut = 0x0170;
-  t.Uhungarumlautcyrillic = 0x04f2;
-  t.Uinvertedbreve = 0x0216;
-  t.Ukcyrillic = 0x0478;
-  t.Umacron = 0x016a;
-  t.Umacroncyrillic = 0x04ee;
-  t.Umacrondieresis = 0x1e7a;
-  t.Umonospace = 0xff35;
-  t.Uogonek = 0x0172;
-  t.Upsilon = 0x03a5;
-  t.Upsilon1 = 0x03d2;
-  t.Upsilonacutehooksymbolgreek = 0x03d3;
-  t.Upsilonafrican = 0x01b1;
-  t.Upsilondieresis = 0x03ab;
-  t.Upsilondieresishooksymbolgreek = 0x03d4;
-  t.Upsilonhooksymbol = 0x03d2;
-  t.Upsilontonos = 0x038e;
-  t.Uring = 0x016e;
-  t.Ushortcyrillic = 0x040e;
-  t.Usmall = 0xf775;
-  t.Ustraightcyrillic = 0x04ae;
-  t.Ustraightstrokecyrillic = 0x04b0;
-  t.Utilde = 0x0168;
-  t.Utildeacute = 0x1e78;
-  t.Utildebelow = 0x1e74;
-  t.V = 0x0056;
-  t.Vcircle = 0x24cb;
-  t.Vdotbelow = 0x1e7e;
-  t.Vecyrillic = 0x0412;
-  t.Vewarmenian = 0x054e;
-  t.Vhook = 0x01b2;
-  t.Vmonospace = 0xff36;
-  t.Voarmenian = 0x0548;
-  t.Vsmall = 0xf776;
-  t.Vtilde = 0x1e7c;
-  t.W = 0x0057;
-  t.Wacute = 0x1e82;
-  t.Wcircle = 0x24cc;
-  t.Wcircumflex = 0x0174;
-  t.Wdieresis = 0x1e84;
-  t.Wdotaccent = 0x1e86;
-  t.Wdotbelow = 0x1e88;
-  t.Wgrave = 0x1e80;
-  t.Wmonospace = 0xff37;
-  t.Wsmall = 0xf777;
-  t.X = 0x0058;
-  t.Xcircle = 0x24cd;
-  t.Xdieresis = 0x1e8c;
-  t.Xdotaccent = 0x1e8a;
-  t.Xeharmenian = 0x053d;
-  t.Xi = 0x039e;
-  t.Xmonospace = 0xff38;
-  t.Xsmall = 0xf778;
-  t.Y = 0x0059;
-  t.Yacute = 0x00dd;
-  t.Yacutesmall = 0xf7fd;
-  t.Yatcyrillic = 0x0462;
-  t.Ycircle = 0x24ce;
-  t.Ycircumflex = 0x0176;
-  t.Ydieresis = 0x0178;
-  t.Ydieresissmall = 0xf7ff;
-  t.Ydotaccent = 0x1e8e;
-  t.Ydotbelow = 0x1ef4;
-  t.Yericyrillic = 0x042b;
-  t.Yerudieresiscyrillic = 0x04f8;
-  t.Ygrave = 0x1ef2;
-  t.Yhook = 0x01b3;
-  t.Yhookabove = 0x1ef6;
-  t.Yiarmenian = 0x0545;
-  t.Yicyrillic = 0x0407;
-  t.Yiwnarmenian = 0x0552;
-  t.Ymonospace = 0xff39;
-  t.Ysmall = 0xf779;
-  t.Ytilde = 0x1ef8;
-  t.Yusbigcyrillic = 0x046a;
-  t.Yusbigiotifiedcyrillic = 0x046c;
-  t.Yuslittlecyrillic = 0x0466;
-  t.Yuslittleiotifiedcyrillic = 0x0468;
-  t.Z = 0x005a;
-  t.Zaarmenian = 0x0536;
-  t.Zacute = 0x0179;
-  t.Zcaron = 0x017d;
-  t.Zcaronsmall = 0xf6ff;
-  t.Zcircle = 0x24cf;
-  t.Zcircumflex = 0x1e90;
-  t.Zdot = 0x017b;
-  t.Zdotaccent = 0x017b;
-  t.Zdotbelow = 0x1e92;
-  t.Zecyrillic = 0x0417;
-  t.Zedescendercyrillic = 0x0498;
-  t.Zedieresiscyrillic = 0x04de;
-  t.Zeta = 0x0396;
-  t.Zhearmenian = 0x053a;
-  t.Zhebrevecyrillic = 0x04c1;
-  t.Zhecyrillic = 0x0416;
-  t.Zhedescendercyrillic = 0x0496;
-  t.Zhedieresiscyrillic = 0x04dc;
-  t.Zlinebelow = 0x1e94;
-  t.Zmonospace = 0xff3a;
-  t.Zsmall = 0xf77a;
-  t.Zstroke = 0x01b5;
-  t.a = 0x0061;
-  t.aabengali = 0x0986;
-  t.aacute = 0x00e1;
-  t.aadeva = 0x0906;
-  t.aagujarati = 0x0a86;
-  t.aagurmukhi = 0x0a06;
-  t.aamatragurmukhi = 0x0a3e;
-  t.aarusquare = 0x3303;
-  t.aavowelsignbengali = 0x09be;
-  t.aavowelsigndeva = 0x093e;
-  t.aavowelsigngujarati = 0x0abe;
-  t.abbreviationmarkarmenian = 0x055f;
-  t.abbreviationsigndeva = 0x0970;
-  t.abengali = 0x0985;
-  t.abopomofo = 0x311a;
-  t.abreve = 0x0103;
-  t.abreveacute = 0x1eaf;
-  t.abrevecyrillic = 0x04d1;
-  t.abrevedotbelow = 0x1eb7;
-  t.abrevegrave = 0x1eb1;
-  t.abrevehookabove = 0x1eb3;
-  t.abrevetilde = 0x1eb5;
-  t.acaron = 0x01ce;
-  t.acircle = 0x24d0;
-  t.acircumflex = 0x00e2;
-  t.acircumflexacute = 0x1ea5;
-  t.acircumflexdotbelow = 0x1ead;
-  t.acircumflexgrave = 0x1ea7;
-  t.acircumflexhookabove = 0x1ea9;
-  t.acircumflextilde = 0x1eab;
-  t.acute = 0x00b4;
-  t.acutebelowcmb = 0x0317;
-  t.acutecmb = 0x0301;
-  t.acutecomb = 0x0301;
-  t.acutedeva = 0x0954;
-  t.acutelowmod = 0x02cf;
-  t.acutetonecmb = 0x0341;
-  t.acyrillic = 0x0430;
-  t.adblgrave = 0x0201;
-  t.addakgurmukhi = 0x0a71;
-  t.adeva = 0x0905;
-  t.adieresis = 0x00e4;
-  t.adieresiscyrillic = 0x04d3;
-  t.adieresismacron = 0x01df;
-  t.adotbelow = 0x1ea1;
-  t.adotmacron = 0x01e1;
-  t.ae = 0x00e6;
-  t.aeacute = 0x01fd;
-  t.aekorean = 0x3150;
-  t.aemacron = 0x01e3;
-  t.afii00208 = 0x2015;
-  t.afii08941 = 0x20a4;
-  t.afii10017 = 0x0410;
-  t.afii10018 = 0x0411;
-  t.afii10019 = 0x0412;
-  t.afii10020 = 0x0413;
-  t.afii10021 = 0x0414;
-  t.afii10022 = 0x0415;
-  t.afii10023 = 0x0401;
-  t.afii10024 = 0x0416;
-  t.afii10025 = 0x0417;
-  t.afii10026 = 0x0418;
-  t.afii10027 = 0x0419;
-  t.afii10028 = 0x041a;
-  t.afii10029 = 0x041b;
-  t.afii10030 = 0x041c;
-  t.afii10031 = 0x041d;
-  t.afii10032 = 0x041e;
-  t.afii10033 = 0x041f;
-  t.afii10034 = 0x0420;
-  t.afii10035 = 0x0421;
-  t.afii10036 = 0x0422;
-  t.afii10037 = 0x0423;
-  t.afii10038 = 0x0424;
-  t.afii10039 = 0x0425;
-  t.afii10040 = 0x0426;
-  t.afii10041 = 0x0427;
-  t.afii10042 = 0x0428;
-  t.afii10043 = 0x0429;
-  t.afii10044 = 0x042a;
-  t.afii10045 = 0x042b;
-  t.afii10046 = 0x042c;
-  t.afii10047 = 0x042d;
-  t.afii10048 = 0x042e;
-  t.afii10049 = 0x042f;
-  t.afii10050 = 0x0490;
-  t.afii10051 = 0x0402;
-  t.afii10052 = 0x0403;
-  t.afii10053 = 0x0404;
-  t.afii10054 = 0x0405;
-  t.afii10055 = 0x0406;
-  t.afii10056 = 0x0407;
-  t.afii10057 = 0x0408;
-  t.afii10058 = 0x0409;
-  t.afii10059 = 0x040a;
-  t.afii10060 = 0x040b;
-  t.afii10061 = 0x040c;
-  t.afii10062 = 0x040e;
-  t.afii10063 = 0xf6c4;
-  t.afii10064 = 0xf6c5;
-  t.afii10065 = 0x0430;
-  t.afii10066 = 0x0431;
-  t.afii10067 = 0x0432;
-  t.afii10068 = 0x0433;
-  t.afii10069 = 0x0434;
-  t.afii10070 = 0x0435;
-  t.afii10071 = 0x0451;
-  t.afii10072 = 0x0436;
-  t.afii10073 = 0x0437;
-  t.afii10074 = 0x0438;
-  t.afii10075 = 0x0439;
-  t.afii10076 = 0x043a;
-  t.afii10077 = 0x043b;
-  t.afii10078 = 0x043c;
-  t.afii10079 = 0x043d;
-  t.afii10080 = 0x043e;
-  t.afii10081 = 0x043f;
-  t.afii10082 = 0x0440;
-  t.afii10083 = 0x0441;
-  t.afii10084 = 0x0442;
-  t.afii10085 = 0x0443;
-  t.afii10086 = 0x0444;
-  t.afii10087 = 0x0445;
-  t.afii10088 = 0x0446;
-  t.afii10089 = 0x0447;
-  t.afii10090 = 0x0448;
-  t.afii10091 = 0x0449;
-  t.afii10092 = 0x044a;
-  t.afii10093 = 0x044b;
-  t.afii10094 = 0x044c;
-  t.afii10095 = 0x044d;
-  t.afii10096 = 0x044e;
-  t.afii10097 = 0x044f;
-  t.afii10098 = 0x0491;
-  t.afii10099 = 0x0452;
-  t.afii10100 = 0x0453;
-  t.afii10101 = 0x0454;
-  t.afii10102 = 0x0455;
-  t.afii10103 = 0x0456;
-  t.afii10104 = 0x0457;
-  t.afii10105 = 0x0458;
-  t.afii10106 = 0x0459;
-  t.afii10107 = 0x045a;
-  t.afii10108 = 0x045b;
-  t.afii10109 = 0x045c;
-  t.afii10110 = 0x045e;
-  t.afii10145 = 0x040f;
-  t.afii10146 = 0x0462;
-  t.afii10147 = 0x0472;
-  t.afii10148 = 0x0474;
-  t.afii10192 = 0xf6c6;
-  t.afii10193 = 0x045f;
-  t.afii10194 = 0x0463;
-  t.afii10195 = 0x0473;
-  t.afii10196 = 0x0475;
-  t.afii10831 = 0xf6c7;
-  t.afii10832 = 0xf6c8;
-  t.afii10846 = 0x04d9;
-  t.afii299 = 0x200e;
-  t.afii300 = 0x200f;
-  t.afii301 = 0x200d;
-  t.afii57381 = 0x066a;
-  t.afii57388 = 0x060c;
-  t.afii57392 = 0x0660;
-  t.afii57393 = 0x0661;
-  t.afii57394 = 0x0662;
-  t.afii57395 = 0x0663;
-  t.afii57396 = 0x0664;
-  t.afii57397 = 0x0665;
-  t.afii57398 = 0x0666;
-  t.afii57399 = 0x0667;
-  t.afii57400 = 0x0668;
-  t.afii57401 = 0x0669;
-  t.afii57403 = 0x061b;
-  t.afii57407 = 0x061f;
-  t.afii57409 = 0x0621;
-  t.afii57410 = 0x0622;
-  t.afii57411 = 0x0623;
-  t.afii57412 = 0x0624;
-  t.afii57413 = 0x0625;
-  t.afii57414 = 0x0626;
-  t.afii57415 = 0x0627;
-  t.afii57416 = 0x0628;
-  t.afii57417 = 0x0629;
-  t.afii57418 = 0x062a;
-  t.afii57419 = 0x062b;
-  t.afii57420 = 0x062c;
-  t.afii57421 = 0x062d;
-  t.afii57422 = 0x062e;
-  t.afii57423 = 0x062f;
-  t.afii57424 = 0x0630;
-  t.afii57425 = 0x0631;
-  t.afii57426 = 0x0632;
-  t.afii57427 = 0x0633;
-  t.afii57428 = 0x0634;
-  t.afii57429 = 0x0635;
-  t.afii57430 = 0x0636;
-  t.afii57431 = 0x0637;
-  t.afii57432 = 0x0638;
-  t.afii57433 = 0x0639;
-  t.afii57434 = 0x063a;
-  t.afii57440 = 0x0640;
-  t.afii57441 = 0x0641;
-  t.afii57442 = 0x0642;
-  t.afii57443 = 0x0643;
-  t.afii57444 = 0x0644;
-  t.afii57445 = 0x0645;
-  t.afii57446 = 0x0646;
-  t.afii57448 = 0x0648;
-  t.afii57449 = 0x0649;
-  t.afii57450 = 0x064a;
-  t.afii57451 = 0x064b;
-  t.afii57452 = 0x064c;
-  t.afii57453 = 0x064d;
-  t.afii57454 = 0x064e;
-  t.afii57455 = 0x064f;
-  t.afii57456 = 0x0650;
-  t.afii57457 = 0x0651;
-  t.afii57458 = 0x0652;
-  t.afii57470 = 0x0647;
-  t.afii57505 = 0x06a4;
-  t.afii57506 = 0x067e;
-  t.afii57507 = 0x0686;
-  t.afii57508 = 0x0698;
-  t.afii57509 = 0x06af;
-  t.afii57511 = 0x0679;
-  t.afii57512 = 0x0688;
-  t.afii57513 = 0x0691;
-  t.afii57514 = 0x06ba;
-  t.afii57519 = 0x06d2;
-  t.afii57534 = 0x06d5;
-  t.afii57636 = 0x20aa;
-  t.afii57645 = 0x05be;
-  t.afii57658 = 0x05c3;
-  t.afii57664 = 0x05d0;
-  t.afii57665 = 0x05d1;
-  t.afii57666 = 0x05d2;
-  t.afii57667 = 0x05d3;
-  t.afii57668 = 0x05d4;
-  t.afii57669 = 0x05d5;
-  t.afii57670 = 0x05d6;
-  t.afii57671 = 0x05d7;
-  t.afii57672 = 0x05d8;
-  t.afii57673 = 0x05d9;
-  t.afii57674 = 0x05da;
-  t.afii57675 = 0x05db;
-  t.afii57676 = 0x05dc;
-  t.afii57677 = 0x05dd;
-  t.afii57678 = 0x05de;
-  t.afii57679 = 0x05df;
-  t.afii57680 = 0x05e0;
-  t.afii57681 = 0x05e1;
-  t.afii57682 = 0x05e2;
-  t.afii57683 = 0x05e3;
-  t.afii57684 = 0x05e4;
-  t.afii57685 = 0x05e5;
-  t.afii57686 = 0x05e6;
-  t.afii57687 = 0x05e7;
-  t.afii57688 = 0x05e8;
-  t.afii57689 = 0x05e9;
-  t.afii57690 = 0x05ea;
-  t.afii57694 = 0xfb2a;
-  t.afii57695 = 0xfb2b;
-  t.afii57700 = 0xfb4b;
-  t.afii57705 = 0xfb1f;
-  t.afii57716 = 0x05f0;
-  t.afii57717 = 0x05f1;
-  t.afii57718 = 0x05f2;
-  t.afii57723 = 0xfb35;
-  t.afii57793 = 0x05b4;
-  t.afii57794 = 0x05b5;
-  t.afii57795 = 0x05b6;
-  t.afii57796 = 0x05bb;
-  t.afii57797 = 0x05b8;
-  t.afii57798 = 0x05b7;
-  t.afii57799 = 0x05b0;
-  t.afii57800 = 0x05b2;
-  t.afii57801 = 0x05b1;
-  t.afii57802 = 0x05b3;
-  t.afii57803 = 0x05c2;
-  t.afii57804 = 0x05c1;
-  t.afii57806 = 0x05b9;
-  t.afii57807 = 0x05bc;
-  t.afii57839 = 0x05bd;
-  t.afii57841 = 0x05bf;
-  t.afii57842 = 0x05c0;
-  t.afii57929 = 0x02bc;
-  t.afii61248 = 0x2105;
-  t.afii61289 = 0x2113;
-  t.afii61352 = 0x2116;
-  t.afii61573 = 0x202c;
-  t.afii61574 = 0x202d;
-  t.afii61575 = 0x202e;
-  t.afii61664 = 0x200c;
-  t.afii63167 = 0x066d;
-  t.afii64937 = 0x02bd;
-  t.agrave = 0x00e0;
-  t.agujarati = 0x0a85;
-  t.agurmukhi = 0x0a05;
-  t.ahiragana = 0x3042;
-  t.ahookabove = 0x1ea3;
-  t.aibengali = 0x0990;
-  t.aibopomofo = 0x311e;
-  t.aideva = 0x0910;
-  t.aiecyrillic = 0x04d5;
-  t.aigujarati = 0x0a90;
-  t.aigurmukhi = 0x0a10;
-  t.aimatragurmukhi = 0x0a48;
-  t.ainarabic = 0x0639;
-  t.ainfinalarabic = 0xfeca;
-  t.aininitialarabic = 0xfecb;
-  t.ainmedialarabic = 0xfecc;
-  t.ainvertedbreve = 0x0203;
-  t.aivowelsignbengali = 0x09c8;
-  t.aivowelsigndeva = 0x0948;
-  t.aivowelsigngujarati = 0x0ac8;
-  t.akatakana = 0x30a2;
-  t.akatakanahalfwidth = 0xff71;
-  t.akorean = 0x314f;
-  t.alef = 0x05d0;
-  t.alefarabic = 0x0627;
-  t.alefdageshhebrew = 0xfb30;
-  t.aleffinalarabic = 0xfe8e;
-  t.alefhamzaabovearabic = 0x0623;
-  t.alefhamzaabovefinalarabic = 0xfe84;
-  t.alefhamzabelowarabic = 0x0625;
-  t.alefhamzabelowfinalarabic = 0xfe88;
-  t.alefhebrew = 0x05d0;
-  t.aleflamedhebrew = 0xfb4f;
-  t.alefmaddaabovearabic = 0x0622;
-  t.alefmaddaabovefinalarabic = 0xfe82;
-  t.alefmaksuraarabic = 0x0649;
-  t.alefmaksurafinalarabic = 0xfef0;
-  t.alefmaksurainitialarabic = 0xfef3;
-  t.alefmaksuramedialarabic = 0xfef4;
-  t.alefpatahhebrew = 0xfb2e;
-  t.alefqamatshebrew = 0xfb2f;
-  t.aleph = 0x2135;
-  t.allequal = 0x224c;
-  t.alpha = 0x03b1;
-  t.alphatonos = 0x03ac;
-  t.amacron = 0x0101;
-  t.amonospace = 0xff41;
-  t.ampersand = 0x0026;
-  t.ampersandmonospace = 0xff06;
-  t.ampersandsmall = 0xf726;
-  t.amsquare = 0x33c2;
-  t.anbopomofo = 0x3122;
-  t.angbopomofo = 0x3124;
-  t.angbracketleft = 0x3008; // Glyph is missing from Adobe's original list.
-  t.angbracketright = 0x3009; // Glyph is missing from Adobe's original list.
-  t.angkhankhuthai = 0x0e5a;
-  t.angle = 0x2220;
-  t.anglebracketleft = 0x3008;
-  t.anglebracketleftvertical = 0xfe3f;
-  t.anglebracketright = 0x3009;
-  t.anglebracketrightvertical = 0xfe40;
-  t.angleleft = 0x2329;
-  t.angleright = 0x232a;
-  t.angstrom = 0x212b;
-  t.anoteleia = 0x0387;
-  t.anudattadeva = 0x0952;
-  t.anusvarabengali = 0x0982;
-  t.anusvaradeva = 0x0902;
-  t.anusvaragujarati = 0x0a82;
-  t.aogonek = 0x0105;
-  t.apaatosquare = 0x3300;
-  t.aparen = 0x249c;
-  t.apostrophearmenian = 0x055a;
-  t.apostrophemod = 0x02bc;
-  t.apple = 0xf8ff;
-  t.approaches = 0x2250;
-  t.approxequal = 0x2248;
-  t.approxequalorimage = 0x2252;
-  t.approximatelyequal = 0x2245;
-  t.araeaekorean = 0x318e;
-  t.araeakorean = 0x318d;
-  t.arc = 0x2312;
-  t.arighthalfring = 0x1e9a;
-  t.aring = 0x00e5;
-  t.aringacute = 0x01fb;
-  t.aringbelow = 0x1e01;
-  t.arrowboth = 0x2194;
-  t.arrowdashdown = 0x21e3;
-  t.arrowdashleft = 0x21e0;
-  t.arrowdashright = 0x21e2;
-  t.arrowdashup = 0x21e1;
-  t.arrowdblboth = 0x21d4;
-  t.arrowdbldown = 0x21d3;
-  t.arrowdblleft = 0x21d0;
-  t.arrowdblright = 0x21d2;
-  t.arrowdblup = 0x21d1;
-  t.arrowdown = 0x2193;
-  t.arrowdownleft = 0x2199;
-  t.arrowdownright = 0x2198;
-  t.arrowdownwhite = 0x21e9;
-  t.arrowheaddownmod = 0x02c5;
-  t.arrowheadleftmod = 0x02c2;
-  t.arrowheadrightmod = 0x02c3;
-  t.arrowheadupmod = 0x02c4;
-  t.arrowhorizex = 0xf8e7;
-  t.arrowleft = 0x2190;
-  t.arrowleftdbl = 0x21d0;
-  t.arrowleftdblstroke = 0x21cd;
-  t.arrowleftoverright = 0x21c6;
-  t.arrowleftwhite = 0x21e6;
-  t.arrowright = 0x2192;
-  t.arrowrightdblstroke = 0x21cf;
-  t.arrowrightheavy = 0x279e;
-  t.arrowrightoverleft = 0x21c4;
-  t.arrowrightwhite = 0x21e8;
-  t.arrowtableft = 0x21e4;
-  t.arrowtabright = 0x21e5;
-  t.arrowup = 0x2191;
-  t.arrowupdn = 0x2195;
-  t.arrowupdnbse = 0x21a8;
-  t.arrowupdownbase = 0x21a8;
-  t.arrowupleft = 0x2196;
-  t.arrowupleftofdown = 0x21c5;
-  t.arrowupright = 0x2197;
-  t.arrowupwhite = 0x21e7;
-  t.arrowvertex = 0xf8e6;
-  t.asciicircum = 0x005e;
-  t.asciicircummonospace = 0xff3e;
-  t.asciitilde = 0x007e;
-  t.asciitildemonospace = 0xff5e;
-  t.ascript = 0x0251;
-  t.ascriptturned = 0x0252;
-  t.asmallhiragana = 0x3041;
-  t.asmallkatakana = 0x30a1;
-  t.asmallkatakanahalfwidth = 0xff67;
-  t.asterisk = 0x002a;
-  t.asteriskaltonearabic = 0x066d;
-  t.asteriskarabic = 0x066d;
-  t.asteriskmath = 0x2217;
-  t.asteriskmonospace = 0xff0a;
-  t.asterisksmall = 0xfe61;
-  t.asterism = 0x2042;
-  t.asuperior = 0xf6e9;
-  t.asymptoticallyequal = 0x2243;
-  t.at = 0x0040;
-  t.atilde = 0x00e3;
-  t.atmonospace = 0xff20;
-  t.atsmall = 0xfe6b;
-  t.aturned = 0x0250;
-  t.aubengali = 0x0994;
-  t.aubopomofo = 0x3120;
-  t.audeva = 0x0914;
-  t.augujarati = 0x0a94;
-  t.augurmukhi = 0x0a14;
-  t.aulengthmarkbengali = 0x09d7;
-  t.aumatragurmukhi = 0x0a4c;
-  t.auvowelsignbengali = 0x09cc;
-  t.auvowelsigndeva = 0x094c;
-  t.auvowelsigngujarati = 0x0acc;
-  t.avagrahadeva = 0x093d;
-  t.aybarmenian = 0x0561;
-  t.ayin = 0x05e2;
-  t.ayinaltonehebrew = 0xfb20;
-  t.ayinhebrew = 0x05e2;
-  t.b = 0x0062;
-  t.babengali = 0x09ac;
-  t.backslash = 0x005c;
-  t.backslashmonospace = 0xff3c;
-  t.badeva = 0x092c;
-  t.bagujarati = 0x0aac;
-  t.bagurmukhi = 0x0a2c;
-  t.bahiragana = 0x3070;
-  t.bahtthai = 0x0e3f;
-  t.bakatakana = 0x30d0;
-  t.bar = 0x007c;
-  t.barmonospace = 0xff5c;
-  t.bbopomofo = 0x3105;
-  t.bcircle = 0x24d1;
-  t.bdotaccent = 0x1e03;
-  t.bdotbelow = 0x1e05;
-  t.beamedsixteenthnotes = 0x266c;
-  t.because = 0x2235;
-  t.becyrillic = 0x0431;
-  t.beharabic = 0x0628;
-  t.behfinalarabic = 0xfe90;
-  t.behinitialarabic = 0xfe91;
-  t.behiragana = 0x3079;
-  t.behmedialarabic = 0xfe92;
-  t.behmeeminitialarabic = 0xfc9f;
-  t.behmeemisolatedarabic = 0xfc08;
-  t.behnoonfinalarabic = 0xfc6d;
-  t.bekatakana = 0x30d9;
-  t.benarmenian = 0x0562;
-  t.bet = 0x05d1;
-  t.beta = 0x03b2;
-  t.betasymbolgreek = 0x03d0;
-  t.betdagesh = 0xfb31;
-  t.betdageshhebrew = 0xfb31;
-  t.bethebrew = 0x05d1;
-  t.betrafehebrew = 0xfb4c;
-  t.bhabengali = 0x09ad;
-  t.bhadeva = 0x092d;
-  t.bhagujarati = 0x0aad;
-  t.bhagurmukhi = 0x0a2d;
-  t.bhook = 0x0253;
-  t.bihiragana = 0x3073;
-  t.bikatakana = 0x30d3;
-  t.bilabialclick = 0x0298;
-  t.bindigurmukhi = 0x0a02;
-  t.birusquare = 0x3331;
-  t.blackcircle = 0x25cf;
-  t.blackdiamond = 0x25c6;
-  t.blackdownpointingtriangle = 0x25bc;
-  t.blackleftpointingpointer = 0x25c4;
-  t.blackleftpointingtriangle = 0x25c0;
-  t.blacklenticularbracketleft = 0x3010;
-  t.blacklenticularbracketleftvertical = 0xfe3b;
-  t.blacklenticularbracketright = 0x3011;
-  t.blacklenticularbracketrightvertical = 0xfe3c;
-  t.blacklowerlefttriangle = 0x25e3;
-  t.blacklowerrighttriangle = 0x25e2;
-  t.blackrectangle = 0x25ac;
-  t.blackrightpointingpointer = 0x25ba;
-  t.blackrightpointingtriangle = 0x25b6;
-  t.blacksmallsquare = 0x25aa;
-  t.blacksmilingface = 0x263b;
-  t.blacksquare = 0x25a0;
-  t.blackstar = 0x2605;
-  t.blackupperlefttriangle = 0x25e4;
-  t.blackupperrighttriangle = 0x25e5;
-  t.blackuppointingsmalltriangle = 0x25b4;
-  t.blackuppointingtriangle = 0x25b2;
-  t.blank = 0x2423;
-  t.blinebelow = 0x1e07;
-  t.block = 0x2588;
-  t.bmonospace = 0xff42;
-  t.bobaimaithai = 0x0e1a;
-  t.bohiragana = 0x307c;
-  t.bokatakana = 0x30dc;
-  t.bparen = 0x249d;
-  t.bqsquare = 0x33c3;
-  t.braceex = 0xf8f4;
-  t.braceleft = 0x007b;
-  t.braceleftbt = 0xf8f3;
-  t.braceleftmid = 0xf8f2;
-  t.braceleftmonospace = 0xff5b;
-  t.braceleftsmall = 0xfe5b;
-  t.bracelefttp = 0xf8f1;
-  t.braceleftvertical = 0xfe37;
-  t.braceright = 0x007d;
-  t.bracerightbt = 0xf8fe;
-  t.bracerightmid = 0xf8fd;
-  t.bracerightmonospace = 0xff5d;
-  t.bracerightsmall = 0xfe5c;
-  t.bracerighttp = 0xf8fc;
-  t.bracerightvertical = 0xfe38;
-  t.bracketleft = 0x005b;
-  t.bracketleftbt = 0xf8f0;
-  t.bracketleftex = 0xf8ef;
-  t.bracketleftmonospace = 0xff3b;
-  t.bracketlefttp = 0xf8ee;
-  t.bracketright = 0x005d;
-  t.bracketrightbt = 0xf8fb;
-  t.bracketrightex = 0xf8fa;
-  t.bracketrightmonospace = 0xff3d;
-  t.bracketrighttp = 0xf8f9;
-  t.breve = 0x02d8;
-  t.brevebelowcmb = 0x032e;
-  t.brevecmb = 0x0306;
-  t.breveinvertedbelowcmb = 0x032f;
-  t.breveinvertedcmb = 0x0311;
-  t.breveinverteddoublecmb = 0x0361;
-  t.bridgebelowcmb = 0x032a;
-  t.bridgeinvertedbelowcmb = 0x033a;
-  t.brokenbar = 0x00a6;
-  t.bstroke = 0x0180;
-  t.bsuperior = 0xf6ea;
-  t.btopbar = 0x0183;
-  t.buhiragana = 0x3076;
-  t.bukatakana = 0x30d6;
-  t.bullet = 0x2022;
-  t.bulletinverse = 0x25d8;
-  t.bulletoperator = 0x2219;
-  t.bullseye = 0x25ce;
-  t.c = 0x0063;
-  t.caarmenian = 0x056e;
-  t.cabengali = 0x099a;
-  t.cacute = 0x0107;
-  t.cadeva = 0x091a;
-  t.cagujarati = 0x0a9a;
-  t.cagurmukhi = 0x0a1a;
-  t.calsquare = 0x3388;
-  t.candrabindubengali = 0x0981;
-  t.candrabinducmb = 0x0310;
-  t.candrabindudeva = 0x0901;
-  t.candrabindugujarati = 0x0a81;
-  t.capslock = 0x21ea;
-  t.careof = 0x2105;
-  t.caron = 0x02c7;
-  t.caronbelowcmb = 0x032c;
-  t.caroncmb = 0x030c;
-  t.carriagereturn = 0x21b5;
-  t.cbopomofo = 0x3118;
-  t.ccaron = 0x010d;
-  t.ccedilla = 0x00e7;
-  t.ccedillaacute = 0x1e09;
-  t.ccircle = 0x24d2;
-  t.ccircumflex = 0x0109;
-  t.ccurl = 0x0255;
-  t.cdot = 0x010b;
-  t.cdotaccent = 0x010b;
-  t.cdsquare = 0x33c5;
-  t.cedilla = 0x00b8;
-  t.cedillacmb = 0x0327;
-  t.cent = 0x00a2;
-  t.centigrade = 0x2103;
-  t.centinferior = 0xf6df;
-  t.centmonospace = 0xffe0;
-  t.centoldstyle = 0xf7a2;
-  t.centsuperior = 0xf6e0;
-  t.chaarmenian = 0x0579;
-  t.chabengali = 0x099b;
-  t.chadeva = 0x091b;
-  t.chagujarati = 0x0a9b;
-  t.chagurmukhi = 0x0a1b;
-  t.chbopomofo = 0x3114;
-  t.cheabkhasiancyrillic = 0x04bd;
-  t.checkmark = 0x2713;
-  t.checyrillic = 0x0447;
-  t.chedescenderabkhasiancyrillic = 0x04bf;
-  t.chedescendercyrillic = 0x04b7;
-  t.chedieresiscyrillic = 0x04f5;
-  t.cheharmenian = 0x0573;
-  t.chekhakassiancyrillic = 0x04cc;
-  t.cheverticalstrokecyrillic = 0x04b9;
-  t.chi = 0x03c7;
-  t.chieuchacirclekorean = 0x3277;
-  t.chieuchaparenkorean = 0x3217;
-  t.chieuchcirclekorean = 0x3269;
-  t.chieuchkorean = 0x314a;
-  t.chieuchparenkorean = 0x3209;
-  t.chochangthai = 0x0e0a;
-  t.chochanthai = 0x0e08;
-  t.chochingthai = 0x0e09;
-  t.chochoethai = 0x0e0c;
-  t.chook = 0x0188;
-  t.cieucacirclekorean = 0x3276;
-  t.cieucaparenkorean = 0x3216;
-  t.cieuccirclekorean = 0x3268;
-  t.cieuckorean = 0x3148;
-  t.cieucparenkorean = 0x3208;
-  t.cieucuparenkorean = 0x321c;
-  t.circle = 0x25cb;
-  t.circlecopyrt = 0x00a9; // Glyph is missing from Adobe's original list.
-  t.circlemultiply = 0x2297;
-  t.circleot = 0x2299;
-  t.circleplus = 0x2295;
-  t.circlepostalmark = 0x3036;
-  t.circlewithlefthalfblack = 0x25d0;
-  t.circlewithrighthalfblack = 0x25d1;
-  t.circumflex = 0x02c6;
-  t.circumflexbelowcmb = 0x032d;
-  t.circumflexcmb = 0x0302;
-  t.clear = 0x2327;
-  t.clickalveolar = 0x01c2;
-  t.clickdental = 0x01c0;
-  t.clicklateral = 0x01c1;
-  t.clickretroflex = 0x01c3;
-  t.club = 0x2663;
-  t.clubsuitblack = 0x2663;
-  t.clubsuitwhite = 0x2667;
-  t.cmcubedsquare = 0x33a4;
-  t.cmonospace = 0xff43;
-  t.cmsquaredsquare = 0x33a0;
-  t.coarmenian = 0x0581;
-  t.colon = 0x003a;
-  t.colonmonetary = 0x20a1;
-  t.colonmonospace = 0xff1a;
-  t.colonsign = 0x20a1;
-  t.colonsmall = 0xfe55;
-  t.colontriangularhalfmod = 0x02d1;
-  t.colontriangularmod = 0x02d0;
-  t.comma = 0x002c;
-  t.commaabovecmb = 0x0313;
-  t.commaaboverightcmb = 0x0315;
-  t.commaaccent = 0xf6c3;
-  t.commaarabic = 0x060c;
-  t.commaarmenian = 0x055d;
-  t.commainferior = 0xf6e1;
-  t.commamonospace = 0xff0c;
-  t.commareversedabovecmb = 0x0314;
-  t.commareversedmod = 0x02bd;
-  t.commasmall = 0xfe50;
-  t.commasuperior = 0xf6e2;
-  t.commaturnedabovecmb = 0x0312;
-  t.commaturnedmod = 0x02bb;
-  t.compass = 0x263c;
-  t.congruent = 0x2245;
-  t.contourintegral = 0x222e;
-  t.control = 0x2303;
-  t.controlACK = 0x0006;
-  t.controlBEL = 0x0007;
-  t.controlBS = 0x0008;
-  t.controlCAN = 0x0018;
-  t.controlCR = 0x000d;
-  t.controlDC1 = 0x0011;
-  t.controlDC2 = 0x0012;
-  t.controlDC3 = 0x0013;
-  t.controlDC4 = 0x0014;
-  t.controlDEL = 0x007f;
-  t.controlDLE = 0x0010;
-  t.controlEM = 0x0019;
-  t.controlENQ = 0x0005;
-  t.controlEOT = 0x0004;
-  t.controlESC = 0x001b;
-  t.controlETB = 0x0017;
-  t.controlETX = 0x0003;
-  t.controlFF = 0x000c;
-  t.controlFS = 0x001c;
-  t.controlGS = 0x001d;
-  t.controlHT = 0x0009;
-  t.controlLF = 0x000a;
-  t.controlNAK = 0x0015;
-  t.controlNULL = 0x0000; // Glyph is missing from Adobe's original list.
-  t.controlRS = 0x001e;
-  t.controlSI = 0x000f;
-  t.controlSO = 0x000e;
-  t.controlSOT = 0x0002;
-  t.controlSTX = 0x0001;
-  t.controlSUB = 0x001a;
-  t.controlSYN = 0x0016;
-  t.controlUS = 0x001f;
-  t.controlVT = 0x000b;
-  t.copyright = 0x00a9;
-  t.copyrightsans = 0xf8e9;
-  t.copyrightserif = 0xf6d9;
-  t.cornerbracketleft = 0x300c;
-  t.cornerbracketlefthalfwidth = 0xff62;
-  t.cornerbracketleftvertical = 0xfe41;
-  t.cornerbracketright = 0x300d;
-  t.cornerbracketrighthalfwidth = 0xff63;
-  t.cornerbracketrightvertical = 0xfe42;
-  t.corporationsquare = 0x337f;
-  t.cosquare = 0x33c7;
-  t.coverkgsquare = 0x33c6;
-  t.cparen = 0x249e;
-  t.cruzeiro = 0x20a2;
-  t.cstretched = 0x0297;
-  t.curlyand = 0x22cf;
-  t.curlyor = 0x22ce;
-  t.currency = 0x00a4;
-  t.cyrBreve = 0xf6d1;
-  t.cyrFlex = 0xf6d2;
-  t.cyrbreve = 0xf6d4;
-  t.cyrflex = 0xf6d5;
-  t.d = 0x0064;
-  t.daarmenian = 0x0564;
-  t.dabengali = 0x09a6;
-  t.dadarabic = 0x0636;
-  t.dadeva = 0x0926;
-  t.dadfinalarabic = 0xfebe;
-  t.dadinitialarabic = 0xfebf;
-  t.dadmedialarabic = 0xfec0;
-  t.dagesh = 0x05bc;
-  t.dageshhebrew = 0x05bc;
-  t.dagger = 0x2020;
-  t.daggerdbl = 0x2021;
-  t.dagujarati = 0x0aa6;
-  t.dagurmukhi = 0x0a26;
-  t.dahiragana = 0x3060;
-  t.dakatakana = 0x30c0;
-  t.dalarabic = 0x062f;
-  t.dalet = 0x05d3;
-  t.daletdagesh = 0xfb33;
-  t.daletdageshhebrew = 0xfb33;
-  t.dalethebrew = 0x05d3;
-  t.dalfinalarabic = 0xfeaa;
-  t.dammaarabic = 0x064f;
-  t.dammalowarabic = 0x064f;
-  t.dammatanaltonearabic = 0x064c;
-  t.dammatanarabic = 0x064c;
-  t.danda = 0x0964;
-  t.dargahebrew = 0x05a7;
-  t.dargalefthebrew = 0x05a7;
-  t.dasiapneumatacyrilliccmb = 0x0485;
-  t.dblGrave = 0xf6d3;
-  t.dblanglebracketleft = 0x300a;
-  t.dblanglebracketleftvertical = 0xfe3d;
-  t.dblanglebracketright = 0x300b;
-  t.dblanglebracketrightvertical = 0xfe3e;
-  t.dblarchinvertedbelowcmb = 0x032b;
-  t.dblarrowleft = 0x21d4;
-  t.dblarrowright = 0x21d2;
-  t.dbldanda = 0x0965;
-  t.dblgrave = 0xf6d6;
-  t.dblgravecmb = 0x030f;
-  t.dblintegral = 0x222c;
-  t.dbllowline = 0x2017;
-  t.dbllowlinecmb = 0x0333;
-  t.dbloverlinecmb = 0x033f;
-  t.dblprimemod = 0x02ba;
-  t.dblverticalbar = 0x2016;
-  t.dblverticallineabovecmb = 0x030e;
-  t.dbopomofo = 0x3109;
-  t.dbsquare = 0x33c8;
-  t.dcaron = 0x010f;
-  t.dcedilla = 0x1e11;
-  t.dcircle = 0x24d3;
-  t.dcircumflexbelow = 0x1e13;
-  t.dcroat = 0x0111;
-  t.ddabengali = 0x09a1;
-  t.ddadeva = 0x0921;
-  t.ddagujarati = 0x0aa1;
-  t.ddagurmukhi = 0x0a21;
-  t.ddalarabic = 0x0688;
-  t.ddalfinalarabic = 0xfb89;
-  t.dddhadeva = 0x095c;
-  t.ddhabengali = 0x09a2;
-  t.ddhadeva = 0x0922;
-  t.ddhagujarati = 0x0aa2;
-  t.ddhagurmukhi = 0x0a22;
-  t.ddotaccent = 0x1e0b;
-  t.ddotbelow = 0x1e0d;
-  t.decimalseparatorarabic = 0x066b;
-  t.decimalseparatorpersian = 0x066b;
-  t.decyrillic = 0x0434;
-  t.degree = 0x00b0;
-  t.dehihebrew = 0x05ad;
-  t.dehiragana = 0x3067;
-  t.deicoptic = 0x03ef;
-  t.dekatakana = 0x30c7;
-  t.deleteleft = 0x232b;
-  t.deleteright = 0x2326;
-  t.delta = 0x03b4;
-  t.deltaturned = 0x018d;
-  t.denominatorminusonenumeratorbengali = 0x09f8;
-  t.dezh = 0x02a4;
-  t.dhabengali = 0x09a7;
-  t.dhadeva = 0x0927;
-  t.dhagujarati = 0x0aa7;
-  t.dhagurmukhi = 0x0a27;
-  t.dhook = 0x0257;
-  t.dialytikatonos = 0x0385;
-  t.dialytikatonoscmb = 0x0344;
-  t.diamond = 0x2666;
-  t.diamondsuitwhite = 0x2662;
-  t.dieresis = 0x00a8;
-  t.dieresisacute = 0xf6d7;
-  t.dieresisbelowcmb = 0x0324;
-  t.dieresiscmb = 0x0308;
-  t.dieresisgrave = 0xf6d8;
-  t.dieresistonos = 0x0385;
-  t.dihiragana = 0x3062;
-  t.dikatakana = 0x30c2;
-  t.dittomark = 0x3003;
-  t.divide = 0x00f7;
-  t.divides = 0x2223;
-  t.divisionslash = 0x2215;
-  t.djecyrillic = 0x0452;
-  t.dkshade = 0x2593;
-  t.dlinebelow = 0x1e0f;
-  t.dlsquare = 0x3397;
-  t.dmacron = 0x0111;
-  t.dmonospace = 0xff44;
-  t.dnblock = 0x2584;
-  t.dochadathai = 0x0e0e;
-  t.dodekthai = 0x0e14;
-  t.dohiragana = 0x3069;
-  t.dokatakana = 0x30c9;
-  t.dollar = 0x0024;
-  t.dollarinferior = 0xf6e3;
-  t.dollarmonospace = 0xff04;
-  t.dollaroldstyle = 0xf724;
-  t.dollarsmall = 0xfe69;
-  t.dollarsuperior = 0xf6e4;
-  t.dong = 0x20ab;
-  t.dorusquare = 0x3326;
-  t.dotaccent = 0x02d9;
-  t.dotaccentcmb = 0x0307;
-  t.dotbelowcmb = 0x0323;
-  t.dotbelowcomb = 0x0323;
-  t.dotkatakana = 0x30fb;
-  t.dotlessi = 0x0131;
-  t.dotlessj = 0xf6be;
-  t.dotlessjstrokehook = 0x0284;
-  t.dotmath = 0x22c5;
-  t.dottedcircle = 0x25cc;
-  t.doubleyodpatah = 0xfb1f;
-  t.doubleyodpatahhebrew = 0xfb1f;
-  t.downtackbelowcmb = 0x031e;
-  t.downtackmod = 0x02d5;
-  t.dparen = 0x249f;
-  t.dsuperior = 0xf6eb;
-  t.dtail = 0x0256;
-  t.dtopbar = 0x018c;
-  t.duhiragana = 0x3065;
-  t.dukatakana = 0x30c5;
-  t.dz = 0x01f3;
-  t.dzaltone = 0x02a3;
-  t.dzcaron = 0x01c6;
-  t.dzcurl = 0x02a5;
-  t.dzeabkhasiancyrillic = 0x04e1;
-  t.dzecyrillic = 0x0455;
-  t.dzhecyrillic = 0x045f;
-  t.e = 0x0065;
-  t.eacute = 0x00e9;
-  t.earth = 0x2641;
-  t.ebengali = 0x098f;
-  t.ebopomofo = 0x311c;
-  t.ebreve = 0x0115;
-  t.ecandradeva = 0x090d;
-  t.ecandragujarati = 0x0a8d;
-  t.ecandravowelsigndeva = 0x0945;
-  t.ecandravowelsigngujarati = 0x0ac5;
-  t.ecaron = 0x011b;
-  t.ecedillabreve = 0x1e1d;
-  t.echarmenian = 0x0565;
-  t.echyiwnarmenian = 0x0587;
-  t.ecircle = 0x24d4;
-  t.ecircumflex = 0x00ea;
-  t.ecircumflexacute = 0x1ebf;
-  t.ecircumflexbelow = 0x1e19;
-  t.ecircumflexdotbelow = 0x1ec7;
-  t.ecircumflexgrave = 0x1ec1;
-  t.ecircumflexhookabove = 0x1ec3;
-  t.ecircumflextilde = 0x1ec5;
-  t.ecyrillic = 0x0454;
-  t.edblgrave = 0x0205;
-  t.edeva = 0x090f;
-  t.edieresis = 0x00eb;
-  t.edot = 0x0117;
-  t.edotaccent = 0x0117;
-  t.edotbelow = 0x1eb9;
-  t.eegurmukhi = 0x0a0f;
-  t.eematragurmukhi = 0x0a47;
-  t.efcyrillic = 0x0444;
-  t.egrave = 0x00e8;
-  t.egujarati = 0x0a8f;
-  t.eharmenian = 0x0567;
-  t.ehbopomofo = 0x311d;
-  t.ehiragana = 0x3048;
-  t.ehookabove = 0x1ebb;
-  t.eibopomofo = 0x311f;
-  t.eight = 0x0038;
-  t.eightarabic = 0x0668;
-  t.eightbengali = 0x09ee;
-  t.eightcircle = 0x2467;
-  t.eightcircleinversesansserif = 0x2791;
-  t.eightdeva = 0x096e;
-  t.eighteencircle = 0x2471;
-  t.eighteenparen = 0x2485;
-  t.eighteenperiod = 0x2499;
-  t.eightgujarati = 0x0aee;
-  t.eightgurmukhi = 0x0a6e;
-  t.eighthackarabic = 0x0668;
-  t.eighthangzhou = 0x3028;
-  t.eighthnotebeamed = 0x266b;
-  t.eightideographicparen = 0x3227;
-  t.eightinferior = 0x2088;
-  t.eightmonospace = 0xff18;
-  t.eightoldstyle = 0xf738;
-  t.eightparen = 0x247b;
-  t.eightperiod = 0x248f;
-  t.eightpersian = 0x06f8;
-  t.eightroman = 0x2177;
-  t.eightsuperior = 0x2078;
-  t.eightthai = 0x0e58;
-  t.einvertedbreve = 0x0207;
-  t.eiotifiedcyrillic = 0x0465;
-  t.ekatakana = 0x30a8;
-  t.ekatakanahalfwidth = 0xff74;
-  t.ekonkargurmukhi = 0x0a74;
-  t.ekorean = 0x3154;
-  t.elcyrillic = 0x043b;
-  t.element = 0x2208;
-  t.elevencircle = 0x246a;
-  t.elevenparen = 0x247e;
-  t.elevenperiod = 0x2492;
-  t.elevenroman = 0x217a;
-  t.ellipsis = 0x2026;
-  t.ellipsisvertical = 0x22ee;
-  t.emacron = 0x0113;
-  t.emacronacute = 0x1e17;
-  t.emacrongrave = 0x1e15;
-  t.emcyrillic = 0x043c;
-  t.emdash = 0x2014;
-  t.emdashvertical = 0xfe31;
-  t.emonospace = 0xff45;
-  t.emphasismarkarmenian = 0x055b;
-  t.emptyset = 0x2205;
-  t.enbopomofo = 0x3123;
-  t.encyrillic = 0x043d;
-  t.endash = 0x2013;
-  t.endashvertical = 0xfe32;
-  t.endescendercyrillic = 0x04a3;
-  t.eng = 0x014b;
-  t.engbopomofo = 0x3125;
-  t.enghecyrillic = 0x04a5;
-  t.enhookcyrillic = 0x04c8;
-  t.enspace = 0x2002;
-  t.eogonek = 0x0119;
-  t.eokorean = 0x3153;
-  t.eopen = 0x025b;
-  t.eopenclosed = 0x029a;
-  t.eopenreversed = 0x025c;
-  t.eopenreversedclosed = 0x025e;
-  t.eopenreversedhook = 0x025d;
-  t.eparen = 0x24a0;
-  t.epsilon = 0x03b5;
-  t.epsilontonos = 0x03ad;
-  t.equal = 0x003d;
-  t.equalmonospace = 0xff1d;
-  t.equalsmall = 0xfe66;
-  t.equalsuperior = 0x207c;
-  t.equivalence = 0x2261;
-  t.erbopomofo = 0x3126;
-  t.ercyrillic = 0x0440;
-  t.ereversed = 0x0258;
-  t.ereversedcyrillic = 0x044d;
-  t.escyrillic = 0x0441;
-  t.esdescendercyrillic = 0x04ab;
-  t.esh = 0x0283;
-  t.eshcurl = 0x0286;
-  t.eshortdeva = 0x090e;
-  t.eshortvowelsigndeva = 0x0946;
-  t.eshreversedloop = 0x01aa;
-  t.eshsquatreversed = 0x0285;
-  t.esmallhiragana = 0x3047;
-  t.esmallkatakana = 0x30a7;
-  t.esmallkatakanahalfwidth = 0xff6a;
-  t.estimated = 0x212e;
-  t.esuperior = 0xf6ec;
-  t.eta = 0x03b7;
-  t.etarmenian = 0x0568;
-  t.etatonos = 0x03ae;
-  t.eth = 0x00f0;
-  t.etilde = 0x1ebd;
-  t.etildebelow = 0x1e1b;
-  t.etnahtafoukhhebrew = 0x0591;
-  t.etnahtafoukhlefthebrew = 0x0591;
-  t.etnahtahebrew = 0x0591;
-  t.etnahtalefthebrew = 0x0591;
-  t.eturned = 0x01dd;
-  t.eukorean = 0x3161;
-  t.euro = 0x20ac;
-  t.evowelsignbengali = 0x09c7;
-  t.evowelsigndeva = 0x0947;
-  t.evowelsigngujarati = 0x0ac7;
-  t.exclam = 0x0021;
-  t.exclamarmenian = 0x055c;
-  t.exclamdbl = 0x203c;
-  t.exclamdown = 0x00a1;
-  t.exclamdownsmall = 0xf7a1;
-  t.exclammonospace = 0xff01;
-  t.exclamsmall = 0xf721;
-  t.existential = 0x2203;
-  t.ezh = 0x0292;
-  t.ezhcaron = 0x01ef;
-  t.ezhcurl = 0x0293;
-  t.ezhreversed = 0x01b9;
-  t.ezhtail = 0x01ba;
-  t.f = 0x0066;
-  t.fadeva = 0x095e;
-  t.fagurmukhi = 0x0a5e;
-  t.fahrenheit = 0x2109;
-  t.fathaarabic = 0x064e;
-  t.fathalowarabic = 0x064e;
-  t.fathatanarabic = 0x064b;
-  t.fbopomofo = 0x3108;
-  t.fcircle = 0x24d5;
-  t.fdotaccent = 0x1e1f;
-  t.feharabic = 0x0641;
-  t.feharmenian = 0x0586;
-  t.fehfinalarabic = 0xfed2;
-  t.fehinitialarabic = 0xfed3;
-  t.fehmedialarabic = 0xfed4;
-  t.feicoptic = 0x03e5;
-  t.female = 0x2640;
-  t.ff = 0xfb00;
-  t.f_f = 0xfb00;
-  t.ffi = 0xfb03;
-  t.f_f_i = 0xfb03;
-  t.ffl = 0xfb04;
-  t.f_f_l = 0xfb04;
-  t.fi = 0xfb01;
-  t.f_i = 0xfb01;
-  t.fifteencircle = 0x246e;
-  t.fifteenparen = 0x2482;
-  t.fifteenperiod = 0x2496;
-  t.figuredash = 0x2012;
-  t.filledbox = 0x25a0;
-  t.filledrect = 0x25ac;
-  t.finalkaf = 0x05da;
-  t.finalkafdagesh = 0xfb3a;
-  t.finalkafdageshhebrew = 0xfb3a;
-  t.finalkafhebrew = 0x05da;
-  t.finalmem = 0x05dd;
-  t.finalmemhebrew = 0x05dd;
-  t.finalnun = 0x05df;
-  t.finalnunhebrew = 0x05df;
-  t.finalpe = 0x05e3;
-  t.finalpehebrew = 0x05e3;
-  t.finaltsadi = 0x05e5;
-  t.finaltsadihebrew = 0x05e5;
-  t.firsttonechinese = 0x02c9;
-  t.fisheye = 0x25c9;
-  t.fitacyrillic = 0x0473;
-  t.five = 0x0035;
-  t.fivearabic = 0x0665;
-  t.fivebengali = 0x09eb;
-  t.fivecircle = 0x2464;
-  t.fivecircleinversesansserif = 0x278e;
-  t.fivedeva = 0x096b;
-  t.fiveeighths = 0x215d;
-  t.fivegujarati = 0x0aeb;
-  t.fivegurmukhi = 0x0a6b;
-  t.fivehackarabic = 0x0665;
-  t.fivehangzhou = 0x3025;
-  t.fiveideographicparen = 0x3224;
-  t.fiveinferior = 0x2085;
-  t.fivemonospace = 0xff15;
-  t.fiveoldstyle = 0xf735;
-  t.fiveparen = 0x2478;
-  t.fiveperiod = 0x248c;
-  t.fivepersian = 0x06f5;
-  t.fiveroman = 0x2174;
-  t.fivesuperior = 0x2075;
-  t.fivethai = 0x0e55;
-  t.fl = 0xfb02;
-  t.f_l = 0xfb02;
-  t.florin = 0x0192;
-  t.fmonospace = 0xff46;
-  t.fmsquare = 0x3399;
-  t.fofanthai = 0x0e1f;
-  t.fofathai = 0x0e1d;
-  t.fongmanthai = 0x0e4f;
-  t.forall = 0x2200;
-  t.four = 0x0034;
-  t.fourarabic = 0x0664;
-  t.fourbengali = 0x09ea;
-  t.fourcircle = 0x2463;
-  t.fourcircleinversesansserif = 0x278d;
-  t.fourdeva = 0x096a;
-  t.fourgujarati = 0x0aea;
-  t.fourgurmukhi = 0x0a6a;
-  t.fourhackarabic = 0x0664;
-  t.fourhangzhou = 0x3024;
-  t.fourideographicparen = 0x3223;
-  t.fourinferior = 0x2084;
-  t.fourmonospace = 0xff14;
-  t.fournumeratorbengali = 0x09f7;
-  t.fouroldstyle = 0xf734;
-  t.fourparen = 0x2477;
-  t.fourperiod = 0x248b;
-  t.fourpersian = 0x06f4;
-  t.fourroman = 0x2173;
-  t.foursuperior = 0x2074;
-  t.fourteencircle = 0x246d;
-  t.fourteenparen = 0x2481;
-  t.fourteenperiod = 0x2495;
-  t.fourthai = 0x0e54;
-  t.fourthtonechinese = 0x02cb;
-  t.fparen = 0x24a1;
-  t.fraction = 0x2044;
-  t.franc = 0x20a3;
-  t.g = 0x0067;
-  t.gabengali = 0x0997;
-  t.gacute = 0x01f5;
-  t.gadeva = 0x0917;
-  t.gafarabic = 0x06af;
-  t.gaffinalarabic = 0xfb93;
-  t.gafinitialarabic = 0xfb94;
-  t.gafmedialarabic = 0xfb95;
-  t.gagujarati = 0x0a97;
-  t.gagurmukhi = 0x0a17;
-  t.gahiragana = 0x304c;
-  t.gakatakana = 0x30ac;
-  t.gamma = 0x03b3;
-  t.gammalatinsmall = 0x0263;
-  t.gammasuperior = 0x02e0;
-  t.gangiacoptic = 0x03eb;
-  t.gbopomofo = 0x310d;
-  t.gbreve = 0x011f;
-  t.gcaron = 0x01e7;
-  t.gcedilla = 0x0123;
-  t.gcircle = 0x24d6;
-  t.gcircumflex = 0x011d;
-  t.gcommaaccent = 0x0123;
-  t.gdot = 0x0121;
-  t.gdotaccent = 0x0121;
-  t.gecyrillic = 0x0433;
-  t.gehiragana = 0x3052;
-  t.gekatakana = 0x30b2;
-  t.geometricallyequal = 0x2251;
-  t.gereshaccenthebrew = 0x059c;
-  t.gereshhebrew = 0x05f3;
-  t.gereshmuqdamhebrew = 0x059d;
-  t.germandbls = 0x00df;
-  t.gershayimaccenthebrew = 0x059e;
-  t.gershayimhebrew = 0x05f4;
-  t.getamark = 0x3013;
-  t.ghabengali = 0x0998;
-  t.ghadarmenian = 0x0572;
-  t.ghadeva = 0x0918;
-  t.ghagujarati = 0x0a98;
-  t.ghagurmukhi = 0x0a18;
-  t.ghainarabic = 0x063a;
-  t.ghainfinalarabic = 0xfece;
-  t.ghaininitialarabic = 0xfecf;
-  t.ghainmedialarabic = 0xfed0;
-  t.ghemiddlehookcyrillic = 0x0495;
-  t.ghestrokecyrillic = 0x0493;
-  t.gheupturncyrillic = 0x0491;
-  t.ghhadeva = 0x095a;
-  t.ghhagurmukhi = 0x0a5a;
-  t.ghook = 0x0260;
-  t.ghzsquare = 0x3393;
-  t.gihiragana = 0x304e;
-  t.gikatakana = 0x30ae;
-  t.gimarmenian = 0x0563;
-  t.gimel = 0x05d2;
-  t.gimeldagesh = 0xfb32;
-  t.gimeldageshhebrew = 0xfb32;
-  t.gimelhebrew = 0x05d2;
-  t.gjecyrillic = 0x0453;
-  t.glottalinvertedstroke = 0x01be;
-  t.glottalstop = 0x0294;
-  t.glottalstopinverted = 0x0296;
-  t.glottalstopmod = 0x02c0;
-  t.glottalstopreversed = 0x0295;
-  t.glottalstopreversedmod = 0x02c1;
-  t.glottalstopreversedsuperior = 0x02e4;
-  t.glottalstopstroke = 0x02a1;
-  t.glottalstopstrokereversed = 0x02a2;
-  t.gmacron = 0x1e21;
-  t.gmonospace = 0xff47;
-  t.gohiragana = 0x3054;
-  t.gokatakana = 0x30b4;
-  t.gparen = 0x24a2;
-  t.gpasquare = 0x33ac;
-  t.gradient = 0x2207;
-  t.grave = 0x0060;
-  t.gravebelowcmb = 0x0316;
-  t.gravecmb = 0x0300;
-  t.gravecomb = 0x0300;
-  t.gravedeva = 0x0953;
-  t.gravelowmod = 0x02ce;
-  t.gravemonospace = 0xff40;
-  t.gravetonecmb = 0x0340;
-  t.greater = 0x003e;
-  t.greaterequal = 0x2265;
-  t.greaterequalorless = 0x22db;
-  t.greatermonospace = 0xff1e;
-  t.greaterorequivalent = 0x2273;
-  t.greaterorless = 0x2277;
-  t.greateroverequal = 0x2267;
-  t.greatersmall = 0xfe65;
-  t.gscript = 0x0261;
-  t.gstroke = 0x01e5;
-  t.guhiragana = 0x3050;
-  t.guillemotleft = 0x00ab;
-  t.guillemotright = 0x00bb;
-  t.guilsinglleft = 0x2039;
-  t.guilsinglright = 0x203a;
-  t.gukatakana = 0x30b0;
-  t.guramusquare = 0x3318;
-  t.gysquare = 0x33c9;
-  t.h = 0x0068;
-  t.haabkhasiancyrillic = 0x04a9;
-  t.haaltonearabic = 0x06c1;
-  t.habengali = 0x09b9;
-  t.hadescendercyrillic = 0x04b3;
-  t.hadeva = 0x0939;
-  t.hagujarati = 0x0ab9;
-  t.hagurmukhi = 0x0a39;
-  t.haharabic = 0x062d;
-  t.hahfinalarabic = 0xfea2;
-  t.hahinitialarabic = 0xfea3;
-  t.hahiragana = 0x306f;
-  t.hahmedialarabic = 0xfea4;
-  t.haitusquare = 0x332a;
-  t.hakatakana = 0x30cf;
-  t.hakatakanahalfwidth = 0xff8a;
-  t.halantgurmukhi = 0x0a4d;
-  t.hamzaarabic = 0x0621;
-  t.hamzalowarabic = 0x0621;
-  t.hangulfiller = 0x3164;
-  t.hardsigncyrillic = 0x044a;
-  t.harpoonleftbarbup = 0x21bc;
-  t.harpoonrightbarbup = 0x21c0;
-  t.hasquare = 0x33ca;
-  t.hatafpatah = 0x05b2;
-  t.hatafpatah16 = 0x05b2;
-  t.hatafpatah23 = 0x05b2;
-  t.hatafpatah2f = 0x05b2;
-  t.hatafpatahhebrew = 0x05b2;
-  t.hatafpatahnarrowhebrew = 0x05b2;
-  t.hatafpatahquarterhebrew = 0x05b2;
-  t.hatafpatahwidehebrew = 0x05b2;
-  t.hatafqamats = 0x05b3;
-  t.hatafqamats1b = 0x05b3;
-  t.hatafqamats28 = 0x05b3;
-  t.hatafqamats34 = 0x05b3;
-  t.hatafqamatshebrew = 0x05b3;
-  t.hatafqamatsnarrowhebrew = 0x05b3;
-  t.hatafqamatsquarterhebrew = 0x05b3;
-  t.hatafqamatswidehebrew = 0x05b3;
-  t.hatafsegol = 0x05b1;
-  t.hatafsegol17 = 0x05b1;
-  t.hatafsegol24 = 0x05b1;
-  t.hatafsegol30 = 0x05b1;
-  t.hatafsegolhebrew = 0x05b1;
-  t.hatafsegolnarrowhebrew = 0x05b1;
-  t.hatafsegolquarterhebrew = 0x05b1;
-  t.hatafsegolwidehebrew = 0x05b1;
-  t.hbar = 0x0127;
-  t.hbopomofo = 0x310f;
-  t.hbrevebelow = 0x1e2b;
-  t.hcedilla = 0x1e29;
-  t.hcircle = 0x24d7;
-  t.hcircumflex = 0x0125;
-  t.hdieresis = 0x1e27;
-  t.hdotaccent = 0x1e23;
-  t.hdotbelow = 0x1e25;
-  t.he = 0x05d4;
-  t.heart = 0x2665;
-  t.heartsuitblack = 0x2665;
-  t.heartsuitwhite = 0x2661;
-  t.hedagesh = 0xfb34;
-  t.hedageshhebrew = 0xfb34;
-  t.hehaltonearabic = 0x06c1;
-  t.heharabic = 0x0647;
-  t.hehebrew = 0x05d4;
-  t.hehfinalaltonearabic = 0xfba7;
-  t.hehfinalalttwoarabic = 0xfeea;
-  t.hehfinalarabic = 0xfeea;
-  t.hehhamzaabovefinalarabic = 0xfba5;
-  t.hehhamzaaboveisolatedarabic = 0xfba4;
-  t.hehinitialaltonearabic = 0xfba8;
-  t.hehinitialarabic = 0xfeeb;
-  t.hehiragana = 0x3078;
-  t.hehmedialaltonearabic = 0xfba9;
-  t.hehmedialarabic = 0xfeec;
-  t.heiseierasquare = 0x337b;
-  t.hekatakana = 0x30d8;
-  t.hekatakanahalfwidth = 0xff8d;
-  t.hekutaarusquare = 0x3336;
-  t.henghook = 0x0267;
-  t.herutusquare = 0x3339;
-  t.het = 0x05d7;
-  t.hethebrew = 0x05d7;
-  t.hhook = 0x0266;
-  t.hhooksuperior = 0x02b1;
-  t.hieuhacirclekorean = 0x327b;
-  t.hieuhaparenkorean = 0x321b;
-  t.hieuhcirclekorean = 0x326d;
-  t.hieuhkorean = 0x314e;
-  t.hieuhparenkorean = 0x320d;
-  t.hihiragana = 0x3072;
-  t.hikatakana = 0x30d2;
-  t.hikatakanahalfwidth = 0xff8b;
-  t.hiriq = 0x05b4;
-  t.hiriq14 = 0x05b4;
-  t.hiriq21 = 0x05b4;
-  t.hiriq2d = 0x05b4;
-  t.hiriqhebrew = 0x05b4;
-  t.hiriqnarrowhebrew = 0x05b4;
-  t.hiriqquarterhebrew = 0x05b4;
-  t.hiriqwidehebrew = 0x05b4;
-  t.hlinebelow = 0x1e96;
-  t.hmonospace = 0xff48;
-  t.hoarmenian = 0x0570;
-  t.hohipthai = 0x0e2b;
-  t.hohiragana = 0x307b;
-  t.hokatakana = 0x30db;
-  t.hokatakanahalfwidth = 0xff8e;
-  t.holam = 0x05b9;
-  t.holam19 = 0x05b9;
-  t.holam26 = 0x05b9;
-  t.holam32 = 0x05b9;
-  t.holamhebrew = 0x05b9;
-  t.holamnarrowhebrew = 0x05b9;
-  t.holamquarterhebrew = 0x05b9;
-  t.holamwidehebrew = 0x05b9;
-  t.honokhukthai = 0x0e2e;
-  t.hookabovecomb = 0x0309;
-  t.hookcmb = 0x0309;
-  t.hookpalatalizedbelowcmb = 0x0321;
-  t.hookretroflexbelowcmb = 0x0322;
-  t.hoonsquare = 0x3342;
-  t.horicoptic = 0x03e9;
-  t.horizontalbar = 0x2015;
-  t.horncmb = 0x031b;
-  t.hotsprings = 0x2668;
-  t.house = 0x2302;
-  t.hparen = 0x24a3;
-  t.hsuperior = 0x02b0;
-  t.hturned = 0x0265;
-  t.huhiragana = 0x3075;
-  t.huiitosquare = 0x3333;
-  t.hukatakana = 0x30d5;
-  t.hukatakanahalfwidth = 0xff8c;
-  t.hungarumlaut = 0x02dd;
-  t.hungarumlautcmb = 0x030b;
-  t.hv = 0x0195;
-  t.hyphen = 0x002d;
-  t.hypheninferior = 0xf6e5;
-  t.hyphenmonospace = 0xff0d;
-  t.hyphensmall = 0xfe63;
-  t.hyphensuperior = 0xf6e6;
-  t.hyphentwo = 0x2010;
-  t.i = 0x0069;
-  t.iacute = 0x00ed;
-  t.iacyrillic = 0x044f;
-  t.ibengali = 0x0987;
-  t.ibopomofo = 0x3127;
-  t.ibreve = 0x012d;
-  t.icaron = 0x01d0;
-  t.icircle = 0x24d8;
-  t.icircumflex = 0x00ee;
-  t.icyrillic = 0x0456;
-  t.idblgrave = 0x0209;
-  t.ideographearthcircle = 0x328f;
-  t.ideographfirecircle = 0x328b;
-  t.ideographicallianceparen = 0x323f;
-  t.ideographiccallparen = 0x323a;
-  t.ideographiccentrecircle = 0x32a5;
-  t.ideographicclose = 0x3006;
-  t.ideographiccomma = 0x3001;
-  t.ideographiccommaleft = 0xff64;
-  t.ideographiccongratulationparen = 0x3237;
-  t.ideographiccorrectcircle = 0x32a3;
-  t.ideographicearthparen = 0x322f;
-  t.ideographicenterpriseparen = 0x323d;
-  t.ideographicexcellentcircle = 0x329d;
-  t.ideographicfestivalparen = 0x3240;
-  t.ideographicfinancialcircle = 0x3296;
-  t.ideographicfinancialparen = 0x3236;
-  t.ideographicfireparen = 0x322b;
-  t.ideographichaveparen = 0x3232;
-  t.ideographichighcircle = 0x32a4;
-  t.ideographiciterationmark = 0x3005;
-  t.ideographiclaborcircle = 0x3298;
-  t.ideographiclaborparen = 0x3238;
-  t.ideographicleftcircle = 0x32a7;
-  t.ideographiclowcircle = 0x32a6;
-  t.ideographicmedicinecircle = 0x32a9;
-  t.ideographicmetalparen = 0x322e;
-  t.ideographicmoonparen = 0x322a;
-  t.ideographicnameparen = 0x3234;
-  t.ideographicperiod = 0x3002;
-  t.ideographicprintcircle = 0x329e;
-  t.ideographicreachparen = 0x3243;
-  t.ideographicrepresentparen = 0x3239;
-  t.ideographicresourceparen = 0x323e;
-  t.ideographicrightcircle = 0x32a8;
-  t.ideographicsecretcircle = 0x3299;
-  t.ideographicselfparen = 0x3242;
-  t.ideographicsocietyparen = 0x3233;
-  t.ideographicspace = 0x3000;
-  t.ideographicspecialparen = 0x3235;
-  t.ideographicstockparen = 0x3231;
-  t.ideographicstudyparen = 0x323b;
-  t.ideographicsunparen = 0x3230;
-  t.ideographicsuperviseparen = 0x323c;
-  t.ideographicwaterparen = 0x322c;
-  t.ideographicwoodparen = 0x322d;
-  t.ideographiczero = 0x3007;
-  t.ideographmetalcircle = 0x328e;
-  t.ideographmooncircle = 0x328a;
-  t.ideographnamecircle = 0x3294;
-  t.ideographsuncircle = 0x3290;
-  t.ideographwatercircle = 0x328c;
-  t.ideographwoodcircle = 0x328d;
-  t.ideva = 0x0907;
-  t.idieresis = 0x00ef;
-  t.idieresisacute = 0x1e2f;
-  t.idieresiscyrillic = 0x04e5;
-  t.idotbelow = 0x1ecb;
-  t.iebrevecyrillic = 0x04d7;
-  t.iecyrillic = 0x0435;
-  t.ieungacirclekorean = 0x3275;
-  t.ieungaparenkorean = 0x3215;
-  t.ieungcirclekorean = 0x3267;
-  t.ieungkorean = 0x3147;
-  t.ieungparenkorean = 0x3207;
-  t.igrave = 0x00ec;
-  t.igujarati = 0x0a87;
-  t.igurmukhi = 0x0a07;
-  t.ihiragana = 0x3044;
-  t.ihookabove = 0x1ec9;
-  t.iibengali = 0x0988;
-  t.iicyrillic = 0x0438;
-  t.iideva = 0x0908;
-  t.iigujarati = 0x0a88;
-  t.iigurmukhi = 0x0a08;
-  t.iimatragurmukhi = 0x0a40;
-  t.iinvertedbreve = 0x020b;
-  t.iishortcyrillic = 0x0439;
-  t.iivowelsignbengali = 0x09c0;
-  t.iivowelsigndeva = 0x0940;
-  t.iivowelsigngujarati = 0x0ac0;
-  t.ij = 0x0133;
-  t.ikatakana = 0x30a4;
-  t.ikatakanahalfwidth = 0xff72;
-  t.ikorean = 0x3163;
-  t.ilde = 0x02dc;
-  t.iluyhebrew = 0x05ac;
-  t.imacron = 0x012b;
-  t.imacroncyrillic = 0x04e3;
-  t.imageorapproximatelyequal = 0x2253;
-  t.imatragurmukhi = 0x0a3f;
-  t.imonospace = 0xff49;
-  t.increment = 0x2206;
-  t.infinity = 0x221e;
-  t.iniarmenian = 0x056b;
-  t.integral = 0x222b;
-  t.integralbottom = 0x2321;
-  t.integralbt = 0x2321;
-  t.integralex = 0xf8f5;
-  t.integraltop = 0x2320;
-  t.integraltp = 0x2320;
-  t.intersection = 0x2229;
-  t.intisquare = 0x3305;
-  t.invbullet = 0x25d8;
-  t.invcircle = 0x25d9;
-  t.invsmileface = 0x263b;
-  t.iocyrillic = 0x0451;
-  t.iogonek = 0x012f;
-  t.iota = 0x03b9;
-  t.iotadieresis = 0x03ca;
-  t.iotadieresistonos = 0x0390;
-  t.iotalatin = 0x0269;
-  t.iotatonos = 0x03af;
-  t.iparen = 0x24a4;
-  t.irigurmukhi = 0x0a72;
-  t.ismallhiragana = 0x3043;
-  t.ismallkatakana = 0x30a3;
-  t.ismallkatakanahalfwidth = 0xff68;
-  t.issharbengali = 0x09fa;
-  t.istroke = 0x0268;
-  t.isuperior = 0xf6ed;
-  t.iterationhiragana = 0x309d;
-  t.iterationkatakana = 0x30fd;
-  t.itilde = 0x0129;
-  t.itildebelow = 0x1e2d;
-  t.iubopomofo = 0x3129;
-  t.iucyrillic = 0x044e;
-  t.ivowelsignbengali = 0x09bf;
-  t.ivowelsigndeva = 0x093f;
-  t.ivowelsigngujarati = 0x0abf;
-  t.izhitsacyrillic = 0x0475;
-  t.izhitsadblgravecyrillic = 0x0477;
-  t.j = 0x006a;
-  t.jaarmenian = 0x0571;
-  t.jabengali = 0x099c;
-  t.jadeva = 0x091c;
-  t.jagujarati = 0x0a9c;
-  t.jagurmukhi = 0x0a1c;
-  t.jbopomofo = 0x3110;
-  t.jcaron = 0x01f0;
-  t.jcircle = 0x24d9;
-  t.jcircumflex = 0x0135;
-  t.jcrossedtail = 0x029d;
-  t.jdotlessstroke = 0x025f;
-  t.jecyrillic = 0x0458;
-  t.jeemarabic = 0x062c;
-  t.jeemfinalarabic = 0xfe9e;
-  t.jeeminitialarabic = 0xfe9f;
-  t.jeemmedialarabic = 0xfea0;
-  t.jeharabic = 0x0698;
-  t.jehfinalarabic = 0xfb8b;
-  t.jhabengali = 0x099d;
-  t.jhadeva = 0x091d;
-  t.jhagujarati = 0x0a9d;
-  t.jhagurmukhi = 0x0a1d;
-  t.jheharmenian = 0x057b;
-  t.jis = 0x3004;
-  t.jmonospace = 0xff4a;
-  t.jparen = 0x24a5;
-  t.jsuperior = 0x02b2;
-  t.k = 0x006b;
-  t.kabashkircyrillic = 0x04a1;
-  t.kabengali = 0x0995;
-  t.kacute = 0x1e31;
-  t.kacyrillic = 0x043a;
-  t.kadescendercyrillic = 0x049b;
-  t.kadeva = 0x0915;
-  t.kaf = 0x05db;
-  t.kafarabic = 0x0643;
-  t.kafdagesh = 0xfb3b;
-  t.kafdageshhebrew = 0xfb3b;
-  t.kaffinalarabic = 0xfeda;
-  t.kafhebrew = 0x05db;
-  t.kafinitialarabic = 0xfedb;
-  t.kafmedialarabic = 0xfedc;
-  t.kafrafehebrew = 0xfb4d;
-  t.kagujarati = 0x0a95;
-  t.kagurmukhi = 0x0a15;
-  t.kahiragana = 0x304b;
-  t.kahookcyrillic = 0x04c4;
-  t.kakatakana = 0x30ab;
-  t.kakatakanahalfwidth = 0xff76;
-  t.kappa = 0x03ba;
-  t.kappasymbolgreek = 0x03f0;
-  t.kapyeounmieumkorean = 0x3171;
-  t.kapyeounphieuphkorean = 0x3184;
-  t.kapyeounpieupkorean = 0x3178;
-  t.kapyeounssangpieupkorean = 0x3179;
-  t.karoriisquare = 0x330d;
-  t.kashidaautoarabic = 0x0640;
-  t.kashidaautonosidebearingarabic = 0x0640;
-  t.kasmallkatakana = 0x30f5;
-  t.kasquare = 0x3384;
-  t.kasraarabic = 0x0650;
-  t.kasratanarabic = 0x064d;
-  t.kastrokecyrillic = 0x049f;
-  t.katahiraprolongmarkhalfwidth = 0xff70;
-  t.kaverticalstrokecyrillic = 0x049d;
-  t.kbopomofo = 0x310e;
-  t.kcalsquare = 0x3389;
-  t.kcaron = 0x01e9;
-  t.kcedilla = 0x0137;
-  t.kcircle = 0x24da;
-  t.kcommaaccent = 0x0137;
-  t.kdotbelow = 0x1e33;
-  t.keharmenian = 0x0584;
-  t.kehiragana = 0x3051;
-  t.kekatakana = 0x30b1;
-  t.kekatakanahalfwidth = 0xff79;
-  t.kenarmenian = 0x056f;
-  t.kesmallkatakana = 0x30f6;
-  t.kgreenlandic = 0x0138;
-  t.khabengali = 0x0996;
-  t.khacyrillic = 0x0445;
-  t.khadeva = 0x0916;
-  t.khagujarati = 0x0a96;
-  t.khagurmukhi = 0x0a16;
-  t.khaharabic = 0x062e;
-  t.khahfinalarabic = 0xfea6;
-  t.khahinitialarabic = 0xfea7;
-  t.khahmedialarabic = 0xfea8;
-  t.kheicoptic = 0x03e7;
-  t.khhadeva = 0x0959;
-  t.khhagurmukhi = 0x0a59;
-  t.khieukhacirclekorean = 0x3278;
-  t.khieukhaparenkorean = 0x3218;
-  t.khieukhcirclekorean = 0x326a;
-  t.khieukhkorean = 0x314b;
-  t.khieukhparenkorean = 0x320a;
-  t.khokhaithai = 0x0e02;
-  t.khokhonthai = 0x0e05;
-  t.khokhuatthai = 0x0e03;
-  t.khokhwaithai = 0x0e04;
-  t.khomutthai = 0x0e5b;
-  t.khook = 0x0199;
-  t.khorakhangthai = 0x0e06;
-  t.khzsquare = 0x3391;
-  t.kihiragana = 0x304d;
-  t.kikatakana = 0x30ad;
-  t.kikatakanahalfwidth = 0xff77;
-  t.kiroguramusquare = 0x3315;
-  t.kiromeetorusquare = 0x3316;
-  t.kirosquare = 0x3314;
-  t.kiyeokacirclekorean = 0x326e;
-  t.kiyeokaparenkorean = 0x320e;
-  t.kiyeokcirclekorean = 0x3260;
-  t.kiyeokkorean = 0x3131;
-  t.kiyeokparenkorean = 0x3200;
-  t.kiyeoksioskorean = 0x3133;
-  t.kjecyrillic = 0x045c;
-  t.klinebelow = 0x1e35;
-  t.klsquare = 0x3398;
-  t.kmcubedsquare = 0x33a6;
-  t.kmonospace = 0xff4b;
-  t.kmsquaredsquare = 0x33a2;
-  t.kohiragana = 0x3053;
-  t.kohmsquare = 0x33c0;
-  t.kokaithai = 0x0e01;
-  t.kokatakana = 0x30b3;
-  t.kokatakanahalfwidth = 0xff7a;
-  t.kooposquare = 0x331e;
-  t.koppacyrillic = 0x0481;
-  t.koreanstandardsymbol = 0x327f;
-  t.koroniscmb = 0x0343;
-  t.kparen = 0x24a6;
-  t.kpasquare = 0x33aa;
-  t.ksicyrillic = 0x046f;
-  t.ktsquare = 0x33cf;
-  t.kturned = 0x029e;
-  t.kuhiragana = 0x304f;
-  t.kukatakana = 0x30af;
-  t.kukatakanahalfwidth = 0xff78;
-  t.kvsquare = 0x33b8;
-  t.kwsquare = 0x33be;
-  t.l = 0x006c;
-  t.labengali = 0x09b2;
-  t.lacute = 0x013a;
-  t.ladeva = 0x0932;
-  t.lagujarati = 0x0ab2;
-  t.lagurmukhi = 0x0a32;
-  t.lakkhangyaothai = 0x0e45;
-  t.lamaleffinalarabic = 0xfefc;
-  t.lamalefhamzaabovefinalarabic = 0xfef8;
-  t.lamalefhamzaaboveisolatedarabic = 0xfef7;
-  t.lamalefhamzabelowfinalarabic = 0xfefa;
-  t.lamalefhamzabelowisolatedarabic = 0xfef9;
-  t.lamalefisolatedarabic = 0xfefb;
-  t.lamalefmaddaabovefinalarabic = 0xfef6;
-  t.lamalefmaddaaboveisolatedarabic = 0xfef5;
-  t.lamarabic = 0x0644;
-  t.lambda = 0x03bb;
-  t.lambdastroke = 0x019b;
-  t.lamed = 0x05dc;
-  t.lameddagesh = 0xfb3c;
-  t.lameddageshhebrew = 0xfb3c;
-  t.lamedhebrew = 0x05dc;
-  t.lamfinalarabic = 0xfede;
-  t.lamhahinitialarabic = 0xfcca;
-  t.laminitialarabic = 0xfedf;
-  t.lamjeeminitialarabic = 0xfcc9;
-  t.lamkhahinitialarabic = 0xfccb;
-  t.lamlamhehisolatedarabic = 0xfdf2;
-  t.lammedialarabic = 0xfee0;
-  t.lammeemhahinitialarabic = 0xfd88;
-  t.lammeeminitialarabic = 0xfccc;
-  t.largecircle = 0x25ef;
-  t.lbar = 0x019a;
-  t.lbelt = 0x026c;
-  t.lbopomofo = 0x310c;
-  t.lcaron = 0x013e;
-  t.lcedilla = 0x013c;
-  t.lcircle = 0x24db;
-  t.lcircumflexbelow = 0x1e3d;
-  t.lcommaaccent = 0x013c;
-  t.ldot = 0x0140;
-  t.ldotaccent = 0x0140;
-  t.ldotbelow = 0x1e37;
-  t.ldotbelowmacron = 0x1e39;
-  t.leftangleabovecmb = 0x031a;
-  t.lefttackbelowcmb = 0x0318;
-  t.less = 0x003c;
-  t.lessequal = 0x2264;
-  t.lessequalorgreater = 0x22da;
-  t.lessmonospace = 0xff1c;
-  t.lessorequivalent = 0x2272;
-  t.lessorgreater = 0x2276;
-  t.lessoverequal = 0x2266;
-  t.lesssmall = 0xfe64;
-  t.lezh = 0x026e;
-  t.lfblock = 0x258c;
-  t.lhookretroflex = 0x026d;
-  t.lira = 0x20a4;
-  t.liwnarmenian = 0x056c;
-  t.lj = 0x01c9;
-  t.ljecyrillic = 0x0459;
-  t.ll = 0xf6c0;
-  t.lladeva = 0x0933;
-  t.llagujarati = 0x0ab3;
-  t.llinebelow = 0x1e3b;
-  t.llladeva = 0x0934;
-  t.llvocalicbengali = 0x09e1;
-  t.llvocalicdeva = 0x0961;
-  t.llvocalicvowelsignbengali = 0x09e3;
-  t.llvocalicvowelsigndeva = 0x0963;
-  t.lmiddletilde = 0x026b;
-  t.lmonospace = 0xff4c;
-  t.lmsquare = 0x33d0;
-  t.lochulathai = 0x0e2c;
-  t.logicaland = 0x2227;
-  t.logicalnot = 0x00ac;
-  t.logicalnotreversed = 0x2310;
-  t.logicalor = 0x2228;
-  t.lolingthai = 0x0e25;
-  t.longs = 0x017f;
-  t.lowlinecenterline = 0xfe4e;
-  t.lowlinecmb = 0x0332;
-  t.lowlinedashed = 0xfe4d;
-  t.lozenge = 0x25ca;
-  t.lparen = 0x24a7;
-  t.lslash = 0x0142;
-  t.lsquare = 0x2113;
-  t.lsuperior = 0xf6ee;
-  t.ltshade = 0x2591;
-  t.luthai = 0x0e26;
-  t.lvocalicbengali = 0x098c;
-  t.lvocalicdeva = 0x090c;
-  t.lvocalicvowelsignbengali = 0x09e2;
-  t.lvocalicvowelsigndeva = 0x0962;
-  t.lxsquare = 0x33d3;
-  t.m = 0x006d;
-  t.mabengali = 0x09ae;
-  t.macron = 0x00af;
-  t.macronbelowcmb = 0x0331;
-  t.macroncmb = 0x0304;
-  t.macronlowmod = 0x02cd;
-  t.macronmonospace = 0xffe3;
-  t.macute = 0x1e3f;
-  t.madeva = 0x092e;
-  t.magujarati = 0x0aae;
-  t.magurmukhi = 0x0a2e;
-  t.mahapakhhebrew = 0x05a4;
-  t.mahapakhlefthebrew = 0x05a4;
-  t.mahiragana = 0x307e;
-  t.maichattawalowleftthai = 0xf895;
-  t.maichattawalowrightthai = 0xf894;
-  t.maichattawathai = 0x0e4b;
-  t.maichattawaupperleftthai = 0xf893;
-  t.maieklowleftthai = 0xf88c;
-  t.maieklowrightthai = 0xf88b;
-  t.maiekthai = 0x0e48;
-  t.maiekupperleftthai = 0xf88a;
-  t.maihanakatleftthai = 0xf884;
-  t.maihanakatthai = 0x0e31;
-  t.maitaikhuleftthai = 0xf889;
-  t.maitaikhuthai = 0x0e47;
-  t.maitholowleftthai = 0xf88f;
-  t.maitholowrightthai = 0xf88e;
-  t.maithothai = 0x0e49;
-  t.maithoupperleftthai = 0xf88d;
-  t.maitrilowleftthai = 0xf892;
-  t.maitrilowrightthai = 0xf891;
-  t.maitrithai = 0x0e4a;
-  t.maitriupperleftthai = 0xf890;
-  t.maiyamokthai = 0x0e46;
-  t.makatakana = 0x30de;
-  t.makatakanahalfwidth = 0xff8f;
-  t.male = 0x2642;
-  t.mansyonsquare = 0x3347;
-  t.maqafhebrew = 0x05be;
-  t.mars = 0x2642;
-  t.masoracirclehebrew = 0x05af;
-  t.masquare = 0x3383;
-  t.mbopomofo = 0x3107;
-  t.mbsquare = 0x33d4;
-  t.mcircle = 0x24dc;
-  t.mcubedsquare = 0x33a5;
-  t.mdotaccent = 0x1e41;
-  t.mdotbelow = 0x1e43;
-  t.meemarabic = 0x0645;
-  t.meemfinalarabic = 0xfee2;
-  t.meeminitialarabic = 0xfee3;
-  t.meemmedialarabic = 0xfee4;
-  t.meemmeeminitialarabic = 0xfcd1;
-  t.meemmeemisolatedarabic = 0xfc48;
-  t.meetorusquare = 0x334d;
-  t.mehiragana = 0x3081;
-  t.meizierasquare = 0x337e;
-  t.mekatakana = 0x30e1;
-  t.mekatakanahalfwidth = 0xff92;
-  t.mem = 0x05de;
-  t.memdagesh = 0xfb3e;
-  t.memdageshhebrew = 0xfb3e;
-  t.memhebrew = 0x05de;
-  t.menarmenian = 0x0574;
-  t.merkhahebrew = 0x05a5;
-  t.merkhakefulahebrew = 0x05a6;
-  t.merkhakefulalefthebrew = 0x05a6;
-  t.merkhalefthebrew = 0x05a5;
-  t.mhook = 0x0271;
-  t.mhzsquare = 0x3392;
-  t.middledotkatakanahalfwidth = 0xff65;
-  t.middot = 0x00b7;
-  t.mieumacirclekorean = 0x3272;
-  t.mieumaparenkorean = 0x3212;
-  t.mieumcirclekorean = 0x3264;
-  t.mieumkorean = 0x3141;
-  t.mieumpansioskorean = 0x3170;
-  t.mieumparenkorean = 0x3204;
-  t.mieumpieupkorean = 0x316e;
-  t.mieumsioskorean = 0x316f;
-  t.mihiragana = 0x307f;
-  t.mikatakana = 0x30df;
-  t.mikatakanahalfwidth = 0xff90;
-  t.minus = 0x2212;
-  t.minusbelowcmb = 0x0320;
-  t.minuscircle = 0x2296;
-  t.minusmod = 0x02d7;
-  t.minusplus = 0x2213;
-  t.minute = 0x2032;
-  t.miribaarusquare = 0x334a;
-  t.mirisquare = 0x3349;
-  t.mlonglegturned = 0x0270;
-  t.mlsquare = 0x3396;
-  t.mmcubedsquare = 0x33a3;
-  t.mmonospace = 0xff4d;
-  t.mmsquaredsquare = 0x339f;
-  t.mohiragana = 0x3082;
-  t.mohmsquare = 0x33c1;
-  t.mokatakana = 0x30e2;
-  t.mokatakanahalfwidth = 0xff93;
-  t.molsquare = 0x33d6;
-  t.momathai = 0x0e21;
-  t.moverssquare = 0x33a7;
-  t.moverssquaredsquare = 0x33a8;
-  t.mparen = 0x24a8;
-  t.mpasquare = 0x33ab;
-  t.mssquare = 0x33b3;
-  t.msuperior = 0xf6ef;
-  t.mturned = 0x026f;
-  t.mu = 0x00b5;
-  t.mu1 = 0x00b5;
-  t.muasquare = 0x3382;
-  t.muchgreater = 0x226b;
-  t.muchless = 0x226a;
-  t.mufsquare = 0x338c;
-  t.mugreek = 0x03bc;
-  t.mugsquare = 0x338d;
-  t.muhiragana = 0x3080;
-  t.mukatakana = 0x30e0;
-  t.mukatakanahalfwidth = 0xff91;
-  t.mulsquare = 0x3395;
-  t.multiply = 0x00d7;
-  t.mumsquare = 0x339b;
-  t.munahhebrew = 0x05a3;
-  t.munahlefthebrew = 0x05a3;
-  t.musicalnote = 0x266a;
-  t.musicalnotedbl = 0x266b;
-  t.musicflatsign = 0x266d;
-  t.musicsharpsign = 0x266f;
-  t.mussquare = 0x33b2;
-  t.muvsquare = 0x33b6;
-  t.muwsquare = 0x33bc;
-  t.mvmegasquare = 0x33b9;
-  t.mvsquare = 0x33b7;
-  t.mwmegasquare = 0x33bf;
-  t.mwsquare = 0x33bd;
-  t.n = 0x006e;
-  t.nabengali = 0x09a8;
-  t.nabla = 0x2207;
-  t.nacute = 0x0144;
-  t.nadeva = 0x0928;
-  t.nagujarati = 0x0aa8;
-  t.nagurmukhi = 0x0a28;
-  t.nahiragana = 0x306a;
-  t.nakatakana = 0x30ca;
-  t.nakatakanahalfwidth = 0xff85;
-  t.napostrophe = 0x0149;
-  t.nasquare = 0x3381;
-  t.nbopomofo = 0x310b;
-  t.nbspace = 0x00a0;
-  t.ncaron = 0x0148;
-  t.ncedilla = 0x0146;
-  t.ncircle = 0x24dd;
-  t.ncircumflexbelow = 0x1e4b;
-  t.ncommaaccent = 0x0146;
-  t.ndotaccent = 0x1e45;
-  t.ndotbelow = 0x1e47;
-  t.nehiragana = 0x306d;
-  t.nekatakana = 0x30cd;
-  t.nekatakanahalfwidth = 0xff88;
-  t.newsheqelsign = 0x20aa;
-  t.nfsquare = 0x338b;
-  t.ngabengali = 0x0999;
-  t.ngadeva = 0x0919;
-  t.ngagujarati = 0x0a99;
-  t.ngagurmukhi = 0x0a19;
-  t.ngonguthai = 0x0e07;
-  t.nhiragana = 0x3093;
-  t.nhookleft = 0x0272;
-  t.nhookretroflex = 0x0273;
-  t.nieunacirclekorean = 0x326f;
-  t.nieunaparenkorean = 0x320f;
-  t.nieuncieuckorean = 0x3135;
-  t.nieuncirclekorean = 0x3261;
-  t.nieunhieuhkorean = 0x3136;
-  t.nieunkorean = 0x3134;
-  t.nieunpansioskorean = 0x3168;
-  t.nieunparenkorean = 0x3201;
-  t.nieunsioskorean = 0x3167;
-  t.nieuntikeutkorean = 0x3166;
-  t.nihiragana = 0x306b;
-  t.nikatakana = 0x30cb;
-  t.nikatakanahalfwidth = 0xff86;
-  t.nikhahitleftthai = 0xf899;
-  t.nikhahitthai = 0x0e4d;
-  t.nine = 0x0039;
-  t.ninearabic = 0x0669;
-  t.ninebengali = 0x09ef;
-  t.ninecircle = 0x2468;
-  t.ninecircleinversesansserif = 0x2792;
-  t.ninedeva = 0x096f;
-  t.ninegujarati = 0x0aef;
-  t.ninegurmukhi = 0x0a6f;
-  t.ninehackarabic = 0x0669;
-  t.ninehangzhou = 0x3029;
-  t.nineideographicparen = 0x3228;
-  t.nineinferior = 0x2089;
-  t.ninemonospace = 0xff19;
-  t.nineoldstyle = 0xf739;
-  t.nineparen = 0x247c;
-  t.nineperiod = 0x2490;
-  t.ninepersian = 0x06f9;
-  t.nineroman = 0x2178;
-  t.ninesuperior = 0x2079;
-  t.nineteencircle = 0x2472;
-  t.nineteenparen = 0x2486;
-  t.nineteenperiod = 0x249a;
-  t.ninethai = 0x0e59;
-  t.nj = 0x01cc;
-  t.njecyrillic = 0x045a;
-  t.nkatakana = 0x30f3;
-  t.nkatakanahalfwidth = 0xff9d;
-  t.nlegrightlong = 0x019e;
-  t.nlinebelow = 0x1e49;
-  t.nmonospace = 0xff4e;
-  t.nmsquare = 0x339a;
-  t.nnabengali = 0x09a3;
-  t.nnadeva = 0x0923;
-  t.nnagujarati = 0x0aa3;
-  t.nnagurmukhi = 0x0a23;
-  t.nnnadeva = 0x0929;
-  t.nohiragana = 0x306e;
-  t.nokatakana = 0x30ce;
-  t.nokatakanahalfwidth = 0xff89;
-  t.nonbreakingspace = 0x00a0;
-  t.nonenthai = 0x0e13;
-  t.nonuthai = 0x0e19;
-  t.noonarabic = 0x0646;
-  t.noonfinalarabic = 0xfee6;
-  t.noonghunnaarabic = 0x06ba;
-  t.noonghunnafinalarabic = 0xfb9f;
-  t.nooninitialarabic = 0xfee7;
-  t.noonjeeminitialarabic = 0xfcd2;
-  t.noonjeemisolatedarabic = 0xfc4b;
-  t.noonmedialarabic = 0xfee8;
-  t.noonmeeminitialarabic = 0xfcd5;
-  t.noonmeemisolatedarabic = 0xfc4e;
-  t.noonnoonfinalarabic = 0xfc8d;
-  t.notcontains = 0x220c;
-  t.notelement = 0x2209;
-  t.notelementof = 0x2209;
-  t.notequal = 0x2260;
-  t.notgreater = 0x226f;
-  t.notgreaternorequal = 0x2271;
-  t.notgreaternorless = 0x2279;
-  t.notidentical = 0x2262;
-  t.notless = 0x226e;
-  t.notlessnorequal = 0x2270;
-  t.notparallel = 0x2226;
-  t.notprecedes = 0x2280;
-  t.notsubset = 0x2284;
-  t.notsucceeds = 0x2281;
-  t.notsuperset = 0x2285;
-  t.nowarmenian = 0x0576;
-  t.nparen = 0x24a9;
-  t.nssquare = 0x33b1;
-  t.nsuperior = 0x207f;
-  t.ntilde = 0x00f1;
-  t.nu = 0x03bd;
-  t.nuhiragana = 0x306c;
-  t.nukatakana = 0x30cc;
-  t.nukatakanahalfwidth = 0xff87;
-  t.nuktabengali = 0x09bc;
-  t.nuktadeva = 0x093c;
-  t.nuktagujarati = 0x0abc;
-  t.nuktagurmukhi = 0x0a3c;
-  t.numbersign = 0x0023;
-  t.numbersignmonospace = 0xff03;
-  t.numbersignsmall = 0xfe5f;
-  t.numeralsigngreek = 0x0374;
-  t.numeralsignlowergreek = 0x0375;
-  t.numero = 0x2116;
-  t.nun = 0x05e0;
-  t.nundagesh = 0xfb40;
-  t.nundageshhebrew = 0xfb40;
-  t.nunhebrew = 0x05e0;
-  t.nvsquare = 0x33b5;
-  t.nwsquare = 0x33bb;
-  t.nyabengali = 0x099e;
-  t.nyadeva = 0x091e;
-  t.nyagujarati = 0x0a9e;
-  t.nyagurmukhi = 0x0a1e;
-  t.o = 0x006f;
-  t.oacute = 0x00f3;
-  t.oangthai = 0x0e2d;
-  t.obarred = 0x0275;
-  t.obarredcyrillic = 0x04e9;
-  t.obarreddieresiscyrillic = 0x04eb;
-  t.obengali = 0x0993;
-  t.obopomofo = 0x311b;
-  t.obreve = 0x014f;
-  t.ocandradeva = 0x0911;
-  t.ocandragujarati = 0x0a91;
-  t.ocandravowelsigndeva = 0x0949;
-  t.ocandravowelsigngujarati = 0x0ac9;
-  t.ocaron = 0x01d2;
-  t.ocircle = 0x24de;
-  t.ocircumflex = 0x00f4;
-  t.ocircumflexacute = 0x1ed1;
-  t.ocircumflexdotbelow = 0x1ed9;
-  t.ocircumflexgrave = 0x1ed3;
-  t.ocircumflexhookabove = 0x1ed5;
-  t.ocircumflextilde = 0x1ed7;
-  t.ocyrillic = 0x043e;
-  t.odblacute = 0x0151;
-  t.odblgrave = 0x020d;
-  t.odeva = 0x0913;
-  t.odieresis = 0x00f6;
-  t.odieresiscyrillic = 0x04e7;
-  t.odotbelow = 0x1ecd;
-  t.oe = 0x0153;
-  t.oekorean = 0x315a;
-  t.ogonek = 0x02db;
-  t.ogonekcmb = 0x0328;
-  t.ograve = 0x00f2;
-  t.ogujarati = 0x0a93;
-  t.oharmenian = 0x0585;
-  t.ohiragana = 0x304a;
-  t.ohookabove = 0x1ecf;
-  t.ohorn = 0x01a1;
-  t.ohornacute = 0x1edb;
-  t.ohorndotbelow = 0x1ee3;
-  t.ohorngrave = 0x1edd;
-  t.ohornhookabove = 0x1edf;
-  t.ohorntilde = 0x1ee1;
-  t.ohungarumlaut = 0x0151;
-  t.oi = 0x01a3;
-  t.oinvertedbreve = 0x020f;
-  t.okatakana = 0x30aa;
-  t.okatakanahalfwidth = 0xff75;
-  t.okorean = 0x3157;
-  t.olehebrew = 0x05ab;
-  t.omacron = 0x014d;
-  t.omacronacute = 0x1e53;
-  t.omacrongrave = 0x1e51;
-  t.omdeva = 0x0950;
-  t.omega = 0x03c9;
-  t.omega1 = 0x03d6;
-  t.omegacyrillic = 0x0461;
-  t.omegalatinclosed = 0x0277;
-  t.omegaroundcyrillic = 0x047b;
-  t.omegatitlocyrillic = 0x047d;
-  t.omegatonos = 0x03ce;
-  t.omgujarati = 0x0ad0;
-  t.omicron = 0x03bf;
-  t.omicrontonos = 0x03cc;
-  t.omonospace = 0xff4f;
-  t.one = 0x0031;
-  t.onearabic = 0x0661;
-  t.onebengali = 0x09e7;
-  t.onecircle = 0x2460;
-  t.onecircleinversesansserif = 0x278a;
-  t.onedeva = 0x0967;
-  t.onedotenleader = 0x2024;
-  t.oneeighth = 0x215b;
-  t.onefitted = 0xf6dc;
-  t.onegujarati = 0x0ae7;
-  t.onegurmukhi = 0x0a67;
-  t.onehackarabic = 0x0661;
-  t.onehalf = 0x00bd;
-  t.onehangzhou = 0x3021;
-  t.oneideographicparen = 0x3220;
-  t.oneinferior = 0x2081;
-  t.onemonospace = 0xff11;
-  t.onenumeratorbengali = 0x09f4;
-  t.oneoldstyle = 0xf731;
-  t.oneparen = 0x2474;
-  t.oneperiod = 0x2488;
-  t.onepersian = 0x06f1;
-  t.onequarter = 0x00bc;
-  t.oneroman = 0x2170;
-  t.onesuperior = 0x00b9;
-  t.onethai = 0x0e51;
-  t.onethird = 0x2153;
-  t.oogonek = 0x01eb;
-  t.oogonekmacron = 0x01ed;
-  t.oogurmukhi = 0x0a13;
-  t.oomatragurmukhi = 0x0a4b;
-  t.oopen = 0x0254;
-  t.oparen = 0x24aa;
-  t.openbullet = 0x25e6;
-  t.option = 0x2325;
-  t.ordfeminine = 0x00aa;
-  t.ordmasculine = 0x00ba;
-  t.orthogonal = 0x221f;
-  t.oshortdeva = 0x0912;
-  t.oshortvowelsigndeva = 0x094a;
-  t.oslash = 0x00f8;
-  t.oslashacute = 0x01ff;
-  t.osmallhiragana = 0x3049;
-  t.osmallkatakana = 0x30a9;
-  t.osmallkatakanahalfwidth = 0xff6b;
-  t.ostrokeacute = 0x01ff;
-  t.osuperior = 0xf6f0;
-  t.otcyrillic = 0x047f;
-  t.otilde = 0x00f5;
-  t.otildeacute = 0x1e4d;
-  t.otildedieresis = 0x1e4f;
-  t.oubopomofo = 0x3121;
-  t.overline = 0x203e;
-  t.overlinecenterline = 0xfe4a;
-  t.overlinecmb = 0x0305;
-  t.overlinedashed = 0xfe49;
-  t.overlinedblwavy = 0xfe4c;
-  t.overlinewavy = 0xfe4b;
-  t.overscore = 0x00af;
-  t.ovowelsignbengali = 0x09cb;
-  t.ovowelsigndeva = 0x094b;
-  t.ovowelsigngujarati = 0x0acb;
-  t.p = 0x0070;
-  t.paampssquare = 0x3380;
-  t.paasentosquare = 0x332b;
-  t.pabengali = 0x09aa;
-  t.pacute = 0x1e55;
-  t.padeva = 0x092a;
-  t.pagedown = 0x21df;
-  t.pageup = 0x21de;
-  t.pagujarati = 0x0aaa;
-  t.pagurmukhi = 0x0a2a;
-  t.pahiragana = 0x3071;
-  t.paiyannoithai = 0x0e2f;
-  t.pakatakana = 0x30d1;
-  t.palatalizationcyrilliccmb = 0x0484;
-  t.palochkacyrillic = 0x04c0;
-  t.pansioskorean = 0x317f;
-  t.paragraph = 0x00b6;
-  t.parallel = 0x2225;
-  t.parenleft = 0x0028;
-  t.parenleftaltonearabic = 0xfd3e;
-  t.parenleftbt = 0xf8ed;
-  t.parenleftex = 0xf8ec;
-  t.parenleftinferior = 0x208d;
-  t.parenleftmonospace = 0xff08;
-  t.parenleftsmall = 0xfe59;
-  t.parenleftsuperior = 0x207d;
-  t.parenlefttp = 0xf8eb;
-  t.parenleftvertical = 0xfe35;
-  t.parenright = 0x0029;
-  t.parenrightaltonearabic = 0xfd3f;
-  t.parenrightbt = 0xf8f8;
-  t.parenrightex = 0xf8f7;
-  t.parenrightinferior = 0x208e;
-  t.parenrightmonospace = 0xff09;
-  t.parenrightsmall = 0xfe5a;
-  t.parenrightsuperior = 0x207e;
-  t.parenrighttp = 0xf8f6;
-  t.parenrightvertical = 0xfe36;
-  t.partialdiff = 0x2202;
-  t.paseqhebrew = 0x05c0;
-  t.pashtahebrew = 0x0599;
-  t.pasquare = 0x33a9;
-  t.patah = 0x05b7;
-  t.patah11 = 0x05b7;
-  t.patah1d = 0x05b7;
-  t.patah2a = 0x05b7;
-  t.patahhebrew = 0x05b7;
-  t.patahnarrowhebrew = 0x05b7;
-  t.patahquarterhebrew = 0x05b7;
-  t.patahwidehebrew = 0x05b7;
-  t.pazerhebrew = 0x05a1;
-  t.pbopomofo = 0x3106;
-  t.pcircle = 0x24df;
-  t.pdotaccent = 0x1e57;
-  t.pe = 0x05e4;
-  t.pecyrillic = 0x043f;
-  t.pedagesh = 0xfb44;
-  t.pedageshhebrew = 0xfb44;
-  t.peezisquare = 0x333b;
-  t.pefinaldageshhebrew = 0xfb43;
-  t.peharabic = 0x067e;
-  t.peharmenian = 0x057a;
-  t.pehebrew = 0x05e4;
-  t.pehfinalarabic = 0xfb57;
-  t.pehinitialarabic = 0xfb58;
-  t.pehiragana = 0x307a;
-  t.pehmedialarabic = 0xfb59;
-  t.pekatakana = 0x30da;
-  t.pemiddlehookcyrillic = 0x04a7;
-  t.perafehebrew = 0xfb4e;
-  t.percent = 0x0025;
-  t.percentarabic = 0x066a;
-  t.percentmonospace = 0xff05;
-  t.percentsmall = 0xfe6a;
-  t.period = 0x002e;
-  t.periodarmenian = 0x0589;
-  t.periodcentered = 0x00b7;
-  t.periodhalfwidth = 0xff61;
-  t.periodinferior = 0xf6e7;
-  t.periodmonospace = 0xff0e;
-  t.periodsmall = 0xfe52;
-  t.periodsuperior = 0xf6e8;
-  t.perispomenigreekcmb = 0x0342;
-  t.perpendicular = 0x22a5;
-  t.perthousand = 0x2030;
-  t.peseta = 0x20a7;
-  t.pfsquare = 0x338a;
-  t.phabengali = 0x09ab;
-  t.phadeva = 0x092b;
-  t.phagujarati = 0x0aab;
-  t.phagurmukhi = 0x0a2b;
-  t.phi = 0x03c6;
-  t.phi1 = 0x03d5;
-  t.phieuphacirclekorean = 0x327a;
-  t.phieuphaparenkorean = 0x321a;
-  t.phieuphcirclekorean = 0x326c;
-  t.phieuphkorean = 0x314d;
-  t.phieuphparenkorean = 0x320c;
-  t.philatin = 0x0278;
-  t.phinthuthai = 0x0e3a;
-  t.phisymbolgreek = 0x03d5;
-  t.phook = 0x01a5;
-  t.phophanthai = 0x0e1e;
-  t.phophungthai = 0x0e1c;
-  t.phosamphaothai = 0x0e20;
-  t.pi = 0x03c0;
-  t.pieupacirclekorean = 0x3273;
-  t.pieupaparenkorean = 0x3213;
-  t.pieupcieuckorean = 0x3176;
-  t.pieupcirclekorean = 0x3265;
-  t.pieupkiyeokkorean = 0x3172;
-  t.pieupkorean = 0x3142;
-  t.pieupparenkorean = 0x3205;
-  t.pieupsioskiyeokkorean = 0x3174;
-  t.pieupsioskorean = 0x3144;
-  t.pieupsiostikeutkorean = 0x3175;
-  t.pieupthieuthkorean = 0x3177;
-  t.pieuptikeutkorean = 0x3173;
-  t.pihiragana = 0x3074;
-  t.pikatakana = 0x30d4;
-  t.pisymbolgreek = 0x03d6;
-  t.piwrarmenian = 0x0583;
-  t.planckover2pi = 0x210f;
-  t.planckover2pi1 = 0x210f;
-  t.plus = 0x002b;
-  t.plusbelowcmb = 0x031f;
-  t.pluscircle = 0x2295;
-  t.plusminus = 0x00b1;
-  t.plusmod = 0x02d6;
-  t.plusmonospace = 0xff0b;
-  t.plussmall = 0xfe62;
-  t.plussuperior = 0x207a;
-  t.pmonospace = 0xff50;
-  t.pmsquare = 0x33d8;
-  t.pohiragana = 0x307d;
-  t.pointingindexdownwhite = 0x261f;
-  t.pointingindexleftwhite = 0x261c;
-  t.pointingindexrightwhite = 0x261e;
-  t.pointingindexupwhite = 0x261d;
-  t.pokatakana = 0x30dd;
-  t.poplathai = 0x0e1b;
-  t.postalmark = 0x3012;
-  t.postalmarkface = 0x3020;
-  t.pparen = 0x24ab;
-  t.precedes = 0x227a;
-  t.prescription = 0x211e;
-  t.primemod = 0x02b9;
-  t.primereversed = 0x2035;
-  t.product = 0x220f;
-  t.projective = 0x2305;
-  t.prolongedkana = 0x30fc;
-  t.propellor = 0x2318;
-  t.propersubset = 0x2282;
-  t.propersuperset = 0x2283;
-  t.proportion = 0x2237;
-  t.proportional = 0x221d;
-  t.psi = 0x03c8;
-  t.psicyrillic = 0x0471;
-  t.psilipneumatacyrilliccmb = 0x0486;
-  t.pssquare = 0x33b0;
-  t.puhiragana = 0x3077;
-  t.pukatakana = 0x30d7;
-  t.pvsquare = 0x33b4;
-  t.pwsquare = 0x33ba;
-  t.q = 0x0071;
-  t.qadeva = 0x0958;
-  t.qadmahebrew = 0x05a8;
-  t.qafarabic = 0x0642;
-  t.qaffinalarabic = 0xfed6;
-  t.qafinitialarabic = 0xfed7;
-  t.qafmedialarabic = 0xfed8;
-  t.qamats = 0x05b8;
-  t.qamats10 = 0x05b8;
-  t.qamats1a = 0x05b8;
-  t.qamats1c = 0x05b8;
-  t.qamats27 = 0x05b8;
-  t.qamats29 = 0x05b8;
-  t.qamats33 = 0x05b8;
-  t.qamatsde = 0x05b8;
-  t.qamatshebrew = 0x05b8;
-  t.qamatsnarrowhebrew = 0x05b8;
-  t.qamatsqatanhebrew = 0x05b8;
-  t.qamatsqatannarrowhebrew = 0x05b8;
-  t.qamatsqatanquarterhebrew = 0x05b8;
-  t.qamatsqatanwidehebrew = 0x05b8;
-  t.qamatsquarterhebrew = 0x05b8;
-  t.qamatswidehebrew = 0x05b8;
-  t.qarneyparahebrew = 0x059f;
-  t.qbopomofo = 0x3111;
-  t.qcircle = 0x24e0;
-  t.qhook = 0x02a0;
-  t.qmonospace = 0xff51;
-  t.qof = 0x05e7;
-  t.qofdagesh = 0xfb47;
-  t.qofdageshhebrew = 0xfb47;
-  t.qofhebrew = 0x05e7;
-  t.qparen = 0x24ac;
-  t.quarternote = 0x2669;
-  t.qubuts = 0x05bb;
-  t.qubuts18 = 0x05bb;
-  t.qubuts25 = 0x05bb;
-  t.qubuts31 = 0x05bb;
-  t.qubutshebrew = 0x05bb;
-  t.qubutsnarrowhebrew = 0x05bb;
-  t.qubutsquarterhebrew = 0x05bb;
-  t.qubutswidehebrew = 0x05bb;
-  t.question = 0x003f;
-  t.questionarabic = 0x061f;
-  t.questionarmenian = 0x055e;
-  t.questiondown = 0x00bf;
-  t.questiondownsmall = 0xf7bf;
-  t.questiongreek = 0x037e;
-  t.questionmonospace = 0xff1f;
-  t.questionsmall = 0xf73f;
-  t.quotedbl = 0x0022;
-  t.quotedblbase = 0x201e;
-  t.quotedblleft = 0x201c;
-  t.quotedblmonospace = 0xff02;
-  t.quotedblprime = 0x301e;
-  t.quotedblprimereversed = 0x301d;
-  t.quotedblright = 0x201d;
-  t.quoteleft = 0x2018;
-  t.quoteleftreversed = 0x201b;
-  t.quotereversed = 0x201b;
-  t.quoteright = 0x2019;
-  t.quoterightn = 0x0149;
-  t.quotesinglbase = 0x201a;
-  t.quotesingle = 0x0027;
-  t.quotesinglemonospace = 0xff07;
-  t.r = 0x0072;
-  t.raarmenian = 0x057c;
-  t.rabengali = 0x09b0;
-  t.racute = 0x0155;
-  t.radeva = 0x0930;
-  t.radical = 0x221a;
-  t.radicalex = 0xf8e5;
-  t.radoverssquare = 0x33ae;
-  t.radoverssquaredsquare = 0x33af;
-  t.radsquare = 0x33ad;
-  t.rafe = 0x05bf;
-  t.rafehebrew = 0x05bf;
-  t.ragujarati = 0x0ab0;
-  t.ragurmukhi = 0x0a30;
-  t.rahiragana = 0x3089;
-  t.rakatakana = 0x30e9;
-  t.rakatakanahalfwidth = 0xff97;
-  t.ralowerdiagonalbengali = 0x09f1;
-  t.ramiddlediagonalbengali = 0x09f0;
-  t.ramshorn = 0x0264;
-  t.ratio = 0x2236;
-  t.rbopomofo = 0x3116;
-  t.rcaron = 0x0159;
-  t.rcedilla = 0x0157;
-  t.rcircle = 0x24e1;
-  t.rcommaaccent = 0x0157;
-  t.rdblgrave = 0x0211;
-  t.rdotaccent = 0x1e59;
-  t.rdotbelow = 0x1e5b;
-  t.rdotbelowmacron = 0x1e5d;
-  t.referencemark = 0x203b;
-  t.reflexsubset = 0x2286;
-  t.reflexsuperset = 0x2287;
-  t.registered = 0x00ae;
-  t.registersans = 0xf8e8;
-  t.registerserif = 0xf6da;
-  t.reharabic = 0x0631;
-  t.reharmenian = 0x0580;
-  t.rehfinalarabic = 0xfeae;
-  t.rehiragana = 0x308c;
-  t.rekatakana = 0x30ec;
-  t.rekatakanahalfwidth = 0xff9a;
-  t.resh = 0x05e8;
-  t.reshdageshhebrew = 0xfb48;
-  t.reshhebrew = 0x05e8;
-  t.reversedtilde = 0x223d;
-  t.reviahebrew = 0x0597;
-  t.reviamugrashhebrew = 0x0597;
-  t.revlogicalnot = 0x2310;
-  t.rfishhook = 0x027e;
-  t.rfishhookreversed = 0x027f;
-  t.rhabengali = 0x09dd;
-  t.rhadeva = 0x095d;
-  t.rho = 0x03c1;
-  t.rhook = 0x027d;
-  t.rhookturned = 0x027b;
-  t.rhookturnedsuperior = 0x02b5;
-  t.rhosymbolgreek = 0x03f1;
-  t.rhotichookmod = 0x02de;
-  t.rieulacirclekorean = 0x3271;
-  t.rieulaparenkorean = 0x3211;
-  t.rieulcirclekorean = 0x3263;
-  t.rieulhieuhkorean = 0x3140;
-  t.rieulkiyeokkorean = 0x313a;
-  t.rieulkiyeoksioskorean = 0x3169;
-  t.rieulkorean = 0x3139;
-  t.rieulmieumkorean = 0x313b;
-  t.rieulpansioskorean = 0x316c;
-  t.rieulparenkorean = 0x3203;
-  t.rieulphieuphkorean = 0x313f;
-  t.rieulpieupkorean = 0x313c;
-  t.rieulpieupsioskorean = 0x316b;
-  t.rieulsioskorean = 0x313d;
-  t.rieulthieuthkorean = 0x313e;
-  t.rieultikeutkorean = 0x316a;
-  t.rieulyeorinhieuhkorean = 0x316d;
-  t.rightangle = 0x221f;
-  t.righttackbelowcmb = 0x0319;
-  t.righttriangle = 0x22bf;
-  t.rihiragana = 0x308a;
-  t.rikatakana = 0x30ea;
-  t.rikatakanahalfwidth = 0xff98;
-  t.ring = 0x02da;
-  t.ringbelowcmb = 0x0325;
-  t.ringcmb = 0x030a;
-  t.ringhalfleft = 0x02bf;
-  t.ringhalfleftarmenian = 0x0559;
-  t.ringhalfleftbelowcmb = 0x031c;
-  t.ringhalfleftcentered = 0x02d3;
-  t.ringhalfright = 0x02be;
-  t.ringhalfrightbelowcmb = 0x0339;
-  t.ringhalfrightcentered = 0x02d2;
-  t.rinvertedbreve = 0x0213;
-  t.rittorusquare = 0x3351;
-  t.rlinebelow = 0x1e5f;
-  t.rlongleg = 0x027c;
-  t.rlonglegturned = 0x027a;
-  t.rmonospace = 0xff52;
-  t.rohiragana = 0x308d;
-  t.rokatakana = 0x30ed;
-  t.rokatakanahalfwidth = 0xff9b;
-  t.roruathai = 0x0e23;
-  t.rparen = 0x24ad;
-  t.rrabengali = 0x09dc;
-  t.rradeva = 0x0931;
-  t.rragurmukhi = 0x0a5c;
-  t.rreharabic = 0x0691;
-  t.rrehfinalarabic = 0xfb8d;
-  t.rrvocalicbengali = 0x09e0;
-  t.rrvocalicdeva = 0x0960;
-  t.rrvocalicgujarati = 0x0ae0;
-  t.rrvocalicvowelsignbengali = 0x09c4;
-  t.rrvocalicvowelsigndeva = 0x0944;
-  t.rrvocalicvowelsigngujarati = 0x0ac4;
-  t.rsuperior = 0xf6f1;
-  t.rtblock = 0x2590;
-  t.rturned = 0x0279;
-  t.rturnedsuperior = 0x02b4;
-  t.ruhiragana = 0x308b;
-  t.rukatakana = 0x30eb;
-  t.rukatakanahalfwidth = 0xff99;
-  t.rupeemarkbengali = 0x09f2;
-  t.rupeesignbengali = 0x09f3;
-  t.rupiah = 0xf6dd;
-  t.ruthai = 0x0e24;
-  t.rvocalicbengali = 0x098b;
-  t.rvocalicdeva = 0x090b;
-  t.rvocalicgujarati = 0x0a8b;
-  t.rvocalicvowelsignbengali = 0x09c3;
-  t.rvocalicvowelsigndeva = 0x0943;
-  t.rvocalicvowelsigngujarati = 0x0ac3;
-  t.s = 0x0073;
-  t.sabengali = 0x09b8;
-  t.sacute = 0x015b;
-  t.sacutedotaccent = 0x1e65;
-  t.sadarabic = 0x0635;
-  t.sadeva = 0x0938;
-  t.sadfinalarabic = 0xfeba;
-  t.sadinitialarabic = 0xfebb;
-  t.sadmedialarabic = 0xfebc;
-  t.sagujarati = 0x0ab8;
-  t.sagurmukhi = 0x0a38;
-  t.sahiragana = 0x3055;
-  t.sakatakana = 0x30b5;
-  t.sakatakanahalfwidth = 0xff7b;
-  t.sallallahoualayhewasallamarabic = 0xfdfa;
-  t.samekh = 0x05e1;
-  t.samekhdagesh = 0xfb41;
-  t.samekhdageshhebrew = 0xfb41;
-  t.samekhhebrew = 0x05e1;
-  t.saraaathai = 0x0e32;
-  t.saraaethai = 0x0e41;
-  t.saraaimaimalaithai = 0x0e44;
-  t.saraaimaimuanthai = 0x0e43;
-  t.saraamthai = 0x0e33;
-  t.saraathai = 0x0e30;
-  t.saraethai = 0x0e40;
-  t.saraiileftthai = 0xf886;
-  t.saraiithai = 0x0e35;
-  t.saraileftthai = 0xf885;
-  t.saraithai = 0x0e34;
-  t.saraothai = 0x0e42;
-  t.saraueeleftthai = 0xf888;
-  t.saraueethai = 0x0e37;
-  t.saraueleftthai = 0xf887;
-  t.sarauethai = 0x0e36;
-  t.sarauthai = 0x0e38;
-  t.sarauuthai = 0x0e39;
-  t.sbopomofo = 0x3119;
-  t.scaron = 0x0161;
-  t.scarondotaccent = 0x1e67;
-  t.scedilla = 0x015f;
-  t.schwa = 0x0259;
-  t.schwacyrillic = 0x04d9;
-  t.schwadieresiscyrillic = 0x04db;
-  t.schwahook = 0x025a;
-  t.scircle = 0x24e2;
-  t.scircumflex = 0x015d;
-  t.scommaaccent = 0x0219;
-  t.sdotaccent = 0x1e61;
-  t.sdotbelow = 0x1e63;
-  t.sdotbelowdotaccent = 0x1e69;
-  t.seagullbelowcmb = 0x033c;
-  t.second = 0x2033;
-  t.secondtonechinese = 0x02ca;
-  t.section = 0x00a7;
-  t.seenarabic = 0x0633;
-  t.seenfinalarabic = 0xfeb2;
-  t.seeninitialarabic = 0xfeb3;
-  t.seenmedialarabic = 0xfeb4;
-  t.segol = 0x05b6;
-  t.segol13 = 0x05b6;
-  t.segol1f = 0x05b6;
-  t.segol2c = 0x05b6;
-  t.segolhebrew = 0x05b6;
-  t.segolnarrowhebrew = 0x05b6;
-  t.segolquarterhebrew = 0x05b6;
-  t.segoltahebrew = 0x0592;
-  t.segolwidehebrew = 0x05b6;
-  t.seharmenian = 0x057d;
-  t.sehiragana = 0x305b;
-  t.sekatakana = 0x30bb;
-  t.sekatakanahalfwidth = 0xff7e;
-  t.semicolon = 0x003b;
-  t.semicolonarabic = 0x061b;
-  t.semicolonmonospace = 0xff1b;
-  t.semicolonsmall = 0xfe54;
-  t.semivoicedmarkkana = 0x309c;
-  t.semivoicedmarkkanahalfwidth = 0xff9f;
-  t.sentisquare = 0x3322;
-  t.sentosquare = 0x3323;
-  t.seven = 0x0037;
-  t.sevenarabic = 0x0667;
-  t.sevenbengali = 0x09ed;
-  t.sevencircle = 0x2466;
-  t.sevencircleinversesansserif = 0x2790;
-  t.sevendeva = 0x096d;
-  t.seveneighths = 0x215e;
-  t.sevengujarati = 0x0aed;
-  t.sevengurmukhi = 0x0a6d;
-  t.sevenhackarabic = 0x0667;
-  t.sevenhangzhou = 0x3027;
-  t.sevenideographicparen = 0x3226;
-  t.seveninferior = 0x2087;
-  t.sevenmonospace = 0xff17;
-  t.sevenoldstyle = 0xf737;
-  t.sevenparen = 0x247a;
-  t.sevenperiod = 0x248e;
-  t.sevenpersian = 0x06f7;
-  t.sevenroman = 0x2176;
-  t.sevensuperior = 0x2077;
-  t.seventeencircle = 0x2470;
-  t.seventeenparen = 0x2484;
-  t.seventeenperiod = 0x2498;
-  t.seventhai = 0x0e57;
-  t.sfthyphen = 0x00ad;
-  t.shaarmenian = 0x0577;
-  t.shabengali = 0x09b6;
-  t.shacyrillic = 0x0448;
-  t.shaddaarabic = 0x0651;
-  t.shaddadammaarabic = 0xfc61;
-  t.shaddadammatanarabic = 0xfc5e;
-  t.shaddafathaarabic = 0xfc60;
-  t.shaddakasraarabic = 0xfc62;
-  t.shaddakasratanarabic = 0xfc5f;
-  t.shade = 0x2592;
-  t.shadedark = 0x2593;
-  t.shadelight = 0x2591;
-  t.shademedium = 0x2592;
-  t.shadeva = 0x0936;
-  t.shagujarati = 0x0ab6;
-  t.shagurmukhi = 0x0a36;
-  t.shalshelethebrew = 0x0593;
-  t.shbopomofo = 0x3115;
-  t.shchacyrillic = 0x0449;
-  t.sheenarabic = 0x0634;
-  t.sheenfinalarabic = 0xfeb6;
-  t.sheeninitialarabic = 0xfeb7;
-  t.sheenmedialarabic = 0xfeb8;
-  t.sheicoptic = 0x03e3;
-  t.sheqel = 0x20aa;
-  t.sheqelhebrew = 0x20aa;
-  t.sheva = 0x05b0;
-  t.sheva115 = 0x05b0;
-  t.sheva15 = 0x05b0;
-  t.sheva22 = 0x05b0;
-  t.sheva2e = 0x05b0;
-  t.shevahebrew = 0x05b0;
-  t.shevanarrowhebrew = 0x05b0;
-  t.shevaquarterhebrew = 0x05b0;
-  t.shevawidehebrew = 0x05b0;
-  t.shhacyrillic = 0x04bb;
-  t.shimacoptic = 0x03ed;
-  t.shin = 0x05e9;
-  t.shindagesh = 0xfb49;
-  t.shindageshhebrew = 0xfb49;
-  t.shindageshshindot = 0xfb2c;
-  t.shindageshshindothebrew = 0xfb2c;
-  t.shindageshsindot = 0xfb2d;
-  t.shindageshsindothebrew = 0xfb2d;
-  t.shindothebrew = 0x05c1;
-  t.shinhebrew = 0x05e9;
-  t.shinshindot = 0xfb2a;
-  t.shinshindothebrew = 0xfb2a;
-  t.shinsindot = 0xfb2b;
-  t.shinsindothebrew = 0xfb2b;
-  t.shook = 0x0282;
-  t.sigma = 0x03c3;
-  t.sigma1 = 0x03c2;
-  t.sigmafinal = 0x03c2;
-  t.sigmalunatesymbolgreek = 0x03f2;
-  t.sihiragana = 0x3057;
-  t.sikatakana = 0x30b7;
-  t.sikatakanahalfwidth = 0xff7c;
-  t.siluqhebrew = 0x05bd;
-  t.siluqlefthebrew = 0x05bd;
-  t.similar = 0x223c;
-  t.sindothebrew = 0x05c2;
-  t.siosacirclekorean = 0x3274;
-  t.siosaparenkorean = 0x3214;
-  t.sioscieuckorean = 0x317e;
-  t.sioscirclekorean = 0x3266;
-  t.sioskiyeokkorean = 0x317a;
-  t.sioskorean = 0x3145;
-  t.siosnieunkorean = 0x317b;
-  t.siosparenkorean = 0x3206;
-  t.siospieupkorean = 0x317d;
-  t.siostikeutkorean = 0x317c;
-  t.six = 0x0036;
-  t.sixarabic = 0x0666;
-  t.sixbengali = 0x09ec;
-  t.sixcircle = 0x2465;
-  t.sixcircleinversesansserif = 0x278f;
-  t.sixdeva = 0x096c;
-  t.sixgujarati = 0x0aec;
-  t.sixgurmukhi = 0x0a6c;
-  t.sixhackarabic = 0x0666;
-  t.sixhangzhou = 0x3026;
-  t.sixideographicparen = 0x3225;
-  t.sixinferior = 0x2086;
-  t.sixmonospace = 0xff16;
-  t.sixoldstyle = 0xf736;
-  t.sixparen = 0x2479;
-  t.sixperiod = 0x248d;
-  t.sixpersian = 0x06f6;
-  t.sixroman = 0x2175;
-  t.sixsuperior = 0x2076;
-  t.sixteencircle = 0x246f;
-  t.sixteencurrencydenominatorbengali = 0x09f9;
-  t.sixteenparen = 0x2483;
-  t.sixteenperiod = 0x2497;
-  t.sixthai = 0x0e56;
-  t.slash = 0x002f;
-  t.slashmonospace = 0xff0f;
-  t.slong = 0x017f;
-  t.slongdotaccent = 0x1e9b;
-  t.smileface = 0x263a;
-  t.smonospace = 0xff53;
-  t.sofpasuqhebrew = 0x05c3;
-  t.softhyphen = 0x00ad;
-  t.softsigncyrillic = 0x044c;
-  t.sohiragana = 0x305d;
-  t.sokatakana = 0x30bd;
-  t.sokatakanahalfwidth = 0xff7f;
-  t.soliduslongoverlaycmb = 0x0338;
-  t.solidusshortoverlaycmb = 0x0337;
-  t.sorusithai = 0x0e29;
-  t.sosalathai = 0x0e28;
-  t.sosothai = 0x0e0b;
-  t.sosuathai = 0x0e2a;
-  t.space = 0x0020;
-  t.spacehackarabic = 0x0020;
-  t.spade = 0x2660;
-  t.spadesuitblack = 0x2660;
-  t.spadesuitwhite = 0x2664;
-  t.sparen = 0x24ae;
-  t.squarebelowcmb = 0x033b;
-  t.squarecc = 0x33c4;
-  t.squarecm = 0x339d;
-  t.squarediagonalcrosshatchfill = 0x25a9;
-  t.squarehorizontalfill = 0x25a4;
-  t.squarekg = 0x338f;
-  t.squarekm = 0x339e;
-  t.squarekmcapital = 0x33ce;
-  t.squareln = 0x33d1;
-  t.squarelog = 0x33d2;
-  t.squaremg = 0x338e;
-  t.squaremil = 0x33d5;
-  t.squaremm = 0x339c;
-  t.squaremsquared = 0x33a1;
-  t.squareorthogonalcrosshatchfill = 0x25a6;
-  t.squareupperlefttolowerrightfill = 0x25a7;
-  t.squareupperrighttolowerleftfill = 0x25a8;
-  t.squareverticalfill = 0x25a5;
-  t.squarewhitewithsmallblack = 0x25a3;
-  t.srsquare = 0x33db;
-  t.ssabengali = 0x09b7;
-  t.ssadeva = 0x0937;
-  t.ssagujarati = 0x0ab7;
-  t.ssangcieuckorean = 0x3149;
-  t.ssanghieuhkorean = 0x3185;
-  t.ssangieungkorean = 0x3180;
-  t.ssangkiyeokkorean = 0x3132;
-  t.ssangnieunkorean = 0x3165;
-  t.ssangpieupkorean = 0x3143;
-  t.ssangsioskorean = 0x3146;
-  t.ssangtikeutkorean = 0x3138;
-  t.ssuperior = 0xf6f2;
-  t.sterling = 0x00a3;
-  t.sterlingmonospace = 0xffe1;
-  t.strokelongoverlaycmb = 0x0336;
-  t.strokeshortoverlaycmb = 0x0335;
-  t.subset = 0x2282;
-  t.subsetnotequal = 0x228a;
-  t.subsetorequal = 0x2286;
-  t.succeeds = 0x227b;
-  t.suchthat = 0x220b;
-  t.suhiragana = 0x3059;
-  t.sukatakana = 0x30b9;
-  t.sukatakanahalfwidth = 0xff7d;
-  t.sukunarabic = 0x0652;
-  t.summation = 0x2211;
-  t.sun = 0x263c;
-  t.superset = 0x2283;
-  t.supersetnotequal = 0x228b;
-  t.supersetorequal = 0x2287;
-  t.svsquare = 0x33dc;
-  t.syouwaerasquare = 0x337c;
-  t.t = 0x0074;
-  t.tabengali = 0x09a4;
-  t.tackdown = 0x22a4;
-  t.tackleft = 0x22a3;
-  t.tadeva = 0x0924;
-  t.tagujarati = 0x0aa4;
-  t.tagurmukhi = 0x0a24;
-  t.taharabic = 0x0637;
-  t.tahfinalarabic = 0xfec2;
-  t.tahinitialarabic = 0xfec3;
-  t.tahiragana = 0x305f;
-  t.tahmedialarabic = 0xfec4;
-  t.taisyouerasquare = 0x337d;
-  t.takatakana = 0x30bf;
-  t.takatakanahalfwidth = 0xff80;
-  t.tatweelarabic = 0x0640;
-  t.tau = 0x03c4;
-  t.tav = 0x05ea;
-  t.tavdages = 0xfb4a;
-  t.tavdagesh = 0xfb4a;
-  t.tavdageshhebrew = 0xfb4a;
-  t.tavhebrew = 0x05ea;
-  t.tbar = 0x0167;
-  t.tbopomofo = 0x310a;
-  t.tcaron = 0x0165;
-  t.tccurl = 0x02a8;
-  t.tcedilla = 0x0163;
-  t.tcheharabic = 0x0686;
-  t.tchehfinalarabic = 0xfb7b;
-  t.tchehinitialarabic = 0xfb7c;
-  t.tchehmedialarabic = 0xfb7d;
-  t.tcircle = 0x24e3;
-  t.tcircumflexbelow = 0x1e71;
-  t.tcommaaccent = 0x0163;
-  t.tdieresis = 0x1e97;
-  t.tdotaccent = 0x1e6b;
-  t.tdotbelow = 0x1e6d;
-  t.tecyrillic = 0x0442;
-  t.tedescendercyrillic = 0x04ad;
-  t.teharabic = 0x062a;
-  t.tehfinalarabic = 0xfe96;
-  t.tehhahinitialarabic = 0xfca2;
-  t.tehhahisolatedarabic = 0xfc0c;
-  t.tehinitialarabic = 0xfe97;
-  t.tehiragana = 0x3066;
-  t.tehjeeminitialarabic = 0xfca1;
-  t.tehjeemisolatedarabic = 0xfc0b;
-  t.tehmarbutaarabic = 0x0629;
-  t.tehmarbutafinalarabic = 0xfe94;
-  t.tehmedialarabic = 0xfe98;
-  t.tehmeeminitialarabic = 0xfca4;
-  t.tehmeemisolatedarabic = 0xfc0e;
-  t.tehnoonfinalarabic = 0xfc73;
-  t.tekatakana = 0x30c6;
-  t.tekatakanahalfwidth = 0xff83;
-  t.telephone = 0x2121;
-  t.telephoneblack = 0x260e;
-  t.telishagedolahebrew = 0x05a0;
-  t.telishaqetanahebrew = 0x05a9;
-  t.tencircle = 0x2469;
-  t.tenideographicparen = 0x3229;
-  t.tenparen = 0x247d;
-  t.tenperiod = 0x2491;
-  t.tenroman = 0x2179;
-  t.tesh = 0x02a7;
-  t.tet = 0x05d8;
-  t.tetdagesh = 0xfb38;
-  t.tetdageshhebrew = 0xfb38;
-  t.tethebrew = 0x05d8;
-  t.tetsecyrillic = 0x04b5;
-  t.tevirhebrew = 0x059b;
-  t.tevirlefthebrew = 0x059b;
-  t.thabengali = 0x09a5;
-  t.thadeva = 0x0925;
-  t.thagujarati = 0x0aa5;
-  t.thagurmukhi = 0x0a25;
-  t.thalarabic = 0x0630;
-  t.thalfinalarabic = 0xfeac;
-  t.thanthakhatlowleftthai = 0xf898;
-  t.thanthakhatlowrightthai = 0xf897;
-  t.thanthakhatthai = 0x0e4c;
-  t.thanthakhatupperleftthai = 0xf896;
-  t.theharabic = 0x062b;
-  t.thehfinalarabic = 0xfe9a;
-  t.thehinitialarabic = 0xfe9b;
-  t.thehmedialarabic = 0xfe9c;
-  t.thereexists = 0x2203;
-  t.therefore = 0x2234;
-  t.theta = 0x03b8;
-  t.theta1 = 0x03d1;
-  t.thetasymbolgreek = 0x03d1;
-  t.thieuthacirclekorean = 0x3279;
-  t.thieuthaparenkorean = 0x3219;
-  t.thieuthcirclekorean = 0x326b;
-  t.thieuthkorean = 0x314c;
-  t.thieuthparenkorean = 0x320b;
-  t.thirteencircle = 0x246c;
-  t.thirteenparen = 0x2480;
-  t.thirteenperiod = 0x2494;
-  t.thonangmonthothai = 0x0e11;
-  t.thook = 0x01ad;
-  t.thophuthaothai = 0x0e12;
-  t.thorn = 0x00fe;
-  t.thothahanthai = 0x0e17;
-  t.thothanthai = 0x0e10;
-  t.thothongthai = 0x0e18;
-  t.thothungthai = 0x0e16;
-  t.thousandcyrillic = 0x0482;
-  t.thousandsseparatorarabic = 0x066c;
-  t.thousandsseparatorpersian = 0x066c;
-  t.three = 0x0033;
-  t.threearabic = 0x0663;
-  t.threebengali = 0x09e9;
-  t.threecircle = 0x2462;
-  t.threecircleinversesansserif = 0x278c;
-  t.threedeva = 0x0969;
-  t.threeeighths = 0x215c;
-  t.threegujarati = 0x0ae9;
-  t.threegurmukhi = 0x0a69;
-  t.threehackarabic = 0x0663;
-  t.threehangzhou = 0x3023;
-  t.threeideographicparen = 0x3222;
-  t.threeinferior = 0x2083;
-  t.threemonospace = 0xff13;
-  t.threenumeratorbengali = 0x09f6;
-  t.threeoldstyle = 0xf733;
-  t.threeparen = 0x2476;
-  t.threeperiod = 0x248a;
-  t.threepersian = 0x06f3;
-  t.threequarters = 0x00be;
-  t.threequartersemdash = 0xf6de;
-  t.threeroman = 0x2172;
-  t.threesuperior = 0x00b3;
-  t.threethai = 0x0e53;
-  t.thzsquare = 0x3394;
-  t.tihiragana = 0x3061;
-  t.tikatakana = 0x30c1;
-  t.tikatakanahalfwidth = 0xff81;
-  t.tikeutacirclekorean = 0x3270;
-  t.tikeutaparenkorean = 0x3210;
-  t.tikeutcirclekorean = 0x3262;
-  t.tikeutkorean = 0x3137;
-  t.tikeutparenkorean = 0x3202;
-  t.tilde = 0x02dc;
-  t.tildebelowcmb = 0x0330;
-  t.tildecmb = 0x0303;
-  t.tildecomb = 0x0303;
-  t.tildedoublecmb = 0x0360;
-  t.tildeoperator = 0x223c;
-  t.tildeoverlaycmb = 0x0334;
-  t.tildeverticalcmb = 0x033e;
-  t.timescircle = 0x2297;
-  t.tipehahebrew = 0x0596;
-  t.tipehalefthebrew = 0x0596;
-  t.tippigurmukhi = 0x0a70;
-  t.titlocyrilliccmb = 0x0483;
-  t.tiwnarmenian = 0x057f;
-  t.tlinebelow = 0x1e6f;
-  t.tmonospace = 0xff54;
-  t.toarmenian = 0x0569;
-  t.tohiragana = 0x3068;
-  t.tokatakana = 0x30c8;
-  t.tokatakanahalfwidth = 0xff84;
-  t.tonebarextrahighmod = 0x02e5;
-  t.tonebarextralowmod = 0x02e9;
-  t.tonebarhighmod = 0x02e6;
-  t.tonebarlowmod = 0x02e8;
-  t.tonebarmidmod = 0x02e7;
-  t.tonefive = 0x01bd;
-  t.tonesix = 0x0185;
-  t.tonetwo = 0x01a8;
-  t.tonos = 0x0384;
-  t.tonsquare = 0x3327;
-  t.topatakthai = 0x0e0f;
-  t.tortoiseshellbracketleft = 0x3014;
-  t.tortoiseshellbracketleftsmall = 0xfe5d;
-  t.tortoiseshellbracketleftvertical = 0xfe39;
-  t.tortoiseshellbracketright = 0x3015;
-  t.tortoiseshellbracketrightsmall = 0xfe5e;
-  t.tortoiseshellbracketrightvertical = 0xfe3a;
-  t.totaothai = 0x0e15;
-  t.tpalatalhook = 0x01ab;
-  t.tparen = 0x24af;
-  t.trademark = 0x2122;
-  t.trademarksans = 0xf8ea;
-  t.trademarkserif = 0xf6db;
-  t.tretroflexhook = 0x0288;
-  t.triagdn = 0x25bc;
-  t.triaglf = 0x25c4;
-  t.triagrt = 0x25ba;
-  t.triagup = 0x25b2;
-  t.ts = 0x02a6;
-  t.tsadi = 0x05e6;
-  t.tsadidagesh = 0xfb46;
-  t.tsadidageshhebrew = 0xfb46;
-  t.tsadihebrew = 0x05e6;
-  t.tsecyrillic = 0x0446;
-  t.tsere = 0x05b5;
-  t.tsere12 = 0x05b5;
-  t.tsere1e = 0x05b5;
-  t.tsere2b = 0x05b5;
-  t.tserehebrew = 0x05b5;
-  t.tserenarrowhebrew = 0x05b5;
-  t.tserequarterhebrew = 0x05b5;
-  t.tserewidehebrew = 0x05b5;
-  t.tshecyrillic = 0x045b;
-  t.tsuperior = 0xf6f3;
-  t.ttabengali = 0x099f;
-  t.ttadeva = 0x091f;
-  t.ttagujarati = 0x0a9f;
-  t.ttagurmukhi = 0x0a1f;
-  t.tteharabic = 0x0679;
-  t.ttehfinalarabic = 0xfb67;
-  t.ttehinitialarabic = 0xfb68;
-  t.ttehmedialarabic = 0xfb69;
-  t.tthabengali = 0x09a0;
-  t.tthadeva = 0x0920;
-  t.tthagujarati = 0x0aa0;
-  t.tthagurmukhi = 0x0a20;
-  t.tturned = 0x0287;
-  t.tuhiragana = 0x3064;
-  t.tukatakana = 0x30c4;
-  t.tukatakanahalfwidth = 0xff82;
-  t.tusmallhiragana = 0x3063;
-  t.tusmallkatakana = 0x30c3;
-  t.tusmallkatakanahalfwidth = 0xff6f;
-  t.twelvecircle = 0x246b;
-  t.twelveparen = 0x247f;
-  t.twelveperiod = 0x2493;
-  t.twelveroman = 0x217b;
-  t.twentycircle = 0x2473;
-  t.twentyhangzhou = 0x5344;
-  t.twentyparen = 0x2487;
-  t.twentyperiod = 0x249b;
-  t.two = 0x0032;
-  t.twoarabic = 0x0662;
-  t.twobengali = 0x09e8;
-  t.twocircle = 0x2461;
-  t.twocircleinversesansserif = 0x278b;
-  t.twodeva = 0x0968;
-  t.twodotenleader = 0x2025;
-  t.twodotleader = 0x2025;
-  t.twodotleadervertical = 0xfe30;
-  t.twogujarati = 0x0ae8;
-  t.twogurmukhi = 0x0a68;
-  t.twohackarabic = 0x0662;
-  t.twohangzhou = 0x3022;
-  t.twoideographicparen = 0x3221;
-  t.twoinferior = 0x2082;
-  t.twomonospace = 0xff12;
-  t.twonumeratorbengali = 0x09f5;
-  t.twooldstyle = 0xf732;
-  t.twoparen = 0x2475;
-  t.twoperiod = 0x2489;
-  t.twopersian = 0x06f2;
-  t.tworoman = 0x2171;
-  t.twostroke = 0x01bb;
-  t.twosuperior = 0x00b2;
-  t.twothai = 0x0e52;
-  t.twothirds = 0x2154;
-  t.u = 0x0075;
-  t.uacute = 0x00fa;
-  t.ubar = 0x0289;
-  t.ubengali = 0x0989;
-  t.ubopomofo = 0x3128;
-  t.ubreve = 0x016d;
-  t.ucaron = 0x01d4;
-  t.ucircle = 0x24e4;
-  t.ucircumflex = 0x00fb;
-  t.ucircumflexbelow = 0x1e77;
-  t.ucyrillic = 0x0443;
-  t.udattadeva = 0x0951;
-  t.udblacute = 0x0171;
-  t.udblgrave = 0x0215;
-  t.udeva = 0x0909;
-  t.udieresis = 0x00fc;
-  t.udieresisacute = 0x01d8;
-  t.udieresisbelow = 0x1e73;
-  t.udieresiscaron = 0x01da;
-  t.udieresiscyrillic = 0x04f1;
-  t.udieresisgrave = 0x01dc;
-  t.udieresismacron = 0x01d6;
-  t.udotbelow = 0x1ee5;
-  t.ugrave = 0x00f9;
-  t.ugujarati = 0x0a89;
-  t.ugurmukhi = 0x0a09;
-  t.uhiragana = 0x3046;
-  t.uhookabove = 0x1ee7;
-  t.uhorn = 0x01b0;
-  t.uhornacute = 0x1ee9;
-  t.uhorndotbelow = 0x1ef1;
-  t.uhorngrave = 0x1eeb;
-  t.uhornhookabove = 0x1eed;
-  t.uhorntilde = 0x1eef;
-  t.uhungarumlaut = 0x0171;
-  t.uhungarumlautcyrillic = 0x04f3;
-  t.uinvertedbreve = 0x0217;
-  t.ukatakana = 0x30a6;
-  t.ukatakanahalfwidth = 0xff73;
-  t.ukcyrillic = 0x0479;
-  t.ukorean = 0x315c;
-  t.umacron = 0x016b;
-  t.umacroncyrillic = 0x04ef;
-  t.umacrondieresis = 0x1e7b;
-  t.umatragurmukhi = 0x0a41;
-  t.umonospace = 0xff55;
-  t.underscore = 0x005f;
-  t.underscoredbl = 0x2017;
-  t.underscoremonospace = 0xff3f;
-  t.underscorevertical = 0xfe33;
-  t.underscorewavy = 0xfe4f;
-  t.union = 0x222a;
-  t.universal = 0x2200;
-  t.uogonek = 0x0173;
-  t.uparen = 0x24b0;
-  t.upblock = 0x2580;
-  t.upperdothebrew = 0x05c4;
-  t.upsilon = 0x03c5;
-  t.upsilondieresis = 0x03cb;
-  t.upsilondieresistonos = 0x03b0;
-  t.upsilonlatin = 0x028a;
-  t.upsilontonos = 0x03cd;
-  t.uptackbelowcmb = 0x031d;
-  t.uptackmod = 0x02d4;
-  t.uragurmukhi = 0x0a73;
-  t.uring = 0x016f;
-  t.ushortcyrillic = 0x045e;
-  t.usmallhiragana = 0x3045;
-  t.usmallkatakana = 0x30a5;
-  t.usmallkatakanahalfwidth = 0xff69;
-  t.ustraightcyrillic = 0x04af;
-  t.ustraightstrokecyrillic = 0x04b1;
-  t.utilde = 0x0169;
-  t.utildeacute = 0x1e79;
-  t.utildebelow = 0x1e75;
-  t.uubengali = 0x098a;
-  t.uudeva = 0x090a;
-  t.uugujarati = 0x0a8a;
-  t.uugurmukhi = 0x0a0a;
-  t.uumatragurmukhi = 0x0a42;
-  t.uuvowelsignbengali = 0x09c2;
-  t.uuvowelsigndeva = 0x0942;
-  t.uuvowelsigngujarati = 0x0ac2;
-  t.uvowelsignbengali = 0x09c1;
-  t.uvowelsigndeva = 0x0941;
-  t.uvowelsigngujarati = 0x0ac1;
-  t.v = 0x0076;
-  t.vadeva = 0x0935;
-  t.vagujarati = 0x0ab5;
-  t.vagurmukhi = 0x0a35;
-  t.vakatakana = 0x30f7;
-  t.vav = 0x05d5;
-  t.vavdagesh = 0xfb35;
-  t.vavdagesh65 = 0xfb35;
-  t.vavdageshhebrew = 0xfb35;
-  t.vavhebrew = 0x05d5;
-  t.vavholam = 0xfb4b;
-  t.vavholamhebrew = 0xfb4b;
-  t.vavvavhebrew = 0x05f0;
-  t.vavyodhebrew = 0x05f1;
-  t.vcircle = 0x24e5;
-  t.vdotbelow = 0x1e7f;
-  t.vecyrillic = 0x0432;
-  t.veharabic = 0x06a4;
-  t.vehfinalarabic = 0xfb6b;
-  t.vehinitialarabic = 0xfb6c;
-  t.vehmedialarabic = 0xfb6d;
-  t.vekatakana = 0x30f9;
-  t.venus = 0x2640;
-  t.verticalbar = 0x007c;
-  t.verticallineabovecmb = 0x030d;
-  t.verticallinebelowcmb = 0x0329;
-  t.verticallinelowmod = 0x02cc;
-  t.verticallinemod = 0x02c8;
-  t.vewarmenian = 0x057e;
-  t.vhook = 0x028b;
-  t.vikatakana = 0x30f8;
-  t.viramabengali = 0x09cd;
-  t.viramadeva = 0x094d;
-  t.viramagujarati = 0x0acd;
-  t.visargabengali = 0x0983;
-  t.visargadeva = 0x0903;
-  t.visargagujarati = 0x0a83;
-  t.vmonospace = 0xff56;
-  t.voarmenian = 0x0578;
-  t.voicediterationhiragana = 0x309e;
-  t.voicediterationkatakana = 0x30fe;
-  t.voicedmarkkana = 0x309b;
-  t.voicedmarkkanahalfwidth = 0xff9e;
-  t.vokatakana = 0x30fa;
-  t.vparen = 0x24b1;
-  t.vtilde = 0x1e7d;
-  t.vturned = 0x028c;
-  t.vuhiragana = 0x3094;
-  t.vukatakana = 0x30f4;
-  t.w = 0x0077;
-  t.wacute = 0x1e83;
-  t.waekorean = 0x3159;
-  t.wahiragana = 0x308f;
-  t.wakatakana = 0x30ef;
-  t.wakatakanahalfwidth = 0xff9c;
-  t.wakorean = 0x3158;
-  t.wasmallhiragana = 0x308e;
-  t.wasmallkatakana = 0x30ee;
-  t.wattosquare = 0x3357;
-  t.wavedash = 0x301c;
-  t.wavyunderscorevertical = 0xfe34;
-  t.wawarabic = 0x0648;
-  t.wawfinalarabic = 0xfeee;
-  t.wawhamzaabovearabic = 0x0624;
-  t.wawhamzaabovefinalarabic = 0xfe86;
-  t.wbsquare = 0x33dd;
-  t.wcircle = 0x24e6;
-  t.wcircumflex = 0x0175;
-  t.wdieresis = 0x1e85;
-  t.wdotaccent = 0x1e87;
-  t.wdotbelow = 0x1e89;
-  t.wehiragana = 0x3091;
-  t.weierstrass = 0x2118;
-  t.wekatakana = 0x30f1;
-  t.wekorean = 0x315e;
-  t.weokorean = 0x315d;
-  t.wgrave = 0x1e81;
-  t.whitebullet = 0x25e6;
-  t.whitecircle = 0x25cb;
-  t.whitecircleinverse = 0x25d9;
-  t.whitecornerbracketleft = 0x300e;
-  t.whitecornerbracketleftvertical = 0xfe43;
-  t.whitecornerbracketright = 0x300f;
-  t.whitecornerbracketrightvertical = 0xfe44;
-  t.whitediamond = 0x25c7;
-  t.whitediamondcontainingblacksmalldiamond = 0x25c8;
-  t.whitedownpointingsmalltriangle = 0x25bf;
-  t.whitedownpointingtriangle = 0x25bd;
-  t.whiteleftpointingsmalltriangle = 0x25c3;
-  t.whiteleftpointingtriangle = 0x25c1;
-  t.whitelenticularbracketleft = 0x3016;
-  t.whitelenticularbracketright = 0x3017;
-  t.whiterightpointingsmalltriangle = 0x25b9;
-  t.whiterightpointingtriangle = 0x25b7;
-  t.whitesmallsquare = 0x25ab;
-  t.whitesmilingface = 0x263a;
-  t.whitesquare = 0x25a1;
-  t.whitestar = 0x2606;
-  t.whitetelephone = 0x260f;
-  t.whitetortoiseshellbracketleft = 0x3018;
-  t.whitetortoiseshellbracketright = 0x3019;
-  t.whiteuppointingsmalltriangle = 0x25b5;
-  t.whiteuppointingtriangle = 0x25b3;
-  t.wihiragana = 0x3090;
-  t.wikatakana = 0x30f0;
-  t.wikorean = 0x315f;
-  t.wmonospace = 0xff57;
-  t.wohiragana = 0x3092;
-  t.wokatakana = 0x30f2;
-  t.wokatakanahalfwidth = 0xff66;
-  t.won = 0x20a9;
-  t.wonmonospace = 0xffe6;
-  t.wowaenthai = 0x0e27;
-  t.wparen = 0x24b2;
-  t.wring = 0x1e98;
-  t.wsuperior = 0x02b7;
-  t.wturned = 0x028d;
-  t.wynn = 0x01bf;
-  t.x = 0x0078;
-  t.xabovecmb = 0x033d;
-  t.xbopomofo = 0x3112;
-  t.xcircle = 0x24e7;
-  t.xdieresis = 0x1e8d;
-  t.xdotaccent = 0x1e8b;
-  t.xeharmenian = 0x056d;
-  t.xi = 0x03be;
-  t.xmonospace = 0xff58;
-  t.xparen = 0x24b3;
-  t.xsuperior = 0x02e3;
-  t.y = 0x0079;
-  t.yaadosquare = 0x334e;
-  t.yabengali = 0x09af;
-  t.yacute = 0x00fd;
-  t.yadeva = 0x092f;
-  t.yaekorean = 0x3152;
-  t.yagujarati = 0x0aaf;
-  t.yagurmukhi = 0x0a2f;
-  t.yahiragana = 0x3084;
-  t.yakatakana = 0x30e4;
-  t.yakatakanahalfwidth = 0xff94;
-  t.yakorean = 0x3151;
-  t.yamakkanthai = 0x0e4e;
-  t.yasmallhiragana = 0x3083;
-  t.yasmallkatakana = 0x30e3;
-  t.yasmallkatakanahalfwidth = 0xff6c;
-  t.yatcyrillic = 0x0463;
-  t.ycircle = 0x24e8;
-  t.ycircumflex = 0x0177;
-  t.ydieresis = 0x00ff;
-  t.ydotaccent = 0x1e8f;
-  t.ydotbelow = 0x1ef5;
-  t.yeharabic = 0x064a;
-  t.yehbarreearabic = 0x06d2;
-  t.yehbarreefinalarabic = 0xfbaf;
-  t.yehfinalarabic = 0xfef2;
-  t.yehhamzaabovearabic = 0x0626;
-  t.yehhamzaabovefinalarabic = 0xfe8a;
-  t.yehhamzaaboveinitialarabic = 0xfe8b;
-  t.yehhamzaabovemedialarabic = 0xfe8c;
-  t.yehinitialarabic = 0xfef3;
-  t.yehmedialarabic = 0xfef4;
-  t.yehmeeminitialarabic = 0xfcdd;
-  t.yehmeemisolatedarabic = 0xfc58;
-  t.yehnoonfinalarabic = 0xfc94;
-  t.yehthreedotsbelowarabic = 0x06d1;
-  t.yekorean = 0x3156;
-  t.yen = 0x00a5;
-  t.yenmonospace = 0xffe5;
-  t.yeokorean = 0x3155;
-  t.yeorinhieuhkorean = 0x3186;
-  t.yerahbenyomohebrew = 0x05aa;
-  t.yerahbenyomolefthebrew = 0x05aa;
-  t.yericyrillic = 0x044b;
-  t.yerudieresiscyrillic = 0x04f9;
-  t.yesieungkorean = 0x3181;
-  t.yesieungpansioskorean = 0x3183;
-  t.yesieungsioskorean = 0x3182;
-  t.yetivhebrew = 0x059a;
-  t.ygrave = 0x1ef3;
-  t.yhook = 0x01b4;
-  t.yhookabove = 0x1ef7;
-  t.yiarmenian = 0x0575;
-  t.yicyrillic = 0x0457;
-  t.yikorean = 0x3162;
-  t.yinyang = 0x262f;
-  t.yiwnarmenian = 0x0582;
-  t.ymonospace = 0xff59;
-  t.yod = 0x05d9;
-  t.yoddagesh = 0xfb39;
-  t.yoddageshhebrew = 0xfb39;
-  t.yodhebrew = 0x05d9;
-  t.yodyodhebrew = 0x05f2;
-  t.yodyodpatahhebrew = 0xfb1f;
-  t.yohiragana = 0x3088;
-  t.yoikorean = 0x3189;
-  t.yokatakana = 0x30e8;
-  t.yokatakanahalfwidth = 0xff96;
-  t.yokorean = 0x315b;
-  t.yosmallhiragana = 0x3087;
-  t.yosmallkatakana = 0x30e7;
-  t.yosmallkatakanahalfwidth = 0xff6e;
-  t.yotgreek = 0x03f3;
-  t.yoyaekorean = 0x3188;
-  t.yoyakorean = 0x3187;
-  t.yoyakthai = 0x0e22;
-  t.yoyingthai = 0x0e0d;
-  t.yparen = 0x24b4;
-  t.ypogegrammeni = 0x037a;
-  t.ypogegrammenigreekcmb = 0x0345;
-  t.yr = 0x01a6;
-  t.yring = 0x1e99;
-  t.ysuperior = 0x02b8;
-  t.ytilde = 0x1ef9;
-  t.yturned = 0x028e;
-  t.yuhiragana = 0x3086;
-  t.yuikorean = 0x318c;
-  t.yukatakana = 0x30e6;
-  t.yukatakanahalfwidth = 0xff95;
-  t.yukorean = 0x3160;
-  t.yusbigcyrillic = 0x046b;
-  t.yusbigiotifiedcyrillic = 0x046d;
-  t.yuslittlecyrillic = 0x0467;
-  t.yuslittleiotifiedcyrillic = 0x0469;
-  t.yusmallhiragana = 0x3085;
-  t.yusmallkatakana = 0x30e5;
-  t.yusmallkatakanahalfwidth = 0xff6d;
-  t.yuyekorean = 0x318b;
-  t.yuyeokorean = 0x318a;
-  t.yyabengali = 0x09df;
-  t.yyadeva = 0x095f;
-  t.z = 0x007a;
-  t.zaarmenian = 0x0566;
-  t.zacute = 0x017a;
-  t.zadeva = 0x095b;
-  t.zagurmukhi = 0x0a5b;
-  t.zaharabic = 0x0638;
-  t.zahfinalarabic = 0xfec6;
-  t.zahinitialarabic = 0xfec7;
-  t.zahiragana = 0x3056;
-  t.zahmedialarabic = 0xfec8;
-  t.zainarabic = 0x0632;
-  t.zainfinalarabic = 0xfeb0;
-  t.zakatakana = 0x30b6;
-  t.zaqefgadolhebrew = 0x0595;
-  t.zaqefqatanhebrew = 0x0594;
-  t.zarqahebrew = 0x0598;
-  t.zayin = 0x05d6;
-  t.zayindagesh = 0xfb36;
-  t.zayindageshhebrew = 0xfb36;
-  t.zayinhebrew = 0x05d6;
-  t.zbopomofo = 0x3117;
-  t.zcaron = 0x017e;
-  t.zcircle = 0x24e9;
-  t.zcircumflex = 0x1e91;
-  t.zcurl = 0x0291;
-  t.zdot = 0x017c;
-  t.zdotaccent = 0x017c;
-  t.zdotbelow = 0x1e93;
-  t.zecyrillic = 0x0437;
-  t.zedescendercyrillic = 0x0499;
-  t.zedieresiscyrillic = 0x04df;
-  t.zehiragana = 0x305c;
-  t.zekatakana = 0x30bc;
-  t.zero = 0x0030;
-  t.zeroarabic = 0x0660;
-  t.zerobengali = 0x09e6;
-  t.zerodeva = 0x0966;
-  t.zerogujarati = 0x0ae6;
-  t.zerogurmukhi = 0x0a66;
-  t.zerohackarabic = 0x0660;
-  t.zeroinferior = 0x2080;
-  t.zeromonospace = 0xff10;
-  t.zerooldstyle = 0xf730;
-  t.zeropersian = 0x06f0;
-  t.zerosuperior = 0x2070;
-  t.zerothai = 0x0e50;
-  t.zerowidthjoiner = 0xfeff;
-  t.zerowidthnonjoiner = 0x200c;
-  t.zerowidthspace = 0x200b;
-  t.zeta = 0x03b6;
-  t.zhbopomofo = 0x3113;
-  t.zhearmenian = 0x056a;
-  t.zhebrevecyrillic = 0x04c2;
-  t.zhecyrillic = 0x0436;
-  t.zhedescendercyrillic = 0x0497;
-  t.zhedieresiscyrillic = 0x04dd;
-  t.zihiragana = 0x3058;
-  t.zikatakana = 0x30b8;
-  t.zinorhebrew = 0x05ae;
-  t.zlinebelow = 0x1e95;
-  t.zmonospace = 0xff5a;
-  t.zohiragana = 0x305e;
-  t.zokatakana = 0x30be;
-  t.zparen = 0x24b5;
-  t.zretroflexhook = 0x0290;
-  t.zstroke = 0x01b6;
-  t.zuhiragana = 0x305a;
-  t.zukatakana = 0x30ba;
-  t[".notdef"] = 0x0000;
+const getGlyphsUnicode = getLookupTableFactory(() => {
+  return {
+    A: 0x0041 as const,
+    AE: 0x00c6 as const,
+    AEacute: 0x01fc as const,
+    AEmacron: 0x01e2 as const,
+    AEsmall: 0xf7e6 as const,
+    Aacute: 0x00c1 as const,
+    Aacutesmall: 0xf7e1 as const,
+    Abreve: 0x0102 as const,
+    Abreveacute: 0x1eae as const,
+    Abrevecyrillic: 0x04d0 as const,
+    Abrevedotbelow: 0x1eb6 as const,
+    Abrevegrave: 0x1eb0 as const,
+    Abrevehookabove: 0x1eb2 as const,
+    Abrevetilde: 0x1eb4 as const,
+    Acaron: 0x01cd as const,
+    Acircle: 0x24b6 as const,
+    Acircumflex: 0x00c2 as const,
+    Acircumflexacute: 0x1ea4 as const,
+    Acircumflexdotbelow: 0x1eac as const,
+    Acircumflexgrave: 0x1ea6 as const,
+    Acircumflexhookabove: 0x1ea8 as const,
+    Acircumflexsmall: 0xf7e2 as const,
+    Acircumflextilde: 0x1eaa as const,
+    Acute: 0xf6c9 as const,
+    Acutesmall: 0xf7b4 as const,
+    Acyrillic: 0x0410 as const,
+    Adblgrave: 0x0200 as const,
+    Adieresis: 0x00c4 as const,
+    Adieresiscyrillic: 0x04d2 as const,
+    Adieresismacron: 0x01de as const,
+    Adieresissmall: 0xf7e4 as const,
+    Adotbelow: 0x1ea0 as const,
+    Adotmacron: 0x01e0 as const,
+    Agrave: 0x00c0 as const,
+    Agravesmall: 0xf7e0 as const,
+    Ahookabove: 0x1ea2 as const,
+    Aiecyrillic: 0x04d4 as const,
+    Ainvertedbreve: 0x0202 as const,
+    Alpha: 0x0391 as const,
+    Alphatonos: 0x0386 as const,
+    Amacron: 0x0100 as const,
+    Amonospace: 0xff21 as const,
+    Aogonek: 0x0104 as const,
+    Aring: 0x00c5 as const,
+    Aringacute: 0x01fa as const,
+    Aringbelow: 0x1e00 as const,
+    Aringsmall: 0xf7e5 as const,
+    Asmall: 0xf761 as const,
+    Atilde: 0x00c3 as const,
+    Atildesmall: 0xf7e3 as const,
+    Aybarmenian: 0x0531 as const,
+    B: 0x0042 as const,
+    Bcircle: 0x24b7 as const,
+    Bdotaccent: 0x1e02 as const,
+    Bdotbelow: 0x1e04 as const,
+    Becyrillic: 0x0411 as const,
+    Benarmenian: 0x0532 as const,
+    Beta: 0x0392 as const,
+    Bhook: 0x0181 as const,
+    Blinebelow: 0x1e06 as const,
+    Bmonospace: 0xff22 as const,
+    Brevesmall: 0xf6f4 as const,
+    Bsmall: 0xf762 as const,
+    Btopbar: 0x0182 as const,
+    C: 0x0043 as const,
+    Caarmenian: 0x053e as const,
+    Cacute: 0x0106 as const,
+    Caron: 0xf6ca as const,
+    Caronsmall: 0xf6f5 as const,
+    Ccaron: 0x010c as const,
+    Ccedilla: 0x00c7 as const,
+    Ccedillaacute: 0x1e08 as const,
+    Ccedillasmall: 0xf7e7 as const,
+    Ccircle: 0x24b8 as const,
+    Ccircumflex: 0x0108 as const,
+    Cdot: 0x010a as const,
+    Cdotaccent: 0x010a as const,
+    Cedillasmall: 0xf7b8 as const,
+    Chaarmenian: 0x0549 as const,
+    Cheabkhasiancyrillic: 0x04bc as const,
+    Checyrillic: 0x0427 as const,
+    Chedescenderabkhasiancyrillic: 0x04be as const,
+    Chedescendercyrillic: 0x04b6 as const,
+    Chedieresiscyrillic: 0x04f4 as const,
+    Cheharmenian: 0x0543 as const,
+    Chekhakassiancyrillic: 0x04cb as const,
+    Cheverticalstrokecyrillic: 0x04b8 as const,
+    Chi: 0x03a7 as const,
+    Chook: 0x0187 as const,
+    Circumflexsmall: 0xf6f6 as const,
+    Cmonospace: 0xff23 as const,
+    Coarmenian: 0x0551 as const,
+    Csmall: 0xf763 as const,
+    D: 0x0044 as const,
+    DZ: 0x01f1 as const,
+    DZcaron: 0x01c4 as const,
+    Daarmenian: 0x0534 as const,
+    Dafrican: 0x0189 as const,
+    Dcaron: 0x010e as const,
+    Dcedilla: 0x1e10 as const,
+    Dcircle: 0x24b9 as const,
+    Dcircumflexbelow: 0x1e12 as const,
+    Dcroat: 0x0110 as const,
+    Ddotaccent: 0x1e0a as const,
+    Ddotbelow: 0x1e0c as const,
+    Decyrillic: 0x0414 as const,
+    Deicoptic: 0x03ee as const,
+    Delta: 0x2206 as const,
+    Deltagreek: 0x0394 as const,
+    Dhook: 0x018a as const,
+    Dieresis: 0xf6cb as const,
+    DieresisAcute: 0xf6cc as const,
+    DieresisGrave: 0xf6cd as const,
+    Dieresissmall: 0xf7a8 as const,
+    Digammagreek: 0x03dc as const,
+    Djecyrillic: 0x0402 as const,
+    Dlinebelow: 0x1e0e as const,
+    Dmonospace: 0xff24 as const,
+    Dotaccentsmall: 0xf6f7 as const,
+    Dslash: 0x0110 as const,
+    Dsmall: 0xf764 as const,
+    Dtopbar: 0x018b as const,
+    Dz: 0x01f2 as const,
+    Dzcaron: 0x01c5 as const,
+    Dzeabkhasiancyrillic: 0x04e0 as const,
+    Dzecyrillic: 0x0405 as const,
+    Dzhecyrillic: 0x040f as const,
+    E: 0x0045 as const,
+    Eacute: 0x00c9 as const,
+    Eacutesmall: 0xf7e9 as const,
+    Ebreve: 0x0114 as const,
+    Ecaron: 0x011a as const,
+    Ecedillabreve: 0x1e1c as const,
+    Echarmenian: 0x0535 as const,
+    Ecircle: 0x24ba as const,
+    Ecircumflex: 0x00ca as const,
+    Ecircumflexacute: 0x1ebe as const,
+    Ecircumflexbelow: 0x1e18 as const,
+    Ecircumflexdotbelow: 0x1ec6 as const,
+    Ecircumflexgrave: 0x1ec0 as const,
+    Ecircumflexhookabove: 0x1ec2 as const,
+    Ecircumflexsmall: 0xf7ea as const,
+    Ecircumflextilde: 0x1ec4 as const,
+    Ecyrillic: 0x0404 as const,
+    Edblgrave: 0x0204 as const,
+    Edieresis: 0x00cb as const,
+    Edieresissmall: 0xf7eb as const,
+    Edot: 0x0116 as const,
+    Edotaccent: 0x0116 as const,
+    Edotbelow: 0x1eb8 as const,
+    Efcyrillic: 0x0424 as const,
+    Egrave: 0x00c8 as const,
+    Egravesmall: 0xf7e8 as const,
+    Eharmenian: 0x0537 as const,
+    Ehookabove: 0x1eba as const,
+    Eightroman: 0x2167 as const,
+    Einvertedbreve: 0x0206 as const,
+    Eiotifiedcyrillic: 0x0464 as const,
+    Elcyrillic: 0x041b as const,
+    Elevenroman: 0x216a as const,
+    Emacron: 0x0112 as const,
+    Emacronacute: 0x1e16 as const,
+    Emacrongrave: 0x1e14 as const,
+    Emcyrillic: 0x041c as const,
+    Emonospace: 0xff25 as const,
+    Encyrillic: 0x041d as const,
+    Endescendercyrillic: 0x04a2 as const,
+    Eng: 0x014a as const,
+    Enghecyrillic: 0x04a4 as const,
+    Enhookcyrillic: 0x04c7 as const,
+    Eogonek: 0x0118 as const,
+    Eopen: 0x0190 as const,
+    Epsilon: 0x0395 as const,
+    Epsilontonos: 0x0388 as const,
+    Ercyrillic: 0x0420 as const,
+    Ereversed: 0x018e as const,
+    Ereversedcyrillic: 0x042d as const,
+    Escyrillic: 0x0421 as const,
+    Esdescendercyrillic: 0x04aa as const,
+    Esh: 0x01a9 as const,
+    Esmall: 0xf765 as const,
+    Eta: 0x0397 as const,
+    Etarmenian: 0x0538 as const,
+    Etatonos: 0x0389 as const,
+    Eth: 0x00d0 as const,
+    Ethsmall: 0xf7f0 as const,
+    Etilde: 0x1ebc as const,
+    Etildebelow: 0x1e1a as const,
+    Euro: 0x20ac as const,
+    Ezh: 0x01b7 as const,
+    Ezhcaron: 0x01ee as const,
+    Ezhreversed: 0x01b8 as const,
+    F: 0x0046 as const,
+    Fcircle: 0x24bb as const,
+    Fdotaccent: 0x1e1e as const,
+    Feharmenian: 0x0556 as const,
+    Feicoptic: 0x03e4 as const,
+    Fhook: 0x0191 as const,
+    Fitacyrillic: 0x0472 as const,
+    Fiveroman: 0x2164 as const,
+    Fmonospace: 0xff26 as const,
+    Fourroman: 0x2163 as const,
+    Fsmall: 0xf766 as const,
+    G: 0x0047 as const,
+    GBsquare: 0x3387 as const,
+    Gacute: 0x01f4 as const,
+    Gamma: 0x0393 as const,
+    Gammaafrican: 0x0194 as const,
+    Gangiacoptic: 0x03ea as const,
+    Gbreve: 0x011e as const,
+    Gcaron: 0x01e6 as const,
+    Gcedilla: 0x0122 as const,
+    Gcircle: 0x24bc as const,
+    Gcircumflex: 0x011c as const,
+    Gcommaaccent: 0x0122 as const,
+    Gdot: 0x0120 as const,
+    Gdotaccent: 0x0120 as const,
+    Gecyrillic: 0x0413 as const,
+    Ghadarmenian: 0x0542 as const,
+    Ghemiddlehookcyrillic: 0x0494 as const,
+    Ghestrokecyrillic: 0x0492 as const,
+    Gheupturncyrillic: 0x0490 as const,
+    Ghook: 0x0193 as const,
+    Gimarmenian: 0x0533 as const,
+    Gjecyrillic: 0x0403 as const,
+    Gmacron: 0x1e20 as const,
+    Gmonospace: 0xff27 as const,
+    Grave: 0xf6ce as const,
+    Gravesmall: 0xf760 as const,
+    Gsmall: 0xf767 as const,
+    Gsmallhook: 0x029b as const,
+    Gstroke: 0x01e4 as const,
+    H: 0x0048 as const,
+    H18533: 0x25cf as const,
+    H18543: 0x25aa as const,
+    H18551: 0x25ab as const,
+    H22073: 0x25a1 as const,
+    HPsquare: 0x33cb as const,
+    Haabkhasiancyrillic: 0x04a8 as const,
+    Hadescendercyrillic: 0x04b2 as const,
+    Hardsigncyrillic: 0x042a as const,
+    Hbar: 0x0126 as const,
+    Hbrevebelow: 0x1e2a as const,
+    Hcedilla: 0x1e28 as const,
+    Hcircle: 0x24bd as const,
+    Hcircumflex: 0x0124 as const,
+    Hdieresis: 0x1e26 as const,
+    Hdotaccent: 0x1e22 as const,
+    Hdotbelow: 0x1e24 as const,
+    Hmonospace: 0xff28 as const,
+    Hoarmenian: 0x0540 as const,
+    Horicoptic: 0x03e8 as const,
+    Hsmall: 0xf768 as const,
+    Hungarumlaut: 0xf6cf as const,
+    Hungarumlautsmall: 0xf6f8 as const,
+    Hzsquare: 0x3390 as const,
+    I: 0x0049 as const,
+    IAcyrillic: 0x042f as const,
+    IJ: 0x0132 as const,
+    IUcyrillic: 0x042e as const,
+    Iacute: 0x00cd as const,
+    Iacutesmall: 0xf7ed as const,
+    Ibreve: 0x012c as const,
+    Icaron: 0x01cf as const,
+    Icircle: 0x24be as const,
+    Icircumflex: 0x00ce as const,
+    Icircumflexsmall: 0xf7ee as const,
+    Icyrillic: 0x0406 as const,
+    Idblgrave: 0x0208 as const,
+    Idieresis: 0x00cf as const,
+    Idieresisacute: 0x1e2e as const,
+    Idieresiscyrillic: 0x04e4 as const,
+    Idieresissmall: 0xf7ef as const,
+    Idot: 0x0130 as const,
+    Idotaccent: 0x0130 as const,
+    Idotbelow: 0x1eca as const,
+    Iebrevecyrillic: 0x04d6 as const,
+    Iecyrillic: 0x0415 as const,
+    Ifraktur: 0x2111 as const,
+    Igrave: 0x00cc as const,
+    Igravesmall: 0xf7ec as const,
+    Ihookabove: 0x1ec8 as const,
+    Iicyrillic: 0x0418 as const,
+    Iinvertedbreve: 0x020a as const,
+    Iishortcyrillic: 0x0419 as const,
+    Imacron: 0x012a as const,
+    Imacroncyrillic: 0x04e2 as const,
+    Imonospace: 0xff29 as const,
+    Iniarmenian: 0x053b as const,
+    Iocyrillic: 0x0401 as const,
+    Iogonek: 0x012e as const,
+    Iota: 0x0399 as const,
+    Iotaafrican: 0x0196 as const,
+    Iotadieresis: 0x03aa as const,
+    Iotatonos: 0x038a as const,
+    Ismall: 0xf769 as const,
+    Istroke: 0x0197 as const,
+    Itilde: 0x0128 as const,
+    Itildebelow: 0x1e2c as const,
+    Izhitsacyrillic: 0x0474 as const,
+    Izhitsadblgravecyrillic: 0x0476 as const,
+    J: 0x004a as const,
+    Jaarmenian: 0x0541 as const,
+    Jcircle: 0x24bf as const,
+    Jcircumflex: 0x0134 as const,
+    Jecyrillic: 0x0408 as const,
+    Jheharmenian: 0x054b as const,
+    Jmonospace: 0xff2a as const,
+    Jsmall: 0xf76a as const,
+    K: 0x004b as const,
+    KBsquare: 0x3385 as const,
+    KKsquare: 0x33cd as const,
+    Kabashkircyrillic: 0x04a0 as const,
+    Kacute: 0x1e30 as const,
+    Kacyrillic: 0x041a as const,
+    Kadescendercyrillic: 0x049a as const,
+    Kahookcyrillic: 0x04c3 as const,
+    Kappa: 0x039a as const,
+    Kastrokecyrillic: 0x049e as const,
+    Kaverticalstrokecyrillic: 0x049c as const,
+    Kcaron: 0x01e8 as const,
+    Kcedilla: 0x0136 as const,
+    Kcircle: 0x24c0 as const,
+    Kcommaaccent: 0x0136 as const,
+    Kdotbelow: 0x1e32 as const,
+    Keharmenian: 0x0554 as const,
+    Kenarmenian: 0x053f as const,
+    Khacyrillic: 0x0425 as const,
+    Kheicoptic: 0x03e6 as const,
+    Khook: 0x0198 as const,
+    Kjecyrillic: 0x040c as const,
+    Klinebelow: 0x1e34 as const,
+    Kmonospace: 0xff2b as const,
+    Koppacyrillic: 0x0480 as const,
+    Koppagreek: 0x03de as const,
+    Ksicyrillic: 0x046e as const,
+    Ksmall: 0xf76b as const,
+    L: 0x004c as const,
+    LJ: 0x01c7 as const,
+    LL: 0xf6bf as const,
+    Lacute: 0x0139 as const,
+    Lambda: 0x039b as const,
+    Lcaron: 0x013d as const,
+    Lcedilla: 0x013b as const,
+    Lcircle: 0x24c1 as const,
+    Lcircumflexbelow: 0x1e3c as const,
+    Lcommaaccent: 0x013b as const,
+    Ldot: 0x013f as const,
+    Ldotaccent: 0x013f as const,
+    Ldotbelow: 0x1e36 as const,
+    Ldotbelowmacron: 0x1e38 as const,
+    Liwnarmenian: 0x053c as const,
+    Lj: 0x01c8 as const,
+    Ljecyrillic: 0x0409 as const,
+    Llinebelow: 0x1e3a as const,
+    Lmonospace: 0xff2c as const,
+    Lslash: 0x0141 as const,
+    Lslashsmall: 0xf6f9 as const,
+    Lsmall: 0xf76c as const,
+    M: 0x004d as const,
+    MBsquare: 0x3386 as const,
+    Macron: 0xf6d0 as const,
+    Macronsmall: 0xf7af as const,
+    Macute: 0x1e3e as const,
+    Mcircle: 0x24c2 as const,
+    Mdotaccent: 0x1e40 as const,
+    Mdotbelow: 0x1e42 as const,
+    Menarmenian: 0x0544 as const,
+    Mmonospace: 0xff2d as const,
+    Msmall: 0xf76d as const,
+    Mturned: 0x019c as const,
+    Mu: 0x039c as const,
+    N: 0x004e as const,
+    NJ: 0x01ca as const,
+    Nacute: 0x0143 as const,
+    Ncaron: 0x0147 as const,
+    Ncedilla: 0x0145 as const,
+    Ncircle: 0x24c3 as const,
+    Ncircumflexbelow: 0x1e4a as const,
+    Ncommaaccent: 0x0145 as const,
+    Ndotaccent: 0x1e44 as const,
+    Ndotbelow: 0x1e46 as const,
+    Nhookleft: 0x019d as const,
+    Nineroman: 0x2168 as const,
+    Nj: 0x01cb as const,
+    Njecyrillic: 0x040a as const,
+    Nlinebelow: 0x1e48 as const,
+    Nmonospace: 0xff2e as const,
+    Nowarmenian: 0x0546 as const,
+    Nsmall: 0xf76e as const,
+    Ntilde: 0x00d1 as const,
+    Ntildesmall: 0xf7f1 as const,
+    Nu: 0x039d as const,
+    O: 0x004f as const,
+    OE: 0x0152 as const,
+    OEsmall: 0xf6fa as const,
+    Oacute: 0x00d3 as const,
+    Oacutesmall: 0xf7f3 as const,
+    Obarredcyrillic: 0x04e8 as const,
+    Obarreddieresiscyrillic: 0x04ea as const,
+    Obreve: 0x014e as const,
+    Ocaron: 0x01d1 as const,
+    Ocenteredtilde: 0x019f as const,
+    Ocircle: 0x24c4 as const,
+    Ocircumflex: 0x00d4 as const,
+    Ocircumflexacute: 0x1ed0 as const,
+    Ocircumflexdotbelow: 0x1ed8 as const,
+    Ocircumflexgrave: 0x1ed2 as const,
+    Ocircumflexhookabove: 0x1ed4 as const,
+    Ocircumflexsmall: 0xf7f4 as const,
+    Ocircumflextilde: 0x1ed6 as const,
+    Ocyrillic: 0x041e as const,
+    Odblacute: 0x0150 as const,
+    Odblgrave: 0x020c as const,
+    Odieresis: 0x00d6 as const,
+    Odieresiscyrillic: 0x04e6 as const,
+    Odieresissmall: 0xf7f6 as const,
+    Odotbelow: 0x1ecc as const,
+    Ogoneksmall: 0xf6fb as const,
+    Ograve: 0x00d2 as const,
+    Ogravesmall: 0xf7f2 as const,
+    Oharmenian: 0x0555 as const,
+    Ohm: 0x2126 as const,
+    Ohookabove: 0x1ece as const,
+    Ohorn: 0x01a0 as const,
+    Ohornacute: 0x1eda as const,
+    Ohorndotbelow: 0x1ee2 as const,
+    Ohorngrave: 0x1edc as const,
+    Ohornhookabove: 0x1ede as const,
+    Ohorntilde: 0x1ee0 as const,
+    Ohungarumlaut: 0x0150 as const,
+    Oi: 0x01a2 as const,
+    Oinvertedbreve: 0x020e as const,
+    Omacron: 0x014c as const,
+    Omacronacute: 0x1e52 as const,
+    Omacrongrave: 0x1e50 as const,
+    Omega: 0x2126 as const,
+    Omegacyrillic: 0x0460 as const,
+    Omegagreek: 0x03a9 as const,
+    Omegaroundcyrillic: 0x047a as const,
+    Omegatitlocyrillic: 0x047c as const,
+    Omegatonos: 0x038f as const,
+    Omicron: 0x039f as const,
+    Omicrontonos: 0x038c as const,
+    Omonospace: 0xff2f as const,
+    Oneroman: 0x2160 as const,
+    Oogonek: 0x01ea as const,
+    Oogonekmacron: 0x01ec as const,
+    Oopen: 0x0186 as const,
+    Oslash: 0x00d8 as const,
+    Oslashacute: 0x01fe as const,
+    Oslashsmall: 0xf7f8 as const,
+    Osmall: 0xf76f as const,
+    Ostrokeacute: 0x01fe as const,
+    Otcyrillic: 0x047e as const,
+    Otilde: 0x00d5 as const,
+    Otildeacute: 0x1e4c as const,
+    Otildedieresis: 0x1e4e as const,
+    Otildesmall: 0xf7f5 as const,
+    P: 0x0050 as const,
+    Pacute: 0x1e54 as const,
+    Pcircle: 0x24c5 as const,
+    Pdotaccent: 0x1e56 as const,
+    Pecyrillic: 0x041f as const,
+    Peharmenian: 0x054a as const,
+    Pemiddlehookcyrillic: 0x04a6 as const,
+    Phi: 0x03a6 as const,
+    Phook: 0x01a4 as const,
+    Pi: 0x03a0 as const,
+    Piwrarmenian: 0x0553 as const,
+    Pmonospace: 0xff30 as const,
+    Psi: 0x03a8 as const,
+    Psicyrillic: 0x0470 as const,
+    Psmall: 0xf770 as const,
+    Q: 0x0051 as const,
+    Qcircle: 0x24c6 as const,
+    Qmonospace: 0xff31 as const,
+    Qsmall: 0xf771 as const,
+    R: 0x0052 as const,
+    Raarmenian: 0x054c as const,
+    Racute: 0x0154 as const,
+    Rcaron: 0x0158 as const,
+    Rcedilla: 0x0156 as const,
+    Rcircle: 0x24c7 as const,
+    Rcommaaccent: 0x0156 as const,
+    Rdblgrave: 0x0210 as const,
+    Rdotaccent: 0x1e58 as const,
+    Rdotbelow: 0x1e5a as const,
+    Rdotbelowmacron: 0x1e5c as const,
+    Reharmenian: 0x0550 as const,
+    Rfraktur: 0x211c as const,
+    Rho: 0x03a1 as const,
+    Ringsmall: 0xf6fc as const,
+    Rinvertedbreve: 0x0212 as const,
+    Rlinebelow: 0x1e5e as const,
+    Rmonospace: 0xff32 as const,
+    Rsmall: 0xf772 as const,
+    Rsmallinverted: 0x0281 as const,
+    Rsmallinvertedsuperior: 0x02b6 as const,
+    S: 0x0053 as const,
+    SF010000: 0x250c as const,
+    SF020000: 0x2514 as const,
+    SF030000: 0x2510 as const,
+    SF040000: 0x2518 as const,
+    SF050000: 0x253c as const,
+    SF060000: 0x252c as const,
+    SF070000: 0x2534 as const,
+    SF080000: 0x251c as const,
+    SF090000: 0x2524 as const,
+    SF100000: 0x2500 as const,
+    SF110000: 0x2502 as const,
+    SF190000: 0x2561 as const,
+    SF200000: 0x2562 as const,
+    SF210000: 0x2556 as const,
+    SF220000: 0x2555 as const,
+    SF230000: 0x2563 as const,
+    SF240000: 0x2551 as const,
+    SF250000: 0x2557 as const,
+    SF260000: 0x255d as const,
+    SF270000: 0x255c as const,
+    SF280000: 0x255b as const,
+    SF360000: 0x255e as const,
+    SF370000: 0x255f as const,
+    SF380000: 0x255a as const,
+    SF390000: 0x2554 as const,
+    SF400000: 0x2569 as const,
+    SF410000: 0x2566 as const,
+    SF420000: 0x2560 as const,
+    SF430000: 0x2550 as const,
+    SF440000: 0x256c as const,
+    SF450000: 0x2567 as const,
+    SF460000: 0x2568 as const,
+    SF470000: 0x2564 as const,
+    SF480000: 0x2565 as const,
+    SF490000: 0x2559 as const,
+    SF500000: 0x2558 as const,
+    SF510000: 0x2552 as const,
+    SF520000: 0x2553 as const,
+    SF530000: 0x256b as const,
+    SF540000: 0x256a as const,
+    Sacute: 0x015a as const,
+    Sacutedotaccent: 0x1e64 as const,
+    Sampigreek: 0x03e0 as const,
+    Scaron: 0x0160 as const,
+    Scarondotaccent: 0x1e66 as const,
+    Scaronsmall: 0xf6fd as const,
+    Scedilla: 0x015e as const,
+    Schwa: 0x018f as const,
+    Schwacyrillic: 0x04d8 as const,
+    Schwadieresiscyrillic: 0x04da as const,
+    Scircle: 0x24c8 as const,
+    Scircumflex: 0x015c as const,
+    Scommaaccent: 0x0218 as const,
+    Sdotaccent: 0x1e60 as const,
+    Sdotbelow: 0x1e62 as const,
+    Sdotbelowdotaccent: 0x1e68 as const,
+    Seharmenian: 0x054d as const,
+    Sevenroman: 0x2166 as const,
+    Shaarmenian: 0x0547 as const,
+    Shacyrillic: 0x0428 as const,
+    Shchacyrillic: 0x0429 as const,
+    Sheicoptic: 0x03e2 as const,
+    Shhacyrillic: 0x04ba as const,
+    Shimacoptic: 0x03ec as const,
+    Sigma: 0x03a3 as const,
+    Sixroman: 0x2165 as const,
+    Smonospace: 0xff33 as const,
+    Softsigncyrillic: 0x042c as const,
+    Ssmall: 0xf773 as const,
+    Stigmagreek: 0x03da as const,
+    T: 0x0054 as const,
+    Tau: 0x03a4 as const,
+    Tbar: 0x0166 as const,
+    Tcaron: 0x0164 as const,
+    Tcedilla: 0x0162 as const,
+    Tcircle: 0x24c9 as const,
+    Tcircumflexbelow: 0x1e70 as const,
+    Tcommaaccent: 0x0162 as const,
+    Tdotaccent: 0x1e6a as const,
+    Tdotbelow: 0x1e6c as const,
+    Tecyrillic: 0x0422 as const,
+    Tedescendercyrillic: 0x04ac as const,
+    Tenroman: 0x2169 as const,
+    Tetsecyrillic: 0x04b4 as const,
+    Theta: 0x0398 as const,
+    Thook: 0x01ac as const,
+    Thorn: 0x00de as const,
+    Thornsmall: 0xf7fe as const,
+    Threeroman: 0x2162 as const,
+    Tildesmall: 0xf6fe as const,
+    Tiwnarmenian: 0x054f as const,
+    Tlinebelow: 0x1e6e as const,
+    Tmonospace: 0xff34 as const,
+    Toarmenian: 0x0539 as const,
+    Tonefive: 0x01bc as const,
+    Tonesix: 0x0184 as const,
+    Tonetwo: 0x01a7 as const,
+    Tretroflexhook: 0x01ae as const,
+    Tsecyrillic: 0x0426 as const,
+    Tshecyrillic: 0x040b as const,
+    Tsmall: 0xf774 as const,
+    Twelveroman: 0x216b as const,
+    Tworoman: 0x2161 as const,
+    U: 0x0055 as const,
+    Uacute: 0x00da as const,
+    Uacutesmall: 0xf7fa as const,
+    Ubreve: 0x016c as const,
+    Ucaron: 0x01d3 as const,
+    Ucircle: 0x24ca as const,
+    Ucircumflex: 0x00db as const,
+    Ucircumflexbelow: 0x1e76 as const,
+    Ucircumflexsmall: 0xf7fb as const,
+    Ucyrillic: 0x0423 as const,
+    Udblacute: 0x0170 as const,
+    Udblgrave: 0x0214 as const,
+    Udieresis: 0x00dc as const,
+    Udieresisacute: 0x01d7 as const,
+    Udieresisbelow: 0x1e72 as const,
+    Udieresiscaron: 0x01d9 as const,
+    Udieresiscyrillic: 0x04f0 as const,
+    Udieresisgrave: 0x01db as const,
+    Udieresismacron: 0x01d5 as const,
+    Udieresissmall: 0xf7fc as const,
+    Udotbelow: 0x1ee4 as const,
+    Ugrave: 0x00d9 as const,
+    Ugravesmall: 0xf7f9 as const,
+    Uhookabove: 0x1ee6 as const,
+    Uhorn: 0x01af as const,
+    Uhornacute: 0x1ee8 as const,
+    Uhorndotbelow: 0x1ef0 as const,
+    Uhorngrave: 0x1eea as const,
+    Uhornhookabove: 0x1eec as const,
+    Uhorntilde: 0x1eee as const,
+    Uhungarumlaut: 0x0170 as const,
+    Uhungarumlautcyrillic: 0x04f2 as const,
+    Uinvertedbreve: 0x0216 as const,
+    Ukcyrillic: 0x0478 as const,
+    Umacron: 0x016a as const,
+    Umacroncyrillic: 0x04ee as const,
+    Umacrondieresis: 0x1e7a as const,
+    Umonospace: 0xff35 as const,
+    Uogonek: 0x0172 as const,
+    Upsilon: 0x03a5 as const,
+    Upsilon1: 0x03d2 as const,
+    Upsilonacutehooksymbolgreek: 0x03d3 as const,
+    Upsilonafrican: 0x01b1 as const,
+    Upsilondieresis: 0x03ab as const,
+    Upsilondieresishooksymbolgreek: 0x03d4 as const,
+    Upsilonhooksymbol: 0x03d2 as const,
+    Upsilontonos: 0x038e as const,
+    Uring: 0x016e as const,
+    Ushortcyrillic: 0x040e as const,
+    Usmall: 0xf775 as const,
+    Ustraightcyrillic: 0x04ae as const,
+    Ustraightstrokecyrillic: 0x04b0 as const,
+    Utilde: 0x0168 as const,
+    Utildeacute: 0x1e78 as const,
+    Utildebelow: 0x1e74 as const,
+    V: 0x0056 as const,
+    Vcircle: 0x24cb as const,
+    Vdotbelow: 0x1e7e as const,
+    Vecyrillic: 0x0412 as const,
+    Vewarmenian: 0x054e as const,
+    Vhook: 0x01b2 as const,
+    Vmonospace: 0xff36 as const,
+    Voarmenian: 0x0548 as const,
+    Vsmall: 0xf776 as const,
+    Vtilde: 0x1e7c as const,
+    W: 0x0057 as const,
+    Wacute: 0x1e82 as const,
+    Wcircle: 0x24cc as const,
+    Wcircumflex: 0x0174 as const,
+    Wdieresis: 0x1e84 as const,
+    Wdotaccent: 0x1e86 as const,
+    Wdotbelow: 0x1e88 as const,
+    Wgrave: 0x1e80 as const,
+    Wmonospace: 0xff37 as const,
+    Wsmall: 0xf777 as const,
+    X: 0x0058 as const,
+    Xcircle: 0x24cd as const,
+    Xdieresis: 0x1e8c as const,
+    Xdotaccent: 0x1e8a as const,
+    Xeharmenian: 0x053d as const,
+    Xi: 0x039e as const,
+    Xmonospace: 0xff38 as const,
+    Xsmall: 0xf778 as const,
+    Y: 0x0059 as const,
+    Yacute: 0x00dd as const,
+    Yacutesmall: 0xf7fd as const,
+    Yatcyrillic: 0x0462 as const,
+    Ycircle: 0x24ce as const,
+    Ycircumflex: 0x0176 as const,
+    Ydieresis: 0x0178 as const,
+    Ydieresissmall: 0xf7ff as const,
+    Ydotaccent: 0x1e8e as const,
+    Ydotbelow: 0x1ef4 as const,
+    Yericyrillic: 0x042b as const,
+    Yerudieresiscyrillic: 0x04f8 as const,
+    Ygrave: 0x1ef2 as const,
+    Yhook: 0x01b3 as const,
+    Yhookabove: 0x1ef6 as const,
+    Yiarmenian: 0x0545 as const,
+    Yicyrillic: 0x0407 as const,
+    Yiwnarmenian: 0x0552 as const,
+    Ymonospace: 0xff39 as const,
+    Ysmall: 0xf779 as const,
+    Ytilde: 0x1ef8 as const,
+    Yusbigcyrillic: 0x046a as const,
+    Yusbigiotifiedcyrillic: 0x046c as const,
+    Yuslittlecyrillic: 0x0466 as const,
+    Yuslittleiotifiedcyrillic: 0x0468 as const,
+    Z: 0x005a as const,
+    Zaarmenian: 0x0536 as const,
+    Zacute: 0x0179 as const,
+    Zcaron: 0x017d as const,
+    Zcaronsmall: 0xf6ff as const,
+    Zcircle: 0x24cf as const,
+    Zcircumflex: 0x1e90 as const,
+    Zdot: 0x017b as const,
+    Zdotaccent: 0x017b as const,
+    Zdotbelow: 0x1e92 as const,
+    Zecyrillic: 0x0417 as const,
+    Zedescendercyrillic: 0x0498 as const,
+    Zedieresiscyrillic: 0x04de as const,
+    Zeta: 0x0396 as const,
+    Zhearmenian: 0x053a as const,
+    Zhebrevecyrillic: 0x04c1 as const,
+    Zhecyrillic: 0x0416 as const,
+    Zhedescendercyrillic: 0x0496 as const,
+    Zhedieresiscyrillic: 0x04dc as const,
+    Zlinebelow: 0x1e94 as const,
+    Zmonospace: 0xff3a as const,
+    Zsmall: 0xf77a as const,
+    Zstroke: 0x01b5 as const,
+    a: 0x0061 as const,
+    aabengali: 0x0986 as const,
+    aacute: 0x00e1 as const,
+    aadeva: 0x0906 as const,
+    aagujarati: 0x0a86 as const,
+    aagurmukhi: 0x0a06 as const,
+    aamatragurmukhi: 0x0a3e as const,
+    aarusquare: 0x3303 as const,
+    aavowelsignbengali: 0x09be as const,
+    aavowelsigndeva: 0x093e as const,
+    aavowelsigngujarati: 0x0abe as const,
+    abbreviationmarkarmenian: 0x055f as const,
+    abbreviationsigndeva: 0x0970 as const,
+    abengali: 0x0985 as const,
+    abopomofo: 0x311a as const,
+    abreve: 0x0103 as const,
+    abreveacute: 0x1eaf as const,
+    abrevecyrillic: 0x04d1 as const,
+    abrevedotbelow: 0x1eb7 as const,
+    abrevegrave: 0x1eb1 as const,
+    abrevehookabove: 0x1eb3 as const,
+    abrevetilde: 0x1eb5 as const,
+    acaron: 0x01ce as const,
+    acircle: 0x24d0 as const,
+    acircumflex: 0x00e2 as const,
+    acircumflexacute: 0x1ea5 as const,
+    acircumflexdotbelow: 0x1ead as const,
+    acircumflexgrave: 0x1ea7 as const,
+    acircumflexhookabove: 0x1ea9 as const,
+    acircumflextilde: 0x1eab as const,
+    acute: 0x00b4 as const,
+    acutebelowcmb: 0x0317 as const,
+    acutecmb: 0x0301 as const,
+    acutecomb: 0x0301 as const,
+    acutedeva: 0x0954 as const,
+    acutelowmod: 0x02cf as const,
+    acutetonecmb: 0x0341 as const,
+    acyrillic: 0x0430 as const,
+    adblgrave: 0x0201 as const,
+    addakgurmukhi: 0x0a71 as const,
+    adeva: 0x0905 as const,
+    adieresis: 0x00e4 as const,
+    adieresiscyrillic: 0x04d3 as const,
+    adieresismacron: 0x01df as const,
+    adotbelow: 0x1ea1 as const,
+    adotmacron: 0x01e1 as const,
+    ae: 0x00e6 as const,
+    aeacute: 0x01fd as const,
+    aekorean: 0x3150 as const,
+    aemacron: 0x01e3 as const,
+    afii00208: 0x2015 as const,
+    afii08941: 0x20a4 as const,
+    afii10017: 0x0410 as const,
+    afii10018: 0x0411 as const,
+    afii10019: 0x0412 as const,
+    afii10020: 0x0413 as const,
+    afii10021: 0x0414 as const,
+    afii10022: 0x0415 as const,
+    afii10023: 0x0401 as const,
+    afii10024: 0x0416 as const,
+    afii10025: 0x0417 as const,
+    afii10026: 0x0418 as const,
+    afii10027: 0x0419 as const,
+    afii10028: 0x041a as const,
+    afii10029: 0x041b as const,
+    afii10030: 0x041c as const,
+    afii10031: 0x041d as const,
+    afii10032: 0x041e as const,
+    afii10033: 0x041f as const,
+    afii10034: 0x0420 as const,
+    afii10035: 0x0421 as const,
+    afii10036: 0x0422 as const,
+    afii10037: 0x0423 as const,
+    afii10038: 0x0424 as const,
+    afii10039: 0x0425 as const,
+    afii10040: 0x0426 as const,
+    afii10041: 0x0427 as const,
+    afii10042: 0x0428 as const,
+    afii10043: 0x0429 as const,
+    afii10044: 0x042a as const,
+    afii10045: 0x042b as const,
+    afii10046: 0x042c as const,
+    afii10047: 0x042d as const,
+    afii10048: 0x042e as const,
+    afii10049: 0x042f as const,
+    afii10050: 0x0490 as const,
+    afii10051: 0x0402 as const,
+    afii10052: 0x0403 as const,
+    afii10053: 0x0404 as const,
+    afii10054: 0x0405 as const,
+    afii10055: 0x0406 as const,
+    afii10056: 0x0407 as const,
+    afii10057: 0x0408 as const,
+    afii10058: 0x0409 as const,
+    afii10059: 0x040a as const,
+    afii10060: 0x040b as const,
+    afii10061: 0x040c as const,
+    afii10062: 0x040e as const,
+    afii10063: 0xf6c4 as const,
+    afii10064: 0xf6c5 as const,
+    afii10065: 0x0430 as const,
+    afii10066: 0x0431 as const,
+    afii10067: 0x0432 as const,
+    afii10068: 0x0433 as const,
+    afii10069: 0x0434 as const,
+    afii10070: 0x0435 as const,
+    afii10071: 0x0451 as const,
+    afii10072: 0x0436 as const,
+    afii10073: 0x0437 as const,
+    afii10074: 0x0438 as const,
+    afii10075: 0x0439 as const,
+    afii10076: 0x043a as const,
+    afii10077: 0x043b as const,
+    afii10078: 0x043c as const,
+    afii10079: 0x043d as const,
+    afii10080: 0x043e as const,
+    afii10081: 0x043f as const,
+    afii10082: 0x0440 as const,
+    afii10083: 0x0441 as const,
+    afii10084: 0x0442 as const,
+    afii10085: 0x0443 as const,
+    afii10086: 0x0444 as const,
+    afii10087: 0x0445 as const,
+    afii10088: 0x0446 as const,
+    afii10089: 0x0447 as const,
+    afii10090: 0x0448 as const,
+    afii10091: 0x0449 as const,
+    afii10092: 0x044a as const,
+    afii10093: 0x044b as const,
+    afii10094: 0x044c as const,
+    afii10095: 0x044d as const,
+    afii10096: 0x044e as const,
+    afii10097: 0x044f as const,
+    afii10098: 0x0491 as const,
+    afii10099: 0x0452 as const,
+    afii10100: 0x0453 as const,
+    afii10101: 0x0454 as const,
+    afii10102: 0x0455 as const,
+    afii10103: 0x0456 as const,
+    afii10104: 0x0457 as const,
+    afii10105: 0x0458 as const,
+    afii10106: 0x0459 as const,
+    afii10107: 0x045a as const,
+    afii10108: 0x045b as const,
+    afii10109: 0x045c as const,
+    afii10110: 0x045e as const,
+    afii10145: 0x040f as const,
+    afii10146: 0x0462 as const,
+    afii10147: 0x0472 as const,
+    afii10148: 0x0474 as const,
+    afii10192: 0xf6c6 as const,
+    afii10193: 0x045f as const,
+    afii10194: 0x0463 as const,
+    afii10195: 0x0473 as const,
+    afii10196: 0x0475 as const,
+    afii10831: 0xf6c7 as const,
+    afii10832: 0xf6c8 as const,
+    afii10846: 0x04d9 as const,
+    afii299: 0x200e as const,
+    afii300: 0x200f as const,
+    afii301: 0x200d as const,
+    afii57381: 0x066a as const,
+    afii57388: 0x060c as const,
+    afii57392: 0x0660 as const,
+    afii57393: 0x0661 as const,
+    afii57394: 0x0662 as const,
+    afii57395: 0x0663 as const,
+    afii57396: 0x0664 as const,
+    afii57397: 0x0665 as const,
+    afii57398: 0x0666 as const,
+    afii57399: 0x0667 as const,
+    afii57400: 0x0668 as const,
+    afii57401: 0x0669 as const,
+    afii57403: 0x061b as const,
+    afii57407: 0x061f as const,
+    afii57409: 0x0621 as const,
+    afii57410: 0x0622 as const,
+    afii57411: 0x0623 as const,
+    afii57412: 0x0624 as const,
+    afii57413: 0x0625 as const,
+    afii57414: 0x0626 as const,
+    afii57415: 0x0627 as const,
+    afii57416: 0x0628 as const,
+    afii57417: 0x0629 as const,
+    afii57418: 0x062a as const,
+    afii57419: 0x062b as const,
+    afii57420: 0x062c as const,
+    afii57421: 0x062d as const,
+    afii57422: 0x062e as const,
+    afii57423: 0x062f as const,
+    afii57424: 0x0630 as const,
+    afii57425: 0x0631 as const,
+    afii57426: 0x0632 as const,
+    afii57427: 0x0633 as const,
+    afii57428: 0x0634 as const,
+    afii57429: 0x0635 as const,
+    afii57430: 0x0636 as const,
+    afii57431: 0x0637 as const,
+    afii57432: 0x0638 as const,
+    afii57433: 0x0639 as const,
+    afii57434: 0x063a as const,
+    afii57440: 0x0640 as const,
+    afii57441: 0x0641 as const,
+    afii57442: 0x0642 as const,
+    afii57443: 0x0643 as const,
+    afii57444: 0x0644 as const,
+    afii57445: 0x0645 as const,
+    afii57446: 0x0646 as const,
+    afii57448: 0x0648 as const,
+    afii57449: 0x0649 as const,
+    afii57450: 0x064a as const,
+    afii57451: 0x064b as const,
+    afii57452: 0x064c as const,
+    afii57453: 0x064d as const,
+    afii57454: 0x064e as const,
+    afii57455: 0x064f as const,
+    afii57456: 0x0650 as const,
+    afii57457: 0x0651 as const,
+    afii57458: 0x0652 as const,
+    afii57470: 0x0647 as const,
+    afii57505: 0x06a4 as const,
+    afii57506: 0x067e as const,
+    afii57507: 0x0686 as const,
+    afii57508: 0x0698 as const,
+    afii57509: 0x06af as const,
+    afii57511: 0x0679 as const,
+    afii57512: 0x0688 as const,
+    afii57513: 0x0691 as const,
+    afii57514: 0x06ba as const,
+    afii57519: 0x06d2 as const,
+    afii57534: 0x06d5 as const,
+    afii57636: 0x20aa as const,
+    afii57645: 0x05be as const,
+    afii57658: 0x05c3 as const,
+    afii57664: 0x05d0 as const,
+    afii57665: 0x05d1 as const,
+    afii57666: 0x05d2 as const,
+    afii57667: 0x05d3 as const,
+    afii57668: 0x05d4 as const,
+    afii57669: 0x05d5 as const,
+    afii57670: 0x05d6 as const,
+    afii57671: 0x05d7 as const,
+    afii57672: 0x05d8 as const,
+    afii57673: 0x05d9 as const,
+    afii57674: 0x05da as const,
+    afii57675: 0x05db as const,
+    afii57676: 0x05dc as const,
+    afii57677: 0x05dd as const,
+    afii57678: 0x05de as const,
+    afii57679: 0x05df as const,
+    afii57680: 0x05e0 as const,
+    afii57681: 0x05e1 as const,
+    afii57682: 0x05e2 as const,
+    afii57683: 0x05e3 as const,
+    afii57684: 0x05e4 as const,
+    afii57685: 0x05e5 as const,
+    afii57686: 0x05e6 as const,
+    afii57687: 0x05e7 as const,
+    afii57688: 0x05e8 as const,
+    afii57689: 0x05e9 as const,
+    afii57690: 0x05ea as const,
+    afii57694: 0xfb2a as const,
+    afii57695: 0xfb2b as const,
+    afii57700: 0xfb4b as const,
+    afii57705: 0xfb1f as const,
+    afii57716: 0x05f0 as const,
+    afii57717: 0x05f1 as const,
+    afii57718: 0x05f2 as const,
+    afii57723: 0xfb35 as const,
+    afii57793: 0x05b4 as const,
+    afii57794: 0x05b5 as const,
+    afii57795: 0x05b6 as const,
+    afii57796: 0x05bb as const,
+    afii57797: 0x05b8 as const,
+    afii57798: 0x05b7 as const,
+    afii57799: 0x05b0 as const,
+    afii57800: 0x05b2 as const,
+    afii57801: 0x05b1 as const,
+    afii57802: 0x05b3 as const,
+    afii57803: 0x05c2 as const,
+    afii57804: 0x05c1 as const,
+    afii57806: 0x05b9 as const,
+    afii57807: 0x05bc as const,
+    afii57839: 0x05bd as const,
+    afii57841: 0x05bf as const,
+    afii57842: 0x05c0 as const,
+    afii57929: 0x02bc as const,
+    afii61248: 0x2105 as const,
+    afii61289: 0x2113 as const,
+    afii61352: 0x2116 as const,
+    afii61573: 0x202c as const,
+    afii61574: 0x202d as const,
+    afii61575: 0x202e as const,
+    afii61664: 0x200c as const,
+    afii63167: 0x066d as const,
+    afii64937: 0x02bd as const,
+    agrave: 0x00e0 as const,
+    agujarati: 0x0a85 as const,
+    agurmukhi: 0x0a05 as const,
+    ahiragana: 0x3042 as const,
+    ahookabove: 0x1ea3 as const,
+    aibengali: 0x0990 as const,
+    aibopomofo: 0x311e as const,
+    aideva: 0x0910 as const,
+    aiecyrillic: 0x04d5 as const,
+    aigujarati: 0x0a90 as const,
+    aigurmukhi: 0x0a10 as const,
+    aimatragurmukhi: 0x0a48 as const,
+    ainarabic: 0x0639 as const,
+    ainfinalarabic: 0xfeca as const,
+    aininitialarabic: 0xfecb as const,
+    ainmedialarabic: 0xfecc as const,
+    ainvertedbreve: 0x0203 as const,
+    aivowelsignbengali: 0x09c8 as const,
+    aivowelsigndeva: 0x0948 as const,
+    aivowelsigngujarati: 0x0ac8 as const,
+    akatakana: 0x30a2 as const,
+    akatakanahalfwidth: 0xff71 as const,
+    akorean: 0x314f as const,
+    alef: 0x05d0 as const,
+    alefarabic: 0x0627 as const,
+    alefdageshhebrew: 0xfb30 as const,
+    aleffinalarabic: 0xfe8e as const,
+    alefhamzaabovearabic: 0x0623 as const,
+    alefhamzaabovefinalarabic: 0xfe84 as const,
+    alefhamzabelowarabic: 0x0625 as const,
+    alefhamzabelowfinalarabic: 0xfe88 as const,
+    alefhebrew: 0x05d0 as const,
+    aleflamedhebrew: 0xfb4f as const,
+    alefmaddaabovearabic: 0x0622 as const,
+    alefmaddaabovefinalarabic: 0xfe82 as const,
+    alefmaksuraarabic: 0x0649 as const,
+    alefmaksurafinalarabic: 0xfef0 as const,
+    alefmaksurainitialarabic: 0xfef3 as const,
+    alefmaksuramedialarabic: 0xfef4 as const,
+    alefpatahhebrew: 0xfb2e as const,
+    alefqamatshebrew: 0xfb2f as const,
+    aleph: 0x2135 as const,
+    allequal: 0x224c as const,
+    alpha: 0x03b1 as const,
+    alphatonos: 0x03ac as const,
+    amacron: 0x0101 as const,
+    amonospace: 0xff41 as const,
+    ampersand: 0x0026 as const,
+    ampersandmonospace: 0xff06 as const,
+    ampersandsmall: 0xf726 as const,
+    amsquare: 0x33c2 as const,
+    anbopomofo: 0x3122 as const,
+    angbopomofo: 0x3124 as const,
+    angbracketleft: 0x3008 as const, // Glyph is missing from Adobe's original list.
+    angbracketright: 0x3009 as const, // Glyph is missing from Adobe's original list.
+    angkhankhuthai: 0x0e5a as const,
+    angle: 0x2220 as const,
+    anglebracketleft: 0x3008 as const,
+    anglebracketleftvertical: 0xfe3f as const,
+    anglebracketright: 0x3009 as const,
+    anglebracketrightvertical: 0xfe40 as const,
+    angleleft: 0x2329 as const,
+    angleright: 0x232a as const,
+    angstrom: 0x212b as const,
+    anoteleia: 0x0387 as const,
+    anudattadeva: 0x0952 as const,
+    anusvarabengali: 0x0982 as const,
+    anusvaradeva: 0x0902 as const,
+    anusvaragujarati: 0x0a82 as const,
+    aogonek: 0x0105 as const,
+    apaatosquare: 0x3300 as const,
+    aparen: 0x249c as const,
+    apostrophearmenian: 0x055a as const,
+    apostrophemod: 0x02bc as const,
+    apple: 0xf8ff as const,
+    approaches: 0x2250 as const,
+    approxequal: 0x2248 as const,
+    approxequalorimage: 0x2252 as const,
+    approximatelyequal: 0x2245 as const,
+    araeaekorean: 0x318e as const,
+    araeakorean: 0x318d as const,
+    arc: 0x2312 as const,
+    arighthalfring: 0x1e9a as const,
+    aring: 0x00e5 as const,
+    aringacute: 0x01fb as const,
+    aringbelow: 0x1e01 as const,
+    arrowboth: 0x2194 as const,
+    arrowdashdown: 0x21e3 as const,
+    arrowdashleft: 0x21e0 as const,
+    arrowdashright: 0x21e2 as const,
+    arrowdashup: 0x21e1 as const,
+    arrowdblboth: 0x21d4 as const,
+    arrowdbldown: 0x21d3 as const,
+    arrowdblleft: 0x21d0 as const,
+    arrowdblright: 0x21d2 as const,
+    arrowdblup: 0x21d1 as const,
+    arrowdown: 0x2193 as const,
+    arrowdownleft: 0x2199 as const,
+    arrowdownright: 0x2198 as const,
+    arrowdownwhite: 0x21e9 as const,
+    arrowheaddownmod: 0x02c5 as const,
+    arrowheadleftmod: 0x02c2 as const,
+    arrowheadrightmod: 0x02c3 as const,
+    arrowheadupmod: 0x02c4 as const,
+    arrowhorizex: 0xf8e7 as const,
+    arrowleft: 0x2190 as const,
+    arrowleftdbl: 0x21d0 as const,
+    arrowleftdblstroke: 0x21cd as const,
+    arrowleftoverright: 0x21c6 as const,
+    arrowleftwhite: 0x21e6 as const,
+    arrowright: 0x2192 as const,
+    arrowrightdblstroke: 0x21cf as const,
+    arrowrightheavy: 0x279e as const,
+    arrowrightoverleft: 0x21c4 as const,
+    arrowrightwhite: 0x21e8 as const,
+    arrowtableft: 0x21e4 as const,
+    arrowtabright: 0x21e5 as const,
+    arrowup: 0x2191 as const,
+    arrowupdn: 0x2195 as const,
+    arrowupdnbse: 0x21a8 as const,
+    arrowupdownbase: 0x21a8 as const,
+    arrowupleft: 0x2196 as const,
+    arrowupleftofdown: 0x21c5 as const,
+    arrowupright: 0x2197 as const,
+    arrowupwhite: 0x21e7 as const,
+    arrowvertex: 0xf8e6 as const,
+    asciicircum: 0x005e as const,
+    asciicircummonospace: 0xff3e as const,
+    asciitilde: 0x007e as const,
+    asciitildemonospace: 0xff5e as const,
+    ascript: 0x0251 as const,
+    ascriptturned: 0x0252 as const,
+    asmallhiragana: 0x3041 as const,
+    asmallkatakana: 0x30a1 as const,
+    asmallkatakanahalfwidth: 0xff67 as const,
+    asterisk: 0x002a as const,
+    asteriskaltonearabic: 0x066d as const,
+    asteriskarabic: 0x066d as const,
+    asteriskmath: 0x2217 as const,
+    asteriskmonospace: 0xff0a as const,
+    asterisksmall: 0xfe61 as const,
+    asterism: 0x2042 as const,
+    asuperior: 0xf6e9 as const,
+    asymptoticallyequal: 0x2243 as const,
+    at: 0x0040 as const,
+    atilde: 0x00e3 as const,
+    atmonospace: 0xff20 as const,
+    atsmall: 0xfe6b as const,
+    aturned: 0x0250 as const,
+    aubengali: 0x0994 as const,
+    aubopomofo: 0x3120 as const,
+    audeva: 0x0914 as const,
+    augujarati: 0x0a94 as const,
+    augurmukhi: 0x0a14 as const,
+    aulengthmarkbengali: 0x09d7 as const,
+    aumatragurmukhi: 0x0a4c as const,
+    auvowelsignbengali: 0x09cc as const,
+    auvowelsigndeva: 0x094c as const,
+    auvowelsigngujarati: 0x0acc as const,
+    avagrahadeva: 0x093d as const,
+    aybarmenian: 0x0561 as const,
+    ayin: 0x05e2 as const,
+    ayinaltonehebrew: 0xfb20 as const,
+    ayinhebrew: 0x05e2 as const,
+    b: 0x0062 as const,
+    babengali: 0x09ac as const,
+    backslash: 0x005c as const,
+    backslashmonospace: 0xff3c as const,
+    badeva: 0x092c as const,
+    bagujarati: 0x0aac as const,
+    bagurmukhi: 0x0a2c as const,
+    bahiragana: 0x3070 as const,
+    bahtthai: 0x0e3f as const,
+    bakatakana: 0x30d0 as const,
+    bar: 0x007c as const,
+    barmonospace: 0xff5c as const,
+    bbopomofo: 0x3105 as const,
+    bcircle: 0x24d1 as const,
+    bdotaccent: 0x1e03 as const,
+    bdotbelow: 0x1e05 as const,
+    beamedsixteenthnotes: 0x266c as const,
+    because: 0x2235 as const,
+    becyrillic: 0x0431 as const,
+    beharabic: 0x0628 as const,
+    behfinalarabic: 0xfe90 as const,
+    behinitialarabic: 0xfe91 as const,
+    behiragana: 0x3079 as const,
+    behmedialarabic: 0xfe92 as const,
+    behmeeminitialarabic: 0xfc9f as const,
+    behmeemisolatedarabic: 0xfc08 as const,
+    behnoonfinalarabic: 0xfc6d as const,
+    bekatakana: 0x30d9 as const,
+    benarmenian: 0x0562 as const,
+    bet: 0x05d1 as const,
+    beta: 0x03b2 as const,
+    betasymbolgreek: 0x03d0 as const,
+    betdagesh: 0xfb31 as const,
+    betdageshhebrew: 0xfb31 as const,
+    bethebrew: 0x05d1 as const,
+    betrafehebrew: 0xfb4c as const,
+    bhabengali: 0x09ad as const,
+    bhadeva: 0x092d as const,
+    bhagujarati: 0x0aad as const,
+    bhagurmukhi: 0x0a2d as const,
+    bhook: 0x0253 as const,
+    bihiragana: 0x3073 as const,
+    bikatakana: 0x30d3 as const,
+    bilabialclick: 0x0298 as const,
+    bindigurmukhi: 0x0a02 as const,
+    birusquare: 0x3331 as const,
+    blackcircle: 0x25cf as const,
+    blackdiamond: 0x25c6 as const,
+    blackdownpointingtriangle: 0x25bc as const,
+    blackleftpointingpointer: 0x25c4 as const,
+    blackleftpointingtriangle: 0x25c0 as const,
+    blacklenticularbracketleft: 0x3010 as const,
+    blacklenticularbracketleftvertical: 0xfe3b as const,
+    blacklenticularbracketright: 0x3011 as const,
+    blacklenticularbracketrightvertical: 0xfe3c as const,
+    blacklowerlefttriangle: 0x25e3 as const,
+    blacklowerrighttriangle: 0x25e2 as const,
+    blackrectangle: 0x25ac as const,
+    blackrightpointingpointer: 0x25ba as const,
+    blackrightpointingtriangle: 0x25b6 as const,
+    blacksmallsquare: 0x25aa as const,
+    blacksmilingface: 0x263b as const,
+    blacksquare: 0x25a0 as const,
+    blackstar: 0x2605 as const,
+    blackupperlefttriangle: 0x25e4 as const,
+    blackupperrighttriangle: 0x25e5 as const,
+    blackuppointingsmalltriangle: 0x25b4 as const,
+    blackuppointingtriangle: 0x25b2 as const,
+    blank: 0x2423 as const,
+    blinebelow: 0x1e07 as const,
+    block: 0x2588 as const,
+    bmonospace: 0xff42 as const,
+    bobaimaithai: 0x0e1a as const,
+    bohiragana: 0x307c as const,
+    bokatakana: 0x30dc as const,
+    bparen: 0x249d as const,
+    bqsquare: 0x33c3 as const,
+    braceex: 0xf8f4 as const,
+    braceleft: 0x007b as const,
+    braceleftbt: 0xf8f3 as const,
+    braceleftmid: 0xf8f2 as const,
+    braceleftmonospace: 0xff5b as const,
+    braceleftsmall: 0xfe5b as const,
+    bracelefttp: 0xf8f1 as const,
+    braceleftvertical: 0xfe37 as const,
+    braceright: 0x007d as const,
+    bracerightbt: 0xf8fe as const,
+    bracerightmid: 0xf8fd as const,
+    bracerightmonospace: 0xff5d as const,
+    bracerightsmall: 0xfe5c as const,
+    bracerighttp: 0xf8fc as const,
+    bracerightvertical: 0xfe38 as const,
+    bracketleft: 0x005b as const,
+    bracketleftbt: 0xf8f0 as const,
+    bracketleftex: 0xf8ef as const,
+    bracketleftmonospace: 0xff3b as const,
+    bracketlefttp: 0xf8ee as const,
+    bracketright: 0x005d as const,
+    bracketrightbt: 0xf8fb as const,
+    bracketrightex: 0xf8fa as const,
+    bracketrightmonospace: 0xff3d as const,
+    bracketrighttp: 0xf8f9 as const,
+    breve: 0x02d8 as const,
+    brevebelowcmb: 0x032e as const,
+    brevecmb: 0x0306 as const,
+    breveinvertedbelowcmb: 0x032f as const,
+    breveinvertedcmb: 0x0311 as const,
+    breveinverteddoublecmb: 0x0361 as const,
+    bridgebelowcmb: 0x032a as const,
+    bridgeinvertedbelowcmb: 0x033a as const,
+    brokenbar: 0x00a6 as const,
+    bstroke: 0x0180 as const,
+    bsuperior: 0xf6ea as const,
+    btopbar: 0x0183 as const,
+    buhiragana: 0x3076 as const,
+    bukatakana: 0x30d6 as const,
+    bullet: 0x2022 as const,
+    bulletinverse: 0x25d8 as const,
+    bulletoperator: 0x2219 as const,
+    bullseye: 0x25ce as const,
+    c: 0x0063 as const,
+    caarmenian: 0x056e as const,
+    cabengali: 0x099a as const,
+    cacute: 0x0107 as const,
+    cadeva: 0x091a as const,
+    cagujarati: 0x0a9a as const,
+    cagurmukhi: 0x0a1a as const,
+    calsquare: 0x3388 as const,
+    candrabindubengali: 0x0981 as const,
+    candrabinducmb: 0x0310 as const,
+    candrabindudeva: 0x0901 as const,
+    candrabindugujarati: 0x0a81 as const,
+    capslock: 0x21ea as const,
+    careof: 0x2105 as const,
+    caron: 0x02c7 as const,
+    caronbelowcmb: 0x032c as const,
+    caroncmb: 0x030c as const,
+    carriagereturn: 0x21b5 as const,
+    cbopomofo: 0x3118 as const,
+    ccaron: 0x010d as const,
+    ccedilla: 0x00e7 as const,
+    ccedillaacute: 0x1e09 as const,
+    ccircle: 0x24d2 as const,
+    ccircumflex: 0x0109 as const,
+    ccurl: 0x0255 as const,
+    cdot: 0x010b as const,
+    cdotaccent: 0x010b as const,
+    cdsquare: 0x33c5 as const,
+    cedilla: 0x00b8 as const,
+    cedillacmb: 0x0327 as const,
+    cent: 0x00a2 as const,
+    centigrade: 0x2103 as const,
+    centinferior: 0xf6df as const,
+    centmonospace: 0xffe0 as const,
+    centoldstyle: 0xf7a2 as const,
+    centsuperior: 0xf6e0 as const,
+    chaarmenian: 0x0579 as const,
+    chabengali: 0x099b as const,
+    chadeva: 0x091b as const,
+    chagujarati: 0x0a9b as const,
+    chagurmukhi: 0x0a1b as const,
+    chbopomofo: 0x3114 as const,
+    cheabkhasiancyrillic: 0x04bd as const,
+    checkmark: 0x2713 as const,
+    checyrillic: 0x0447 as const,
+    chedescenderabkhasiancyrillic: 0x04bf as const,
+    chedescendercyrillic: 0x04b7 as const,
+    chedieresiscyrillic: 0x04f5 as const,
+    cheharmenian: 0x0573 as const,
+    chekhakassiancyrillic: 0x04cc as const,
+    cheverticalstrokecyrillic: 0x04b9 as const,
+    chi: 0x03c7 as const,
+    chieuchacirclekorean: 0x3277 as const,
+    chieuchaparenkorean: 0x3217 as const,
+    chieuchcirclekorean: 0x3269 as const,
+    chieuchkorean: 0x314a as const,
+    chieuchparenkorean: 0x3209 as const,
+    chochangthai: 0x0e0a as const,
+    chochanthai: 0x0e08 as const,
+    chochingthai: 0x0e09 as const,
+    chochoethai: 0x0e0c as const,
+    chook: 0x0188 as const,
+    cieucacirclekorean: 0x3276 as const,
+    cieucaparenkorean: 0x3216 as const,
+    cieuccirclekorean: 0x3268 as const,
+    cieuckorean: 0x3148 as const,
+    cieucparenkorean: 0x3208 as const,
+    cieucuparenkorean: 0x321c as const,
+    circle: 0x25cb as const,
+    circlecopyrt: 0x00a9 as const, // Glyph is missing from Adobe's original list.
+    circlemultiply: 0x2297 as const,
+    circleot: 0x2299 as const,
+    circleplus: 0x2295 as const,
+    circlepostalmark: 0x3036 as const,
+    circlewithlefthalfblack: 0x25d0 as const,
+    circlewithrighthalfblack: 0x25d1 as const,
+    circumflex: 0x02c6 as const,
+    circumflexbelowcmb: 0x032d as const,
+    circumflexcmb: 0x0302 as const,
+    clear: 0x2327 as const,
+    clickalveolar: 0x01c2 as const,
+    clickdental: 0x01c0 as const,
+    clicklateral: 0x01c1 as const,
+    clickretroflex: 0x01c3 as const,
+    club: 0x2663 as const,
+    clubsuitblack: 0x2663 as const,
+    clubsuitwhite: 0x2667 as const,
+    cmcubedsquare: 0x33a4 as const,
+    cmonospace: 0xff43 as const,
+    cmsquaredsquare: 0x33a0 as const,
+    coarmenian: 0x0581 as const,
+    colon: 0x003a as const,
+    colonmonetary: 0x20a1 as const,
+    colonmonospace: 0xff1a as const,
+    colonsign: 0x20a1 as const,
+    colonsmall: 0xfe55 as const,
+    colontriangularhalfmod: 0x02d1 as const,
+    colontriangularmod: 0x02d0 as const,
+    comma: 0x002c as const,
+    commaabovecmb: 0x0313 as const,
+    commaaboverightcmb: 0x0315 as const,
+    commaaccent: 0xf6c3 as const,
+    commaarabic: 0x060c as const,
+    commaarmenian: 0x055d as const,
+    commainferior: 0xf6e1 as const,
+    commamonospace: 0xff0c as const,
+    commareversedabovecmb: 0x0314 as const,
+    commareversedmod: 0x02bd as const,
+    commasmall: 0xfe50 as const,
+    commasuperior: 0xf6e2 as const,
+    commaturnedabovecmb: 0x0312 as const,
+    commaturnedmod: 0x02bb as const,
+    compass: 0x263c as const,
+    congruent: 0x2245 as const,
+    contourintegral: 0x222e as const,
+    control: 0x2303 as const,
+    controlACK: 0x0006 as const,
+    controlBEL: 0x0007 as const,
+    controlBS: 0x0008 as const,
+    controlCAN: 0x0018 as const,
+    controlCR: 0x000d as const,
+    controlDC1: 0x0011 as const,
+    controlDC2: 0x0012 as const,
+    controlDC3: 0x0013 as const,
+    controlDC4: 0x0014 as const,
+    controlDEL: 0x007f as const,
+    controlDLE: 0x0010 as const,
+    controlEM: 0x0019 as const,
+    controlENQ: 0x0005 as const,
+    controlEOT: 0x0004 as const,
+    controlESC: 0x001b as const,
+    controlETB: 0x0017 as const,
+    controlETX: 0x0003 as const,
+    controlFF: 0x000c as const,
+    controlFS: 0x001c as const,
+    controlGS: 0x001d as const,
+    controlHT: 0x0009 as const,
+    controlLF: 0x000a as const,
+    controlNAK: 0x0015 as const,
+    controlNULL: 0x0000 as const, // Glyph is missing from Adobe's original list.
+    controlRS: 0x001e as const,
+    controlSI: 0x000f as const,
+    controlSO: 0x000e as const,
+    controlSOT: 0x0002 as const,
+    controlSTX: 0x0001 as const,
+    controlSUB: 0x001a as const,
+    controlSYN: 0x0016 as const,
+    controlUS: 0x001f as const,
+    controlVT: 0x000b as const,
+    copyright: 0x00a9 as const,
+    copyrightsans: 0xf8e9 as const,
+    copyrightserif: 0xf6d9 as const,
+    cornerbracketleft: 0x300c as const,
+    cornerbracketlefthalfwidth: 0xff62 as const,
+    cornerbracketleftvertical: 0xfe41 as const,
+    cornerbracketright: 0x300d as const,
+    cornerbracketrighthalfwidth: 0xff63 as const,
+    cornerbracketrightvertical: 0xfe42 as const,
+    corporationsquare: 0x337f as const,
+    cosquare: 0x33c7 as const,
+    coverkgsquare: 0x33c6 as const,
+    cparen: 0x249e as const,
+    cruzeiro: 0x20a2 as const,
+    cstretched: 0x0297 as const,
+    curlyand: 0x22cf as const,
+    curlyor: 0x22ce as const,
+    currency: 0x00a4 as const,
+    cyrBreve: 0xf6d1 as const,
+    cyrFlex: 0xf6d2 as const,
+    cyrbreve: 0xf6d4 as const,
+    cyrflex: 0xf6d5 as const,
+    d: 0x0064 as const,
+    daarmenian: 0x0564 as const,
+    dabengali: 0x09a6 as const,
+    dadarabic: 0x0636 as const,
+    dadeva: 0x0926 as const,
+    dadfinalarabic: 0xfebe as const,
+    dadinitialarabic: 0xfebf as const,
+    dadmedialarabic: 0xfec0 as const,
+    dagesh: 0x05bc as const,
+    dageshhebrew: 0x05bc as const,
+    dagger: 0x2020 as const,
+    daggerdbl: 0x2021 as const,
+    dagujarati: 0x0aa6 as const,
+    dagurmukhi: 0x0a26 as const,
+    dahiragana: 0x3060 as const,
+    dakatakana: 0x30c0 as const,
+    dalarabic: 0x062f as const,
+    dalet: 0x05d3 as const,
+    daletdagesh: 0xfb33 as const,
+    daletdageshhebrew: 0xfb33 as const,
+    dalethebrew: 0x05d3 as const,
+    dalfinalarabic: 0xfeaa as const,
+    dammaarabic: 0x064f as const,
+    dammalowarabic: 0x064f as const,
+    dammatanaltonearabic: 0x064c as const,
+    dammatanarabic: 0x064c as const,
+    danda: 0x0964 as const,
+    dargahebrew: 0x05a7 as const,
+    dargalefthebrew: 0x05a7 as const,
+    dasiapneumatacyrilliccmb: 0x0485 as const,
+    dblGrave: 0xf6d3 as const,
+    dblanglebracketleft: 0x300a as const,
+    dblanglebracketleftvertical: 0xfe3d as const,
+    dblanglebracketright: 0x300b as const,
+    dblanglebracketrightvertical: 0xfe3e as const,
+    dblarchinvertedbelowcmb: 0x032b as const,
+    dblarrowleft: 0x21d4 as const,
+    dblarrowright: 0x21d2 as const,
+    dbldanda: 0x0965 as const,
+    dblgrave: 0xf6d6 as const,
+    dblgravecmb: 0x030f as const,
+    dblintegral: 0x222c as const,
+    dbllowline: 0x2017 as const,
+    dbllowlinecmb: 0x0333 as const,
+    dbloverlinecmb: 0x033f as const,
+    dblprimemod: 0x02ba as const,
+    dblverticalbar: 0x2016 as const,
+    dblverticallineabovecmb: 0x030e as const,
+    dbopomofo: 0x3109 as const,
+    dbsquare: 0x33c8 as const,
+    dcaron: 0x010f as const,
+    dcedilla: 0x1e11 as const,
+    dcircle: 0x24d3 as const,
+    dcircumflexbelow: 0x1e13 as const,
+    dcroat: 0x0111 as const,
+    ddabengali: 0x09a1 as const,
+    ddadeva: 0x0921 as const,
+    ddagujarati: 0x0aa1 as const,
+    ddagurmukhi: 0x0a21 as const,
+    ddalarabic: 0x0688 as const,
+    ddalfinalarabic: 0xfb89 as const,
+    dddhadeva: 0x095c as const,
+    ddhabengali: 0x09a2 as const,
+    ddhadeva: 0x0922 as const,
+    ddhagujarati: 0x0aa2 as const,
+    ddhagurmukhi: 0x0a22 as const,
+    ddotaccent: 0x1e0b as const,
+    ddotbelow: 0x1e0d as const,
+    decimalseparatorarabic: 0x066b as const,
+    decimalseparatorpersian: 0x066b as const,
+    decyrillic: 0x0434 as const,
+    degree: 0x00b0 as const,
+    dehihebrew: 0x05ad as const,
+    dehiragana: 0x3067 as const,
+    deicoptic: 0x03ef as const,
+    dekatakana: 0x30c7 as const,
+    deleteleft: 0x232b as const,
+    deleteright: 0x2326 as const,
+    delta: 0x03b4 as const,
+    deltaturned: 0x018d as const,
+    denominatorminusonenumeratorbengali: 0x09f8 as const,
+    dezh: 0x02a4 as const,
+    dhabengali: 0x09a7 as const,
+    dhadeva: 0x0927 as const,
+    dhagujarati: 0x0aa7 as const,
+    dhagurmukhi: 0x0a27 as const,
+    dhook: 0x0257 as const,
+    dialytikatonos: 0x0385 as const,
+    dialytikatonoscmb: 0x0344 as const,
+    diamond: 0x2666 as const,
+    diamondsuitwhite: 0x2662 as const,
+    dieresis: 0x00a8 as const,
+    dieresisacute: 0xf6d7 as const,
+    dieresisbelowcmb: 0x0324 as const,
+    dieresiscmb: 0x0308 as const,
+    dieresisgrave: 0xf6d8 as const,
+    dieresistonos: 0x0385 as const,
+    dihiragana: 0x3062 as const,
+    dikatakana: 0x30c2 as const,
+    dittomark: 0x3003 as const,
+    divide: 0x00f7 as const,
+    divides: 0x2223 as const,
+    divisionslash: 0x2215 as const,
+    djecyrillic: 0x0452 as const,
+    dkshade: 0x2593 as const,
+    dlinebelow: 0x1e0f as const,
+    dlsquare: 0x3397 as const,
+    dmacron: 0x0111 as const,
+    dmonospace: 0xff44 as const,
+    dnblock: 0x2584 as const,
+    dochadathai: 0x0e0e as const,
+    dodekthai: 0x0e14 as const,
+    dohiragana: 0x3069 as const,
+    dokatakana: 0x30c9 as const,
+    dollar: 0x0024 as const,
+    dollarinferior: 0xf6e3 as const,
+    dollarmonospace: 0xff04 as const,
+    dollaroldstyle: 0xf724 as const,
+    dollarsmall: 0xfe69 as const,
+    dollarsuperior: 0xf6e4 as const,
+    dong: 0x20ab as const,
+    dorusquare: 0x3326 as const,
+    dotaccent: 0x02d9 as const,
+    dotaccentcmb: 0x0307 as const,
+    dotbelowcmb: 0x0323 as const,
+    dotbelowcomb: 0x0323 as const,
+    dotkatakana: 0x30fb as const,
+    dotlessi: 0x0131 as const,
+    dotlessj: 0xf6be as const,
+    dotlessjstrokehook: 0x0284 as const,
+    dotmath: 0x22c5 as const,
+    dottedcircle: 0x25cc as const,
+    doubleyodpatah: 0xfb1f as const,
+    doubleyodpatahhebrew: 0xfb1f as const,
+    downtackbelowcmb: 0x031e as const,
+    downtackmod: 0x02d5 as const,
+    dparen: 0x249f as const,
+    dsuperior: 0xf6eb as const,
+    dtail: 0x0256 as const,
+    dtopbar: 0x018c as const,
+    duhiragana: 0x3065 as const,
+    dukatakana: 0x30c5 as const,
+    dz: 0x01f3 as const,
+    dzaltone: 0x02a3 as const,
+    dzcaron: 0x01c6 as const,
+    dzcurl: 0x02a5 as const,
+    dzeabkhasiancyrillic: 0x04e1 as const,
+    dzecyrillic: 0x0455 as const,
+    dzhecyrillic: 0x045f as const,
+    e: 0x0065 as const,
+    eacute: 0x00e9 as const,
+    earth: 0x2641 as const,
+    ebengali: 0x098f as const,
+    ebopomofo: 0x311c as const,
+    ebreve: 0x0115 as const,
+    ecandradeva: 0x090d as const,
+    ecandragujarati: 0x0a8d as const,
+    ecandravowelsigndeva: 0x0945 as const,
+    ecandravowelsigngujarati: 0x0ac5 as const,
+    ecaron: 0x011b as const,
+    ecedillabreve: 0x1e1d as const,
+    echarmenian: 0x0565 as const,
+    echyiwnarmenian: 0x0587 as const,
+    ecircle: 0x24d4 as const,
+    ecircumflex: 0x00ea as const,
+    ecircumflexacute: 0x1ebf as const,
+    ecircumflexbelow: 0x1e19 as const,
+    ecircumflexdotbelow: 0x1ec7 as const,
+    ecircumflexgrave: 0x1ec1 as const,
+    ecircumflexhookabove: 0x1ec3 as const,
+    ecircumflextilde: 0x1ec5 as const,
+    ecyrillic: 0x0454 as const,
+    edblgrave: 0x0205 as const,
+    edeva: 0x090f as const,
+    edieresis: 0x00eb as const,
+    edot: 0x0117 as const,
+    edotaccent: 0x0117 as const,
+    edotbelow: 0x1eb9 as const,
+    eegurmukhi: 0x0a0f as const,
+    eematragurmukhi: 0x0a47 as const,
+    efcyrillic: 0x0444 as const,
+    egrave: 0x00e8 as const,
+    egujarati: 0x0a8f as const,
+    eharmenian: 0x0567 as const,
+    ehbopomofo: 0x311d as const,
+    ehiragana: 0x3048 as const,
+    ehookabove: 0x1ebb as const,
+    eibopomofo: 0x311f as const,
+    eight: 0x0038 as const,
+    eightarabic: 0x0668 as const,
+    eightbengali: 0x09ee as const,
+    eightcircle: 0x2467 as const,
+    eightcircleinversesansserif: 0x2791 as const,
+    eightdeva: 0x096e as const,
+    eighteencircle: 0x2471 as const,
+    eighteenparen: 0x2485 as const,
+    eighteenperiod: 0x2499 as const,
+    eightgujarati: 0x0aee as const,
+    eightgurmukhi: 0x0a6e as const,
+    eighthackarabic: 0x0668 as const,
+    eighthangzhou: 0x3028 as const,
+    eighthnotebeamed: 0x266b as const,
+    eightideographicparen: 0x3227 as const,
+    eightinferior: 0x2088 as const,
+    eightmonospace: 0xff18 as const,
+    eightoldstyle: 0xf738 as const,
+    eightparen: 0x247b as const,
+    eightperiod: 0x248f as const,
+    eightpersian: 0x06f8 as const,
+    eightroman: 0x2177 as const,
+    eightsuperior: 0x2078 as const,
+    eightthai: 0x0e58 as const,
+    einvertedbreve: 0x0207 as const,
+    eiotifiedcyrillic: 0x0465 as const,
+    ekatakana: 0x30a8 as const,
+    ekatakanahalfwidth: 0xff74 as const,
+    ekonkargurmukhi: 0x0a74 as const,
+    ekorean: 0x3154 as const,
+    elcyrillic: 0x043b as const,
+    element: 0x2208 as const,
+    elevencircle: 0x246a as const,
+    elevenparen: 0x247e as const,
+    elevenperiod: 0x2492 as const,
+    elevenroman: 0x217a as const,
+    ellipsis: 0x2026 as const,
+    ellipsisvertical: 0x22ee as const,
+    emacron: 0x0113 as const,
+    emacronacute: 0x1e17 as const,
+    emacrongrave: 0x1e15 as const,
+    emcyrillic: 0x043c as const,
+    emdash: 0x2014 as const,
+    emdashvertical: 0xfe31 as const,
+    emonospace: 0xff45 as const,
+    emphasismarkarmenian: 0x055b as const,
+    emptyset: 0x2205 as const,
+    enbopomofo: 0x3123 as const,
+    encyrillic: 0x043d as const,
+    endash: 0x2013 as const,
+    endashvertical: 0xfe32 as const,
+    endescendercyrillic: 0x04a3 as const,
+    eng: 0x014b as const,
+    engbopomofo: 0x3125 as const,
+    enghecyrillic: 0x04a5 as const,
+    enhookcyrillic: 0x04c8 as const,
+    enspace: 0x2002 as const,
+    eogonek: 0x0119 as const,
+    eokorean: 0x3153 as const,
+    eopen: 0x025b as const,
+    eopenclosed: 0x029a as const,
+    eopenreversed: 0x025c as const,
+    eopenreversedclosed: 0x025e as const,
+    eopenreversedhook: 0x025d as const,
+    eparen: 0x24a0 as const,
+    epsilon: 0x03b5 as const,
+    epsilontonos: 0x03ad as const,
+    equal: 0x003d as const,
+    equalmonospace: 0xff1d as const,
+    equalsmall: 0xfe66 as const,
+    equalsuperior: 0x207c as const,
+    equivalence: 0x2261 as const,
+    erbopomofo: 0x3126 as const,
+    ercyrillic: 0x0440 as const,
+    ereversed: 0x0258 as const,
+    ereversedcyrillic: 0x044d as const,
+    escyrillic: 0x0441 as const,
+    esdescendercyrillic: 0x04ab as const,
+    esh: 0x0283 as const,
+    eshcurl: 0x0286 as const,
+    eshortdeva: 0x090e as const,
+    eshortvowelsigndeva: 0x0946 as const,
+    eshreversedloop: 0x01aa as const,
+    eshsquatreversed: 0x0285 as const,
+    esmallhiragana: 0x3047 as const,
+    esmallkatakana: 0x30a7 as const,
+    esmallkatakanahalfwidth: 0xff6a as const,
+    estimated: 0x212e as const,
+    esuperior: 0xf6ec as const,
+    eta: 0x03b7 as const,
+    etarmenian: 0x0568 as const,
+    etatonos: 0x03ae as const,
+    eth: 0x00f0 as const,
+    etilde: 0x1ebd as const,
+    etildebelow: 0x1e1b as const,
+    etnahtafoukhhebrew: 0x0591 as const,
+    etnahtafoukhlefthebrew: 0x0591 as const,
+    etnahtahebrew: 0x0591 as const,
+    etnahtalefthebrew: 0x0591 as const,
+    eturned: 0x01dd as const,
+    eukorean: 0x3161 as const,
+    euro: 0x20ac as const,
+    evowelsignbengali: 0x09c7 as const,
+    evowelsigndeva: 0x0947 as const,
+    evowelsigngujarati: 0x0ac7 as const,
+    exclam: 0x0021 as const,
+    exclamarmenian: 0x055c as const,
+    exclamdbl: 0x203c as const,
+    exclamdown: 0x00a1 as const,
+    exclamdownsmall: 0xf7a1 as const,
+    exclammonospace: 0xff01 as const,
+    exclamsmall: 0xf721 as const,
+    existential: 0x2203 as const,
+    ezh: 0x0292 as const,
+    ezhcaron: 0x01ef as const,
+    ezhcurl: 0x0293 as const,
+    ezhreversed: 0x01b9 as const,
+    ezhtail: 0x01ba as const,
+    f: 0x0066 as const,
+    fadeva: 0x095e as const,
+    fagurmukhi: 0x0a5e as const,
+    fahrenheit: 0x2109 as const,
+    fathaarabic: 0x064e as const,
+    fathalowarabic: 0x064e as const,
+    fathatanarabic: 0x064b as const,
+    fbopomofo: 0x3108 as const,
+    fcircle: 0x24d5 as const,
+    fdotaccent: 0x1e1f as const,
+    feharabic: 0x0641 as const,
+    feharmenian: 0x0586 as const,
+    fehfinalarabic: 0xfed2 as const,
+    fehinitialarabic: 0xfed3 as const,
+    fehmedialarabic: 0xfed4 as const,
+    feicoptic: 0x03e5 as const,
+    female: 0x2640 as const,
+    ff: 0xfb00 as const,
+    f_f: 0xfb00 as const,
+    ffi: 0xfb03 as const,
+    f_f_i: 0xfb03 as const,
+    ffl: 0xfb04 as const,
+    f_f_l: 0xfb04 as const,
+    fi: 0xfb01 as const,
+    f_i: 0xfb01 as const,
+    fifteencircle: 0x246e as const,
+    fifteenparen: 0x2482 as const,
+    fifteenperiod: 0x2496 as const,
+    figuredash: 0x2012 as const,
+    filledbox: 0x25a0 as const,
+    filledrect: 0x25ac as const,
+    finalkaf: 0x05da as const,
+    finalkafdagesh: 0xfb3a as const,
+    finalkafdageshhebrew: 0xfb3a as const,
+    finalkafhebrew: 0x05da as const,
+    finalmem: 0x05dd as const,
+    finalmemhebrew: 0x05dd as const,
+    finalnun: 0x05df as const,
+    finalnunhebrew: 0x05df as const,
+    finalpe: 0x05e3 as const,
+    finalpehebrew: 0x05e3 as const,
+    finaltsadi: 0x05e5 as const,
+    finaltsadihebrew: 0x05e5 as const,
+    firsttonechinese: 0x02c9 as const,
+    fisheye: 0x25c9 as const,
+    fitacyrillic: 0x0473 as const,
+    five: 0x0035 as const,
+    fivearabic: 0x0665 as const,
+    fivebengali: 0x09eb as const,
+    fivecircle: 0x2464 as const,
+    fivecircleinversesansserif: 0x278e as const,
+    fivedeva: 0x096b as const,
+    fiveeighths: 0x215d as const,
+    fivegujarati: 0x0aeb as const,
+    fivegurmukhi: 0x0a6b as const,
+    fivehackarabic: 0x0665 as const,
+    fivehangzhou: 0x3025 as const,
+    fiveideographicparen: 0x3224 as const,
+    fiveinferior: 0x2085 as const,
+    fivemonospace: 0xff15 as const,
+    fiveoldstyle: 0xf735 as const,
+    fiveparen: 0x2478 as const,
+    fiveperiod: 0x248c as const,
+    fivepersian: 0x06f5 as const,
+    fiveroman: 0x2174 as const,
+    fivesuperior: 0x2075 as const,
+    fivethai: 0x0e55 as const,
+    fl: 0xfb02 as const,
+    f_l: 0xfb02 as const,
+    florin: 0x0192 as const,
+    fmonospace: 0xff46 as const,
+    fmsquare: 0x3399 as const,
+    fofanthai: 0x0e1f as const,
+    fofathai: 0x0e1d as const,
+    fongmanthai: 0x0e4f as const,
+    forall: 0x2200 as const,
+    four: 0x0034 as const,
+    fourarabic: 0x0664 as const,
+    fourbengali: 0x09ea as const,
+    fourcircle: 0x2463 as const,
+    fourcircleinversesansserif: 0x278d as const,
+    fourdeva: 0x096a as const,
+    fourgujarati: 0x0aea as const,
+    fourgurmukhi: 0x0a6a as const,
+    fourhackarabic: 0x0664 as const,
+    fourhangzhou: 0x3024 as const,
+    fourideographicparen: 0x3223 as const,
+    fourinferior: 0x2084 as const,
+    fourmonospace: 0xff14 as const,
+    fournumeratorbengali: 0x09f7 as const,
+    fouroldstyle: 0xf734 as const,
+    fourparen: 0x2477 as const,
+    fourperiod: 0x248b as const,
+    fourpersian: 0x06f4 as const,
+    fourroman: 0x2173 as const,
+    foursuperior: 0x2074 as const,
+    fourteencircle: 0x246d as const,
+    fourteenparen: 0x2481 as const,
+    fourteenperiod: 0x2495 as const,
+    fourthai: 0x0e54 as const,
+    fourthtonechinese: 0x02cb as const,
+    fparen: 0x24a1 as const,
+    fraction: 0x2044 as const,
+    franc: 0x20a3 as const,
+    g: 0x0067 as const,
+    gabengali: 0x0997 as const,
+    gacute: 0x01f5 as const,
+    gadeva: 0x0917 as const,
+    gafarabic: 0x06af as const,
+    gaffinalarabic: 0xfb93 as const,
+    gafinitialarabic: 0xfb94 as const,
+    gafmedialarabic: 0xfb95 as const,
+    gagujarati: 0x0a97 as const,
+    gagurmukhi: 0x0a17 as const,
+    gahiragana: 0x304c as const,
+    gakatakana: 0x30ac as const,
+    gamma: 0x03b3 as const,
+    gammalatinsmall: 0x0263 as const,
+    gammasuperior: 0x02e0 as const,
+    gangiacoptic: 0x03eb as const,
+    gbopomofo: 0x310d as const,
+    gbreve: 0x011f as const,
+    gcaron: 0x01e7 as const,
+    gcedilla: 0x0123 as const,
+    gcircle: 0x24d6 as const,
+    gcircumflex: 0x011d as const,
+    gcommaaccent: 0x0123 as const,
+    gdot: 0x0121 as const,
+    gdotaccent: 0x0121 as const,
+    gecyrillic: 0x0433 as const,
+    gehiragana: 0x3052 as const,
+    gekatakana: 0x30b2 as const,
+    geometricallyequal: 0x2251 as const,
+    gereshaccenthebrew: 0x059c as const,
+    gereshhebrew: 0x05f3 as const,
+    gereshmuqdamhebrew: 0x059d as const,
+    germandbls: 0x00df as const,
+    gershayimaccenthebrew: 0x059e as const,
+    gershayimhebrew: 0x05f4 as const,
+    getamark: 0x3013 as const,
+    ghabengali: 0x0998 as const,
+    ghadarmenian: 0x0572 as const,
+    ghadeva: 0x0918 as const,
+    ghagujarati: 0x0a98 as const,
+    ghagurmukhi: 0x0a18 as const,
+    ghainarabic: 0x063a as const,
+    ghainfinalarabic: 0xfece as const,
+    ghaininitialarabic: 0xfecf as const,
+    ghainmedialarabic: 0xfed0 as const,
+    ghemiddlehookcyrillic: 0x0495 as const,
+    ghestrokecyrillic: 0x0493 as const,
+    gheupturncyrillic: 0x0491 as const,
+    ghhadeva: 0x095a as const,
+    ghhagurmukhi: 0x0a5a as const,
+    ghook: 0x0260 as const,
+    ghzsquare: 0x3393 as const,
+    gihiragana: 0x304e as const,
+    gikatakana: 0x30ae as const,
+    gimarmenian: 0x0563 as const,
+    gimel: 0x05d2 as const,
+    gimeldagesh: 0xfb32 as const,
+    gimeldageshhebrew: 0xfb32 as const,
+    gimelhebrew: 0x05d2 as const,
+    gjecyrillic: 0x0453 as const,
+    glottalinvertedstroke: 0x01be as const,
+    glottalstop: 0x0294 as const,
+    glottalstopinverted: 0x0296 as const,
+    glottalstopmod: 0x02c0 as const,
+    glottalstopreversed: 0x0295 as const,
+    glottalstopreversedmod: 0x02c1 as const,
+    glottalstopreversedsuperior: 0x02e4 as const,
+    glottalstopstroke: 0x02a1 as const,
+    glottalstopstrokereversed: 0x02a2 as const,
+    gmacron: 0x1e21 as const,
+    gmonospace: 0xff47 as const,
+    gohiragana: 0x3054 as const,
+    gokatakana: 0x30b4 as const,
+    gparen: 0x24a2 as const,
+    gpasquare: 0x33ac as const,
+    gradient: 0x2207 as const,
+    grave: 0x0060 as const,
+    gravebelowcmb: 0x0316 as const,
+    gravecmb: 0x0300 as const,
+    gravecomb: 0x0300 as const,
+    gravedeva: 0x0953 as const,
+    gravelowmod: 0x02ce as const,
+    gravemonospace: 0xff40 as const,
+    gravetonecmb: 0x0340 as const,
+    greater: 0x003e as const,
+    greaterequal: 0x2265 as const,
+    greaterequalorless: 0x22db as const,
+    greatermonospace: 0xff1e as const,
+    greaterorequivalent: 0x2273 as const,
+    greaterorless: 0x2277 as const,
+    greateroverequal: 0x2267 as const,
+    greatersmall: 0xfe65 as const,
+    gscript: 0x0261 as const,
+    gstroke: 0x01e5 as const,
+    guhiragana: 0x3050 as const,
+    guillemotleft: 0x00ab as const,
+    guillemotright: 0x00bb as const,
+    guilsinglleft: 0x2039 as const,
+    guilsinglright: 0x203a as const,
+    gukatakana: 0x30b0 as const,
+    guramusquare: 0x3318 as const,
+    gysquare: 0x33c9 as const,
+    h: 0x0068 as const,
+    haabkhasiancyrillic: 0x04a9 as const,
+    haaltonearabic: 0x06c1 as const,
+    habengali: 0x09b9 as const,
+    hadescendercyrillic: 0x04b3 as const,
+    hadeva: 0x0939 as const,
+    hagujarati: 0x0ab9 as const,
+    hagurmukhi: 0x0a39 as const,
+    haharabic: 0x062d as const,
+    hahfinalarabic: 0xfea2 as const,
+    hahinitialarabic: 0xfea3 as const,
+    hahiragana: 0x306f as const,
+    hahmedialarabic: 0xfea4 as const,
+    haitusquare: 0x332a as const,
+    hakatakana: 0x30cf as const,
+    hakatakanahalfwidth: 0xff8a as const,
+    halantgurmukhi: 0x0a4d as const,
+    hamzaarabic: 0x0621 as const,
+    hamzalowarabic: 0x0621 as const,
+    hangulfiller: 0x3164 as const,
+    hardsigncyrillic: 0x044a as const,
+    harpoonleftbarbup: 0x21bc as const,
+    harpoonrightbarbup: 0x21c0 as const,
+    hasquare: 0x33ca as const,
+    hatafpatah: 0x05b2 as const,
+    hatafpatah16: 0x05b2 as const,
+    hatafpatah23: 0x05b2 as const,
+    hatafpatah2f: 0x05b2 as const,
+    hatafpatahhebrew: 0x05b2 as const,
+    hatafpatahnarrowhebrew: 0x05b2 as const,
+    hatafpatahquarterhebrew: 0x05b2 as const,
+    hatafpatahwidehebrew: 0x05b2 as const,
+    hatafqamats: 0x05b3 as const,
+    hatafqamats1b: 0x05b3 as const,
+    hatafqamats28: 0x05b3 as const,
+    hatafqamats34: 0x05b3 as const,
+    hatafqamatshebrew: 0x05b3 as const,
+    hatafqamatsnarrowhebrew: 0x05b3 as const,
+    hatafqamatsquarterhebrew: 0x05b3 as const,
+    hatafqamatswidehebrew: 0x05b3 as const,
+    hatafsegol: 0x05b1 as const,
+    hatafsegol17: 0x05b1 as const,
+    hatafsegol24: 0x05b1 as const,
+    hatafsegol30: 0x05b1 as const,
+    hatafsegolhebrew: 0x05b1 as const,
+    hatafsegolnarrowhebrew: 0x05b1 as const,
+    hatafsegolquarterhebrew: 0x05b1 as const,
+    hatafsegolwidehebrew: 0x05b1 as const,
+    hbar: 0x0127 as const,
+    hbopomofo: 0x310f as const,
+    hbrevebelow: 0x1e2b as const,
+    hcedilla: 0x1e29 as const,
+    hcircle: 0x24d7 as const,
+    hcircumflex: 0x0125 as const,
+    hdieresis: 0x1e27 as const,
+    hdotaccent: 0x1e23 as const,
+    hdotbelow: 0x1e25 as const,
+    he: 0x05d4 as const,
+    heart: 0x2665 as const,
+    heartsuitblack: 0x2665 as const,
+    heartsuitwhite: 0x2661 as const,
+    hedagesh: 0xfb34 as const,
+    hedageshhebrew: 0xfb34 as const,
+    hehaltonearabic: 0x06c1 as const,
+    heharabic: 0x0647 as const,
+    hehebrew: 0x05d4 as const,
+    hehfinalaltonearabic: 0xfba7 as const,
+    hehfinalalttwoarabic: 0xfeea as const,
+    hehfinalarabic: 0xfeea as const,
+    hehhamzaabovefinalarabic: 0xfba5 as const,
+    hehhamzaaboveisolatedarabic: 0xfba4 as const,
+    hehinitialaltonearabic: 0xfba8 as const,
+    hehinitialarabic: 0xfeeb as const,
+    hehiragana: 0x3078 as const,
+    hehmedialaltonearabic: 0xfba9 as const,
+    hehmedialarabic: 0xfeec as const,
+    heiseierasquare: 0x337b as const,
+    hekatakana: 0x30d8 as const,
+    hekatakanahalfwidth: 0xff8d as const,
+    hekutaarusquare: 0x3336 as const,
+    henghook: 0x0267 as const,
+    herutusquare: 0x3339 as const,
+    het: 0x05d7 as const,
+    hethebrew: 0x05d7 as const,
+    hhook: 0x0266 as const,
+    hhooksuperior: 0x02b1 as const,
+    hieuhacirclekorean: 0x327b as const,
+    hieuhaparenkorean: 0x321b as const,
+    hieuhcirclekorean: 0x326d as const,
+    hieuhkorean: 0x314e as const,
+    hieuhparenkorean: 0x320d as const,
+    hihiragana: 0x3072 as const,
+    hikatakana: 0x30d2 as const,
+    hikatakanahalfwidth: 0xff8b as const,
+    hiriq: 0x05b4 as const,
+    hiriq14: 0x05b4 as const,
+    hiriq21: 0x05b4 as const,
+    hiriq2d: 0x05b4 as const,
+    hiriqhebrew: 0x05b4 as const,
+    hiriqnarrowhebrew: 0x05b4 as const,
+    hiriqquarterhebrew: 0x05b4 as const,
+    hiriqwidehebrew: 0x05b4 as const,
+    hlinebelow: 0x1e96 as const,
+    hmonospace: 0xff48 as const,
+    hoarmenian: 0x0570 as const,
+    hohipthai: 0x0e2b as const,
+    hohiragana: 0x307b as const,
+    hokatakana: 0x30db as const,
+    hokatakanahalfwidth: 0xff8e as const,
+    holam: 0x05b9 as const,
+    holam19: 0x05b9 as const,
+    holam26: 0x05b9 as const,
+    holam32: 0x05b9 as const,
+    holamhebrew: 0x05b9 as const,
+    holamnarrowhebrew: 0x05b9 as const,
+    holamquarterhebrew: 0x05b9 as const,
+    holamwidehebrew: 0x05b9 as const,
+    honokhukthai: 0x0e2e as const,
+    hookabovecomb: 0x0309 as const,
+    hookcmb: 0x0309 as const,
+    hookpalatalizedbelowcmb: 0x0321 as const,
+    hookretroflexbelowcmb: 0x0322 as const,
+    hoonsquare: 0x3342 as const,
+    horicoptic: 0x03e9 as const,
+    horizontalbar: 0x2015 as const,
+    horncmb: 0x031b as const,
+    hotsprings: 0x2668 as const,
+    house: 0x2302 as const,
+    hparen: 0x24a3 as const,
+    hsuperior: 0x02b0 as const,
+    hturned: 0x0265 as const,
+    huhiragana: 0x3075 as const,
+    huiitosquare: 0x3333 as const,
+    hukatakana: 0x30d5 as const,
+    hukatakanahalfwidth: 0xff8c as const,
+    hungarumlaut: 0x02dd as const,
+    hungarumlautcmb: 0x030b as const,
+    hv: 0x0195 as const,
+    hyphen: 0x002d as const,
+    hypheninferior: 0xf6e5 as const,
+    hyphenmonospace: 0xff0d as const,
+    hyphensmall: 0xfe63 as const,
+    hyphensuperior: 0xf6e6 as const,
+    hyphentwo: 0x2010 as const,
+    i: 0x0069 as const,
+    iacute: 0x00ed as const,
+    iacyrillic: 0x044f as const,
+    ibengali: 0x0987 as const,
+    ibopomofo: 0x3127 as const,
+    ibreve: 0x012d as const,
+    icaron: 0x01d0 as const,
+    icircle: 0x24d8 as const,
+    icircumflex: 0x00ee as const,
+    icyrillic: 0x0456 as const,
+    idblgrave: 0x0209 as const,
+    ideographearthcircle: 0x328f as const,
+    ideographfirecircle: 0x328b as const,
+    ideographicallianceparen: 0x323f as const,
+    ideographiccallparen: 0x323a as const,
+    ideographiccentrecircle: 0x32a5 as const,
+    ideographicclose: 0x3006 as const,
+    ideographiccomma: 0x3001 as const,
+    ideographiccommaleft: 0xff64 as const,
+    ideographiccongratulationparen: 0x3237 as const,
+    ideographiccorrectcircle: 0x32a3 as const,
+    ideographicearthparen: 0x322f as const,
+    ideographicenterpriseparen: 0x323d as const,
+    ideographicexcellentcircle: 0x329d as const,
+    ideographicfestivalparen: 0x3240 as const,
+    ideographicfinancialcircle: 0x3296 as const,
+    ideographicfinancialparen: 0x3236 as const,
+    ideographicfireparen: 0x322b as const,
+    ideographichaveparen: 0x3232 as const,
+    ideographichighcircle: 0x32a4 as const,
+    ideographiciterationmark: 0x3005 as const,
+    ideographiclaborcircle: 0x3298 as const,
+    ideographiclaborparen: 0x3238 as const,
+    ideographicleftcircle: 0x32a7 as const,
+    ideographiclowcircle: 0x32a6 as const,
+    ideographicmedicinecircle: 0x32a9 as const,
+    ideographicmetalparen: 0x322e as const,
+    ideographicmoonparen: 0x322a as const,
+    ideographicnameparen: 0x3234 as const,
+    ideographicperiod: 0x3002 as const,
+    ideographicprintcircle: 0x329e as const,
+    ideographicreachparen: 0x3243 as const,
+    ideographicrepresentparen: 0x3239 as const,
+    ideographicresourceparen: 0x323e as const,
+    ideographicrightcircle: 0x32a8 as const,
+    ideographicsecretcircle: 0x3299 as const,
+    ideographicselfparen: 0x3242 as const,
+    ideographicsocietyparen: 0x3233 as const,
+    ideographicspace: 0x3000 as const,
+    ideographicspecialparen: 0x3235 as const,
+    ideographicstockparen: 0x3231 as const,
+    ideographicstudyparen: 0x323b as const,
+    ideographicsunparen: 0x3230 as const,
+    ideographicsuperviseparen: 0x323c as const,
+    ideographicwaterparen: 0x322c as const,
+    ideographicwoodparen: 0x322d as const,
+    ideographiczero: 0x3007 as const,
+    ideographmetalcircle: 0x328e as const,
+    ideographmooncircle: 0x328a as const,
+    ideographnamecircle: 0x3294 as const,
+    ideographsuncircle: 0x3290 as const,
+    ideographwatercircle: 0x328c as const,
+    ideographwoodcircle: 0x328d as const,
+    ideva: 0x0907 as const,
+    idieresis: 0x00ef as const,
+    idieresisacute: 0x1e2f as const,
+    idieresiscyrillic: 0x04e5 as const,
+    idotbelow: 0x1ecb as const,
+    iebrevecyrillic: 0x04d7 as const,
+    iecyrillic: 0x0435 as const,
+    ieungacirclekorean: 0x3275 as const,
+    ieungaparenkorean: 0x3215 as const,
+    ieungcirclekorean: 0x3267 as const,
+    ieungkorean: 0x3147 as const,
+    ieungparenkorean: 0x3207 as const,
+    igrave: 0x00ec as const,
+    igujarati: 0x0a87 as const,
+    igurmukhi: 0x0a07 as const,
+    ihiragana: 0x3044 as const,
+    ihookabove: 0x1ec9 as const,
+    iibengali: 0x0988 as const,
+    iicyrillic: 0x0438 as const,
+    iideva: 0x0908 as const,
+    iigujarati: 0x0a88 as const,
+    iigurmukhi: 0x0a08 as const,
+    iimatragurmukhi: 0x0a40 as const,
+    iinvertedbreve: 0x020b as const,
+    iishortcyrillic: 0x0439 as const,
+    iivowelsignbengali: 0x09c0 as const,
+    iivowelsigndeva: 0x0940 as const,
+    iivowelsigngujarati: 0x0ac0 as const,
+    ij: 0x0133 as const,
+    ikatakana: 0x30a4 as const,
+    ikatakanahalfwidth: 0xff72 as const,
+    ikorean: 0x3163 as const,
+    ilde: 0x02dc as const,
+    iluyhebrew: 0x05ac as const,
+    imacron: 0x012b as const,
+    imacroncyrillic: 0x04e3 as const,
+    imageorapproximatelyequal: 0x2253 as const,
+    imatragurmukhi: 0x0a3f as const,
+    imonospace: 0xff49 as const,
+    increment: 0x2206 as const,
+    infinity: 0x221e as const,
+    iniarmenian: 0x056b as const,
+    integral: 0x222b as const,
+    integralbottom: 0x2321 as const,
+    integralbt: 0x2321 as const,
+    integralex: 0xf8f5 as const,
+    integraltop: 0x2320 as const,
+    integraltp: 0x2320 as const,
+    intersection: 0x2229 as const,
+    intisquare: 0x3305 as const,
+    invbullet: 0x25d8 as const,
+    invcircle: 0x25d9 as const,
+    invsmileface: 0x263b as const,
+    iocyrillic: 0x0451 as const,
+    iogonek: 0x012f as const,
+    iota: 0x03b9 as const,
+    iotadieresis: 0x03ca as const,
+    iotadieresistonos: 0x0390 as const,
+    iotalatin: 0x0269 as const,
+    iotatonos: 0x03af as const,
+    iparen: 0x24a4 as const,
+    irigurmukhi: 0x0a72 as const,
+    ismallhiragana: 0x3043 as const,
+    ismallkatakana: 0x30a3 as const,
+    ismallkatakanahalfwidth: 0xff68 as const,
+    issharbengali: 0x09fa as const,
+    istroke: 0x0268 as const,
+    isuperior: 0xf6ed as const,
+    iterationhiragana: 0x309d as const,
+    iterationkatakana: 0x30fd as const,
+    itilde: 0x0129 as const,
+    itildebelow: 0x1e2d as const,
+    iubopomofo: 0x3129 as const,
+    iucyrillic: 0x044e as const,
+    ivowelsignbengali: 0x09bf as const,
+    ivowelsigndeva: 0x093f as const,
+    ivowelsigngujarati: 0x0abf as const,
+    izhitsacyrillic: 0x0475 as const,
+    izhitsadblgravecyrillic: 0x0477 as const,
+    j: 0x006a as const,
+    jaarmenian: 0x0571 as const,
+    jabengali: 0x099c as const,
+    jadeva: 0x091c as const,
+    jagujarati: 0x0a9c as const,
+    jagurmukhi: 0x0a1c as const,
+    jbopomofo: 0x3110 as const,
+    jcaron: 0x01f0 as const,
+    jcircle: 0x24d9 as const,
+    jcircumflex: 0x0135 as const,
+    jcrossedtail: 0x029d as const,
+    jdotlessstroke: 0x025f as const,
+    jecyrillic: 0x0458 as const,
+    jeemarabic: 0x062c as const,
+    jeemfinalarabic: 0xfe9e as const,
+    jeeminitialarabic: 0xfe9f as const,
+    jeemmedialarabic: 0xfea0 as const,
+    jeharabic: 0x0698 as const,
+    jehfinalarabic: 0xfb8b as const,
+    jhabengali: 0x099d as const,
+    jhadeva: 0x091d as const,
+    jhagujarati: 0x0a9d as const,
+    jhagurmukhi: 0x0a1d as const,
+    jheharmenian: 0x057b as const,
+    jis: 0x3004 as const,
+    jmonospace: 0xff4a as const,
+    jparen: 0x24a5 as const,
+    jsuperior: 0x02b2 as const,
+    k: 0x006b as const,
+    kabashkircyrillic: 0x04a1 as const,
+    kabengali: 0x0995 as const,
+    kacute: 0x1e31 as const,
+    kacyrillic: 0x043a as const,
+    kadescendercyrillic: 0x049b as const,
+    kadeva: 0x0915 as const,
+    kaf: 0x05db as const,
+    kafarabic: 0x0643 as const,
+    kafdagesh: 0xfb3b as const,
+    kafdageshhebrew: 0xfb3b as const,
+    kaffinalarabic: 0xfeda as const,
+    kafhebrew: 0x05db as const,
+    kafinitialarabic: 0xfedb as const,
+    kafmedialarabic: 0xfedc as const,
+    kafrafehebrew: 0xfb4d as const,
+    kagujarati: 0x0a95 as const,
+    kagurmukhi: 0x0a15 as const,
+    kahiragana: 0x304b as const,
+    kahookcyrillic: 0x04c4 as const,
+    kakatakana: 0x30ab as const,
+    kakatakanahalfwidth: 0xff76 as const,
+    kappa: 0x03ba as const,
+    kappasymbolgreek: 0x03f0 as const,
+    kapyeounmieumkorean: 0x3171 as const,
+    kapyeounphieuphkorean: 0x3184 as const,
+    kapyeounpieupkorean: 0x3178 as const,
+    kapyeounssangpieupkorean: 0x3179 as const,
+    karoriisquare: 0x330d as const,
+    kashidaautoarabic: 0x0640 as const,
+    kashidaautonosidebearingarabic: 0x0640 as const,
+    kasmallkatakana: 0x30f5 as const,
+    kasquare: 0x3384 as const,
+    kasraarabic: 0x0650 as const,
+    kasratanarabic: 0x064d as const,
+    kastrokecyrillic: 0x049f as const,
+    katahiraprolongmarkhalfwidth: 0xff70 as const,
+    kaverticalstrokecyrillic: 0x049d as const,
+    kbopomofo: 0x310e as const,
+    kcalsquare: 0x3389 as const,
+    kcaron: 0x01e9 as const,
+    kcedilla: 0x0137 as const,
+    kcircle: 0x24da as const,
+    kcommaaccent: 0x0137 as const,
+    kdotbelow: 0x1e33 as const,
+    keharmenian: 0x0584 as const,
+    kehiragana: 0x3051 as const,
+    kekatakana: 0x30b1 as const,
+    kekatakanahalfwidth: 0xff79 as const,
+    kenarmenian: 0x056f as const,
+    kesmallkatakana: 0x30f6 as const,
+    kgreenlandic: 0x0138 as const,
+    khabengali: 0x0996 as const,
+    khacyrillic: 0x0445 as const,
+    khadeva: 0x0916 as const,
+    khagujarati: 0x0a96 as const,
+    khagurmukhi: 0x0a16 as const,
+    khaharabic: 0x062e as const,
+    khahfinalarabic: 0xfea6 as const,
+    khahinitialarabic: 0xfea7 as const,
+    khahmedialarabic: 0xfea8 as const,
+    kheicoptic: 0x03e7 as const,
+    khhadeva: 0x0959 as const,
+    khhagurmukhi: 0x0a59 as const,
+    khieukhacirclekorean: 0x3278 as const,
+    khieukhaparenkorean: 0x3218 as const,
+    khieukhcirclekorean: 0x326a as const,
+    khieukhkorean: 0x314b as const,
+    khieukhparenkorean: 0x320a as const,
+    khokhaithai: 0x0e02 as const,
+    khokhonthai: 0x0e05 as const,
+    khokhuatthai: 0x0e03 as const,
+    khokhwaithai: 0x0e04 as const,
+    khomutthai: 0x0e5b as const,
+    khook: 0x0199 as const,
+    khorakhangthai: 0x0e06 as const,
+    khzsquare: 0x3391 as const,
+    kihiragana: 0x304d as const,
+    kikatakana: 0x30ad as const,
+    kikatakanahalfwidth: 0xff77 as const,
+    kiroguramusquare: 0x3315 as const,
+    kiromeetorusquare: 0x3316 as const,
+    kirosquare: 0x3314 as const,
+    kiyeokacirclekorean: 0x326e as const,
+    kiyeokaparenkorean: 0x320e as const,
+    kiyeokcirclekorean: 0x3260 as const,
+    kiyeokkorean: 0x3131 as const,
+    kiyeokparenkorean: 0x3200 as const,
+    kiyeoksioskorean: 0x3133 as const,
+    kjecyrillic: 0x045c as const,
+    klinebelow: 0x1e35 as const,
+    klsquare: 0x3398 as const,
+    kmcubedsquare: 0x33a6 as const,
+    kmonospace: 0xff4b as const,
+    kmsquaredsquare: 0x33a2 as const,
+    kohiragana: 0x3053 as const,
+    kohmsquare: 0x33c0 as const,
+    kokaithai: 0x0e01 as const,
+    kokatakana: 0x30b3 as const,
+    kokatakanahalfwidth: 0xff7a as const,
+    kooposquare: 0x331e as const,
+    koppacyrillic: 0x0481 as const,
+    koreanstandardsymbol: 0x327f as const,
+    koroniscmb: 0x0343 as const,
+    kparen: 0x24a6 as const,
+    kpasquare: 0x33aa as const,
+    ksicyrillic: 0x046f as const,
+    ktsquare: 0x33cf as const,
+    kturned: 0x029e as const,
+    kuhiragana: 0x304f as const,
+    kukatakana: 0x30af as const,
+    kukatakanahalfwidth: 0xff78 as const,
+    kvsquare: 0x33b8 as const,
+    kwsquare: 0x33be as const,
+    l: 0x006c as const,
+    labengali: 0x09b2 as const,
+    lacute: 0x013a as const,
+    ladeva: 0x0932 as const,
+    lagujarati: 0x0ab2 as const,
+    lagurmukhi: 0x0a32 as const,
+    lakkhangyaothai: 0x0e45 as const,
+    lamaleffinalarabic: 0xfefc as const,
+    lamalefhamzaabovefinalarabic: 0xfef8 as const,
+    lamalefhamzaaboveisolatedarabic: 0xfef7 as const,
+    lamalefhamzabelowfinalarabic: 0xfefa as const,
+    lamalefhamzabelowisolatedarabic: 0xfef9 as const,
+    lamalefisolatedarabic: 0xfefb as const,
+    lamalefmaddaabovefinalarabic: 0xfef6 as const,
+    lamalefmaddaaboveisolatedarabic: 0xfef5 as const,
+    lamarabic: 0x0644 as const,
+    lambda: 0x03bb as const,
+    lambdastroke: 0x019b as const,
+    lamed: 0x05dc as const,
+    lameddagesh: 0xfb3c as const,
+    lameddageshhebrew: 0xfb3c as const,
+    lamedhebrew: 0x05dc as const,
+    lamfinalarabic: 0xfede as const,
+    lamhahinitialarabic: 0xfcca as const,
+    laminitialarabic: 0xfedf as const,
+    lamjeeminitialarabic: 0xfcc9 as const,
+    lamkhahinitialarabic: 0xfccb as const,
+    lamlamhehisolatedarabic: 0xfdf2 as const,
+    lammedialarabic: 0xfee0 as const,
+    lammeemhahinitialarabic: 0xfd88 as const,
+    lammeeminitialarabic: 0xfccc as const,
+    largecircle: 0x25ef as const,
+    lbar: 0x019a as const,
+    lbelt: 0x026c as const,
+    lbopomofo: 0x310c as const,
+    lcaron: 0x013e as const,
+    lcedilla: 0x013c as const,
+    lcircle: 0x24db as const,
+    lcircumflexbelow: 0x1e3d as const,
+    lcommaaccent: 0x013c as const,
+    ldot: 0x0140 as const,
+    ldotaccent: 0x0140 as const,
+    ldotbelow: 0x1e37 as const,
+    ldotbelowmacron: 0x1e39 as const,
+    leftangleabovecmb: 0x031a as const,
+    lefttackbelowcmb: 0x0318 as const,
+    less: 0x003c as const,
+    lessequal: 0x2264 as const,
+    lessequalorgreater: 0x22da as const,
+    lessmonospace: 0xff1c as const,
+    lessorequivalent: 0x2272 as const,
+    lessorgreater: 0x2276 as const,
+    lessoverequal: 0x2266 as const,
+    lesssmall: 0xfe64 as const,
+    lezh: 0x026e as const,
+    lfblock: 0x258c as const,
+    lhookretroflex: 0x026d as const,
+    lira: 0x20a4 as const,
+    liwnarmenian: 0x056c as const,
+    lj: 0x01c9 as const,
+    ljecyrillic: 0x0459 as const,
+    ll: 0xf6c0 as const,
+    lladeva: 0x0933 as const,
+    llagujarati: 0x0ab3 as const,
+    llinebelow: 0x1e3b as const,
+    llladeva: 0x0934 as const,
+    llvocalicbengali: 0x09e1 as const,
+    llvocalicdeva: 0x0961 as const,
+    llvocalicvowelsignbengali: 0x09e3 as const,
+    llvocalicvowelsigndeva: 0x0963 as const,
+    lmiddletilde: 0x026b as const,
+    lmonospace: 0xff4c as const,
+    lmsquare: 0x33d0 as const,
+    lochulathai: 0x0e2c as const,
+    logicaland: 0x2227 as const,
+    logicalnot: 0x00ac as const,
+    logicalnotreversed: 0x2310 as const,
+    logicalor: 0x2228 as const,
+    lolingthai: 0x0e25 as const,
+    longs: 0x017f as const,
+    lowlinecenterline: 0xfe4e as const,
+    lowlinecmb: 0x0332 as const,
+    lowlinedashed: 0xfe4d as const,
+    lozenge: 0x25ca as const,
+    lparen: 0x24a7 as const,
+    lslash: 0x0142 as const,
+    lsquare: 0x2113 as const,
+    lsuperior: 0xf6ee as const,
+    ltshade: 0x2591 as const,
+    luthai: 0x0e26 as const,
+    lvocalicbengali: 0x098c as const,
+    lvocalicdeva: 0x090c as const,
+    lvocalicvowelsignbengali: 0x09e2 as const,
+    lvocalicvowelsigndeva: 0x0962 as const,
+    lxsquare: 0x33d3 as const,
+    m: 0x006d as const,
+    mabengali: 0x09ae as const,
+    macron: 0x00af as const,
+    macronbelowcmb: 0x0331 as const,
+    macroncmb: 0x0304 as const,
+    macronlowmod: 0x02cd as const,
+    macronmonospace: 0xffe3 as const,
+    macute: 0x1e3f as const,
+    madeva: 0x092e as const,
+    magujarati: 0x0aae as const,
+    magurmukhi: 0x0a2e as const,
+    mahapakhhebrew: 0x05a4 as const,
+    mahapakhlefthebrew: 0x05a4 as const,
+    mahiragana: 0x307e as const,
+    maichattawalowleftthai: 0xf895 as const,
+    maichattawalowrightthai: 0xf894 as const,
+    maichattawathai: 0x0e4b as const,
+    maichattawaupperleftthai: 0xf893 as const,
+    maieklowleftthai: 0xf88c as const,
+    maieklowrightthai: 0xf88b as const,
+    maiekthai: 0x0e48 as const,
+    maiekupperleftthai: 0xf88a as const,
+    maihanakatleftthai: 0xf884 as const,
+    maihanakatthai: 0x0e31 as const,
+    maitaikhuleftthai: 0xf889 as const,
+    maitaikhuthai: 0x0e47 as const,
+    maitholowleftthai: 0xf88f as const,
+    maitholowrightthai: 0xf88e as const,
+    maithothai: 0x0e49 as const,
+    maithoupperleftthai: 0xf88d as const,
+    maitrilowleftthai: 0xf892 as const,
+    maitrilowrightthai: 0xf891 as const,
+    maitrithai: 0x0e4a as const,
+    maitriupperleftthai: 0xf890 as const,
+    maiyamokthai: 0x0e46 as const,
+    makatakana: 0x30de as const,
+    makatakanahalfwidth: 0xff8f as const,
+    male: 0x2642 as const,
+    mansyonsquare: 0x3347 as const,
+    maqafhebrew: 0x05be as const,
+    mars: 0x2642 as const,
+    masoracirclehebrew: 0x05af as const,
+    masquare: 0x3383 as const,
+    mbopomofo: 0x3107 as const,
+    mbsquare: 0x33d4 as const,
+    mcircle: 0x24dc as const,
+    mcubedsquare: 0x33a5 as const,
+    mdotaccent: 0x1e41 as const,
+    mdotbelow: 0x1e43 as const,
+    meemarabic: 0x0645 as const,
+    meemfinalarabic: 0xfee2 as const,
+    meeminitialarabic: 0xfee3 as const,
+    meemmedialarabic: 0xfee4 as const,
+    meemmeeminitialarabic: 0xfcd1 as const,
+    meemmeemisolatedarabic: 0xfc48 as const,
+    meetorusquare: 0x334d as const,
+    mehiragana: 0x3081 as const,
+    meizierasquare: 0x337e as const,
+    mekatakana: 0x30e1 as const,
+    mekatakanahalfwidth: 0xff92 as const,
+    mem: 0x05de as const,
+    memdagesh: 0xfb3e as const,
+    memdageshhebrew: 0xfb3e as const,
+    memhebrew: 0x05de as const,
+    menarmenian: 0x0574 as const,
+    merkhahebrew: 0x05a5 as const,
+    merkhakefulahebrew: 0x05a6 as const,
+    merkhakefulalefthebrew: 0x05a6 as const,
+    merkhalefthebrew: 0x05a5 as const,
+    mhook: 0x0271 as const,
+    mhzsquare: 0x3392 as const,
+    middledotkatakanahalfwidth: 0xff65 as const,
+    middot: 0x00b7 as const,
+    mieumacirclekorean: 0x3272 as const,
+    mieumaparenkorean: 0x3212 as const,
+    mieumcirclekorean: 0x3264 as const,
+    mieumkorean: 0x3141 as const,
+    mieumpansioskorean: 0x3170 as const,
+    mieumparenkorean: 0x3204 as const,
+    mieumpieupkorean: 0x316e as const,
+    mieumsioskorean: 0x316f as const,
+    mihiragana: 0x307f as const,
+    mikatakana: 0x30df as const,
+    mikatakanahalfwidth: 0xff90 as const,
+    minus: 0x2212 as const,
+    minusbelowcmb: 0x0320 as const,
+    minuscircle: 0x2296 as const,
+    minusmod: 0x02d7 as const,
+    minusplus: 0x2213 as const,
+    minute: 0x2032 as const,
+    miribaarusquare: 0x334a as const,
+    mirisquare: 0x3349 as const,
+    mlonglegturned: 0x0270 as const,
+    mlsquare: 0x3396 as const,
+    mmcubedsquare: 0x33a3 as const,
+    mmonospace: 0xff4d as const,
+    mmsquaredsquare: 0x339f as const,
+    mohiragana: 0x3082 as const,
+    mohmsquare: 0x33c1 as const,
+    mokatakana: 0x30e2 as const,
+    mokatakanahalfwidth: 0xff93 as const,
+    molsquare: 0x33d6 as const,
+    momathai: 0x0e21 as const,
+    moverssquare: 0x33a7 as const,
+    moverssquaredsquare: 0x33a8 as const,
+    mparen: 0x24a8 as const,
+    mpasquare: 0x33ab as const,
+    mssquare: 0x33b3 as const,
+    msuperior: 0xf6ef as const,
+    mturned: 0x026f as const,
+    mu: 0x00b5 as const,
+    mu1: 0x00b5 as const,
+    muasquare: 0x3382 as const,
+    muchgreater: 0x226b as const,
+    muchless: 0x226a as const,
+    mufsquare: 0x338c as const,
+    mugreek: 0x03bc as const,
+    mugsquare: 0x338d as const,
+    muhiragana: 0x3080 as const,
+    mukatakana: 0x30e0 as const,
+    mukatakanahalfwidth: 0xff91 as const,
+    mulsquare: 0x3395 as const,
+    multiply: 0x00d7 as const,
+    mumsquare: 0x339b as const,
+    munahhebrew: 0x05a3 as const,
+    munahlefthebrew: 0x05a3 as const,
+    musicalnote: 0x266a as const,
+    musicalnotedbl: 0x266b as const,
+    musicflatsign: 0x266d as const,
+    musicsharpsign: 0x266f as const,
+    mussquare: 0x33b2 as const,
+    muvsquare: 0x33b6 as const,
+    muwsquare: 0x33bc as const,
+    mvmegasquare: 0x33b9 as const,
+    mvsquare: 0x33b7 as const,
+    mwmegasquare: 0x33bf as const,
+    mwsquare: 0x33bd as const,
+    n: 0x006e as const,
+    nabengali: 0x09a8 as const,
+    nabla: 0x2207 as const,
+    nacute: 0x0144 as const,
+    nadeva: 0x0928 as const,
+    nagujarati: 0x0aa8 as const,
+    nagurmukhi: 0x0a28 as const,
+    nahiragana: 0x306a as const,
+    nakatakana: 0x30ca as const,
+    nakatakanahalfwidth: 0xff85 as const,
+    napostrophe: 0x0149 as const,
+    nasquare: 0x3381 as const,
+    nbopomofo: 0x310b as const,
+    nbspace: 0x00a0 as const,
+    ncaron: 0x0148 as const,
+    ncedilla: 0x0146 as const,
+    ncircle: 0x24dd as const,
+    ncircumflexbelow: 0x1e4b as const,
+    ncommaaccent: 0x0146 as const,
+    ndotaccent: 0x1e45 as const,
+    ndotbelow: 0x1e47 as const,
+    nehiragana: 0x306d as const,
+    nekatakana: 0x30cd as const,
+    nekatakanahalfwidth: 0xff88 as const,
+    newsheqelsign: 0x20aa as const,
+    nfsquare: 0x338b as const,
+    ngabengali: 0x0999 as const,
+    ngadeva: 0x0919 as const,
+    ngagujarati: 0x0a99 as const,
+    ngagurmukhi: 0x0a19 as const,
+    ngonguthai: 0x0e07 as const,
+    nhiragana: 0x3093 as const,
+    nhookleft: 0x0272 as const,
+    nhookretroflex: 0x0273 as const,
+    nieunacirclekorean: 0x326f as const,
+    nieunaparenkorean: 0x320f as const,
+    nieuncieuckorean: 0x3135 as const,
+    nieuncirclekorean: 0x3261 as const,
+    nieunhieuhkorean: 0x3136 as const,
+    nieunkorean: 0x3134 as const,
+    nieunpansioskorean: 0x3168 as const,
+    nieunparenkorean: 0x3201 as const,
+    nieunsioskorean: 0x3167 as const,
+    nieuntikeutkorean: 0x3166 as const,
+    nihiragana: 0x306b as const,
+    nikatakana: 0x30cb as const,
+    nikatakanahalfwidth: 0xff86 as const,
+    nikhahitleftthai: 0xf899 as const,
+    nikhahitthai: 0x0e4d as const,
+    nine: 0x0039 as const,
+    ninearabic: 0x0669 as const,
+    ninebengali: 0x09ef as const,
+    ninecircle: 0x2468 as const,
+    ninecircleinversesansserif: 0x2792 as const,
+    ninedeva: 0x096f as const,
+    ninegujarati: 0x0aef as const,
+    ninegurmukhi: 0x0a6f as const,
+    ninehackarabic: 0x0669 as const,
+    ninehangzhou: 0x3029 as const,
+    nineideographicparen: 0x3228 as const,
+    nineinferior: 0x2089 as const,
+    ninemonospace: 0xff19 as const,
+    nineoldstyle: 0xf739 as const,
+    nineparen: 0x247c as const,
+    nineperiod: 0x2490 as const,
+    ninepersian: 0x06f9 as const,
+    nineroman: 0x2178 as const,
+    ninesuperior: 0x2079 as const,
+    nineteencircle: 0x2472 as const,
+    nineteenparen: 0x2486 as const,
+    nineteenperiod: 0x249a as const,
+    ninethai: 0x0e59 as const,
+    nj: 0x01cc as const,
+    njecyrillic: 0x045a as const,
+    nkatakana: 0x30f3 as const,
+    nkatakanahalfwidth: 0xff9d as const,
+    nlegrightlong: 0x019e as const,
+    nlinebelow: 0x1e49 as const,
+    nmonospace: 0xff4e as const,
+    nmsquare: 0x339a as const,
+    nnabengali: 0x09a3 as const,
+    nnadeva: 0x0923 as const,
+    nnagujarati: 0x0aa3 as const,
+    nnagurmukhi: 0x0a23 as const,
+    nnnadeva: 0x0929 as const,
+    nohiragana: 0x306e as const,
+    nokatakana: 0x30ce as const,
+    nokatakanahalfwidth: 0xff89 as const,
+    nonbreakingspace: 0x00a0 as const,
+    nonenthai: 0x0e13 as const,
+    nonuthai: 0x0e19 as const,
+    noonarabic: 0x0646 as const,
+    noonfinalarabic: 0xfee6 as const,
+    noonghunnaarabic: 0x06ba as const,
+    noonghunnafinalarabic: 0xfb9f as const,
+    nooninitialarabic: 0xfee7 as const,
+    noonjeeminitialarabic: 0xfcd2 as const,
+    noonjeemisolatedarabic: 0xfc4b as const,
+    noonmedialarabic: 0xfee8 as const,
+    noonmeeminitialarabic: 0xfcd5 as const,
+    noonmeemisolatedarabic: 0xfc4e as const,
+    noonnoonfinalarabic: 0xfc8d as const,
+    notcontains: 0x220c as const,
+    notelement: 0x2209 as const,
+    notelementof: 0x2209 as const,
+    notequal: 0x2260 as const,
+    notgreater: 0x226f as const,
+    notgreaternorequal: 0x2271 as const,
+    notgreaternorless: 0x2279 as const,
+    notidentical: 0x2262 as const,
+    notless: 0x226e as const,
+    notlessnorequal: 0x2270 as const,
+    notparallel: 0x2226 as const,
+    notprecedes: 0x2280 as const,
+    notsubset: 0x2284 as const,
+    notsucceeds: 0x2281 as const,
+    notsuperset: 0x2285 as const,
+    nowarmenian: 0x0576 as const,
+    nparen: 0x24a9 as const,
+    nssquare: 0x33b1 as const,
+    nsuperior: 0x207f as const,
+    ntilde: 0x00f1 as const,
+    nu: 0x03bd as const,
+    nuhiragana: 0x306c as const,
+    nukatakana: 0x30cc as const,
+    nukatakanahalfwidth: 0xff87 as const,
+    nuktabengali: 0x09bc as const,
+    nuktadeva: 0x093c as const,
+    nuktagujarati: 0x0abc as const,
+    nuktagurmukhi: 0x0a3c as const,
+    numbersign: 0x0023 as const,
+    numbersignmonospace: 0xff03 as const,
+    numbersignsmall: 0xfe5f as const,
+    numeralsigngreek: 0x0374 as const,
+    numeralsignlowergreek: 0x0375 as const,
+    numero: 0x2116 as const,
+    nun: 0x05e0 as const,
+    nundagesh: 0xfb40 as const,
+    nundageshhebrew: 0xfb40 as const,
+    nunhebrew: 0x05e0 as const,
+    nvsquare: 0x33b5 as const,
+    nwsquare: 0x33bb as const,
+    nyabengali: 0x099e as const,
+    nyadeva: 0x091e as const,
+    nyagujarati: 0x0a9e as const,
+    nyagurmukhi: 0x0a1e as const,
+    o: 0x006f as const,
+    oacute: 0x00f3 as const,
+    oangthai: 0x0e2d as const,
+    obarred: 0x0275 as const,
+    obarredcyrillic: 0x04e9 as const,
+    obarreddieresiscyrillic: 0x04eb as const,
+    obengali: 0x0993 as const,
+    obopomofo: 0x311b as const,
+    obreve: 0x014f as const,
+    ocandradeva: 0x0911 as const,
+    ocandragujarati: 0x0a91 as const,
+    ocandravowelsigndeva: 0x0949 as const,
+    ocandravowelsigngujarati: 0x0ac9 as const,
+    ocaron: 0x01d2 as const,
+    ocircle: 0x24de as const,
+    ocircumflex: 0x00f4 as const,
+    ocircumflexacute: 0x1ed1 as const,
+    ocircumflexdotbelow: 0x1ed9 as const,
+    ocircumflexgrave: 0x1ed3 as const,
+    ocircumflexhookabove: 0x1ed5 as const,
+    ocircumflextilde: 0x1ed7 as const,
+    ocyrillic: 0x043e as const,
+    odblacute: 0x0151 as const,
+    odblgrave: 0x020d as const,
+    odeva: 0x0913 as const,
+    odieresis: 0x00f6 as const,
+    odieresiscyrillic: 0x04e7 as const,
+    odotbelow: 0x1ecd as const,
+    oe: 0x0153 as const,
+    oekorean: 0x315a as const,
+    ogonek: 0x02db as const,
+    ogonekcmb: 0x0328 as const,
+    ograve: 0x00f2 as const,
+    ogujarati: 0x0a93 as const,
+    oharmenian: 0x0585 as const,
+    ohiragana: 0x304a as const,
+    ohookabove: 0x1ecf as const,
+    ohorn: 0x01a1 as const,
+    ohornacute: 0x1edb as const,
+    ohorndotbelow: 0x1ee3 as const,
+    ohorngrave: 0x1edd as const,
+    ohornhookabove: 0x1edf as const,
+    ohorntilde: 0x1ee1 as const,
+    ohungarumlaut: 0x0151 as const,
+    oi: 0x01a3 as const,
+    oinvertedbreve: 0x020f as const,
+    okatakana: 0x30aa as const,
+    okatakanahalfwidth: 0xff75 as const,
+    okorean: 0x3157 as const,
+    olehebrew: 0x05ab as const,
+    omacron: 0x014d as const,
+    omacronacute: 0x1e53 as const,
+    omacrongrave: 0x1e51 as const,
+    omdeva: 0x0950 as const,
+    omega: 0x03c9 as const,
+    omega1: 0x03d6 as const,
+    omegacyrillic: 0x0461 as const,
+    omegalatinclosed: 0x0277 as const,
+    omegaroundcyrillic: 0x047b as const,
+    omegatitlocyrillic: 0x047d as const,
+    omegatonos: 0x03ce as const,
+    omgujarati: 0x0ad0 as const,
+    omicron: 0x03bf as const,
+    omicrontonos: 0x03cc as const,
+    omonospace: 0xff4f as const,
+    one: 0x0031 as const,
+    onearabic: 0x0661 as const,
+    onebengali: 0x09e7 as const,
+    onecircle: 0x2460 as const,
+    onecircleinversesansserif: 0x278a as const,
+    onedeva: 0x0967 as const,
+    onedotenleader: 0x2024 as const,
+    oneeighth: 0x215b as const,
+    onefitted: 0xf6dc as const,
+    onegujarati: 0x0ae7 as const,
+    onegurmukhi: 0x0a67 as const,
+    onehackarabic: 0x0661 as const,
+    onehalf: 0x00bd as const,
+    onehangzhou: 0x3021 as const,
+    oneideographicparen: 0x3220 as const,
+    oneinferior: 0x2081 as const,
+    onemonospace: 0xff11 as const,
+    onenumeratorbengali: 0x09f4 as const,
+    oneoldstyle: 0xf731 as const,
+    oneparen: 0x2474 as const,
+    oneperiod: 0x2488 as const,
+    onepersian: 0x06f1 as const,
+    onequarter: 0x00bc as const,
+    oneroman: 0x2170 as const,
+    onesuperior: 0x00b9 as const,
+    onethai: 0x0e51 as const,
+    onethird: 0x2153 as const,
+    oogonek: 0x01eb as const,
+    oogonekmacron: 0x01ed as const,
+    oogurmukhi: 0x0a13 as const,
+    oomatragurmukhi: 0x0a4b as const,
+    oopen: 0x0254 as const,
+    oparen: 0x24aa as const,
+    openbullet: 0x25e6 as const,
+    option: 0x2325 as const,
+    ordfeminine: 0x00aa as const,
+    ordmasculine: 0x00ba as const,
+    orthogonal: 0x221f as const,
+    oshortdeva: 0x0912 as const,
+    oshortvowelsigndeva: 0x094a as const,
+    oslash: 0x00f8 as const,
+    oslashacute: 0x01ff as const,
+    osmallhiragana: 0x3049 as const,
+    osmallkatakana: 0x30a9 as const,
+    osmallkatakanahalfwidth: 0xff6b as const,
+    ostrokeacute: 0x01ff as const,
+    osuperior: 0xf6f0 as const,
+    otcyrillic: 0x047f as const,
+    otilde: 0x00f5 as const,
+    otildeacute: 0x1e4d as const,
+    otildedieresis: 0x1e4f as const,
+    oubopomofo: 0x3121 as const,
+    overline: 0x203e as const,
+    overlinecenterline: 0xfe4a as const,
+    overlinecmb: 0x0305 as const,
+    overlinedashed: 0xfe49 as const,
+    overlinedblwavy: 0xfe4c as const,
+    overlinewavy: 0xfe4b as const,
+    overscore: 0x00af as const,
+    ovowelsignbengali: 0x09cb as const,
+    ovowelsigndeva: 0x094b as const,
+    ovowelsigngujarati: 0x0acb as const,
+    p: 0x0070 as const,
+    paampssquare: 0x3380 as const,
+    paasentosquare: 0x332b as const,
+    pabengali: 0x09aa as const,
+    pacute: 0x1e55 as const,
+    padeva: 0x092a as const,
+    pagedown: 0x21df as const,
+    pageup: 0x21de as const,
+    pagujarati: 0x0aaa as const,
+    pagurmukhi: 0x0a2a as const,
+    pahiragana: 0x3071 as const,
+    paiyannoithai: 0x0e2f as const,
+    pakatakana: 0x30d1 as const,
+    palatalizationcyrilliccmb: 0x0484 as const,
+    palochkacyrillic: 0x04c0 as const,
+    pansioskorean: 0x317f as const,
+    paragraph: 0x00b6 as const,
+    parallel: 0x2225 as const,
+    parenleft: 0x0028 as const,
+    parenleftaltonearabic: 0xfd3e as const,
+    parenleftbt: 0xf8ed as const,
+    parenleftex: 0xf8ec as const,
+    parenleftinferior: 0x208d as const,
+    parenleftmonospace: 0xff08 as const,
+    parenleftsmall: 0xfe59 as const,
+    parenleftsuperior: 0x207d as const,
+    parenlefttp: 0xf8eb as const,
+    parenleftvertical: 0xfe35 as const,
+    parenright: 0x0029 as const,
+    parenrightaltonearabic: 0xfd3f as const,
+    parenrightbt: 0xf8f8 as const,
+    parenrightex: 0xf8f7 as const,
+    parenrightinferior: 0x208e as const,
+    parenrightmonospace: 0xff09 as const,
+    parenrightsmall: 0xfe5a as const,
+    parenrightsuperior: 0x207e as const,
+    parenrighttp: 0xf8f6 as const,
+    parenrightvertical: 0xfe36 as const,
+    partialdiff: 0x2202 as const,
+    paseqhebrew: 0x05c0 as const,
+    pashtahebrew: 0x0599 as const,
+    pasquare: 0x33a9 as const,
+    patah: 0x05b7 as const,
+    patah11: 0x05b7 as const,
+    patah1d: 0x05b7 as const,
+    patah2a: 0x05b7 as const,
+    patahhebrew: 0x05b7 as const,
+    patahnarrowhebrew: 0x05b7 as const,
+    patahquarterhebrew: 0x05b7 as const,
+    patahwidehebrew: 0x05b7 as const,
+    pazerhebrew: 0x05a1 as const,
+    pbopomofo: 0x3106 as const,
+    pcircle: 0x24df as const,
+    pdotaccent: 0x1e57 as const,
+    pe: 0x05e4 as const,
+    pecyrillic: 0x043f as const,
+    pedagesh: 0xfb44 as const,
+    pedageshhebrew: 0xfb44 as const,
+    peezisquare: 0x333b as const,
+    pefinaldageshhebrew: 0xfb43 as const,
+    peharabic: 0x067e as const,
+    peharmenian: 0x057a as const,
+    pehebrew: 0x05e4 as const,
+    pehfinalarabic: 0xfb57 as const,
+    pehinitialarabic: 0xfb58 as const,
+    pehiragana: 0x307a as const,
+    pehmedialarabic: 0xfb59 as const,
+    pekatakana: 0x30da as const,
+    pemiddlehookcyrillic: 0x04a7 as const,
+    perafehebrew: 0xfb4e as const,
+    percent: 0x0025 as const,
+    percentarabic: 0x066a as const,
+    percentmonospace: 0xff05 as const,
+    percentsmall: 0xfe6a as const,
+    period: 0x002e as const,
+    periodarmenian: 0x0589 as const,
+    periodcentered: 0x00b7 as const,
+    periodhalfwidth: 0xff61 as const,
+    periodinferior: 0xf6e7 as const,
+    periodmonospace: 0xff0e as const,
+    periodsmall: 0xfe52 as const,
+    periodsuperior: 0xf6e8 as const,
+    perispomenigreekcmb: 0x0342 as const,
+    perpendicular: 0x22a5 as const,
+    perthousand: 0x2030 as const,
+    peseta: 0x20a7 as const,
+    pfsquare: 0x338a as const,
+    phabengali: 0x09ab as const,
+    phadeva: 0x092b as const,
+    phagujarati: 0x0aab as const,
+    phagurmukhi: 0x0a2b as const,
+    phi: 0x03c6 as const,
+    phi1: 0x03d5 as const,
+    phieuphacirclekorean: 0x327a as const,
+    phieuphaparenkorean: 0x321a as const,
+    phieuphcirclekorean: 0x326c as const,
+    phieuphkorean: 0x314d as const,
+    phieuphparenkorean: 0x320c as const,
+    philatin: 0x0278 as const,
+    phinthuthai: 0x0e3a as const,
+    phisymbolgreek: 0x03d5 as const,
+    phook: 0x01a5 as const,
+    phophanthai: 0x0e1e as const,
+    phophungthai: 0x0e1c as const,
+    phosamphaothai: 0x0e20 as const,
+    pi: 0x03c0 as const,
+    pieupacirclekorean: 0x3273 as const,
+    pieupaparenkorean: 0x3213 as const,
+    pieupcieuckorean: 0x3176 as const,
+    pieupcirclekorean: 0x3265 as const,
+    pieupkiyeokkorean: 0x3172 as const,
+    pieupkorean: 0x3142 as const,
+    pieupparenkorean: 0x3205 as const,
+    pieupsioskiyeokkorean: 0x3174 as const,
+    pieupsioskorean: 0x3144 as const,
+    pieupsiostikeutkorean: 0x3175 as const,
+    pieupthieuthkorean: 0x3177 as const,
+    pieuptikeutkorean: 0x3173 as const,
+    pihiragana: 0x3074 as const,
+    pikatakana: 0x30d4 as const,
+    pisymbolgreek: 0x03d6 as const,
+    piwrarmenian: 0x0583 as const,
+    planckover2pi: 0x210f as const,
+    planckover2pi1: 0x210f as const,
+    plus: 0x002b as const,
+    plusbelowcmb: 0x031f as const,
+    pluscircle: 0x2295 as const,
+    plusminus: 0x00b1 as const,
+    plusmod: 0x02d6 as const,
+    plusmonospace: 0xff0b as const,
+    plussmall: 0xfe62 as const,
+    plussuperior: 0x207a as const,
+    pmonospace: 0xff50 as const,
+    pmsquare: 0x33d8 as const,
+    pohiragana: 0x307d as const,
+    pointingindexdownwhite: 0x261f as const,
+    pointingindexleftwhite: 0x261c as const,
+    pointingindexrightwhite: 0x261e as const,
+    pointingindexupwhite: 0x261d as const,
+    pokatakana: 0x30dd as const,
+    poplathai: 0x0e1b as const,
+    postalmark: 0x3012 as const,
+    postalmarkface: 0x3020 as const,
+    pparen: 0x24ab as const,
+    precedes: 0x227a as const,
+    prescription: 0x211e as const,
+    primemod: 0x02b9 as const,
+    primereversed: 0x2035 as const,
+    product: 0x220f as const,
+    projective: 0x2305 as const,
+    prolongedkana: 0x30fc as const,
+    propellor: 0x2318 as const,
+    propersubset: 0x2282 as const,
+    propersuperset: 0x2283 as const,
+    proportion: 0x2237 as const,
+    proportional: 0x221d as const,
+    psi: 0x03c8 as const,
+    psicyrillic: 0x0471 as const,
+    psilipneumatacyrilliccmb: 0x0486 as const,
+    pssquare: 0x33b0 as const,
+    puhiragana: 0x3077 as const,
+    pukatakana: 0x30d7 as const,
+    pvsquare: 0x33b4 as const,
+    pwsquare: 0x33ba as const,
+    q: 0x0071 as const,
+    qadeva: 0x0958 as const,
+    qadmahebrew: 0x05a8 as const,
+    qafarabic: 0x0642 as const,
+    qaffinalarabic: 0xfed6 as const,
+    qafinitialarabic: 0xfed7 as const,
+    qafmedialarabic: 0xfed8 as const,
+    qamats: 0x05b8 as const,
+    qamats10: 0x05b8 as const,
+    qamats1a: 0x05b8 as const,
+    qamats1c: 0x05b8 as const,
+    qamats27: 0x05b8 as const,
+    qamats29: 0x05b8 as const,
+    qamats33: 0x05b8 as const,
+    qamatsde: 0x05b8 as const,
+    qamatshebrew: 0x05b8 as const,
+    qamatsnarrowhebrew: 0x05b8 as const,
+    qamatsqatanhebrew: 0x05b8 as const,
+    qamatsqatannarrowhebrew: 0x05b8 as const,
+    qamatsqatanquarterhebrew: 0x05b8 as const,
+    qamatsqatanwidehebrew: 0x05b8 as const,
+    qamatsquarterhebrew: 0x05b8 as const,
+    qamatswidehebrew: 0x05b8 as const,
+    qarneyparahebrew: 0x059f as const,
+    qbopomofo: 0x3111 as const,
+    qcircle: 0x24e0 as const,
+    qhook: 0x02a0 as const,
+    qmonospace: 0xff51 as const,
+    qof: 0x05e7 as const,
+    qofdagesh: 0xfb47 as const,
+    qofdageshhebrew: 0xfb47 as const,
+    qofhebrew: 0x05e7 as const,
+    qparen: 0x24ac as const,
+    quarternote: 0x2669 as const,
+    qubuts: 0x05bb as const,
+    qubuts18: 0x05bb as const,
+    qubuts25: 0x05bb as const,
+    qubuts31: 0x05bb as const,
+    qubutshebrew: 0x05bb as const,
+    qubutsnarrowhebrew: 0x05bb as const,
+    qubutsquarterhebrew: 0x05bb as const,
+    qubutswidehebrew: 0x05bb as const,
+    question: 0x003f as const,
+    questionarabic: 0x061f as const,
+    questionarmenian: 0x055e as const,
+    questiondown: 0x00bf as const,
+    questiondownsmall: 0xf7bf as const,
+    questiongreek: 0x037e as const,
+    questionmonospace: 0xff1f as const,
+    questionsmall: 0xf73f as const,
+    quotedbl: 0x0022 as const,
+    quotedblbase: 0x201e as const,
+    quotedblleft: 0x201c as const,
+    quotedblmonospace: 0xff02 as const,
+    quotedblprime: 0x301e as const,
+    quotedblprimereversed: 0x301d as const,
+    quotedblright: 0x201d as const,
+    quoteleft: 0x2018 as const,
+    quoteleftreversed: 0x201b as const,
+    quotereversed: 0x201b as const,
+    quoteright: 0x2019 as const,
+    quoterightn: 0x0149 as const,
+    quotesinglbase: 0x201a as const,
+    quotesingle: 0x0027 as const,
+    quotesinglemonospace: 0xff07 as const,
+    r: 0x0072 as const,
+    raarmenian: 0x057c as const,
+    rabengali: 0x09b0 as const,
+    racute: 0x0155 as const,
+    radeva: 0x0930 as const,
+    radical: 0x221a as const,
+    radicalex: 0xf8e5 as const,
+    radoverssquare: 0x33ae as const,
+    radoverssquaredsquare: 0x33af as const,
+    radsquare: 0x33ad as const,
+    rafe: 0x05bf as const,
+    rafehebrew: 0x05bf as const,
+    ragujarati: 0x0ab0 as const,
+    ragurmukhi: 0x0a30 as const,
+    rahiragana: 0x3089 as const,
+    rakatakana: 0x30e9 as const,
+    rakatakanahalfwidth: 0xff97 as const,
+    ralowerdiagonalbengali: 0x09f1 as const,
+    ramiddlediagonalbengali: 0x09f0 as const,
+    ramshorn: 0x0264 as const,
+    ratio: 0x2236 as const,
+    rbopomofo: 0x3116 as const,
+    rcaron: 0x0159 as const,
+    rcedilla: 0x0157 as const,
+    rcircle: 0x24e1 as const,
+    rcommaaccent: 0x0157 as const,
+    rdblgrave: 0x0211 as const,
+    rdotaccent: 0x1e59 as const,
+    rdotbelow: 0x1e5b as const,
+    rdotbelowmacron: 0x1e5d as const,
+    referencemark: 0x203b as const,
+    reflexsubset: 0x2286 as const,
+    reflexsuperset: 0x2287 as const,
+    registered: 0x00ae as const,
+    registersans: 0xf8e8 as const,
+    registerserif: 0xf6da as const,
+    reharabic: 0x0631 as const,
+    reharmenian: 0x0580 as const,
+    rehfinalarabic: 0xfeae as const,
+    rehiragana: 0x308c as const,
+    rekatakana: 0x30ec as const,
+    rekatakanahalfwidth: 0xff9a as const,
+    resh: 0x05e8 as const,
+    reshdageshhebrew: 0xfb48 as const,
+    reshhebrew: 0x05e8 as const,
+    reversedtilde: 0x223d as const,
+    reviahebrew: 0x0597 as const,
+    reviamugrashhebrew: 0x0597 as const,
+    revlogicalnot: 0x2310 as const,
+    rfishhook: 0x027e as const,
+    rfishhookreversed: 0x027f as const,
+    rhabengali: 0x09dd as const,
+    rhadeva: 0x095d as const,
+    rho: 0x03c1 as const,
+    rhook: 0x027d as const,
+    rhookturned: 0x027b as const,
+    rhookturnedsuperior: 0x02b5 as const,
+    rhosymbolgreek: 0x03f1 as const,
+    rhotichookmod: 0x02de as const,
+    rieulacirclekorean: 0x3271 as const,
+    rieulaparenkorean: 0x3211 as const,
+    rieulcirclekorean: 0x3263 as const,
+    rieulhieuhkorean: 0x3140 as const,
+    rieulkiyeokkorean: 0x313a as const,
+    rieulkiyeoksioskorean: 0x3169 as const,
+    rieulkorean: 0x3139 as const,
+    rieulmieumkorean: 0x313b as const,
+    rieulpansioskorean: 0x316c as const,
+    rieulparenkorean: 0x3203 as const,
+    rieulphieuphkorean: 0x313f as const,
+    rieulpieupkorean: 0x313c as const,
+    rieulpieupsioskorean: 0x316b as const,
+    rieulsioskorean: 0x313d as const,
+    rieulthieuthkorean: 0x313e as const,
+    rieultikeutkorean: 0x316a as const,
+    rieulyeorinhieuhkorean: 0x316d as const,
+    rightangle: 0x221f as const,
+    righttackbelowcmb: 0x0319 as const,
+    righttriangle: 0x22bf as const,
+    rihiragana: 0x308a as const,
+    rikatakana: 0x30ea as const,
+    rikatakanahalfwidth: 0xff98 as const,
+    ring: 0x02da as const,
+    ringbelowcmb: 0x0325 as const,
+    ringcmb: 0x030a as const,
+    ringhalfleft: 0x02bf as const,
+    ringhalfleftarmenian: 0x0559 as const,
+    ringhalfleftbelowcmb: 0x031c as const,
+    ringhalfleftcentered: 0x02d3 as const,
+    ringhalfright: 0x02be as const,
+    ringhalfrightbelowcmb: 0x0339 as const,
+    ringhalfrightcentered: 0x02d2 as const,
+    rinvertedbreve: 0x0213 as const,
+    rittorusquare: 0x3351 as const,
+    rlinebelow: 0x1e5f as const,
+    rlongleg: 0x027c as const,
+    rlonglegturned: 0x027a as const,
+    rmonospace: 0xff52 as const,
+    rohiragana: 0x308d as const,
+    rokatakana: 0x30ed as const,
+    rokatakanahalfwidth: 0xff9b as const,
+    roruathai: 0x0e23 as const,
+    rparen: 0x24ad as const,
+    rrabengali: 0x09dc as const,
+    rradeva: 0x0931 as const,
+    rragurmukhi: 0x0a5c as const,
+    rreharabic: 0x0691 as const,
+    rrehfinalarabic: 0xfb8d as const,
+    rrvocalicbengali: 0x09e0 as const,
+    rrvocalicdeva: 0x0960 as const,
+    rrvocalicgujarati: 0x0ae0 as const,
+    rrvocalicvowelsignbengali: 0x09c4 as const,
+    rrvocalicvowelsigndeva: 0x0944 as const,
+    rrvocalicvowelsigngujarati: 0x0ac4 as const,
+    rsuperior: 0xf6f1 as const,
+    rtblock: 0x2590 as const,
+    rturned: 0x0279 as const,
+    rturnedsuperior: 0x02b4 as const,
+    ruhiragana: 0x308b as const,
+    rukatakana: 0x30eb as const,
+    rukatakanahalfwidth: 0xff99 as const,
+    rupeemarkbengali: 0x09f2 as const,
+    rupeesignbengali: 0x09f3 as const,
+    rupiah: 0xf6dd as const,
+    ruthai: 0x0e24 as const,
+    rvocalicbengali: 0x098b as const,
+    rvocalicdeva: 0x090b as const,
+    rvocalicgujarati: 0x0a8b as const,
+    rvocalicvowelsignbengali: 0x09c3 as const,
+    rvocalicvowelsigndeva: 0x0943 as const,
+    rvocalicvowelsigngujarati: 0x0ac3 as const,
+    s: 0x0073 as const,
+    sabengali: 0x09b8 as const,
+    sacute: 0x015b as const,
+    sacutedotaccent: 0x1e65 as const,
+    sadarabic: 0x0635 as const,
+    sadeva: 0x0938 as const,
+    sadfinalarabic: 0xfeba as const,
+    sadinitialarabic: 0xfebb as const,
+    sadmedialarabic: 0xfebc as const,
+    sagujarati: 0x0ab8 as const,
+    sagurmukhi: 0x0a38 as const,
+    sahiragana: 0x3055 as const,
+    sakatakana: 0x30b5 as const,
+    sakatakanahalfwidth: 0xff7b as const,
+    sallallahoualayhewasallamarabic: 0xfdfa as const,
+    samekh: 0x05e1 as const,
+    samekhdagesh: 0xfb41 as const,
+    samekhdageshhebrew: 0xfb41 as const,
+    samekhhebrew: 0x05e1 as const,
+    saraaathai: 0x0e32 as const,
+    saraaethai: 0x0e41 as const,
+    saraaimaimalaithai: 0x0e44 as const,
+    saraaimaimuanthai: 0x0e43 as const,
+    saraamthai: 0x0e33 as const,
+    saraathai: 0x0e30 as const,
+    saraethai: 0x0e40 as const,
+    saraiileftthai: 0xf886 as const,
+    saraiithai: 0x0e35 as const,
+    saraileftthai: 0xf885 as const,
+    saraithai: 0x0e34 as const,
+    saraothai: 0x0e42 as const,
+    saraueeleftthai: 0xf888 as const,
+    saraueethai: 0x0e37 as const,
+    saraueleftthai: 0xf887 as const,
+    sarauethai: 0x0e36 as const,
+    sarauthai: 0x0e38 as const,
+    sarauuthai: 0x0e39 as const,
+    sbopomofo: 0x3119 as const,
+    scaron: 0x0161 as const,
+    scarondotaccent: 0x1e67 as const,
+    scedilla: 0x015f as const,
+    schwa: 0x0259 as const,
+    schwacyrillic: 0x04d9 as const,
+    schwadieresiscyrillic: 0x04db as const,
+    schwahook: 0x025a as const,
+    scircle: 0x24e2 as const,
+    scircumflex: 0x015d as const,
+    scommaaccent: 0x0219 as const,
+    sdotaccent: 0x1e61 as const,
+    sdotbelow: 0x1e63 as const,
+    sdotbelowdotaccent: 0x1e69 as const,
+    seagullbelowcmb: 0x033c as const,
+    second: 0x2033 as const,
+    secondtonechinese: 0x02ca as const,
+    section: 0x00a7 as const,
+    seenarabic: 0x0633 as const,
+    seenfinalarabic: 0xfeb2 as const,
+    seeninitialarabic: 0xfeb3 as const,
+    seenmedialarabic: 0xfeb4 as const,
+    segol: 0x05b6 as const,
+    segol13: 0x05b6 as const,
+    segol1f: 0x05b6 as const,
+    segol2c: 0x05b6 as const,
+    segolhebrew: 0x05b6 as const,
+    segolnarrowhebrew: 0x05b6 as const,
+    segolquarterhebrew: 0x05b6 as const,
+    segoltahebrew: 0x0592 as const,
+    segolwidehebrew: 0x05b6 as const,
+    seharmenian: 0x057d as const,
+    sehiragana: 0x305b as const,
+    sekatakana: 0x30bb as const,
+    sekatakanahalfwidth: 0xff7e as const,
+    semicolon: 0x003b as const,
+    semicolonarabic: 0x061b as const,
+    semicolonmonospace: 0xff1b as const,
+    semicolonsmall: 0xfe54 as const,
+    semivoicedmarkkana: 0x309c as const,
+    semivoicedmarkkanahalfwidth: 0xff9f as const,
+    sentisquare: 0x3322 as const,
+    sentosquare: 0x3323 as const,
+    seven: 0x0037 as const,
+    sevenarabic: 0x0667 as const,
+    sevenbengali: 0x09ed as const,
+    sevencircle: 0x2466 as const,
+    sevencircleinversesansserif: 0x2790 as const,
+    sevendeva: 0x096d as const,
+    seveneighths: 0x215e as const,
+    sevengujarati: 0x0aed as const,
+    sevengurmukhi: 0x0a6d as const,
+    sevenhackarabic: 0x0667 as const,
+    sevenhangzhou: 0x3027 as const,
+    sevenideographicparen: 0x3226 as const,
+    seveninferior: 0x2087 as const,
+    sevenmonospace: 0xff17 as const,
+    sevenoldstyle: 0xf737 as const,
+    sevenparen: 0x247a as const,
+    sevenperiod: 0x248e as const,
+    sevenpersian: 0x06f7 as const,
+    sevenroman: 0x2176 as const,
+    sevensuperior: 0x2077 as const,
+    seventeencircle: 0x2470 as const,
+    seventeenparen: 0x2484 as const,
+    seventeenperiod: 0x2498 as const,
+    seventhai: 0x0e57 as const,
+    sfthyphen: 0x00ad as const,
+    shaarmenian: 0x0577 as const,
+    shabengali: 0x09b6 as const,
+    shacyrillic: 0x0448 as const,
+    shaddaarabic: 0x0651 as const,
+    shaddadammaarabic: 0xfc61 as const,
+    shaddadammatanarabic: 0xfc5e as const,
+    shaddafathaarabic: 0xfc60 as const,
+    shaddakasraarabic: 0xfc62 as const,
+    shaddakasratanarabic: 0xfc5f as const,
+    shade: 0x2592 as const,
+    shadedark: 0x2593 as const,
+    shadelight: 0x2591 as const,
+    shademedium: 0x2592 as const,
+    shadeva: 0x0936 as const,
+    shagujarati: 0x0ab6 as const,
+    shagurmukhi: 0x0a36 as const,
+    shalshelethebrew: 0x0593 as const,
+    shbopomofo: 0x3115 as const,
+    shchacyrillic: 0x0449 as const,
+    sheenarabic: 0x0634 as const,
+    sheenfinalarabic: 0xfeb6 as const,
+    sheeninitialarabic: 0xfeb7 as const,
+    sheenmedialarabic: 0xfeb8 as const,
+    sheicoptic: 0x03e3 as const,
+    sheqel: 0x20aa as const,
+    sheqelhebrew: 0x20aa as const,
+    sheva: 0x05b0 as const,
+    sheva115: 0x05b0 as const,
+    sheva15: 0x05b0 as const,
+    sheva22: 0x05b0 as const,
+    sheva2e: 0x05b0 as const,
+    shevahebrew: 0x05b0 as const,
+    shevanarrowhebrew: 0x05b0 as const,
+    shevaquarterhebrew: 0x05b0 as const,
+    shevawidehebrew: 0x05b0 as const,
+    shhacyrillic: 0x04bb as const,
+    shimacoptic: 0x03ed as const,
+    shin: 0x05e9 as const,
+    shindagesh: 0xfb49 as const,
+    shindageshhebrew: 0xfb49 as const,
+    shindageshshindot: 0xfb2c as const,
+    shindageshshindothebrew: 0xfb2c as const,
+    shindageshsindot: 0xfb2d as const,
+    shindageshsindothebrew: 0xfb2d as const,
+    shindothebrew: 0x05c1 as const,
+    shinhebrew: 0x05e9 as const,
+    shinshindot: 0xfb2a as const,
+    shinshindothebrew: 0xfb2a as const,
+    shinsindot: 0xfb2b as const,
+    shinsindothebrew: 0xfb2b as const,
+    shook: 0x0282 as const,
+    sigma: 0x03c3 as const,
+    sigma1: 0x03c2 as const,
+    sigmafinal: 0x03c2 as const,
+    sigmalunatesymbolgreek: 0x03f2 as const,
+    sihiragana: 0x3057 as const,
+    sikatakana: 0x30b7 as const,
+    sikatakanahalfwidth: 0xff7c as const,
+    siluqhebrew: 0x05bd as const,
+    siluqlefthebrew: 0x05bd as const,
+    similar: 0x223c as const,
+    sindothebrew: 0x05c2 as const,
+    siosacirclekorean: 0x3274 as const,
+    siosaparenkorean: 0x3214 as const,
+    sioscieuckorean: 0x317e as const,
+    sioscirclekorean: 0x3266 as const,
+    sioskiyeokkorean: 0x317a as const,
+    sioskorean: 0x3145 as const,
+    siosnieunkorean: 0x317b as const,
+    siosparenkorean: 0x3206 as const,
+    siospieupkorean: 0x317d as const,
+    siostikeutkorean: 0x317c as const,
+    six: 0x0036 as const,
+    sixarabic: 0x0666 as const,
+    sixbengali: 0x09ec as const,
+    sixcircle: 0x2465 as const,
+    sixcircleinversesansserif: 0x278f as const,
+    sixdeva: 0x096c as const,
+    sixgujarati: 0x0aec as const,
+    sixgurmukhi: 0x0a6c as const,
+    sixhackarabic: 0x0666 as const,
+    sixhangzhou: 0x3026 as const,
+    sixideographicparen: 0x3225 as const,
+    sixinferior: 0x2086 as const,
+    sixmonospace: 0xff16 as const,
+    sixoldstyle: 0xf736 as const,
+    sixparen: 0x2479 as const,
+    sixperiod: 0x248d as const,
+    sixpersian: 0x06f6 as const,
+    sixroman: 0x2175 as const,
+    sixsuperior: 0x2076 as const,
+    sixteencircle: 0x246f as const,
+    sixteencurrencydenominatorbengali: 0x09f9 as const,
+    sixteenparen: 0x2483 as const,
+    sixteenperiod: 0x2497 as const,
+    sixthai: 0x0e56 as const,
+    slash: 0x002f as const,
+    slashmonospace: 0xff0f as const,
+    slong: 0x017f as const,
+    slongdotaccent: 0x1e9b as const,
+    smileface: 0x263a as const,
+    smonospace: 0xff53 as const,
+    sofpasuqhebrew: 0x05c3 as const,
+    softhyphen: 0x00ad as const,
+    softsigncyrillic: 0x044c as const,
+    sohiragana: 0x305d as const,
+    sokatakana: 0x30bd as const,
+    sokatakanahalfwidth: 0xff7f as const,
+    soliduslongoverlaycmb: 0x0338 as const,
+    solidusshortoverlaycmb: 0x0337 as const,
+    sorusithai: 0x0e29 as const,
+    sosalathai: 0x0e28 as const,
+    sosothai: 0x0e0b as const,
+    sosuathai: 0x0e2a as const,
+    space: 0x0020 as const,
+    spacehackarabic: 0x0020 as const,
+    spade: 0x2660 as const,
+    spadesuitblack: 0x2660 as const,
+    spadesuitwhite: 0x2664 as const,
+    sparen: 0x24ae as const,
+    squarebelowcmb: 0x033b as const,
+    squarecc: 0x33c4 as const,
+    squarecm: 0x339d as const,
+    squarediagonalcrosshatchfill: 0x25a9 as const,
+    squarehorizontalfill: 0x25a4 as const,
+    squarekg: 0x338f as const,
+    squarekm: 0x339e as const,
+    squarekmcapital: 0x33ce as const,
+    squareln: 0x33d1 as const,
+    squarelog: 0x33d2 as const,
+    squaremg: 0x338e as const,
+    squaremil: 0x33d5 as const,
+    squaremm: 0x339c as const,
+    squaremsquared: 0x33a1 as const,
+    squareorthogonalcrosshatchfill: 0x25a6 as const,
+    squareupperlefttolowerrightfill: 0x25a7 as const,
+    squareupperrighttolowerleftfill: 0x25a8 as const,
+    squareverticalfill: 0x25a5 as const,
+    squarewhitewithsmallblack: 0x25a3 as const,
+    srsquare: 0x33db as const,
+    ssabengali: 0x09b7 as const,
+    ssadeva: 0x0937 as const,
+    ssagujarati: 0x0ab7 as const,
+    ssangcieuckorean: 0x3149 as const,
+    ssanghieuhkorean: 0x3185 as const,
+    ssangieungkorean: 0x3180 as const,
+    ssangkiyeokkorean: 0x3132 as const,
+    ssangnieunkorean: 0x3165 as const,
+    ssangpieupkorean: 0x3143 as const,
+    ssangsioskorean: 0x3146 as const,
+    ssangtikeutkorean: 0x3138 as const,
+    ssuperior: 0xf6f2 as const,
+    sterling: 0x00a3 as const,
+    sterlingmonospace: 0xffe1 as const,
+    strokelongoverlaycmb: 0x0336 as const,
+    strokeshortoverlaycmb: 0x0335 as const,
+    subset: 0x2282 as const,
+    subsetnotequal: 0x228a as const,
+    subsetorequal: 0x2286 as const,
+    succeeds: 0x227b as const,
+    suchthat: 0x220b as const,
+    suhiragana: 0x3059 as const,
+    sukatakana: 0x30b9 as const,
+    sukatakanahalfwidth: 0xff7d as const,
+    sukunarabic: 0x0652 as const,
+    summation: 0x2211 as const,
+    sun: 0x263c as const,
+    superset: 0x2283 as const,
+    supersetnotequal: 0x228b as const,
+    supersetorequal: 0x2287 as const,
+    svsquare: 0x33dc as const,
+    syouwaerasquare: 0x337c as const,
+    t: 0x0074 as const,
+    tabengali: 0x09a4 as const,
+    tackdown: 0x22a4 as const,
+    tackleft: 0x22a3 as const,
+    tadeva: 0x0924 as const,
+    tagujarati: 0x0aa4 as const,
+    tagurmukhi: 0x0a24 as const,
+    taharabic: 0x0637 as const,
+    tahfinalarabic: 0xfec2 as const,
+    tahinitialarabic: 0xfec3 as const,
+    tahiragana: 0x305f as const,
+    tahmedialarabic: 0xfec4 as const,
+    taisyouerasquare: 0x337d as const,
+    takatakana: 0x30bf as const,
+    takatakanahalfwidth: 0xff80 as const,
+    tatweelarabic: 0x0640 as const,
+    tau: 0x03c4 as const,
+    tav: 0x05ea as const,
+    tavdages: 0xfb4a as const,
+    tavdagesh: 0xfb4a as const,
+    tavdageshhebrew: 0xfb4a as const,
+    tavhebrew: 0x05ea as const,
+    tbar: 0x0167 as const,
+    tbopomofo: 0x310a as const,
+    tcaron: 0x0165 as const,
+    tccurl: 0x02a8 as const,
+    tcedilla: 0x0163 as const,
+    tcheharabic: 0x0686 as const,
+    tchehfinalarabic: 0xfb7b as const,
+    tchehinitialarabic: 0xfb7c as const,
+    tchehmedialarabic: 0xfb7d as const,
+    tcircle: 0x24e3 as const,
+    tcircumflexbelow: 0x1e71 as const,
+    tcommaaccent: 0x0163 as const,
+    tdieresis: 0x1e97 as const,
+    tdotaccent: 0x1e6b as const,
+    tdotbelow: 0x1e6d as const,
+    tecyrillic: 0x0442 as const,
+    tedescendercyrillic: 0x04ad as const,
+    teharabic: 0x062a as const,
+    tehfinalarabic: 0xfe96 as const,
+    tehhahinitialarabic: 0xfca2 as const,
+    tehhahisolatedarabic: 0xfc0c as const,
+    tehinitialarabic: 0xfe97 as const,
+    tehiragana: 0x3066 as const,
+    tehjeeminitialarabic: 0xfca1 as const,
+    tehjeemisolatedarabic: 0xfc0b as const,
+    tehmarbutaarabic: 0x0629 as const,
+    tehmarbutafinalarabic: 0xfe94 as const,
+    tehmedialarabic: 0xfe98 as const,
+    tehmeeminitialarabic: 0xfca4 as const,
+    tehmeemisolatedarabic: 0xfc0e as const,
+    tehnoonfinalarabic: 0xfc73 as const,
+    tekatakana: 0x30c6 as const,
+    tekatakanahalfwidth: 0xff83 as const,
+    telephone: 0x2121 as const,
+    telephoneblack: 0x260e as const,
+    telishagedolahebrew: 0x05a0 as const,
+    telishaqetanahebrew: 0x05a9 as const,
+    tencircle: 0x2469 as const,
+    tenideographicparen: 0x3229 as const,
+    tenparen: 0x247d as const,
+    tenperiod: 0x2491 as const,
+    tenroman: 0x2179 as const,
+    tesh: 0x02a7 as const,
+    tet: 0x05d8 as const,
+    tetdagesh: 0xfb38 as const,
+    tetdageshhebrew: 0xfb38 as const,
+    tethebrew: 0x05d8 as const,
+    tetsecyrillic: 0x04b5 as const,
+    tevirhebrew: 0x059b as const,
+    tevirlefthebrew: 0x059b as const,
+    thabengali: 0x09a5 as const,
+    thadeva: 0x0925 as const,
+    thagujarati: 0x0aa5 as const,
+    thagurmukhi: 0x0a25 as const,
+    thalarabic: 0x0630 as const,
+    thalfinalarabic: 0xfeac as const,
+    thanthakhatlowleftthai: 0xf898 as const,
+    thanthakhatlowrightthai: 0xf897 as const,
+    thanthakhatthai: 0x0e4c as const,
+    thanthakhatupperleftthai: 0xf896 as const,
+    theharabic: 0x062b as const,
+    thehfinalarabic: 0xfe9a as const,
+    thehinitialarabic: 0xfe9b as const,
+    thehmedialarabic: 0xfe9c as const,
+    thereexists: 0x2203 as const,
+    therefore: 0x2234 as const,
+    theta: 0x03b8 as const,
+    theta1: 0x03d1 as const,
+    thetasymbolgreek: 0x03d1 as const,
+    thieuthacirclekorean: 0x3279 as const,
+    thieuthaparenkorean: 0x3219 as const,
+    thieuthcirclekorean: 0x326b as const,
+    thieuthkorean: 0x314c as const,
+    thieuthparenkorean: 0x320b as const,
+    thirteencircle: 0x246c as const,
+    thirteenparen: 0x2480 as const,
+    thirteenperiod: 0x2494 as const,
+    thonangmonthothai: 0x0e11 as const,
+    thook: 0x01ad as const,
+    thophuthaothai: 0x0e12 as const,
+    thorn: 0x00fe as const,
+    thothahanthai: 0x0e17 as const,
+    thothanthai: 0x0e10 as const,
+    thothongthai: 0x0e18 as const,
+    thothungthai: 0x0e16 as const,
+    thousandcyrillic: 0x0482 as const,
+    thousandsseparatorarabic: 0x066c as const,
+    thousandsseparatorpersian: 0x066c as const,
+    three: 0x0033 as const,
+    threearabic: 0x0663 as const,
+    threebengali: 0x09e9 as const,
+    threecircle: 0x2462 as const,
+    threecircleinversesansserif: 0x278c as const,
+    threedeva: 0x0969 as const,
+    threeeighths: 0x215c as const,
+    threegujarati: 0x0ae9 as const,
+    threegurmukhi: 0x0a69 as const,
+    threehackarabic: 0x0663 as const,
+    threehangzhou: 0x3023 as const,
+    threeideographicparen: 0x3222 as const,
+    threeinferior: 0x2083 as const,
+    threemonospace: 0xff13 as const,
+    threenumeratorbengali: 0x09f6 as const,
+    threeoldstyle: 0xf733 as const,
+    threeparen: 0x2476 as const,
+    threeperiod: 0x248a as const,
+    threepersian: 0x06f3 as const,
+    threequarters: 0x00be as const,
+    threequartersemdash: 0xf6de as const,
+    threeroman: 0x2172 as const,
+    threesuperior: 0x00b3 as const,
+    threethai: 0x0e53 as const,
+    thzsquare: 0x3394 as const,
+    tihiragana: 0x3061 as const,
+    tikatakana: 0x30c1 as const,
+    tikatakanahalfwidth: 0xff81 as const,
+    tikeutacirclekorean: 0x3270 as const,
+    tikeutaparenkorean: 0x3210 as const,
+    tikeutcirclekorean: 0x3262 as const,
+    tikeutkorean: 0x3137 as const,
+    tikeutparenkorean: 0x3202 as const,
+    tilde: 0x02dc as const,
+    tildebelowcmb: 0x0330 as const,
+    tildecmb: 0x0303 as const,
+    tildecomb: 0x0303 as const,
+    tildedoublecmb: 0x0360 as const,
+    tildeoperator: 0x223c as const,
+    tildeoverlaycmb: 0x0334 as const,
+    tildeverticalcmb: 0x033e as const,
+    timescircle: 0x2297 as const,
+    tipehahebrew: 0x0596 as const,
+    tipehalefthebrew: 0x0596 as const,
+    tippigurmukhi: 0x0a70 as const,
+    titlocyrilliccmb: 0x0483 as const,
+    tiwnarmenian: 0x057f as const,
+    tlinebelow: 0x1e6f as const,
+    tmonospace: 0xff54 as const,
+    toarmenian: 0x0569 as const,
+    tohiragana: 0x3068 as const,
+    tokatakana: 0x30c8 as const,
+    tokatakanahalfwidth: 0xff84 as const,
+    tonebarextrahighmod: 0x02e5 as const,
+    tonebarextralowmod: 0x02e9 as const,
+    tonebarhighmod: 0x02e6 as const,
+    tonebarlowmod: 0x02e8 as const,
+    tonebarmidmod: 0x02e7 as const,
+    tonefive: 0x01bd as const,
+    tonesix: 0x0185 as const,
+    tonetwo: 0x01a8 as const,
+    tonos: 0x0384 as const,
+    tonsquare: 0x3327 as const,
+    topatakthai: 0x0e0f as const,
+    tortoiseshellbracketleft: 0x3014 as const,
+    tortoiseshellbracketleftsmall: 0xfe5d as const,
+    tortoiseshellbracketleftvertical: 0xfe39 as const,
+    tortoiseshellbracketright: 0x3015 as const,
+    tortoiseshellbracketrightsmall: 0xfe5e as const,
+    tortoiseshellbracketrightvertical: 0xfe3a as const,
+    totaothai: 0x0e15 as const,
+    tpalatalhook: 0x01ab as const,
+    tparen: 0x24af as const,
+    trademark: 0x2122 as const,
+    trademarksans: 0xf8ea as const,
+    trademarkserif: 0xf6db as const,
+    tretroflexhook: 0x0288 as const,
+    triagdn: 0x25bc as const,
+    triaglf: 0x25c4 as const,
+    triagrt: 0x25ba as const,
+    triagup: 0x25b2 as const,
+    ts: 0x02a6 as const,
+    tsadi: 0x05e6 as const,
+    tsadidagesh: 0xfb46 as const,
+    tsadidageshhebrew: 0xfb46 as const,
+    tsadihebrew: 0x05e6 as const,
+    tsecyrillic: 0x0446 as const,
+    tsere: 0x05b5 as const,
+    tsere12: 0x05b5 as const,
+    tsere1e: 0x05b5 as const,
+    tsere2b: 0x05b5 as const,
+    tserehebrew: 0x05b5 as const,
+    tserenarrowhebrew: 0x05b5 as const,
+    tserequarterhebrew: 0x05b5 as const,
+    tserewidehebrew: 0x05b5 as const,
+    tshecyrillic: 0x045b as const,
+    tsuperior: 0xf6f3 as const,
+    ttabengali: 0x099f as const,
+    ttadeva: 0x091f as const,
+    ttagujarati: 0x0a9f as const,
+    ttagurmukhi: 0x0a1f as const,
+    tteharabic: 0x0679 as const,
+    ttehfinalarabic: 0xfb67 as const,
+    ttehinitialarabic: 0xfb68 as const,
+    ttehmedialarabic: 0xfb69 as const,
+    tthabengali: 0x09a0 as const,
+    tthadeva: 0x0920 as const,
+    tthagujarati: 0x0aa0 as const,
+    tthagurmukhi: 0x0a20 as const,
+    tturned: 0x0287 as const,
+    tuhiragana: 0x3064 as const,
+    tukatakana: 0x30c4 as const,
+    tukatakanahalfwidth: 0xff82 as const,
+    tusmallhiragana: 0x3063 as const,
+    tusmallkatakana: 0x30c3 as const,
+    tusmallkatakanahalfwidth: 0xff6f as const,
+    twelvecircle: 0x246b as const,
+    twelveparen: 0x247f as const,
+    twelveperiod: 0x2493 as const,
+    twelveroman: 0x217b as const,
+    twentycircle: 0x2473 as const,
+    twentyhangzhou: 0x5344 as const,
+    twentyparen: 0x2487 as const,
+    twentyperiod: 0x249b as const,
+    two: 0x0032 as const,
+    twoarabic: 0x0662 as const,
+    twobengali: 0x09e8 as const,
+    twocircle: 0x2461 as const,
+    twocircleinversesansserif: 0x278b as const,
+    twodeva: 0x0968 as const,
+    twodotenleader: 0x2025 as const,
+    twodotleader: 0x2025 as const,
+    twodotleadervertical: 0xfe30 as const,
+    twogujarati: 0x0ae8 as const,
+    twogurmukhi: 0x0a68 as const,
+    twohackarabic: 0x0662 as const,
+    twohangzhou: 0x3022 as const,
+    twoideographicparen: 0x3221 as const,
+    twoinferior: 0x2082 as const,
+    twomonospace: 0xff12 as const,
+    twonumeratorbengali: 0x09f5 as const,
+    twooldstyle: 0xf732 as const,
+    twoparen: 0x2475 as const,
+    twoperiod: 0x2489 as const,
+    twopersian: 0x06f2 as const,
+    tworoman: 0x2171 as const,
+    twostroke: 0x01bb as const,
+    twosuperior: 0x00b2 as const,
+    twothai: 0x0e52 as const,
+    twothirds: 0x2154 as const,
+    u: 0x0075 as const,
+    uacute: 0x00fa as const,
+    ubar: 0x0289 as const,
+    ubengali: 0x0989 as const,
+    ubopomofo: 0x3128 as const,
+    ubreve: 0x016d as const,
+    ucaron: 0x01d4 as const,
+    ucircle: 0x24e4 as const,
+    ucircumflex: 0x00fb as const,
+    ucircumflexbelow: 0x1e77 as const,
+    ucyrillic: 0x0443 as const,
+    udattadeva: 0x0951 as const,
+    udblacute: 0x0171 as const,
+    udblgrave: 0x0215 as const,
+    udeva: 0x0909 as const,
+    udieresis: 0x00fc as const,
+    udieresisacute: 0x01d8 as const,
+    udieresisbelow: 0x1e73 as const,
+    udieresiscaron: 0x01da as const,
+    udieresiscyrillic: 0x04f1 as const,
+    udieresisgrave: 0x01dc as const,
+    udieresismacron: 0x01d6 as const,
+    udotbelow: 0x1ee5 as const,
+    ugrave: 0x00f9 as const,
+    ugujarati: 0x0a89 as const,
+    ugurmukhi: 0x0a09 as const,
+    uhiragana: 0x3046 as const,
+    uhookabove: 0x1ee7 as const,
+    uhorn: 0x01b0 as const,
+    uhornacute: 0x1ee9 as const,
+    uhorndotbelow: 0x1ef1 as const,
+    uhorngrave: 0x1eeb as const,
+    uhornhookabove: 0x1eed as const,
+    uhorntilde: 0x1eef as const,
+    uhungarumlaut: 0x0171 as const,
+    uhungarumlautcyrillic: 0x04f3 as const,
+    uinvertedbreve: 0x0217 as const,
+    ukatakana: 0x30a6 as const,
+    ukatakanahalfwidth: 0xff73 as const,
+    ukcyrillic: 0x0479 as const,
+    ukorean: 0x315c as const,
+    umacron: 0x016b as const,
+    umacroncyrillic: 0x04ef as const,
+    umacrondieresis: 0x1e7b as const,
+    umatragurmukhi: 0x0a41 as const,
+    umonospace: 0xff55 as const,
+    underscore: 0x005f as const,
+    underscoredbl: 0x2017 as const,
+    underscoremonospace: 0xff3f as const,
+    underscorevertical: 0xfe33 as const,
+    underscorewavy: 0xfe4f as const,
+    union: 0x222a as const,
+    universal: 0x2200 as const,
+    uogonek: 0x0173 as const,
+    uparen: 0x24b0 as const,
+    upblock: 0x2580 as const,
+    upperdothebrew: 0x05c4 as const,
+    upsilon: 0x03c5 as const,
+    upsilondieresis: 0x03cb as const,
+    upsilondieresistonos: 0x03b0 as const,
+    upsilonlatin: 0x028a as const,
+    upsilontonos: 0x03cd as const,
+    uptackbelowcmb: 0x031d as const,
+    uptackmod: 0x02d4 as const,
+    uragurmukhi: 0x0a73 as const,
+    uring: 0x016f as const,
+    ushortcyrillic: 0x045e as const,
+    usmallhiragana: 0x3045 as const,
+    usmallkatakana: 0x30a5 as const,
+    usmallkatakanahalfwidth: 0xff69 as const,
+    ustraightcyrillic: 0x04af as const,
+    ustraightstrokecyrillic: 0x04b1 as const,
+    utilde: 0x0169 as const,
+    utildeacute: 0x1e79 as const,
+    utildebelow: 0x1e75 as const,
+    uubengali: 0x098a as const,
+    uudeva: 0x090a as const,
+    uugujarati: 0x0a8a as const,
+    uugurmukhi: 0x0a0a as const,
+    uumatragurmukhi: 0x0a42 as const,
+    uuvowelsignbengali: 0x09c2 as const,
+    uuvowelsigndeva: 0x0942 as const,
+    uuvowelsigngujarati: 0x0ac2 as const,
+    uvowelsignbengali: 0x09c1 as const,
+    uvowelsigndeva: 0x0941 as const,
+    uvowelsigngujarati: 0x0ac1 as const,
+    v: 0x0076 as const,
+    vadeva: 0x0935 as const,
+    vagujarati: 0x0ab5 as const,
+    vagurmukhi: 0x0a35 as const,
+    vakatakana: 0x30f7 as const,
+    vav: 0x05d5 as const,
+    vavdagesh: 0xfb35 as const,
+    vavdagesh65: 0xfb35 as const,
+    vavdageshhebrew: 0xfb35 as const,
+    vavhebrew: 0x05d5 as const,
+    vavholam: 0xfb4b as const,
+    vavholamhebrew: 0xfb4b as const,
+    vavvavhebrew: 0x05f0 as const,
+    vavyodhebrew: 0x05f1 as const,
+    vcircle: 0x24e5 as const,
+    vdotbelow: 0x1e7f as const,
+    vecyrillic: 0x0432 as const,
+    veharabic: 0x06a4 as const,
+    vehfinalarabic: 0xfb6b as const,
+    vehinitialarabic: 0xfb6c as const,
+    vehmedialarabic: 0xfb6d as const,
+    vekatakana: 0x30f9 as const,
+    venus: 0x2640 as const,
+    verticalbar: 0x007c as const,
+    verticallineabovecmb: 0x030d as const,
+    verticallinebelowcmb: 0x0329 as const,
+    verticallinelowmod: 0x02cc as const,
+    verticallinemod: 0x02c8 as const,
+    vewarmenian: 0x057e as const,
+    vhook: 0x028b as const,
+    vikatakana: 0x30f8 as const,
+    viramabengali: 0x09cd as const,
+    viramadeva: 0x094d as const,
+    viramagujarati: 0x0acd as const,
+    visargabengali: 0x0983 as const,
+    visargadeva: 0x0903 as const,
+    visargagujarati: 0x0a83 as const,
+    vmonospace: 0xff56 as const,
+    voarmenian: 0x0578 as const,
+    voicediterationhiragana: 0x309e as const,
+    voicediterationkatakana: 0x30fe as const,
+    voicedmarkkana: 0x309b as const,
+    voicedmarkkanahalfwidth: 0xff9e as const,
+    vokatakana: 0x30fa as const,
+    vparen: 0x24b1 as const,
+    vtilde: 0x1e7d as const,
+    vturned: 0x028c as const,
+    vuhiragana: 0x3094 as const,
+    vukatakana: 0x30f4 as const,
+    w: 0x0077 as const,
+    wacute: 0x1e83 as const,
+    waekorean: 0x3159 as const,
+    wahiragana: 0x308f as const,
+    wakatakana: 0x30ef as const,
+    wakatakanahalfwidth: 0xff9c as const,
+    wakorean: 0x3158 as const,
+    wasmallhiragana: 0x308e as const,
+    wasmallkatakana: 0x30ee as const,
+    wattosquare: 0x3357 as const,
+    wavedash: 0x301c as const,
+    wavyunderscorevertical: 0xfe34 as const,
+    wawarabic: 0x0648 as const,
+    wawfinalarabic: 0xfeee as const,
+    wawhamzaabovearabic: 0x0624 as const,
+    wawhamzaabovefinalarabic: 0xfe86 as const,
+    wbsquare: 0x33dd as const,
+    wcircle: 0x24e6 as const,
+    wcircumflex: 0x0175 as const,
+    wdieresis: 0x1e85 as const,
+    wdotaccent: 0x1e87 as const,
+    wdotbelow: 0x1e89 as const,
+    wehiragana: 0x3091 as const,
+    weierstrass: 0x2118 as const,
+    wekatakana: 0x30f1 as const,
+    wekorean: 0x315e as const,
+    weokorean: 0x315d as const,
+    wgrave: 0x1e81 as const,
+    whitebullet: 0x25e6 as const,
+    whitecircle: 0x25cb as const,
+    whitecircleinverse: 0x25d9 as const,
+    whitecornerbracketleft: 0x300e as const,
+    whitecornerbracketleftvertical: 0xfe43 as const,
+    whitecornerbracketright: 0x300f as const,
+    whitecornerbracketrightvertical: 0xfe44 as const,
+    whitediamond: 0x25c7 as const,
+    whitediamondcontainingblacksmalldiamond: 0x25c8 as const,
+    whitedownpointingsmalltriangle: 0x25bf as const,
+    whitedownpointingtriangle: 0x25bd as const,
+    whiteleftpointingsmalltriangle: 0x25c3 as const,
+    whiteleftpointingtriangle: 0x25c1 as const,
+    whitelenticularbracketleft: 0x3016 as const,
+    whitelenticularbracketright: 0x3017 as const,
+    whiterightpointingsmalltriangle: 0x25b9 as const,
+    whiterightpointingtriangle: 0x25b7 as const,
+    whitesmallsquare: 0x25ab as const,
+    whitesmilingface: 0x263a as const,
+    whitesquare: 0x25a1 as const,
+    whitestar: 0x2606 as const,
+    whitetelephone: 0x260f as const,
+    whitetortoiseshellbracketleft: 0x3018 as const,
+    whitetortoiseshellbracketright: 0x3019 as const,
+    whiteuppointingsmalltriangle: 0x25b5 as const,
+    whiteuppointingtriangle: 0x25b3 as const,
+    wihiragana: 0x3090 as const,
+    wikatakana: 0x30f0 as const,
+    wikorean: 0x315f as const,
+    wmonospace: 0xff57 as const,
+    wohiragana: 0x3092 as const,
+    wokatakana: 0x30f2 as const,
+    wokatakanahalfwidth: 0xff66 as const,
+    won: 0x20a9 as const,
+    wonmonospace: 0xffe6 as const,
+    wowaenthai: 0x0e27 as const,
+    wparen: 0x24b2 as const,
+    wring: 0x1e98 as const,
+    wsuperior: 0x02b7 as const,
+    wturned: 0x028d as const,
+    wynn: 0x01bf as const,
+    x: 0x0078 as const,
+    xabovecmb: 0x033d as const,
+    xbopomofo: 0x3112 as const,
+    xcircle: 0x24e7 as const,
+    xdieresis: 0x1e8d as const,
+    xdotaccent: 0x1e8b as const,
+    xeharmenian: 0x056d as const,
+    xi: 0x03be as const,
+    xmonospace: 0xff58 as const,
+    xparen: 0x24b3 as const,
+    xsuperior: 0x02e3 as const,
+    y: 0x0079 as const,
+    yaadosquare: 0x334e as const,
+    yabengali: 0x09af as const,
+    yacute: 0x00fd as const,
+    yadeva: 0x092f as const,
+    yaekorean: 0x3152 as const,
+    yagujarati: 0x0aaf as const,
+    yagurmukhi: 0x0a2f as const,
+    yahiragana: 0x3084 as const,
+    yakatakana: 0x30e4 as const,
+    yakatakanahalfwidth: 0xff94 as const,
+    yakorean: 0x3151 as const,
+    yamakkanthai: 0x0e4e as const,
+    yasmallhiragana: 0x3083 as const,
+    yasmallkatakana: 0x30e3 as const,
+    yasmallkatakanahalfwidth: 0xff6c as const,
+    yatcyrillic: 0x0463 as const,
+    ycircle: 0x24e8 as const,
+    ycircumflex: 0x0177 as const,
+    ydieresis: 0x00ff as const,
+    ydotaccent: 0x1e8f as const,
+    ydotbelow: 0x1ef5 as const,
+    yeharabic: 0x064a as const,
+    yehbarreearabic: 0x06d2 as const,
+    yehbarreefinalarabic: 0xfbaf as const,
+    yehfinalarabic: 0xfef2 as const,
+    yehhamzaabovearabic: 0x0626 as const,
+    yehhamzaabovefinalarabic: 0xfe8a as const,
+    yehhamzaaboveinitialarabic: 0xfe8b as const,
+    yehhamzaabovemedialarabic: 0xfe8c as const,
+    yehinitialarabic: 0xfef3 as const,
+    yehmedialarabic: 0xfef4 as const,
+    yehmeeminitialarabic: 0xfcdd as const,
+    yehmeemisolatedarabic: 0xfc58 as const,
+    yehnoonfinalarabic: 0xfc94 as const,
+    yehthreedotsbelowarabic: 0x06d1 as const,
+    yekorean: 0x3156 as const,
+    yen: 0x00a5 as const,
+    yenmonospace: 0xffe5 as const,
+    yeokorean: 0x3155 as const,
+    yeorinhieuhkorean: 0x3186 as const,
+    yerahbenyomohebrew: 0x05aa as const,
+    yerahbenyomolefthebrew: 0x05aa as const,
+    yericyrillic: 0x044b as const,
+    yerudieresiscyrillic: 0x04f9 as const,
+    yesieungkorean: 0x3181 as const,
+    yesieungpansioskorean: 0x3183 as const,
+    yesieungsioskorean: 0x3182 as const,
+    yetivhebrew: 0x059a as const,
+    ygrave: 0x1ef3 as const,
+    yhook: 0x01b4 as const,
+    yhookabove: 0x1ef7 as const,
+    yiarmenian: 0x0575 as const,
+    yicyrillic: 0x0457 as const,
+    yikorean: 0x3162 as const,
+    yinyang: 0x262f as const,
+    yiwnarmenian: 0x0582 as const,
+    ymonospace: 0xff59 as const,
+    yod: 0x05d9 as const,
+    yoddagesh: 0xfb39 as const,
+    yoddageshhebrew: 0xfb39 as const,
+    yodhebrew: 0x05d9 as const,
+    yodyodhebrew: 0x05f2 as const,
+    yodyodpatahhebrew: 0xfb1f as const,
+    yohiragana: 0x3088 as const,
+    yoikorean: 0x3189 as const,
+    yokatakana: 0x30e8 as const,
+    yokatakanahalfwidth: 0xff96 as const,
+    yokorean: 0x315b as const,
+    yosmallhiragana: 0x3087 as const,
+    yosmallkatakana: 0x30e7 as const,
+    yosmallkatakanahalfwidth: 0xff6e as const,
+    yotgreek: 0x03f3 as const,
+    yoyaekorean: 0x3188 as const,
+    yoyakorean: 0x3187 as const,
+    yoyakthai: 0x0e22 as const,
+    yoyingthai: 0x0e0d as const,
+    yparen: 0x24b4 as const,
+    ypogegrammeni: 0x037a as const,
+    ypogegrammenigreekcmb: 0x0345 as const,
+    yr: 0x01a6 as const,
+    yring: 0x1e99 as const,
+    ysuperior: 0x02b8 as const,
+    ytilde: 0x1ef9 as const,
+    yturned: 0x028e as const,
+    yuhiragana: 0x3086 as const,
+    yuikorean: 0x318c as const,
+    yukatakana: 0x30e6 as const,
+    yukatakanahalfwidth: 0xff95 as const,
+    yukorean: 0x3160 as const,
+    yusbigcyrillic: 0x046b as const,
+    yusbigiotifiedcyrillic: 0x046d as const,
+    yuslittlecyrillic: 0x0467 as const,
+    yuslittleiotifiedcyrillic: 0x0469 as const,
+    yusmallhiragana: 0x3085 as const,
+    yusmallkatakana: 0x30e5 as const,
+    yusmallkatakanahalfwidth: 0xff6d as const,
+    yuyekorean: 0x318b as const,
+    yuyeokorean: 0x318a as const,
+    yyabengali: 0x09df as const,
+    yyadeva: 0x095f as const,
+    z: 0x007a as const,
+    zaarmenian: 0x0566 as const,
+    zacute: 0x017a as const,
+    zadeva: 0x095b as const,
+    zagurmukhi: 0x0a5b as const,
+    zaharabic: 0x0638 as const,
+    zahfinalarabic: 0xfec6 as const,
+    zahinitialarabic: 0xfec7 as const,
+    zahiragana: 0x3056 as const,
+    zahmedialarabic: 0xfec8 as const,
+    zainarabic: 0x0632 as const,
+    zainfinalarabic: 0xfeb0 as const,
+    zakatakana: 0x30b6 as const,
+    zaqefgadolhebrew: 0x0595 as const,
+    zaqefqatanhebrew: 0x0594 as const,
+    zarqahebrew: 0x0598 as const,
+    zayin: 0x05d6 as const,
+    zayindagesh: 0xfb36 as const,
+    zayindageshhebrew: 0xfb36 as const,
+    zayinhebrew: 0x05d6 as const,
+    zbopomofo: 0x3117 as const,
+    zcaron: 0x017e as const,
+    zcircle: 0x24e9 as const,
+    zcircumflex: 0x1e91 as const,
+    zcurl: 0x0291 as const,
+    zdot: 0x017c as const,
+    zdotaccent: 0x017c as const,
+    zdotbelow: 0x1e93 as const,
+    zecyrillic: 0x0437 as const,
+    zedescendercyrillic: 0x0499 as const,
+    zedieresiscyrillic: 0x04df as const,
+    zehiragana: 0x305c as const,
+    zekatakana: 0x30bc as const,
+    zero: 0x0030 as const,
+    zeroarabic: 0x0660 as const,
+    zerobengali: 0x09e6 as const,
+    zerodeva: 0x0966 as const,
+    zerogujarati: 0x0ae6 as const,
+    zerogurmukhi: 0x0a66 as const,
+    zerohackarabic: 0x0660 as const,
+    zeroinferior: 0x2080 as const,
+    zeromonospace: 0xff10 as const,
+    zerooldstyle: 0xf730 as const,
+    zeropersian: 0x06f0 as const,
+    zerosuperior: 0x2070 as const,
+    zerothai: 0x0e50 as const,
+    zerowidthjoiner: 0xfeff as const,
+    zerowidthnonjoiner: 0x200c as const,
+    zerowidthspace: 0x200b as const,
+    zeta: 0x03b6 as const,
+    zhbopomofo: 0x3113 as const,
+    zhearmenian: 0x056a as const,
+    zhebrevecyrillic: 0x04c2 as const,
+    zhecyrillic: 0x0436 as const,
+    zhedescendercyrillic: 0x0497 as const,
+    zhedieresiscyrillic: 0x04dd as const,
+    zihiragana: 0x3058 as const,
+    zikatakana: 0x30b8 as const,
+    zinorhebrew: 0x05ae as const,
+    zlinebelow: 0x1e95 as const,
+    zmonospace: 0xff5a as const,
+    zohiragana: 0x305e as const,
+    zokatakana: 0x30be as const,
+    zparen: 0x24b5 as const,
+    zretroflexhook: 0x0290 as const,
+    zstroke: 0x01b6 as const,
+    zuhiragana: 0x305a as const,
+    zukatakana: 0x30ba as const,
+    ".notdef": 0x0000 as const,
 
-  // TeX-specific glyph names.
-  t.angbracketleftbig = 0x2329;
-  t.angbracketleftBig = 0x2329;
-  t.angbracketleftbigg = 0x2329;
-  t.angbracketleftBigg = 0x2329;
-  t.angbracketrightBig = 0x232a;
-  t.angbracketrightbig = 0x232a;
-  t.angbracketrightBigg = 0x232a;
-  t.angbracketrightbigg = 0x232a;
-  t.arrowhookleft = 0x21aa;
-  t.arrowhookright = 0x21a9;
-  t.arrowlefttophalf = 0x21bc;
-  t.arrowleftbothalf = 0x21bd;
-  t.arrownortheast = 0x2197;
-  t.arrownorthwest = 0x2196;
-  t.arrowrighttophalf = 0x21c0;
-  t.arrowrightbothalf = 0x21c1;
-  t.arrowsoutheast = 0x2198;
-  t.arrowsouthwest = 0x2199;
-  t.backslashbig = 0x2216;
-  t.backslashBig = 0x2216;
-  t.backslashBigg = 0x2216;
-  t.backslashbigg = 0x2216;
-  t.bardbl = 0x2016;
-  t.bracehtipdownleft = 0xfe37;
-  t.bracehtipdownright = 0xfe37;
-  t.bracehtipupleft = 0xfe38;
-  t.bracehtipupright = 0xfe38;
-  t.braceleftBig = 0x007b;
-  t.braceleftbig = 0x007b;
-  t.braceleftbigg = 0x007b;
-  t.braceleftBigg = 0x007b;
-  t.bracerightBig = 0x007d;
-  t.bracerightbig = 0x007d;
-  t.bracerightbigg = 0x007d;
-  t.bracerightBigg = 0x007d;
-  t.bracketleftbig = 0x005b;
-  t.bracketleftBig = 0x005b;
-  t.bracketleftbigg = 0x005b;
-  t.bracketleftBigg = 0x005b;
-  t.bracketrightBig = 0x005d;
-  t.bracketrightbig = 0x005d;
-  t.bracketrightbigg = 0x005d;
-  t.bracketrightBigg = 0x005d;
-  t.ceilingleftbig = 0x2308;
-  t.ceilingleftBig = 0x2308;
-  t.ceilingleftBigg = 0x2308;
-  t.ceilingleftbigg = 0x2308;
-  t.ceilingrightbig = 0x2309;
-  t.ceilingrightBig = 0x2309;
-  t.ceilingrightbigg = 0x2309;
-  t.ceilingrightBigg = 0x2309;
-  t.circledotdisplay = 0x2299;
-  t.circledottext = 0x2299;
-  t.circlemultiplydisplay = 0x2297;
-  t.circlemultiplytext = 0x2297;
-  t.circleplusdisplay = 0x2295;
-  t.circleplustext = 0x2295;
-  t.contintegraldisplay = 0x222e;
-  t.contintegraltext = 0x222e;
-  t.coproductdisplay = 0x2210;
-  t.coproducttext = 0x2210;
-  t.floorleftBig = 0x230a;
-  t.floorleftbig = 0x230a;
-  t.floorleftbigg = 0x230a;
-  t.floorleftBigg = 0x230a;
-  t.floorrightbig = 0x230b;
-  t.floorrightBig = 0x230b;
-  t.floorrightBigg = 0x230b;
-  t.floorrightbigg = 0x230b;
-  t.hatwide = 0x0302;
-  t.hatwider = 0x0302;
-  t.hatwidest = 0x0302;
-  t.intercal = 0x1d40;
-  t.integraldisplay = 0x222b;
-  t.integraltext = 0x222b;
-  t.intersectiondisplay = 0x22c2;
-  t.intersectiontext = 0x22c2;
-  t.logicalanddisplay = 0x2227;
-  t.logicalandtext = 0x2227;
-  t.logicalordisplay = 0x2228;
-  t.logicalortext = 0x2228;
-  t.parenleftBig = 0x0028;
-  t.parenleftbig = 0x0028;
-  t.parenleftBigg = 0x0028;
-  t.parenleftbigg = 0x0028;
-  t.parenrightBig = 0x0029;
-  t.parenrightbig = 0x0029;
-  t.parenrightBigg = 0x0029;
-  t.parenrightbigg = 0x0029;
-  t.prime = 0x2032;
-  t.productdisplay = 0x220f;
-  t.producttext = 0x220f;
-  t.radicalbig = 0x221a;
-  t.radicalBig = 0x221a;
-  t.radicalBigg = 0x221a;
-  t.radicalbigg = 0x221a;
-  t.radicalbt = 0x221a;
-  t.radicaltp = 0x221a;
-  t.radicalvertex = 0x221a;
-  t.slashbig = 0x002f;
-  t.slashBig = 0x002f;
-  t.slashBigg = 0x002f;
-  t.slashbigg = 0x002f;
-  t.summationdisplay = 0x2211;
-  t.summationtext = 0x2211;
-  t.tildewide = 0x02dc;
-  t.tildewider = 0x02dc;
-  t.tildewidest = 0x02dc;
-  t.uniondisplay = 0x22c3;
-  t.unionmultidisplay = 0x228e;
-  t.unionmultitext = 0x228e;
-  t.unionsqdisplay = 0x2294;
-  t.unionsqtext = 0x2294;
-  t.uniontext = 0x22c3;
-  t.vextenddouble = 0x2225;
-  t.vextendsingle = 0x2223;
+    // TeX-specific glyph names.
+    angbracketleftbig: 0x2329 as const,
+    angbracketleftBig: 0x2329 as const,
+    angbracketleftbigg: 0x2329 as const,
+    angbracketleftBigg: 0x2329 as const,
+    angbracketrightBig: 0x232a as const,
+    angbracketrightbig: 0x232a as const,
+    angbracketrightBigg: 0x232a as const,
+    angbracketrightbigg: 0x232a as const,
+    arrowhookleft: 0x21aa as const,
+    arrowhookright: 0x21a9 as const,
+    arrowlefttophalf: 0x21bc as const,
+    arrowleftbothalf: 0x21bd as const,
+    arrownortheast: 0x2197 as const,
+    arrownorthwest: 0x2196 as const,
+    arrowrighttophalf: 0x21c0 as const,
+    arrowrightbothalf: 0x21c1 as const,
+    arrowsoutheast: 0x2198 as const,
+    arrowsouthwest: 0x2199 as const,
+    backslashbig: 0x2216 as const,
+    backslashBig: 0x2216 as const,
+    backslashBigg: 0x2216 as const,
+    backslashbigg: 0x2216 as const,
+    bardbl: 0x2016 as const,
+    bracehtipdownleft: 0xfe37 as const,
+    bracehtipdownright: 0xfe37 as const,
+    bracehtipupleft: 0xfe38 as const,
+    bracehtipupright: 0xfe38 as const,
+    braceleftBig: 0x007b as const,
+    braceleftbig: 0x007b as const,
+    braceleftbigg: 0x007b as const,
+    braceleftBigg: 0x007b as const,
+    bracerightBig: 0x007d as const,
+    bracerightbig: 0x007d as const,
+    bracerightbigg: 0x007d as const,
+    bracerightBigg: 0x007d as const,
+    bracketleftbig: 0x005b as const,
+    bracketleftBig: 0x005b as const,
+    bracketleftbigg: 0x005b as const,
+    bracketleftBigg: 0x005b as const,
+    bracketrightBig: 0x005d as const,
+    bracketrightbig: 0x005d as const,
+    bracketrightbigg: 0x005d as const,
+    bracketrightBigg: 0x005d as const,
+    ceilingleftbig: 0x2308 as const,
+    ceilingleftBig: 0x2308 as const,
+    ceilingleftBigg: 0x2308 as const,
+    ceilingleftbigg: 0x2308 as const,
+    ceilingrightbig: 0x2309 as const,
+    ceilingrightBig: 0x2309 as const,
+    ceilingrightbigg: 0x2309 as const,
+    ceilingrightBigg: 0x2309 as const,
+    circledotdisplay: 0x2299 as const,
+    circledottext: 0x2299 as const,
+    circlemultiplydisplay: 0x2297 as const,
+    circlemultiplytext: 0x2297 as const,
+    circleplusdisplay: 0x2295 as const,
+    circleplustext: 0x2295 as const,
+    contintegraldisplay: 0x222e as const,
+    contintegraltext: 0x222e as const,
+    coproductdisplay: 0x2210 as const,
+    coproducttext: 0x2210 as const,
+    floorleftBig: 0x230a as const,
+    floorleftbig: 0x230a as const,
+    floorleftbigg: 0x230a as const,
+    floorleftBigg: 0x230a as const,
+    floorrightbig: 0x230b as const,
+    floorrightBig: 0x230b as const,
+    floorrightBigg: 0x230b as const,
+    floorrightbigg: 0x230b as const,
+    hatwide: 0x0302 as const,
+    hatwider: 0x0302 as const,
+    hatwidest: 0x0302 as const,
+    intercal: 0x1d40 as const,
+    integraldisplay: 0x222b as const,
+    integraltext: 0x222b as const,
+    intersectiondisplay: 0x22c2 as const,
+    intersectiontext: 0x22c2 as const,
+    logicalanddisplay: 0x2227 as const,
+    logicalandtext: 0x2227 as const,
+    logicalordisplay: 0x2228 as const,
+    logicalortext: 0x2228 as const,
+    parenleftBig: 0x0028 as const,
+    parenleftbig: 0x0028 as const,
+    parenleftBigg: 0x0028 as const,
+    parenleftbigg: 0x0028 as const,
+    parenrightBig: 0x0029 as const,
+    parenrightbig: 0x0029 as const,
+    parenrightBigg: 0x0029 as const,
+    parenrightbigg: 0x0029 as const,
+    prime: 0x2032 as const,
+    productdisplay: 0x220f as const,
+    producttext: 0x220f as const,
+    radicalbig: 0x221a as const,
+    radicalBig: 0x221a as const,
+    radicalBigg: 0x221a as const,
+    radicalbigg: 0x221a as const,
+    radicalbt: 0x221a as const,
+    radicaltp: 0x221a as const,
+    radicalvertex: 0x221a as const,
+    slashbig: 0x002f as const,
+    slashBig: 0x002f as const,
+    slashBigg: 0x002f as const,
+    slashbigg: 0x002f as const,
+    summationdisplay: 0x2211 as const,
+    summationtext: 0x2211 as const,
+    tildewide: 0x02dc as const,
+    tildewider: 0x02dc as const,
+    tildewidest: 0x02dc as const,
+    uniondisplay: 0x22c3 as const,
+    unionmultidisplay: 0x228e as const,
+    unionmultitext: 0x228e as const,
+    unionsqdisplay: 0x2294 as const,
+    unionsqtext: 0x2294 as const,
+    uniontext: 0x22c3 as const,
+    vextenddouble: 0x2225 as const,
+    vextendsingle: 0x2223 as const
+  }
 });
 
-const getDingbatsGlyphsUnicode = getLookupTableFactory(function (t) {
-  t.space = 0x0020;
-  t.a1 = 0x2701;
-  t.a2 = 0x2702;
-  t.a202 = 0x2703;
-  t.a3 = 0x2704;
-  t.a4 = 0x260e;
-  t.a5 = 0x2706;
-  t.a119 = 0x2707;
-  t.a118 = 0x2708;
-  t.a117 = 0x2709;
-  t.a11 = 0x261b;
-  t.a12 = 0x261e;
-  t.a13 = 0x270c;
-  t.a14 = 0x270d;
-  t.a15 = 0x270e;
-  t.a16 = 0x270f;
-  t.a105 = 0x2710;
-  t.a17 = 0x2711;
-  t.a18 = 0x2712;
-  t.a19 = 0x2713;
-  t.a20 = 0x2714;
-  t.a21 = 0x2715;
-  t.a22 = 0x2716;
-  t.a23 = 0x2717;
-  t.a24 = 0x2718;
-  t.a25 = 0x2719;
-  t.a26 = 0x271a;
-  t.a27 = 0x271b;
-  t.a28 = 0x271c;
-  t.a6 = 0x271d;
-  t.a7 = 0x271e;
-  t.a8 = 0x271f;
-  t.a9 = 0x2720;
-  t.a10 = 0x2721;
-  t.a29 = 0x2722;
-  t.a30 = 0x2723;
-  t.a31 = 0x2724;
-  t.a32 = 0x2725;
-  t.a33 = 0x2726;
-  t.a34 = 0x2727;
-  t.a35 = 0x2605;
-  t.a36 = 0x2729;
-  t.a37 = 0x272a;
-  t.a38 = 0x272b;
-  t.a39 = 0x272c;
-  t.a40 = 0x272d;
-  t.a41 = 0x272e;
-  t.a42 = 0x272f;
-  t.a43 = 0x2730;
-  t.a44 = 0x2731;
-  t.a45 = 0x2732;
-  t.a46 = 0x2733;
-  t.a47 = 0x2734;
-  t.a48 = 0x2735;
-  t.a49 = 0x2736;
-  t.a50 = 0x2737;
-  t.a51 = 0x2738;
-  t.a52 = 0x2739;
-  t.a53 = 0x273a;
-  t.a54 = 0x273b;
-  t.a55 = 0x273c;
-  t.a56 = 0x273d;
-  t.a57 = 0x273e;
-  t.a58 = 0x273f;
-  t.a59 = 0x2740;
-  t.a60 = 0x2741;
-  t.a61 = 0x2742;
-  t.a62 = 0x2743;
-  t.a63 = 0x2744;
-  t.a64 = 0x2745;
-  t.a65 = 0x2746;
-  t.a66 = 0x2747;
-  t.a67 = 0x2748;
-  t.a68 = 0x2749;
-  t.a69 = 0x274a;
-  t.a70 = 0x274b;
-  t.a71 = 0x25cf;
-  t.a72 = 0x274d;
-  t.a73 = 0x25a0;
-  t.a74 = 0x274f;
-  t.a203 = 0x2750;
-  t.a75 = 0x2751;
-  t.a204 = 0x2752;
-  t.a76 = 0x25b2;
-  t.a77 = 0x25bc;
-  t.a78 = 0x25c6;
-  t.a79 = 0x2756;
-  t.a81 = 0x25d7;
-  t.a82 = 0x2758;
-  t.a83 = 0x2759;
-  t.a84 = 0x275a;
-  t.a97 = 0x275b;
-  t.a98 = 0x275c;
-  t.a99 = 0x275d;
-  t.a100 = 0x275e;
-  t.a101 = 0x2761;
-  t.a102 = 0x2762;
-  t.a103 = 0x2763;
-  t.a104 = 0x2764;
-  t.a106 = 0x2765;
-  t.a107 = 0x2766;
-  t.a108 = 0x2767;
-  t.a112 = 0x2663;
-  t.a111 = 0x2666;
-  t.a110 = 0x2665;
-  t.a109 = 0x2660;
-  t.a120 = 0x2460;
-  t.a121 = 0x2461;
-  t.a122 = 0x2462;
-  t.a123 = 0x2463;
-  t.a124 = 0x2464;
-  t.a125 = 0x2465;
-  t.a126 = 0x2466;
-  t.a127 = 0x2467;
-  t.a128 = 0x2468;
-  t.a129 = 0x2469;
-  t.a130 = 0x2776;
-  t.a131 = 0x2777;
-  t.a132 = 0x2778;
-  t.a133 = 0x2779;
-  t.a134 = 0x277a;
-  t.a135 = 0x277b;
-  t.a136 = 0x277c;
-  t.a137 = 0x277d;
-  t.a138 = 0x277e;
-  t.a139 = 0x277f;
-  t.a140 = 0x2780;
-  t.a141 = 0x2781;
-  t.a142 = 0x2782;
-  t.a143 = 0x2783;
-  t.a144 = 0x2784;
-  t.a145 = 0x2785;
-  t.a146 = 0x2786;
-  t.a147 = 0x2787;
-  t.a148 = 0x2788;
-  t.a149 = 0x2789;
-  t.a150 = 0x278a;
-  t.a151 = 0x278b;
-  t.a152 = 0x278c;
-  t.a153 = 0x278d;
-  t.a154 = 0x278e;
-  t.a155 = 0x278f;
-  t.a156 = 0x2790;
-  t.a157 = 0x2791;
-  t.a158 = 0x2792;
-  t.a159 = 0x2793;
-  t.a160 = 0x2794;
-  t.a161 = 0x2192;
-  t.a163 = 0x2194;
-  t.a164 = 0x2195;
-  t.a196 = 0x2798;
-  t.a165 = 0x2799;
-  t.a192 = 0x279a;
-  t.a166 = 0x279b;
-  t.a167 = 0x279c;
-  t.a168 = 0x279d;
-  t.a169 = 0x279e;
-  t.a170 = 0x279f;
-  t.a171 = 0x27a0;
-  t.a172 = 0x27a1;
-  t.a173 = 0x27a2;
-  t.a162 = 0x27a3;
-  t.a174 = 0x27a4;
-  t.a175 = 0x27a5;
-  t.a176 = 0x27a6;
-  t.a177 = 0x27a7;
-  t.a178 = 0x27a8;
-  t.a179 = 0x27a9;
-  t.a193 = 0x27aa;
-  t.a180 = 0x27ab;
-  t.a199 = 0x27ac;
-  t.a181 = 0x27ad;
-  t.a200 = 0x27ae;
-  t.a182 = 0x27af;
-  t.a201 = 0x27b1;
-  t.a183 = 0x27b2;
-  t.a184 = 0x27b3;
-  t.a197 = 0x27b4;
-  t.a185 = 0x27b5;
-  t.a194 = 0x27b6;
-  t.a198 = 0x27b7;
-  t.a186 = 0x27b8;
-  t.a195 = 0x27b9;
-  t.a187 = 0x27ba;
-  t.a188 = 0x27bb;
-  t.a189 = 0x27bc;
-  t.a190 = 0x27bd;
-  t.a191 = 0x27be;
-  t.a89 = 0x2768; // 0xF8D7
-  t.a90 = 0x2769; // 0xF8D8
-  t.a93 = 0x276a; // 0xF8D9
-  t.a94 = 0x276b; // 0xF8DA
-  t.a91 = 0x276c; // 0xF8DB
-  t.a92 = 0x276d; // 0xF8DC
-  t.a205 = 0x276e; // 0xF8DD
-  t.a85 = 0x276f; // 0xF8DE
-  t.a206 = 0x2770; // 0xF8DF
-  t.a86 = 0x2771; // 0xF8E0
-  t.a87 = 0x2772; // 0xF8E1
-  t.a88 = 0x2773; // 0xF8E2
-  t.a95 = 0x2774; // 0xF8E3
-  t.a96 = 0x2775; // 0xF8E4
-  t[".notdef"] = 0x0000;
+const getDingbatsGlyphsUnicode = getLookupTableFactory(() => {
+  return {
+    space: 0x0020 as const,
+    a1: 0x2701 as const,
+    a2: 0x2702 as const,
+    a202: 0x2703 as const,
+    a3: 0x2704 as const,
+    a4: 0x260e as const,
+    a5: 0x2706 as const,
+    a119: 0x2707 as const,
+    a118: 0x2708 as const,
+    a117: 0x2709 as const,
+    a11: 0x261b as const,
+    a12: 0x261e as const,
+    a13: 0x270c as const,
+    a14: 0x270d as const,
+    a15: 0x270e as const,
+    a16: 0x270f as const,
+    a105: 0x2710 as const,
+    a17: 0x2711 as const,
+    a18: 0x2712 as const,
+    a19: 0x2713 as const,
+    a20: 0x2714 as const,
+    a21: 0x2715 as const,
+    a22: 0x2716 as const,
+    a23: 0x2717 as const,
+    a24: 0x2718 as const,
+    a25: 0x2719 as const,
+    a26: 0x271a as const,
+    a27: 0x271b as const,
+    a28: 0x271c as const,
+    a6: 0x271d as const,
+    a7: 0x271e as const,
+    a8: 0x271f as const,
+    a9: 0x2720 as const,
+    a10: 0x2721 as const,
+    a29: 0x2722 as const,
+    a30: 0x2723 as const,
+    a31: 0x2724 as const,
+    a32: 0x2725 as const,
+    a33: 0x2726 as const,
+    a34: 0x2727 as const,
+    a35: 0x2605 as const,
+    a36: 0x2729 as const,
+    a37: 0x272a as const,
+    a38: 0x272b as const,
+    a39: 0x272c as const,
+    a40: 0x272d as const,
+    a41: 0x272e as const,
+    a42: 0x272f as const,
+    a43: 0x2730 as const,
+    a44: 0x2731 as const,
+    a45: 0x2732 as const,
+    a46: 0x2733 as const,
+    a47: 0x2734 as const,
+    a48: 0x2735 as const,
+    a49: 0x2736 as const,
+    a50: 0x2737 as const,
+    a51: 0x2738 as const,
+    a52: 0x2739 as const,
+    a53: 0x273a as const,
+    a54: 0x273b as const,
+    a55: 0x273c as const,
+    a56: 0x273d as const,
+    a57: 0x273e as const,
+    a58: 0x273f as const,
+    a59: 0x2740 as const,
+    a60: 0x2741 as const,
+    a61: 0x2742 as const,
+    a62: 0x2743 as const,
+    a63: 0x2744 as const,
+    a64: 0x2745 as const,
+    a65: 0x2746 as const,
+    a66: 0x2747 as const,
+    a67: 0x2748 as const,
+    a68: 0x2749 as const,
+    a69: 0x274a as const,
+    a70: 0x274b as const,
+    a71: 0x25cf as const,
+    a72: 0x274d as const,
+    a73: 0x25a0 as const,
+    a74: 0x274f as const,
+    a203: 0x2750 as const,
+    a75: 0x2751 as const,
+    a204: 0x2752 as const,
+    a76: 0x25b2 as const,
+    a77: 0x25bc as const,
+    a78: 0x25c6 as const,
+    a79: 0x2756 as const,
+    a81: 0x25d7 as const,
+    a82: 0x2758 as const,
+    a83: 0x2759 as const,
+    a84: 0x275a as const,
+    a97: 0x275b as const,
+    a98: 0x275c as const,
+    a99: 0x275d as const,
+    a100: 0x275e as const,
+    a101: 0x2761 as const,
+    a102: 0x2762 as const,
+    a103: 0x2763 as const,
+    a104: 0x2764 as const,
+    a106: 0x2765 as const,
+    a107: 0x2766 as const,
+    a108: 0x2767 as const,
+    a112: 0x2663 as const,
+    a111: 0x2666 as const,
+    a110: 0x2665 as const,
+    a109: 0x2660 as const,
+    a120: 0x2460 as const,
+    a121: 0x2461 as const,
+    a122: 0x2462 as const,
+    a123: 0x2463 as const,
+    a124: 0x2464 as const,
+    a125: 0x2465 as const,
+    a126: 0x2466 as const,
+    a127: 0x2467 as const,
+    a128: 0x2468 as const,
+    a129: 0x2469 as const,
+    a130: 0x2776 as const,
+    a131: 0x2777 as const,
+    a132: 0x2778 as const,
+    a133: 0x2779 as const,
+    a134: 0x277a as const,
+    a135: 0x277b as const,
+    a136: 0x277c as const,
+    a137: 0x277d as const,
+    a138: 0x277e as const,
+    a139: 0x277f as const,
+    a140: 0x2780 as const,
+    a141: 0x2781 as const,
+    a142: 0x2782 as const,
+    a143: 0x2783 as const,
+    a144: 0x2784 as const,
+    a145: 0x2785 as const,
+    a146: 0x2786 as const,
+    a147: 0x2787 as const,
+    a148: 0x2788 as const,
+    a149: 0x2789 as const,
+    a150: 0x278a as const,
+    a151: 0x278b as const,
+    a152: 0x278c as const,
+    a153: 0x278d as const,
+    a154: 0x278e as const,
+    a155: 0x278f as const,
+    a156: 0x2790 as const,
+    a157: 0x2791 as const,
+    a158: 0x2792 as const,
+    a159: 0x2793 as const,
+    a160: 0x2794 as const,
+    a161: 0x2192 as const,
+    a163: 0x2194 as const,
+    a164: 0x2195 as const,
+    a196: 0x2798 as const,
+    a165: 0x2799 as const,
+    a192: 0x279a as const,
+    a166: 0x279b as const,
+    a167: 0x279c as const,
+    a168: 0x279d as const,
+    a169: 0x279e as const,
+    a170: 0x279f as const,
+    a171: 0x27a0 as const,
+    a172: 0x27a1 as const,
+    a173: 0x27a2 as const,
+    a162: 0x27a3 as const,
+    a174: 0x27a4 as const,
+    a175: 0x27a5 as const,
+    a176: 0x27a6 as const,
+    a177: 0x27a7 as const,
+    a178: 0x27a8 as const,
+    a179: 0x27a9 as const,
+    a193: 0x27aa as const,
+    a180: 0x27ab as const,
+    a199: 0x27ac as const,
+    a181: 0x27ad as const,
+    a200: 0x27ae as const,
+    a182: 0x27af as const,
+    a201: 0x27b1 as const,
+    a183: 0x27b2 as const,
+    a184: 0x27b3 as const,
+    a197: 0x27b4 as const,
+    a185: 0x27b5 as const,
+    a194: 0x27b6 as const,
+    a198: 0x27b7 as const,
+    a186: 0x27b8 as const,
+    a195: 0x27b9 as const,
+    a187: 0x27ba as const,
+    a188: 0x27bb as const,
+    a189: 0x27bc as const,
+    a190: 0x27bd as const,
+    a191: 0x27be as const,
+    a89: 0x2768 as const, // 0xF8D7
+    a90: 0x2769 as const, // 0xF8D8
+    a93: 0x276a as const, // 0xF8D9
+    a94: 0x276b as const, // 0xF8DA
+    a91: 0x276c as const, // 0xF8DB
+    a92: 0x276d as const, // 0xF8DC
+    a205: 0x276e as const, // 0xF8DD
+    a85: 0x276f as const, // 0xF8DE
+    a206: 0x2770 as const, // 0xF8DF
+    a86: 0x2771 as const, // 0xF8E0
+    a87: 0x2772 as const, // 0xF8E1
+    a88: 0x2773 as const, // 0xF8E2
+    a95: 0x2774 as const, // 0xF8E3
+    a96: 0x2775 as const, // 0xF8E4
+    ".notdef": 0x0000 as const,
+  }
 });
 
 export { getDingbatsGlyphsUnicode, getGlyphsUnicode };

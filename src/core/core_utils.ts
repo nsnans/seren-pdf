@@ -32,18 +32,14 @@ import { Uint8TypedArray } from "../common/typed_array";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
-type InitializerType = ((t: { [key: string]: any }) => void) | null;
-
-// 有待考量
-function getLookupTableFactory(initializer: InitializerType) {
-  let lookup: { [key: string]: any } | null = null;
-  return function () {
+function getLookupTableFactory<V>(initializer: (() => V) | null) {
+  return () => {
+    let v: V | null = null;
     if (initializer) {
-      lookup = Object.create(null);
-      initializer(lookup!);
+      v = initializer()!;
       initializer = null;
     }
-    return lookup;
+    return v!;
   };
 }
 

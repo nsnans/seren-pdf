@@ -172,42 +172,44 @@ function normalizeFontName(name: string) {
   return name.replaceAll(/[,_]/g, "-").replaceAll(/\s/g, "");
 }
 
-const getVerticalPresentationForm = getLookupTableFactory(t => {
+const getVerticalPresentationForm = getLookupTableFactory(() => {
   // This table has been found at
   // https://searchfox.org/mozilla-central/rev/cbdfa503a87597b20719aae5f6a1efccd6cb3b7b/gfx/thebes/gfxHarfBuzzShaper.cpp#251-294
-  t[0x2013] = 0xfe32; // EN DASH
-  t[0x2014] = 0xfe31; // EM DASH
-  t[0x2025] = 0xfe30; // TWO DOT LEADER
-  t[0x2026] = 0xfe19; // HORIZONTAL ELLIPSIS
-  t[0x3001] = 0xfe11; // IDEOGRAPHIC COMMA
-  t[0x3002] = 0xfe12; // IDEOGRAPHIC FULL STOP
-  t[0x3008] = 0xfe3f; // LEFT ANGLE BRACKET
-  t[0x3009] = 0xfe40; // RIGHT ANGLE BRACKET
-  t[0x300a] = 0xfe3d; // LEFT DOUBLE ANGLE BRACKET
-  t[0x300b] = 0xfe3e; // RIGHT DOUBLE ANGLE BRACKET
-  t[0x300c] = 0xfe41; // LEFT CORNER BRACKET
-  t[0x300d] = 0xfe42; // RIGHT CORNER BRACKET
-  t[0x300e] = 0xfe43; // LEFT WHITE CORNER BRACKET
-  t[0x300f] = 0xfe44; // RIGHT WHITE CORNER BRACKET
-  t[0x3010] = 0xfe3b; // LEFT BLACK LENTICULAR BRACKET
-  t[0x3011] = 0xfe3c; // RIGHT BLACK LENTICULAR BRACKET
-  t[0x3014] = 0xfe39; // LEFT TORTOISE SHELL BRACKET
-  t[0x3015] = 0xfe3a; // RIGHT TORTOISE SHELL BRACKET
-  t[0x3016] = 0xfe17; // LEFT WHITE LENTICULAR BRACKET
-  t[0x3017] = 0xfe18; // RIGHT WHITE LENTICULAR BRACKET
-  t[0xfe4f] = 0xfe34; // WAVY LOW LINE
-  t[0xff01] = 0xfe15; // FULLWIDTH EXCLAMATION MARK
-  t[0xff08] = 0xfe35; // FULLWIDTH LEFT PARENTHESIS
-  t[0xff09] = 0xfe36; // FULLWIDTH RIGHT PARENTHESIS
-  t[0xff0c] = 0xfe10; // FULLWIDTH COMMA
-  t[0xff1a] = 0xfe13; // FULLWIDTH COLON
-  t[0xff1b] = 0xfe14; // FULLWIDTH SEMICOLON
-  t[0xff1f] = 0xfe16; // FULLWIDTH QUESTION MARK
-  t[0xff3b] = 0xfe47; // FULLWIDTH LEFT SQUARE BRACKET
-  t[0xff3d] = 0xfe48; // FULLWIDTH RIGHT SQUARE BRACKET
-  t[0xff3f] = 0xfe33; // FULLWIDTH LOW LINE
-  t[0xff5b] = 0xfe37; // FULLWIDTH LEFT CURLY BRACKET
-  t[0xff5d] = 0xfe38; // FULLWIDTH RIGHT CURLY BRACKET
+  return {
+    0x2013: 0xfe32 as const, // EN DASH
+    0x2014: 0xfe31 as const, // EM DASH
+    0x2025: 0xfe30 as const, // TWO DOT LEADER
+    0x2026: 0xfe19 as const, // HORIZONTAL ELLIPSIS
+    0x3001: 0xfe11 as const, // IDEOGRAPHIC COMMA
+    0x3002: 0xfe12 as const, // IDEOGRAPHIC FULL STOP
+    0x3008: 0xfe3f as const, // LEFT ANGLE BRACKET
+    0x3009: 0xfe40 as const, // RIGHT ANGLE BRACKET
+    0x300a: 0xfe3d as const, // LEFT DOUBLE ANGLE BRACKET
+    0x300b: 0xfe3e as const, // RIGHT DOUBLE ANGLE BRACKET
+    0x300c: 0xfe41 as const, // LEFT CORNER BRACKET
+    0x300d: 0xfe42 as const, // RIGHT CORNER BRACKET
+    0x300e: 0xfe43 as const, // LEFT WHITE CORNER BRACKET
+    0x300f: 0xfe44 as const, // RIGHT WHITE CORNER BRACKET
+    0x3010: 0xfe3b as const, // LEFT BLACK LENTICULAR BRACKET
+    0x3011: 0xfe3c as const, // RIGHT BLACK LENTICULAR BRACKET
+    0x3014: 0xfe39 as const, // LEFT TORTOISE SHELL BRACKET
+    0x3015: 0xfe3a as const, // RIGHT TORTOISE SHELL BRACKET
+    0x3016: 0xfe17 as const, // LEFT WHITE LENTICULAR BRACKET
+    0x3017: 0xfe18 as const, // RIGHT WHITE LENTICULAR BRACKET
+    0xfe4f: 0xfe34 as const, // WAVY LOW LINE
+    0xff01: 0xfe15 as const, // FULLWIDTH EXCLAMATION MARK
+    0xff08: 0xfe35 as const, // FULLWIDTH LEFT PARENTHESIS
+    0xff09: 0xfe36 as const, // FULLWIDTH RIGHT PARENTHESIS
+    0xff0c: 0xfe10 as const, // FULLWIDTH COMMA
+    0xff1a: 0xfe13 as const, // FULLWIDTH COLON
+    0xff1b: 0xfe14 as const, // FULLWIDTH SEMICOLON
+    0xff1f: 0xfe16 as const, // FULLWIDTH QUESTION MARK
+    0xff3b: 0xfe47 as const, // FULLWIDTH LEFT SQUARE BRACKET
+    0xff3d: 0xfe48 as const, // FULLWIDTH RIGHT SQUARE BRACKET
+    0xff3f: 0xfe33 as const, // FULLWIDTH LOW LINE
+    0xff5b: 0xfe37 as const, // FULLWIDTH LEFT CURLY BRACKET
+    0xff5d: 0xfe38 as const, // FULLWIDTH RIGHT CURLY BRACKET
+  }
 });
 
 export {

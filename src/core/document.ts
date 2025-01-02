@@ -156,9 +156,7 @@ class Page {
    */
   _getInheritableProperty(key: string, getArray = false) {
     const value = getInheritableProperty(
-      this.pageDict,
-      key,
-      getArray, false,
+      this.pageDict, key, getArray, false,
     );
     if (!Array.isArray(value)) {
       return value;

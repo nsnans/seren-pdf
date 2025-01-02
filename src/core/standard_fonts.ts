@@ -20,873 +20,887 @@ import { normalizeFontName } from "./fonts_utils";
  * Hold a map of decoded fonts and of the standard fourteen Type1
  * fonts and their acronyms.
  */
-const getStdFontMap = getLookupTableFactory(function (t) {
+const getStdFontMap = getLookupTableFactory(() => {
   // The standard 14 fonts:
-  t["Times-Roman"] = "Times-Roman";
-  t.Helvetica = "Helvetica";
-  t.Courier = "Courier";
-  t.Symbol = "Symbol";
-  t["Times-Bold"] = "Times-Bold";
-  t["Helvetica-Bold"] = "Helvetica-Bold";
-  t["Courier-Bold"] = "Courier-Bold";
-  t.ZapfDingbats = "ZapfDingbats";
-  t["Times-Italic"] = "Times-Italic";
-  t["Helvetica-Oblique"] = "Helvetica-Oblique";
-  t["Courier-Oblique"] = "Courier-Oblique";
-  t["Times-BoldItalic"] = "Times-BoldItalic";
-  t["Helvetica-BoldOblique"] = "Helvetica-BoldOblique";
-  t["Courier-BoldOblique"] = "Courier-BoldOblique";
+  return {
+    "Times-Roman": "Times-Roman" as const,
+    "Helvetica": "Helvetica" as const,
+    "Courier": "Courier" as const,
+    "Symbol": "Symbol" as const,
+    "Times-Bold": "Times-Bold" as const,
+    "Helvetica-Bold": "Helvetica-Bold" as const,
+    "Courier-Bold": "Courier-Bold" as const,
+    "ZapfDingbats": "ZapfDingbats" as const,
+    "Times-Italic": "Times-Italic" as const,
+    "Helvetica-Oblique": "Helvetica-Oblique" as const,
+    "Courier-Oblique": "Courier-Oblique" as const,
+    "Times-BoldItalic": "Times-BoldItalic" as const,
+    "Helvetica-BoldOblique": "Helvetica-BoldOblique" as const,
+    "Courier-BoldOblique": "Courier-BoldOblique" as const,
 
-  // Extra mappings
-  t.ArialNarrow = "Helvetica";
-  t["ArialNarrow-Bold"] = "Helvetica-Bold";
-  t["ArialNarrow-BoldItalic"] = "Helvetica-BoldOblique";
-  t["ArialNarrow-Italic"] = "Helvetica-Oblique";
-  t.ArialBlack = "Helvetica";
-  t["ArialBlack-Bold"] = "Helvetica-Bold";
-  t["ArialBlack-BoldItalic"] = "Helvetica-BoldOblique";
-  t["ArialBlack-Italic"] = "Helvetica-Oblique";
-  t["Arial-Black"] = "Helvetica";
-  t["Arial-Black-Bold"] = "Helvetica-Bold";
-  t["Arial-Black-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Arial-Black-Italic"] = "Helvetica-Oblique";
-  t.Arial = "Helvetica";
-  t["Arial-Bold"] = "Helvetica-Bold";
-  t["Arial-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Arial-Italic"] = "Helvetica-Oblique";
-  t.ArialMT = "Helvetica";
-  t["Arial-BoldItalicMT"] = "Helvetica-BoldOblique";
-  t["Arial-BoldMT"] = "Helvetica-Bold";
-  t["Arial-ItalicMT"] = "Helvetica-Oblique";
-  t["Arial-BoldItalicMT-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Arial-BoldMT-Bold"] = "Helvetica-Bold";
-  t["Arial-ItalicMT-Italic"] = "Helvetica-Oblique";
-  t.ArialUnicodeMS = "Helvetica";
-  t["ArialUnicodeMS-Bold"] = "Helvetica-Bold";
-  t["ArialUnicodeMS-BoldItalic"] = "Helvetica-BoldOblique";
-  t["ArialUnicodeMS-Italic"] = "Helvetica-Oblique";
-  t["Courier-BoldItalic"] = "Courier-BoldOblique";
-  t["Courier-Italic"] = "Courier-Oblique";
-  t.CourierNew = "Courier";
-  t["CourierNew-Bold"] = "Courier-Bold";
-  t["CourierNew-BoldItalic"] = "Courier-BoldOblique";
-  t["CourierNew-Italic"] = "Courier-Oblique";
-  t["CourierNewPS-BoldItalicMT"] = "Courier-BoldOblique";
-  t["CourierNewPS-BoldMT"] = "Courier-Bold";
-  t["CourierNewPS-ItalicMT"] = "Courier-Oblique";
-  t.CourierNewPSMT = "Courier";
-  t["Helvetica-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Helvetica-Italic"] = "Helvetica-Oblique";
-  t["Symbol-Bold"] = "Symbol";
-  t["Symbol-BoldItalic"] = "Symbol";
-  t["Symbol-Italic"] = "Symbol";
-  t.TimesNewRoman = "Times-Roman";
-  t["TimesNewRoman-Bold"] = "Times-Bold";
-  t["TimesNewRoman-BoldItalic"] = "Times-BoldItalic";
-  t["TimesNewRoman-Italic"] = "Times-Italic";
-  t.TimesNewRomanPS = "Times-Roman";
-  t["TimesNewRomanPS-Bold"] = "Times-Bold";
-  t["TimesNewRomanPS-BoldItalic"] = "Times-BoldItalic";
-  t["TimesNewRomanPS-BoldItalicMT"] = "Times-BoldItalic";
-  t["TimesNewRomanPS-BoldMT"] = "Times-Bold";
-  t["TimesNewRomanPS-Italic"] = "Times-Italic";
-  t["TimesNewRomanPS-ItalicMT"] = "Times-Italic";
-  t.TimesNewRomanPSMT = "Times-Roman";
-  t["TimesNewRomanPSMT-Bold"] = "Times-Bold";
-  t["TimesNewRomanPSMT-BoldItalic"] = "Times-BoldItalic";
-  t["TimesNewRomanPSMT-Italic"] = "Times-Italic";
+    // Extra mappings
+    "ArialNarrow": "Helvetica" as const,
+    "ArialNarrow-Bold": "Helvetica-Bold" as const,
+    "ArialNarrow-BoldItalic": "Helvetica-BoldOblique" as const,
+    "ArialNarrow-Italic": "Helvetica-Oblique" as const,
+    "ArialBlack": "Helvetica" as const,
+    "ArialBlack-Bold": "Helvetica-Bold" as const,
+    "ArialBlack-BoldItalic": "Helvetica-BoldOblique" as const,
+    "ArialBlack-Italic": "Helvetica-Oblique" as const,
+    "Arial-Black": "Helvetica" as const,
+    "Arial-Black-Bold": "Helvetica-Bold" as const,
+    "Arial-Black-BoldItalic": "Helvetica-BoldOblique" as const,
+    "Arial-Black-Italic": "Helvetica-Oblique" as const,
+    "Arial": "Helvetica" as const,
+    "Arial-Bold": "Helvetica-Bold" as const,
+    "Arial-BoldItalic": "Helvetica-BoldOblique" as const,
+    "Arial-Italic": "Helvetica-Oblique" as const,
+    "ArialMT": "Helvetica" as const,
+    "Arial-BoldItalicMT": "Helvetica-BoldOblique" as const,
+    "Arial-BoldMT": "Helvetica-Bold" as const,
+    "Arial-ItalicMT": "Helvetica-Oblique" as const,
+    "Arial-BoldItalicMT-BoldItalic": "Helvetica-BoldOblique" as const,
+    "Arial-BoldMT-Bold": "Helvetica-Bold" as const,
+    "Arial-ItalicMT-Italic": "Helvetica-Oblique" as const,
+    "ArialUnicodeMS": "Helvetica" as const,
+    "ArialUnicodeMS-Bold": "Helvetica-Bold" as const,
+    "ArialUnicodeMS-BoldItalic": "Helvetica-BoldOblique" as const,
+    "ArialUnicodeMS-Italic": "Helvetica-Oblique" as const,
+    "Courier-BoldItalic": "Courier-BoldOblique" as const,
+    "Courier-Italic": "Courier-Oblique" as const,
+    "CourierNew": "Courier" as const,
+    "CourierNew-Bold": "Courier-Bold" as const,
+    "CourierNew-BoldItalic": "Courier-BoldOblique" as const,
+    "CourierNew-Italic": "Courier-Oblique" as const,
+    "CourierNewPS-BoldItalicMT": "Courier-BoldOblique" as const,
+    "CourierNewPS-BoldMT": "Courier-Bold" as const,
+    "CourierNewPS-ItalicMT": "Courier-Oblique" as const,
+    "CourierNewPSMT": "Courier" as const,
+    "Helvetica-BoldItalic": "Helvetica-BoldOblique" as const,
+    "Helvetica-Italic": "Helvetica-Oblique" as const,
+    "Symbol-Bold": "Symbol" as const,
+    "Symbol-BoldItalic": "Symbol" as const,
+    "Symbol-Italic": "Symbol" as const,
+    "TimesNewRoman": "Times-Roman" as const,
+    "TimesNewRoman-Bold": "Times-Bold" as const,
+    "TimesNewRoman-BoldItalic": "Times-BoldItalic" as const,
+    "TimesNewRoman-Italic": "Times-Italic" as const,
+    "TimesNewRomanPS": "Times-Roman" as const,
+    "TimesNewRomanPS-Bold": "Times-Bold" as const,
+    "TimesNewRomanPS-BoldItalic": "Times-BoldItalic" as const,
+    "TimesNewRomanPS-BoldItalicMT": "Times-BoldItalic" as const,
+    "TimesNewRomanPS-BoldMT": "Times-Bold" as const,
+    "TimesNewRomanPS-Italic": "Times-Italic" as const,
+    "TimesNewRomanPS-ItalicMT": "Times-Italic" as const,
+    "TimesNewRomanPSMT": "Times-Roman" as const,
+    "TimesNewRomanPSMT-Bold": "Times-Bold" as const,
+    "TimesNewRomanPSMT-BoldItalic": "Times-BoldItalic" as const,
+    "TimesNewRomanPSMT-Italic": "Times-Italic" as const,
+  }
 });
 
 // Contains mapping for standard fonts and xfa fonts.
-const getFontNameToFileMap = getLookupTableFactory(function (t) {
-  t.Courier = "FoxitFixed.pfb";
-  t["Courier-Bold"] = "FoxitFixedBold.pfb";
-  t["Courier-BoldOblique"] = "FoxitFixedBoldItalic.pfb";
-  t["Courier-Oblique"] = "FoxitFixedItalic.pfb";
-  t.Helvetica = "LiberationSans-Regular.ttf";
-  t["Helvetica-Bold"] = "LiberationSans-Bold.ttf";
-  t["Helvetica-BoldOblique"] = "LiberationSans-BoldItalic.ttf";
-  t["Helvetica-Oblique"] = "LiberationSans-Italic.ttf";
-  t["Times-Roman"] = "FoxitSerif.pfb";
-  t["Times-Bold"] = "FoxitSerifBold.pfb";
-  t["Times-BoldItalic"] = "FoxitSerifBoldItalic.pfb";
-  t["Times-Italic"] = "FoxitSerifItalic.pfb";
-  t.Symbol = "FoxitSymbol.pfb";
-  t.ZapfDingbats = "FoxitDingbats.pfb";
-  t["LiberationSans-Regular"] = "LiberationSans-Regular.ttf";
-  t["LiberationSans-Bold"] = "LiberationSans-Bold.ttf";
-  t["LiberationSans-Italic"] = "LiberationSans-Italic.ttf";
-  t["LiberationSans-BoldItalic"] = "LiberationSans-BoldItalic.ttf";
+const getFontNameToFileMap = getLookupTableFactory(() => {
+  return {
+    "Courier": "FoxitFixed.pfb" as const,
+    "Courier-Bold": "FoxitFixedBold.pfb" as const,
+    "Courier-BoldOblique": "FoxitFixedBoldItalic.pfb" as const,
+    "Courier-Oblique": "FoxitFixedItalic.pfb" as const,
+    "Helvetica": "LiberationSans-Regular.ttf" as const,
+    "Helvetica-Bold": "LiberationSans-Bold.ttf" as const,
+    "Helvetica-BoldOblique": "LiberationSans-BoldItalic.ttf" as const,
+    "Helvetica-Oblique": "LiberationSans-Italic.ttf" as const,
+    "Times-Roman": "FoxitSerif.pfb" as const,
+    "Times-Bold": "FoxitSerifBold.pfb" as const,
+    "Times-BoldItalic": "FoxitSerifBoldItalic.pfb" as const,
+    "Times-Italic": "FoxitSerifItalic.pfb" as const,
+    "Symbol": "FoxitSymbol.pfb" as const,
+    "ZapfDingbats": "FoxitDingbats.pfb" as const,
+    "LiberationSans-Regular": "LiberationSans-Regular.ttf" as const,
+    "LiberationSans-Bold": "LiberationSans-Bold.ttf" as const,
+    "LiberationSans-Italic": "LiberationSans-Italic.ttf" as const,
+    "LiberationSans-BoldItalic": "LiberationSans-BoldItalic.ttf" as const,
+  }
 });
 
 /**
  * Holds the map of the non-standard fonts that might be included as
  * a standard fonts without glyph data.
  */
-const getNonStdFontMap = getLookupTableFactory(function (t) {
-  t.Calibri = "Helvetica";
-  t["Calibri-Bold"] = "Helvetica-Bold";
-  t["Calibri-BoldItalic"] = "Helvetica-BoldOblique";
-  t["Calibri-Italic"] = "Helvetica-Oblique";
-  t.CenturyGothic = "Helvetica";
-  t["CenturyGothic-Bold"] = "Helvetica-Bold";
-  t["CenturyGothic-BoldItalic"] = "Helvetica-BoldOblique";
-  t["CenturyGothic-Italic"] = "Helvetica-Oblique";
-  t.ComicSansMS = "Comic Sans MS";
-  t["ComicSansMS-Bold"] = "Comic Sans MS-Bold";
-  t["ComicSansMS-BoldItalic"] = "Comic Sans MS-BoldItalic";
-  t["ComicSansMS-Italic"] = "Comic Sans MS-Italic";
-  t.GillSansMT = "Helvetica";
-  t["GillSansMT-Bold"] = "Helvetica-Bold";
-  t["GillSansMT-BoldItalic"] = "Helvetica-BoldOblique";
-  t["GillSansMT-Italic"] = "Helvetica-Oblique";
-  t.Impact = "Helvetica";
-  t["ItcSymbol-Bold"] = "Helvetica-Bold";
-  t["ItcSymbol-BoldItalic"] = "Helvetica-BoldOblique";
-  t["ItcSymbol-Book"] = "Helvetica";
-  t["ItcSymbol-BookItalic"] = "Helvetica-Oblique";
-  t["ItcSymbol-Medium"] = "Helvetica";
-  t["ItcSymbol-MediumItalic"] = "Helvetica-Oblique";
-  t.LucidaConsole = "Courier";
-  t["LucidaConsole-Bold"] = "Courier-Bold";
-  t["LucidaConsole-BoldItalic"] = "Courier-BoldOblique";
-  t["LucidaConsole-Italic"] = "Courier-Oblique";
-  t["LucidaSans-Demi"] = "Helvetica-Bold";
-  t["MS-Gothic"] = "MS Gothic";
-  t["MS-Gothic-Bold"] = "MS Gothic-Bold";
-  t["MS-Gothic-BoldItalic"] = "MS Gothic-BoldItalic";
-  t["MS-Gothic-Italic"] = "MS Gothic-Italic";
-  t["MS-Mincho"] = "MS Mincho";
-  t["MS-Mincho-Bold"] = "MS Mincho-Bold";
-  t["MS-Mincho-BoldItalic"] = "MS Mincho-BoldItalic";
-  t["MS-Mincho-Italic"] = "MS Mincho-Italic";
-  t["MS-PGothic"] = "MS PGothic";
-  t["MS-PGothic-Bold"] = "MS PGothic-Bold";
-  t["MS-PGothic-BoldItalic"] = "MS PGothic-BoldItalic";
-  t["MS-PGothic-Italic"] = "MS PGothic-Italic";
-  t["MS-PMincho"] = "MS PMincho";
-  t["MS-PMincho-Bold"] = "MS PMincho-Bold";
-  t["MS-PMincho-BoldItalic"] = "MS PMincho-BoldItalic";
-  t["MS-PMincho-Italic"] = "MS PMincho-Italic";
-  t.NuptialScript = "Times-Italic";
-  t.SegoeUISymbol = "Helvetica";
+const getNonStdFontMap = getLookupTableFactory(() => {
+  return {
+    "Calibri": "Helvetica" as const,
+    "Calibri-Bold": "Helvetica-Bold" as const,
+    "Calibri-BoldItalic": "Helvetica-BoldOblique" as const,
+    "Calibri-Italic": "Helvetica-Oblique" as const,
+    "CenturyGothic": "Helvetica" as const,
+    "CenturyGothic-Bold": "Helvetica-Bold" as const,
+    "CenturyGothic-BoldItalic": "Helvetica-BoldOblique" as const,
+    "CenturyGothic-Italic": "Helvetica-Oblique" as const,
+    "ComicSansMS": "Comic Sans MS" as const,
+    "ComicSansMS-Bold": "Comic Sans MS-Bold" as const,
+    "ComicSansMS-BoldItalic": "Comic Sans MS-BoldItalic" as const,
+    "ComicSansMS-Italic": "Comic Sans MS-Italic" as const,
+    "GillSansMT": "Helvetica" as const,
+    "GillSansMT-Bold": "Helvetica-Bold" as const,
+    "GillSansMT-BoldItalic": "Helvetica-BoldOblique" as const,
+    "GillSansMT-Italic": "Helvetica-Oblique" as const,
+    "Impact": "Helvetica" as const,
+    "ItcSymbol-Bold": "Helvetica-Bold" as const,
+    "ItcSymbol-BoldItalic": "Helvetica-BoldOblique" as const,
+    "ItcSymbol-Book": "Helvetica" as const,
+    "ItcSymbol-BookItalic": "Helvetica-Oblique" as const,
+    "ItcSymbol-Medium": "Helvetica" as const,
+    "ItcSymbol-MediumItalic": "Helvetica-Oblique" as const,
+    "LucidaConsole": "Courier" as const,
+    "LucidaConsole-Bold": "Courier-Bold" as const,
+    "LucidaConsole-BoldItalic": "Courier-BoldOblique" as const,
+    "LucidaConsole-Italic": "Courier-Oblique" as const,
+    "LucidaSans-Demi": "Helvetica-Bold" as const,
+    "MS-Gothic": "MS Gothic" as const,
+    "MS-Gothic-Bold": "MS Gothic-Bold" as const,
+    "MS-Gothic-BoldItalic": "MS Gothic-BoldItalic" as const,
+    "MS-Gothic-Italic": "MS Gothic-Italic" as const,
+    "MS-Mincho": "MS Mincho" as const,
+    "MS-Mincho-Bold": "MS Mincho-Bold" as const,
+    "MS-Mincho-BoldItalic": "MS Mincho-BoldItalic" as const,
+    "MS-Mincho-Italic": "MS Mincho-Italic" as const,
+    "MS-PGothic": "MS PGothic" as const,
+    "MS-PGothic-Bold": "MS PGothic-Bold" as const,
+    "MS-PGothic-BoldItalic": "MS PGothic-BoldItalic" as const,
+    "MS-PGothic-Italic": "MS PGothic-Italic" as const,
+    "MS-PMincho": "MS PMincho" as const,
+    "MS-PMincho-Bold": "MS PMincho-Bold" as const,
+    "MS-PMincho-BoldItalic": "MS PMincho-BoldItalic" as const,
+    "MS-PMincho-Italic": "MS PMincho-Italic" as const,
+    "NuptialScript": "Times-Italic" as const,
+    "SegoeUISymbol": "Helvetica" as const,
+  }
 });
 
-const getSerifFonts = getLookupTableFactory(function (t) {
-  t["Adobe Jenson"] = true;
-  t["Adobe Text"] = true;
-  t.Albertus = true;
-  t.Aldus = true;
-  t.Alexandria = true;
-  t.Algerian = true;
-  t["American Typewriter"] = true;
-  t.Antiqua = true;
-  t.Apex = true;
-  t.Arno = true;
-  t.Aster = true;
-  t.Aurora = true;
-  t.Baskerville = true;
-  t.Bell = true;
-  t.Bembo = true;
-  t["Bembo Schoolbook"] = true;
-  t.Benguiat = true;
-  t["Berkeley Old Style"] = true;
-  t["Bernhard Modern"] = true;
-  t["Berthold City"] = true;
-  t.Bodoni = true;
-  t["Bauer Bodoni"] = true;
-  t["Book Antiqua"] = true;
-  t.Bookman = true;
-  t["Bordeaux Roman"] = true;
-  t["Californian FB"] = true;
-  t.Calisto = true;
-  t.Calvert = true;
-  t.Capitals = true;
-  t.Cambria = true;
-  t.Cartier = true;
-  t.Caslon = true;
-  t.Catull = true;
-  t.Centaur = true;
-  t["Century Old Style"] = true;
-  t["Century Schoolbook"] = true;
-  t.Chaparral = true;
-  t["Charis SIL"] = true;
-  t.Cheltenham = true;
-  t["Cholla Slab"] = true;
-  t.Clarendon = true;
-  t.Clearface = true;
-  t.Cochin = true;
-  t.Colonna = true;
-  t["Computer Modern"] = true;
-  t["Concrete Roman"] = true;
-  t.Constantia = true;
-  t["Cooper Black"] = true;
-  t.Corona = true;
-  t.Ecotype = true;
-  t.Egyptienne = true;
-  t.Elephant = true;
-  t.Excelsior = true;
-  t.Fairfield = true;
-  t["FF Scala"] = true;
-  t.Folkard = true;
-  t.Footlight = true;
-  t.FreeSerif = true;
-  t["Friz Quadrata"] = true;
-  t.Garamond = true;
-  t.Gentium = true;
-  t.Georgia = true;
-  t.Gloucester = true;
-  t["Goudy Old Style"] = true;
-  t["Goudy Schoolbook"] = true;
-  t["Goudy Pro Font"] = true;
-  t.Granjon = true;
-  t["Guardian Egyptian"] = true;
-  t.Heather = true;
-  t.Hercules = true;
-  t["High Tower Text"] = true;
-  t.Hiroshige = true;
-  t["Hoefler Text"] = true;
-  t["Humana Serif"] = true;
-  t.Imprint = true;
-  t["Ionic No. 5"] = true;
-  t.Janson = true;
-  t.Joanna = true;
-  t.Korinna = true;
-  t.Lexicon = true;
-  t.LiberationSerif = true;
-  t["Liberation Serif"] = true;
-  t["Linux Libertine"] = true;
-  t.Literaturnaya = true;
-  t.Lucida = true;
-  t["Lucida Bright"] = true;
-  t.Melior = true;
-  t.Memphis = true;
-  t.Miller = true;
-  t.Minion = true;
-  t.Modern = true;
-  t["Mona Lisa"] = true;
-  t["Mrs Eaves"] = true;
-  t["MS Serif"] = true;
-  t["Museo Slab"] = true;
-  t["New York"] = true;
-  t["Nimbus Roman"] = true;
-  t["NPS Rawlinson Roadway"] = true;
-  t.NuptialScript = true;
-  t.Palatino = true;
-  t.Perpetua = true;
-  t.Plantin = true;
-  t["Plantin Schoolbook"] = true;
-  t.Playbill = true;
-  t["Poor Richard"] = true;
-  t["Rawlinson Roadway"] = true;
-  t.Renault = true;
-  t.Requiem = true;
-  t.Rockwell = true;
-  t.Roman = true;
-  t["Rotis Serif"] = true;
-  t.Sabon = true;
-  t.Scala = true;
-  t.Seagull = true;
-  t.Sistina = true;
-  t.Souvenir = true;
-  t.STIX = true;
-  t["Stone Informal"] = true;
-  t["Stone Serif"] = true;
-  t.Sylfaen = true;
-  t.Times = true;
-  t.Trajan = true;
-  t["Trinité"] = true;
-  t["Trump Mediaeval"] = true;
-  t.Utopia = true;
-  t["Vale Type"] = true;
-  t["Bitstream Vera"] = true;
-  t["Vera Serif"] = true;
-  t.Versailles = true;
-  t.Wanted = true;
-  t.Weiss = true;
-  t["Wide Latin"] = true;
-  t.Windsor = true;
-  t.XITS = true;
+const getSerifFonts = getLookupTableFactory(() => {
+  return {
+    "Adobe Jenson": true as const,
+    "Adobe Text": true as const,
+    "Albertus": true as const,
+    "Aldus": true as const,
+    "Alexandria": true as const,
+    "Algerian": true as const,
+    "American Typewriter": true as const,
+    "Antiqua": true as const,
+    "Apex": true as const,
+    "Arno": true as const,
+    "Aster": true as const,
+    "Aurora": true as const,
+    "Baskerville": true as const,
+    "Bell": true as const,
+    "Bembo": true as const,
+    "Bembo Schoolbook": true as const,
+    "Benguiat": true as const,
+    "Berkeley Old Style": true as const,
+    "Bernhard Modern": true as const,
+    "Berthold City": true as const,
+    "Bodoni": true as const,
+    "Bauer Bodoni": true as const,
+    "Book Antiqua": true as const,
+    "Bookman": true as const,
+    "Bordeaux Roman": true as const,
+    "Californian FB": true as const,
+    "Calisto": true as const,
+    "Calvert": true as const,
+    "Capitals": true as const,
+    "Cambria": true as const,
+    "Cartier": true as const,
+    "Caslon": true as const,
+    "Catull": true as const,
+    "Centaur": true as const,
+    "Century Old Style": true as const,
+    "Century Schoolbook": true as const,
+    "Chaparral": true as const,
+    "Charis SIL": true as const,
+    "Cheltenham": true as const,
+    "Cholla Slab": true as const,
+    "Clarendon": true as const,
+    "Clearface": true as const,
+    "Cochin": true as const,
+    "Colonna": true as const,
+    "Computer Modern": true as const,
+    "Concrete Roman": true as const,
+    "Constantia": true as const,
+    "Cooper Black": true as const,
+    "Corona": true as const,
+    "Ecotype": true as const,
+    "Egyptienne": true as const,
+    "Elephant": true as const,
+    "Excelsior": true as const,
+    "Fairfield": true as const,
+    "FF Scala": true as const,
+    "Folkard": true as const,
+    "Footlight": true as const,
+    "FreeSerif": true as const,
+    "Friz Quadrata": true as const,
+    "Garamond": true as const,
+    "Gentium": true as const,
+    "Georgia": true as const,
+    "Gloucester": true as const,
+    "Goudy Old Style": true as const,
+    "Goudy Schoolbook": true as const,
+    "Goudy Pro Font": true as const,
+    "Granjon": true as const,
+    "Guardian Egyptian": true as const,
+    "Heather": true as const,
+    "Hercules": true as const,
+    "High Tower Text": true as const,
+    "Hiroshige": true as const,
+    "Hoefler Text": true as const,
+    "Humana Serif": true as const,
+    "Imprint": true as const,
+    "Ionic No. 5": true as const,
+    "Janson": true as const,
+    "Joanna": true as const,
+    "Korinna": true as const,
+    "Lexicon": true as const,
+    "LiberationSerif": true as const,
+    "Liberation Serif": true as const,
+    "Linux Libertine": true as const,
+    "Literaturnaya": true as const,
+    "Lucida": true as const,
+    "Lucida Bright": true as const,
+    "Melior": true as const,
+    "Memphis": true as const,
+    "Miller": true as const,
+    "Minion": true as const,
+    "Modern": true as const,
+    "Mona Lisa": true as const,
+    "Mrs Eaves": true as const,
+    "MS Serif": true as const,
+    "Museo Slab": true as const,
+    "New York": true as const,
+    "Nimbus Roman": true as const,
+    "NPS Rawlinson Roadway": true as const,
+    "NuptialScript": true as const,
+    "Palatino": true as const,
+    "Perpetua": true as const,
+    "Plantin": true as const,
+    "Plantin Schoolbook": true as const,
+    "Playbill": true as const,
+    "Poor Richard": true as const,
+    "Rawlinson Roadway": true as const,
+    "Renault": true as const,
+    "Requiem": true as const,
+    "Rockwell": true as const,
+    "Roman": true as const,
+    "Rotis Serif": true as const,
+    "Sabon": true as const,
+    "Scala": true as const,
+    "Seagull": true as const,
+    "Sistina": true as const,
+    "Souvenir": true as const,
+    "STIX": true as const,
+    "Stone Informal": true as const,
+    "Stone Serif": true as const,
+    "Sylfaen": true as const,
+    "Times": true as const,
+    "Trajan": true as const,
+    "Trinité": true as const,
+    "Trump Mediaeval": true as const,
+    "Utopia": true as const,
+    "Vale Type": true as const,
+    "Bitstream Vera": true as const,
+    "Vera Serif": true as const,
+    "Versailles": true as const,
+    "Wanted": true as const,
+    "Weiss": true as const,
+    "Wide Latin": true as const,
+    "Windsor": true as const,
+    "XITS": true as const,
+  }
 });
 
-const getSymbolsFonts = getLookupTableFactory(function (t) {
-  t.Dingbats = true;
-  t.Symbol = true;
-  t.ZapfDingbats = true;
-  t.Wingdings = true;
-  t["Wingdings-Bold"] = true;
-  t["Wingdings-Regular"] = true;
+const getSymbolsFonts = getLookupTableFactory(() => {
+  return {
+    "Dingbats": true as const,
+    "Symbol": true as const,
+    "ZapfDingbats": true as const,
+    "Wingdings": true as const,
+    "Wingdings-Bold": true as const,
+    "Wingdings-Regular": true as const,
+  }
 });
 
 // Glyph map for well-known standard fonts. Sometimes Ghostscript uses CID
 // fonts, but does not embed the CID to GID mapping. The mapping is incomplete
 // for all glyphs, but common for some set of the standard fonts.
-const getGlyphMapForStandardFonts = getLookupTableFactory(function (t) {
-  t[2] = 10;
-  t[3] = 32;
-  t[4] = 33;
-  t[5] = 34;
-  t[6] = 35;
-  t[7] = 36;
-  t[8] = 37;
-  t[9] = 38;
-  t[10] = 39;
-  t[11] = 40;
-  t[12] = 41;
-  t[13] = 42;
-  t[14] = 43;
-  t[15] = 44;
-  t[16] = 45;
-  t[17] = 46;
-  t[18] = 47;
-  t[19] = 48;
-  t[20] = 49;
-  t[21] = 50;
-  t[22] = 51;
-  t[23] = 52;
-  t[24] = 53;
-  t[25] = 54;
-  t[26] = 55;
-  t[27] = 56;
-  t[28] = 57;
-  t[29] = 58;
-  t[30] = 894;
-  t[31] = 60;
-  t[32] = 61;
-  t[33] = 62;
-  t[34] = 63;
-  t[35] = 64;
-  t[36] = 65;
-  t[37] = 66;
-  t[38] = 67;
-  t[39] = 68;
-  t[40] = 69;
-  t[41] = 70;
-  t[42] = 71;
-  t[43] = 72;
-  t[44] = 73;
-  t[45] = 74;
-  t[46] = 75;
-  t[47] = 76;
-  t[48] = 77;
-  t[49] = 78;
-  t[50] = 79;
-  t[51] = 80;
-  t[52] = 81;
-  t[53] = 82;
-  t[54] = 83;
-  t[55] = 84;
-  t[56] = 85;
-  t[57] = 86;
-  t[58] = 87;
-  t[59] = 88;
-  t[60] = 89;
-  t[61] = 90;
-  t[62] = 91;
-  t[63] = 92;
-  t[64] = 93;
-  t[65] = 94;
-  t[66] = 95;
-  t[67] = 96;
-  t[68] = 97;
-  t[69] = 98;
-  t[70] = 99;
-  t[71] = 100;
-  t[72] = 101;
-  t[73] = 102;
-  t[74] = 103;
-  t[75] = 104;
-  t[76] = 105;
-  t[77] = 106;
-  t[78] = 107;
-  t[79] = 108;
-  t[80] = 109;
-  t[81] = 110;
-  t[82] = 111;
-  t[83] = 112;
-  t[84] = 113;
-  t[85] = 114;
-  t[86] = 115;
-  t[87] = 116;
-  t[88] = 117;
-  t[89] = 118;
-  t[90] = 119;
-  t[91] = 120;
-  t[92] = 121;
-  t[93] = 122;
-  t[94] = 123;
-  t[95] = 124;
-  t[96] = 125;
-  t[97] = 126;
-  t[98] = 196;
-  t[99] = 197;
-  t[100] = 199;
-  t[101] = 201;
-  t[102] = 209;
-  t[103] = 214;
-  t[104] = 220;
-  t[105] = 225;
-  t[106] = 224;
-  t[107] = 226;
-  t[108] = 228;
-  t[109] = 227;
-  t[110] = 229;
-  t[111] = 231;
-  t[112] = 233;
-  t[113] = 232;
-  t[114] = 234;
-  t[115] = 235;
-  t[116] = 237;
-  t[117] = 236;
-  t[118] = 238;
-  t[119] = 239;
-  t[120] = 241;
-  t[121] = 243;
-  t[122] = 242;
-  t[123] = 244;
-  t[124] = 246;
-  t[125] = 245;
-  t[126] = 250;
-  t[127] = 249;
-  t[128] = 251;
-  t[129] = 252;
-  t[130] = 8224;
-  t[131] = 176;
-  t[132] = 162;
-  t[133] = 163;
-  t[134] = 167;
-  t[135] = 8226;
-  t[136] = 182;
-  t[137] = 223;
-  t[138] = 174;
-  t[139] = 169;
-  t[140] = 8482;
-  t[141] = 180;
-  t[142] = 168;
-  t[143] = 8800;
-  t[144] = 198;
-  t[145] = 216;
-  t[146] = 8734;
-  t[147] = 177;
-  t[148] = 8804;
-  t[149] = 8805;
-  t[150] = 165;
-  t[151] = 181;
-  t[152] = 8706;
-  t[153] = 8721;
-  t[154] = 8719;
-  t[156] = 8747;
-  t[157] = 170;
-  t[158] = 186;
-  t[159] = 8486;
-  t[160] = 230;
-  t[161] = 248;
-  t[162] = 191;
-  t[163] = 161;
-  t[164] = 172;
-  t[165] = 8730;
-  t[166] = 402;
-  t[167] = 8776;
-  t[168] = 8710;
-  t[169] = 171;
-  t[170] = 187;
-  t[171] = 8230;
-  t[179] = 8220;
-  t[180] = 8221;
-  t[181] = 8216;
-  t[182] = 8217;
-  t[200] = 193;
-  t[203] = 205;
-  t[207] = 211;
-  t[210] = 218;
-  t[223] = 711;
-  t[224] = 321;
-  t[225] = 322;
-  t[226] = 352;
-  t[227] = 353;
-  t[228] = 381;
-  t[229] = 382;
-  t[233] = 221;
-  t[234] = 253;
-  t[252] = 263;
-  t[253] = 268;
-  t[254] = 269;
-  t[258] = 258;
-  t[260] = 260;
-  t[261] = 261;
-  t[265] = 280;
-  t[266] = 281;
-  t[267] = 282;
-  t[268] = 283;
-  t[269] = 313;
-  t[275] = 323;
-  t[276] = 324;
-  t[278] = 328;
-  t[283] = 344;
-  t[284] = 345;
-  t[285] = 346;
-  t[286] = 347;
-  t[292] = 367;
-  t[295] = 377;
-  t[296] = 378;
-  t[298] = 380;
-  t[305] = 963;
-  t[306] = 964;
-  t[307] = 966;
-  t[308] = 8215;
-  t[309] = 8252;
-  t[310] = 8319;
-  t[311] = 8359;
-  t[312] = 8592;
-  t[313] = 8593;
-  t[337] = 9552;
-  t[493] = 1039;
-  t[494] = 1040;
-  t[672] = 1488;
-  t[673] = 1489;
-  t[674] = 1490;
-  t[675] = 1491;
-  t[676] = 1492;
-  t[677] = 1493;
-  t[678] = 1494;
-  t[679] = 1495;
-  t[680] = 1496;
-  t[681] = 1497;
-  t[682] = 1498;
-  t[683] = 1499;
-  t[684] = 1500;
-  t[685] = 1501;
-  t[686] = 1502;
-  t[687] = 1503;
-  t[688] = 1504;
-  t[689] = 1505;
-  t[690] = 1506;
-  t[691] = 1507;
-  t[692] = 1508;
-  t[693] = 1509;
-  t[694] = 1510;
-  t[695] = 1511;
-  t[696] = 1512;
-  t[697] = 1513;
-  t[698] = 1514;
-  t[705] = 1524;
-  t[706] = 8362;
-  t[710] = 64288;
-  t[711] = 64298;
-  t[759] = 1617;
-  t[761] = 1776;
-  t[763] = 1778;
-  t[775] = 1652;
-  t[777] = 1764;
-  t[778] = 1780;
-  t[779] = 1781;
-  t[780] = 1782;
-  t[782] = 771;
-  t[783] = 64726;
-  t[786] = 8363;
-  t[788] = 8532;
-  t[790] = 768;
-  t[791] = 769;
-  t[792] = 768;
-  t[795] = 803;
-  t[797] = 64336;
-  t[798] = 64337;
-  t[799] = 64342;
-  t[800] = 64343;
-  t[801] = 64344;
-  t[802] = 64345;
-  t[803] = 64362;
-  t[804] = 64363;
-  t[805] = 64364;
-  t[2424] = 7821;
-  t[2425] = 7822;
-  t[2426] = 7823;
-  t[2427] = 7824;
-  t[2428] = 7825;
-  t[2429] = 7826;
-  t[2430] = 7827;
-  t[2433] = 7682;
-  t[2678] = 8045;
-  t[2679] = 8046;
-  t[2830] = 1552;
-  t[2838] = 686;
-  t[2840] = 751;
-  t[2842] = 753;
-  t[2843] = 754;
-  t[2844] = 755;
-  t[2846] = 757;
-  t[2856] = 767;
-  t[2857] = 848;
-  t[2858] = 849;
-  t[2862] = 853;
-  t[2863] = 854;
-  t[2864] = 855;
-  t[2865] = 861;
-  t[2866] = 862;
-  t[2906] = 7460;
-  t[2908] = 7462;
-  t[2909] = 7463;
-  t[2910] = 7464;
-  t[2912] = 7466;
-  t[2913] = 7467;
-  t[2914] = 7468;
-  t[2916] = 7470;
-  t[2917] = 7471;
-  t[2918] = 7472;
-  t[2920] = 7474;
-  t[2921] = 7475;
-  t[2922] = 7476;
-  t[2924] = 7478;
-  t[2925] = 7479;
-  t[2926] = 7480;
-  t[2928] = 7482;
-  t[2929] = 7483;
-  t[2930] = 7484;
-  t[2932] = 7486;
-  t[2933] = 7487;
-  t[2934] = 7488;
-  t[2936] = 7490;
-  t[2937] = 7491;
-  t[2938] = 7492;
-  t[2940] = 7494;
-  t[2941] = 7495;
-  t[2942] = 7496;
-  t[2944] = 7498;
-  t[2946] = 7500;
-  t[2948] = 7502;
-  t[2950] = 7504;
-  t[2951] = 7505;
-  t[2952] = 7506;
-  t[2954] = 7508;
-  t[2955] = 7509;
-  t[2956] = 7510;
-  t[2958] = 7512;
-  t[2959] = 7513;
-  t[2960] = 7514;
-  t[2962] = 7516;
-  t[2963] = 7517;
-  t[2964] = 7518;
-  t[2966] = 7520;
-  t[2967] = 7521;
-  t[2968] = 7522;
-  t[2970] = 7524;
-  t[2971] = 7525;
-  t[2972] = 7526;
-  t[2974] = 7528;
-  t[2975] = 7529;
-  t[2976] = 7530;
-  t[2978] = 1537;
-  t[2979] = 1538;
-  t[2980] = 1539;
-  t[2982] = 1549;
-  t[2983] = 1551;
-  t[2984] = 1552;
-  t[2986] = 1554;
-  t[2987] = 1555;
-  t[2988] = 1556;
-  t[2990] = 1623;
-  t[2991] = 1624;
-  t[2995] = 1775;
-  t[2999] = 1791;
-  t[3002] = 64290;
-  t[3003] = 64291;
-  t[3004] = 64292;
-  t[3006] = 64294;
-  t[3007] = 64295;
-  t[3008] = 64296;
-  t[3011] = 1900;
-  t[3014] = 8223;
-  t[3015] = 8244;
-  t[3017] = 7532;
-  t[3018] = 7533;
-  t[3019] = 7534;
-  t[3075] = 7590;
-  t[3076] = 7591;
-  t[3079] = 7594;
-  t[3080] = 7595;
-  t[3083] = 7598;
-  t[3084] = 7599;
-  t[3087] = 7602;
-  t[3088] = 7603;
-  t[3091] = 7606;
-  t[3092] = 7607;
-  t[3095] = 7610;
-  t[3096] = 7611;
-  t[3099] = 7614;
-  t[3100] = 7615;
-  t[3103] = 7618;
-  t[3104] = 7619;
-  t[3107] = 8337;
-  t[3108] = 8338;
-  t[3116] = 1884;
-  t[3119] = 1885;
-  t[3120] = 1885;
-  t[3123] = 1886;
-  t[3124] = 1886;
-  t[3127] = 1887;
-  t[3128] = 1887;
-  t[3131] = 1888;
-  t[3132] = 1888;
-  t[3135] = 1889;
-  t[3136] = 1889;
-  t[3139] = 1890;
-  t[3140] = 1890;
-  t[3143] = 1891;
-  t[3144] = 1891;
-  t[3147] = 1892;
-  t[3148] = 1892;
-  t[3153] = 580;
-  t[3154] = 581;
-  t[3157] = 584;
-  t[3158] = 585;
-  t[3161] = 588;
-  t[3162] = 589;
-  t[3165] = 891;
-  t[3166] = 892;
-  t[3169] = 1274;
-  t[3170] = 1275;
-  t[3173] = 1278;
-  t[3174] = 1279;
-  t[3181] = 7622;
-  t[3182] = 7623;
-  t[3282] = 11799;
-  t[3316] = 578;
-  t[3379] = 42785;
-  t[3393] = 1159;
-  t[3416] = 8377;
+const getGlyphMapForStandardFonts = getLookupTableFactory(() => {
+  return {
+    2: 10 as const,
+    3: 32 as const,
+    4: 33 as const,
+    5: 34 as const,
+    6: 35 as const,
+    7: 36 as const,
+    8: 37 as const,
+    9: 38 as const,
+    10: 39 as const,
+    11: 40 as const,
+    12: 41 as const,
+    13: 42 as const,
+    14: 43 as const,
+    15: 44 as const,
+    16: 45 as const,
+    17: 46 as const,
+    18: 47 as const,
+    19: 48 as const,
+    20: 49 as const,
+    21: 50 as const,
+    22: 51 as const,
+    23: 52 as const,
+    24: 53 as const,
+    25: 54 as const,
+    26: 55 as const,
+    27: 56 as const,
+    28: 57 as const,
+    29: 58 as const,
+    30: 894 as const,
+    31: 60 as const,
+    32: 61 as const,
+    33: 62 as const,
+    34: 63 as const,
+    35: 64 as const,
+    36: 65 as const,
+    37: 66 as const,
+    38: 67 as const,
+    39: 68 as const,
+    40: 69 as const,
+    41: 70 as const,
+    42: 71 as const,
+    43: 72 as const,
+    44: 73 as const,
+    45: 74 as const,
+    46: 75 as const,
+    47: 76 as const,
+    48: 77 as const,
+    49: 78 as const,
+    50: 79 as const,
+    51: 80 as const,
+    52: 81 as const,
+    53: 82 as const,
+    54: 83 as const,
+    55: 84 as const,
+    56: 85 as const,
+    57: 86 as const,
+    58: 87 as const,
+    59: 88 as const,
+    60: 89 as const,
+    61: 90 as const,
+    62: 91 as const,
+    63: 92 as const,
+    64: 93 as const,
+    65: 94 as const,
+    66: 95 as const,
+    67: 96 as const,
+    68: 97 as const,
+    69: 98 as const,
+    70: 99 as const,
+    71: 100 as const,
+    72: 101 as const,
+    73: 102 as const,
+    74: 103 as const,
+    75: 104 as const,
+    76: 105 as const,
+    77: 106 as const,
+    78: 107 as const,
+    79: 108 as const,
+    80: 109 as const,
+    81: 110 as const,
+    82: 111 as const,
+    83: 112 as const,
+    84: 113 as const,
+    85: 114 as const,
+    86: 115 as const,
+    87: 116 as const,
+    88: 117 as const,
+    89: 118 as const,
+    90: 119 as const,
+    91: 120 as const,
+    92: 121 as const,
+    93: 122 as const,
+    94: 123 as const,
+    95: 124 as const,
+    96: 125 as const,
+    97: 126 as const,
+    98: 196 as const,
+    99: 197 as const,
+    100: 199 as const,
+    101: 201 as const,
+    102: 209 as const,
+    103: 214 as const,
+    104: 220 as const,
+    105: 225 as const,
+    106: 224 as const,
+    107: 226 as const,
+    108: 228 as const,
+    109: 227 as const,
+    110: 229 as const,
+    111: 231 as const,
+    112: 233 as const,
+    113: 232 as const,
+    114: 234 as const,
+    115: 235 as const,
+    116: 237 as const,
+    117: 236 as const,
+    118: 238 as const,
+    119: 239 as const,
+    120: 241 as const,
+    121: 243 as const,
+    122: 242 as const,
+    123: 244 as const,
+    124: 246 as const,
+    125: 245 as const,
+    126: 250 as const,
+    127: 249 as const,
+    128: 251 as const,
+    129: 252 as const,
+    130: 8224 as const,
+    131: 176 as const,
+    132: 162 as const,
+    133: 163 as const,
+    134: 167 as const,
+    135: 8226 as const,
+    136: 182 as const,
+    137: 223 as const,
+    138: 174 as const,
+    139: 169 as const,
+    140: 8482 as const,
+    141: 180 as const,
+    142: 168 as const,
+    143: 8800 as const,
+    144: 198 as const,
+    145: 216 as const,
+    146: 8734 as const,
+    147: 177 as const,
+    148: 8804 as const,
+    149: 8805 as const,
+    150: 165 as const,
+    151: 181 as const,
+    152: 8706 as const,
+    153: 8721 as const,
+    154: 8719 as const,
+    156: 8747 as const,
+    157: 170 as const,
+    158: 186 as const,
+    159: 8486 as const,
+    160: 230 as const,
+    161: 248 as const,
+    162: 191 as const,
+    163: 161 as const,
+    164: 172 as const,
+    165: 8730 as const,
+    166: 402 as const,
+    167: 8776 as const,
+    168: 8710 as const,
+    169: 171 as const,
+    170: 187 as const,
+    171: 8230 as const,
+    179: 8220 as const,
+    180: 8221 as const,
+    181: 8216 as const,
+    182: 8217 as const,
+    200: 193 as const,
+    203: 205 as const,
+    207: 211 as const,
+    210: 218 as const,
+    223: 711 as const,
+    224: 321 as const,
+    225: 322 as const,
+    226: 352 as const,
+    227: 353 as const,
+    228: 381 as const,
+    229: 382 as const,
+    233: 221 as const,
+    234: 253 as const,
+    252: 263 as const,
+    253: 268 as const,
+    254: 269 as const,
+    258: 258 as const,
+    260: 260 as const,
+    261: 261 as const,
+    265: 280 as const,
+    266: 281 as const,
+    267: 282 as const,
+    268: 283 as const,
+    269: 313 as const,
+    275: 323 as const,
+    276: 324 as const,
+    278: 328 as const,
+    283: 344 as const,
+    284: 345 as const,
+    285: 346 as const,
+    286: 347 as const,
+    292: 367 as const,
+    295: 377 as const,
+    296: 378 as const,
+    298: 380 as const,
+    305: 963 as const,
+    306: 964 as const,
+    307: 966 as const,
+    308: 8215 as const,
+    309: 8252 as const,
+    310: 8319 as const,
+    311: 8359 as const,
+    312: 8592 as const,
+    313: 8593 as const,
+    337: 9552 as const,
+    493: 1039 as const,
+    494: 1040 as const,
+    672: 1488 as const,
+    673: 1489 as const,
+    674: 1490 as const,
+    675: 1491 as const,
+    676: 1492 as const,
+    677: 1493 as const,
+    678: 1494 as const,
+    679: 1495 as const,
+    680: 1496 as const,
+    681: 1497 as const,
+    682: 1498 as const,
+    683: 1499 as const,
+    684: 1500 as const,
+    685: 1501 as const,
+    686: 1502 as const,
+    687: 1503 as const,
+    688: 1504 as const,
+    689: 1505 as const,
+    690: 1506 as const,
+    691: 1507 as const,
+    692: 1508 as const,
+    693: 1509 as const,
+    694: 1510 as const,
+    695: 1511 as const,
+    696: 1512 as const,
+    697: 1513 as const,
+    698: 1514 as const,
+    705: 1524 as const,
+    706: 8362 as const,
+    710: 64288 as const,
+    711: 64298 as const,
+    759: 1617 as const,
+    761: 1776 as const,
+    763: 1778 as const,
+    775: 1652 as const,
+    777: 1764 as const,
+    778: 1780 as const,
+    779: 1781 as const,
+    780: 1782 as const,
+    782: 771 as const,
+    783: 64726 as const,
+    786: 8363 as const,
+    788: 8532 as const,
+    790: 768 as const,
+    791: 769 as const,
+    792: 768 as const,
+    795: 803 as const,
+    797: 64336 as const,
+    798: 64337 as const,
+    799: 64342 as const,
+    800: 64343 as const,
+    801: 64344 as const,
+    802: 64345 as const,
+    803: 64362 as const,
+    804: 64363 as const,
+    805: 64364 as const,
+    2424: 7821 as const,
+    2425: 7822 as const,
+    2426: 7823 as const,
+    2427: 7824 as const,
+    2428: 7825 as const,
+    2429: 7826 as const,
+    2430: 7827 as const,
+    2433: 7682 as const,
+    2678: 8045 as const,
+    2679: 8046 as const,
+    2830: 1552 as const,
+    2838: 686 as const,
+    2840: 751 as const,
+    2842: 753 as const,
+    2843: 754 as const,
+    2844: 755 as const,
+    2846: 757 as const,
+    2856: 767 as const,
+    2857: 848 as const,
+    2858: 849 as const,
+    2862: 853 as const,
+    2863: 854 as const,
+    2864: 855 as const,
+    2865: 861 as const,
+    2866: 862 as const,
+    2906: 7460 as const,
+    2908: 7462 as const,
+    2909: 7463 as const,
+    2910: 7464 as const,
+    2912: 7466 as const,
+    2913: 7467 as const,
+    2914: 7468 as const,
+    2916: 7470 as const,
+    2917: 7471 as const,
+    2918: 7472 as const,
+    2920: 7474 as const,
+    2921: 7475 as const,
+    2922: 7476 as const,
+    2924: 7478 as const,
+    2925: 7479 as const,
+    2926: 7480 as const,
+    2928: 7482 as const,
+    2929: 7483 as const,
+    2930: 7484 as const,
+    2932: 7486 as const,
+    2933: 7487 as const,
+    2934: 7488 as const,
+    2936: 7490 as const,
+    2937: 7491 as const,
+    2938: 7492 as const,
+    2940: 7494 as const,
+    2941: 7495 as const,
+    2942: 7496 as const,
+    2944: 7498 as const,
+    2946: 7500 as const,
+    2948: 7502 as const,
+    2950: 7504 as const,
+    2951: 7505 as const,
+    2952: 7506 as const,
+    2954: 7508 as const,
+    2955: 7509 as const,
+    2956: 7510 as const,
+    2958: 7512 as const,
+    2959: 7513 as const,
+    2960: 7514 as const,
+    2962: 7516 as const,
+    2963: 7517 as const,
+    2964: 7518 as const,
+    2966: 7520 as const,
+    2967: 7521 as const,
+    2968: 7522 as const,
+    2970: 7524 as const,
+    2971: 7525 as const,
+    2972: 7526 as const,
+    2974: 7528 as const,
+    2975: 7529 as const,
+    2976: 7530 as const,
+    2978: 1537 as const,
+    2979: 1538 as const,
+    2980: 1539 as const,
+    2982: 1549 as const,
+    2983: 1551 as const,
+    2984: 1552 as const,
+    2986: 1554 as const,
+    2987: 1555 as const,
+    2988: 1556 as const,
+    2990: 1623 as const,
+    2991: 1624 as const,
+    2995: 1775 as const,
+    2999: 1791 as const,
+    3002: 64290 as const,
+    3003: 64291 as const,
+    3004: 64292 as const,
+    3006: 64294 as const,
+    3007: 64295 as const,
+    3008: 64296 as const,
+    3011: 1900 as const,
+    3014: 8223 as const,
+    3015: 8244 as const,
+    3017: 7532 as const,
+    3018: 7533 as const,
+    3019: 7534 as const,
+    3075: 7590 as const,
+    3076: 7591 as const,
+    3079: 7594 as const,
+    3080: 7595 as const,
+    3083: 7598 as const,
+    3084: 7599 as const,
+    3087: 7602 as const,
+    3088: 7603 as const,
+    3091: 7606 as const,
+    3092: 7607 as const,
+    3095: 7610 as const,
+    3096: 7611 as const,
+    3099: 7614 as const,
+    3100: 7615 as const,
+    3103: 7618 as const,
+    3104: 7619 as const,
+    3107: 8337 as const,
+    3108: 8338 as const,
+    3116: 1884 as const,
+    3119: 1885 as const,
+    3120: 1885 as const,
+    3123: 1886 as const,
+    3124: 1886 as const,
+    3127: 1887 as const,
+    3128: 1887 as const,
+    3131: 1888 as const,
+    3132: 1888 as const,
+    3135: 1889 as const,
+    3136: 1889 as const,
+    3139: 1890 as const,
+    3140: 1890 as const,
+    3143: 1891 as const,
+    3144: 1891 as const,
+    3147: 1892 as const,
+    3148: 1892 as const,
+    3153: 580 as const,
+    3154: 581 as const,
+    3157: 584 as const,
+    3158: 585 as const,
+    3161: 588 as const,
+    3162: 589 as const,
+    3165: 891 as const,
+    3166: 892 as const,
+    3169: 1274 as const,
+    3170: 1275 as const,
+    3173: 1278 as const,
+    3174: 1279 as const,
+    3181: 7622 as const,
+    3182: 7623 as const,
+    3282: 11799 as const,
+    3316: 578 as const,
+    3379: 42785 as const,
+    3393: 1159 as const,
+    3416: 8377 as const,
+  }
 });
 
 // The glyph map for ArialBlack differs slightly from the glyph map used for
 // other well-known standard fonts. Hence we use this (incomplete) CID to GID
 // mapping to adjust the glyph map for non-embedded ArialBlack fonts.
-const getSupplementalGlyphMapForArialBlack = getLookupTableFactory(
-  function (t) {
-    t[227] = 322;
-    t[264] = 261;
-    t[291] = 346;
+const getSupplementalGlyphMapForArialBlack = getLookupTableFactory(() => {
+  return {
+    227: 322 as const,
+    264: 261 as const,
+    291: 346 as const,
   }
-);
+});
 
 // The glyph map for Calibri (a Windows font) differs from the glyph map used
 // in the standard fonts. Hence we use this (incomplete) CID to GID mapping to
 // adjust the glyph map for non-embedded Calibri fonts.
-const getSupplementalGlyphMapForCalibri = getLookupTableFactory(function (t) {
-  t[1] = 32;
-  t[4] = 65;
-  t[5] = 192;
-  t[6] = 193;
-  t[9] = 196;
-  t[17] = 66;
-  t[18] = 67;
-  t[21] = 268;
-  t[24] = 68;
-  t[28] = 69;
-  t[29] = 200;
-  t[30] = 201;
-  t[32] = 282;
-  t[38] = 70;
-  t[39] = 71;
-  t[44] = 72;
-  t[47] = 73;
-  t[48] = 204;
-  t[49] = 205;
-  t[58] = 74;
-  t[60] = 75;
-  t[62] = 76;
-  t[68] = 77;
-  t[69] = 78;
-  t[75] = 79;
-  t[76] = 210;
-  t[80] = 214;
-  t[87] = 80;
-  t[89] = 81;
-  t[90] = 82;
-  t[92] = 344;
-  t[94] = 83;
-  t[97] = 352;
-  t[100] = 84;
-  t[104] = 85;
-  t[109] = 220;
-  t[115] = 86;
-  t[116] = 87;
-  t[121] = 88;
-  t[122] = 89;
-  t[124] = 221;
-  t[127] = 90;
-  t[129] = 381;
-  t[258] = 97;
-  t[259] = 224;
-  t[260] = 225;
-  t[263] = 228;
-  t[268] = 261;
-  t[271] = 98;
-  t[272] = 99;
-  t[273] = 263;
-  t[275] = 269;
-  t[282] = 100;
-  t[286] = 101;
-  t[287] = 232;
-  t[288] = 233;
-  t[290] = 283;
-  t[295] = 281;
-  t[296] = 102;
-  t[336] = 103;
-  t[346] = 104;
-  t[349] = 105;
-  t[350] = 236;
-  t[351] = 237;
-  t[361] = 106;
-  t[364] = 107;
-  t[367] = 108;
-  t[371] = 322;
-  t[373] = 109;
-  t[374] = 110;
-  t[381] = 111;
-  t[382] = 242;
-  t[383] = 243;
-  t[386] = 246;
-  t[393] = 112;
-  t[395] = 113;
-  t[396] = 114;
-  t[398] = 345;
-  t[400] = 115;
-  t[401] = 347;
-  t[403] = 353;
-  t[410] = 116;
-  t[437] = 117;
-  t[442] = 252;
-  t[448] = 118;
-  t[449] = 119;
-  t[454] = 120;
-  t[455] = 121;
-  t[457] = 253;
-  t[460] = 122;
-  t[462] = 382;
-  t[463] = 380;
-  t[853] = 44;
-  t[855] = 58;
-  t[856] = 46;
-  t[876] = 47;
-  t[878] = 45;
-  t[882] = 45;
-  t[894] = 40;
-  t[895] = 41;
-  t[896] = 91;
-  t[897] = 93;
-  t[923] = 64;
-  t[1004] = 48;
-  t[1005] = 49;
-  t[1006] = 50;
-  t[1007] = 51;
-  t[1008] = 52;
-  t[1009] = 53;
-  t[1010] = 54;
-  t[1011] = 55;
-  t[1012] = 56;
-  t[1013] = 57;
-  t[1081] = 37;
-  t[1085] = 43;
-  t[1086] = 45;
+const getSupplementalGlyphMapForCalibri = getLookupTableFactory(() => {
+  return {
+    1: 32 as const,
+    4: 65 as const,
+    5: 192 as const,
+    6: 193 as const,
+    9: 196 as const,
+    17: 66 as const,
+    18: 67 as const,
+    21: 268 as const,
+    24: 68 as const,
+    28: 69 as const,
+    29: 200 as const,
+    30: 201 as const,
+    32: 282 as const,
+    38: 70 as const,
+    39: 71 as const,
+    44: 72 as const,
+    47: 73 as const,
+    48: 204 as const,
+    49: 205 as const,
+    58: 74 as const,
+    60: 75 as const,
+    62: 76 as const,
+    68: 77 as const,
+    69: 78 as const,
+    75: 79 as const,
+    76: 210 as const,
+    80: 214 as const,
+    87: 80 as const,
+    89: 81 as const,
+    90: 82 as const,
+    92: 344 as const,
+    94: 83 as const,
+    97: 352 as const,
+    100: 84 as const,
+    104: 85 as const,
+    109: 220 as const,
+    115: 86 as const,
+    116: 87 as const,
+    121: 88 as const,
+    122: 89 as const,
+    124: 221 as const,
+    127: 90 as const,
+    129: 381 as const,
+    258: 97 as const,
+    259: 224 as const,
+    260: 225 as const,
+    263: 228 as const,
+    268: 261 as const,
+    271: 98 as const,
+    272: 99 as const,
+    273: 263 as const,
+    275: 269 as const,
+    282: 100 as const,
+    286: 101 as const,
+    287: 232 as const,
+    288: 233 as const,
+    290: 283 as const,
+    295: 281 as const,
+    296: 102 as const,
+    336: 103 as const,
+    346: 104 as const,
+    349: 105 as const,
+    350: 236 as const,
+    351: 237 as const,
+    361: 106 as const,
+    364: 107 as const,
+    367: 108 as const,
+    371: 322 as const,
+    373: 109 as const,
+    374: 110 as const,
+    381: 111 as const,
+    382: 242 as const,
+    383: 243 as const,
+    386: 246 as const,
+    393: 112 as const,
+    395: 113 as const,
+    396: 114 as const,
+    398: 345 as const,
+    400: 115 as const,
+    401: 347 as const,
+    403: 353 as const,
+    410: 116 as const,
+    437: 117 as const,
+    442: 252 as const,
+    448: 118 as const,
+    449: 119 as const,
+    454: 120 as const,
+    455: 121 as const,
+    457: 253 as const,
+    460: 122 as const,
+    462: 382 as const,
+    463: 380 as const,
+    853: 44 as const,
+    855: 58 as const,
+    856: 46 as const,
+    876: 47 as const,
+    878: 45 as const,
+    882: 45 as const,
+    894: 40 as const,
+    895: 41 as const,
+    896: 91 as const,
+    897: 93 as const,
+    923: 64 as const,
+    1004: 48 as const,
+    1005: 49 as const,
+    1006: 50 as const,
+    1007: 51 as const,
+    1008: 52 as const,
+    1009: 53 as const,
+    1010: 54 as const,
+    1011: 55 as const,
+    1012: 56 as const,
+    1013: 57 as const,
+    1081: 37 as const,
+    1085: 43 as const,
+    1086: 45 as const,
+  }
 });
 
 function getStandardFontName(name: string) {
@@ -897,11 +911,12 @@ function getStandardFontName(name: string) {
 
 function isKnownFontName(name: string) {
   const fontName = normalizeFontName(name);
+  // 这里不是反复创建对象了吗？ 后面可能考虑要优化
   return !!(
-    getStdFontMap()![fontName] ||
-    getNonStdFontMap()![fontName] ||
-    getSerifFonts()![fontName] ||
-    getSymbolsFonts()![fontName]
+    (<Record<string, string>>getStdFontMap())[fontName] ||
+    (<Record<string, string>>getNonStdFontMap())[fontName] ||
+    (<Record<string, boolean>>getSerifFonts())[fontName] ||
+    (<Record<string, boolean>>getSymbolsFonts())[fontName]
   );
 }
 

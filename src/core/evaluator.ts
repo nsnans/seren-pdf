@@ -162,19 +162,11 @@ export interface CssFontInfo {
   metrics: { lineHeight: number, lineGap: number }
 }
 
-const DefaultDocParamEvaluatorOptions: DocumentEvaluatorOptions = Object.freeze({
-  maxImageSize: -1,
-  disableFontFace: false,
-  ignoreErrors: false,
-  isEvalSupported: true,
-  isOffscreenCanvasSupported: false,
-  isChrome: false,
-  canvasMaxAreaInBytes: -1,
-  fontExtraProperties: false,
-  useSystemFonts: true,
-  cMapUrl: null,
-  standardFontDataUrl: null,
-});
+// 取代原来的Object.freeze，这里可能类型会更明显一点
+// 在vscode中，可以使用ctrl+p来查看每一个变量对应的值
+const DefaultDocParamEvaluatorOptions = new DocumentEvaluatorOptions(
+  -1, false, false, true, false, false, -1, false, true, null, null
+);
 
 enum PatternType {
   TILING = 1,
@@ -262,6 +254,10 @@ export function addLocallyCachedImageOps(opList: OperatorList, data: ImageCacheD
   }
   opList.addImageOps(data.fn, <any>data.args, data.optionalContent);
 
+  // 既然fn知道了，那么fn对应的参数类型也应该要明确
+  // 现在的问题就是，fn明明已经知道了，但是却获取不到fn对应的参数类型
+  // 以至于无法对参数做一个详实的声明，继而无法准确的使用参数
+  // 有没有一个优雅且高效，只基于TypeScript的声明，而不影响史记开发的方法？
   if (data.fn === OPS.paintImageMaskXObject && (<ImageMaskXObject>data.args[0])?.count > 0) {
     (<ImageMaskXObject>data.args[0]).count++;
   }
@@ -298,7 +294,7 @@ export class TimeSlotManager {
 
 class PartialEvaluator {
 
-  readonly xref;
+  readonly xref: XRef;
 
   protected handler: MessageHandler;
 
@@ -308,7 +304,7 @@ class PartialEvaluator {
 
   protected fontCache;
 
-  protected builtInCMapCache: Map<string, { cMapData: Uint8Array; isCompressed: boolean; }>;
+  protected builtInCMapCache: Map<string, { cMapData: Uint8Array<ArrayBuffer>; isCompressed: boolean; }>;
 
   protected standardFontDataCache;
 
@@ -331,7 +327,7 @@ class PartialEvaluator {
     idFactory: GlobalIdFactory,
     fontCache: RefSetCache,
     builtInCMapCache: Map<string, any>,
-    standardFontDataCache: Map<string, any>,
+    standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
     options: DocumentEvaluatorOptions | null = null,
@@ -363,8 +359,7 @@ class PartialEvaluator {
    */
   get _pdfFunctionFactory() {
     const pdfFunctionFactory = new PDFFunctionFactory(
-      this.xref,
-      this.options.isEvalSupported
+      this.xref, this.options.isEvalSupported
     );
     return shadow(this, "_pdfFunctionFactory", pdfFunctionFactory);
   }
@@ -376,9 +371,7 @@ class PartialEvaluator {
   clone(newOptions = null) {
     const newEvaluator = Object.create(this);
     newEvaluator.options = Object.assign(
-      Object.create(null),
-      this.options,
-      newOptions
+      Object.create(null), this.options, newOptions
     );
     return newEvaluator;
   }
@@ -397,8 +390,8 @@ class PartialEvaluator {
       processed.put(resources.objId);
     }
 
-    const nodes = [resources],
-      xref = this.xref;
+    const nodes = [resources];
+    const xref = this.xref;
     while (nodes.length) {
       const node = nodes.shift();
       // First check the current resources for blend modes.
@@ -501,10 +494,7 @@ class PartialEvaluator {
     if (cachedData) {
       return cachedData;
     }
-    let data: {
-      cMapData: Uint8Array;
-      isCompressed: boolean;
-    };
+    let data: { cMapData: Uint8Array<ArrayBuffer>; isCompressed: boolean; };
 
     if (this.options.cMapUrl !== null) {
       // Only compressed CMaps are (currently) supported here.
@@ -537,9 +527,7 @@ class PartialEvaluator {
 
     // The symbol fonts are not consistent across platforms, always load the
     // standard font data for them.
-    if (
-      this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats"
-    ) {
+    if (this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
       return null;
     }
 
@@ -4052,9 +4040,9 @@ class PartialEvaluator {
     let widths: Record<string, number> = Object.create(null);
     let monospace = false;
 
-    const stdFontMap = getStdFontMap()!;
+    const stdFontMap = getStdFontMap();
     let lookupName = stdFontMap[name] || name;
-    const Metrics: Record<string, number | (() => Record<string, number>)> = getMetrics()!;
+    const Metrics = getMetrics();
 
     if (!(lookupName in Metrics)) {
       // Use default fonts for looking up font metrics if the passed

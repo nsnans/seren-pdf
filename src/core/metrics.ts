@@ -18,3039 +18,3064 @@ import { getLookupTableFactory } from "./core_utils";
 // The Metrics object contains glyph widths (in glyph space units).
 // As per PDF spec, for most fonts (Type 3 being an exception) a glyph
 // space unit corresponds to 1/1000th of text space unit.
-const getMetrics = getLookupTableFactory(function (t) {
-  t.Courier = 600;
-  t["Courier-Bold"] = 600;
-  t["Courier-BoldOblique"] = 600;
-  t["Courier-Oblique"] = 600;
-  // eslint-disable-next-line no-shadow
-  t.Helvetica = getLookupTableFactory(function (t) {
-    t.space = 278;
-    t.exclam = 278;
-    t.quotedbl = 355;
-    t.numbersign = 556;
-    t.dollar = 556;
-    t.percent = 889;
-    t.ampersand = 667;
-    t.quoteright = 222;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 389;
-    t.plus = 584;
-    t.comma = 278;
-    t.hyphen = 333;
-    t.period = 278;
-    t.slash = 278;
-    t.zero = 556;
-    t.one = 556;
-    t.two = 556;
-    t.three = 556;
-    t.four = 556;
-    t.five = 556;
-    t.six = 556;
-    t.seven = 556;
-    t.eight = 556;
-    t.nine = 556;
-    t.colon = 278;
-    t.semicolon = 278;
-    t.less = 584;
-    t.equal = 584;
-    t.greater = 584;
-    t.question = 556;
-    t.at = 1015;
-    t.A = 667;
-    t.B = 667;
-    t.C = 722;
-    t.D = 722;
-    t.E = 667;
-    t.F = 611;
-    t.G = 778;
-    t.H = 722;
-    t.I = 278;
-    t.J = 500;
-    t.K = 667;
-    t.L = 556;
-    t.M = 833;
-    t.N = 722;
-    t.O = 778;
-    t.P = 667;
-    t.Q = 778;
-    t.R = 722;
-    t.S = 667;
-    t.T = 611;
-    t.U = 722;
-    t.V = 667;
-    t.W = 944;
-    t.X = 667;
-    t.Y = 667;
-    t.Z = 611;
-    t.bracketleft = 278;
-    t.backslash = 278;
-    t.bracketright = 278;
-    t.asciicircum = 469;
-    t.underscore = 556;
-    t.quoteleft = 222;
-    t.a = 556;
-    t.b = 556;
-    t.c = 500;
-    t.d = 556;
-    t.e = 556;
-    t.f = 278;
-    t.g = 556;
-    t.h = 556;
-    t.i = 222;
-    t.j = 222;
-    t.k = 500;
-    t.l = 222;
-    t.m = 833;
-    t.n = 556;
-    t.o = 556;
-    t.p = 556;
-    t.q = 556;
-    t.r = 333;
-    t.s = 500;
-    t.t = 278;
-    t.u = 556;
-    t.v = 500;
-    t.w = 722;
-    t.x = 500;
-    t.y = 500;
-    t.z = 500;
-    t.braceleft = 334;
-    t.bar = 260;
-    t.braceright = 334;
-    t.asciitilde = 584;
-    t.exclamdown = 333;
-    t.cent = 556;
-    t.sterling = 556;
-    t.fraction = 167;
-    t.yen = 556;
-    t.florin = 556;
-    t.section = 556;
-    t.currency = 556;
-    t.quotesingle = 191;
-    t.quotedblleft = 333;
-    t.guillemotleft = 556;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 500;
-    t.fl = 500;
-    t.endash = 556;
-    t.dagger = 556;
-    t.daggerdbl = 556;
-    t.periodcentered = 278;
-    t.paragraph = 537;
-    t.bullet = 350;
-    t.quotesinglbase = 222;
-    t.quotedblbase = 333;
-    t.quotedblright = 333;
-    t.guillemotright = 556;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 611;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 1000;
-    t.ordfeminine = 370;
-    t.Lslash = 556;
-    t.Oslash = 778;
-    t.OE = 1000;
-    t.ordmasculine = 365;
-    t.ae = 889;
-    t.dotlessi = 278;
-    t.lslash = 222;
-    t.oslash = 611;
-    t.oe = 944;
-    t.germandbls = 611;
-    t.Idieresis = 278;
-    t.eacute = 556;
-    t.abreve = 556;
-    t.uhungarumlaut = 556;
-    t.ecaron = 556;
-    t.Ydieresis = 667;
-    t.divide = 584;
-    t.Yacute = 667;
-    t.Acircumflex = 667;
-    t.aacute = 556;
-    t.Ucircumflex = 722;
-    t.yacute = 500;
-    t.scommaaccent = 500;
-    t.ecircumflex = 556;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 556;
-    t.Uacute = 722;
-    t.uogonek = 556;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 737;
-    t.Emacron = 667;
-    t.ccaron = 500;
-    t.aring = 556;
-    t.Ncommaaccent = 722;
-    t.lacute = 222;
-    t.agrave = 556;
-    t.Tcommaaccent = 611;
-    t.Cacute = 722;
-    t.atilde = 556;
-    t.Edotaccent = 667;
-    t.scaron = 500;
-    t.scedilla = 500;
-    t.iacute = 278;
-    t.lozenge = 471;
-    t.Rcaron = 722;
-    t.Gcommaaccent = 778;
-    t.ucircumflex = 556;
-    t.acircumflex = 556;
-    t.Amacron = 667;
-    t.rcaron = 333;
-    t.ccedilla = 500;
-    t.Zdotaccent = 611;
-    t.Thorn = 667;
-    t.Omacron = 778;
-    t.Racute = 722;
-    t.Sacute = 667;
-    t.dcaron = 643;
-    t.Umacron = 722;
-    t.uring = 556;
-    t.threesuperior = 333;
-    t.Ograve = 778;
-    t.Agrave = 667;
-    t.Abreve = 667;
-    t.multiply = 584;
-    t.uacute = 556;
-    t.Tcaron = 611;
-    t.partialdiff = 476;
-    t.ydieresis = 500;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 556;
-    t.edieresis = 556;
-    t.cacute = 500;
-    t.nacute = 556;
-    t.umacron = 556;
-    t.Ncaron = 722;
-    t.Iacute = 278;
-    t.plusminus = 584;
-    t.brokenbar = 260;
-    t.registered = 737;
-    t.Gbreve = 778;
-    t.Idotaccent = 278;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 333;
-    t.omacron = 556;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 722;
-    t.lcommaaccent = 222;
-    t.tcaron = 317;
-    t.eogonek = 556;
-    t.Uogonek = 722;
-    t.Aacute = 667;
-    t.Adieresis = 667;
-    t.egrave = 556;
-    t.zacute = 500;
-    t.iogonek = 222;
-    t.Oacute = 778;
-    t.oacute = 556;
-    t.amacron = 556;
-    t.sacute = 500;
-    t.idieresis = 278;
-    t.Ocircumflex = 778;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 556;
-    t.twosuperior = 333;
-    t.Odieresis = 778;
-    t.mu = 556;
-    t.igrave = 278;
-    t.ohungarumlaut = 556;
-    t.Eogonek = 667;
-    t.dcroat = 556;
-    t.threequarters = 834;
-    t.Scedilla = 667;
-    t.lcaron = 299;
-    t.Kcommaaccent = 667;
-    t.Lacute = 556;
-    t.trademark = 1000;
-    t.edotaccent = 556;
-    t.Igrave = 278;
-    t.Imacron = 278;
-    t.Lcaron = 556;
-    t.onehalf = 834;
-    t.lessequal = 549;
-    t.ocircumflex = 556;
-    t.ntilde = 556;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 556;
-    t.gbreve = 556;
-    t.onequarter = 834;
-    t.Scaron = 667;
-    t.Scommaaccent = 667;
-    t.Ohungarumlaut = 778;
-    t.degree = 400;
-    t.ograve = 556;
-    t.Ccaron = 722;
-    t.ugrave = 556;
-    t.radical = 453;
-    t.Dcaron = 722;
-    t.rcommaaccent = 333;
-    t.Ntilde = 722;
-    t.otilde = 556;
-    t.Rcommaaccent = 722;
-    t.Lcommaaccent = 556;
-    t.Atilde = 667;
-    t.Aogonek = 667;
-    t.Aring = 667;
-    t.Otilde = 778;
-    t.zdotaccent = 500;
-    t.Ecaron = 667;
-    t.Iogonek = 278;
-    t.kcommaaccent = 500;
-    t.minus = 584;
-    t.Icircumflex = 278;
-    t.ncaron = 556;
-    t.tcommaaccent = 278;
-    t.logicalnot = 584;
-    t.odieresis = 556;
-    t.udieresis = 556;
-    t.notequal = 549;
-    t.gcommaaccent = 556;
-    t.eth = 556;
-    t.zcaron = 500;
-    t.ncommaaccent = 556;
-    t.onesuperior = 333;
-    t.imacron = 278;
-    t.Euro = 556;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Helvetica-Bold"] = getLookupTableFactory(function (t) {
-    t.space = 278;
-    t.exclam = 333;
-    t.quotedbl = 474;
-    t.numbersign = 556;
-    t.dollar = 556;
-    t.percent = 889;
-    t.ampersand = 722;
-    t.quoteright = 278;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 389;
-    t.plus = 584;
-    t.comma = 278;
-    t.hyphen = 333;
-    t.period = 278;
-    t.slash = 278;
-    t.zero = 556;
-    t.one = 556;
-    t.two = 556;
-    t.three = 556;
-    t.four = 556;
-    t.five = 556;
-    t.six = 556;
-    t.seven = 556;
-    t.eight = 556;
-    t.nine = 556;
-    t.colon = 333;
-    t.semicolon = 333;
-    t.less = 584;
-    t.equal = 584;
-    t.greater = 584;
-    t.question = 611;
-    t.at = 975;
-    t.A = 722;
-    t.B = 722;
-    t.C = 722;
-    t.D = 722;
-    t.E = 667;
-    t.F = 611;
-    t.G = 778;
-    t.H = 722;
-    t.I = 278;
-    t.J = 556;
-    t.K = 722;
-    t.L = 611;
-    t.M = 833;
-    t.N = 722;
-    t.O = 778;
-    t.P = 667;
-    t.Q = 778;
-    t.R = 722;
-    t.S = 667;
-    t.T = 611;
-    t.U = 722;
-    t.V = 667;
-    t.W = 944;
-    t.X = 667;
-    t.Y = 667;
-    t.Z = 611;
-    t.bracketleft = 333;
-    t.backslash = 278;
-    t.bracketright = 333;
-    t.asciicircum = 584;
-    t.underscore = 556;
-    t.quoteleft = 278;
-    t.a = 556;
-    t.b = 611;
-    t.c = 556;
-    t.d = 611;
-    t.e = 556;
-    t.f = 333;
-    t.g = 611;
-    t.h = 611;
-    t.i = 278;
-    t.j = 278;
-    t.k = 556;
-    t.l = 278;
-    t.m = 889;
-    t.n = 611;
-    t.o = 611;
-    t.p = 611;
-    t.q = 611;
-    t.r = 389;
-    t.s = 556;
-    t.t = 333;
-    t.u = 611;
-    t.v = 556;
-    t.w = 778;
-    t.x = 556;
-    t.y = 556;
-    t.z = 500;
-    t.braceleft = 389;
-    t.bar = 280;
-    t.braceright = 389;
-    t.asciitilde = 584;
-    t.exclamdown = 333;
-    t.cent = 556;
-    t.sterling = 556;
-    t.fraction = 167;
-    t.yen = 556;
-    t.florin = 556;
-    t.section = 556;
-    t.currency = 556;
-    t.quotesingle = 238;
-    t.quotedblleft = 500;
-    t.guillemotleft = 556;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 611;
-    t.fl = 611;
-    t.endash = 556;
-    t.dagger = 556;
-    t.daggerdbl = 556;
-    t.periodcentered = 278;
-    t.paragraph = 556;
-    t.bullet = 350;
-    t.quotesinglbase = 278;
-    t.quotedblbase = 500;
-    t.quotedblright = 500;
-    t.guillemotright = 556;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 611;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 1000;
-    t.ordfeminine = 370;
-    t.Lslash = 611;
-    t.Oslash = 778;
-    t.OE = 1000;
-    t.ordmasculine = 365;
-    t.ae = 889;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 611;
-    t.oe = 944;
-    t.germandbls = 611;
-    t.Idieresis = 278;
-    t.eacute = 556;
-    t.abreve = 556;
-    t.uhungarumlaut = 611;
-    t.ecaron = 556;
-    t.Ydieresis = 667;
-    t.divide = 584;
-    t.Yacute = 667;
-    t.Acircumflex = 722;
-    t.aacute = 556;
-    t.Ucircumflex = 722;
-    t.yacute = 556;
-    t.scommaaccent = 556;
-    t.ecircumflex = 556;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 556;
-    t.Uacute = 722;
-    t.uogonek = 611;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 737;
-    t.Emacron = 667;
-    t.ccaron = 556;
-    t.aring = 556;
-    t.Ncommaaccent = 722;
-    t.lacute = 278;
-    t.agrave = 556;
-    t.Tcommaaccent = 611;
-    t.Cacute = 722;
-    t.atilde = 556;
-    t.Edotaccent = 667;
-    t.scaron = 556;
-    t.scedilla = 556;
-    t.iacute = 278;
-    t.lozenge = 494;
-    t.Rcaron = 722;
-    t.Gcommaaccent = 778;
-    t.ucircumflex = 611;
-    t.acircumflex = 556;
-    t.Amacron = 722;
-    t.rcaron = 389;
-    t.ccedilla = 556;
-    t.Zdotaccent = 611;
-    t.Thorn = 667;
-    t.Omacron = 778;
-    t.Racute = 722;
-    t.Sacute = 667;
-    t.dcaron = 743;
-    t.Umacron = 722;
-    t.uring = 611;
-    t.threesuperior = 333;
-    t.Ograve = 778;
-    t.Agrave = 722;
-    t.Abreve = 722;
-    t.multiply = 584;
-    t.uacute = 611;
-    t.Tcaron = 611;
-    t.partialdiff = 494;
-    t.ydieresis = 556;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 556;
-    t.edieresis = 556;
-    t.cacute = 556;
-    t.nacute = 611;
-    t.umacron = 611;
-    t.Ncaron = 722;
-    t.Iacute = 278;
-    t.plusminus = 584;
-    t.brokenbar = 280;
-    t.registered = 737;
-    t.Gbreve = 778;
-    t.Idotaccent = 278;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 389;
-    t.omacron = 611;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 722;
-    t.lcommaaccent = 278;
-    t.tcaron = 389;
-    t.eogonek = 556;
-    t.Uogonek = 722;
-    t.Aacute = 722;
-    t.Adieresis = 722;
-    t.egrave = 556;
-    t.zacute = 500;
-    t.iogonek = 278;
-    t.Oacute = 778;
-    t.oacute = 611;
-    t.amacron = 556;
-    t.sacute = 556;
-    t.idieresis = 278;
-    t.Ocircumflex = 778;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 611;
-    t.twosuperior = 333;
-    t.Odieresis = 778;
-    t.mu = 611;
-    t.igrave = 278;
-    t.ohungarumlaut = 611;
-    t.Eogonek = 667;
-    t.dcroat = 611;
-    t.threequarters = 834;
-    t.Scedilla = 667;
-    t.lcaron = 400;
-    t.Kcommaaccent = 722;
-    t.Lacute = 611;
-    t.trademark = 1000;
-    t.edotaccent = 556;
-    t.Igrave = 278;
-    t.Imacron = 278;
-    t.Lcaron = 611;
-    t.onehalf = 834;
-    t.lessequal = 549;
-    t.ocircumflex = 611;
-    t.ntilde = 611;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 556;
-    t.gbreve = 611;
-    t.onequarter = 834;
-    t.Scaron = 667;
-    t.Scommaaccent = 667;
-    t.Ohungarumlaut = 778;
-    t.degree = 400;
-    t.ograve = 611;
-    t.Ccaron = 722;
-    t.ugrave = 611;
-    t.radical = 549;
-    t.Dcaron = 722;
-    t.rcommaaccent = 389;
-    t.Ntilde = 722;
-    t.otilde = 611;
-    t.Rcommaaccent = 722;
-    t.Lcommaaccent = 611;
-    t.Atilde = 722;
-    t.Aogonek = 722;
-    t.Aring = 722;
-    t.Otilde = 778;
-    t.zdotaccent = 500;
-    t.Ecaron = 667;
-    t.Iogonek = 278;
-    t.kcommaaccent = 556;
-    t.minus = 584;
-    t.Icircumflex = 278;
-    t.ncaron = 611;
-    t.tcommaaccent = 333;
-    t.logicalnot = 584;
-    t.odieresis = 611;
-    t.udieresis = 611;
-    t.notequal = 549;
-    t.gcommaaccent = 611;
-    t.eth = 611;
-    t.zcaron = 500;
-    t.ncommaaccent = 611;
-    t.onesuperior = 333;
-    t.imacron = 278;
-    t.Euro = 556;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Helvetica-BoldOblique"] = getLookupTableFactory(function (t) {
-    t.space = 278;
-    t.exclam = 333;
-    t.quotedbl = 474;
-    t.numbersign = 556;
-    t.dollar = 556;
-    t.percent = 889;
-    t.ampersand = 722;
-    t.quoteright = 278;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 389;
-    t.plus = 584;
-    t.comma = 278;
-    t.hyphen = 333;
-    t.period = 278;
-    t.slash = 278;
-    t.zero = 556;
-    t.one = 556;
-    t.two = 556;
-    t.three = 556;
-    t.four = 556;
-    t.five = 556;
-    t.six = 556;
-    t.seven = 556;
-    t.eight = 556;
-    t.nine = 556;
-    t.colon = 333;
-    t.semicolon = 333;
-    t.less = 584;
-    t.equal = 584;
-    t.greater = 584;
-    t.question = 611;
-    t.at = 975;
-    t.A = 722;
-    t.B = 722;
-    t.C = 722;
-    t.D = 722;
-    t.E = 667;
-    t.F = 611;
-    t.G = 778;
-    t.H = 722;
-    t.I = 278;
-    t.J = 556;
-    t.K = 722;
-    t.L = 611;
-    t.M = 833;
-    t.N = 722;
-    t.O = 778;
-    t.P = 667;
-    t.Q = 778;
-    t.R = 722;
-    t.S = 667;
-    t.T = 611;
-    t.U = 722;
-    t.V = 667;
-    t.W = 944;
-    t.X = 667;
-    t.Y = 667;
-    t.Z = 611;
-    t.bracketleft = 333;
-    t.backslash = 278;
-    t.bracketright = 333;
-    t.asciicircum = 584;
-    t.underscore = 556;
-    t.quoteleft = 278;
-    t.a = 556;
-    t.b = 611;
-    t.c = 556;
-    t.d = 611;
-    t.e = 556;
-    t.f = 333;
-    t.g = 611;
-    t.h = 611;
-    t.i = 278;
-    t.j = 278;
-    t.k = 556;
-    t.l = 278;
-    t.m = 889;
-    t.n = 611;
-    t.o = 611;
-    t.p = 611;
-    t.q = 611;
-    t.r = 389;
-    t.s = 556;
-    t.t = 333;
-    t.u = 611;
-    t.v = 556;
-    t.w = 778;
-    t.x = 556;
-    t.y = 556;
-    t.z = 500;
-    t.braceleft = 389;
-    t.bar = 280;
-    t.braceright = 389;
-    t.asciitilde = 584;
-    t.exclamdown = 333;
-    t.cent = 556;
-    t.sterling = 556;
-    t.fraction = 167;
-    t.yen = 556;
-    t.florin = 556;
-    t.section = 556;
-    t.currency = 556;
-    t.quotesingle = 238;
-    t.quotedblleft = 500;
-    t.guillemotleft = 556;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 611;
-    t.fl = 611;
-    t.endash = 556;
-    t.dagger = 556;
-    t.daggerdbl = 556;
-    t.periodcentered = 278;
-    t.paragraph = 556;
-    t.bullet = 350;
-    t.quotesinglbase = 278;
-    t.quotedblbase = 500;
-    t.quotedblright = 500;
-    t.guillemotright = 556;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 611;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 1000;
-    t.ordfeminine = 370;
-    t.Lslash = 611;
-    t.Oslash = 778;
-    t.OE = 1000;
-    t.ordmasculine = 365;
-    t.ae = 889;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 611;
-    t.oe = 944;
-    t.germandbls = 611;
-    t.Idieresis = 278;
-    t.eacute = 556;
-    t.abreve = 556;
-    t.uhungarumlaut = 611;
-    t.ecaron = 556;
-    t.Ydieresis = 667;
-    t.divide = 584;
-    t.Yacute = 667;
-    t.Acircumflex = 722;
-    t.aacute = 556;
-    t.Ucircumflex = 722;
-    t.yacute = 556;
-    t.scommaaccent = 556;
-    t.ecircumflex = 556;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 556;
-    t.Uacute = 722;
-    t.uogonek = 611;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 737;
-    t.Emacron = 667;
-    t.ccaron = 556;
-    t.aring = 556;
-    t.Ncommaaccent = 722;
-    t.lacute = 278;
-    t.agrave = 556;
-    t.Tcommaaccent = 611;
-    t.Cacute = 722;
-    t.atilde = 556;
-    t.Edotaccent = 667;
-    t.scaron = 556;
-    t.scedilla = 556;
-    t.iacute = 278;
-    t.lozenge = 494;
-    t.Rcaron = 722;
-    t.Gcommaaccent = 778;
-    t.ucircumflex = 611;
-    t.acircumflex = 556;
-    t.Amacron = 722;
-    t.rcaron = 389;
-    t.ccedilla = 556;
-    t.Zdotaccent = 611;
-    t.Thorn = 667;
-    t.Omacron = 778;
-    t.Racute = 722;
-    t.Sacute = 667;
-    t.dcaron = 743;
-    t.Umacron = 722;
-    t.uring = 611;
-    t.threesuperior = 333;
-    t.Ograve = 778;
-    t.Agrave = 722;
-    t.Abreve = 722;
-    t.multiply = 584;
-    t.uacute = 611;
-    t.Tcaron = 611;
-    t.partialdiff = 494;
-    t.ydieresis = 556;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 556;
-    t.edieresis = 556;
-    t.cacute = 556;
-    t.nacute = 611;
-    t.umacron = 611;
-    t.Ncaron = 722;
-    t.Iacute = 278;
-    t.plusminus = 584;
-    t.brokenbar = 280;
-    t.registered = 737;
-    t.Gbreve = 778;
-    t.Idotaccent = 278;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 389;
-    t.omacron = 611;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 722;
-    t.lcommaaccent = 278;
-    t.tcaron = 389;
-    t.eogonek = 556;
-    t.Uogonek = 722;
-    t.Aacute = 722;
-    t.Adieresis = 722;
-    t.egrave = 556;
-    t.zacute = 500;
-    t.iogonek = 278;
-    t.Oacute = 778;
-    t.oacute = 611;
-    t.amacron = 556;
-    t.sacute = 556;
-    t.idieresis = 278;
-    t.Ocircumflex = 778;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 611;
-    t.twosuperior = 333;
-    t.Odieresis = 778;
-    t.mu = 611;
-    t.igrave = 278;
-    t.ohungarumlaut = 611;
-    t.Eogonek = 667;
-    t.dcroat = 611;
-    t.threequarters = 834;
-    t.Scedilla = 667;
-    t.lcaron = 400;
-    t.Kcommaaccent = 722;
-    t.Lacute = 611;
-    t.trademark = 1000;
-    t.edotaccent = 556;
-    t.Igrave = 278;
-    t.Imacron = 278;
-    t.Lcaron = 611;
-    t.onehalf = 834;
-    t.lessequal = 549;
-    t.ocircumflex = 611;
-    t.ntilde = 611;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 556;
-    t.gbreve = 611;
-    t.onequarter = 834;
-    t.Scaron = 667;
-    t.Scommaaccent = 667;
-    t.Ohungarumlaut = 778;
-    t.degree = 400;
-    t.ograve = 611;
-    t.Ccaron = 722;
-    t.ugrave = 611;
-    t.radical = 549;
-    t.Dcaron = 722;
-    t.rcommaaccent = 389;
-    t.Ntilde = 722;
-    t.otilde = 611;
-    t.Rcommaaccent = 722;
-    t.Lcommaaccent = 611;
-    t.Atilde = 722;
-    t.Aogonek = 722;
-    t.Aring = 722;
-    t.Otilde = 778;
-    t.zdotaccent = 500;
-    t.Ecaron = 667;
-    t.Iogonek = 278;
-    t.kcommaaccent = 556;
-    t.minus = 584;
-    t.Icircumflex = 278;
-    t.ncaron = 611;
-    t.tcommaaccent = 333;
-    t.logicalnot = 584;
-    t.odieresis = 611;
-    t.udieresis = 611;
-    t.notequal = 549;
-    t.gcommaaccent = 611;
-    t.eth = 611;
-    t.zcaron = 500;
-    t.ncommaaccent = 611;
-    t.onesuperior = 333;
-    t.imacron = 278;
-    t.Euro = 556;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Helvetica-Oblique"] = getLookupTableFactory(function (t) {
-    t.space = 278;
-    t.exclam = 278;
-    t.quotedbl = 355;
-    t.numbersign = 556;
-    t.dollar = 556;
-    t.percent = 889;
-    t.ampersand = 667;
-    t.quoteright = 222;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 389;
-    t.plus = 584;
-    t.comma = 278;
-    t.hyphen = 333;
-    t.period = 278;
-    t.slash = 278;
-    t.zero = 556;
-    t.one = 556;
-    t.two = 556;
-    t.three = 556;
-    t.four = 556;
-    t.five = 556;
-    t.six = 556;
-    t.seven = 556;
-    t.eight = 556;
-    t.nine = 556;
-    t.colon = 278;
-    t.semicolon = 278;
-    t.less = 584;
-    t.equal = 584;
-    t.greater = 584;
-    t.question = 556;
-    t.at = 1015;
-    t.A = 667;
-    t.B = 667;
-    t.C = 722;
-    t.D = 722;
-    t.E = 667;
-    t.F = 611;
-    t.G = 778;
-    t.H = 722;
-    t.I = 278;
-    t.J = 500;
-    t.K = 667;
-    t.L = 556;
-    t.M = 833;
-    t.N = 722;
-    t.O = 778;
-    t.P = 667;
-    t.Q = 778;
-    t.R = 722;
-    t.S = 667;
-    t.T = 611;
-    t.U = 722;
-    t.V = 667;
-    t.W = 944;
-    t.X = 667;
-    t.Y = 667;
-    t.Z = 611;
-    t.bracketleft = 278;
-    t.backslash = 278;
-    t.bracketright = 278;
-    t.asciicircum = 469;
-    t.underscore = 556;
-    t.quoteleft = 222;
-    t.a = 556;
-    t.b = 556;
-    t.c = 500;
-    t.d = 556;
-    t.e = 556;
-    t.f = 278;
-    t.g = 556;
-    t.h = 556;
-    t.i = 222;
-    t.j = 222;
-    t.k = 500;
-    t.l = 222;
-    t.m = 833;
-    t.n = 556;
-    t.o = 556;
-    t.p = 556;
-    t.q = 556;
-    t.r = 333;
-    t.s = 500;
-    t.t = 278;
-    t.u = 556;
-    t.v = 500;
-    t.w = 722;
-    t.x = 500;
-    t.y = 500;
-    t.z = 500;
-    t.braceleft = 334;
-    t.bar = 260;
-    t.braceright = 334;
-    t.asciitilde = 584;
-    t.exclamdown = 333;
-    t.cent = 556;
-    t.sterling = 556;
-    t.fraction = 167;
-    t.yen = 556;
-    t.florin = 556;
-    t.section = 556;
-    t.currency = 556;
-    t.quotesingle = 191;
-    t.quotedblleft = 333;
-    t.guillemotleft = 556;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 500;
-    t.fl = 500;
-    t.endash = 556;
-    t.dagger = 556;
-    t.daggerdbl = 556;
-    t.periodcentered = 278;
-    t.paragraph = 537;
-    t.bullet = 350;
-    t.quotesinglbase = 222;
-    t.quotedblbase = 333;
-    t.quotedblright = 333;
-    t.guillemotright = 556;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 611;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 1000;
-    t.ordfeminine = 370;
-    t.Lslash = 556;
-    t.Oslash = 778;
-    t.OE = 1000;
-    t.ordmasculine = 365;
-    t.ae = 889;
-    t.dotlessi = 278;
-    t.lslash = 222;
-    t.oslash = 611;
-    t.oe = 944;
-    t.germandbls = 611;
-    t.Idieresis = 278;
-    t.eacute = 556;
-    t.abreve = 556;
-    t.uhungarumlaut = 556;
-    t.ecaron = 556;
-    t.Ydieresis = 667;
-    t.divide = 584;
-    t.Yacute = 667;
-    t.Acircumflex = 667;
-    t.aacute = 556;
-    t.Ucircumflex = 722;
-    t.yacute = 500;
-    t.scommaaccent = 500;
-    t.ecircumflex = 556;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 556;
-    t.Uacute = 722;
-    t.uogonek = 556;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 737;
-    t.Emacron = 667;
-    t.ccaron = 500;
-    t.aring = 556;
-    t.Ncommaaccent = 722;
-    t.lacute = 222;
-    t.agrave = 556;
-    t.Tcommaaccent = 611;
-    t.Cacute = 722;
-    t.atilde = 556;
-    t.Edotaccent = 667;
-    t.scaron = 500;
-    t.scedilla = 500;
-    t.iacute = 278;
-    t.lozenge = 471;
-    t.Rcaron = 722;
-    t.Gcommaaccent = 778;
-    t.ucircumflex = 556;
-    t.acircumflex = 556;
-    t.Amacron = 667;
-    t.rcaron = 333;
-    t.ccedilla = 500;
-    t.Zdotaccent = 611;
-    t.Thorn = 667;
-    t.Omacron = 778;
-    t.Racute = 722;
-    t.Sacute = 667;
-    t.dcaron = 643;
-    t.Umacron = 722;
-    t.uring = 556;
-    t.threesuperior = 333;
-    t.Ograve = 778;
-    t.Agrave = 667;
-    t.Abreve = 667;
-    t.multiply = 584;
-    t.uacute = 556;
-    t.Tcaron = 611;
-    t.partialdiff = 476;
-    t.ydieresis = 500;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 556;
-    t.edieresis = 556;
-    t.cacute = 500;
-    t.nacute = 556;
-    t.umacron = 556;
-    t.Ncaron = 722;
-    t.Iacute = 278;
-    t.plusminus = 584;
-    t.brokenbar = 260;
-    t.registered = 737;
-    t.Gbreve = 778;
-    t.Idotaccent = 278;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 333;
-    t.omacron = 556;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 722;
-    t.lcommaaccent = 222;
-    t.tcaron = 317;
-    t.eogonek = 556;
-    t.Uogonek = 722;
-    t.Aacute = 667;
-    t.Adieresis = 667;
-    t.egrave = 556;
-    t.zacute = 500;
-    t.iogonek = 222;
-    t.Oacute = 778;
-    t.oacute = 556;
-    t.amacron = 556;
-    t.sacute = 500;
-    t.idieresis = 278;
-    t.Ocircumflex = 778;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 556;
-    t.twosuperior = 333;
-    t.Odieresis = 778;
-    t.mu = 556;
-    t.igrave = 278;
-    t.ohungarumlaut = 556;
-    t.Eogonek = 667;
-    t.dcroat = 556;
-    t.threequarters = 834;
-    t.Scedilla = 667;
-    t.lcaron = 299;
-    t.Kcommaaccent = 667;
-    t.Lacute = 556;
-    t.trademark = 1000;
-    t.edotaccent = 556;
-    t.Igrave = 278;
-    t.Imacron = 278;
-    t.Lcaron = 556;
-    t.onehalf = 834;
-    t.lessequal = 549;
-    t.ocircumflex = 556;
-    t.ntilde = 556;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 556;
-    t.gbreve = 556;
-    t.onequarter = 834;
-    t.Scaron = 667;
-    t.Scommaaccent = 667;
-    t.Ohungarumlaut = 778;
-    t.degree = 400;
-    t.ograve = 556;
-    t.Ccaron = 722;
-    t.ugrave = 556;
-    t.radical = 453;
-    t.Dcaron = 722;
-    t.rcommaaccent = 333;
-    t.Ntilde = 722;
-    t.otilde = 556;
-    t.Rcommaaccent = 722;
-    t.Lcommaaccent = 556;
-    t.Atilde = 667;
-    t.Aogonek = 667;
-    t.Aring = 667;
-    t.Otilde = 778;
-    t.zdotaccent = 500;
-    t.Ecaron = 667;
-    t.Iogonek = 278;
-    t.kcommaaccent = 500;
-    t.minus = 584;
-    t.Icircumflex = 278;
-    t.ncaron = 556;
-    t.tcommaaccent = 278;
-    t.logicalnot = 584;
-    t.odieresis = 556;
-    t.udieresis = 556;
-    t.notequal = 549;
-    t.gcommaaccent = 556;
-    t.eth = 556;
-    t.zcaron = 500;
-    t.ncommaaccent = 556;
-    t.onesuperior = 333;
-    t.imacron = 278;
-    t.Euro = 556;
-  });
-  // eslint-disable-next-line no-shadow
-  t.Symbol = getLookupTableFactory(function (t) {
-    t.space = 250;
-    t.exclam = 333;
-    t.universal = 713;
-    t.numbersign = 500;
-    t.existential = 549;
-    t.percent = 833;
-    t.ampersand = 778;
-    t.suchthat = 439;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asteriskmath = 500;
-    t.plus = 549;
-    t.comma = 250;
-    t.minus = 549;
-    t.period = 250;
-    t.slash = 278;
-    t.zero = 500;
-    t.one = 500;
-    t.two = 500;
-    t.three = 500;
-    t.four = 500;
-    t.five = 500;
-    t.six = 500;
-    t.seven = 500;
-    t.eight = 500;
-    t.nine = 500;
-    t.colon = 278;
-    t.semicolon = 278;
-    t.less = 549;
-    t.equal = 549;
-    t.greater = 549;
-    t.question = 444;
-    t.congruent = 549;
-    t.Alpha = 722;
-    t.Beta = 667;
-    t.Chi = 722;
-    t.Delta = 612;
-    t.Epsilon = 611;
-    t.Phi = 763;
-    t.Gamma = 603;
-    t.Eta = 722;
-    t.Iota = 333;
-    t.theta1 = 631;
-    t.Kappa = 722;
-    t.Lambda = 686;
-    t.Mu = 889;
-    t.Nu = 722;
-    t.Omicron = 722;
-    t.Pi = 768;
-    t.Theta = 741;
-    t.Rho = 556;
-    t.Sigma = 592;
-    t.Tau = 611;
-    t.Upsilon = 690;
-    t.sigma1 = 439;
-    t.Omega = 768;
-    t.Xi = 645;
-    t.Psi = 795;
-    t.Zeta = 611;
-    t.bracketleft = 333;
-    t.therefore = 863;
-    t.bracketright = 333;
-    t.perpendicular = 658;
-    t.underscore = 500;
-    t.radicalex = 500;
-    t.alpha = 631;
-    t.beta = 549;
-    t.chi = 549;
-    t.delta = 494;
-    t.epsilon = 439;
-    t.phi = 521;
-    t.gamma = 411;
-    t.eta = 603;
-    t.iota = 329;
-    t.phi1 = 603;
-    t.kappa = 549;
-    t.lambda = 549;
-    t.mu = 576;
-    t.nu = 521;
-    t.omicron = 549;
-    t.pi = 549;
-    t.theta = 521;
-    t.rho = 549;
-    t.sigma = 603;
-    t.tau = 439;
-    t.upsilon = 576;
-    t.omega1 = 713;
-    t.omega = 686;
-    t.xi = 493;
-    t.psi = 686;
-    t.zeta = 494;
-    t.braceleft = 480;
-    t.bar = 200;
-    t.braceright = 480;
-    t.similar = 549;
-    t.Euro = 750;
-    t.Upsilon1 = 620;
-    t.minute = 247;
-    t.lessequal = 549;
-    t.fraction = 167;
-    t.infinity = 713;
-    t.florin = 500;
-    t.club = 753;
-    t.diamond = 753;
-    t.heart = 753;
-    t.spade = 753;
-    t.arrowboth = 1042;
-    t.arrowleft = 987;
-    t.arrowup = 603;
-    t.arrowright = 987;
-    t.arrowdown = 603;
-    t.degree = 400;
-    t.plusminus = 549;
-    t.second = 411;
-    t.greaterequal = 549;
-    t.multiply = 549;
-    t.proportional = 713;
-    t.partialdiff = 494;
-    t.bullet = 460;
-    t.divide = 549;
-    t.notequal = 549;
-    t.equivalence = 549;
-    t.approxequal = 549;
-    t.ellipsis = 1000;
-    t.arrowvertex = 603;
-    t.arrowhorizex = 1000;
-    t.carriagereturn = 658;
-    t.aleph = 823;
-    t.Ifraktur = 686;
-    t.Rfraktur = 795;
-    t.weierstrass = 987;
-    t.circlemultiply = 768;
-    t.circleplus = 768;
-    t.emptyset = 823;
-    t.intersection = 768;
-    t.union = 768;
-    t.propersuperset = 713;
-    t.reflexsuperset = 713;
-    t.notsubset = 713;
-    t.propersubset = 713;
-    t.reflexsubset = 713;
-    t.element = 713;
-    t.notelement = 713;
-    t.angle = 768;
-    t.gradient = 713;
-    t.registerserif = 790;
-    t.copyrightserif = 790;
-    t.trademarkserif = 890;
-    t.product = 823;
-    t.radical = 549;
-    t.dotmath = 250;
-    t.logicalnot = 713;
-    t.logicaland = 603;
-    t.logicalor = 603;
-    t.arrowdblboth = 1042;
-    t.arrowdblleft = 987;
-    t.arrowdblup = 603;
-    t.arrowdblright = 987;
-    t.arrowdbldown = 603;
-    t.lozenge = 494;
-    t.angleleft = 329;
-    t.registersans = 790;
-    t.copyrightsans = 790;
-    t.trademarksans = 786;
-    t.summation = 713;
-    t.parenlefttp = 384;
-    t.parenleftex = 384;
-    t.parenleftbt = 384;
-    t.bracketlefttp = 384;
-    t.bracketleftex = 384;
-    t.bracketleftbt = 384;
-    t.bracelefttp = 494;
-    t.braceleftmid = 494;
-    t.braceleftbt = 494;
-    t.braceex = 494;
-    t.angleright = 329;
-    t.integral = 274;
-    t.integraltp = 686;
-    t.integralex = 686;
-    t.integralbt = 686;
-    t.parenrighttp = 384;
-    t.parenrightex = 384;
-    t.parenrightbt = 384;
-    t.bracketrighttp = 384;
-    t.bracketrightex = 384;
-    t.bracketrightbt = 384;
-    t.bracerighttp = 494;
-    t.bracerightmid = 494;
-    t.bracerightbt = 494;
-    t.apple = 790;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Times-Roman"] = getLookupTableFactory(function (t) {
-    t.space = 250;
-    t.exclam = 333;
-    t.quotedbl = 408;
-    t.numbersign = 500;
-    t.dollar = 500;
-    t.percent = 833;
-    t.ampersand = 778;
-    t.quoteright = 333;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 500;
-    t.plus = 564;
-    t.comma = 250;
-    t.hyphen = 333;
-    t.period = 250;
-    t.slash = 278;
-    t.zero = 500;
-    t.one = 500;
-    t.two = 500;
-    t.three = 500;
-    t.four = 500;
-    t.five = 500;
-    t.six = 500;
-    t.seven = 500;
-    t.eight = 500;
-    t.nine = 500;
-    t.colon = 278;
-    t.semicolon = 278;
-    t.less = 564;
-    t.equal = 564;
-    t.greater = 564;
-    t.question = 444;
-    t.at = 921;
-    t.A = 722;
-    t.B = 667;
-    t.C = 667;
-    t.D = 722;
-    t.E = 611;
-    t.F = 556;
-    t.G = 722;
-    t.H = 722;
-    t.I = 333;
-    t.J = 389;
-    t.K = 722;
-    t.L = 611;
-    t.M = 889;
-    t.N = 722;
-    t.O = 722;
-    t.P = 556;
-    t.Q = 722;
-    t.R = 667;
-    t.S = 556;
-    t.T = 611;
-    t.U = 722;
-    t.V = 722;
-    t.W = 944;
-    t.X = 722;
-    t.Y = 722;
-    t.Z = 611;
-    t.bracketleft = 333;
-    t.backslash = 278;
-    t.bracketright = 333;
-    t.asciicircum = 469;
-    t.underscore = 500;
-    t.quoteleft = 333;
-    t.a = 444;
-    t.b = 500;
-    t.c = 444;
-    t.d = 500;
-    t.e = 444;
-    t.f = 333;
-    t.g = 500;
-    t.h = 500;
-    t.i = 278;
-    t.j = 278;
-    t.k = 500;
-    t.l = 278;
-    t.m = 778;
-    t.n = 500;
-    t.o = 500;
-    t.p = 500;
-    t.q = 500;
-    t.r = 333;
-    t.s = 389;
-    t.t = 278;
-    t.u = 500;
-    t.v = 500;
-    t.w = 722;
-    t.x = 500;
-    t.y = 500;
-    t.z = 444;
-    t.braceleft = 480;
-    t.bar = 200;
-    t.braceright = 480;
-    t.asciitilde = 541;
-    t.exclamdown = 333;
-    t.cent = 500;
-    t.sterling = 500;
-    t.fraction = 167;
-    t.yen = 500;
-    t.florin = 500;
-    t.section = 500;
-    t.currency = 500;
-    t.quotesingle = 180;
-    t.quotedblleft = 444;
-    t.guillemotleft = 500;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 556;
-    t.fl = 556;
-    t.endash = 500;
-    t.dagger = 500;
-    t.daggerdbl = 500;
-    t.periodcentered = 250;
-    t.paragraph = 453;
-    t.bullet = 350;
-    t.quotesinglbase = 333;
-    t.quotedblbase = 444;
-    t.quotedblright = 444;
-    t.guillemotright = 500;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 444;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 889;
-    t.ordfeminine = 276;
-    t.Lslash = 611;
-    t.Oslash = 722;
-    t.OE = 889;
-    t.ordmasculine = 310;
-    t.ae = 667;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 500;
-    t.oe = 722;
-    t.germandbls = 500;
-    t.Idieresis = 333;
-    t.eacute = 444;
-    t.abreve = 444;
-    t.uhungarumlaut = 500;
-    t.ecaron = 444;
-    t.Ydieresis = 722;
-    t.divide = 564;
-    t.Yacute = 722;
-    t.Acircumflex = 722;
-    t.aacute = 444;
-    t.Ucircumflex = 722;
-    t.yacute = 500;
-    t.scommaaccent = 389;
-    t.ecircumflex = 444;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 444;
-    t.Uacute = 722;
-    t.uogonek = 500;
-    t.Edieresis = 611;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 760;
-    t.Emacron = 611;
-    t.ccaron = 444;
-    t.aring = 444;
-    t.Ncommaaccent = 722;
-    t.lacute = 278;
-    t.agrave = 444;
-    t.Tcommaaccent = 611;
-    t.Cacute = 667;
-    t.atilde = 444;
-    t.Edotaccent = 611;
-    t.scaron = 389;
-    t.scedilla = 389;
-    t.iacute = 278;
-    t.lozenge = 471;
-    t.Rcaron = 667;
-    t.Gcommaaccent = 722;
-    t.ucircumflex = 500;
-    t.acircumflex = 444;
-    t.Amacron = 722;
-    t.rcaron = 333;
-    t.ccedilla = 444;
-    t.Zdotaccent = 611;
-    t.Thorn = 556;
-    t.Omacron = 722;
-    t.Racute = 667;
-    t.Sacute = 556;
-    t.dcaron = 588;
-    t.Umacron = 722;
-    t.uring = 500;
-    t.threesuperior = 300;
-    t.Ograve = 722;
-    t.Agrave = 722;
-    t.Abreve = 722;
-    t.multiply = 564;
-    t.uacute = 500;
-    t.Tcaron = 611;
-    t.partialdiff = 476;
-    t.ydieresis = 500;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 611;
-    t.adieresis = 444;
-    t.edieresis = 444;
-    t.cacute = 444;
-    t.nacute = 500;
-    t.umacron = 500;
-    t.Ncaron = 722;
-    t.Iacute = 333;
-    t.plusminus = 564;
-    t.brokenbar = 200;
-    t.registered = 760;
-    t.Gbreve = 722;
-    t.Idotaccent = 333;
-    t.summation = 600;
-    t.Egrave = 611;
-    t.racute = 333;
-    t.omacron = 500;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 667;
-    t.lcommaaccent = 278;
-    t.tcaron = 326;
-    t.eogonek = 444;
-    t.Uogonek = 722;
-    t.Aacute = 722;
-    t.Adieresis = 722;
-    t.egrave = 444;
-    t.zacute = 444;
-    t.iogonek = 278;
-    t.Oacute = 722;
-    t.oacute = 500;
-    t.amacron = 444;
-    t.sacute = 389;
-    t.idieresis = 278;
-    t.Ocircumflex = 722;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 500;
-    t.twosuperior = 300;
-    t.Odieresis = 722;
-    t.mu = 500;
-    t.igrave = 278;
-    t.ohungarumlaut = 500;
-    t.Eogonek = 611;
-    t.dcroat = 500;
-    t.threequarters = 750;
-    t.Scedilla = 556;
-    t.lcaron = 344;
-    t.Kcommaaccent = 722;
-    t.Lacute = 611;
-    t.trademark = 980;
-    t.edotaccent = 444;
-    t.Igrave = 333;
-    t.Imacron = 333;
-    t.Lcaron = 611;
-    t.onehalf = 750;
-    t.lessequal = 549;
-    t.ocircumflex = 500;
-    t.ntilde = 500;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 611;
-    t.emacron = 444;
-    t.gbreve = 500;
-    t.onequarter = 750;
-    t.Scaron = 556;
-    t.Scommaaccent = 556;
-    t.Ohungarumlaut = 722;
-    t.degree = 400;
-    t.ograve = 500;
-    t.Ccaron = 667;
-    t.ugrave = 500;
-    t.radical = 453;
-    t.Dcaron = 722;
-    t.rcommaaccent = 333;
-    t.Ntilde = 722;
-    t.otilde = 500;
-    t.Rcommaaccent = 667;
-    t.Lcommaaccent = 611;
-    t.Atilde = 722;
-    t.Aogonek = 722;
-    t.Aring = 722;
-    t.Otilde = 722;
-    t.zdotaccent = 444;
-    t.Ecaron = 611;
-    t.Iogonek = 333;
-    t.kcommaaccent = 500;
-    t.minus = 564;
-    t.Icircumflex = 333;
-    t.ncaron = 500;
-    t.tcommaaccent = 278;
-    t.logicalnot = 564;
-    t.odieresis = 500;
-    t.udieresis = 500;
-    t.notequal = 549;
-    t.gcommaaccent = 500;
-    t.eth = 500;
-    t.zcaron = 444;
-    t.ncommaaccent = 500;
-    t.onesuperior = 300;
-    t.imacron = 278;
-    t.Euro = 500;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Times-Bold"] = getLookupTableFactory(function (t) {
-    t.space = 250;
-    t.exclam = 333;
-    t.quotedbl = 555;
-    t.numbersign = 500;
-    t.dollar = 500;
-    t.percent = 1000;
-    t.ampersand = 833;
-    t.quoteright = 333;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 500;
-    t.plus = 570;
-    t.comma = 250;
-    t.hyphen = 333;
-    t.period = 250;
-    t.slash = 278;
-    t.zero = 500;
-    t.one = 500;
-    t.two = 500;
-    t.three = 500;
-    t.four = 500;
-    t.five = 500;
-    t.six = 500;
-    t.seven = 500;
-    t.eight = 500;
-    t.nine = 500;
-    t.colon = 333;
-    t.semicolon = 333;
-    t.less = 570;
-    t.equal = 570;
-    t.greater = 570;
-    t.question = 500;
-    t.at = 930;
-    t.A = 722;
-    t.B = 667;
-    t.C = 722;
-    t.D = 722;
-    t.E = 667;
-    t.F = 611;
-    t.G = 778;
-    t.H = 778;
-    t.I = 389;
-    t.J = 500;
-    t.K = 778;
-    t.L = 667;
-    t.M = 944;
-    t.N = 722;
-    t.O = 778;
-    t.P = 611;
-    t.Q = 778;
-    t.R = 722;
-    t.S = 556;
-    t.T = 667;
-    t.U = 722;
-    t.V = 722;
-    t.W = 1000;
-    t.X = 722;
-    t.Y = 722;
-    t.Z = 667;
-    t.bracketleft = 333;
-    t.backslash = 278;
-    t.bracketright = 333;
-    t.asciicircum = 581;
-    t.underscore = 500;
-    t.quoteleft = 333;
-    t.a = 500;
-    t.b = 556;
-    t.c = 444;
-    t.d = 556;
-    t.e = 444;
-    t.f = 333;
-    t.g = 500;
-    t.h = 556;
-    t.i = 278;
-    t.j = 333;
-    t.k = 556;
-    t.l = 278;
-    t.m = 833;
-    t.n = 556;
-    t.o = 500;
-    t.p = 556;
-    t.q = 556;
-    t.r = 444;
-    t.s = 389;
-    t.t = 333;
-    t.u = 556;
-    t.v = 500;
-    t.w = 722;
-    t.x = 500;
-    t.y = 500;
-    t.z = 444;
-    t.braceleft = 394;
-    t.bar = 220;
-    t.braceright = 394;
-    t.asciitilde = 520;
-    t.exclamdown = 333;
-    t.cent = 500;
-    t.sterling = 500;
-    t.fraction = 167;
-    t.yen = 500;
-    t.florin = 500;
-    t.section = 500;
-    t.currency = 500;
-    t.quotesingle = 278;
-    t.quotedblleft = 500;
-    t.guillemotleft = 500;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 556;
-    t.fl = 556;
-    t.endash = 500;
-    t.dagger = 500;
-    t.daggerdbl = 500;
-    t.periodcentered = 250;
-    t.paragraph = 540;
-    t.bullet = 350;
-    t.quotesinglbase = 333;
-    t.quotedblbase = 500;
-    t.quotedblright = 500;
-    t.guillemotright = 500;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 500;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 1000;
-    t.ordfeminine = 300;
-    t.Lslash = 667;
-    t.Oslash = 778;
-    t.OE = 1000;
-    t.ordmasculine = 330;
-    t.ae = 722;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 500;
-    t.oe = 722;
-    t.germandbls = 556;
-    t.Idieresis = 389;
-    t.eacute = 444;
-    t.abreve = 500;
-    t.uhungarumlaut = 556;
-    t.ecaron = 444;
-    t.Ydieresis = 722;
-    t.divide = 570;
-    t.Yacute = 722;
-    t.Acircumflex = 722;
-    t.aacute = 500;
-    t.Ucircumflex = 722;
-    t.yacute = 500;
-    t.scommaaccent = 389;
-    t.ecircumflex = 444;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 500;
-    t.Uacute = 722;
-    t.uogonek = 556;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 747;
-    t.Emacron = 667;
-    t.ccaron = 444;
-    t.aring = 500;
-    t.Ncommaaccent = 722;
-    t.lacute = 278;
-    t.agrave = 500;
-    t.Tcommaaccent = 667;
-    t.Cacute = 722;
-    t.atilde = 500;
-    t.Edotaccent = 667;
-    t.scaron = 389;
-    t.scedilla = 389;
-    t.iacute = 278;
-    t.lozenge = 494;
-    t.Rcaron = 722;
-    t.Gcommaaccent = 778;
-    t.ucircumflex = 556;
-    t.acircumflex = 500;
-    t.Amacron = 722;
-    t.rcaron = 444;
-    t.ccedilla = 444;
-    t.Zdotaccent = 667;
-    t.Thorn = 611;
-    t.Omacron = 778;
-    t.Racute = 722;
-    t.Sacute = 556;
-    t.dcaron = 672;
-    t.Umacron = 722;
-    t.uring = 556;
-    t.threesuperior = 300;
-    t.Ograve = 778;
-    t.Agrave = 722;
-    t.Abreve = 722;
-    t.multiply = 570;
-    t.uacute = 556;
-    t.Tcaron = 667;
-    t.partialdiff = 494;
-    t.ydieresis = 500;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 500;
-    t.edieresis = 444;
-    t.cacute = 444;
-    t.nacute = 556;
-    t.umacron = 556;
-    t.Ncaron = 722;
-    t.Iacute = 389;
-    t.plusminus = 570;
-    t.brokenbar = 220;
-    t.registered = 747;
-    t.Gbreve = 778;
-    t.Idotaccent = 389;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 444;
-    t.omacron = 500;
-    t.Zacute = 667;
-    t.Zcaron = 667;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 722;
-    t.lcommaaccent = 278;
-    t.tcaron = 416;
-    t.eogonek = 444;
-    t.Uogonek = 722;
-    t.Aacute = 722;
-    t.Adieresis = 722;
-    t.egrave = 444;
-    t.zacute = 444;
-    t.iogonek = 278;
-    t.Oacute = 778;
-    t.oacute = 500;
-    t.amacron = 500;
-    t.sacute = 389;
-    t.idieresis = 278;
-    t.Ocircumflex = 778;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 556;
-    t.twosuperior = 300;
-    t.Odieresis = 778;
-    t.mu = 556;
-    t.igrave = 278;
-    t.ohungarumlaut = 500;
-    t.Eogonek = 667;
-    t.dcroat = 556;
-    t.threequarters = 750;
-    t.Scedilla = 556;
-    t.lcaron = 394;
-    t.Kcommaaccent = 778;
-    t.Lacute = 667;
-    t.trademark = 1000;
-    t.edotaccent = 444;
-    t.Igrave = 389;
-    t.Imacron = 389;
-    t.Lcaron = 667;
-    t.onehalf = 750;
-    t.lessequal = 549;
-    t.ocircumflex = 500;
-    t.ntilde = 556;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 444;
-    t.gbreve = 500;
-    t.onequarter = 750;
-    t.Scaron = 556;
-    t.Scommaaccent = 556;
-    t.Ohungarumlaut = 778;
-    t.degree = 400;
-    t.ograve = 500;
-    t.Ccaron = 722;
-    t.ugrave = 556;
-    t.radical = 549;
-    t.Dcaron = 722;
-    t.rcommaaccent = 444;
-    t.Ntilde = 722;
-    t.otilde = 500;
-    t.Rcommaaccent = 722;
-    t.Lcommaaccent = 667;
-    t.Atilde = 722;
-    t.Aogonek = 722;
-    t.Aring = 722;
-    t.Otilde = 778;
-    t.zdotaccent = 444;
-    t.Ecaron = 667;
-    t.Iogonek = 389;
-    t.kcommaaccent = 556;
-    t.minus = 570;
-    t.Icircumflex = 389;
-    t.ncaron = 556;
-    t.tcommaaccent = 333;
-    t.logicalnot = 570;
-    t.odieresis = 500;
-    t.udieresis = 556;
-    t.notequal = 549;
-    t.gcommaaccent = 500;
-    t.eth = 500;
-    t.zcaron = 444;
-    t.ncommaaccent = 556;
-    t.onesuperior = 300;
-    t.imacron = 278;
-    t.Euro = 500;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Times-BoldItalic"] = getLookupTableFactory(function (t) {
-    t.space = 250;
-    t.exclam = 389;
-    t.quotedbl = 555;
-    t.numbersign = 500;
-    t.dollar = 500;
-    t.percent = 833;
-    t.ampersand = 778;
-    t.quoteright = 333;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 500;
-    t.plus = 570;
-    t.comma = 250;
-    t.hyphen = 333;
-    t.period = 250;
-    t.slash = 278;
-    t.zero = 500;
-    t.one = 500;
-    t.two = 500;
-    t.three = 500;
-    t.four = 500;
-    t.five = 500;
-    t.six = 500;
-    t.seven = 500;
-    t.eight = 500;
-    t.nine = 500;
-    t.colon = 333;
-    t.semicolon = 333;
-    t.less = 570;
-    t.equal = 570;
-    t.greater = 570;
-    t.question = 500;
-    t.at = 832;
-    t.A = 667;
-    t.B = 667;
-    t.C = 667;
-    t.D = 722;
-    t.E = 667;
-    t.F = 667;
-    t.G = 722;
-    t.H = 778;
-    t.I = 389;
-    t.J = 500;
-    t.K = 667;
-    t.L = 611;
-    t.M = 889;
-    t.N = 722;
-    t.O = 722;
-    t.P = 611;
-    t.Q = 722;
-    t.R = 667;
-    t.S = 556;
-    t.T = 611;
-    t.U = 722;
-    t.V = 667;
-    t.W = 889;
-    t.X = 667;
-    t.Y = 611;
-    t.Z = 611;
-    t.bracketleft = 333;
-    t.backslash = 278;
-    t.bracketright = 333;
-    t.asciicircum = 570;
-    t.underscore = 500;
-    t.quoteleft = 333;
-    t.a = 500;
-    t.b = 500;
-    t.c = 444;
-    t.d = 500;
-    t.e = 444;
-    t.f = 333;
-    t.g = 500;
-    t.h = 556;
-    t.i = 278;
-    t.j = 278;
-    t.k = 500;
-    t.l = 278;
-    t.m = 778;
-    t.n = 556;
-    t.o = 500;
-    t.p = 500;
-    t.q = 500;
-    t.r = 389;
-    t.s = 389;
-    t.t = 278;
-    t.u = 556;
-    t.v = 444;
-    t.w = 667;
-    t.x = 500;
-    t.y = 444;
-    t.z = 389;
-    t.braceleft = 348;
-    t.bar = 220;
-    t.braceright = 348;
-    t.asciitilde = 570;
-    t.exclamdown = 389;
-    t.cent = 500;
-    t.sterling = 500;
-    t.fraction = 167;
-    t.yen = 500;
-    t.florin = 500;
-    t.section = 500;
-    t.currency = 500;
-    t.quotesingle = 278;
-    t.quotedblleft = 500;
-    t.guillemotleft = 500;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 556;
-    t.fl = 556;
-    t.endash = 500;
-    t.dagger = 500;
-    t.daggerdbl = 500;
-    t.periodcentered = 250;
-    t.paragraph = 500;
-    t.bullet = 350;
-    t.quotesinglbase = 333;
-    t.quotedblbase = 500;
-    t.quotedblright = 500;
-    t.guillemotright = 500;
-    t.ellipsis = 1000;
-    t.perthousand = 1000;
-    t.questiondown = 500;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 1000;
-    t.AE = 944;
-    t.ordfeminine = 266;
-    t.Lslash = 611;
-    t.Oslash = 722;
-    t.OE = 944;
-    t.ordmasculine = 300;
-    t.ae = 722;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 500;
-    t.oe = 722;
-    t.germandbls = 500;
-    t.Idieresis = 389;
-    t.eacute = 444;
-    t.abreve = 500;
-    t.uhungarumlaut = 556;
-    t.ecaron = 444;
-    t.Ydieresis = 611;
-    t.divide = 570;
-    t.Yacute = 611;
-    t.Acircumflex = 667;
-    t.aacute = 500;
-    t.Ucircumflex = 722;
-    t.yacute = 444;
-    t.scommaaccent = 389;
-    t.ecircumflex = 444;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 500;
-    t.Uacute = 722;
-    t.uogonek = 556;
-    t.Edieresis = 667;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 747;
-    t.Emacron = 667;
-    t.ccaron = 444;
-    t.aring = 500;
-    t.Ncommaaccent = 722;
-    t.lacute = 278;
-    t.agrave = 500;
-    t.Tcommaaccent = 611;
-    t.Cacute = 667;
-    t.atilde = 500;
-    t.Edotaccent = 667;
-    t.scaron = 389;
-    t.scedilla = 389;
-    t.iacute = 278;
-    t.lozenge = 494;
-    t.Rcaron = 667;
-    t.Gcommaaccent = 722;
-    t.ucircumflex = 556;
-    t.acircumflex = 500;
-    t.Amacron = 667;
-    t.rcaron = 389;
-    t.ccedilla = 444;
-    t.Zdotaccent = 611;
-    t.Thorn = 611;
-    t.Omacron = 722;
-    t.Racute = 667;
-    t.Sacute = 556;
-    t.dcaron = 608;
-    t.Umacron = 722;
-    t.uring = 556;
-    t.threesuperior = 300;
-    t.Ograve = 722;
-    t.Agrave = 667;
-    t.Abreve = 667;
-    t.multiply = 570;
-    t.uacute = 556;
-    t.Tcaron = 611;
-    t.partialdiff = 494;
-    t.ydieresis = 444;
-    t.Nacute = 722;
-    t.icircumflex = 278;
-    t.Ecircumflex = 667;
-    t.adieresis = 500;
-    t.edieresis = 444;
-    t.cacute = 444;
-    t.nacute = 556;
-    t.umacron = 556;
-    t.Ncaron = 722;
-    t.Iacute = 389;
-    t.plusminus = 570;
-    t.brokenbar = 220;
-    t.registered = 747;
-    t.Gbreve = 722;
-    t.Idotaccent = 389;
-    t.summation = 600;
-    t.Egrave = 667;
-    t.racute = 389;
-    t.omacron = 500;
-    t.Zacute = 611;
-    t.Zcaron = 611;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 667;
-    t.lcommaaccent = 278;
-    t.tcaron = 366;
-    t.eogonek = 444;
-    t.Uogonek = 722;
-    t.Aacute = 667;
-    t.Adieresis = 667;
-    t.egrave = 444;
-    t.zacute = 389;
-    t.iogonek = 278;
-    t.Oacute = 722;
-    t.oacute = 500;
-    t.amacron = 500;
-    t.sacute = 389;
-    t.idieresis = 278;
-    t.Ocircumflex = 722;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 500;
-    t.twosuperior = 300;
-    t.Odieresis = 722;
-    t.mu = 576;
-    t.igrave = 278;
-    t.ohungarumlaut = 500;
-    t.Eogonek = 667;
-    t.dcroat = 500;
-    t.threequarters = 750;
-    t.Scedilla = 556;
-    t.lcaron = 382;
-    t.Kcommaaccent = 667;
-    t.Lacute = 611;
-    t.trademark = 1000;
-    t.edotaccent = 444;
-    t.Igrave = 389;
-    t.Imacron = 389;
-    t.Lcaron = 611;
-    t.onehalf = 750;
-    t.lessequal = 549;
-    t.ocircumflex = 500;
-    t.ntilde = 556;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 667;
-    t.emacron = 444;
-    t.gbreve = 500;
-    t.onequarter = 750;
-    t.Scaron = 556;
-    t.Scommaaccent = 556;
-    t.Ohungarumlaut = 722;
-    t.degree = 400;
-    t.ograve = 500;
-    t.Ccaron = 667;
-    t.ugrave = 556;
-    t.radical = 549;
-    t.Dcaron = 722;
-    t.rcommaaccent = 389;
-    t.Ntilde = 722;
-    t.otilde = 500;
-    t.Rcommaaccent = 667;
-    t.Lcommaaccent = 611;
-    t.Atilde = 667;
-    t.Aogonek = 667;
-    t.Aring = 667;
-    t.Otilde = 722;
-    t.zdotaccent = 389;
-    t.Ecaron = 667;
-    t.Iogonek = 389;
-    t.kcommaaccent = 500;
-    t.minus = 606;
-    t.Icircumflex = 389;
-    t.ncaron = 556;
-    t.tcommaaccent = 278;
-    t.logicalnot = 606;
-    t.odieresis = 500;
-    t.udieresis = 556;
-    t.notequal = 549;
-    t.gcommaaccent = 500;
-    t.eth = 500;
-    t.zcaron = 389;
-    t.ncommaaccent = 556;
-    t.onesuperior = 300;
-    t.imacron = 278;
-    t.Euro = 500;
-  });
-  // eslint-disable-next-line no-shadow
-  t["Times-Italic"] = getLookupTableFactory(function (t) {
-    t.space = 250;
-    t.exclam = 333;
-    t.quotedbl = 420;
-    t.numbersign = 500;
-    t.dollar = 500;
-    t.percent = 833;
-    t.ampersand = 778;
-    t.quoteright = 333;
-    t.parenleft = 333;
-    t.parenright = 333;
-    t.asterisk = 500;
-    t.plus = 675;
-    t.comma = 250;
-    t.hyphen = 333;
-    t.period = 250;
-    t.slash = 278;
-    t.zero = 500;
-    t.one = 500;
-    t.two = 500;
-    t.three = 500;
-    t.four = 500;
-    t.five = 500;
-    t.six = 500;
-    t.seven = 500;
-    t.eight = 500;
-    t.nine = 500;
-    t.colon = 333;
-    t.semicolon = 333;
-    t.less = 675;
-    t.equal = 675;
-    t.greater = 675;
-    t.question = 500;
-    t.at = 920;
-    t.A = 611;
-    t.B = 611;
-    t.C = 667;
-    t.D = 722;
-    t.E = 611;
-    t.F = 611;
-    t.G = 722;
-    t.H = 722;
-    t.I = 333;
-    t.J = 444;
-    t.K = 667;
-    t.L = 556;
-    t.M = 833;
-    t.N = 667;
-    t.O = 722;
-    t.P = 611;
-    t.Q = 722;
-    t.R = 611;
-    t.S = 500;
-    t.T = 556;
-    t.U = 722;
-    t.V = 611;
-    t.W = 833;
-    t.X = 611;
-    t.Y = 556;
-    t.Z = 556;
-    t.bracketleft = 389;
-    t.backslash = 278;
-    t.bracketright = 389;
-    t.asciicircum = 422;
-    t.underscore = 500;
-    t.quoteleft = 333;
-    t.a = 500;
-    t.b = 500;
-    t.c = 444;
-    t.d = 500;
-    t.e = 444;
-    t.f = 278;
-    t.g = 500;
-    t.h = 500;
-    t.i = 278;
-    t.j = 278;
-    t.k = 444;
-    t.l = 278;
-    t.m = 722;
-    t.n = 500;
-    t.o = 500;
-    t.p = 500;
-    t.q = 500;
-    t.r = 389;
-    t.s = 389;
-    t.t = 278;
-    t.u = 500;
-    t.v = 444;
-    t.w = 667;
-    t.x = 444;
-    t.y = 444;
-    t.z = 389;
-    t.braceleft = 400;
-    t.bar = 275;
-    t.braceright = 400;
-    t.asciitilde = 541;
-    t.exclamdown = 389;
-    t.cent = 500;
-    t.sterling = 500;
-    t.fraction = 167;
-    t.yen = 500;
-    t.florin = 500;
-    t.section = 500;
-    t.currency = 500;
-    t.quotesingle = 214;
-    t.quotedblleft = 556;
-    t.guillemotleft = 500;
-    t.guilsinglleft = 333;
-    t.guilsinglright = 333;
-    t.fi = 500;
-    t.fl = 500;
-    t.endash = 500;
-    t.dagger = 500;
-    t.daggerdbl = 500;
-    t.periodcentered = 250;
-    t.paragraph = 523;
-    t.bullet = 350;
-    t.quotesinglbase = 333;
-    t.quotedblbase = 556;
-    t.quotedblright = 556;
-    t.guillemotright = 500;
-    t.ellipsis = 889;
-    t.perthousand = 1000;
-    t.questiondown = 500;
-    t.grave = 333;
-    t.acute = 333;
-    t.circumflex = 333;
-    t.tilde = 333;
-    t.macron = 333;
-    t.breve = 333;
-    t.dotaccent = 333;
-    t.dieresis = 333;
-    t.ring = 333;
-    t.cedilla = 333;
-    t.hungarumlaut = 333;
-    t.ogonek = 333;
-    t.caron = 333;
-    t.emdash = 889;
-    t.AE = 889;
-    t.ordfeminine = 276;
-    t.Lslash = 556;
-    t.Oslash = 722;
-    t.OE = 944;
-    t.ordmasculine = 310;
-    t.ae = 667;
-    t.dotlessi = 278;
-    t.lslash = 278;
-    t.oslash = 500;
-    t.oe = 667;
-    t.germandbls = 500;
-    t.Idieresis = 333;
-    t.eacute = 444;
-    t.abreve = 500;
-    t.uhungarumlaut = 500;
-    t.ecaron = 444;
-    t.Ydieresis = 556;
-    t.divide = 675;
-    t.Yacute = 556;
-    t.Acircumflex = 611;
-    t.aacute = 500;
-    t.Ucircumflex = 722;
-    t.yacute = 444;
-    t.scommaaccent = 389;
-    t.ecircumflex = 444;
-    t.Uring = 722;
-    t.Udieresis = 722;
-    t.aogonek = 500;
-    t.Uacute = 722;
-    t.uogonek = 500;
-    t.Edieresis = 611;
-    t.Dcroat = 722;
-    t.commaaccent = 250;
-    t.copyright = 760;
-    t.Emacron = 611;
-    t.ccaron = 444;
-    t.aring = 500;
-    t.Ncommaaccent = 667;
-    t.lacute = 278;
-    t.agrave = 500;
-    t.Tcommaaccent = 556;
-    t.Cacute = 667;
-    t.atilde = 500;
-    t.Edotaccent = 611;
-    t.scaron = 389;
-    t.scedilla = 389;
-    t.iacute = 278;
-    t.lozenge = 471;
-    t.Rcaron = 611;
-    t.Gcommaaccent = 722;
-    t.ucircumflex = 500;
-    t.acircumflex = 500;
-    t.Amacron = 611;
-    t.rcaron = 389;
-    t.ccedilla = 444;
-    t.Zdotaccent = 556;
-    t.Thorn = 611;
-    t.Omacron = 722;
-    t.Racute = 611;
-    t.Sacute = 500;
-    t.dcaron = 544;
-    t.Umacron = 722;
-    t.uring = 500;
-    t.threesuperior = 300;
-    t.Ograve = 722;
-    t.Agrave = 611;
-    t.Abreve = 611;
-    t.multiply = 675;
-    t.uacute = 500;
-    t.Tcaron = 556;
-    t.partialdiff = 476;
-    t.ydieresis = 444;
-    t.Nacute = 667;
-    t.icircumflex = 278;
-    t.Ecircumflex = 611;
-    t.adieresis = 500;
-    t.edieresis = 444;
-    t.cacute = 444;
-    t.nacute = 500;
-    t.umacron = 500;
-    t.Ncaron = 667;
-    t.Iacute = 333;
-    t.plusminus = 675;
-    t.brokenbar = 275;
-    t.registered = 760;
-    t.Gbreve = 722;
-    t.Idotaccent = 333;
-    t.summation = 600;
-    t.Egrave = 611;
-    t.racute = 389;
-    t.omacron = 500;
-    t.Zacute = 556;
-    t.Zcaron = 556;
-    t.greaterequal = 549;
-    t.Eth = 722;
-    t.Ccedilla = 667;
-    t.lcommaaccent = 278;
-    t.tcaron = 300;
-    t.eogonek = 444;
-    t.Uogonek = 722;
-    t.Aacute = 611;
-    t.Adieresis = 611;
-    t.egrave = 444;
-    t.zacute = 389;
-    t.iogonek = 278;
-    t.Oacute = 722;
-    t.oacute = 500;
-    t.amacron = 500;
-    t.sacute = 389;
-    t.idieresis = 278;
-    t.Ocircumflex = 722;
-    t.Ugrave = 722;
-    t.Delta = 612;
-    t.thorn = 500;
-    t.twosuperior = 300;
-    t.Odieresis = 722;
-    t.mu = 500;
-    t.igrave = 278;
-    t.ohungarumlaut = 500;
-    t.Eogonek = 611;
-    t.dcroat = 500;
-    t.threequarters = 750;
-    t.Scedilla = 500;
-    t.lcaron = 300;
-    t.Kcommaaccent = 667;
-    t.Lacute = 556;
-    t.trademark = 980;
-    t.edotaccent = 444;
-    t.Igrave = 333;
-    t.Imacron = 333;
-    t.Lcaron = 611;
-    t.onehalf = 750;
-    t.lessequal = 549;
-    t.ocircumflex = 500;
-    t.ntilde = 500;
-    t.Uhungarumlaut = 722;
-    t.Eacute = 611;
-    t.emacron = 444;
-    t.gbreve = 500;
-    t.onequarter = 750;
-    t.Scaron = 500;
-    t.Scommaaccent = 500;
-    t.Ohungarumlaut = 722;
-    t.degree = 400;
-    t.ograve = 500;
-    t.Ccaron = 667;
-    t.ugrave = 500;
-    t.radical = 453;
-    t.Dcaron = 722;
-    t.rcommaaccent = 389;
-    t.Ntilde = 667;
-    t.otilde = 500;
-    t.Rcommaaccent = 611;
-    t.Lcommaaccent = 556;
-    t.Atilde = 611;
-    t.Aogonek = 611;
-    t.Aring = 611;
-    t.Otilde = 722;
-    t.zdotaccent = 389;
-    t.Ecaron = 611;
-    t.Iogonek = 333;
-    t.kcommaaccent = 444;
-    t.minus = 675;
-    t.Icircumflex = 333;
-    t.ncaron = 500;
-    t.tcommaaccent = 278;
-    t.logicalnot = 675;
-    t.odieresis = 500;
-    t.udieresis = 500;
-    t.notequal = 549;
-    t.gcommaaccent = 500;
-    t.eth = 500;
-    t.zcaron = 389;
-    t.ncommaaccent = 500;
-    t.onesuperior = 300;
-    t.imacron = 278;
-    t.Euro = 500;
-  });
-  // eslint-disable-next-line no-shadow
-  t.ZapfDingbats = getLookupTableFactory(function (t) {
-    t.space = 278;
-    t.a1 = 974;
-    t.a2 = 961;
-    t.a202 = 974;
-    t.a3 = 980;
-    t.a4 = 719;
-    t.a5 = 789;
-    t.a119 = 790;
-    t.a118 = 791;
-    t.a117 = 690;
-    t.a11 = 960;
-    t.a12 = 939;
-    t.a13 = 549;
-    t.a14 = 855;
-    t.a15 = 911;
-    t.a16 = 933;
-    t.a105 = 911;
-    t.a17 = 945;
-    t.a18 = 974;
-    t.a19 = 755;
-    t.a20 = 846;
-    t.a21 = 762;
-    t.a22 = 761;
-    t.a23 = 571;
-    t.a24 = 677;
-    t.a25 = 763;
-    t.a26 = 760;
-    t.a27 = 759;
-    t.a28 = 754;
-    t.a6 = 494;
-    t.a7 = 552;
-    t.a8 = 537;
-    t.a9 = 577;
-    t.a10 = 692;
-    t.a29 = 786;
-    t.a30 = 788;
-    t.a31 = 788;
-    t.a32 = 790;
-    t.a33 = 793;
-    t.a34 = 794;
-    t.a35 = 816;
-    t.a36 = 823;
-    t.a37 = 789;
-    t.a38 = 841;
-    t.a39 = 823;
-    t.a40 = 833;
-    t.a41 = 816;
-    t.a42 = 831;
-    t.a43 = 923;
-    t.a44 = 744;
-    t.a45 = 723;
-    t.a46 = 749;
-    t.a47 = 790;
-    t.a48 = 792;
-    t.a49 = 695;
-    t.a50 = 776;
-    t.a51 = 768;
-    t.a52 = 792;
-    t.a53 = 759;
-    t.a54 = 707;
-    t.a55 = 708;
-    t.a56 = 682;
-    t.a57 = 701;
-    t.a58 = 826;
-    t.a59 = 815;
-    t.a60 = 789;
-    t.a61 = 789;
-    t.a62 = 707;
-    t.a63 = 687;
-    t.a64 = 696;
-    t.a65 = 689;
-    t.a66 = 786;
-    t.a67 = 787;
-    t.a68 = 713;
-    t.a69 = 791;
-    t.a70 = 785;
-    t.a71 = 791;
-    t.a72 = 873;
-    t.a73 = 761;
-    t.a74 = 762;
-    t.a203 = 762;
-    t.a75 = 759;
-    t.a204 = 759;
-    t.a76 = 892;
-    t.a77 = 892;
-    t.a78 = 788;
-    t.a79 = 784;
-    t.a81 = 438;
-    t.a82 = 138;
-    t.a83 = 277;
-    t.a84 = 415;
-    t.a97 = 392;
-    t.a98 = 392;
-    t.a99 = 668;
-    t.a100 = 668;
-    t.a89 = 390;
-    t.a90 = 390;
-    t.a93 = 317;
-    t.a94 = 317;
-    t.a91 = 276;
-    t.a92 = 276;
-    t.a205 = 509;
-    t.a85 = 509;
-    t.a206 = 410;
-    t.a86 = 410;
-    t.a87 = 234;
-    t.a88 = 234;
-    t.a95 = 334;
-    t.a96 = 334;
-    t.a101 = 732;
-    t.a102 = 544;
-    t.a103 = 544;
-    t.a104 = 910;
-    t.a106 = 667;
-    t.a107 = 760;
-    t.a108 = 760;
-    t.a112 = 776;
-    t.a111 = 595;
-    t.a110 = 694;
-    t.a109 = 626;
-    t.a120 = 788;
-    t.a121 = 788;
-    t.a122 = 788;
-    t.a123 = 788;
-    t.a124 = 788;
-    t.a125 = 788;
-    t.a126 = 788;
-    t.a127 = 788;
-    t.a128 = 788;
-    t.a129 = 788;
-    t.a130 = 788;
-    t.a131 = 788;
-    t.a132 = 788;
-    t.a133 = 788;
-    t.a134 = 788;
-    t.a135 = 788;
-    t.a136 = 788;
-    t.a137 = 788;
-    t.a138 = 788;
-    t.a139 = 788;
-    t.a140 = 788;
-    t.a141 = 788;
-    t.a142 = 788;
-    t.a143 = 788;
-    t.a144 = 788;
-    t.a145 = 788;
-    t.a146 = 788;
-    t.a147 = 788;
-    t.a148 = 788;
-    t.a149 = 788;
-    t.a150 = 788;
-    t.a151 = 788;
-    t.a152 = 788;
-    t.a153 = 788;
-    t.a154 = 788;
-    t.a155 = 788;
-    t.a156 = 788;
-    t.a157 = 788;
-    t.a158 = 788;
-    t.a159 = 788;
-    t.a160 = 894;
-    t.a161 = 838;
-    t.a163 = 1016;
-    t.a164 = 458;
-    t.a196 = 748;
-    t.a165 = 924;
-    t.a192 = 748;
-    t.a166 = 918;
-    t.a167 = 927;
-    t.a168 = 928;
-    t.a169 = 928;
-    t.a170 = 834;
-    t.a171 = 873;
-    t.a172 = 828;
-    t.a173 = 924;
-    t.a162 = 924;
-    t.a174 = 917;
-    t.a175 = 930;
-    t.a176 = 931;
-    t.a177 = 463;
-    t.a178 = 883;
-    t.a179 = 836;
-    t.a193 = 836;
-    t.a180 = 867;
-    t.a199 = 867;
-    t.a181 = 696;
-    t.a200 = 696;
-    t.a182 = 874;
-    t.a201 = 874;
-    t.a183 = 760;
-    t.a184 = 946;
-    t.a197 = 771;
-    t.a185 = 865;
-    t.a194 = 771;
-    t.a198 = 888;
-    t.a186 = 967;
-    t.a195 = 888;
-    t.a187 = 831;
-    t.a188 = 873;
-    t.a189 = 927;
-    t.a190 = 970;
-    t.a191 = 918;
-  });
+const getMetrics = getLookupTableFactory(() => {
+
+  return {
+    Courier: 600 as const,
+    "Courier-Bold": 600 as const,
+    "Courier-BoldOblique": 600 as const,
+    "Courier-Oblique": 600 as const,
+    // eslint-disable-next-line no-shadow
+    Helvetica: getLookupTableFactory(() => {
+      return {
+        space: 278 as const,
+        exclam: 278 as const,
+        quotedbl: 355 as const,
+        numbersign: 556 as const,
+        dollar: 556 as const,
+        percent: 889 as const,
+        ampersand: 667 as const,
+        quoteright: 222 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 389 as const,
+        plus: 584 as const,
+        comma: 278 as const,
+        hyphen: 333 as const,
+        period: 278 as const,
+        slash: 278 as const,
+        zero: 556 as const,
+        one: 556 as const,
+        two: 556 as const,
+        three: 556 as const,
+        four: 556 as const,
+        five: 556 as const,
+        six: 556 as const,
+        seven: 556 as const,
+        eight: 556 as const,
+        nine: 556 as const,
+        colon: 278 as const,
+        semicolon: 278 as const,
+        less: 584 as const,
+        equal: 584 as const,
+        greater: 584 as const,
+        question: 556 as const,
+        at: 1015 as const,
+        A: 667 as const,
+        B: 667 as const,
+        C: 722 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 611 as const,
+        G: 778 as const,
+        H: 722 as const,
+        I: 278 as const,
+        J: 500 as const,
+        K: 667 as const,
+        L: 556 as const,
+        M: 833 as const,
+        N: 722 as const,
+        O: 778 as const,
+        P: 667 as const,
+        Q: 778 as const,
+        R: 722 as const,
+        S: 667 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 667 as const,
+        W: 944 as const,
+        X: 667 as const,
+        Y: 667 as const,
+        Z: 611 as const,
+        bracketleft: 278 as const,
+        backslash: 278 as const,
+        bracketright: 278 as const,
+        asciicircum: 469 as const,
+        underscore: 556 as const,
+        quoteleft: 222 as const,
+        a: 556 as const,
+        b: 556 as const,
+        c: 500 as const,
+        d: 556 as const,
+        e: 556 as const,
+        f: 278 as const,
+        g: 556 as const,
+        h: 556 as const,
+        i: 222 as const,
+        j: 222 as const,
+        k: 500 as const,
+        l: 222 as const,
+        m: 833 as const,
+        n: 556 as const,
+        o: 556 as const,
+        p: 556 as const,
+        q: 556 as const,
+        r: 333 as const,
+        s: 500 as const,
+        t: 278 as const,
+        u: 556 as const,
+        v: 500 as const,
+        w: 722 as const,
+        x: 500 as const,
+        y: 500 as const,
+        z: 500 as const,
+        braceleft: 334 as const,
+        bar: 260 as const,
+        braceright: 334 as const,
+        asciitilde: 584 as const,
+        exclamdown: 333 as const,
+        cent: 556 as const,
+        sterling: 556 as const,
+        fraction: 167 as const,
+        yen: 556 as const,
+        florin: 556 as const,
+        section: 556 as const,
+        currency: 556 as const,
+        quotesingle: 191 as const,
+        quotedblleft: 333 as const,
+        guillemotleft: 556 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 500 as const,
+        fl: 500 as const,
+        endash: 556 as const,
+        dagger: 556 as const,
+        daggerdbl: 556 as const,
+        periodcentered: 278 as const,
+        paragraph: 537 as const,
+        bullet: 350 as const,
+        quotesinglbase: 222 as const,
+        quotedblbase: 333 as const,
+        quotedblright: 333 as const,
+        guillemotright: 556 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 611 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 1000 as const,
+        ordfeminine: 370 as const,
+        Lslash: 556 as const,
+        Oslash: 778 as const,
+        OE: 1000 as const,
+        ordmasculine: 365 as const,
+        ae: 889 as const,
+        dotlessi: 278 as const,
+        lslash: 222 as const,
+        oslash: 611 as const,
+        oe: 944 as const,
+        germandbls: 611 as const,
+        Idieresis: 278 as const,
+        eacute: 556 as const,
+        abreve: 556 as const,
+        uhungarumlaut: 556 as const,
+        ecaron: 556 as const,
+        Ydieresis: 667 as const,
+        divide: 584 as const,
+        Yacute: 667 as const,
+        Acircumflex: 667 as const,
+        aacute: 556 as const,
+        Ucircumflex: 722 as const,
+        yacute: 500 as const,
+        scommaaccent: 500 as const,
+        ecircumflex: 556 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 556 as const,
+        Uacute: 722 as const,
+        uogonek: 556 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 737 as const,
+        Emacron: 667 as const,
+        ccaron: 500 as const,
+        aring: 556 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 222 as const,
+        agrave: 556 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 722 as const,
+        atilde: 556 as const,
+        Edotaccent: 667 as const,
+        scaron: 500 as const,
+        scedilla: 500 as const,
+        iacute: 278 as const,
+        lozenge: 471 as const,
+        Rcaron: 722 as const,
+        Gcommaaccent: 778 as const,
+        ucircumflex: 556 as const,
+        acircumflex: 556 as const,
+        Amacron: 667 as const,
+        rcaron: 333 as const,
+        ccedilla: 500 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 667 as const,
+        Omacron: 778 as const,
+        Racute: 722 as const,
+        Sacute: 667 as const,
+        dcaron: 643 as const,
+        Umacron: 722 as const,
+        uring: 556 as const,
+        threesuperior: 333 as const,
+        Ograve: 778 as const,
+        Agrave: 667 as const,
+        Abreve: 667 as const,
+        multiply: 584 as const,
+        uacute: 556 as const,
+        Tcaron: 611 as const,
+        partialdiff: 476 as const,
+        ydieresis: 500 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 556 as const,
+        edieresis: 556 as const,
+        cacute: 500 as const,
+        nacute: 556 as const,
+        umacron: 556 as const,
+        Ncaron: 722 as const,
+        Iacute: 278 as const,
+        plusminus: 584 as const,
+        brokenbar: 260 as const,
+        registered: 737 as const,
+        Gbreve: 778 as const,
+        Idotaccent: 278 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 333 as const,
+        omacron: 556 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 722 as const,
+        lcommaaccent: 222 as const,
+        tcaron: 317 as const,
+        eogonek: 556 as const,
+        Uogonek: 722 as const,
+        Aacute: 667 as const,
+        Adieresis: 667 as const,
+        egrave: 556 as const,
+        zacute: 500 as const,
+        iogonek: 222 as const,
+        Oacute: 778 as const,
+        oacute: 556 as const,
+        amacron: 556 as const,
+        sacute: 500 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 778 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 556 as const,
+        twosuperior: 333 as const,
+        Odieresis: 778 as const,
+        mu: 556 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 556 as const,
+        Eogonek: 667 as const,
+        dcroat: 556 as const,
+        threequarters: 834 as const,
+        Scedilla: 667 as const,
+        lcaron: 299 as const,
+        Kcommaaccent: 667 as const,
+        Lacute: 556 as const,
+        trademark: 1000 as const,
+        edotaccent: 556 as const,
+        Igrave: 278 as const,
+        Imacron: 278 as const,
+        Lcaron: 556 as const,
+        onehalf: 834 as const,
+        lessequal: 549 as const,
+        ocircumflex: 556 as const,
+        ntilde: 556 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 556 as const,
+        gbreve: 556 as const,
+        onequarter: 834 as const,
+        Scaron: 667 as const,
+        Scommaaccent: 667 as const,
+        Ohungarumlaut: 778 as const,
+        degree: 400 as const,
+        ograve: 556 as const,
+        Ccaron: 722 as const,
+        ugrave: 556 as const,
+        radical: 453 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 333 as const,
+        Ntilde: 722 as const,
+        otilde: 556 as const,
+        Rcommaaccent: 722 as const,
+        Lcommaaccent: 556 as const,
+        Atilde: 667 as const,
+        Aogonek: 667 as const,
+        Aring: 667 as const,
+        Otilde: 778 as const,
+        zdotaccent: 500 as const,
+        Ecaron: 667 as const,
+        Iogonek: 278 as const,
+        kcommaaccent: 500 as const,
+        minus: 584 as const,
+        Icircumflex: 278 as const,
+        ncaron: 556 as const,
+        tcommaaccent: 278 as const,
+        logicalnot: 584 as const,
+        odieresis: 556 as const,
+        udieresis: 556 as const,
+        notequal: 549 as const,
+        gcommaaccent: 556 as const,
+        eth: 556 as const,
+        zcaron: 500 as const,
+        ncommaaccent: 556 as const,
+        onesuperior: 333 as const,
+        imacron: 278 as const,
+        Euro: 556 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Helvetica-Bold": getLookupTableFactory(() => {
+      return {
+        space: 278 as const,
+        exclam: 333 as const,
+        quotedbl: 474 as const,
+        numbersign: 556 as const,
+        dollar: 556 as const,
+        percent: 889 as const,
+        ampersand: 722 as const,
+        quoteright: 278 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 389 as const,
+        plus: 584 as const,
+        comma: 278 as const,
+        hyphen: 333 as const,
+        period: 278 as const,
+        slash: 278 as const,
+        zero: 556 as const,
+        one: 556 as const,
+        two: 556 as const,
+        three: 556 as const,
+        four: 556 as const,
+        five: 556 as const,
+        six: 556 as const,
+        seven: 556 as const,
+        eight: 556 as const,
+        nine: 556 as const,
+        colon: 333 as const,
+        semicolon: 333 as const,
+        less: 584 as const,
+        equal: 584 as const,
+        greater: 584 as const,
+        question: 611 as const,
+        at: 975 as const,
+        A: 722 as const,
+        B: 722 as const,
+        C: 722 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 611 as const,
+        G: 778 as const,
+        H: 722 as const,
+        I: 278 as const,
+        J: 556 as const,
+        K: 722 as const,
+        L: 611 as const,
+        M: 833 as const,
+        N: 722 as const,
+        O: 778 as const,
+        P: 667 as const,
+        Q: 778 as const,
+        R: 722 as const,
+        S: 667 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 667 as const,
+        W: 944 as const,
+        X: 667 as const,
+        Y: 667 as const,
+        Z: 611 as const,
+        bracketleft: 333 as const,
+        backslash: 278 as const,
+        bracketright: 333 as const,
+        asciicircum: 584 as const,
+        underscore: 556 as const,
+        quoteleft: 278 as const,
+        a: 556 as const,
+        b: 611 as const,
+        c: 556 as const,
+        d: 611 as const,
+        e: 556 as const,
+        f: 333 as const,
+        g: 611 as const,
+        h: 611 as const,
+        i: 278 as const,
+        j: 278 as const,
+        k: 556 as const,
+        l: 278 as const,
+        m: 889 as const,
+        n: 611 as const,
+        o: 611 as const,
+        p: 611 as const,
+        q: 611 as const,
+        r: 389 as const,
+        s: 556 as const,
+        t: 333 as const,
+        u: 611 as const,
+        v: 556 as const,
+        w: 778 as const,
+        x: 556 as const,
+        y: 556 as const,
+        z: 500 as const,
+        braceleft: 389 as const,
+        bar: 280 as const,
+        braceright: 389 as const,
+        asciitilde: 584 as const,
+        exclamdown: 333 as const,
+        cent: 556 as const,
+        sterling: 556 as const,
+        fraction: 167 as const,
+        yen: 556 as const,
+        florin: 556 as const,
+        section: 556 as const,
+        currency: 556 as const,
+        quotesingle: 238 as const,
+        quotedblleft: 500 as const,
+        guillemotleft: 556 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 611 as const,
+        fl: 611 as const,
+        endash: 556 as const,
+        dagger: 556 as const,
+        daggerdbl: 556 as const,
+        periodcentered: 278 as const,
+        paragraph: 556 as const,
+        bullet: 350 as const,
+        quotesinglbase: 278 as const,
+        quotedblbase: 500 as const,
+        quotedblright: 500 as const,
+        guillemotright: 556 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 611 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 1000 as const,
+        ordfeminine: 370 as const,
+        Lslash: 611 as const,
+        Oslash: 778 as const,
+        OE: 1000 as const,
+        ordmasculine: 365 as const,
+        ae: 889 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 611 as const,
+        oe: 944 as const,
+        germandbls: 611 as const,
+        Idieresis: 278 as const,
+        eacute: 556 as const,
+        abreve: 556 as const,
+        uhungarumlaut: 611 as const,
+        ecaron: 556 as const,
+        Ydieresis: 667 as const,
+        divide: 584 as const,
+        Yacute: 667 as const,
+        Acircumflex: 722 as const,
+        aacute: 556 as const,
+        Ucircumflex: 722 as const,
+        yacute: 556 as const,
+        scommaaccent: 556 as const,
+        ecircumflex: 556 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 556 as const,
+        Uacute: 722 as const,
+        uogonek: 611 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 737 as const,
+        Emacron: 667 as const,
+        ccaron: 556 as const,
+        aring: 556 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 278 as const,
+        agrave: 556 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 722 as const,
+        atilde: 556 as const,
+        Edotaccent: 667 as const,
+        scaron: 556 as const,
+        scedilla: 556 as const,
+        iacute: 278 as const,
+        lozenge: 494 as const,
+        Rcaron: 722 as const,
+        Gcommaaccent: 778 as const,
+        ucircumflex: 611 as const,
+        acircumflex: 556 as const,
+        Amacron: 722 as const,
+        rcaron: 389 as const,
+        ccedilla: 556 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 667 as const,
+        Omacron: 778 as const,
+        Racute: 722 as const,
+        Sacute: 667 as const,
+        dcaron: 743 as const,
+        Umacron: 722 as const,
+        uring: 611 as const,
+        threesuperior: 333 as const,
+        Ograve: 778 as const,
+        Agrave: 722 as const,
+        Abreve: 722 as const,
+        multiply: 584 as const,
+        uacute: 611 as const,
+        Tcaron: 611 as const,
+        partialdiff: 494 as const,
+        ydieresis: 556 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 556 as const,
+        edieresis: 556 as const,
+        cacute: 556 as const,
+        nacute: 611 as const,
+        umacron: 611 as const,
+        Ncaron: 722 as const,
+        Iacute: 278 as const,
+        plusminus: 584 as const,
+        brokenbar: 280 as const,
+        registered: 737 as const,
+        Gbreve: 778 as const,
+        Idotaccent: 278 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 389 as const,
+        omacron: 611 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 722 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 389 as const,
+        eogonek: 556 as const,
+        Uogonek: 722 as const,
+        Aacute: 722 as const,
+        Adieresis: 722 as const,
+        egrave: 556 as const,
+        zacute: 500 as const,
+        iogonek: 278 as const,
+        Oacute: 778 as const,
+        oacute: 611 as const,
+        amacron: 556 as const,
+        sacute: 556 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 778 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 611 as const,
+        twosuperior: 333 as const,
+        Odieresis: 778 as const,
+        mu: 611 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 611 as const,
+        Eogonek: 667 as const,
+        dcroat: 611 as const,
+        threequarters: 834 as const,
+        Scedilla: 667 as const,
+        lcaron: 400 as const,
+        Kcommaaccent: 722 as const,
+        Lacute: 611 as const,
+        trademark: 1000 as const,
+        edotaccent: 556 as const,
+        Igrave: 278 as const,
+        Imacron: 278 as const,
+        Lcaron: 611 as const,
+        onehalf: 834 as const,
+        lessequal: 549 as const,
+        ocircumflex: 611 as const,
+        ntilde: 611 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 556 as const,
+        gbreve: 611 as const,
+        onequarter: 834 as const,
+        Scaron: 667 as const,
+        Scommaaccent: 667 as const,
+        Ohungarumlaut: 778 as const,
+        degree: 400 as const,
+        ograve: 611 as const,
+        Ccaron: 722 as const,
+        ugrave: 611 as const,
+        radical: 549 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 389 as const,
+        Ntilde: 722 as const,
+        otilde: 611 as const,
+        Rcommaaccent: 722 as const,
+        Lcommaaccent: 611 as const,
+        Atilde: 722 as const,
+        Aogonek: 722 as const,
+        Aring: 722 as const,
+        Otilde: 778 as const,
+        zdotaccent: 500 as const,
+        Ecaron: 667 as const,
+        Iogonek: 278 as const,
+        kcommaaccent: 556 as const,
+        minus: 584 as const,
+        Icircumflex: 278 as const,
+        ncaron: 611 as const,
+        tcommaaccent: 333 as const,
+        logicalnot: 584 as const,
+        odieresis: 611 as const,
+        udieresis: 611 as const,
+        notequal: 549 as const,
+        gcommaaccent: 611 as const,
+        eth: 611 as const,
+        zcaron: 500 as const,
+        ncommaaccent: 611 as const,
+        onesuperior: 333 as const,
+        imacron: 278 as const,
+        Euro: 556 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Helvetica-BoldOblique": getLookupTableFactory(() => {
+      return {
+        space: 278 as const,
+        exclam: 333 as const,
+        quotedbl: 474 as const,
+        numbersign: 556 as const,
+        dollar: 556 as const,
+        percent: 889 as const,
+        ampersand: 722 as const,
+        quoteright: 278 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 389 as const,
+        plus: 584 as const,
+        comma: 278 as const,
+        hyphen: 333 as const,
+        period: 278 as const,
+        slash: 278 as const,
+        zero: 556 as const,
+        one: 556 as const,
+        two: 556 as const,
+        three: 556 as const,
+        four: 556 as const,
+        five: 556 as const,
+        six: 556 as const,
+        seven: 556 as const,
+        eight: 556 as const,
+        nine: 556 as const,
+        colon: 333 as const,
+        semicolon: 333 as const,
+        less: 584 as const,
+        equal: 584 as const,
+        greater: 584 as const,
+        question: 611 as const,
+        at: 975 as const,
+        A: 722 as const,
+        B: 722 as const,
+        C: 722 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 611 as const,
+        G: 778 as const,
+        H: 722 as const,
+        I: 278 as const,
+        J: 556 as const,
+        K: 722 as const,
+        L: 611 as const,
+        M: 833 as const,
+        N: 722 as const,
+        O: 778 as const,
+        P: 667 as const,
+        Q: 778 as const,
+        R: 722 as const,
+        S: 667 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 667 as const,
+        W: 944 as const,
+        X: 667 as const,
+        Y: 667 as const,
+        Z: 611 as const,
+        bracketleft: 333 as const,
+        backslash: 278 as const,
+        bracketright: 333 as const,
+        asciicircum: 584 as const,
+        underscore: 556 as const,
+        quoteleft: 278 as const,
+        a: 556 as const,
+        b: 611 as const,
+        c: 556 as const,
+        d: 611 as const,
+        e: 556 as const,
+        f: 333 as const,
+        g: 611 as const,
+        h: 611 as const,
+        i: 278 as const,
+        j: 278 as const,
+        k: 556 as const,
+        l: 278 as const,
+        m: 889 as const,
+        n: 611 as const,
+        o: 611 as const,
+        p: 611 as const,
+        q: 611 as const,
+        r: 389 as const,
+        s: 556 as const,
+        t: 333 as const,
+        u: 611 as const,
+        v: 556 as const,
+        w: 778 as const,
+        x: 556 as const,
+        y: 556 as const,
+        z: 500 as const,
+        braceleft: 389 as const,
+        bar: 280 as const,
+        braceright: 389 as const,
+        asciitilde: 584 as const,
+        exclamdown: 333 as const,
+        cent: 556 as const,
+        sterling: 556 as const,
+        fraction: 167 as const,
+        yen: 556 as const,
+        florin: 556 as const,
+        section: 556 as const,
+        currency: 556 as const,
+        quotesingle: 238 as const,
+        quotedblleft: 500 as const,
+        guillemotleft: 556 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 611 as const,
+        fl: 611 as const,
+        endash: 556 as const,
+        dagger: 556 as const,
+        daggerdbl: 556 as const,
+        periodcentered: 278 as const,
+        paragraph: 556 as const,
+        bullet: 350 as const,
+        quotesinglbase: 278 as const,
+        quotedblbase: 500 as const,
+        quotedblright: 500 as const,
+        guillemotright: 556 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 611 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 1000 as const,
+        ordfeminine: 370 as const,
+        Lslash: 611 as const,
+        Oslash: 778 as const,
+        OE: 1000 as const,
+        ordmasculine: 365 as const,
+        ae: 889 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 611 as const,
+        oe: 944 as const,
+        germandbls: 611 as const,
+        Idieresis: 278 as const,
+        eacute: 556 as const,
+        abreve: 556 as const,
+        uhungarumlaut: 611 as const,
+        ecaron: 556 as const,
+        Ydieresis: 667 as const,
+        divide: 584 as const,
+        Yacute: 667 as const,
+        Acircumflex: 722 as const,
+        aacute: 556 as const,
+        Ucircumflex: 722 as const,
+        yacute: 556 as const,
+        scommaaccent: 556 as const,
+        ecircumflex: 556 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 556 as const,
+        Uacute: 722 as const,
+        uogonek: 611 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 737 as const,
+        Emacron: 667 as const,
+        ccaron: 556 as const,
+        aring: 556 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 278 as const,
+        agrave: 556 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 722 as const,
+        atilde: 556 as const,
+        Edotaccent: 667 as const,
+        scaron: 556 as const,
+        scedilla: 556 as const,
+        iacute: 278 as const,
+        lozenge: 494 as const,
+        Rcaron: 722 as const,
+        Gcommaaccent: 778 as const,
+        ucircumflex: 611 as const,
+        acircumflex: 556 as const,
+        Amacron: 722 as const,
+        rcaron: 389 as const,
+        ccedilla: 556 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 667 as const,
+        Omacron: 778 as const,
+        Racute: 722 as const,
+        Sacute: 667 as const,
+        dcaron: 743 as const,
+        Umacron: 722 as const,
+        uring: 611 as const,
+        threesuperior: 333 as const,
+        Ograve: 778 as const,
+        Agrave: 722 as const,
+        Abreve: 722 as const,
+        multiply: 584 as const,
+        uacute: 611 as const,
+        Tcaron: 611 as const,
+        partialdiff: 494 as const,
+        ydieresis: 556 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 556 as const,
+        edieresis: 556 as const,
+        cacute: 556 as const,
+        nacute: 611 as const,
+        umacron: 611 as const,
+        Ncaron: 722 as const,
+        Iacute: 278 as const,
+        plusminus: 584 as const,
+        brokenbar: 280 as const,
+        registered: 737 as const,
+        Gbreve: 778 as const,
+        Idotaccent: 278 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 389 as const,
+        omacron: 611 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 722 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 389 as const,
+        eogonek: 556 as const,
+        Uogonek: 722 as const,
+        Aacute: 722 as const,
+        Adieresis: 722 as const,
+        egrave: 556 as const,
+        zacute: 500 as const,
+        iogonek: 278 as const,
+        Oacute: 778 as const,
+        oacute: 611 as const,
+        amacron: 556 as const,
+        sacute: 556 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 778 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 611 as const,
+        twosuperior: 333 as const,
+        Odieresis: 778 as const,
+        mu: 611 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 611 as const,
+        Eogonek: 667 as const,
+        dcroat: 611 as const,
+        threequarters: 834 as const,
+        Scedilla: 667 as const,
+        lcaron: 400 as const,
+        Kcommaaccent: 722 as const,
+        Lacute: 611 as const,
+        trademark: 1000 as const,
+        edotaccent: 556 as const,
+        Igrave: 278 as const,
+        Imacron: 278 as const,
+        Lcaron: 611 as const,
+        onehalf: 834 as const,
+        lessequal: 549 as const,
+        ocircumflex: 611 as const,
+        ntilde: 611 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 556 as const,
+        gbreve: 611 as const,
+        onequarter: 834 as const,
+        Scaron: 667 as const,
+        Scommaaccent: 667 as const,
+        Ohungarumlaut: 778 as const,
+        degree: 400 as const,
+        ograve: 611 as const,
+        Ccaron: 722 as const,
+        ugrave: 611 as const,
+        radical: 549 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 389 as const,
+        Ntilde: 722 as const,
+        otilde: 611 as const,
+        Rcommaaccent: 722 as const,
+        Lcommaaccent: 611 as const,
+        Atilde: 722 as const,
+        Aogonek: 722 as const,
+        Aring: 722 as const,
+        Otilde: 778 as const,
+        zdotaccent: 500 as const,
+        Ecaron: 667 as const,
+        Iogonek: 278 as const,
+        kcommaaccent: 556 as const,
+        minus: 584 as const,
+        Icircumflex: 278 as const,
+        ncaron: 611 as const,
+        tcommaaccent: 333 as const,
+        logicalnot: 584 as const,
+        odieresis: 611 as const,
+        udieresis: 611 as const,
+        notequal: 549 as const,
+        gcommaaccent: 611 as const,
+        eth: 611 as const,
+        zcaron: 500 as const,
+        ncommaaccent: 611 as const,
+        onesuperior: 333 as const,
+        imacron: 278 as const,
+        Euro: 556 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Helvetica-Oblique": getLookupTableFactory(() => {
+      return {
+        space: 278 as const,
+        exclam: 278 as const,
+        quotedbl: 355 as const,
+        numbersign: 556 as const,
+        dollar: 556 as const,
+        percent: 889 as const,
+        ampersand: 667 as const,
+        quoteright: 222 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 389 as const,
+        plus: 584 as const,
+        comma: 278 as const,
+        hyphen: 333 as const,
+        period: 278 as const,
+        slash: 278 as const,
+        zero: 556 as const,
+        one: 556 as const,
+        two: 556 as const,
+        three: 556 as const,
+        four: 556 as const,
+        five: 556 as const,
+        six: 556 as const,
+        seven: 556 as const,
+        eight: 556 as const,
+        nine: 556 as const,
+        colon: 278 as const,
+        semicolon: 278 as const,
+        less: 584 as const,
+        equal: 584 as const,
+        greater: 584 as const,
+        question: 556 as const,
+        at: 1015 as const,
+        A: 667 as const,
+        B: 667 as const,
+        C: 722 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 611 as const,
+        G: 778 as const,
+        H: 722 as const,
+        I: 278 as const,
+        J: 500 as const,
+        K: 667 as const,
+        L: 556 as const,
+        M: 833 as const,
+        N: 722 as const,
+        O: 778 as const,
+        P: 667 as const,
+        Q: 778 as const,
+        R: 722 as const,
+        S: 667 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 667 as const,
+        W: 944 as const,
+        X: 667 as const,
+        Y: 667 as const,
+        Z: 611 as const,
+        bracketleft: 278 as const,
+        backslash: 278 as const,
+        bracketright: 278 as const,
+        asciicircum: 469 as const,
+        underscore: 556 as const,
+        quoteleft: 222 as const,
+        a: 556 as const,
+        b: 556 as const,
+        c: 500 as const,
+        d: 556 as const,
+        e: 556 as const,
+        f: 278 as const,
+        g: 556 as const,
+        h: 556 as const,
+        i: 222 as const,
+        j: 222 as const,
+        k: 500 as const,
+        l: 222 as const,
+        m: 833 as const,
+        n: 556 as const,
+        o: 556 as const,
+        p: 556 as const,
+        q: 556 as const,
+        r: 333 as const,
+        s: 500 as const,
+        t: 278 as const,
+        u: 556 as const,
+        v: 500 as const,
+        w: 722 as const,
+        x: 500 as const,
+        y: 500 as const,
+        z: 500 as const,
+        braceleft: 334 as const,
+        bar: 260 as const,
+        braceright: 334 as const,
+        asciitilde: 584 as const,
+        exclamdown: 333 as const,
+        cent: 556 as const,
+        sterling: 556 as const,
+        fraction: 167 as const,
+        yen: 556 as const,
+        florin: 556 as const,
+        section: 556 as const,
+        currency: 556 as const,
+        quotesingle: 191 as const,
+        quotedblleft: 333 as const,
+        guillemotleft: 556 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 500 as const,
+        fl: 500 as const,
+        endash: 556 as const,
+        dagger: 556 as const,
+        daggerdbl: 556 as const,
+        periodcentered: 278 as const,
+        paragraph: 537 as const,
+        bullet: 350 as const,
+        quotesinglbase: 222 as const,
+        quotedblbase: 333 as const,
+        quotedblright: 333 as const,
+        guillemotright: 556 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 611 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 1000 as const,
+        ordfeminine: 370 as const,
+        Lslash: 556 as const,
+        Oslash: 778 as const,
+        OE: 1000 as const,
+        ordmasculine: 365 as const,
+        ae: 889 as const,
+        dotlessi: 278 as const,
+        lslash: 222 as const,
+        oslash: 611 as const,
+        oe: 944 as const,
+        germandbls: 611 as const,
+        Idieresis: 278 as const,
+        eacute: 556 as const,
+        abreve: 556 as const,
+        uhungarumlaut: 556 as const,
+        ecaron: 556 as const,
+        Ydieresis: 667 as const,
+        divide: 584 as const,
+        Yacute: 667 as const,
+        Acircumflex: 667 as const,
+        aacute: 556 as const,
+        Ucircumflex: 722 as const,
+        yacute: 500 as const,
+        scommaaccent: 500 as const,
+        ecircumflex: 556 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 556 as const,
+        Uacute: 722 as const,
+        uogonek: 556 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 737 as const,
+        Emacron: 667 as const,
+        ccaron: 500 as const,
+        aring: 556 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 222 as const,
+        agrave: 556 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 722 as const,
+        atilde: 556 as const,
+        Edotaccent: 667 as const,
+        scaron: 500 as const,
+        scedilla: 500 as const,
+        iacute: 278 as const,
+        lozenge: 471 as const,
+        Rcaron: 722 as const,
+        Gcommaaccent: 778 as const,
+        ucircumflex: 556 as const,
+        acircumflex: 556 as const,
+        Amacron: 667 as const,
+        rcaron: 333 as const,
+        ccedilla: 500 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 667 as const,
+        Omacron: 778 as const,
+        Racute: 722 as const,
+        Sacute: 667 as const,
+        dcaron: 643 as const,
+        Umacron: 722 as const,
+        uring: 556 as const,
+        threesuperior: 333 as const,
+        Ograve: 778 as const,
+        Agrave: 667 as const,
+        Abreve: 667 as const,
+        multiply: 584 as const,
+        uacute: 556 as const,
+        Tcaron: 611 as const,
+        partialdiff: 476 as const,
+        ydieresis: 500 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 556 as const,
+        edieresis: 556 as const,
+        cacute: 500 as const,
+        nacute: 556 as const,
+        umacron: 556 as const,
+        Ncaron: 722 as const,
+        Iacute: 278 as const,
+        plusminus: 584 as const,
+        brokenbar: 260 as const,
+        registered: 737 as const,
+        Gbreve: 778 as const,
+        Idotaccent: 278 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 333 as const,
+        omacron: 556 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 722 as const,
+        lcommaaccent: 222 as const,
+        tcaron: 317 as const,
+        eogonek: 556 as const,
+        Uogonek: 722 as const,
+        Aacute: 667 as const,
+        Adieresis: 667 as const,
+        egrave: 556 as const,
+        zacute: 500 as const,
+        iogonek: 222 as const,
+        Oacute: 778 as const,
+        oacute: 556 as const,
+        amacron: 556 as const,
+        sacute: 500 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 778 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 556 as const,
+        twosuperior: 333 as const,
+        Odieresis: 778 as const,
+        mu: 556 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 556 as const,
+        Eogonek: 667 as const,
+        dcroat: 556 as const,
+        threequarters: 834 as const,
+        Scedilla: 667 as const,
+        lcaron: 299 as const,
+        Kcommaaccent: 667 as const,
+        Lacute: 556 as const,
+        trademark: 1000 as const,
+        edotaccent: 556 as const,
+        Igrave: 278 as const,
+        Imacron: 278 as const,
+        Lcaron: 556 as const,
+        onehalf: 834 as const,
+        lessequal: 549 as const,
+        ocircumflex: 556 as const,
+        ntilde: 556 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 556 as const,
+        gbreve: 556 as const,
+        onequarter: 834 as const,
+        Scaron: 667 as const,
+        Scommaaccent: 667 as const,
+        Ohungarumlaut: 778 as const,
+        degree: 400 as const,
+        ograve: 556 as const,
+        Ccaron: 722 as const,
+        ugrave: 556 as const,
+        radical: 453 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 333 as const,
+        Ntilde: 722 as const,
+        otilde: 556 as const,
+        Rcommaaccent: 722 as const,
+        Lcommaaccent: 556 as const,
+        Atilde: 667 as const,
+        Aogonek: 667 as const,
+        Aring: 667 as const,
+        Otilde: 778 as const,
+        zdotaccent: 500 as const,
+        Ecaron: 667 as const,
+        Iogonek: 278 as const,
+        kcommaaccent: 500 as const,
+        minus: 584 as const,
+        Icircumflex: 278 as const,
+        ncaron: 556 as const,
+        tcommaaccent: 278 as const,
+        logicalnot: 584 as const,
+        odieresis: 556 as const,
+        udieresis: 556 as const,
+        notequal: 549 as const,
+        gcommaaccent: 556 as const,
+        eth: 556 as const,
+        zcaron: 500 as const,
+        ncommaaccent: 556 as const,
+        onesuperior: 333 as const,
+        imacron: 278 as const,
+        Euro: 556 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    Symbol = getLookupTableFactory(() => {
+      return {
+        space: 250 as const,
+        exclam: 333 as const,
+        universal: 713 as const,
+        numbersign: 500 as const,
+        existential: 549 as const,
+        percent: 833 as const,
+        ampersand: 778 as const,
+        suchthat: 439 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asteriskmath: 500 as const,
+        plus: 549 as const,
+        comma: 250 as const,
+        minus: 549 as const,
+        period: 250 as const,
+        slash: 278 as const,
+        zero: 500 as const,
+        one: 500 as const,
+        two: 500 as const,
+        three: 500 as const,
+        four: 500 as const,
+        five: 500 as const,
+        six: 500 as const,
+        seven: 500 as const,
+        eight: 500 as const,
+        nine: 500 as const,
+        colon: 278 as const,
+        semicolon: 278 as const,
+        less: 549 as const,
+        equal: 549 as const,
+        greater: 549 as const,
+        question: 444 as const,
+        congruent: 549 as const,
+        Alpha: 722 as const,
+        Beta: 667 as const,
+        Chi: 722 as const,
+        Delta: 612 as const,
+        Epsilon: 611 as const,
+        Phi: 763 as const,
+        Gamma: 603 as const,
+        Eta: 722 as const,
+        Iota: 333 as const,
+        theta1: 631 as const,
+        Kappa: 722 as const,
+        Lambda: 686 as const,
+        Mu: 889 as const,
+        Nu: 722 as const,
+        Omicron: 722 as const,
+        Pi: 768 as const,
+        Theta: 741 as const,
+        Rho: 556 as const,
+        Sigma: 592 as const,
+        Tau: 611 as const,
+        Upsilon: 690 as const,
+        sigma1: 439 as const,
+        Omega: 768 as const,
+        Xi: 645 as const,
+        Psi: 795 as const,
+        Zeta: 611 as const,
+        bracketleft: 333 as const,
+        therefore: 863 as const,
+        bracketright: 333 as const,
+        perpendicular: 658 as const,
+        underscore: 500 as const,
+        radicalex: 500 as const,
+        alpha: 631 as const,
+        beta: 549 as const,
+        chi: 549 as const,
+        delta: 494 as const,
+        epsilon: 439 as const,
+        phi: 521 as const,
+        gamma: 411 as const,
+        eta: 603 as const,
+        iota: 329 as const,
+        phi1: 603 as const,
+        kappa: 549 as const,
+        lambda: 549 as const,
+        mu: 576 as const,
+        nu: 521 as const,
+        omicron: 549 as const,
+        pi: 549 as const,
+        theta: 521 as const,
+        rho: 549 as const,
+        sigma: 603 as const,
+        tau: 439 as const,
+        upsilon: 576 as const,
+        omega1: 713 as const,
+        omega: 686 as const,
+        xi: 493 as const,
+        psi: 686 as const,
+        zeta: 494 as const,
+        braceleft: 480 as const,
+        bar: 200 as const,
+        braceright: 480 as const,
+        similar: 549 as const,
+        Euro: 750 as const,
+        Upsilon1: 620 as const,
+        minute: 247 as const,
+        lessequal: 549 as const,
+        fraction: 167 as const,
+        infinity: 713 as const,
+        florin: 500 as const,
+        club: 753 as const,
+        diamond: 753 as const,
+        heart: 753 as const,
+        spade: 753 as const,
+        arrowboth: 1042 as const,
+        arrowleft: 987 as const,
+        arrowup: 603 as const,
+        arrowright: 987 as const,
+        arrowdown: 603 as const,
+        degree: 400 as const,
+        plusminus: 549 as const,
+        second: 411 as const,
+        greaterequal: 549 as const,
+        multiply: 549 as const,
+        proportional: 713 as const,
+        partialdiff: 494 as const,
+        bullet: 460 as const,
+        divide: 549 as const,
+        notequal: 549 as const,
+        equivalence: 549 as const,
+        approxequal: 549 as const,
+        ellipsis: 1000 as const,
+        arrowvertex: 603 as const,
+        arrowhorizex: 1000 as const,
+        carriagereturn: 658 as const,
+        aleph: 823 as const,
+        Ifraktur: 686 as const,
+        Rfraktur: 795 as const,
+        weierstrass: 987 as const,
+        circlemultiply: 768 as const,
+        circleplus: 768 as const,
+        emptyset: 823 as const,
+        intersection: 768 as const,
+        union: 768 as const,
+        propersuperset: 713 as const,
+        reflexsuperset: 713 as const,
+        notsubset: 713 as const,
+        propersubset: 713 as const,
+        reflexsubset: 713 as const,
+        element: 713 as const,
+        notelement: 713 as const,
+        angle: 768 as const,
+        gradient: 713 as const,
+        registerserif: 790 as const,
+        copyrightserif: 790 as const,
+        trademarkserif: 890 as const,
+        product: 823 as const,
+        radical: 549 as const,
+        dotmath: 250 as const,
+        logicalnot: 713 as const,
+        logicaland: 603 as const,
+        logicalor: 603 as const,
+        arrowdblboth: 1042 as const,
+        arrowdblleft: 987 as const,
+        arrowdblup: 603 as const,
+        arrowdblright: 987 as const,
+        arrowdbldown: 603 as const,
+        lozenge: 494 as const,
+        angleleft: 329 as const,
+        registersans: 790 as const,
+        copyrightsans: 790 as const,
+        trademarksans: 786 as const,
+        summation: 713 as const,
+        parenlefttp: 384 as const,
+        parenleftex: 384 as const,
+        parenleftbt: 384 as const,
+        bracketlefttp: 384 as const,
+        bracketleftex: 384 as const,
+        bracketleftbt: 384 as const,
+        bracelefttp: 494 as const,
+        braceleftmid: 494 as const,
+        braceleftbt: 494 as const,
+        braceex: 494 as const,
+        angleright: 329 as const,
+        integral: 274 as const,
+        integraltp: 686 as const,
+        integralex: 686 as const,
+        integralbt: 686 as const,
+        parenrighttp: 384 as const,
+        parenrightex: 384 as const,
+        parenrightbt: 384 as const,
+        bracketrighttp: 384 as const,
+        bracketrightex: 384 as const,
+        bracketrightbt: 384 as const,
+        bracerighttp: 494 as const,
+        bracerightmid: 494 as const,
+        bracerightbt: 494 as const,
+        apple: 790 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Times-Roman": getLookupTableFactory(() => {
+      return {
+        space: 250 as const,
+        exclam: 333 as const,
+        quotedbl: 408 as const,
+        numbersign: 500 as const,
+        dollar: 500 as const,
+        percent: 833 as const,
+        ampersand: 778 as const,
+        quoteright: 333 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 500 as const,
+        plus: 564 as const,
+        comma: 250 as const,
+        hyphen: 333 as const,
+        period: 250 as const,
+        slash: 278 as const,
+        zero: 500 as const,
+        one: 500 as const,
+        two: 500 as const,
+        three: 500 as const,
+        four: 500 as const,
+        five: 500 as const,
+        six: 500 as const,
+        seven: 500 as const,
+        eight: 500 as const,
+        nine: 500 as const,
+        colon: 278 as const,
+        semicolon: 278 as const,
+        less: 564 as const,
+        equal: 564 as const,
+        greater: 564 as const,
+        question: 444 as const,
+        at: 921 as const,
+        A: 722 as const,
+        B: 667 as const,
+        C: 667 as const,
+        D: 722 as const,
+        E: 611 as const,
+        F: 556 as const,
+        G: 722 as const,
+        H: 722 as const,
+        I: 333 as const,
+        J: 389 as const,
+        K: 722 as const,
+        L: 611 as const,
+        M: 889 as const,
+        N: 722 as const,
+        O: 722 as const,
+        P: 556 as const,
+        Q: 722 as const,
+        R: 667 as const,
+        S: 556 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 722 as const,
+        W: 944 as const,
+        X: 722 as const,
+        Y: 722 as const,
+        Z: 611 as const,
+        bracketleft: 333 as const,
+        backslash: 278 as const,
+        bracketright: 333 as const,
+        asciicircum: 469 as const,
+        underscore: 500 as const,
+        quoteleft: 333 as const,
+        a: 444 as const,
+        b: 500 as const,
+        c: 444 as const,
+        d: 500 as const,
+        e: 444 as const,
+        f: 333 as const,
+        g: 500 as const,
+        h: 500 as const,
+        i: 278 as const,
+        j: 278 as const,
+        k: 500 as const,
+        l: 278 as const,
+        m: 778 as const,
+        n: 500 as const,
+        o: 500 as const,
+        p: 500 as const,
+        q: 500 as const,
+        r: 333 as const,
+        s: 389 as const,
+        t: 278 as const,
+        u: 500 as const,
+        v: 500 as const,
+        w: 722 as const,
+        x: 500 as const,
+        y: 500 as const,
+        z: 444 as const,
+        braceleft: 480 as const,
+        bar: 200 as const,
+        braceright: 480 as const,
+        asciitilde: 541 as const,
+        exclamdown: 333 as const,
+        cent: 500 as const,
+        sterling: 500 as const,
+        fraction: 167 as const,
+        yen: 500 as const,
+        florin: 500 as const,
+        section: 500 as const,
+        currency: 500 as const,
+        quotesingle: 180 as const,
+        quotedblleft: 444 as const,
+        guillemotleft: 500 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 556 as const,
+        fl: 556 as const,
+        endash: 500 as const,
+        dagger: 500 as const,
+        daggerdbl: 500 as const,
+        periodcentered: 250 as const,
+        paragraph: 453 as const,
+        bullet: 350 as const,
+        quotesinglbase: 333 as const,
+        quotedblbase: 444 as const,
+        quotedblright: 444 as const,
+        guillemotright: 500 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 444 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 889 as const,
+        ordfeminine: 276 as const,
+        Lslash: 611 as const,
+        Oslash: 722 as const,
+        OE: 889 as const,
+        ordmasculine: 310 as const,
+        ae: 667 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 500 as const,
+        oe: 722 as const,
+        germandbls: 500 as const,
+        Idieresis: 333 as const,
+        eacute: 444 as const,
+        abreve: 444 as const,
+        uhungarumlaut: 500 as const,
+        ecaron: 444 as const,
+        Ydieresis: 722 as const,
+        divide: 564 as const,
+        Yacute: 722 as const,
+        Acircumflex: 722 as const,
+        aacute: 444 as const,
+        Ucircumflex: 722 as const,
+        yacute: 500 as const,
+        scommaaccent: 389 as const,
+        ecircumflex: 444 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 444 as const,
+        Uacute: 722 as const,
+        uogonek: 500 as const,
+        Edieresis: 611 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 760 as const,
+        Emacron: 611 as const,
+        ccaron: 444 as const,
+        aring: 444 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 278 as const,
+        agrave: 444 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 667 as const,
+        atilde: 444 as const,
+        Edotaccent: 611 as const,
+        scaron: 389 as const,
+        scedilla: 389 as const,
+        iacute: 278 as const,
+        lozenge: 471 as const,
+        Rcaron: 667 as const,
+        Gcommaaccent: 722 as const,
+        ucircumflex: 500 as const,
+        acircumflex: 444 as const,
+        Amacron: 722 as const,
+        rcaron: 333 as const,
+        ccedilla: 444 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 556 as const,
+        Omacron: 722 as const,
+        Racute: 667 as const,
+        Sacute: 556 as const,
+        dcaron: 588 as const,
+        Umacron: 722 as const,
+        uring: 500 as const,
+        threesuperior: 300 as const,
+        Ograve: 722 as const,
+        Agrave: 722 as const,
+        Abreve: 722 as const,
+        multiply: 564 as const,
+        uacute: 500 as const,
+        Tcaron: 611 as const,
+        partialdiff: 476 as const,
+        ydieresis: 500 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 611 as const,
+        adieresis: 444 as const,
+        edieresis: 444 as const,
+        cacute: 444 as const,
+        nacute: 500 as const,
+        umacron: 500 as const,
+        Ncaron: 722 as const,
+        Iacute: 333 as const,
+        plusminus: 564 as const,
+        brokenbar: 200 as const,
+        registered: 760 as const,
+        Gbreve: 722 as const,
+        Idotaccent: 333 as const,
+        summation: 600 as const,
+        Egrave: 611 as const,
+        racute: 333 as const,
+        omacron: 500 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 667 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 326 as const,
+        eogonek: 444 as const,
+        Uogonek: 722 as const,
+        Aacute: 722 as const,
+        Adieresis: 722 as const,
+        egrave: 444 as const,
+        zacute: 444 as const,
+        iogonek: 278 as const,
+        Oacute: 722 as const,
+        oacute: 500 as const,
+        amacron: 444 as const,
+        sacute: 389 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 722 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 500 as const,
+        twosuperior: 300 as const,
+        Odieresis: 722 as const,
+        mu: 500 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 500 as const,
+        Eogonek: 611 as const,
+        dcroat: 500 as const,
+        threequarters: 750 as const,
+        Scedilla: 556 as const,
+        lcaron: 344 as const,
+        Kcommaaccent: 722 as const,
+        Lacute: 611 as const,
+        trademark: 980 as const,
+        edotaccent: 444 as const,
+        Igrave: 333 as const,
+        Imacron: 333 as const,
+        Lcaron: 611 as const,
+        onehalf: 750 as const,
+        lessequal: 549 as const,
+        ocircumflex: 500 as const,
+        ntilde: 500 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 611 as const,
+        emacron: 444 as const,
+        gbreve: 500 as const,
+        onequarter: 750 as const,
+        Scaron: 556 as const,
+        Scommaaccent: 556 as const,
+        Ohungarumlaut: 722 as const,
+        degree: 400 as const,
+        ograve: 500 as const,
+        Ccaron: 667 as const,
+        ugrave: 500 as const,
+        radical: 453 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 333 as const,
+        Ntilde: 722 as const,
+        otilde: 500 as const,
+        Rcommaaccent: 667 as const,
+        Lcommaaccent: 611 as const,
+        Atilde: 722 as const,
+        Aogonek: 722 as const,
+        Aring: 722 as const,
+        Otilde: 722 as const,
+        zdotaccent: 444 as const,
+        Ecaron: 611 as const,
+        Iogonek: 333 as const,
+        kcommaaccent: 500 as const,
+        minus: 564 as const,
+        Icircumflex: 333 as const,
+        ncaron: 500 as const,
+        tcommaaccent: 278 as const,
+        logicalnot: 564 as const,
+        odieresis: 500 as const,
+        udieresis: 500 as const,
+        notequal: 549 as const,
+        gcommaaccent: 500 as const,
+        eth: 500 as const,
+        zcaron: 444 as const,
+        ncommaaccent: 500 as const,
+        onesuperior: 300 as const,
+        imacron: 278 as const,
+        Euro: 500 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Times-Bold": getLookupTableFactory(() => {
+      return {
+        space: 250 as const,
+        exclam: 333 as const,
+        quotedbl: 555 as const,
+        numbersign: 500 as const,
+        dollar: 500 as const,
+        percent: 1000 as const,
+        ampersand: 833 as const,
+        quoteright: 333 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 500 as const,
+        plus: 570 as const,
+        comma: 250 as const,
+        hyphen: 333 as const,
+        period: 250 as const,
+        slash: 278 as const,
+        zero: 500 as const,
+        one: 500 as const,
+        two: 500 as const,
+        three: 500 as const,
+        four: 500 as const,
+        five: 500 as const,
+        six: 500 as const,
+        seven: 500 as const,
+        eight: 500 as const,
+        nine: 500 as const,
+        colon: 333 as const,
+        semicolon: 333 as const,
+        less: 570 as const,
+        equal: 570 as const,
+        greater: 570 as const,
+        question: 500 as const,
+        at: 930 as const,
+        A: 722 as const,
+        B: 667 as const,
+        C: 722 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 611 as const,
+        G: 778 as const,
+        H: 778 as const,
+        I: 389 as const,
+        J: 500 as const,
+        K: 778 as const,
+        L: 667 as const,
+        M: 944 as const,
+        N: 722 as const,
+        O: 778 as const,
+        P: 611 as const,
+        Q: 778 as const,
+        R: 722 as const,
+        S: 556 as const,
+        T: 667 as const,
+        U: 722 as const,
+        V: 722 as const,
+        W: 1000 as const,
+        X: 722 as const,
+        Y: 722 as const,
+        Z: 667 as const,
+        bracketleft: 333 as const,
+        backslash: 278 as const,
+        bracketright: 333 as const,
+        asciicircum: 581 as const,
+        underscore: 500 as const,
+        quoteleft: 333 as const,
+        a: 500 as const,
+        b: 556 as const,
+        c: 444 as const,
+        d: 556 as const,
+        e: 444 as const,
+        f: 333 as const,
+        g: 500 as const,
+        h: 556 as const,
+        i: 278 as const,
+        j: 333 as const,
+        k: 556 as const,
+        l: 278 as const,
+        m: 833 as const,
+        n: 556 as const,
+        o: 500 as const,
+        p: 556 as const,
+        q: 556 as const,
+        r: 444 as const,
+        s: 389 as const,
+        t: 333 as const,
+        u: 556 as const,
+        v: 500 as const,
+        w: 722 as const,
+        x: 500 as const,
+        y: 500 as const,
+        z: 444 as const,
+        braceleft: 394 as const,
+        bar: 220 as const,
+        braceright: 394 as const,
+        asciitilde: 520 as const,
+        exclamdown: 333 as const,
+        cent: 500 as const,
+        sterling: 500 as const,
+        fraction: 167 as const,
+        yen: 500 as const,
+        florin: 500 as const,
+        section: 500 as const,
+        currency: 500 as const,
+        quotesingle: 278 as const,
+        quotedblleft: 500 as const,
+        guillemotleft: 500 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 556 as const,
+        fl: 556 as const,
+        endash: 500 as const,
+        dagger: 500 as const,
+        daggerdbl: 500 as const,
+        periodcentered: 250 as const,
+        paragraph: 540 as const,
+        bullet: 350 as const,
+        quotesinglbase: 333 as const,
+        quotedblbase: 500 as const,
+        quotedblright: 500 as const,
+        guillemotright: 500 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 500 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 1000 as const,
+        ordfeminine: 300 as const,
+        Lslash: 667 as const,
+        Oslash: 778 as const,
+        OE: 1000 as const,
+        ordmasculine: 330 as const,
+        ae: 722 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 500 as const,
+        oe: 722 as const,
+        germandbls: 556 as const,
+        Idieresis: 389 as const,
+        eacute: 444 as const,
+        abreve: 500 as const,
+        uhungarumlaut: 556 as const,
+        ecaron: 444 as const,
+        Ydieresis: 722 as const,
+        divide: 570 as const,
+        Yacute: 722 as const,
+        Acircumflex: 722 as const,
+        aacute: 500 as const,
+        Ucircumflex: 722 as const,
+        yacute: 500 as const,
+        scommaaccent: 389 as const,
+        ecircumflex: 444 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 500 as const,
+        Uacute: 722 as const,
+        uogonek: 556 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 747 as const,
+        Emacron: 667 as const,
+        ccaron: 444 as const,
+        aring: 500 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 278 as const,
+        agrave: 500 as const,
+        Tcommaaccent: 667 as const,
+        Cacute: 722 as const,
+        atilde: 500 as const,
+        Edotaccent: 667 as const,
+        scaron: 389 as const,
+        scedilla: 389 as const,
+        iacute: 278 as const,
+        lozenge: 494 as const,
+        Rcaron: 722 as const,
+        Gcommaaccent: 778 as const,
+        ucircumflex: 556 as const,
+        acircumflex: 500 as const,
+        Amacron: 722 as const,
+        rcaron: 444 as const,
+        ccedilla: 444 as const,
+        Zdotaccent: 667 as const,
+        Thorn: 611 as const,
+        Omacron: 778 as const,
+        Racute: 722 as const,
+        Sacute: 556 as const,
+        dcaron: 672 as const,
+        Umacron: 722 as const,
+        uring: 556 as const,
+        threesuperior: 300 as const,
+        Ograve: 778 as const,
+        Agrave: 722 as const,
+        Abreve: 722 as const,
+        multiply: 570 as const,
+        uacute: 556 as const,
+        Tcaron: 667 as const,
+        partialdiff: 494 as const,
+        ydieresis: 500 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 500 as const,
+        edieresis: 444 as const,
+        cacute: 444 as const,
+        nacute: 556 as const,
+        umacron: 556 as const,
+        Ncaron: 722 as const,
+        Iacute: 389 as const,
+        plusminus: 570 as const,
+        brokenbar: 220 as const,
+        registered: 747 as const,
+        Gbreve: 778 as const,
+        Idotaccent: 389 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 444 as const,
+        omacron: 500 as const,
+        Zacute: 667 as const,
+        Zcaron: 667 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 722 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 416 as const,
+        eogonek: 444 as const,
+        Uogonek: 722 as const,
+        Aacute: 722 as const,
+        Adieresis: 722 as const,
+        egrave: 444 as const,
+        zacute: 444 as const,
+        iogonek: 278 as const,
+        Oacute: 778 as const,
+        oacute: 500 as const,
+        amacron: 500 as const,
+        sacute: 389 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 778 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 556 as const,
+        twosuperior: 300 as const,
+        Odieresis: 778 as const,
+        mu: 556 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 500 as const,
+        Eogonek: 667 as const,
+        dcroat: 556 as const,
+        threequarters: 750 as const,
+        Scedilla: 556 as const,
+        lcaron: 394 as const,
+        Kcommaaccent: 778 as const,
+        Lacute: 667 as const,
+        trademark: 1000 as const,
+        edotaccent: 444 as const,
+        Igrave: 389 as const,
+        Imacron: 389 as const,
+        Lcaron: 667 as const,
+        onehalf: 750 as const,
+        lessequal: 549 as const,
+        ocircumflex: 500 as const,
+        ntilde: 556 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 444 as const,
+        gbreve: 500 as const,
+        onequarter: 750 as const,
+        Scaron: 556 as const,
+        Scommaaccent: 556 as const,
+        Ohungarumlaut: 778 as const,
+        degree: 400 as const,
+        ograve: 500 as const,
+        Ccaron: 722 as const,
+        ugrave: 556 as const,
+        radical: 549 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 444 as const,
+        Ntilde: 722 as const,
+        otilde: 500 as const,
+        Rcommaaccent: 722 as const,
+        Lcommaaccent: 667 as const,
+        Atilde: 722 as const,
+        Aogonek: 722 as const,
+        Aring: 722 as const,
+        Otilde: 778 as const,
+        zdotaccent: 444 as const,
+        Ecaron: 667 as const,
+        Iogonek: 389 as const,
+        kcommaaccent: 556 as const,
+        minus: 570 as const,
+        Icircumflex: 389 as const,
+        ncaron: 556 as const,
+        tcommaaccent: 333 as const,
+        logicalnot: 570 as const,
+        odieresis: 500 as const,
+        udieresis: 556 as const,
+        notequal: 549 as const,
+        gcommaaccent: 500 as const,
+        eth: 500 as const,
+        zcaron: 444 as const,
+        ncommaaccent: 556 as const,
+        onesuperior: 300 as const,
+        imacron: 278 as const,
+        Euro: 500 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Times-BoldItalic": getLookupTableFactory(() => {
+      return {
+        space: 250 as const,
+        exclam: 389 as const,
+        quotedbl: 555 as const,
+        numbersign: 500 as const,
+        dollar: 500 as const,
+        percent: 833 as const,
+        ampersand: 778 as const,
+        quoteright: 333 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 500 as const,
+        plus: 570 as const,
+        comma: 250 as const,
+        hyphen: 333 as const,
+        period: 250 as const,
+        slash: 278 as const,
+        zero: 500 as const,
+        one: 500 as const,
+        two: 500 as const,
+        three: 500 as const,
+        four: 500 as const,
+        five: 500 as const,
+        six: 500 as const,
+        seven: 500 as const,
+        eight: 500 as const,
+        nine: 500 as const,
+        colon: 333 as const,
+        semicolon: 333 as const,
+        less: 570 as const,
+        equal: 570 as const,
+        greater: 570 as const,
+        question: 500 as const,
+        at: 832 as const,
+        A: 667 as const,
+        B: 667 as const,
+        C: 667 as const,
+        D: 722 as const,
+        E: 667 as const,
+        F: 667 as const,
+        G: 722 as const,
+        H: 778 as const,
+        I: 389 as const,
+        J: 500 as const,
+        K: 667 as const,
+        L: 611 as const,
+        M: 889 as const,
+        N: 722 as const,
+        O: 722 as const,
+        P: 611 as const,
+        Q: 722 as const,
+        R: 667 as const,
+        S: 556 as const,
+        T: 611 as const,
+        U: 722 as const,
+        V: 667 as const,
+        W: 889 as const,
+        X: 667 as const,
+        Y: 611 as const,
+        Z: 611 as const,
+        bracketleft: 333 as const,
+        backslash: 278 as const,
+        bracketright: 333 as const,
+        asciicircum: 570 as const,
+        underscore: 500 as const,
+        quoteleft: 333 as const,
+        a: 500 as const,
+        b: 500 as const,
+        c: 444 as const,
+        d: 500 as const,
+        e: 444 as const,
+        f: 333 as const,
+        g: 500 as const,
+        h: 556 as const,
+        i: 278 as const,
+        j: 278 as const,
+        k: 500 as const,
+        l: 278 as const,
+        m: 778 as const,
+        n: 556 as const,
+        o: 500 as const,
+        p: 500 as const,
+        q: 500 as const,
+        r: 389 as const,
+        s: 389 as const,
+        t: 278 as const,
+        u: 556 as const,
+        v: 444 as const,
+        w: 667 as const,
+        x: 500 as const,
+        y: 444 as const,
+        z: 389 as const,
+        braceleft: 348 as const,
+        bar: 220 as const,
+        braceright: 348 as const,
+        asciitilde: 570 as const,
+        exclamdown: 389 as const,
+        cent: 500 as const,
+        sterling: 500 as const,
+        fraction: 167 as const,
+        yen: 500 as const,
+        florin: 500 as const,
+        section: 500 as const,
+        currency: 500 as const,
+        quotesingle: 278 as const,
+        quotedblleft: 500 as const,
+        guillemotleft: 500 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 556 as const,
+        fl: 556 as const,
+        endash: 500 as const,
+        dagger: 500 as const,
+        daggerdbl: 500 as const,
+        periodcentered: 250 as const,
+        paragraph: 500 as const,
+        bullet: 350 as const,
+        quotesinglbase: 333 as const,
+        quotedblbase: 500 as const,
+        quotedblright: 500 as const,
+        guillemotright: 500 as const,
+        ellipsis: 1000 as const,
+        perthousand: 1000 as const,
+        questiondown: 500 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 1000 as const,
+        AE: 944 as const,
+        ordfeminine: 266 as const,
+        Lslash: 611 as const,
+        Oslash: 722 as const,
+        OE: 944 as const,
+        ordmasculine: 300 as const,
+        ae: 722 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 500 as const,
+        oe: 722 as const,
+        germandbls: 500 as const,
+        Idieresis: 389 as const,
+        eacute: 444 as const,
+        abreve: 500 as const,
+        uhungarumlaut: 556 as const,
+        ecaron: 444 as const,
+        Ydieresis: 611 as const,
+        divide: 570 as const,
+        Yacute: 611 as const,
+        Acircumflex: 667 as const,
+        aacute: 500 as const,
+        Ucircumflex: 722 as const,
+        yacute: 444 as const,
+        scommaaccent: 389 as const,
+        ecircumflex: 444 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 500 as const,
+        Uacute: 722 as const,
+        uogonek: 556 as const,
+        Edieresis: 667 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 747 as const,
+        Emacron: 667 as const,
+        ccaron: 444 as const,
+        aring: 500 as const,
+        Ncommaaccent: 722 as const,
+        lacute: 278 as const,
+        agrave: 500 as const,
+        Tcommaaccent: 611 as const,
+        Cacute: 667 as const,
+        atilde: 500 as const,
+        Edotaccent: 667 as const,
+        scaron: 389 as const,
+        scedilla: 389 as const,
+        iacute: 278 as const,
+        lozenge: 494 as const,
+        Rcaron: 667 as const,
+        Gcommaaccent: 722 as const,
+        ucircumflex: 556 as const,
+        acircumflex: 500 as const,
+        Amacron: 667 as const,
+        rcaron: 389 as const,
+        ccedilla: 444 as const,
+        Zdotaccent: 611 as const,
+        Thorn: 611 as const,
+        Omacron: 722 as const,
+        Racute: 667 as const,
+        Sacute: 556 as const,
+        dcaron: 608 as const,
+        Umacron: 722 as const,
+        uring: 556 as const,
+        threesuperior: 300 as const,
+        Ograve: 722 as const,
+        Agrave: 667 as const,
+        Abreve: 667 as const,
+        multiply: 570 as const,
+        uacute: 556 as const,
+        Tcaron: 611 as const,
+        partialdiff: 494 as const,
+        ydieresis: 444 as const,
+        Nacute: 722 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 667 as const,
+        adieresis: 500 as const,
+        edieresis: 444 as const,
+        cacute: 444 as const,
+        nacute: 556 as const,
+        umacron: 556 as const,
+        Ncaron: 722 as const,
+        Iacute: 389 as const,
+        plusminus: 570 as const,
+        brokenbar: 220 as const,
+        registered: 747 as const,
+        Gbreve: 722 as const,
+        Idotaccent: 389 as const,
+        summation: 600 as const,
+        Egrave: 667 as const,
+        racute: 389 as const,
+        omacron: 500 as const,
+        Zacute: 611 as const,
+        Zcaron: 611 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 667 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 366 as const,
+        eogonek: 444 as const,
+        Uogonek: 722 as const,
+        Aacute: 667 as const,
+        Adieresis: 667 as const,
+        egrave: 444 as const,
+        zacute: 389 as const,
+        iogonek: 278 as const,
+        Oacute: 722 as const,
+        oacute: 500 as const,
+        amacron: 500 as const,
+        sacute: 389 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 722 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 500 as const,
+        twosuperior: 300 as const,
+        Odieresis: 722 as const,
+        mu: 576 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 500 as const,
+        Eogonek: 667 as const,
+        dcroat: 500 as const,
+        threequarters: 750 as const,
+        Scedilla: 556 as const,
+        lcaron: 382 as const,
+        Kcommaaccent: 667 as const,
+        Lacute: 611 as const,
+        trademark: 1000 as const,
+        edotaccent: 444 as const,
+        Igrave: 389 as const,
+        Imacron: 389 as const,
+        Lcaron: 611 as const,
+        onehalf: 750 as const,
+        lessequal: 549 as const,
+        ocircumflex: 500 as const,
+        ntilde: 556 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 667 as const,
+        emacron: 444 as const,
+        gbreve: 500 as const,
+        onequarter: 750 as const,
+        Scaron: 556 as const,
+        Scommaaccent: 556 as const,
+        Ohungarumlaut: 722 as const,
+        degree: 400 as const,
+        ograve: 500 as const,
+        Ccaron: 667 as const,
+        ugrave: 556 as const,
+        radical: 549 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 389 as const,
+        Ntilde: 722 as const,
+        otilde: 500 as const,
+        Rcommaaccent: 667 as const,
+        Lcommaaccent: 611 as const,
+        Atilde: 667 as const,
+        Aogonek: 667 as const,
+        Aring: 667 as const,
+        Otilde: 722 as const,
+        zdotaccent: 389 as const,
+        Ecaron: 667 as const,
+        Iogonek: 389 as const,
+        kcommaaccent: 500 as const,
+        minus: 606 as const,
+        Icircumflex: 389 as const,
+        ncaron: 556 as const,
+        tcommaaccent: 278 as const,
+        logicalnot: 606 as const,
+        odieresis: 500 as const,
+        udieresis: 556 as const,
+        notequal: 549 as const,
+        gcommaaccent: 500 as const,
+        eth: 500 as const,
+        zcaron: 389 as const,
+        ncommaaccent: 556 as const,
+        onesuperior: 300 as const,
+        imacron: 278 as const,
+        Euro: 500 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    "Times-Italic": getLookupTableFactory(() => {
+      return {
+        space: 250 as const,
+        exclam: 333 as const,
+        quotedbl: 420 as const,
+        numbersign: 500 as const,
+        dollar: 500 as const,
+        percent: 833 as const,
+        ampersand: 778 as const,
+        quoteright: 333 as const,
+        parenleft: 333 as const,
+        parenright: 333 as const,
+        asterisk: 500 as const,
+        plus: 675 as const,
+        comma: 250 as const,
+        hyphen: 333 as const,
+        period: 250 as const,
+        slash: 278 as const,
+        zero: 500 as const,
+        one: 500 as const,
+        two: 500 as const,
+        three: 500 as const,
+        four: 500 as const,
+        five: 500 as const,
+        six: 500 as const,
+        seven: 500 as const,
+        eight: 500 as const,
+        nine: 500 as const,
+        colon: 333 as const,
+        semicolon: 333 as const,
+        less: 675 as const,
+        equal: 675 as const,
+        greater: 675 as const,
+        question: 500 as const,
+        at: 920 as const,
+        A: 611 as const,
+        B: 611 as const,
+        C: 667 as const,
+        D: 722 as const,
+        E: 611 as const,
+        F: 611 as const,
+        G: 722 as const,
+        H: 722 as const,
+        I: 333 as const,
+        J: 444 as const,
+        K: 667 as const,
+        L: 556 as const,
+        M: 833 as const,
+        N: 667 as const,
+        O: 722 as const,
+        P: 611 as const,
+        Q: 722 as const,
+        R: 611 as const,
+        S: 500 as const,
+        T: 556 as const,
+        U: 722 as const,
+        V: 611 as const,
+        W: 833 as const,
+        X: 611 as const,
+        Y: 556 as const,
+        Z: 556 as const,
+        bracketleft: 389 as const,
+        backslash: 278 as const,
+        bracketright: 389 as const,
+        asciicircum: 422 as const,
+        underscore: 500 as const,
+        quoteleft: 333 as const,
+        a: 500 as const,
+        b: 500 as const,
+        c: 444 as const,
+        d: 500 as const,
+        e: 444 as const,
+        f: 278 as const,
+        g: 500 as const,
+        h: 500 as const,
+        i: 278 as const,
+        j: 278 as const,
+        k: 444 as const,
+        l: 278 as const,
+        m: 722 as const,
+        n: 500 as const,
+        o: 500 as const,
+        p: 500 as const,
+        q: 500 as const,
+        r: 389 as const,
+        s: 389 as const,
+        t: 278 as const,
+        u: 500 as const,
+        v: 444 as const,
+        w: 667 as const,
+        x: 444 as const,
+        y: 444 as const,
+        z: 389 as const,
+        braceleft: 400 as const,
+        bar: 275 as const,
+        braceright: 400 as const,
+        asciitilde: 541 as const,
+        exclamdown: 389 as const,
+        cent: 500 as const,
+        sterling: 500 as const,
+        fraction: 167 as const,
+        yen: 500 as const,
+        florin: 500 as const,
+        section: 500 as const,
+        currency: 500 as const,
+        quotesingle: 214 as const,
+        quotedblleft: 556 as const,
+        guillemotleft: 500 as const,
+        guilsinglleft: 333 as const,
+        guilsinglright: 333 as const,
+        fi: 500 as const,
+        fl: 500 as const,
+        endash: 500 as const,
+        dagger: 500 as const,
+        daggerdbl: 500 as const,
+        periodcentered: 250 as const,
+        paragraph: 523 as const,
+        bullet: 350 as const,
+        quotesinglbase: 333 as const,
+        quotedblbase: 556 as const,
+        quotedblright: 556 as const,
+        guillemotright: 500 as const,
+        ellipsis: 889 as const,
+        perthousand: 1000 as const,
+        questiondown: 500 as const,
+        grave: 333 as const,
+        acute: 333 as const,
+        circumflex: 333 as const,
+        tilde: 333 as const,
+        macron: 333 as const,
+        breve: 333 as const,
+        dotaccent: 333 as const,
+        dieresis: 333 as const,
+        ring: 333 as const,
+        cedilla: 333 as const,
+        hungarumlaut: 333 as const,
+        ogonek: 333 as const,
+        caron: 333 as const,
+        emdash: 889 as const,
+        AE: 889 as const,
+        ordfeminine: 276 as const,
+        Lslash: 556 as const,
+        Oslash: 722 as const,
+        OE: 944 as const,
+        ordmasculine: 310 as const,
+        ae: 667 as const,
+        dotlessi: 278 as const,
+        lslash: 278 as const,
+        oslash: 500 as const,
+        oe: 667 as const,
+        germandbls: 500 as const,
+        Idieresis: 333 as const,
+        eacute: 444 as const,
+        abreve: 500 as const,
+        uhungarumlaut: 500 as const,
+        ecaron: 444 as const,
+        Ydieresis: 556 as const,
+        divide: 675 as const,
+        Yacute: 556 as const,
+        Acircumflex: 611 as const,
+        aacute: 500 as const,
+        Ucircumflex: 722 as const,
+        yacute: 444 as const,
+        scommaaccent: 389 as const,
+        ecircumflex: 444 as const,
+        Uring: 722 as const,
+        Udieresis: 722 as const,
+        aogonek: 500 as const,
+        Uacute: 722 as const,
+        uogonek: 500 as const,
+        Edieresis: 611 as const,
+        Dcroat: 722 as const,
+        commaaccent: 250 as const,
+        copyright: 760 as const,
+        Emacron: 611 as const,
+        ccaron: 444 as const,
+        aring: 500 as const,
+        Ncommaaccent: 667 as const,
+        lacute: 278 as const,
+        agrave: 500 as const,
+        Tcommaaccent: 556 as const,
+        Cacute: 667 as const,
+        atilde: 500 as const,
+        Edotaccent: 611 as const,
+        scaron: 389 as const,
+        scedilla: 389 as const,
+        iacute: 278 as const,
+        lozenge: 471 as const,
+        Rcaron: 611 as const,
+        Gcommaaccent: 722 as const,
+        ucircumflex: 500 as const,
+        acircumflex: 500 as const,
+        Amacron: 611 as const,
+        rcaron: 389 as const,
+        ccedilla: 444 as const,
+        Zdotaccent: 556 as const,
+        Thorn: 611 as const,
+        Omacron: 722 as const,
+        Racute: 611 as const,
+        Sacute: 500 as const,
+        dcaron: 544 as const,
+        Umacron: 722 as const,
+        uring: 500 as const,
+        threesuperior: 300 as const,
+        Ograve: 722 as const,
+        Agrave: 611 as const,
+        Abreve: 611 as const,
+        multiply: 675 as const,
+        uacute: 500 as const,
+        Tcaron: 556 as const,
+        partialdiff: 476 as const,
+        ydieresis: 444 as const,
+        Nacute: 667 as const,
+        icircumflex: 278 as const,
+        Ecircumflex: 611 as const,
+        adieresis: 500 as const,
+        edieresis: 444 as const,
+        cacute: 444 as const,
+        nacute: 500 as const,
+        umacron: 500 as const,
+        Ncaron: 667 as const,
+        Iacute: 333 as const,
+        plusminus: 675 as const,
+        brokenbar: 275 as const,
+        registered: 760 as const,
+        Gbreve: 722 as const,
+        Idotaccent: 333 as const,
+        summation: 600 as const,
+        Egrave: 611 as const,
+        racute: 389 as const,
+        omacron: 500 as const,
+        Zacute: 556 as const,
+        Zcaron: 556 as const,
+        greaterequal: 549 as const,
+        Eth: 722 as const,
+        Ccedilla: 667 as const,
+        lcommaaccent: 278 as const,
+        tcaron: 300 as const,
+        eogonek: 444 as const,
+        Uogonek: 722 as const,
+        Aacute: 611 as const,
+        Adieresis: 611 as const,
+        egrave: 444 as const,
+        zacute: 389 as const,
+        iogonek: 278 as const,
+        Oacute: 722 as const,
+        oacute: 500 as const,
+        amacron: 500 as const,
+        sacute: 389 as const,
+        idieresis: 278 as const,
+        Ocircumflex: 722 as const,
+        Ugrave: 722 as const,
+        Delta: 612 as const,
+        thorn: 500 as const,
+        twosuperior: 300 as const,
+        Odieresis: 722 as const,
+        mu: 500 as const,
+        igrave: 278 as const,
+        ohungarumlaut: 500 as const,
+        Eogonek: 611 as const,
+        dcroat: 500 as const,
+        threequarters: 750 as const,
+        Scedilla: 500 as const,
+        lcaron: 300 as const,
+        Kcommaaccent: 667 as const,
+        Lacute: 556 as const,
+        trademark: 980 as const,
+        edotaccent: 444 as const,
+        Igrave: 333 as const,
+        Imacron: 333 as const,
+        Lcaron: 611 as const,
+        onehalf: 750 as const,
+        lessequal: 549 as const,
+        ocircumflex: 500 as const,
+        ntilde: 500 as const,
+        Uhungarumlaut: 722 as const,
+        Eacute: 611 as const,
+        emacron: 444 as const,
+        gbreve: 500 as const,
+        onequarter: 750 as const,
+        Scaron: 500 as const,
+        Scommaaccent: 500 as const,
+        Ohungarumlaut: 722 as const,
+        degree: 400 as const,
+        ograve: 500 as const,
+        Ccaron: 667 as const,
+        ugrave: 500 as const,
+        radical: 453 as const,
+        Dcaron: 722 as const,
+        rcommaaccent: 389 as const,
+        Ntilde: 667 as const,
+        otilde: 500 as const,
+        Rcommaaccent: 611 as const,
+        Lcommaaccent: 556 as const,
+        Atilde: 611 as const,
+        Aogonek: 611 as const,
+        Aring: 611 as const,
+        Otilde: 722 as const,
+        zdotaccent: 389 as const,
+        Ecaron: 611 as const,
+        Iogonek: 333 as const,
+        kcommaaccent: 444 as const,
+        minus: 675 as const,
+        Icircumflex: 333 as const,
+        ncaron: 500 as const,
+        tcommaaccent: 278 as const,
+        logicalnot: 675 as const,
+        odieresis: 500 as const,
+        udieresis: 500 as const,
+        notequal: 549 as const,
+        gcommaaccent: 500 as const,
+        eth: 500 as const,
+        zcaron: 389 as const,
+        ncommaaccent: 500 as const,
+        onesuperior: 300 as const,
+        imacron: 278 as const,
+        Euro: 500 as const,
+      }
+    }),
+    // eslint-disable-next-line no-shadow
+    ZapfDingbats: getLookupTableFactory(() => {
+      return {
+        space: 278 as const,
+        a1: 974 as const,
+        a2: 961 as const,
+        a202: 974 as const,
+        a3: 980 as const,
+        a4: 719 as const,
+        a5: 789 as const,
+        a119: 790 as const,
+        a118: 791 as const,
+        a117: 690 as const,
+        a11: 960 as const,
+        a12: 939 as const,
+        a13: 549 as const,
+        a14: 855 as const,
+        a15: 911 as const,
+        a16: 933 as const,
+        a105: 911 as const,
+        a17: 945 as const,
+        a18: 974 as const,
+        a19: 755 as const,
+        a20: 846 as const,
+        a21: 762 as const,
+        a22: 761 as const,
+        a23: 571 as const,
+        a24: 677 as const,
+        a25: 763 as const,
+        a26: 760 as const,
+        a27: 759 as const,
+        a28: 754 as const,
+        a6: 494 as const,
+        a7: 552 as const,
+        a8: 537 as const,
+        a9: 577 as const,
+        a10: 692 as const,
+        a29: 786 as const,
+        a30: 788 as const,
+        a31: 788 as const,
+        a32: 790 as const,
+        a33: 793 as const,
+        a34: 794 as const,
+        a35: 816 as const,
+        a36: 823 as const,
+        a37: 789 as const,
+        a38: 841 as const,
+        a39: 823 as const,
+        a40: 833 as const,
+        a41: 816 as const,
+        a42: 831 as const,
+        a43: 923 as const,
+        a44: 744 as const,
+        a45: 723 as const,
+        a46: 749 as const,
+        a47: 790 as const,
+        a48: 792 as const,
+        a49: 695 as const,
+        a50: 776 as const,
+        a51: 768 as const,
+        a52: 792 as const,
+        a53: 759 as const,
+        a54: 707 as const,
+        a55: 708 as const,
+        a56: 682 as const,
+        a57: 701 as const,
+        a58: 826 as const,
+        a59: 815 as const,
+        a60: 789 as const,
+        a61: 789 as const,
+        a62: 707 as const,
+        a63: 687 as const,
+        a64: 696 as const,
+        a65: 689 as const,
+        a66: 786 as const,
+        a67: 787 as const,
+        a68: 713 as const,
+        a69: 791 as const,
+        a70: 785 as const,
+        a71: 791 as const,
+        a72: 873 as const,
+        a73: 761 as const,
+        a74: 762 as const,
+        a203: 762 as const,
+        a75: 759 as const,
+        a204: 759 as const,
+        a76: 892 as const,
+        a77: 892 as const,
+        a78: 788 as const,
+        a79: 784 as const,
+        a81: 438 as const,
+        a82: 138 as const,
+        a83: 277 as const,
+        a84: 415 as const,
+        a97: 392 as const,
+        a98: 392 as const,
+        a99: 668 as const,
+        a100: 668 as const,
+        a89: 390 as const,
+        a90: 390 as const,
+        a93: 317 as const,
+        a94: 317 as const,
+        a91: 276 as const,
+        a92: 276 as const,
+        a205: 509 as const,
+        a85: 509 as const,
+        a206: 410 as const,
+        a86: 410 as const,
+        a87: 234 as const,
+        a88: 234 as const,
+        a95: 334 as const,
+        a96: 334 as const,
+        a101: 732 as const,
+        a102: 544 as const,
+        a103: 544 as const,
+        a104: 910 as const,
+        a106: 667 as const,
+        a107: 760 as const,
+        a108: 760 as const,
+        a112: 776 as const,
+        a111: 595 as const,
+        a110: 694 as const,
+        a109: 626 as const,
+        a120: 788 as const,
+        a121: 788 as const,
+        a122: 788 as const,
+        a123: 788 as const,
+        a124: 788 as const,
+        a125: 788 as const,
+        a126: 788 as const,
+        a127: 788 as const,
+        a128: 788 as const,
+        a129: 788 as const,
+        a130: 788 as const,
+        a131: 788 as const,
+        a132: 788 as const,
+        a133: 788 as const,
+        a134: 788 as const,
+        a135: 788 as const,
+        a136: 788 as const,
+        a137: 788 as const,
+        a138: 788 as const,
+        a139: 788 as const,
+        a140: 788 as const,
+        a141: 788 as const,
+        a142: 788 as const,
+        a143: 788 as const,
+        a144: 788 as const,
+        a145: 788 as const,
+        a146: 788 as const,
+        a147: 788 as const,
+        a148: 788 as const,
+        a149: 788 as const,
+        a150: 788 as const,
+        a151: 788 as const,
+        a152: 788 as const,
+        a153: 788 as const,
+        a154: 788 as const,
+        a155: 788 as const,
+        a156: 788 as const,
+        a157: 788 as const,
+        a158: 788 as const,
+        a159: 788 as const,
+        a160: 894 as const,
+        a161: 838 as const,
+        a163: 1016 as const,
+        a164: 458 as const,
+        a196: 748 as const,
+        a165: 924 as const,
+        a192: 748 as const,
+        a166: 918 as const,
+        a167: 927 as const,
+        a168: 928 as const,
+        a169: 928 as const,
+        a170: 834 as const,
+        a171: 873 as const,
+        a172: 828 as const,
+        a173: 924 as const,
+        a162: 924 as const,
+        a174: 917 as const,
+        a175: 930 as const,
+        a176: 931 as const,
+        a177: 463 as const,
+        a178: 883 as const,
+        a179: 836 as const,
+        a193: 836 as const,
+        a180: 867 as const,
+        a199: 867 as const,
+        a181: 696 as const,
+        a200: 696 as const,
+        a182: 874 as const,
+        a201: 874 as const,
+        a183: 760 as const,
+        a184: 946 as const,
+        a197: 771 as const,
+        a185: 865 as const,
+        a194: 771 as const,
+        a198: 888 as const,
+        a186: 967 as const,
+        a195: 888 as const,
+        a187: 831 as const,
+        a188: 873 as const,
+        a189: 927 as const,
+        a190: 970 as const,
+        a191: 918 as const,
+      }
+    }),
+  }
 });
 
-const getFontBasicMetrics = getLookupTableFactory(function (t) {
-  t.Courier = {
-    ascent: 629,
-    descent: -157,
-    capHeight: 562,
-    xHeight: -426,
-  };
-  t["Courier-Bold"] = {
-    ascent: 629,
-    descent: -157,
-    capHeight: 562,
-    xHeight: 439,
-  };
-  t["Courier-Oblique"] = {
-    ascent: 629,
-    descent: -157,
-    capHeight: 562,
-    xHeight: 426,
-  };
-  t["Courier-BoldOblique"] = {
-    ascent: 629,
-    descent: -157,
-    capHeight: 562,
-    xHeight: 426,
-  };
-  t.Helvetica = {
-    ascent: 718,
-    descent: -207,
-    capHeight: 718,
-    xHeight: 523,
-  };
-  t["Helvetica-Bold"] = {
-    ascent: 718,
-    descent: -207,
-    capHeight: 718,
-    xHeight: 532,
-  };
-  t["Helvetica-Oblique"] = {
-    ascent: 718,
-    descent: -207,
-    capHeight: 718,
-    xHeight: 523,
-  };
-  t["Helvetica-BoldOblique"] = {
-    ascent: 718,
-    descent: -207,
-    capHeight: 718,
-    xHeight: 532,
-  };
-  t["Times-Roman"] = {
-    ascent: 683,
-    descent: -217,
-    capHeight: 662,
-    xHeight: 450,
-  };
-  t["Times-Bold"] = {
-    ascent: 683,
-    descent: -217,
-    capHeight: 676,
-    xHeight: 461,
-  };
-  t["Times-Italic"] = {
-    ascent: 683,
-    descent: -217,
-    capHeight: 653,
-    xHeight: 441,
-  };
-  t["Times-BoldItalic"] = {
-    ascent: 683,
-    descent: -217,
-    capHeight: 669,
-    xHeight: 462,
-  };
-  t.Symbol = {
-    ascent: Math.NaN,
-    descent: Math.NaN,
-    capHeight: Math.NaN,
-    xHeight: Math.NaN,
-  };
-  t.ZapfDingbats = {
-    ascent: Math.NaN,
-    descent: Math.NaN,
-    capHeight: Math.NaN,
-    xHeight: Math.NaN,
+const getFontBasicMetrics = getLookupTableFactory(() => {
+  return {
+    Courier: {
+      ascent: 629 as const,
+      descent: -157 as const,
+      capHeight: 562 as const,
+      xHeight: -426 as const,
+    },
+    "Courier-Bold": {
+      ascent: 629 as const,
+      descent: -157 as const,
+      capHeight: 562 as const,
+      xHeight: 439 as const,
+    },
+    "Courier-Oblique": {
+      ascent: 629 as const,
+      descent: -157 as const,
+      capHeight: 562 as const,
+      xHeight: 426 as const,
+    },
+    "Courier-BoldOblique": {
+      ascent: 629 as const,
+      descent: -157 as const,
+      capHeight: 562 as const,
+      xHeight: 426 as const,
+    },
+    Helvetica: {
+      ascent: 718 as const,
+      descent: -207 as const,
+      capHeight: 718 as const,
+      xHeight: 523 as const,
+    },
+    "Helvetica-Bold": {
+      ascent: 718 as const,
+      descent: -207 as const,
+      capHeight: 718 as const,
+      xHeight: 532 as const,
+    },
+    "Helvetica-Oblique": {
+      ascent: 718 as const,
+      descent: -207 as const,
+      capHeight: 718 as const,
+      xHeight: 523 as const,
+    },
+    "Helvetica-BoldOblique": {
+      ascent: 718 as const,
+      descent: -207 as const,
+      capHeight: 718 as const,
+      xHeight: 532 as const,
+    },
+    "Times-Roman": {
+      ascent: 683 as const,
+      descent: -217 as const,
+      capHeight: 662 as const,
+      xHeight: 450 as const,
+    },
+    "Times-Bold": {
+      ascent: 683 as const,
+      descent: -217 as const,
+      capHeight: 676 as const,
+      xHeight: 461 as const,
+    },
+    "Times-Italic": {
+      ascent: 683 as const,
+      descent: -217 as const,
+      capHeight: 653 as const,
+      xHeight: 441 as const,
+    },
+    "Times-BoldItalic": {
+      ascent: 683 as const,
+      descent: -217 as const,
+      capHeight: 669 as const,
+      xHeight: 462 as const,
+    },
+    Symbol: {
+      ascent: NaN,
+      descent: NaN,
+      capHeight: NaN,
+      xHeight: NaN,
+    },
+    ZapfDingbats: {
+      ascent: NaN,
+      descent: NaN,
+      capHeight: NaN,
+      xHeight: NaN,
+    }
   };
 });
 

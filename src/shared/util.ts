@@ -338,7 +338,7 @@ export enum OPS {
   setFillTransparent = 93,
 };
 
-export type OPSArgsType = {
+export type OPArg = {
   [OPS.dependency]: [string],
   [OPS.setLineWidth]: number,
   [OPS.setLineCap]: number,
@@ -542,6 +542,15 @@ function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null 
   return null;
 }
 
+/**
+ * 该函数主要实现懒加载功能，一般为某个getter方法服务
+ * 针对某个getter方法，第一次使用的时候，会直接调原来的getter方法，并且生成相应的属性
+ * 生成完相应属性之后，然后用shadow创建新的属性替代掉原来的getter方法，从而实现功能的缓存
+ * 原来的getter在被调用一次之后，就会被shadow方法替换掉
+ * 
+ * shadow方法实现的其实并不完美，因为它的prop是用的字符串形式，它会将代码与代码之间的关联断开掉
+ * 不小心误触或者大小写错误或者字母顺序出错了，都会导致问题。
+ */
 function shadow<T>(obj: object, prop: string, value: T, nonSerializable = false): T {
   if (PlatformHelper.isTesting()) {
     assert(
