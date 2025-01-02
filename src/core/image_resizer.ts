@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { ImageDecoder } from "../global";
 import { FeatureTest, ImageKind, shadow, warn } from "../shared/util";
 
 const MIN_IMAGE_DIM = 2048;
@@ -33,9 +34,9 @@ const MAX_ERROR = 128;
 
 class ImageResizer {
 
-  static #goodSquareLength = MIN_IMAGE_DIM;
+  protected static _goodSquareLength = MIN_IMAGE_DIM;
 
-  static #isChrome = false;
+  protected static _isChrome = false;
 
   static _hasMaxArea = false;
 
@@ -53,18 +54,13 @@ class ImageResizer {
     // issue6741.pdf.
     // https://issues.chromium.org/issues/374807001.
     return shadow(
-      this,
-      "canUseImageDecoder",
-      // eslint-disable-next-line no-undef
-      this.#isChrome || typeof ImageDecoder === "undefined"
-        ? Promise.resolve(false)
-        : // eslint-disable-next-line no-undef
-        ImageDecoder.isTypeSupported("image/bmp")
+      this, "canUseImageDecoder", this._isChrome || typeof ImageDecoder === "undefined"
+      ? Promise.resolve(false) : ImageDecoder.isTypeSupported("image/bmp")
     );
   }
 
   static needsToBeResized(width: number, height: number) {
-    if (width <= this.#goodSquareLength && height <= this.#goodSquareLength) {
+    if (width <= this._goodSquareLength && height <= this._goodSquareLength) {
       return false;
     }
 
@@ -78,15 +74,14 @@ class ImageResizer {
       return area > this.MAX_AREA;
     }
 
-    if (area < this.#goodSquareLength ** 2) {
+    if (area < this._goodSquareLength ** 2) {
       return false;
     }
 
     // We try as much as possible to avoid to compute the max area.
     if (this._areGoodDims(width, height)) {
-      this.#goodSquareLength = Math.max(
-        this.#goodSquareLength,
-        Math.floor(Math.sqrt(width * height))
+      this._goodSquareLength = Math.max(
+        this._goodSquareLength, Math.floor(Math.sqrt(width * height))
       );
       return false;
     }
@@ -95,31 +90,23 @@ class ImageResizer {
     // some large canvas, so in the Firefox case this value (and MAX_DIM) can be
     // infered from prefs (MAX_AREA = gfx.max-alloc-size / 4, 4 is because of
     // RGBA).
-    this.#goodSquareLength = this._guessMax(
-      this.#goodSquareLength,
-      MAX_DIM,
-      MAX_ERROR,
-      0
+    this._goodSquareLength = this._guessMax(
+      this._goodSquareLength, MAX_DIM, MAX_ERROR, 0
     );
-    const maxArea = (this.MAX_AREA = this.#goodSquareLength ** 2);
-
+    const maxArea = (this.MAX_AREA = this._goodSquareLength ** 2);
     return area > maxArea;
   }
 
   static get MAX_DIM() {
     return shadow(
-      this,
-      "MAX_DIM",
-      this._guessMax(MIN_IMAGE_DIM, MAX_IMAGE_DIM, 0, 1)
+      this, "MAX_DIM", this._guessMax(MIN_IMAGE_DIM, MAX_IMAGE_DIM, 0, 1)
     );
   }
 
   static get MAX_AREA() {
     this._hasMaxArea = true;
     return shadow(
-      this,
-      "MAX_AREA",
-      this._guessMax(this.#goodSquareLength, this.MAX_DIM, MAX_ERROR, 0) ** 2
+      this, "MAX_AREA", this._guessMax(this._goodSquareLength, this.MAX_DIM, MAX_ERROR, 0) ** 2
     );
   }
 
@@ -130,19 +117,16 @@ class ImageResizer {
     }
   }
 
-  static setMaxArea(area) {
+  static setMaxArea(area: number) {
     if (!this._hasMaxArea) {
       // Divide by 4 to have the value in pixels.
       this.MAX_AREA = area >> 2;
     }
   }
 
-  static setOptions(opts) {
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
-      throw new Error("Not implemented: setOptions");
-    }
-    this.setMaxArea(opts.maxArea ?? -1);
-    this.#isChrome = opts.isChrome ?? false;
+  static setOptions(maxArea: number | null, isChrome: boolean | null) {
+    this.setMaxArea(maxArea ?? -1);
+    this._isChrome = isChrome ?? false;
   }
 
   static _areGoodDims(width: number, height: number) {
@@ -189,7 +173,8 @@ class ImageResizer {
 
   async _createImage() {
     const data = this._encodeBMP();
-    let decoder, imagePromise;
+    let decoder: ImageDecoder | null = null;
+    let imagePromise;
 
     if (await ImageResizer.canUseImageDecoder) {
       // eslint-disable-next-line no-undef
@@ -199,21 +184,19 @@ class ImageResizer {
         preferAnimation: false,
         transfer: [data.buffer],
       });
-      imagePromise = decoder
-        .decode()
-        .catch(reason => {
-          warn(`BMP image decoding failed: ${reason}`);
-          // It's a bit unfortunate to create the BMP twice but we shouldn't be
-          // here in the first place.
-          return createImageBitmap(
-            new Blob([this._encodeBMP().buffer], {
-              type: "image/bmp",
-            })
-          );
-        })
-        .finally(() => {
-          decoder.close();
-        });
+
+      imagePromise = decoder.decode().catch(reason => {
+        warn(`BMP image decoding failed: ${reason}`);
+        // It's a bit unfortunate to create the BMP twice but we shouldn't be
+        // here in the first place.
+        return createImageBitmap(
+          new Blob([this._encodeBMP().buffer], {
+            type: "image/bmp",
+          })
+        );
+      }).finally(() => {
+        decoder!.close();
+      });
     } else {
       imagePromise = createImageBitmap(
         new Blob([data.buffer], {
@@ -226,9 +209,7 @@ class ImageResizer {
     const { _imgData: imgData } = this;
     const { width, height } = imgData;
     const minFactor = Math.max(
-      width / MAX_DIM,
-      height / MAX_DIM,
-      Math.sqrt((width * height) / MAX_AREA)
+      width / MAX_DIM, height / MAX_DIM, Math.sqrt((width * height) / MAX_AREA)
     );
 
     const firstFactor = Math.max(minFactor, 2);

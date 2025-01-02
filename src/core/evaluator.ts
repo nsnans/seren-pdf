@@ -99,6 +99,7 @@ export interface SeacMapValue {
     y: number;
   };
 }
+
 export interface EvaluatorProperties {
   glyphNames: string[];
   seacMap: Map<number, SeacMapValue>;
@@ -175,9 +176,9 @@ const DefaultDocParamEvaluatorOptions: DocumentEvaluatorOptions = Object.freeze(
   standardFontDataUrl: null,
 });
 
-const PatternType = {
-  TILING: 1,
-  SHADING: 2,
+enum PatternType {
+  TILING = 1,
+  SHADING = 2,
 };
 
 // Optionally avoid sending individual, or very few, text chunks to reduce
@@ -352,10 +353,7 @@ class PartialEvaluator {
     if (PlatformHelper.isMozCental()) {
       ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
     } else {
-      ImageResizer.setOptions({
-        isChrome: this.options.isChrome,
-        maxArea: this.options.canvasMaxAreaInBytes,
-      });
+      ImageResizer.setOptions(this.options.canvasMaxAreaInBytes, this.options.isChrome);
     }
   }
 
@@ -4573,10 +4571,7 @@ class PartialEvaluator {
   }
 
   static buildFontPaths(
-    font: Font,
-    glyphs: Glyph[],
-    handler: MessageHandler,
-    evaluatorOptions: DocumentEvaluatorOptions
+    font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocumentEvaluatorOptions
   ) {
     function buildPath(fontChar: string) {
       const glyphName = `${font.loadedName}_path_${fontChar}`;
@@ -4700,9 +4695,9 @@ export class TranslatedFont {
     const fontResources = this.dict.getValue(DictKey.Resources) || resources;
     const charProcOperatorList: Map<DictKey, OperatorListIR> = new Map();
 
-    const fontBBox = Util.normalizeRect(translatedFont.bbox || [0, 0, 0, 0]),
-      width = fontBBox[2] - fontBBox[0],
-      height = fontBBox[3] - fontBBox[1];
+    const fontBBox = Util.normalizeRect(translatedFont.bbox || [0, 0, 0, 0]);
+    const width = fontBBox[2] - fontBBox[0];
+    const height = fontBBox[3] - fontBBox[1];
     const fontBBoxSize = Math.hypot(width, height);
 
     for (const key of charProcs.getKeys()) {

@@ -391,9 +391,9 @@ class CMap {
 // A special case of CMap, where the _map array implicitly has a length of
 // 65536 and each element is equal to its index.
 class IdentityCMap extends CMap {
+
   constructor(vertical: boolean, n: number) {
     super();
-
     this.vertical = vertical;
     this.addCodespaceRange(n, 0, 0xffff);
   }
@@ -450,7 +450,7 @@ class IdentityCMap extends CMap {
     // 这么做是为了避开报错
     let x = 2 - 1;
     if (x === 1) {
-      unreachable("should not access .isIdentityCMap"); 
+      unreachable("should not access .isIdentityCMap");
     }
     return false;
   }

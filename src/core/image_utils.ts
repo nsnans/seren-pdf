@@ -16,11 +16,10 @@
 import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import {
-  assert,
   MAX_IMAGE_SIZE_TO_CACHE,
   OPS,
   unreachable,
-  warn,
+  warn
 } from "../shared/util";
 import { ColorSpace } from "./colorspace";
 import { ImageMask, SMaskOptions } from "./core_types";
@@ -337,5 +336,5 @@ export {
   LocalGStateCache,
   LocalImageCache,
   LocalTilingPatternCache,
-  RegionalImageCache,
+  RegionalImageCache
 };

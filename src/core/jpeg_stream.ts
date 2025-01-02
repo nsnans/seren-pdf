@@ -18,6 +18,7 @@ import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
 import { JpegImage } from "./jpg";
 import { Stream } from "./stream";
+import { ImageDecoder } from "../global";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves

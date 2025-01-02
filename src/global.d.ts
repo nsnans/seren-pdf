@@ -1,4 +1,5 @@
 import { Event } from "./scripting_api/event";
+import { TypedArray } from "./types";
 
 // 扩展 window 对象，添加 一些全局 属性
 export declare global {
@@ -39,5 +40,35 @@ export declare global {
     __originalClosePath?: () => void;
     __originalBeginPath?: () => void;
   }
+
+  declare interface ImageDecoderOptions {
+    type: string;
+    data: ArrayBuffer | DataView | ReadableStream | TypedArray;
+    premultiplyAlpha?: "none" | "premultiply" | "default";
+    colorSpaceConversion?: "none" | "default";
+    desiredWidth?: number;
+    desiredHeight?: number;
+    preferAnimation?: boolean;
+    tranfer: ArrayBuffer[];
+  }
+
+  declare interface ImageDecodeOption {
+    frameIndex?: number;
+    completeFramesOnly?: boolean;
+  }
+
+  declare interface ImageDecoder {
+    static isTypeSupported(type: string): Promise<boolean>;
+    new: (options: ImageDecoderOptions) => ImageDecoder;
+    close(): void;
+    decode(options?: ImageDecodeOption): Promise<{ image: VideoFrame, complete: boolean }>;
+    reset(): void;
+  }
 }
+
+export declare var ImageDecoder: {
+  prototype: ImageDecoder;
+  new(options: ImageDecoderOption): ImageDecoder;
+  static isTypeSupported(type: string): Promise<boolean>;
+};
 

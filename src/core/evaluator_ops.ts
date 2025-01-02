@@ -2,12 +2,13 @@ import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
 import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
-import { AbortException, FormatError, info, TextRenderingMode, warn } from "../shared/util";
+import { AbortException, assert, FormatError, info, TextRenderingMode, warn } from "../shared/util";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { ImageMask } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
-import { addLocallyCachedImageOps, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
+import { addLocallyCachedImageOps, CssFontInfo, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
 import { ErrorFont } from "./fonts";
 import { PDFImage } from "./image";
 import { GlobalImageCache, GroupOptions, ImageCacheData, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, OptionalContent, RegionalImageCache } from "./image_utils";
@@ -274,28 +275,28 @@ class Operator {
   @handle(OPS.setStrokeColor)
   static setStrokeColor(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.strokeColorSpace!;
-    ctx.args = cs.getRgb(ctx.args as unknown as TypedArray, 0);
+    ctx.args = cs.getRgb(ctx.args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillGray)
   static setFillGray(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.gray;
-    ctx.args = ColorSpace.singletons.gray.getRgb(args as unknown as TypedArray, 0);
+    ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeGray)
   static setStrokeGray(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.gray;
-    ctx.args = ColorSpace.singletons.gray.getRgb(args as unknown as TypedArray, 0);
+    ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillCMYKColor)
   static setFillCMYKColor(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.cmyk;
-    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args as unknown as TypedArray, 0);
+    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
@@ -323,7 +324,7 @@ class Operator {
     const cs = ctx.stateManager.state.patternFillColorSpace;
     if (!cs) {
       if (isNumberArray(ctx.args, null)) {
-        ctx.args = ColorSpace.singletons.gray.getRgb(args as unknown as TypedArray, 0);
+        ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
         ctx.fn = OPS.setFillRGBColor;
         return
       }
@@ -332,10 +333,10 @@ class Operator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(Operator.handleColorN(ctx));
+      ctx.next(this.handleColorN(ctx));
       return OVER
     }
-    ctx.args = cs.getRgb(args as unknown as TypedArray, 0);
+    ctx.args = cs.getRgb(ctx.args, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
@@ -344,7 +345,7 @@ class Operator {
     const cs = ctx.stateManager.state.patternStrokeColorSpace;
     if (!cs) {
       if (isNumberArray(ctx.args, null)) {
-        ctx.args = ColorSpace.singletons.gray.getRgb(args as unknown as TypedArray, 0);
+        ctx.args = ColorSpace.singletons.gray.getRgb(ctx.args, 0);
         ctx.fn = OPS.setStrokeRGBColor;
         return
       }
@@ -356,7 +357,7 @@ class Operator {
       ctx.next(Operator.handleColorN(ctx));
       return OVER;
     }
-    ctx.args = cs.getRgb(args as unknown as TypedArray, 0);
+    ctx.args = cs.getRgb(ctx.args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
@@ -540,11 +541,7 @@ class Operator {
     const fontName = fontArgs?.[0] instanceof Name ? fontArgs[0].name : null;
 
     let translated = await this.loadFont(
-      fontName,
-      fontRef,
-      resources,
-      fallbackFontDict,
-      cssFontInfo
+      fontName, fontRef, resources, fallbackFontDict, cssFontInfo
     );
 
     if (translated.font.isType3Font) {
@@ -552,20 +549,20 @@ class Operator {
         await translated.loadType3Data(this, resources, task);
         // Add the dependencies to the parent operatorList so they are
         // resolved before Type3 operatorLists are executed synchronously.
-        operatorList.addDependencies(translated.type3Dependencies!);
+        ctx.operatorList.addDependencies(translated.type3Dependencies!);
       } catch (reason) {
         translated = new TranslatedFont(
           "g_font_error",
           new ErrorFont(`Type3 font load error: ${reason}`),
           // 这里是个坑爹的问题，估计出问题的时候，直接拿这个font来存dict了
           translated.font as unknown as Dict,
-          this.options,
+          ctx.options,
         );
       }
     }
 
     state.font = translated.font;
-    translated.send(this.handler);
+    translated.send(ctx.handler);
     return translated.loadedName;
   }
 
@@ -672,10 +669,8 @@ class Operator {
     } else {
       fontID = this.idFactory.createFontId();
     }
-    assert(
-      fontID?.startsWith("f"),
-      'The "fontID" must be (correctly) defined.'
-    );
+
+    assert(fontID?.startsWith("f"), 'The "fontID" must be (correctly) defined.');
 
     // Workaround for bad PDF generators that reference fonts incorrectly,
     // where `fontRef` is a `Dict` rather than a `Ref` (fixes bug946506.pdf).
@@ -884,9 +879,7 @@ class Operator {
         resolve(
           new TranslatedFont(
             font.loadedName!,
-            new ErrorFont(
-              reason instanceof Error ? reason.message : reason
-            ),
+            new ErrorFont(reason instanceof Error ? reason.message : reason),
             font,
             this.options,
           )
@@ -895,7 +888,7 @@ class Operator {
     return promise;
   }
 
-  static buildPath(operatorList: OperatorList, fn: OPS, args: any[] | null, parsingText: boolean) {
+  static buildPath(operatorList: OperatorList, fn: OPS, args: MutableArray<any> | null, parsingText: boolean) {
     const lastIndex = operatorList.length - 1;
     if (!args) {
       args = [];
@@ -1529,14 +1522,8 @@ class Operator {
       localColorSpaceCache,
     })
       .then(async imageObj => {
-        imgData = await imageObj.createImageData(
-          /* forceRGBA = */ false,
-          /* isOffscreenCanvasSupported = */ this.options
-            .isOffscreenCanvasSupported
-        );
-        imgData.dataLen = imgData.bitmap
-          ? imgData.width * imgData.height * 4
-          : imgData.data!.length;
+        imgData = await imageObj.createImageData(false, this.options.isOffscreenCanvasSupported);
+        imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
         imgData.ref = imageRef;
 
         if (cacheGlobally) {
@@ -1818,7 +1805,7 @@ class Operators {
 
 interface ProcessOperation {
   fn: OPS | null;
-  args: any[] | null;
+  args: MutableArray<any> | null;
 }
 
 
