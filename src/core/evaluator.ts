@@ -4625,7 +4625,7 @@ export class StateManager {
   }
 }
 
-class TextState implements State {
+export class TextState implements State {
 
   public ctm: Float32Array;
   public fontName: null;

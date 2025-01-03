@@ -1015,11 +1015,6 @@ export class RefSet {
   protected _set: Set<string>;
 
   constructor(parent: RefSet | null = null) {
-    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
-      parent && !(parent instanceof RefSet)
-    ) {
-      unreachable('RefSet: Invalid "parent" value.');
-    }
     this._set = new Set(parent?._set);
   }
 

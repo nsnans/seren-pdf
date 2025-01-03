@@ -9,7 +9,7 @@ import { ColorSpace } from "./colorspace";
 import { ImageMask } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { addLocallyCachedImageOps, CssFontInfo, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
-import { BaseOperator } from "./evaluator_base";
+import { BaseOperator, DEFAULT, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { ErrorFont } from "./fonts";
 import { PDFImage } from "./image";
 import { GlobalImageCache, GroupOptions, ImageCacheData, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, OptionalContent, RegionalImageCache } from "./image_utils";
@@ -19,14 +19,12 @@ import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import { WorkerTask } from "./worker";
 import { XRef } from "./xref";
 
-const MethodMap = new Map<OPS, keyof typeof GeneralOperator>();
-
-const DEFAULT = "DEFAULT";
+const MethodMap = new Map<OPS, keyof GeneralOperator>();
 
 // 这里应该要有handle完的arg类型，但是这种arg类型不太好强制管理起来
 // 强制起来得打开一个开关，开关检测args处理的对不对
 function handle(ops: OPS | "DEFAULT") {
-  return function (target: typeof GeneralOperator, propertyKey: keyof typeof GeneralOperator) {
+  return function (target: GeneralOperator, propertyKey: keyof GeneralOperator) {
     if (ops === DEFAULT) {
       return
     }
@@ -39,15 +37,12 @@ function handle(ops: OPS | "DEFAULT") {
   }
 }
 
-const SKIP = 1;
-const OVER = 2;
-
 class GeneralOperator extends BaseOperator {
 
-  static buildOperatorMap() {
+  buildOperatorMap() {
     const map = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
     for (const [k, v] of MethodMap) {
-      const fn = GeneralOperator[v];
+      const fn = this[v];
       if (fn == null || typeof fn !== 'function') {
         throw new Error("操作符和操作方法不匹配");
       }
@@ -57,7 +52,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.paintXObject)
-  static paintXObject(ctx: ProcessContext) {
+  paintXObject(ctx: ProcessContext) {
     const isValidName = ctx.args![0] instanceof Name;
     const name = ctx.args![0].name;
 
@@ -141,7 +136,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setFont)
-  static setFont(ctx: ProcessContext) {
+  setFont(ctx: ProcessContext) {
     const fontSize = ctx.args![1];
     ctx.next(this.handleSetFont(ctx).then(loadedName => {
       ctx.operatorList.addDependency(loadedName);
@@ -150,17 +145,17 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.beginText)
-  static beginText(ctx: ProcessContext) {
+  beginText(ctx: ProcessContext) {
     ctx.parsingText = true;
   }
 
   @handle(OPS.endText)
-  static endText(ctx: ProcessContext) {
+  endText(ctx: ProcessContext) {
     ctx.parsingText = false;
   }
 
   @handle(OPS.endInlineImage)
-  static endInlineImage(ctx: ProcessContext) {
+  endInlineImage(ctx: ProcessContext) {
     const cacheKey = ctx.args![0].cacheKey;
     if (cacheKey) {
       const localImage = ctx.localImageCache.getByName(cacheKey);
@@ -174,16 +169,16 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.showText)
-  static showText(ctx: ProcessContext) {
+  showText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
-      GeneralOperator.ensureStateFont(ctx.stateManager.state);
+      this.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     ctx.args![0] = this.handleText(ctx, ctx.args![0], ctx.stateManager.state);
   }
 
   @handle(OPS.showSpacedText)
-  static showSpacedText(ctx: ProcessContext) {
+  showSpacedText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
       GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -201,7 +196,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.nextLineShowText)
-  static nextLineShowText(ctx: ProcessContext) {
+  nextLineShowText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
       GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -212,7 +207,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.nextLineSetSpacingShowText)
-  static nextLineSetSpacingShowText(ctx: ProcessContext) {
+  nextLineSetSpacingShowText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
       GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -225,12 +220,12 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setTextRenderingMode)
-  static setTextRenderingMode(ctx: ProcessContext) {
+  setTextRenderingMode(ctx: ProcessContext) {
     ctx.stateManager.state.textRenderingMode = ctx.args![0];
   }
 
   @handle(OPS.setFillColorSpace)
-  static setFillColorSpace(ctx: ProcessContext) {
+  setFillColorSpace(ctx: ProcessContext) {
     const cachedColorSpace = ColorSpace.getCached(
       ctx.args![0], ctx.xref, ctx.localColorSpaceCache
     );
@@ -249,7 +244,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setStrokeColorSpace)
-  static setStrokeColorSpace(ctx: ProcessContext) {
+  setStrokeColorSpace(ctx: ProcessContext) {
     const cachedColorSpace = ColorSpace.getCached(
       ctx.args![0], ctx.xref, ctx.localColorSpaceCache
     );
@@ -267,61 +262,61 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setFillColor)
-  static setFillColor(ctx: ProcessContext) {
+  setFillColor(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.fillColorSpace!;
     ctx.args = cs.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeColor)
-  static setStrokeColor(ctx: ProcessContext) {
+  setStrokeColor(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.strokeColorSpace!;
     ctx.args = cs.getRgb(ctx.args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillGray)
-  static setFillGray(ctx: ProcessContext) {
+  setFillGray(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.gray;
     ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeGray)
-  static setStrokeGray(ctx: ProcessContext) {
+  setStrokeGray(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.gray;
     ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillCMYKColor)
-  static setFillCMYKColor(ctx: ProcessContext) {
+  setFillCMYKColor(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.cmyk;
     ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeCMYKColor)
-  static setStrokeCMYKColor(ctx: ProcessContext) {
+  setStrokeCMYKColor(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.cmyk;
     ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillRGBColor)
-  static setFillRGBColor(ctx: ProcessContext) {
+  setFillRGBColor(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.rgb;
     ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args, 0);
   }
 
   @handle(OPS.setStrokeRGBColor)
-  static setStrokeRGBColor(ctx: ProcessContext) {
+  setStrokeRGBColor(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.rgb;
     ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args, 0);
   }
 
   @handle(OPS.setFillColorN)
-  static setFillColorN(ctx: ProcessContext) {
+  setFillColorN(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.patternFillColorSpace;
     if (!cs) {
       if (isNumberArray(ctx.args, null)) {
@@ -342,7 +337,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setStrokeColorN)
-  static setStrokeColorN(ctx: ProcessContext) {
+  setStrokeColorN(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.patternStrokeColorSpace;
     if (!cs) {
       if (isNumberArray(ctx.args, null)) {
@@ -363,7 +358,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.shadingFill)
-  static shadingFill(ctx: ProcessContext) {
+  shadingFill(ctx: ProcessContext) {
     let shading;
     try {
       const shadingRes = ctx.resources.getValue(DictKey.Shading);
@@ -393,7 +388,7 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.setGState)
-  static setGState(ctx: ProcessContext) {
+  setGState(ctx: ProcessContext) {
     const isValidName = ctx.args![0] instanceof Name;
     const name = ctx.args![0].name;
 
@@ -440,42 +435,42 @@ class GeneralOperator extends BaseOperator {
   }
 
   @handle(OPS.moveTo)
-  static moveTo(ctx: ProcessContext) {
+  moveTo(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.lineTo)
-  static lineTo(ctx: ProcessContext) {
+  lineTo(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo)
-  static curveTo(ctx: ProcessContext) {
+  curveTo(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo2)
-  static curveTo2(ctx: ProcessContext) {
+  curveTo2(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo3)
-  static curveTo3(ctx: ProcessContext) {
+  curveTo3(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.closePath)
-  static closePath(ctx: ProcessContext) {
+  closePath(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.rectangle)
-  static rectangle(ctx: ProcessContext) {
+  rectangle(ctx: ProcessContext) {
     GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
   }
 
@@ -489,37 +484,37 @@ class GeneralOperator extends BaseOperator {
    * but doing so is meaningless without knowing the semantics.
    */
   @handle(OPS.markPoint)
-  static markPoint(_ctx: ProcessContext) {
+  markPoint(_ctx: ProcessContext) {
   }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.markPointProps)
-  static markPointProps(_ctx: ProcessContext) { }
+  markPointProps(_ctx: ProcessContext) { }
 
   /** 
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginCompat)
-  static beginCompat(_ctx: ProcessContext) { }
+  beginCompat(_ctx: ProcessContext) { }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.endCompat)
-  static endCompat(_ctx: ProcessContext) { }
+  endCompat(_ctx: ProcessContext) { }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginMarkedContentProps)
-  static beginMarkedContentProps(_ctx: ProcessContext) {
+  beginMarkedContentProps(_ctx: ProcessContext) {
 
   }
 
   @handle(DEFAULT)
-  static defaultHandler(ctx: ProcessContext) {
+  defaultHandler(ctx: ProcessContext) {
     // Note: Ignore the operator if it has `Dict` arguments, since
     // those are non-serializable, otherwise postMessage will throw
     // "An object could not be cloned.".
@@ -538,7 +533,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static async handleSetFont(ctx: ProcessContext): Promise<string> {
+  async handleSetFont(ctx: ProcessContext): Promise<string> {
     const fontName = fontArgs?.[0] instanceof Name ? fontArgs[0].name : null;
 
     let translated = await this.loadFont(
@@ -728,7 +723,7 @@ class GeneralOperator extends BaseOperator {
     return promise;
   }
 
-  static loadFont(
+  loadFont(
     fontName: string | null,
     font: Ref | Dict | null,
     resources: Dict,
@@ -889,7 +884,7 @@ class GeneralOperator extends BaseOperator {
     return promise;
   }
 
-  static buildPath(operatorList: OperatorList, fn: OPS, args: MutableArray<any> | null, parsingText: boolean) {
+  buildPath(operatorList: OperatorList, fn: OPS, args: MutableArray<any> | null, parsingText: boolean) {
     const lastIndex = operatorList.length - 1;
     if (!args) {
       args = [];
@@ -960,7 +955,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static async _setGState(ctx: ProcessContext, gState: Dict, cacheKey: string) {
+  async _setGState(ctx: ProcessContext, gState: Dict, cacheKey: string) {
     const gStateRef = gState.objId;
     let isSimpleGState = true;
     // This array holds the converted/processed state data.
@@ -1063,7 +1058,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static async buildFormXObject(ctx: ProcessContext) {
+  async buildFormXObject(ctx: ProcessContext) {
     const dict = xobj.dict!;
     const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
     const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
@@ -1130,7 +1125,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null): Promise<OptionalContent | null> {
+  async parseMarkedContentProps(contentProperties: Name | Dict, resources: Dict | null): Promise<OptionalContent | null> {
     let optionalContent: Dict;
     if (contentProperties instanceof Name) {
       const properties = resources!.getValue(DictKey.Properties);
@@ -1192,7 +1187,7 @@ class GeneralOperator extends BaseOperator {
     return null;
   }
 
-  static _parseVisibilityExpression(array: any[], nestingCounter: number, currentResult: (string | string[])[]) {
+  _parseVisibilityExpression(array: any[], nestingCounter: number, currentResult: (string | string[])[]) {
     const MAX_NESTING = 10;
     if (++nestingCounter > MAX_NESTING) {
       warn("Visibility expression is too deeply nested");
@@ -1229,7 +1224,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static async parseColorSpace(cs: Name | Ref | (Ref | Name)[], resources: Dict | null
+  async parseColorSpace(cs: Name | Ref | (Ref | Name)[], resources: Dict | null
     , localColorSpaceCache: LocalColorSpaceCache) {
     return ColorSpace.parseAsync(
       cs, this.xref, resources, this._pdfFunctionFactory, localColorSpaceCache,
@@ -1245,7 +1240,7 @@ class GeneralOperator extends BaseOperator {
     });
   }
 
-  static async buildPaintImageXObject(
+  async buildPaintImageXObject(
     ctx: ProcessContext,
     image: BaseStream,
     isInline: boolean,
@@ -1559,7 +1554,7 @@ class GeneralOperator extends BaseOperator {
     }
   }
 
-  static _sendImgData(objId: string, imgData: ImageMask | null, cacheGlobally = false) {
+  _sendImgData(objId: string, imgData: ImageMask | null, cacheGlobally = false) {
 
     const transfers = imgData ? [imgData.bitmap || imgData.data!.buffer] : null;
 
@@ -1569,22 +1564,7 @@ class GeneralOperator extends BaseOperator {
     return this.handler.obj(objId, this.pageIndex, ObjType.Image, imgData, transfers);
   }
 
-  static ensureStateFont(state: State) {
-    if (state.font) {
-      return;
-    }
-    const reason = new FormatError(
-      "Missing setFont (Tf) operator before text rendering operator."
-    );
-
-    if (this.options.ignoreErrors) {
-      warn(`ensureStateFont: "${reason}".`);
-      return;
-    }
-    throw reason;
-  }
-
-  static handleText(ctx: ProcessContext, chars: string, state: State) {
+  handleText(ctx: ProcessContext, chars: string, state: State) {
     const font = state.font;
     const glyphs = font!.charsToGlyphs(chars);
 
@@ -1604,7 +1584,7 @@ class GeneralOperator extends BaseOperator {
     return glyphs;
   }
 
-  static handleColorN(
+  handleColorN(
     operatorList: OperatorList,
     fn: OPS, // 值应当是OPS.setFillColorN | OPS.setFillColorN,
     args: any[],
@@ -1677,7 +1657,7 @@ class GeneralOperator extends BaseOperator {
     throw new FormatError(`Unknown PatternName: ${patternName}`);
   }
 
-  static parseShading(
+  parseShading(
     shading: Dict,
     resources: Dict,
     localColorSpaceCache: LocalColorSpaceCache,
@@ -1793,11 +1773,6 @@ class Operators {
   execute(ops: OPS, context: ProcessContext): void | /* SKIP */1 | /* OVER */ 2 {
     return (this.operators.get(ops) ?? this.defaultHandler)(context)
   }
-}
-
-interface ProcessOperation {
-  fn: OPS | null;
-  args: MutableArray<any> | null;
 }
 
 
