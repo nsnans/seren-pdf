@@ -901,11 +901,9 @@ export class Dict {
     return shadow(this, "empty", emptyDict);
   }
 
-  static merge({ xref, dictArray, mergeSubDicts = false }:
-    { xref: XRef, dictArray: Dict[], mergeSubDicts: boolean }
-  ) {
-    const mergedDict = new Dict(xref),
-      properties = new Map();
+  static merge(xref: XRef, dictArray: Dict[], mergeSubDicts = false) {
+    const mergedDict = new Dict(xref);
+    const properties = new Map();
 
     for (const dict of dictArray) {
       if (!(dict instanceof Dict)) {

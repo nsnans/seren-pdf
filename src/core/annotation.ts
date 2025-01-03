@@ -2051,11 +2051,9 @@ class WidgetAnnotation extends Annotation {
       localResources,
       acroFormResources,
       appearanceResources,
-      mergedResources: Dict.merge({
-        xref,
-        dictArray: [localResources, appearanceResources, acroFormResources],
-        mergeSubDicts: true,
-      }),
+      mergedResources: Dict.merge(
+        xref, [localResources, appearanceResources, acroFormResources], true,
+      ),
     };
 
     const fieldFlags = <number>getInheritableProperty(dict, "Ff");
@@ -2886,11 +2884,7 @@ class WidgetAnnotation extends Annotation {
         const subResourcesDict = new Dict(xref);
         subResourcesDict.set(DictKey.Font, subFontDict);
 
-        return Dict.merge({
-          xref,
-          dictArray: [subResourcesDict, localResources],
-          mergeSubDicts: true,
-        });
+        return Dict.merge(xref, [subResourcesDict, localResources], true);
       }
     }
     return localResources || Dict.empty;

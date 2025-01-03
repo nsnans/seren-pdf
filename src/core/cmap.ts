@@ -718,20 +718,14 @@ async function createBuiltInCMap(name: string, fetchBuiltInCMap: FetchBuiltInCMa
 }
 
 class CMapFactory {
-  static async create({ encoding, fetchBuiltInCMap, useCMap }:
-    {
-      encoding: Name | BaseStream,
-      fetchBuiltInCMap: FetchBuiltInCMapType
-      useCMap: CMap | null
-    }) {
+  static async create(
+    encoding: Name | BaseStream, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: CMap | null
+  ) {
     if (encoding instanceof Name) {
       return createBuiltInCMap(encoding.name, fetchBuiltInCMap);
     } else if (encoding instanceof BaseStream) {
       const parsedCMap = await parseCMap(
-        /* cMap = */ new CMap(),
-        /* lexer = */ new Lexer(encoding),
-        fetchBuiltInCMap,
-        useCMap
+        new CMap(), new Lexer(encoding), fetchBuiltInCMap, useCMap
       );
 
       if (parsedCMap.isIdentityCMap) {

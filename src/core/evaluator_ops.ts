@@ -9,6 +9,7 @@ import { ColorSpace } from "./colorspace";
 import { ImageMask } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { addLocallyCachedImageOps, CssFontInfo, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
+import { BaseOperator } from "./evaluator_base";
 import { ErrorFont } from "./fonts";
 import { PDFImage } from "./image";
 import { GlobalImageCache, GroupOptions, ImageCacheData, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, OptionalContent, RegionalImageCache } from "./image_utils";
@@ -18,14 +19,14 @@ import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import { WorkerTask } from "./worker";
 import { XRef } from "./xref";
 
-const MethodMap = new Map<OPS, keyof typeof Operator>();
+const MethodMap = new Map<OPS, keyof typeof GeneralOperator>();
 
 const DEFAULT = "DEFAULT";
 
 // 这里应该要有handle完的arg类型，但是这种arg类型不太好强制管理起来
 // 强制起来得打开一个开关，开关检测args处理的对不对
 function handle(ops: OPS | "DEFAULT") {
-  return function (target: typeof Operator, propertyKey: keyof typeof Operator) {
+  return function (target: typeof GeneralOperator, propertyKey: keyof typeof GeneralOperator) {
     if (ops === DEFAULT) {
       return
     }
@@ -41,12 +42,12 @@ function handle(ops: OPS | "DEFAULT") {
 const SKIP = 1;
 const OVER = 2;
 
-class Operator {
+class GeneralOperator extends BaseOperator {
 
   static buildOperatorMap() {
     const map = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
     for (const [k, v] of MethodMap) {
-      const fn = Operator[v];
+      const fn = GeneralOperator[v];
       if (fn == null || typeof fn !== 'function') {
         throw new Error("操作符和操作方法不匹配");
       }
@@ -175,7 +176,7 @@ class Operator {
   @handle(OPS.showText)
   static showText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
-      Operator.ensureStateFont(ctx.stateManager.state);
+      GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     ctx.args![0] = this.handleText(ctx, ctx.args![0], ctx.stateManager.state);
@@ -184,7 +185,7 @@ class Operator {
   @handle(OPS.showSpacedText)
   static showSpacedText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
-      Operator.ensureStateFont(ctx.stateManager.state);
+      GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     const combinedGlyphs = [];
@@ -202,7 +203,7 @@ class Operator {
   @handle(OPS.nextLineShowText)
   static nextLineShowText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
-      Operator.ensureStateFont(ctx.stateManager.state);
+      GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     ctx.operatorList.addOp(OPS.nextLine, null);
@@ -213,7 +214,7 @@ class Operator {
   @handle(OPS.nextLineSetSpacingShowText)
   static nextLineSetSpacingShowText(ctx: ProcessContext) {
     if (!ctx.stateManager.state.font) {
-      Operator.ensureStateFont(ctx.stateManager.state);
+      GeneralOperator.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     ctx.operatorList.addOp(OPS.nextLine, null);
@@ -238,7 +239,7 @@ class Operator {
       return SKIP
     }
 
-    ctx.next(Operator.parseColorSpace(
+    ctx.next(GeneralOperator.parseColorSpace(
       ctx.args![0], ctx.resources, ctx.localColorSpaceCache,
     ).then(colorSpace => {
       ctx.stateManager.state.fillColorSpace =
@@ -257,7 +258,7 @@ class Operator {
       return SKIP
     }
 
-    ctx.next(Operator.parseColorSpace(
+    ctx.next(GeneralOperator.parseColorSpace(
       ctx.args![0], ctx.resources, ctx.localColorSpaceCache,
     ).then(colorSpace => {
       ctx.stateManager.state.strokeColorSpace = colorSpace || ColorSpace.singletons.gray;
@@ -354,7 +355,7 @@ class Operator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(Operator.handleColorN(ctx));
+      ctx.next(GeneralOperator.handleColorN(ctx));
       return OVER;
     }
     ctx.args = cs.getRgb(ctx.args, 0);
@@ -424,7 +425,7 @@ class Operator {
         throw new FormatError("GState should be a dictionary.");
       }
 
-      Operator._setGState(ctx, gState, name).then(resolve, reject);
+      GeneralOperator._setGState(ctx, gState, name).then(resolve, reject);
     }).catch(reason => {
       if (reason instanceof AbortException) {
         return OVER;
@@ -440,42 +441,42 @@ class Operator {
 
   @handle(OPS.moveTo)
   static moveTo(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.lineTo)
   static lineTo(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo)
   static curveTo(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo2)
   static curveTo2(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.curveTo3)
   static curveTo3(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.closePath)
   static closePath(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
 
   }
 
   @handle(OPS.rectangle)
   static rectangle(ctx: ProcessContext) {
-    Operator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
   }
 
 
@@ -492,25 +493,25 @@ class Operator {
   }
 
   /**
-   * @see {@link Operator.markPoint}
+   * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.markPointProps)
   static markPointProps(_ctx: ProcessContext) { }
 
   /** 
-   * @see {@link Operator.markPoint}
+   * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginCompat)
   static beginCompat(_ctx: ProcessContext) { }
 
   /**
-   * @see {@link Operator.markPoint}
+   * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.endCompat)
   static endCompat(_ctx: ProcessContext) { }
 
   /**
-   * @see {@link Operator.markPoint}
+   * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginMarkedContentProps)
   static beginMarkedContentProps(_ctx: ProcessContext) {
@@ -1736,11 +1737,9 @@ class Operator {
     const tilingOpList = new OperatorList();
     // Merge the available resources, to prevent issues when the patternDict
     // is missing some /Resources entries (fixes issue6541.pdf).
-    const patternResources = Dict.merge({
-      xref: this.xref,
-      dictArray: [patternDict.get(DictKey.Resources), resources],
-      mergeSubDicts: false
-    });
+    const patternResources = Dict.merge(
+      this.xref, [patternDict.get(DictKey.Resources), resources], false
+    );
 
     return this.getOperatorList(
       pattern,
@@ -1787,8 +1786,8 @@ class Operators {
   protected readonly defaultHandler: (ctx: ProcessContext) => void;
 
   constructor() {
-    this.operators = Operator.buildOperatorMap();
-    this.defaultHandler = Operator.defaultHandler;
+    this.operators = GeneralOperator.buildOperatorMap();
+    this.defaultHandler = GeneralOperator.defaultHandler;
   }
 
   execute(ops: OPS, context: ProcessContext): void | /* SKIP */1 | /* OVER */ 2 {
