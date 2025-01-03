@@ -351,21 +351,10 @@ class PDFImage {
    * Handles processing of image data and returns the Promise that is resolved
    * with a PDFImage when the image is ready to be used.
    */
-  static async buildImage({
-    xref,
-    res,
-    image,
-    isInline = false,
-    pdfFunctionFactory,
-    localColorSpaceCache,
-  }: {
-    xref: XRef,
-    res: Dict,
-    image: BaseStream,
-    isInline: boolean,
-    pdfFunctionFactory: PDFFunctionFactory,
-    localColorSpaceCache: LocalColorSpaceCache
-  }) {
+  static async buildImage(
+    xref: XRef, res: Dict, image: BaseStream, isInline: boolean = false,
+    pdfFunctionFactory: PDFFunctionFactory, localColorSpaceCache: LocalColorSpaceCache
+  ) {
     const imageData = image;
     let smaskData = null;
     let maskData = null;
@@ -401,9 +390,7 @@ class PDFImage {
   }
 
   static createRawMask(
-    imgArray: Uint8Array<ArrayBuffer>,
-    width: number,
-    height: number,
+    imgArray: Uint8Array<ArrayBuffer>, width: number, height: number,
     imageIsFromDecodeStream: boolean,
     inverseDecode: boolean,
     interpolate: number[],
@@ -929,7 +916,7 @@ class PDFImage {
       canvas = new OffscreenCanvas(drawWidth, drawHeight);
       ctx = canvas.getContext("2d")!;
       canvasImgData = ctx.createImageData(drawWidth, drawHeight);
-      data =<Uint8ClampedArray<ArrayBuffer>>canvasImgData.data;
+      data = <Uint8ClampedArray<ArrayBuffer>>canvasImgData.data;
     }
 
     imgData.kind = ImageKind.RGBA_32BPP;

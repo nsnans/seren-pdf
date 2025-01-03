@@ -22,7 +22,7 @@ export interface SingleOpaquePixelImageMask {
 }
 
 export interface SMaskOptions {
-  transferMap?: Uint8Array;
+  transferMap?: Uint8Array<ArrayBuffer>;
   subtype: string;
   backdrop: number[];
 }

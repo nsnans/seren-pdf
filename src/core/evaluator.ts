@@ -116,6 +116,7 @@ export interface EvaluatorProperties {
   flags: number;
   firstChar: number;
   lastChar: number;
+  // 应该弄个toUnicodeSource，这种像什么话
   toUnicode: BaseStream | Name | ToUnicodeMap | IdentityToUnicodeMap;
   xHeight: number;
   capHeight: number;
@@ -407,7 +408,6 @@ class PartialEvaluator {
             } catch (ex) {
               // Avoid parsing a corrupt ExtGState more than once.
               processed.put(graphicState);
-
               info(`hasBlendModes - ignoring ExtGState: "${ex}".`);
               continue;
             }
@@ -453,7 +453,6 @@ class PartialEvaluator {
           } catch (ex) {
             // Avoid parsing a corrupt XObject more than once.
             processed.put(xObject);
-
             info(`hasBlendModes - ignoring XObject: "${ex}".`);
             continue;
           }
@@ -531,8 +530,8 @@ class PartialEvaluator {
       return null;
     }
 
-    const standardFontNameToFileName = getFontNameToFileMap();
-    const filename = standardFontNameToFileName![name];
+    const lookup: Record<string, string> = getFontNameToFileMap();
+    const filename = lookup![name];
 
     let data: Uint8Array<ArrayBuffer> | null = null;
 
@@ -556,21 +555,16 @@ class PartialEvaluator {
     if (!data) {
       return null;
     }
+
     // Cache the "raw" standard font data, to avoid fetching it repeatedly
     // (see e.g. issue 11399).
     this.standardFontDataCache.set(name, data);
-
     return new Stream(data);
   }
 
   async buildFormXObject(
-    resources: Dict,
-    xobj: BaseStream,
-    smask: SMaskOptions | null,
-    operatorList: OperatorList,
-    task: WorkerTask,
-    initialState: State,
-    localColorSpaceCache: LocalColorSpaceCache
+    resources: Dict, xobj: BaseStream, smask: SMaskOptions | null, operatorList: OperatorList,
+    task: WorkerTask, initialState: State, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
     const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);
@@ -579,8 +573,7 @@ class PartialEvaluator {
     let optionalContent, groupOptions: GroupOptions | null = null;
     if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
-        dict.getValue(DictKey.OC),
-        resources
+        dict.getValue(DictKey.OC), resources
       );
     }
     if (optionalContent !== undefined) {
@@ -589,11 +582,7 @@ class PartialEvaluator {
     const group = dict.getValue(DictKey.Group);
     if (group) {
       groupOptions = {
-        matrix,
-        bbox,
-        smask,
-        isolated: false,
-        knockout: false,
+        matrix, bbox, smask, isolated: false, knockout: false,
       };
 
       const groupSubtype = group.get(DictKey.S);
@@ -603,19 +592,14 @@ class PartialEvaluator {
         groupOptions!.knockout = group.get(DictKey.K) || false;
         if (group.has(DictKey.CS)) {
           const cs = group.getRaw(DictKey.CS);
-
           const cachedColorSpace = ColorSpace.getCached(
-            cs,
-            this.xref,
-            localColorSpaceCache
+            cs, this.xref, localColorSpaceCache
           );
           if (cachedColorSpace) {
             colorSpace = cachedColorSpace;
           } else {
             colorSpace = await this.parseColorSpace(
-              cs,
-              resources,
-              localColorSpaceCache,
+              cs, resources, localColorSpaceCache,
             );
           }
         }
@@ -636,11 +620,7 @@ class PartialEvaluator {
     operatorList.addOp(OPS.paintFormXObjectBegin, args);
 
     await this.getOperatorList(
-      xobj,
-      task,
-      dict.getValue(DictKey.Resources) || resources,
-      operatorList,
-      initialState,
+      xobj, task, dict.getValue(DictKey.Resources) || resources, operatorList, initialState
     );
     operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
@@ -686,7 +666,6 @@ class PartialEvaluator {
     const maxImageSize = this.options.maxImageSize;
     if (maxImageSize !== -1 && w * h > maxImageSize) {
       const msg = "Image exceeded maximum allowed size and was removed.";
-
       if (this.options.ignoreErrors) {
         warn(msg);
         return;
@@ -697,19 +676,16 @@ class PartialEvaluator {
     let optionalContent = null;
     if (dict.has(DictKey.OC)) {
       optionalContent = await this.parseMarkedContentProps(
-        dict.getValue(DictKey.OC),
-        resources
+        dict.getValue(DictKey.OC), resources
       );
     }
 
     const imageMask = dict.getValueWithFallback(DictKey.IM, DictKey.ImageMask) || false;
     let imgData: ImageMask, args;
     if (imageMask) {
-      // This depends on a tmpCanvas being filled with the
-      // current fillStyle, such that processing the pixel
-      // data can't be done here. Instead of creating a
-      // complete PDFImage, only read the information needed
-      // for later.
+      // This depends on a tmpCanvas being filled with the current fillStyle,
+      // such that processing the pixel data can't be done here. 
+      // Instead of creating a complete PDFImage, only read the information needed for later.
       const interpolate = dict.getValueWithFallback(DictKey.I, DictKey.Interpolate);
       const bitStrideLength = (w + 7) >> 3;
       const imgArray = image.getBytes(bitStrideLength * h);
@@ -717,36 +693,25 @@ class PartialEvaluator {
 
       if (this.parsingType3Font) {
         imgData = PDFImage.createRawMask(
-          imgArray,
-          w,
-          h,
-          image instanceof DecodeStream,
-          decode?.[0] > 0,
-          interpolate,
+          imgArray, w, h, image instanceof DecodeStream, decode?.[0] > 0, interpolate
         );
 
         imgData.cached = !!cacheKey;
         args = [imgData];
 
         operatorList.addImageOps(
-          OPS.paintImageMaskXObject,
-          <[ImageMask]>args,
-          <OptionalContent | null>optionalContent
+          OPS.paintImageMaskXObject, <[ImageMask]>args, <OptionalContent | null>optionalContent
         );
 
         if (cacheKey) {
           const cacheData = {
-            fn: OPS.paintImageMaskXObject,
-            args,
-            optionalContent,
+            fn: OPS.paintImageMaskXObject, args, optionalContent,
           };
           localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
           if (imageRef) {
             this._regionalImageCache.set(
-              /* name = */ null,
-              imageRef,
-              <ImageCacheData>cacheData
+              null, imageRef, <ImageCacheData>cacheData
             );
           }
         }
@@ -754,37 +719,26 @@ class PartialEvaluator {
       }
 
       const result = await PDFImage.createMask(
-        imgArray,
-        w,
-        h,
-        image instanceof DecodeStream,
-        decode?.[0] > 0,
-        interpolate,
-        this.options.isOffscreenCanvasSupported,
+        imgArray, w, h, image instanceof DecodeStream,
+        decode?.[0] > 0, interpolate, this.options.isOffscreenCanvasSupported,
       );
 
       if ((<SingleOpaquePixelImageMask>result).isSingleOpaquePixel) {
         // Handles special case of mainly LaTeX documents which use image
         // masks to draw lines with the current fill style.
         operatorList.addImageOps(
-          OPS.paintSolidColorImageMask,
-          [],
-          optionalContent
+          OPS.paintSolidColorImageMask, [], optionalContent
         );
 
         if (cacheKey) {
           const cacheData = {
-            fn: OPS.paintSolidColorImageMask,
-            args: [],
-            optionalContent,
+            fn: OPS.paintSolidColorImageMask, args: [], optionalContent,
           };
           localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
           if (imageRef) {
             this._regionalImageCache.set(
-              /* name = */ null,
-              imageRef,
-              <ImageCacheData>cacheData
+              null, imageRef, <ImageCacheData>cacheData
             );
           }
         }
@@ -795,37 +749,26 @@ class PartialEvaluator {
 
       const objId = `mask_${this.idFactory.createObjId()}`;
       operatorList.addDependency(objId);
-      imgData.dataLen = imgData.bitmap
-        ? imgData.width * imgData.height * 4
-        : imgData.data!.length;
+      imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
       this._sendImgData(objId, imgData);
 
-      args = [
-        {
-          data: objId,
-          width: imgData.width,
-          height: imgData.height,
-          interpolate: imgData.interpolate,
-          count: 1,
-        },
-      ];
-      operatorList.addImageOps(
-        OPS.paintImageMaskXObject,
-        <[ImageMaskXObject]>args,
-        optionalContent
-      );
+      args = [{
+        data: objId,
+        width: imgData.width,
+        height: imgData.height,
+        interpolate: imgData.interpolate,
+        count: 1,
+      }];
+      operatorList.addImageOps(OPS.paintImageMaskXObject, args, optionalContent);
 
       if (cacheKey) {
         const cacheData = {
-          objId,
-          fn: OPS.paintImageMaskXObject,
-          args,
-          optionalContent,
+          objId, fn: OPS.paintImageMaskXObject, args, optionalContent,
         };
         localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
         if (imageRef) {
-          this._regionalImageCache.set(/* name = */ null, imageRef, <ImageCacheData>cacheData);
+          this._regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
         }
       }
       return;
@@ -834,36 +777,18 @@ class PartialEvaluator {
     const SMALL_IMAGE_DIMENSIONS = 200;
     // Inlining small images into the queue as RGB data
     if (
-      isInline &&
-      w + h < SMALL_IMAGE_DIMENSIONS &&
-      !dict.has(DictKey.SMask) &&
-      !dict.has(DictKey.Mask)
+      isInline && w + h < SMALL_IMAGE_DIMENSIONS && !dict.has(DictKey.SMask) && !dict.has(DictKey.Mask)
     ) {
       try {
         const imageObj = new PDFImage(
-          this.xref,
-          resources,
-          image,
-          isInline,
-          null,
-          null,
-          false,
-          this._pdfFunctionFactory,
-          localColorSpaceCache,
+          this.xref, resources, image, isInline, null,
+          null, false, this._pdfFunctionFactory, localColorSpaceCache,
         );
         // We force the use of RGBA_32BPP images here, because we can't handle
         // any other kind.
-        imgData = await imageObj.createImageData(
-          /* forceRGBA = */ true,
-          /* isOffscreenCanvasSupported = */ false
-        );
-        operatorList.isOffscreenCanvasSupported =
-          this.options.isOffscreenCanvasSupported;
-        operatorList.addImageOps(
-          OPS.paintInlineImageXObject,
-          [imgData],
-          optionalContent
-        );
+        imgData = await imageObj.createImageData(true, false);
+        operatorList.isOffscreenCanvasSupported = this.options.isOffscreenCanvasSupported;
+        operatorList.addImageOps(OPS.paintInlineImageXObject, [imgData], optionalContent);
       } catch (reason) {
         const msg = `Unable to decode inline image: "${reason}".`;
 
@@ -877,20 +802,16 @@ class PartialEvaluator {
 
     // If there is no imageMask, create the PDFImage and a lot
     // of image processing can be done here.
-    let objId = `img_${this.idFactory.createObjId()}`,
-      cacheGlobally = false;
+    let objId = `img_${this.idFactory.createObjId()}`;
+    let cacheGlobally = false;
 
     if (this.parsingType3Font) {
       objId = `${this.idFactory.getDocId()}_type3_${objId}`;
     } else if (cacheKey && imageRef) {
-      cacheGlobally = this.globalImageCache.shouldCache(
-        imageRef,
-        this.pageIndex
-      );
+      cacheGlobally = this.globalImageCache.shouldCache(imageRef, this.pageIndex);
 
       if (cacheGlobally) {
         assert(!isInline, "Cannot cache an inline image globally.");
-
         objId = `${this.idFactory.getDocId()}_${objId}`;
       }
     }
@@ -903,10 +824,7 @@ class PartialEvaluator {
     if (cacheGlobally) {
       if (this.globalImageCache.hasDecodeFailed(imageRef!)) {
         this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
-          objId,
-          fn: OPS.paintImageXObject,
-          args,
-          optionalContent,
+          objId, fn: OPS.paintImageXObject, args, optionalContent,
           byteSize: 0, // Data is `null`, since decoding failed previously.
         });
 
@@ -920,15 +838,13 @@ class PartialEvaluator {
       if (w * h > 250000 || dict.has(DictKey.SMask) || dict.has(DictKey.Mask)) {
 
         const handler = this.handler;
-
-        const localLength = await handler.commonobjPromise(objId, CommonObjType.CopyLocalImage, { imageRef: imageRef! });
+        const localLength = await handler.commonobjPromise(
+          objId, CommonObjType.CopyLocalImage, { imageRef: imageRef! }
+        );
 
         if (localLength) {
           this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
-            objId,
-            fn: OPS.paintImageXObject,
-            args,
-            optionalContent,
+            objId, fn: OPS.paintImageXObject, args, optionalContent,
             byteSize: 0, // Temporary entry, to avoid `setData` returning early.
           });
           this.globalImageCache.addByteSize(imageRef!, localLength);
@@ -937,57 +853,37 @@ class PartialEvaluator {
       }
     }
 
-    PDFImage.buildImage({
-      xref: this.xref,
-      res: resources,
-      image,
-      isInline,
-      pdfFunctionFactory: this._pdfFunctionFactory,
-      localColorSpaceCache,
-    })
-      .then(async imageObj => {
-        imgData = await imageObj.createImageData(
-          /* forceRGBA = */ false,
-          /* isOffscreenCanvasSupported = */ this.options
-            .isOffscreenCanvasSupported
-        );
-        imgData.dataLen = imgData.bitmap
-          ? imgData.width * imgData.height * 4
-          : imgData.data!.length;
-        imgData.ref = imageRef;
+    PDFImage.buildImage(
+      this.xref, resources, image, isInline, this._pdfFunctionFactory, localColorSpaceCache,
+    ).then(async imageObj => {
+      imgData = await imageObj.createImageData(false, this.options.isOffscreenCanvasSupported);
+      imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
+      imgData.ref = imageRef;
 
-        if (cacheGlobally) {
-          this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
-        }
-        return this._sendImgData(objId, imgData, cacheGlobally);
-      })
-      .catch(reason => {
-        warn(`Unable to decode image "${objId}": "${reason}".`);
-
-        if (imageRef) {
-          this.globalImageCache.addDecodeFailed(imageRef);
-        }
-        return this._sendImgData(objId, /* imgData = */ null, cacheGlobally);
-      });
+      if (cacheGlobally) {
+        this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
+      }
+      return this._sendImgData(objId, imgData, cacheGlobally);
+    }).catch(reason => {
+      warn(`Unable to decode image "${objId}": "${reason}".`);
+      if (imageRef) {
+        this.globalImageCache.addDecodeFailed(imageRef);
+      }
+      return this._sendImgData(objId, null, cacheGlobally);
+    });
 
     if (cacheKey) {
       const cacheData = {
-        objId,
-        fn: OPS.paintImageXObject,
-        args,
-        optionalContent,
+        objId, fn: OPS.paintImageXObject, args, optionalContent
       };
       localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
       if (imageRef) {
-        this._regionalImageCache.set(/* name = */ null, imageRef, <ImageCacheData>cacheData);
+        this._regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
 
         if (cacheGlobally) {
           this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
-            objId,
-            fn: OPS.paintImageXObject,
-            args,
-            optionalContent,
+            objId, fn: OPS.paintImageXObject, args, optionalContent,
             byteSize: 0, // Temporary entry, note `addByteSize` above.
           });
         }
@@ -996,12 +892,8 @@ class PartialEvaluator {
   }
 
   handleSMask(
-    smask: Dict,
-    resources: Dict,
-    operatorList: OperatorList,
-    task: WorkerTask,
-    stateManager: StateManager,
-    localColorSpaceCache: LocalColorSpaceCache
+    smask: Dict, resources: Dict, operatorList: OperatorList, task: WorkerTask,
+    stateManager: StateManager, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const smaskContent = smask.getValue(DictKey.G);
     const smaskOptions: SMaskOptions = {
@@ -4040,9 +3932,9 @@ class PartialEvaluator {
     let widths: Record<string, number> = Object.create(null);
     let monospace = false;
 
-    const stdFontMap = getStdFontMap();
+    const stdFontMap: Record<string, string> = getStdFontMap();
     let lookupName = stdFontMap[name] || name;
-    const Metrics = getMetrics();
+    const Metrics: Record<string, number | (() => Record<string, number>)> = getMetrics();
 
     if (!(lookupName in Metrics)) {
       // Use default fonts for looking up font metrics if the passed
@@ -4139,8 +4031,8 @@ class PartialEvaluator {
             hash.update(entry.toString());
           } else if (Array.isArray(entry)) {
             // 'Differences' array (fixes bug1157493.pdf).
-            const diffLength = entry.length,
-              diffBuf = new Array(diffLength);
+            const diffLength = entry.length;
+            const diffBuf = new Array(diffLength);
 
             for (let j = 0; j < diffLength; j++) {
               const diffEntry = entry[j];
@@ -4165,11 +4057,7 @@ class PartialEvaluator {
         const stream = <DecodeStream>(toUnicode.str || toUnicode);
         const uint8array = stream.buffer
           ? new Uint8Array(stream.buffer.buffer, 0, stream.bufferLength)
-          : new Uint8Array(
-            stream.bytes.buffer,
-            stream.start,
-            stream.end - stream.start
-          );
+          : new Uint8Array(stream.bytes.buffer, stream.start, stream.end - stream.start);
         hash.update(uint8array);
       } else if (toUnicode instanceof Name) {
         hash.update(toUnicode.name);

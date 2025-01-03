@@ -1513,32 +1513,25 @@ class Operator {
       }
     }
 
-    PDFImage.buildImage({
-      xref: this.xref,
-      res: resources,
-      image,
-      isInline,
-      pdfFunctionFactory: this._pdfFunctionFactory,
-      localColorSpaceCache,
-    })
-      .then(async imageObj => {
-        imgData = await imageObj.createImageData(false, this.options.isOffscreenCanvasSupported);
-        imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
-        imgData.ref = imageRef;
+    PDFImage.buildImage(
+      this.xref, resources, image, isInline, this._pdfFunctionFactory, localColorSpaceCache,
+    ).then(async imageObj => {
+      imgData = await imageObj.createImageData(false, this.options.isOffscreenCanvasSupported);
+      imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
+      imgData.ref = imageRef;
 
-        if (cacheGlobally) {
-          this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
-        }
-        return this._sendImgData(objId, imgData, cacheGlobally);
-      })
-      .catch(reason => {
-        warn(`Unable to decode image "${objId}": "${reason}".`);
+      if (cacheGlobally) {
+        this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
+      }
+      return this._sendImgData(objId, imgData, cacheGlobally);
+    }).catch(reason => {
+      warn(`Unable to decode image "${objId}": "${reason}".`);
 
-        if (imageRef) {
-          this.globalImageCache.addDecodeFailed(imageRef);
-        }
-        return this._sendImgData(objId, /* imgData = */ null, cacheGlobally);
-      });
+      if (imageRef) {
+        this.globalImageCache.addDecodeFailed(imageRef);
+      }
+      return this._sendImgData(objId, /* imgData = */ null, cacheGlobally);
+    });
 
     if (cacheKey) {
       const cacheData = {
