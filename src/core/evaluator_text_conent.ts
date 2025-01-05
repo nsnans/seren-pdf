@@ -1,11 +1,15 @@
 import { TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
 import { AbortException, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, Util, warn } from "../shared/util";
+import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
-import { DefaultTextContentItem, EvaluatorTextContent } from "./core_types";
+import { DefaultTextContentItem, EvaluatorTextContent, TextContentSinkProxy } from "./core_types";
+import { lookupMatrix } from "./core_utils";
 import { StateManager, TextState } from "./evaluator";
-import { BaseOperator, DEFAULT, OVER, ProcessOperation, SKIP } from "./evaluator_base";
-import { Dict, DictKey, Name } from "./primitives";
+import { BaseOperator, DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { Font } from "./fonts";
+import { LocalConditionCache } from "./image_utils";
+import { Dict, DictKey, Name, Ref } from "./primitives";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -26,6 +30,11 @@ function handle(ops: OPS | "DEFAULT") {
 }
 
 interface ProcessContext extends ProcessOperation {
+  emptyXObjectCache: LocalConditionCache;
+  includeMarkedContent: boolean;
+  pageIndex: number;
+  resources: Dict;
+  showSpacedTextBuffer: string[];
   textState: TextState;
   stateManager: StateManager;
 }
@@ -91,11 +100,13 @@ class OperatorAssist {
     textContent: EvaluatorTextContent,
     textContentItem: DefaultTextContentItem,
     disableNormalization: boolean,
+    viewBox: number[]
   ) {
     this.textContent = textContent;
     this.keepWhiteSpace = keepWhiteSpace;
     this.textContentItem = textContentItem;
     this.disableNormalization = disableNormalization;
+    this.viewBox = viewBox;
   }
 
   saveLastChar(char: string): boolean {
@@ -259,6 +270,23 @@ class OperatorAssist {
     };
   }
 
+  async handleSetFont(fontName: string | null, fontRef: Ref | null, textState: TextState) {
+    const translated = await self.loadFont(fontName, fontRef, resources!);
+
+    if (translated.font.isType3Font) {
+      try {
+        await translated.loadType3Data(self, resources!, task);
+      } catch {
+        // Ignore Type3-parsing errors, since we only use `loadType3Data`
+        // here to ensure that we'll always obtain a useful /FontBBox.
+      }
+    }
+
+    textState!.loadedName = translated.loadedName;
+    textState!.font = translated.font!;
+    textState!.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
+  }
+
   applyInverseRotation(x: number, y: number, matrix: TransformType) {
     const scale = Math.hypot(matrix[0], matrix[1]);
     return [
@@ -355,7 +383,7 @@ class OperatorAssist {
       if (advanceY < textOrientation * textContentItem.negativeSpaceMax) {
         /* not the same column */
         if (Math.abs(advanceX) > 0.5 * textContentItem.width) {
-          this.appendEOL();
+          this.appendEOL(textState);
           return true;
         }
 
@@ -365,7 +393,7 @@ class OperatorAssist {
       }
 
       if (Math.abs(advanceX) > textContentItem.width) {
-        this.appendEOL();
+        this.appendEOL(textState);
         return true;
       }
 
@@ -411,7 +439,7 @@ class OperatorAssist {
     if (advanceX < textOrientation * textContentItem.negativeSpaceMax) {
       /* not the same line */
       if (Math.abs(advanceY) > 0.5 * textContentItem.height) {
-        this.appendEOL();
+        this.appendEOL(textState);
         return true;
       }
 
@@ -423,7 +451,7 @@ class OperatorAssist {
     }
 
     if (Math.abs(advanceY) > textContentItem.height) {
-      this.appendEOL();
+      this.appendEOL(textState);
       return true;
     }
 
@@ -456,114 +484,6 @@ class OperatorAssist {
     if (Math.abs(advanceY) > textContentItem.height * this.VERTICAL_SHIFT_RATIO) {
       this.flushTextContentItem();
     }
-
-    function buildTextContentItem(chars: string, extraSpacing: number) {
-      const font = textState!.font!;
-      if (!chars) {
-        // Just move according to the space we have.
-        const charSpacing = textState!.charSpacing + extraSpacing;
-        if (charSpacing) {
-          if (!font!.vertical) {
-            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
-          } else {
-            textState!.translateTextMatrix(0, -charSpacing);
-          }
-        }
-
-        if (keepWhiteSpace) {
-          compareWithLastPosition(0);
-        }
-
-        return;
-      }
-
-      const glyphs = font!.charsToGlyphs(chars);
-      const scale = textState!.fontMatrix[0] * textState!.fontSize;
-
-      for (let i = 0, ii = glyphs.length; i < ii; i++) {
-        const glyph = glyphs[i];
-        const { category } = glyph;
-
-        if (category.isInvisibleFormatMark) {
-          continue;
-        }
-        let charSpacing = textState!.charSpacing + (i + 1 === ii ? extraSpacing : 0);
-
-        let glyphWidth = glyph.width;
-        if (font!.vertical) {
-          glyphWidth = glyph.vmetric ? glyph.vmetric[0] : -glyphWidth;
-        }
-        let scaledDim = glyphWidth * scale;
-
-        if (!keepWhiteSpace && category.isWhitespace) {
-          // Don't push a " " in the textContentItem
-          // (except when it's between two non-spaces chars),
-          // it will be done (if required) in next call to
-          // compareWithLastPosition.
-          // This way we can merge real spaces and spaces due to cursor moves.
-          if (!font!.vertical) {
-            charSpacing += scaledDim + textState!.wordSpacing;
-            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
-          } else {
-            charSpacing += -scaledDim + textState!.wordSpacing;
-            textState!.translateTextMatrix(0, -charSpacing);
-          }
-          saveLastChar(" ");
-          continue;
-        }
-
-        if (!category.isZeroWidthDiacritic && !compareWithLastPosition(scaledDim)) {
-          // The glyph is not in page so just skip it but move the cursor.
-          if (!font!.vertical) {
-            textState!.translateTextMatrix(scaledDim * textState!.textHScale, 0);
-          } else {
-            textState!.translateTextMatrix(0, scaledDim);
-          }
-          continue;
-        }
-
-        // Must be called after compareWithLastPosition because
-        // the textContentItem could have been flushed.
-        const textChunk = ensureTextContentItem();
-        if (category.isZeroWidthDiacritic) {
-          scaledDim = 0;
-        }
-
-        if (!font!.vertical) {
-          scaledDim *= textState!.textHScale;
-          textState!.translateTextMatrix(scaledDim, 0);
-          textChunk.width += scaledDim;
-        } else {
-          textState!.translateTextMatrix(0, scaledDim);
-          scaledDim = Math.abs(scaledDim);
-          textChunk.height += scaledDim;
-        }
-
-        if (scaledDim) {
-          // Save the position of the last visible character.
-          textChunk.prevTransform = getCurrentTextTransform();
-        }
-
-        const glyphUnicode = glyph.unicode;
-        if (saveLastChar(glyphUnicode)) {
-          // The two last chars are a non-whitespace followed by a whitespace
-          // and then this non-whitespace, so we insert a whitespace here.
-          // Replaces all whitespaces with standard spaces (0x20), to avoid
-          // alignment issues between the textLayer and the canvas if the text
-          // contains e.g. tabs (fixes issue6612.pdf).
-          textChunk.str.push(" ");
-        }
-        textChunk.str.push(glyphUnicode);
-
-        if (charSpacing) {
-          if (!font!.vertical) {
-            textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
-          } else {
-            textState!.translateTextMatrix(0, -charSpacing);
-          }
-        }
-      }
-    }
     return true;
   }
 
@@ -581,7 +501,7 @@ class OperatorAssist {
       }
 
       if (this.keepWhiteSpace) {
-        this.compareWithLastPosition(0);
+        this.compareWithLastPosition(0, textState);
       }
 
       return;
@@ -622,7 +542,7 @@ class OperatorAssist {
         continue;
       }
 
-      if (!category.isZeroWidthDiacritic && !this.compareWithLastPosition(scaledDim)) {
+      if (!category.isZeroWidthDiacritic && !this.compareWithLastPosition(scaledDim, textState)) {
         // The glyph is not in page so just skip it but move the cursor.
         if (!font!.vertical) {
           textState!.translateTextMatrix(scaledDim * textState!.textHScale, 0);
@@ -847,7 +767,7 @@ class TextContentOperator extends BaseOperator {
     for (let i = 0, ii = elements.length; i < ii; i++) {
       const item = elements[i];
       if (typeof item === "string") {
-        showSpacedTextBuffer.push(item);
+        ctx.showSpacedTextBuffer.push(item);
       } else if (typeof item === "number" && item !== 0) {
         // PDF Specification 5.3.2 states:
         // The number is expressed in thousandths of a unit of text
@@ -857,15 +777,15 @@ class TextContentOperator extends BaseOperator {
         // In the default coordinate system, a positive adjustment
         // has the effect of moving the next glyph painted either to
         // the left or down by the given amount.
-        const str = showSpacedTextBuffer.join("");
-        showSpacedTextBuffer.length = 0;
+        const str = ctx.showSpacedTextBuffer.join("");
+        ctx.showSpacedTextBuffer.length = 0;
         assist.buildTextContentItem(str, item * spaceFactor, textState);
       }
     }
 
-    if (showSpacedTextBuffer.length > 0) {
-      const str = showSpacedTextBuffer.join("");
-      showSpacedTextBuffer.length = 0;
+    if (ctx.showSpacedTextBuffer.length > 0) {
+      const str = ctx.showSpacedTextBuffer.join("");
+      ctx.showSpacedTextBuffer.length = 0;
       assist.buildTextContentItem(str, 0, textState);
     }
   }
@@ -921,11 +841,11 @@ class TextContentOperator extends BaseOperator {
       }
       let xobj = xobjs!.getRaw(name);
       if (xobj instanceof Ref) {
-        if (emptyXObjectCache.getByRef(xobj)) {
+        if (ctx.emptyXObjectCache.getByRef(xobj)) {
           resolveXObject();
           return;
         }
-        const globalImage = self.globalImageCache.getData(xobj, self.pageIndex);
+        const globalImage = self.globalImageCache.getData(xobj, ctx.pageIndex);
         if (globalImage) {
           resolveXObject();
           return;
@@ -942,7 +862,7 @@ class TextContentOperator extends BaseOperator {
       }
 
       if (type.name !== "Form") {
-        emptyXObjectCache.set(name, xobj.dict!.objId, true);
+        ctx.emptyXObjectCache.set(name, xobj.dict!.objId, true);
         resolveXObject();
         return;
       }
@@ -952,7 +872,7 @@ class TextContentOperator extends BaseOperator {
       // data can otherwise prevent `restore` operators from
       // executing.
       // NOTE: Only an issue when `options.ignoreErrors === true`.
-      const currentState = stateManager.state.clone();
+      const currentState = ctx.stateManager.state.clone();
       const xObjStateManager = new StateManager(currentState);
 
       const matrix = <TransformType | null>lookupMatrix(xobj.dict!.getArrayValue(DictKey.Matrix), null);
@@ -962,9 +882,9 @@ class TextContentOperator extends BaseOperator {
 
       // Enqueue the `textContent` chunk before parsing the /Form
       // XObject.
-      enqueueChunk();
+      assist.enqueueChunk();
 
-      const sinkWrapper = new TextContentSinkProxy(sink);
+      const sinkWrapper = new TextContentSinkProxy(ctx.sink);
 
       self.getTextContent(
         xobj,
@@ -1002,11 +922,11 @@ class TextContentOperator extends BaseOperator {
 
   @handle(OPS.setGState)
   setGState(ctx: ProcessContext, assist: OperatorAssist) {
-    isValidName = ctx.args![0] instanceof Name;
-    name = ctx.args![0].name;
+    const isValidName = ctx.args![0] instanceof Name;
+    const name = ctx.args![0].name;
 
     if (isValidName && ctx.emptyGStateCache.getByName(name)) {
-      break;
+      return
     }
 
     ctx.next(new Promise((resolveGState, rejectGState) => {
@@ -1014,7 +934,7 @@ class TextContentOperator extends BaseOperator {
         throw new FormatError("GState must be referred to by name.");
       }
 
-      const extGState = resources.getValue(DictKey.ExtGState);
+      const extGState = ctx.resources.getValue(DictKey.ExtGState);
       if (!(extGState instanceof Dict)) {
         throw new FormatError("ExtGState should be a dictionary.");
       }
@@ -1057,7 +977,7 @@ class TextContentOperator extends BaseOperator {
   @handle(OPS.beginMarkedContent)
   beginMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
-    if (includeMarkedContent) {
+    if (ctx.includeMarkedContent) {
       markedContentData!.level++;
 
       ctx.textContent.items.push({
@@ -1071,7 +991,7 @@ class TextContentOperator extends BaseOperator {
   @handle(OPS.beginMarkedContentProps)
   beginMarkedContentProps(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
-    if (includeMarkedContent) {
+    if (ctx.includeMarkedContent) {
       markedContentData!.level++;
 
       let mcid = null;
@@ -1083,7 +1003,7 @@ class TextContentOperator extends BaseOperator {
         id: Number.isInteger(mcid)
           ? `${self.idFactory.getPageObjId()}_mc${mcid}`
           : null,
-        tag: args[0] instanceof Name ? args[0].name : null,
+        tag: ctx.args![0] instanceof Name ? ctx.args![0].name : null,
       });
     }
   }
@@ -1118,6 +1038,13 @@ class TextContentOperator extends BaseOperator {
     ) {
       assist.flushTextContentItem();
     }
+  }
+}
+
+export class GetTextContentHandler implements OperatorListHandler {
+
+  handle(): Promise<void> {
+    throw new Error("Method not implemented.");
   }
 
 }

@@ -9,7 +9,7 @@ import { ColorSpace } from "./colorspace";
 import { ImageMask } from "./core_types";
 import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
 import { addLocallyCachedImageOps, CssFontInfo, EvalState, EvaluatorPreprocessor, normalizeBlendMode, PartialEvaluator, State, StateManager, TimeSlotManager, TranslatedFont } from "./evaluator";
-import { BaseOperator, DEFAULT, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { BaseOperator, DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { ErrorFont } from "./fonts";
 import { PDFImage } from "./image";
 import { GlobalImageCache, GroupOptions, ImageCacheData, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, OptionalContent, RegionalImageCache } from "./image_utils";
@@ -1803,7 +1803,7 @@ interface ProcessContext extends ProcessOperation {
   handle: () => Promise<void>;
 }
 
-export class GetOperatorListHandler {
+export class GetOperatorListHandler implements OperatorListHandler {
 
   protected operators: Operators;
 

@@ -1,5 +1,7 @@
 import { OPS } from "../pdf";
+import { FormatError, warn } from "../shared/util";
 import { MutableArray } from "../types";
+import { State } from "./evaluator";
 
 export const SKIP = 1;
 
@@ -28,5 +30,10 @@ export abstract class BaseOperator {
     }
     throw reason;
   }
-  
+}
+
+export interface OperatorListHandler {
+
+  handle(): Promise<void>;
+
 }

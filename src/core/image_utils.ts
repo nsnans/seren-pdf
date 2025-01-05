@@ -114,6 +114,28 @@ class LocalImageCache extends NameLocalCache<ImageCacheData> {
   }
 }
 
+export class LocalConditionCache extends NameLocalCache<Boolean> {
+
+  set(name: string, ref: string | null, data: Boolean) {
+    if (typeof name !== "string") {
+      throw new Error('LocalImageCache.set - expected "name" argument.');
+    }
+    if (ref) {
+      if (this._imageCache.has(ref!)) {
+        return;
+      }
+      this._nameRefMap!.set(name, ref);
+      this._imageCache.put(ref, data);
+      return;
+    }
+    // name
+    if (this._imageMap!.has(name)) {
+      return;
+    }
+    this._imageMap!.set(name, data);
+  }
+}
+
 class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
 
   set(name: string | null, ref: Ref | null, data: ColorSpace) {
