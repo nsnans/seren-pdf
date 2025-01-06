@@ -293,60 +293,69 @@ export class TimeSlotManager {
   }
 }
 
-class PartialEvaluator {
+interface EvaluatorCMapData {
+  cMapData: Uint8Array<ArrayBuffer>;
+  isCompressed: boolean;
+}
+
+/**
+ * 这个Context主要是针对，一整个Evaluator的，区别于ProcessContext
+ * ProcessContext是针对每一次的计算的
+ */
+export interface EvaluatorContext {
 
   readonly xref: XRef;
 
-  protected handler: MessageHandler;
+  readonly handler: MessageHandler;
 
-  protected pageIndex;
+  readonly pageIndex: number;
 
-  protected idFactory: GlobalIdFactory;
+  readonly idFactory: GlobalIdFactory;
 
-  protected fontCache;
+  readonly fontCache: RefSetCache<string, Promise<TranslatedFont>>;
 
-  protected builtInCMapCache: Map<string, { cMapData: Uint8Array<ArrayBuffer>; isCompressed: boolean; }>;
+  readonly builtInCMapCache: Map<string, EvaluatorCMapData>;
 
-  protected standardFontDataCache;
+  readonly standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>;
 
-  protected globalImageCache;
+  readonly globalImageCache: GlobalImageCache;
 
-  protected systemFontCache: Map<string, FontSubstitutionInfo | null>;
+  readonly systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
-  protected _regionalImageCache = new RegionalImageCache();
+  readonly _regionalImageCache: RegionalImageCache;
 
-  protected _fetchBuiltInCMapBound;
+  _fetchBuiltInCMapBound: (name: string) => Promise<EvaluatorCMapData>;
 
-  public options: DocumentEvaluatorOptions;
+  readonly options: DocumentEvaluatorOptions;
 
-  public type3FontRefs: RefSet | null;
+  type3FontRefs: RefSet | null;
+
+}
+
+class PartialEvaluator {
+
+  protected readonly context: EvaluatorContext;
 
   constructor(
     xref: XRef,
     handler: MessageHandler,
     pageIndex: number,
     idFactory: GlobalIdFactory,
-    fontCache: RefSetCache,
-    builtInCMapCache: Map<string, any>,
+    fontCache: RefSetCache<string, Promise<TranslatedFont>>,
+    builtInCMapCache: Map<string, EvaluatorCMapData>,
     standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
     options: DocumentEvaluatorOptions | null = null,
   ) {
-    this.xref = xref;
-    this.handler = handler;
-    this.pageIndex = pageIndex;
-    this.idFactory = idFactory;
-    this.fontCache = fontCache;
-    this.builtInCMapCache = builtInCMapCache;
-    this.standardFontDataCache = standardFontDataCache;
-    this.globalImageCache = globalImageCache;
-    this.systemFontCache = systemFontCache;
-    this.options = options || DefaultDocParamEvaluatorOptions;
-    this.type3FontRefs = null;
-
-    this._regionalImageCache = new RegionalImageCache();
-    this._fetchBuiltInCMapBound = this.fetchBuiltInCMap.bind(this);
+    this.context = {
+      xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache,
+      standardFontDataCache, globalImageCache, systemFontCache,
+      options: options || DefaultDocParamEvaluatorOptions,
+      type3FontRefs: null,
+      _regionalImageCache: new RegionalImageCache(),
+      _fetchBuiltInCMapBound: this.fetchBuiltInCMap.bind(this),
+    }
     if (PlatformHelper.isMozCental()) {
       ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
     } else {
@@ -369,12 +378,33 @@ class PartialEvaluator {
     return !!this.type3FontRefs;
   }
 
+  get xref() {
+    return this.context.xref;
+  }
+
+  get options() {
+    return this.context.options;
+  }
+
+  get type3FontRefs() {
+    return this.context.type3FontRefs!;
+  }
+
+  set type3FontRefs(type3FontRefs: RefSet) {
+    this.context.type3FontRefs = type3FontRefs;
+  }
+
+
   // 这个克隆可能是一个麻烦的问题。
-  clone(newOptions = null) {
-    const newEvaluator = Object.create(this);
-    newEvaluator.options = Object.assign(
-      Object.create(null), this.options, newOptions
-    );
+  clone(ignoreErrors = false): PartialEvaluator {
+    const context = this.context;
+    const options = context.options;
+    Object.assign(Object.create(null), options, { ignoreErrors });
+    const newEvaluator = new PartialEvaluator(
+      context.xref, context.handler, context.pageIndex, context.idFactory,
+      context.fontCache, context.builtInCMapCache, context.standardFontDataCache,
+      context.globalImageCache, context.systemFontCache, options
+    )
     return newEvaluator;
   }
 
@@ -4445,7 +4475,7 @@ export class TranslatedFont {
     // When parsing Type3 glyphs, always ignore them if there are errors.
     // Compared to the parsing of e.g. an entire page, it doesn't really
     // make sense to only be able to render a Type3 glyph partially.
-    const type3Evaluator = evaluator.clone({ ignoreErrors: false });
+    const type3Evaluator = evaluator.clone(false);
     // Prevent circular references in Type3 fonts.
     const type3FontRefs = new RefSet(evaluator.type3FontRefs);
     if (this.dict.objId && !type3FontRefs.has(this.dict.objId)) {
