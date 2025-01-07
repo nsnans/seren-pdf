@@ -4465,6 +4465,7 @@ export class TranslatedFont {
     );
   }
 
+  // 这里这个函数只要做个改写就好了
   loadType3Data(evaluator: PartialEvaluator, resources: Dict, task: WorkerTask) {
     if (this.type3Loaded) {
       return this.type3Loaded;

@@ -1,15 +1,28 @@
+import { Uint8TypedArray } from "../common/typed_array";
+import { TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
-import { AbortException, FormatError, info, stringToPDFString, warn } from "../shared/util";
+import { MurmurHash3_64 } from "../shared/murmurhash3";
+import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, info, stringToPDFString, warn } from "../shared/util";
 import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
-import { IdentityCMap } from "./cmap";
-import { lookupNormalRect } from "./core_utils";
-import { CssFontInfo, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
+import { CMapFactory, IdentityCMap } from "./cmap";
+import { PreEvaluatedFont } from "./core_types";
+import { isNumberArray, lookupMatrix, lookupNormalRect } from "./core_utils";
+import { DecodeStream } from "./decode_stream";
+import { getEncoding, MacRomanEncoding, StandardEncoding, SymbolSetEncoding, WinAnsiEncoding, ZapfDingbatsEncoding } from "./encodings";
+import { CssFontInfo, EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
 import { getFontSubstitution } from "./font_substitutions";
-import { ErrorFont } from "./fonts";
+import { ErrorFont, Font } from "./fonts";
+import { FontFlags } from "./fonts_utils";
+import { getGlyphsUnicode } from "./glyphlist";
 import { getMetrics } from "./metrics";
+import { OperatorList } from "./operator_list";
 import { Dict, DictKey, Name, Ref } from "./primitives";
+import { getFontNameToFileMap, getSerifFonts, getStandardFontName, getStdFontMap, getSymbolsFonts, isKnownFontName } from "./standard_fonts";
+import { Stream } from "./stream";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
+import { getUnicodeForGlyph } from "./unicode";
+import { WorkerTask } from "./worker";
 
 export const SKIP = 1;
 
@@ -23,6 +36,12 @@ export interface ProcessOperation {
 }
 
 export class EvaluatorFontHandler {
+
+  protected readonly context: EvaluatorContext;
+
+  constructor(context: EvaluatorContext) {
+    this.context = context;
+  }
 
   async handleSetFont(
     resources: Dict,
@@ -42,7 +61,8 @@ export class EvaluatorFontHandler {
 
     if (translated.font.isType3Font) {
       try {
-        await translated.loadType3Data(this, resources, task);
+        // 用context构建出
+        await translated.loadType3Data(this.context, resources, task);
         // Add the dependencies to the parent operatorList so they are
         // resolved before Type3 operatorLists are executed synchronously.
         operatorList.addDependencies(translated.type3Dependencies!);
@@ -52,13 +72,13 @@ export class EvaluatorFontHandler {
           new ErrorFont(`Type3 font load error: ${reason}`),
           // 这里是个坑爹的问题，估计出问题的时候，直接拿这个font来存dict了
           translated.font as unknown as Dict,
-          this.options,
+          this.context.options,
         );
       }
     }
 
     state.font = translated.font;
-    translated.send(this.handler);
+    translated.send(this.context.handler);
     return translated.loadedName;
   }
 
@@ -68,7 +88,7 @@ export class EvaluatorFontHandler {
     }
     if (cmapObj instanceof Name) {
       const cmap = await CMapFactory.create(
-        cmapObj, this._fetchBuiltInCMapBound, null
+        cmapObj, this.context._fetchBuiltInCMapBound, null
       );
 
       if (cmap instanceof IdentityCMap) {
@@ -79,7 +99,7 @@ export class EvaluatorFontHandler {
     if (cmapObj instanceof BaseStream) {
       try {
         const cmap = await CMapFactory.create(
-          cmapObj, this._fetchBuiltInCMapBound, null
+          cmapObj, this.context._fetchBuiltInCMapBound, null
         );
 
         if (cmap instanceof IdentityCMap) {
@@ -89,7 +109,7 @@ export class EvaluatorFontHandler {
         // Convert UTF-16BE
         // NOTE: cmap can be a sparse array, so use forEach instead of
         // `for(;;)` to iterate over all keys.
-        cmap.forEach(function (charCode, token) {
+        cmap.forEach((charCode, token) => {
           // Some cmaps contain *only* CID characters (fixes issue9367.pdf).
           if (typeof token === "number") {
             map[charCode] = String.fromCodePoint(token);
@@ -119,7 +139,7 @@ export class EvaluatorFontHandler {
         if (reason instanceof AbortException) {
           return null;
         }
-        if (this.options.ignoreErrors) {
+        if (this.context.options.ignoreErrors) {
           warn(`readToUnicode - ignoring ToUnicode data: "${reason}".`);
           return null;
         }
@@ -130,8 +150,8 @@ export class EvaluatorFontHandler {
   }
 
   async extractDataStructures(dict: Dict, properties: EvaluatorProperties) {
-    const xref = this.xref;
-    let cidToGidBytes;
+    const xref = this.context.xref;
+    let cidToGidBytes: Uint8TypedArray | null = null;
     // 9.10.2
     const toUnicodePromise = this.readToUnicode(<BaseStream>properties.toUnicode);
 
@@ -152,7 +172,7 @@ export class EvaluatorFontHandler {
           cidToGidBytes = cidToGidMap.getBytes();
         }
       } catch (ex) {
-        if (!this.options.ignoreErrors) {
+        if (!this.context.options.ignoreErrors) {
           throw ex;
         }
         warn(`extractDataStructures - ignoring CIDToGIDMap data: "${ex}".`);
@@ -196,7 +216,7 @@ export class EvaluatorFontHandler {
       } else {
         const msg = "Encoding is not a Name nor a Dict";
 
-        if (!this.options.ignoreErrors) {
+        if (!this.context.options.ignoreErrors) {
           throw new FormatError(msg);
         }
         warn(msg);
@@ -213,7 +233,8 @@ export class EvaluatorFontHandler {
     }
 
     const nonEmbeddedFont = !properties.file || properties.isInternalFont;
-    const isSymbolsFontName = getSymbolsFonts()![properties.name];
+    const symbolsFonts: Record<string, boolean> = getSerifFonts();
+    const isSymbolsFontName = symbolsFonts[properties.name];
     // Ignore an incorrectly specified named encoding for non-embedded
     // symbol fonts (fixes issue16464.pdf).
     if (baseEncodingName && nonEmbeddedFont && isSymbolsFontName) {
@@ -261,8 +282,7 @@ export class EvaluatorFontHandler {
 
     if (cidToGidBytes) {
       properties.cidToGidMap = this.readCidToGidMap(
-        cidToGidBytes,
-        builtToUnicode
+        cidToGidBytes, builtToUnicode
       );
     }
     return properties;
@@ -327,7 +347,7 @@ export class EvaluatorFontHandler {
       // d) Obtain the CMap with the name constructed in step (c) (available
       // from the ASN Web site; see the Bibliography).
       const ucs2CMap = await CMapFactory.create(
-        ucs2CMapName, this._fetchBuiltInCMapBound, null
+        ucs2CMapName, this.context._fetchBuiltInCMapBound, null
       );
       const toUnicode: string[] = [];
       const buf: number[] = [];
@@ -390,12 +410,11 @@ export class EvaluatorFontHandler {
 
         // Simulating descriptor flags attribute
         const fontNameWoStyle = baseFontName.split("-", 1)[0];
+        const symbolsFonts: Record<string, boolean> = getSymbolsFonts();
         const flags =
           (this.isSerifFont(fontNameWoStyle) ? FontFlags.Serif : 0) |
           (metrics.monospace ? FontFlags.FixedPitch : 0) |
-          (getSymbolsFonts()![fontNameWoStyle]
-            ? FontFlags.Symbolic
-            : FontFlags.Nonsymbolic);
+          (symbolsFonts[fontNameWoStyle] ? FontFlags.Symbolic : FontFlags.Nonsymbolic);
 
         const properties: EvaluatorProperties = {
           type,
@@ -449,11 +468,11 @@ export class EvaluatorFontHandler {
           file = await this.fetchStandardFontData(standardFontName);
           properties.isInternalFont = !!file;
         }
-        if (!properties.isInternalFont && this.options.useSystemFonts) {
+        if (!properties.isInternalFont && this.context.options.useSystemFonts) {
           properties.systemFontInfo = getFontSubstitution(
-            this.systemFontCache,
-            this.idFactory,
-            this.options.standardFontDataUrl!,
+            this.context.systemFontCache,
+            this.context.idFactory,
+            this.context.options.standardFontDataUrl!,
             baseFontName,
             standardFontName,
             type
@@ -468,7 +487,7 @@ export class EvaluatorFontHandler {
           const glyphWidths = [];
           let j = firstChar;
           for (const w of widths) {
-            const width = this.xref.fetchIfRef(w);
+            const width = this.context.xref.fetchIfRef(w);
             if (typeof width === "number") {
               glyphWidths[j] = width;
             }
@@ -538,7 +557,7 @@ export class EvaluatorFontHandler {
         }
       }
     } catch (ex) {
-      if (!this.options.ignoreErrors) {
+      if (!this.context.options.ignoreErrors) {
         throw ex;
       }
       warn(`translateFont - fetching "${fontName.name}" font file: "${ex}".`);
@@ -565,11 +584,11 @@ export class EvaluatorFontHandler {
         fontFile = await this.fetchStandardFontData(standardFontName);
         isInternalFont = !!fontFile;
       }
-      if (!isInternalFont && this.options.useSystemFonts) {
+      if (!isInternalFont && this.context.options.useSystemFonts) {
         systemFontInfo = getFontSubstitution(
-          this.systemFontCache,
-          this.idFactory,
-          this.options.standardFontDataUrl!,
+          this.context.systemFontCache,
+          this.context.idFactory,
+          this.context.options.standardFontDataUrl!,
           fontName.name,
           standardFontName,
           type
@@ -578,8 +597,7 @@ export class EvaluatorFontHandler {
     }
 
     const fontMatrix = <TransformType>lookupMatrix(
-      dict.getArrayValue(DictKey.FontMatrix),
-      FONT_IDENTITY_MATRIX
+      dict.getArrayValue(DictKey.FontMatrix), FONT_IDENTITY_MATRIX
     );
     const bbox = lookupNormalRect(
       (<Dict>descriptor).getArrayValue(DictKey.FontBBox) || dict.getArrayValue(DictKey.FontBBox),
@@ -662,7 +680,7 @@ export class EvaluatorFontHandler {
         properties.cidEncoding = cidEncoding.name;
       }
       const cMap = await CMapFactory.create(
-        cidEncoding, this._fetchBuiltInCMapBound, null
+        cidEncoding, this.context._fetchBuiltInCMapBound, null
       );
       properties.cMap = cMap;
       properties.vertical = properties.cMap.vertical;
@@ -675,14 +693,14 @@ export class EvaluatorFontHandler {
   }
 
   async fetchStandardFontData(name: string) {
-    const cachedData = this.standardFontDataCache.get(name);
+    const cachedData = this.context.standardFontDataCache.get(name);
     if (cachedData) {
       return new Stream(cachedData);
     }
 
     // The symbol fonts are not consistent across platforms, always load the
     // standard font data for them.
-    if (this.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
+    if (this.context.options.useSystemFonts && name !== "Symbol" && name !== "ZapfDingbats") {
       return null;
     }
 
@@ -691,8 +709,8 @@ export class EvaluatorFontHandler {
 
     let data: Uint8Array<ArrayBuffer> | null = null;
 
-    if (this.options.standardFontDataUrl !== null) {
-      const url = `${this.options.standardFontDataUrl}${filename}`;
+    if (this.context.options.standardFontDataUrl !== null) {
+      const url = `${this.context.options.standardFontDataUrl}${filename}`;
       const response = await fetch(url);
       if (!response.ok) {
         warn(`fetchStandardFontData: failed to fetch file "${url}" with "${response.statusText}".`);
@@ -702,7 +720,7 @@ export class EvaluatorFontHandler {
     } else {
       // Get the data on the main-thread instead.
       try {
-        data = await this.handler.FetchStandardFontData(filename);
+        data = await this.context.handler.FetchStandardFontData(filename);
       } catch (e) {
         warn(`fetchStandardFontData: failed to fetch file "${filename}" with "${e}".`);
       }
@@ -714,11 +732,11 @@ export class EvaluatorFontHandler {
 
     // Cache the "raw" standard font data, to avoid fetching it repeatedly
     // (see e.g. issue 11399).
-    this.standardFontDataCache.set(name, data);
+    this.context.standardFontDataCache.set(name, data);
     return new Stream(data);
   }
 
-  readCidToGidMap(glyphsData: Uint8Array, toUnicode: ToUnicodeMap | IdentityToUnicodeMap) {
+  readCidToGidMap(glyphsData: Uint8TypedArray, toUnicode: ToUnicodeMap | IdentityToUnicodeMap) {
     // Extract the encoding from the CIDToGIDMap
 
     // Set encoding 0 to later verify the font has an encoding
@@ -735,7 +753,7 @@ export class EvaluatorFontHandler {
   }
 
   extractWidths(dict: Dict, descriptor: Dict, properties: EvaluatorProperties) {
-    const xref = this.xref;
+    const xref = this.context.xref;
     let glyphsWidths: number[] = [];
     let defaultWidth = 0;
     const glyphsVMetrics: number[][] = [];
@@ -933,7 +951,7 @@ export class EvaluatorFontHandler {
       }
       encoding[charcode] = glyphName;
     }
-    const glyphsUnicodeMap = getGlyphsUnicode();
+    const glyphsUnicodeMap: Record<string, number> = getGlyphsUnicode();
     for (const charcode in encoding) {
       // a) Map the character code to a character name.
       let glyphName = encoding[charcode];
@@ -942,7 +960,7 @@ export class EvaluatorFontHandler {
       }
       // b) Look up the character name in the Adobe Glyph List (see the
       //    Bibliography) to obtain the corresponding Unicode value.
-      let unicode = glyphsUnicodeMap![glyphName];
+      let unicode = glyphsUnicodeMap[glyphName];
       if (unicode !== undefined) {
         toUnicode[charcode] = String.fromCharCode(unicode);
         continue;
@@ -1033,7 +1051,7 @@ export class EvaluatorFontHandler {
     const errorFont = async () => {
       const errFont = new ErrorFont(`Font "${fontName}" is not available.`);
       return new TranslatedFont(
-        "g_font_error", errFont, <Dict>font, this.options
+        "g_font_error", errFont, <Dict>font, this.context.options
       );
     };
 
@@ -1051,23 +1069,23 @@ export class EvaluatorFontHandler {
       }
     }
     if (fontRef) {
-      if (this.type3FontRefs?.has(fontRef)) {
+      if (this.context.type3FontRefs?.has(fontRef)) {
         return errorFont();
       }
 
-      if (this.fontCache.has(fontRef)) {
-        return this.fontCache.get(fontRef);
+      if (this.context.fontCache.has(fontRef.toString())) {
+        return this.context.fontCache.get(fontRef.toString())!;
       }
 
       try {
-        font = this.xref.fetchIfRef(fontRef);
+        font = this.context.xref.fetchIfRef(fontRef);
       } catch (ex) {
         warn(`loadFont - lookup failed: "${ex}".`);
       }
     }
 
     if (!(font instanceof Dict)) {
-      if (!this.options.ignoreErrors && !this.parsingType3Font) {
+      if (!this.context.options.ignoreErrors && !this.context.parsingType3Font) {
         warn(`Font "${fontName}" is not available.`);
         return errorFont();
       }
@@ -1082,8 +1100,8 @@ export class EvaluatorFontHandler {
 
     // We are holding `font.cacheKey` references only for `fontRef`s that
     // are not actually `Ref`s, but rather `Dict`s. See explanation below.
-    if (font.cacheKey && this.fontCache.has(font.cacheKey)) {
-      return this.fontCache.get(font.cacheKey);
+    if (font.cacheKey && this.context.fontCache.has(font.cacheKey)) {
+      return this.context.fontCache.get(font.cacheKey)!;
     }
 
     const { promise, resolve } = Promise.withResolvers<TranslatedFont>();
@@ -1106,13 +1124,13 @@ export class EvaluatorFontHandler {
 
       if (fontAliases[hash]) {
         const aliasFontRef = fontAliases[hash].aliasRef;
-        if (fontRefIsRef && aliasFontRef && this.fontCache.has(aliasFontRef)) {
-          this.fontCache.putAlias(fontRef!, aliasFontRef);
-          return this.fontCache.get(fontRef!);
+        if (fontRefIsRef && aliasFontRef && this.context.fontCache.has(aliasFontRef)) {
+          this.context.fontCache.putAlias(fontRef!.toString(), aliasFontRef);
+          return this.context.fontCache.get(fontRef!.toString())!;
         }
       } else {
         fontAliases[hash] = {
-          fontID: this.idFactory.createFontId(),
+          fontID: this.context.idFactory.createFontId(),
         };
       }
 
@@ -1121,7 +1139,7 @@ export class EvaluatorFontHandler {
       }
       fontID = fontAliases[hash].fontID;
     } else {
-      fontID = this.idFactory.createFontId();
+      fontID = this.context.idFactory.createFontId();
     }
 
     assert(fontID?.startsWith("f"), 'The "fontID" must be (correctly) defined.');
@@ -1142,27 +1160,27 @@ export class EvaluatorFontHandler {
     //       keys. Also, since `fontRef` is used when getting cached fonts,
     //       we'll not accidentally match fonts cached with the `fontID`.
     if (fontRefIsRef) {
-      this.fontCache.put(fontRef!, promise);
+      this.context.fontCache.put(fontRef!.toString(), promise);
     } else {
       font.cacheKey = `cacheKey_${fontID}`;
-      this.fontCache.put(font.cacheKey, promise);
+      this.context.fontCache.put(font.cacheKey, promise);
     }
 
     // Keep track of each font we translated so the caller can
     // load them asynchronously before calling display on a page.
-    font.loadedName = `${this.idFactory.getDocId()}_${fontID}`;
+    font.loadedName = `${this.context.idFactory.getDocId()}_${fontID}`;
 
     this.translateFont(preEvaluatedFont)
       .then(translatedFont => {
         resolve(new TranslatedFont(
-          font.loadedName!, translatedFont, font, this.options,
+          font.loadedName!, translatedFont, font, this.context.options,
         ));
       }).catch(reason => {
         // TODO reject?
         warn(`loadFont - translateFont failed: "${reason}".`);
         const errFont = new ErrorFont(reason instanceof Error ? reason.message : reason)
         resolve(
-          new TranslatedFont(font.loadedName!, errFont, font, this.options)
+          new TranslatedFont(font.loadedName!, errFont, font, this.context.options)
         );
       });
     return promise;
@@ -1186,7 +1204,7 @@ export class EvaluatorFontHandler {
       if (!df) {
         throw new FormatError("Descendant fonts are not specified");
       }
-      dict = Array.isArray(df) ? this.xref.fetchIfRef(df[0]) : df;
+      dict = Array.isArray(df) ? this.context.xref.fetchIfRef(df[0]) : df;
 
       if (!(dict instanceof Dict)) {
         throw new FormatError("Descendant font is not a dictionary.");
