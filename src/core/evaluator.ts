@@ -300,7 +300,7 @@ interface EvaluatorCMapData {
 
 /**
  * 这个Context主要是针对，一整个Evaluator的，区别于ProcessContext
- * ProcessContext是针对每一次的计算的
+ * ProcessContext是针对每一次的计算的，EvaluatorContext则是伴随整个PartialEvaluator生命周期的
  */
 export interface EvaluatorContext {
 
@@ -4483,8 +4483,8 @@ export class TranslatedFont {
     }
     type3Evaluator.type3FontRefs = type3FontRefs;
 
-    const translatedFont = this.font,
-      type3Dependencies = this.type3Dependencies;
+    const translatedFont = this.font;
+    const type3Dependencies = this.type3Dependencies;
     let loadCharProcsPromise = Promise.resolve();
     const charProcs: Dict = this.dict.getValue(DictKey.CharProcs);
     const fontResources = this.dict.getValue(DictKey.Resources) || resources;
@@ -4496,7 +4496,7 @@ export class TranslatedFont {
     const fontBBoxSize = Math.hypot(width, height);
 
     for (const key of charProcs.getKeys()) {
-      loadCharProcsPromise = loadCharProcsPromise.then(() => {
+      loadCharProcsPromise = loadCharProcsPromise.then(async () => {
         const glyphStream = charProcs.get(key);
         const operatorList = new OperatorList();
         return type3Evaluator

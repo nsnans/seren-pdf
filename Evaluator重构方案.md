@@ -1,0 +1,15 @@
+PartialEvaluator的属性，是否要考虑全部集中到Context当中去？
+
+PartialEvaluator中的方法，该怎么办？如果是OperatorList或者TextContent的内容，直接移动走就可以。
+
+如果一个方法，既要被外部的东西调用，又要被OperatorList和TextContent调用，这种方法该怎么处理？
+解决掉这个问题，就能完成Evaluator的重构了。
+
+以下是被外部调用的方法：
+handleSetFont
+
+所有的状态信息，都保存在Context里面，PartialEvaluator不提供任何具体的操作。但是返回一些handler，由这些handler完成任务的处理，handleSetFont
+
+EvaluatorContext是一个核心的类，保留着一次计算的所有对象信息，然后EvaluatorFontHandler等类围绕着它展开。
+
+在一次解析的过程中，生成一个EvaluatorContext，然后其它所有相关的类都围绕着这个EvaluatorContext展开和生成。
