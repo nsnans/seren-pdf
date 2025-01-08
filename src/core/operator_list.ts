@@ -14,6 +14,7 @@
  */
 
 import { ImageKind, OPS, OPArg, RenderingIntentFlag, warn } from "../shared/util";
+import { MutableArray } from "../types";
 import { StreamSink } from "./core_types";
 import { OptionalContent } from "./image_utils";
 
@@ -700,7 +701,7 @@ export class OperatorList {
   }
 
   // args为某种类型的数组或null
-  addOp(fn: OPS, args: any[] | null) {
+  addOp(fn: OPS, args: MutableArray<any> | null) {
     this.optimizer.push(fn, args);
     this.weight++;
     if (this._streamSink) {

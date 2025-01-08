@@ -9,4 +9,5 @@ export interface MutableArray<T> {
   [Symbol.iterator](): ArrayIterator<T>;
   set?: (data: MutableArray<T>, offset: number) => void;
   subarray?: (begin: number, end?: number) => MutableArray<T>;
+  shift(): T | undefined;
 }

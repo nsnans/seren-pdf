@@ -35,7 +35,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { TypedArray } from "../types";
+import { MutableArray, TypedArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { CMap, CMapFactory, IdentityCMap } from "./cmap";
@@ -51,6 +51,10 @@ import {
   WinAnsiEncoding,
   ZapfDingbatsEncoding,
 } from "./encodings";
+import { EvaluatorColorHandler } from "./evaluator_color_handler";
+import { EvaluatorFontHandler } from "./evaluator_font_handler";
+import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
+import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { FontSubstitutionInfo, getFontSubstitution } from "./font_substitutions";
 import { ErrorFont, Font, Glyph } from "./fonts";
 import { FontFlags } from "./fonts_utils";
@@ -301,8 +305,9 @@ interface EvaluatorCMapData {
 /**
  * 这个Context主要是针对，一整个Evaluator的，区别于ProcessContext
  * ProcessContext是针对每一次的计算的，EvaluatorContext则是伴随整个PartialEvaluator生命周期的
+ * 它可能还是要写成类的形式，不能以接口的形式。
  */
-export interface EvaluatorContext {
+export class EvaluatorContext {
 
   readonly xref: XRef;
 
@@ -322,13 +327,46 @@ export interface EvaluatorContext {
 
   readonly systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
-  readonly _regionalImageCache: RegionalImageCache;
+  readonly _regionalImageCache = new RegionalImageCache();
 
-  _fetchBuiltInCMapBound: (name: string) => Promise<EvaluatorCMapData>;
+  readonly _fetchBuiltInCMapBound: (name: string) => Promise<EvaluatorCMapData>;
 
   readonly options: DocumentEvaluatorOptions;
 
-  type3FontRefs: RefSet | null;
+  readonly fontHandler = new EvaluatorFontHandler(this);
+
+  readonly colorHandler = new EvaluatorColorHandler(this);
+
+  readonly imageHandler = new EvaluatorImageHandler(this);
+
+  readonly generalHandler = new EvaluatorGeneralHandler(this);
+
+  type3FontRefs: RefSet | null = null;
+
+  constructor(
+    xref: XRef,
+    handler: MessageHandler,
+    pageIndex: number,
+    idFactory: GlobalIdFactory,
+    fontCache: RefSetCache<string, Promise<TranslatedFont>>,
+    builtInCMapCache: Map<string, EvaluatorCMapData>,
+    standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>,
+    globalImageCache: GlobalImageCache,
+    systemFontCache: Map<string, FontSubstitutionInfo | null>,
+    options: DocumentEvaluatorOptions,
+  ) {
+    this.xref = xref;
+    this.handler = handler;
+    this.pageIndex = pageIndex;
+    this.idFactory = idFactory;
+    this.fontCache = fontCache;
+    this.builtInCMapCache = builtInCMapCache;
+    this.standardFontDataCache = standardFontDataCache;
+    this.globalImageCache = globalImageCache;
+    this.systemFontCache = systemFontCache;
+    this.options = options;
+    this._fetchBuiltInCMapBound = this.generalHandler.fetchBuiltInCMap.bind(this.generalHandler);
+  }
 
 }
 
@@ -348,14 +386,10 @@ class PartialEvaluator {
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
     options: DocumentEvaluatorOptions | null = null,
   ) {
-    this.context = {
-      xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache,
-      standardFontDataCache, globalImageCache, systemFontCache,
-      options: options || DefaultDocParamEvaluatorOptions,
-      type3FontRefs: null,
-      _regionalImageCache: new RegionalImageCache(),
-      _fetchBuiltInCMapBound: this.fetchBuiltInCMap.bind(this),
-    }
+    this.context = new EvaluatorContext(
+      xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache, standardFontDataCache,
+      globalImageCache, systemFontCache, options || DefaultDocParamEvaluatorOptions
+    )
     if (PlatformHelper.isMozCental()) {
       ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
     } else {
@@ -4972,7 +5006,7 @@ class EvaluatorPreprocessor {
   // These two modes are present because this function is very hot and so
   // avoiding allocations where possible is worthwhile.
   //
-  read(operation: { fn: OPS | null, args: any[] | null }) {
+  read(operation: { fn: OPS | null, args: MutableArray<any> | null }) {
     let args = operation.args;
     while (true) {
       const obj = this.parser.getObj();
