@@ -9,5 +9,12 @@ export interface MutableArray<T> {
   [Symbol.iterator](): ArrayIterator<T>;
   set?: (data: MutableArray<T>, offset: number) => void;
   subarray?: (begin: number, end?: number) => MutableArray<T>;
+}
+
+export interface Shiftable<T> {
   shift(): T | undefined;
+}
+
+export function shiftable<T>(obj: unknown): obj is Shiftable<T> {
+  return !!((<any>obj)?.shift);
 }

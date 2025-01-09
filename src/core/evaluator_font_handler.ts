@@ -641,7 +641,7 @@ export class EvaluatorFontHandler {
       italicAngle,
       isType3Font,
       cssFontInfo,
-      scaleFactors: <number[]>glyphScaleFactors,
+      scaleFactors: <number[]>glyphScaleFactors!,
       systemFontInfo,
       widths: [],
       defaultWidth: 0,

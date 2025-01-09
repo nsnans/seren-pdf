@@ -5,6 +5,7 @@ import { BaseStream } from "./base_stream";
 import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types";
 import { DecodeStream } from "./decode_stream";
 import { EvaluatorContext, StateManager } from "./evaluator";
+import { EvaluatorBaseHandler } from "./evaluator_base";
 import { isPDFFunction } from "./function";
 import { PDFImage } from "./image";
 import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "./image_utils";
@@ -12,12 +13,10 @@ import { OperatorList } from "./operator_list";
 import { Dict, DictKey } from "./primitives";
 import { WorkerTask } from "./worker";
 
-export class EvaluatorImageHandler {
-
-  protected readonly context: EvaluatorContext;
+export class EvaluatorImageHandler extends EvaluatorBaseHandler {
 
   constructor(context: EvaluatorContext) {
-    this.context = context;
+    super(context);
   }
 
   _sendImgData(objId: string, imgData: ImageMask | null, cacheGlobally = false) {
@@ -46,10 +45,10 @@ export class EvaluatorImageHandler {
       warn("Image dimensions are missing, or not numbers.");
       return;
     }
-    const maxImageSize = this.options.maxImageSize;
+    const maxImageSize = this.context.options.maxImageSize;
     if (maxImageSize !== -1 && w * h > maxImageSize) {
       const msg = "Image exceeded maximum allowed size and was removed.";
-      if (this.options.ignoreErrors) {
+      if (this.context.options.ignoreErrors) {
         warn(msg);
         return;
       }
@@ -74,7 +73,7 @@ export class EvaluatorImageHandler {
       const imgArray = image.getBytes(bitStrideLength * h);
       const decode = <number[]>dict.getArrayWithFallback(DictKey.D, DictKey.Decode);
 
-      if (this.parsingType3Font) {
+      if (this.context.parsingType3Font) {
         imgData = PDFImage.createRawMask(
           imgArray, w, h, image instanceof DecodeStream, decode?.[0] > 0, interpolate
         );
@@ -93,7 +92,7 @@ export class EvaluatorImageHandler {
           localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
           if (imageRef) {
-            this._regionalImageCache.set(
+            this.context.regionalImageCache.set(
               null, imageRef, <ImageCacheData>cacheData
             );
           }
@@ -120,7 +119,7 @@ export class EvaluatorImageHandler {
           localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
           if (imageRef) {
-            this._regionalImageCache.set(
+            this.context.regionalImageCache.set(
               null, imageRef, <ImageCacheData>cacheData
             );
           }
@@ -130,7 +129,7 @@ export class EvaluatorImageHandler {
 
       imgData = <ImageMask>result;
 
-      const objId = `mask_${this.idFactory.createObjId()}`;
+      const objId = `mask_${this.context.idFactory.createObjId()}`;
       operatorList.addDependency(objId);
       imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
       this._sendImgData(objId, imgData);
@@ -151,7 +150,7 @@ export class EvaluatorImageHandler {
         localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
         if (imageRef) {
-          this._regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
+          this.context.regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
         }
       }
       return;
@@ -164,18 +163,18 @@ export class EvaluatorImageHandler {
     ) {
       try {
         const imageObj = new PDFImage(
-          this.xref, resources, image, isInline, null,
-          null, false, this._pdfFunctionFactory, localColorSpaceCache,
+          this.context.xref, resources, image, isInline, null,
+          null, false, this.context.pdfFunctionFactory, localColorSpaceCache,
         );
         // We force the use of RGBA_32BPP images here, because we can't handle
         // any other kind.
         imgData = await imageObj.createImageData(true, false);
-        operatorList.isOffscreenCanvasSupported = this.options.isOffscreenCanvasSupported;
+        operatorList.isOffscreenCanvasSupported = this.context.options.isOffscreenCanvasSupported;
         operatorList.addImageOps(OPS.paintInlineImageXObject, [imgData], optionalContent);
       } catch (reason) {
         const msg = `Unable to decode inline image: "${reason}".`;
 
-        if (!this.options.ignoreErrors) {
+        if (!this.context.options.ignoreErrors) {
           throw new Error(msg);
         }
         warn(msg);
@@ -288,7 +287,7 @@ export class EvaluatorImageHandler {
     // we will build a map of integer values in range 0..255 to be fast.
     const transferObj = smask.getValue(DictKey.TR);
     if (isPDFFunction(transferObj)) {
-      const transferFn = this._pdfFunctionFactory.create(transferObj);
+      const transferFn = this.context.pdfFunctionFactory.create(transferObj);
       const transferMap = new Uint8Array(256);
       const tmp = new Float32Array(1);
       for (let i = 0; i < 256; i++) {

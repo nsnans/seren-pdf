@@ -37,6 +37,7 @@ import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ImageMask, SingleOpaquePixelImageMask } from "./core_types";
+import { Uint8TypedArray } from "../common/typed_array";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -390,7 +391,7 @@ class PDFImage {
   }
 
   static createRawMask(
-    imgArray: Uint8Array<ArrayBuffer>, width: number, height: number,
+    imgArray: Uint8TypedArray, width: number, height: number,
     imageIsFromDecodeStream: boolean,
     inverseDecode: boolean,
     interpolate: number[],

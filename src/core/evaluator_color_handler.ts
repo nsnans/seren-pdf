@@ -132,48 +132,33 @@ export class EvaluatorColorHandler {
       this.context.xref, [patternDict.get(DictKey.Resources), resources], false
     );
 
-    return this.context.operatorFactory.createGeneralOperator().handle(pattern, task, patternResources, tilingOpList).then(() => {
-      const operatorListIR = tilingOpList.getIR();
-      const tilingPatternIR = getTilingPatternIR(
-        operatorListIR, patternDict, color
-      );
+    return this.context.operatorFactory.createGeneralOperator()
+      .handle(pattern, task, patternResources, tilingOpList).then(() => {
+        const operatorListIR = tilingOpList.getIR();
+        const tilingPatternIR = getTilingPatternIR(
+          operatorListIR, patternDict, color
+        );
 
-      // Add the dependencies to the parent operator list so they are
-      // resolved before the sub operator list is executed synchronously.
-      operatorList.addDependencies(tilingOpList.dependencies);
-      operatorList.addOp(fn, tilingPatternIR);
+        // Add the dependencies to the parent operator list so they are
+        // resolved before the sub operator list is executed synchronously.
+        operatorList.addDependencies(tilingOpList.dependencies);
+        operatorList.addOp(fn, tilingPatternIR);
 
-      if (patternDict.objId) {
-        localTilingPatternCache.set(null, patternDict.objId, {
-          operatorListIR, dict: patternDict,
-        });
-      }
-    }).catch((reason: unknown) => {
-      if (reason instanceof AbortException) {
-        return;
-      }
-      if (this.context.options.ignoreErrors) {
-        warn(`handleTilingType - ignoring pattern: "${reason}".`);
-        return;
-      }
-      throw reason;
-    });
+        if (patternDict.objId) {
+          localTilingPatternCache.set(null, patternDict.objId, {
+            operatorListIR, dict: patternDict,
+          });
+        }
+      }).catch((reason: unknown) => {
+        if (reason instanceof AbortException) {
+          return;
+        }
+        if (this.context.options.ignoreErrors) {
+          warn(`handleTilingType - ignoring pattern: "${reason}".`);
+          return;
+        }
+        throw reason;
+      });
   }
 
-  async parseColorSpace(
-    cs: Name | Ref | (Ref | Name)[], resources: Dict | null, localColorSpaceCache: LocalColorSpaceCache
-  ) {
-    return ColorSpace.parseAsync(
-      cs, this.context.xref, resources, this.context.pdfFunctionFactory, localColorSpaceCache
-    ).catch(reason => {
-      if (reason instanceof AbortException) {
-        return null;
-      }
-      if (this.context.options.ignoreErrors) {
-        warn(`parseColorSpace - ignoring ColorSpace: "${reason}".`);
-        return null;
-      }
-      throw reason;
-    });
-  }
 }
