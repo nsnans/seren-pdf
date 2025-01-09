@@ -54,7 +54,9 @@ import {
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
+import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
+import { TextContentOperator } from "./evaluator_text_content_operator";
 import { FontSubstitutionInfo, getFontSubstitution } from "./font_substitutions";
 import { ErrorFont, Font, Glyph } from "./fonts";
 import { FontFlags } from "./fonts_utils";
@@ -173,7 +175,7 @@ const DefaultDocParamEvaluatorOptions = new DocumentEvaluatorOptions(
   -1, false, false, true, false, false, -1, false, true, null, null
 );
 
-enum PatternType {
+export enum PatternType {
   TILING = 1,
   SHADING = 2,
 };
@@ -302,6 +304,23 @@ interface EvaluatorCMapData {
   isCompressed: boolean;
 }
 
+export class EvaluatorOperatorFactory {
+
+  protected context: EvaluatorContext;
+
+  constructor(context: EvaluatorContext) {
+    this.context = context;
+  }
+
+  createGeneralOperator() {
+    return new GeneratorOperatorHandler();
+  }
+
+  createTextContentOperator() {
+    return new TextContentOperator();
+  }
+}
+
 /**
  * 这个Context主要是针对，一整个Evaluator的，区别于ProcessContext
  * ProcessContext是针对每一次的计算的，EvaluatorContext则是伴随整个PartialEvaluator生命周期的
@@ -327,9 +346,9 @@ export class EvaluatorContext {
 
   readonly systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
-  readonly _regionalImageCache = new RegionalImageCache();
+  readonly regionalImageCache = new RegionalImageCache();
 
-  readonly _fetchBuiltInCMapBound: (name: string) => Promise<EvaluatorCMapData>;
+  readonly fetchBuiltInCMapBound: (name: string) => Promise<EvaluatorCMapData>;
 
   readonly options: DocumentEvaluatorOptions;
 
@@ -341,7 +360,11 @@ export class EvaluatorContext {
 
   readonly generalHandler = new EvaluatorGeneralHandler(this);
 
-  type3FontRefs: RefSet | null = null;
+  public type3FontRefs: RefSet | null = null;
+
+  protected _pdfFunctionFactory: PDFFunctionFactory | null = null;
+
+  readonly operatorFactory = new EvaluatorOperatorFactory(this);
 
   constructor(
     xref: XRef,
@@ -365,7 +388,20 @@ export class EvaluatorContext {
     this.globalImageCache = globalImageCache;
     this.systemFontCache = systemFontCache;
     this.options = options;
-    this._fetchBuiltInCMapBound = this.generalHandler.fetchBuiltInCMap.bind(this.generalHandler);
+    this.fetchBuiltInCMapBound = this.generalHandler.fetchBuiltInCMap.bind(this.generalHandler);
+  }
+
+  get pdfFunctionFactory() {
+    if (!this._pdfFunctionFactory) {
+      this._pdfFunctionFactory = new PDFFunctionFactory(
+        this.xref, this.options.isEvalSupported
+      );
+    }
+    return this._pdfFunctionFactory!;
+  }
+
+  get parsingType3Font() {
+    return !!this.type3FontRefs;
   }
 
 }

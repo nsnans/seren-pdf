@@ -1,11 +1,10 @@
 import { TransformType } from "../display/display_utils";
 import { CommonObjType, ObjType } from "../shared/message_handler";
 import { AbortException, FormatError, OPS, warn } from "../shared/util";
-import { TypedArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { lookupMatrix } from "./core_utils";
-import { EvaluatorContext } from "./evaluator";
+import { EvaluatorContext, PatternType } from "./evaluator";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
 import { getTilingPatternIR, Pattern } from "./pattern";
@@ -92,14 +91,14 @@ export class EvaluatorColorHandler {
 
     try {
       const shadingFill = Pattern.parseShading(
-        shading, this.xref, resources, this._pdfFunctionFactory, localColorSpaceCache
+        shading, this.context.xref, resources, this.context.pdfFunctionFactory, localColorSpaceCache
       );
       patternIR = shadingFill.getIR();
     } catch (reason) {
       if (reason instanceof AbortException) {
         return null;
       }
-      if (this.options.ignoreErrors) {
+      if (this.context.options.ignoreErrors) {
         warn(`parseShading - ignoring shading: "${reason}".`);
         localShadingPatternCache.set(shading, null);
         return null;
@@ -108,12 +107,12 @@ export class EvaluatorColorHandler {
     }
 
     id = `pattern_${this.context.idFactory.createObjId()}`;
-    if (this.parsingType3Font) {
+    if (this.context.parsingType3Font) {
       id = `${this.context.idFactory.getDocId()}_type3_${id}`;
     }
     localShadingPatternCache.set(shading, id);
 
-    if (this.parsingType3Font) {
+    if (this.context.parsingType3Font) {
       this.context.handler.commonobj(id, CommonObjType.Pattern, patternIR);
     } else {
       this.context.handler.obj(id, this.context.pageIndex, ObjType.Pattern, patternIR);
@@ -133,7 +132,7 @@ export class EvaluatorColorHandler {
       this.context.xref, [patternDict.get(DictKey.Resources), resources], false
     );
 
-    return this.getOperatorList(pattern, task, patternResources, tilingOpList).then(() => {
+    return this.context.operatorFactory.createGeneralOperator().handle(pattern, task, patternResources, tilingOpList).then(() => {
       const operatorListIR = tilingOpList.getIR();
       const tilingPatternIR = getTilingPatternIR(
         operatorListIR, patternDict, color
@@ -149,11 +148,11 @@ export class EvaluatorColorHandler {
           operatorListIR, dict: patternDict,
         });
       }
-    }).catch(reason => {
+    }).catch((reason: unknown) => {
       if (reason instanceof AbortException) {
         return;
       }
-      if (this.options.ignoreErrors) {
+      if (this.context.options.ignoreErrors) {
         warn(`handleTilingType - ignoring pattern: "${reason}".`);
         return;
       }
@@ -165,7 +164,7 @@ export class EvaluatorColorHandler {
     cs: Name | Ref | (Ref | Name)[], resources: Dict | null, localColorSpaceCache: LocalColorSpaceCache
   ) {
     return ColorSpace.parseAsync(
-      cs, this.context.xref, resources, this._pdfFunctionFactory, localColorSpaceCache
+      cs, this.context.xref, resources, this.context.pdfFunctionFactory, localColorSpaceCache
     ).catch(reason => {
       if (reason instanceof AbortException) {
         return null;

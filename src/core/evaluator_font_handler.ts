@@ -76,7 +76,7 @@ export class EvaluatorFontHandler {
     }
     if (cmapObj instanceof Name) {
       const cmap = await CMapFactory.create(
-        cmapObj, this.context._fetchBuiltInCMapBound, null
+        cmapObj, this.context.fetchBuiltInCMapBound, null
       );
 
       if (cmap instanceof IdentityCMap) {
@@ -87,7 +87,7 @@ export class EvaluatorFontHandler {
     if (cmapObj instanceof BaseStream) {
       try {
         const cmap = await CMapFactory.create(
-          cmapObj, this.context._fetchBuiltInCMapBound, null
+          cmapObj, this.context.fetchBuiltInCMapBound, null
         );
 
         if (cmap instanceof IdentityCMap) {
@@ -335,7 +335,7 @@ export class EvaluatorFontHandler {
       // d) Obtain the CMap with the name constructed in step (c) (available
       // from the ASN Web site; see the Bibliography).
       const ucs2CMap = await CMapFactory.create(
-        ucs2CMapName, this.context._fetchBuiltInCMapBound, null
+        ucs2CMapName, this.context.fetchBuiltInCMapBound, null
       );
       const toUnicode: string[] = [];
       const buf: number[] = [];
@@ -668,7 +668,7 @@ export class EvaluatorFontHandler {
         properties.cidEncoding = cidEncoding.name;
       }
       const cMap = await CMapFactory.create(
-        cidEncoding, this.context._fetchBuiltInCMapBound, null
+        cidEncoding, this.context.fetchBuiltInCMapBound, null
       );
       properties.cMap = cMap;
       properties.vertical = properties.cMap.vertical;

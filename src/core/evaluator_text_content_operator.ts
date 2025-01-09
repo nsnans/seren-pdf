@@ -29,7 +29,7 @@ function handle(ops: OPS | "DEFAULT") {
   }
 }
 
-interface ProcessContext extends ProcessOperation {
+interface TextContentProcessContext extends ProcessOperation {
   emptyXObjectCache: LocalConditionCache;
   includeMarkedContent: boolean;
   pageIndex: number;
@@ -676,10 +676,10 @@ class OperatorAssist {
   }
 }
 
-class TextContentOperator extends BaseOperator {
+export class TextContentOperator extends BaseOperator {
 
   @handle(OPS.setFont)
-  setFont(ctx: ProcessContext, assist: OperatorAssist) {
+  setFont(ctx: TextContentProcessContext, assist: OperatorAssist) {
     const fontNameArg = ctx.args![0].name;
     const fontSizeArg = ctx.args![1];
     if (
@@ -698,40 +698,40 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setTextRise)
-  setTextRise(ctx: ProcessContext) {
+  setTextRise(ctx: TextContentProcessContext) {
     ctx.textState.textRise = ctx.args![0];
   }
 
   @handle(OPS.setHScale)
-  setHScale(ctx: ProcessContext) {
+  setHScale(ctx: TextContentProcessContext) {
     ctx.textState.textHScale = ctx.args![0] / 100;
   }
 
   @handle(OPS.setLeading)
-  setLeading(ctx: ProcessContext) {
+  setLeading(ctx: TextContentProcessContext) {
     ctx.textState.leading = ctx.args![0];
   }
 
   @handle(OPS.moveText)
-  moveText(ctx: ProcessContext) {
+  moveText(ctx: TextContentProcessContext) {
     ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
     ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
   }
 
   @handle(OPS.setLeadingMoveText)
-  setLeadingMoveText(ctx: ProcessContext) {
+  setLeadingMoveText(ctx: TextContentProcessContext) {
     ctx.textState.leading = -ctx.args![1];
     ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
     ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
   }
 
   @handle(OPS.nextLine)
-  nextLine(ctx: ProcessContext) {
+  nextLine(ctx: TextContentProcessContext) {
     ctx.textState.carriageReturn();
   }
 
   @handle(OPS.setTextMatrix)
-  setTextMatrix(ctx: ProcessContext, assist: OperatorAssist) {
+  setTextMatrix(ctx: TextContentProcessContext, assist: OperatorAssist) {
     const args = ctx.args!;
     ctx.textState.setTextMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
     ctx.textState.setTextLineMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
@@ -739,23 +739,23 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setCharSpacing)
-  setCharSpacing(ctx: ProcessContext) {
+  setCharSpacing(ctx: TextContentProcessContext) {
     ctx.textState.charSpacing = ctx.args![0];
   }
 
   @handle(OPS.setWordSpacing)
-  setWordSpacing(ctx: ProcessContext) {
+  setWordSpacing(ctx: TextContentProcessContext) {
     ctx.textState.wordSpacing = ctx.args![0];
   }
 
   @handle(OPS.beginText)
-  beginText(ctx: ProcessContext) {
+  beginText(ctx: TextContentProcessContext) {
     ctx.textState.textMatrix = IDENTITY_MATRIX.slice();
     ctx.textState.textLineMatrix = IDENTITY_MATRIX.slice();
   }
 
   @handle(OPS.showSpacedText)
-  showSpaceText(ctx: ProcessContext, assist: OperatorAssist) {
+  showSpaceText(ctx: TextContentProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
       this.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -791,7 +791,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.showText)
-  showText(ctx: ProcessContext, assist: OperatorAssist) {
+  showText(ctx: TextContentProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
       this.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -800,7 +800,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.nextLineShowText)
-  nextLineShowText(ctx: ProcessContext, assist: OperatorAssist) {
+  nextLineShowText(ctx: TextContentProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
       this.ensureStateFont(ctx.stateManager.state);
       return SKIP
@@ -810,7 +810,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.nextLineSetSpacingShowText)
-  nextLineSetSpacingShowText(ctx: ProcessContext, assist: OperatorAssist) {
+  nextLineSetSpacingShowText(ctx: TextContentProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
       this.ensureStateFont(ctx.stateManager.state);
       return SKIP;
@@ -822,7 +822,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.paintXObject)
-  paintXObject(ctx: ProcessContext, assist: OperatorAssist) {
+  paintXObject(ctx: TextContentProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (!xobjs) {
       xobjs = ctx.resources.getValue(DictKey.XObject) || Dict.empty;
@@ -921,7 +921,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setGState)
-  setGState(ctx: ProcessContext, assist: OperatorAssist) {
+  setGState(ctx: TextContentProcessContext, assist: OperatorAssist) {
     const isValidName = ctx.args![0] instanceof Name;
     const name = ctx.args![0].name;
 
@@ -975,7 +975,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.beginMarkedContent)
-  beginMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
+  beginMarkedContent(ctx: TextContentProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
       markedContentData!.level++;
@@ -989,7 +989,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.beginMarkedContentProps)
-  beginMarkedContentProps(ctx: ProcessContext, assist: OperatorAssist) {
+  beginMarkedContentProps(ctx: TextContentProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
       markedContentData!.level++;
@@ -1009,7 +1009,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.endMarkedContent)
-  endMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
+  endMarkedContent(ctx: TextContentProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (includeMarkedContent) {
       if (markedContentData!.level === 0) {
@@ -1027,7 +1027,7 @@ class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.restore)
-  restore(ctx: ProcessContext, assist: OperatorAssist) {
+  restore(ctx: TextContentProcessContext, assist: OperatorAssist) {
     const previousState = ctx.previousState;
     const textState = ctx.textState;
     if (

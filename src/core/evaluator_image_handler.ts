@@ -1,4 +1,16 @@
-import { EvaluatorContext } from "./evaluator";
+import { OPS } from "../pdf";
+import { CommonObjType, ObjType } from "../shared/message_handler";
+import { warn, assert } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types";
+import { DecodeStream } from "./decode_stream";
+import { EvaluatorContext, StateManager } from "./evaluator";
+import { isPDFFunction } from "./function";
+import { PDFImage } from "./image";
+import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "./image_utils";
+import { OperatorList } from "./operator_list";
+import { Dict, DictKey } from "./primitives";
+import { WorkerTask } from "./worker";
 
 export class EvaluatorImageHandler {
 
@@ -9,13 +21,11 @@ export class EvaluatorImageHandler {
   }
 
   _sendImgData(objId: string, imgData: ImageMask | null, cacheGlobally = false) {
-
     const transfers = imgData ? [imgData.bitmap || imgData.data!.buffer] : null;
-
-    if (this.parsingType3Font || cacheGlobally) {
-      return this.handler.commonobj(objId, CommonObjType.Image, imgData, transfers);
+    if (this.context.parsingType3Font || cacheGlobally) {
+      return this.context.handler.commonobj(objId, CommonObjType.Image, imgData, transfers);
     }
-    return this.handler.obj(objId, this.pageIndex, ObjType.Image, imgData, transfers);
+    return this.context.handler.obj(objId, this.context.pageIndex, ObjType.Image, imgData, transfers);
   }
 
   async buildPaintImageXObject(
@@ -93,7 +103,7 @@ export class EvaluatorImageHandler {
 
       const result = await PDFImage.createMask(
         imgArray, w, h, image instanceof DecodeStream,
-        decode?.[0] > 0, interpolate, this.options.isOffscreenCanvasSupported,
+        decode?.[0] > 0, interpolate, this.context.options.isOffscreenCanvasSupported,
       );
 
       if ((<SingleOpaquePixelImageMask>result).isSingleOpaquePixel) {
@@ -175,17 +185,17 @@ export class EvaluatorImageHandler {
 
     // If there is no imageMask, create the PDFImage and a lot
     // of image processing can be done here.
-    let objId = `img_${this.idFactory.createObjId()}`;
+    let objId = `img_${this.context.idFactory.createObjId()}`;
     let cacheGlobally = false;
 
-    if (this.parsingType3Font) {
-      objId = `${this.idFactory.getDocId()}_type3_${objId}`;
+    if (this.context.parsingType3Font) {
+      objId = `${this.context.idFactory.getDocId()}_type3_${objId}`;
     } else if (cacheKey && imageRef) {
-      cacheGlobally = this.globalImageCache.shouldCache(imageRef, this.pageIndex);
+      cacheGlobally = this.context.globalImageCache.shouldCache(imageRef, this.context.pageIndex);
 
       if (cacheGlobally) {
         assert(!isInline, "Cannot cache an inline image globally.");
-        objId = `${this.idFactory.getDocId()}_${objId}`;
+        objId = `${this.context.idFactory.getDocId()}_${objId}`;
       }
     }
 
@@ -195,8 +205,8 @@ export class EvaluatorImageHandler {
     operatorList.addImageOps(OPS.paintImageXObject, args, optionalContent);
 
     if (cacheGlobally) {
-      if (this.globalImageCache.hasDecodeFailed(imageRef!)) {
-        this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+      if (this.context.globalImageCache.hasDecodeFailed(imageRef!)) {
+        this.context.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
           objId, fn: OPS.paintImageXObject, args, optionalContent,
           byteSize: 0, // Data is `null`, since decoding failed previously.
         });
@@ -210,37 +220,37 @@ export class EvaluatorImageHandler {
       // to avoid having to re-parse the image (since that can be slow).
       if (w * h > 250000 || dict.has(DictKey.SMask) || dict.has(DictKey.Mask)) {
 
-        const handler = this.handler;
+        const handler = this.context.handler;
         const localLength = await handler.commonobjPromise(
           objId, CommonObjType.CopyLocalImage, { imageRef: imageRef! }
         );
 
         if (localLength) {
-          this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+          this.context.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
             objId, fn: OPS.paintImageXObject, args, optionalContent,
             byteSize: 0, // Temporary entry, to avoid `setData` returning early.
           });
-          this.globalImageCache.addByteSize(imageRef!, localLength);
+          this.context.globalImageCache.addByteSize(imageRef!, localLength);
           return;
         }
       }
     }
 
     PDFImage.buildImage(
-      this.xref, resources, image, isInline, this._pdfFunctionFactory, localColorSpaceCache,
+      this.context.xref, resources, image, isInline, this.context.pdfFunctionFactory, localColorSpaceCache,
     ).then(async imageObj => {
-      imgData = await imageObj.createImageData(false, this.options.isOffscreenCanvasSupported);
+      imgData = await imageObj.createImageData(false, this.context.options.isOffscreenCanvasSupported);
       imgData.dataLen = imgData.bitmap ? imgData.width * imgData.height * 4 : imgData.data!.length;
       imgData.ref = imageRef;
 
       if (cacheGlobally) {
-        this.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
+        this.context.globalImageCache.addByteSize(imageRef!, imgData.dataLen);
       }
       return this._sendImgData(objId, imgData, cacheGlobally);
     }).catch(reason => {
       warn(`Unable to decode image "${objId}": "${reason}".`);
       if (imageRef) {
-        this.globalImageCache.addDecodeFailed(imageRef);
+        this.context.globalImageCache.addDecodeFailed(imageRef);
       }
       return this._sendImgData(objId, null, cacheGlobally);
     });
@@ -252,10 +262,10 @@ export class EvaluatorImageHandler {
       localImageCache.set(cacheKey, imageRef, <ImageCacheData>cacheData);
 
       if (imageRef) {
-        this._regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
+        this.context.regionalImageCache.set(null, imageRef, <ImageCacheData>cacheData);
 
         if (cacheGlobally) {
-          this.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
+          this.context.globalImageCache.setData(imageRef!, <GlobalImageCacheData>{
             objId, fn: OPS.paintImageXObject, args, optionalContent,
             byteSize: 0, // Temporary entry, note `addByteSize` above.
           });
@@ -289,10 +299,9 @@ export class EvaluatorImageHandler {
       smaskOptions.transferMap = transferMap;
     }
 
-    return this.buildFormXObject(
+    return this.context.generalHandler.buildFormXObject(
       resources, smaskContent, smaskOptions, operatorList,
       task, stateManager.state.clone(), localColorSpaceCache
     );
   }
-  
 }

@@ -7,7 +7,7 @@ import { EvaluatorContext, normalizeBlendMode, PartialEvaluator, State, StateMan
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { OPSProcessContext } from "./evaluator_ops";
+import { OPSProcessContext } from "./evaluator_general_operator";
 import { isPDFFunction } from "./function";
 import { GroupOptions, LocalColorSpaceCache, LocalGStateCache, OptionalContent } from "./image_utils";
 import { OperatorList } from "./operator_list";
@@ -205,7 +205,7 @@ export class EvaluatorGeneralHandler {
           if (cachedColorSpace) {
             colorSpace = cachedColorSpace;
           } else {
-            colorSpace = await this.parseColorSpace(
+            colorSpace = await this.context.colorHandler.parseColorSpace(
               cs, ctx.resources, ctx.localColorSpaceCache,
             );
           }
@@ -571,7 +571,7 @@ export class EvaluatorGeneralHandler {
       );
       if (
         isAddToPathSet || state.fillColorSpace!.name === "Pattern" ||
-        font!.disableFontFace || this.options.disableFontFace
+        font!.disableFontFace || this.context.options.disableFontFace
       ) {
         PartialEvaluator.buildFontPaths(
           font!, glyphs, this.context.handler, this.context.options
