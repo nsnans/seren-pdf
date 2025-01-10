@@ -5,21 +5,23 @@ import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { DefaultTextContentItem, EvaluatorTextContent, TextContentSinkProxy } from "./core_types";
 import { lookupMatrix } from "./core_utils";
-import { StateManager, TextState } from "./evaluator";
-import { BaseOperator, DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { EvaluatorContext, StateManager, TextState } from "./evaluator";
+import { DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { EvaluatorColorHandler } from "./evaluator_color_handler";
+import { EvaluatorFontHandler } from "./evaluator_font_handler";
+import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
+import { ProcessContext } from "./evaluator_general_operator";
+import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "./fonts";
-import { LocalConditionCache } from "./image_utils";
+import { GlobalImageCache, LocalConditionCache } from "./image_utils";
 import { Dict, DictKey, Name, Ref } from "./primitives";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
 // 这里应该要有handle完的arg类型，但是这种arg类型不太好强制管理起来
 // 强制起来得打开一个开关，开关检测args处理的对不对
-function handle(ops: OPS | "DEFAULT") {
+function handle(ops: OPS) {
   return function (target: TextContentOperator, propertyKey: keyof TextContentOperator) {
-    if (ops === DEFAULT) {
-      return
-    }
     if (MethodMap.has(ops)) {
       throw new Error("不能够重复为同一个操作符定义多个操作对象")
     }
@@ -29,7 +31,8 @@ function handle(ops: OPS | "DEFAULT") {
   }
 }
 
-interface TextContentProcessContext extends ProcessOperation {
+interface ProcessContext extends ProcessOperation {
+  globalImageCache: GlobalImageCache;
   emptyXObjectCache: LocalConditionCache;
   includeMarkedContent: boolean;
   pageIndex: number;
@@ -37,6 +40,7 @@ interface TextContentProcessContext extends ProcessOperation {
   showSpacedTextBuffer: string[];
   textState: TextState;
   stateManager: StateManager;
+  next: (promise: Promise<unknown>) => void;
 }
 
 class OperatorAssist {
@@ -676,10 +680,34 @@ class OperatorAssist {
   }
 }
 
-export class TextContentOperator extends BaseOperator {
+export class TextContentOperator {
+
+  protected generalHandler: EvaluatorGeneralHandler;
+
+  protected fontHandler: EvaluatorFontHandler;
+
+  protected imageHandler: EvaluatorImageHandler;
+
+  protected colorHandler: EvaluatorColorHandler;
+
+  protected operator = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
+
+  constructor(context: EvaluatorContext) {
+    this.generalHandler = context.generalHandler;
+    this.fontHandler = context.fontHandler;
+    this.imageHandler = context.imageHandler;
+    this.colorHandler = context.colorHandler;
+    for (const [k, v] of MethodMap) {
+      const fn = this[v];
+      if (fn == null || typeof fn !== 'function') {
+        throw new Error("操作符和操作方法不匹配");
+      }
+      this.operator.set(k, <(context: ProcessContext) => void | 1 | 2>fn);
+    }
+  }
 
   @handle(OPS.setFont)
-  setFont(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  setFont(ctx: ProcessContext, assist: OperatorAssist) {
     const fontNameArg = ctx.args![0].name;
     const fontSizeArg = ctx.args![1];
     if (
@@ -698,40 +726,40 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setTextRise)
-  setTextRise(ctx: TextContentProcessContext) {
+  setTextRise(ctx: ProcessContext) {
     ctx.textState.textRise = ctx.args![0];
   }
 
   @handle(OPS.setHScale)
-  setHScale(ctx: TextContentProcessContext) {
+  setHScale(ctx: ProcessContext) {
     ctx.textState.textHScale = ctx.args![0] / 100;
   }
 
   @handle(OPS.setLeading)
-  setLeading(ctx: TextContentProcessContext) {
+  setLeading(ctx: ProcessContext) {
     ctx.textState.leading = ctx.args![0];
   }
 
   @handle(OPS.moveText)
-  moveText(ctx: TextContentProcessContext) {
+  moveText(ctx: ProcessContext) {
     ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
     ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
   }
 
   @handle(OPS.setLeadingMoveText)
-  setLeadingMoveText(ctx: TextContentProcessContext) {
+  setLeadingMoveText(ctx: ProcessContext) {
     ctx.textState.leading = -ctx.args![1];
     ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
     ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
   }
 
   @handle(OPS.nextLine)
-  nextLine(ctx: TextContentProcessContext) {
+  nextLine(ctx: ProcessContext) {
     ctx.textState.carriageReturn();
   }
 
   @handle(OPS.setTextMatrix)
-  setTextMatrix(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  setTextMatrix(ctx: ProcessContext, assist: OperatorAssist) {
     const args = ctx.args!;
     ctx.textState.setTextMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
     ctx.textState.setTextLineMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
@@ -739,25 +767,25 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setCharSpacing)
-  setCharSpacing(ctx: TextContentProcessContext) {
+  setCharSpacing(ctx: ProcessContext) {
     ctx.textState.charSpacing = ctx.args![0];
   }
 
   @handle(OPS.setWordSpacing)
-  setWordSpacing(ctx: TextContentProcessContext) {
+  setWordSpacing(ctx: ProcessContext) {
     ctx.textState.wordSpacing = ctx.args![0];
   }
 
   @handle(OPS.beginText)
-  beginText(ctx: TextContentProcessContext) {
+  beginText(ctx: ProcessContext) {
     ctx.textState.textMatrix = IDENTITY_MATRIX.slice();
     ctx.textState.textLineMatrix = IDENTITY_MATRIX.slice();
   }
 
   @handle(OPS.showSpacedText)
-  showSpaceText(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  showSpaceText(ctx: ProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
-      this.ensureStateFont(ctx.stateManager.state);
+      this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
 
@@ -791,18 +819,18 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.showText)
-  showText(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  showText(ctx: ProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
-      this.ensureStateFont(ctx.stateManager.state);
+      this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     assist.buildTextContentItem(ctx.args![0], 0, ctx.textState);
   }
 
   @handle(OPS.nextLineShowText)
-  nextLineShowText(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  nextLineShowText(ctx: ProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
-      this.ensureStateFont(ctx.stateManager.state);
+      this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
     ctx.textState.carriageReturn();
@@ -810,9 +838,9 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.nextLineSetSpacingShowText)
-  nextLineSetSpacingShowText(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  nextLineSetSpacingShowText(ctx: ProcessContext, assist: OperatorAssist) {
     if (!ctx.stateManager.state.font) {
-      this.ensureStateFont(ctx.stateManager.state);
+      this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP;
     }
     ctx.textState.wordSpacing = ctx.args![0];
@@ -822,7 +850,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.paintXObject)
-  paintXObject(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  paintXObject(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (!xobjs) {
       xobjs = ctx.resources.getValue(DictKey.XObject) || Dict.empty;
@@ -845,12 +873,12 @@ export class TextContentOperator extends BaseOperator {
           resolveXObject();
           return;
         }
-        const globalImage = self.globalImageCache.getData(xobj, ctx.pageIndex);
+        const globalImage = ctx.globalImageCache.getData(xobj, ctx.pageIndex);
         if (globalImage) {
           resolveXObject();
           return;
         }
-        xobj = xref.fetch(xobj);
+        xobj = ctx.xref.fetch(xobj);
       }
 
       if (!(xobj instanceof BaseStream)) {
@@ -921,7 +949,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.setGState)
-  setGState(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  setGState(ctx: ProcessContext, assist: OperatorAssist) {
     const isValidName = ctx.args![0] instanceof Name;
     const name = ctx.args![0].name;
 
@@ -975,7 +1003,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.beginMarkedContent)
-  beginMarkedContent(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  beginMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
       markedContentData!.level++;
@@ -989,7 +1017,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.beginMarkedContentProps)
-  beginMarkedContentProps(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  beginMarkedContentProps(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
       markedContentData!.level++;
@@ -1009,7 +1037,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.endMarkedContent)
-  endMarkedContent(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  endMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (includeMarkedContent) {
       if (markedContentData!.level === 0) {
@@ -1027,7 +1055,7 @@ export class TextContentOperator extends BaseOperator {
   }
 
   @handle(OPS.restore)
-  restore(ctx: TextContentProcessContext, assist: OperatorAssist) {
+  restore(ctx: ProcessContext, assist: OperatorAssist) {
     const previousState = ctx.previousState;
     const textState = ctx.textState;
     if (

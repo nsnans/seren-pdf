@@ -7,7 +7,7 @@ import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { isNumberArray } from "./core_utils";
 import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "./evaluator";
-import { DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
@@ -213,7 +213,7 @@ class GeneralOperator {
       this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
-    ctx.args![0] = this.generalHandler.handleText(ctx, ctx.args![0], ctx.stateManager.state);
+    ctx.args![0] = this.generalHandler.handleText(ctx.args![0], ctx.stateManager.state);
   }
 
   @handle(OPS.showSpacedText)
@@ -225,7 +225,7 @@ class GeneralOperator {
     const combinedGlyphs = [];
     for (const arrItem of ctx.args![0]) {
       if (typeof arrItem === "string") {
-        combinedGlyphs.push(...this.generalHandler.handleText(ctx, arrItem, ctx.stateManager.state));
+        combinedGlyphs.push(...this.generalHandler.handleText(arrItem, ctx.stateManager.state));
       } else if (typeof arrItem === "number") {
         combinedGlyphs.push(arrItem);
       }
@@ -241,7 +241,7 @@ class GeneralOperator {
       return SKIP
     }
     ctx.operatorList.addOp(OPS.nextLine, null);
-    ctx.args![0] = this.generalHandler.handleText(ctx, ctx.args![0], ctx.stateManager.state);
+    ctx.args![0] = this.generalHandler.handleText(ctx.args![0], ctx.stateManager.state);
     ctx.fn = OPS.showText;
   }
 
@@ -256,7 +256,7 @@ class GeneralOperator {
       ctx.operatorList.addOp(OPS.setWordSpacing, [ctx.args!.shift()]);
       ctx.operatorList.addOp(OPS.setCharSpacing, [ctx.args!.shift()]);
     }
-    ctx.args![0] = this.generalHandler.handleText(ctx, ctx.args![0], ctx.stateManager.state);
+    ctx.args![0] = this.generalHandler.handleText(ctx.args![0], ctx.stateManager.state);
     ctx.fn = OPS.showText;
   }
 
@@ -294,7 +294,7 @@ class GeneralOperator {
       return SKIP
     }
 
-    ctx.next(this.parseColorSpace(
+    ctx.next(this.colorHandler.parseColorSpace(
       ctx.args![0], ctx.resources, ctx.localColorSpaceCache,
     ).then(colorSpace => {
       ctx.stateManager.state.strokeColorSpace = colorSpace || ColorSpace.singletons.gray;
@@ -312,48 +312,48 @@ class GeneralOperator {
   @handle(OPS.setStrokeColor)
   setStrokeColor(ctx: ProcessContext) {
     const cs = ctx.stateManager.state.strokeColorSpace!;
-    ctx.args = cs.getRgb(ctx.args, 0);
+    ctx.args = cs.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillGray)
   setFillGray(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.gray;
-    ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
+    ctx.args = ColorSpace.singletons.gray.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeGray)
   setStrokeGray(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.gray;
-    ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
+    ctx.args = ColorSpace.singletons.gray.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillCMYKColor)
   setFillCMYKColor(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.cmyk;
-    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args, 0);
+    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
   @handle(OPS.setStrokeCMYKColor)
   setStrokeCMYKColor(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.cmyk;
-    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args, 0);
+    ctx.args = ColorSpace.singletons.cmyk.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
   @handle(OPS.setFillRGBColor)
   setFillRGBColor(ctx: ProcessContext) {
     ctx.stateManager.state.fillColorSpace = ColorSpace.singletons.rgb;
-    ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args, 0);
+    ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args!, 0);
   }
 
   @handle(OPS.setStrokeRGBColor)
   setStrokeRGBColor(ctx: ProcessContext) {
     ctx.stateManager.state.strokeColorSpace = ColorSpace.singletons.rgb;
-    ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args, 0);
+    ctx.args = ColorSpace.singletons.rgb.getRgb(ctx.args!, 0);
   }
 
   @handle(OPS.setFillColorN)
@@ -361,7 +361,7 @@ class GeneralOperator {
     const cs = ctx.stateManager.state.patternFillColorSpace;
     if (!cs) {
       if (isNumberArray(ctx.args, null)) {
-        ctx.args = ColorSpace.singletons.gray.getRgb(args, 0);
+        ctx.args = ColorSpace.singletons.gray.getRgb(ctx.args, 0);
         ctx.fn = OPS.setFillRGBColor;
         return
       }
@@ -370,10 +370,10 @@ class GeneralOperator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(this.handleColorN(ctx));
+      ctx.next(this.colorHandler.handleColorN(ctx)!);
       return OVER
     }
-    ctx.args = cs.getRgb(ctx.args, 0);
+    ctx.args = cs.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setFillRGBColor;
   }
 
@@ -391,10 +391,10 @@ class GeneralOperator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(GeneralOperator.handleColorN(ctx));
+      ctx.next(this.colorHandler.handleColorN(ctx)!);
       return OVER;
     }
-    ctx.args = cs.getRgb(ctx.args, 0);
+    ctx.args = cs.getRgb(ctx.args!, 0);
     ctx.fn = OPS.setStrokeRGBColor;
   }
 
@@ -420,7 +420,7 @@ class GeneralOperator {
       }
       throw reason;
     }
-    const patternId = this.parseShading(ctx, shading);
+    const patternId = this.colorHandler.parseShading(ctx, shading);
     if (!patternId) {
       return SKIP
     }
@@ -461,7 +461,7 @@ class GeneralOperator {
         throw new FormatError("GState should be a dictionary.");
       }
 
-      GeneralOperator._setGState(ctx, gState, name).then(resolve, reject);
+      this.generalHandler.setGState(gState, name).then(resolve, reject);
     }).catch(reason => {
       if (reason instanceof AbortException) {
         return OVER;
@@ -477,41 +477,37 @@ class GeneralOperator {
 
   @handle(OPS.moveTo)
   moveTo(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args!, ctx.parsingText);
   }
 
   @handle(OPS.lineTo)
   lineTo(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
-
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.curveTo)
   curveTo(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
-
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.curveTo2)
   curveTo2(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
-
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.curveTo3)
   curveTo3(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.closePath)
   closePath(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
-
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
   @handle(OPS.rectangle)
   rectangle(ctx: ProcessContext) {
-    GeneralOperator.buildPath(ctx.operatorList, ctx.fn!, ctx.args, ctx.parsingText);
+    this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
   }
 
 

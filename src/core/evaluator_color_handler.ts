@@ -5,18 +5,17 @@ import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { lookupMatrix } from "./core_utils";
 import { EvaluatorContext, PatternType } from "./evaluator";
+import { EvaluatorBaseHandler } from "./evaluator_base";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
 import { getTilingPatternIR, Pattern } from "./pattern";
 import { Dict, DictKey, Name, Ref } from "./primitives";
 import { WorkerTask } from "./worker";
 
-export class EvaluatorColorHandler {
-
-  protected readonly context: EvaluatorContext;
+export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 
   constructor(context: EvaluatorContext) {
-    this.context = context;
+    super(context);
   }
 
   handleColorN(
