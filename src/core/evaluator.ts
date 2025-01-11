@@ -56,7 +56,7 @@ import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { TextContentOperator } from "./evaluator_text_content_operator";
+import { GetTextContentHandler, TextContentOperator } from "./evaluator_text_content_operator";
 import { FontSubstitutionInfo, getFontSubstitution } from "./font_substitutions";
 import { ErrorFont, Font, Glyph } from "./fonts";
 import { FontFlags } from "./fonts_utils";
@@ -312,12 +312,38 @@ export class EvaluatorOperatorFactory {
     this.context = context;
   }
 
-  createGeneralOperator() {
-    return new GeneratorOperatorHandler();
+  createGeneralHandler(
+    stream: BaseStream,
+    task: WorkerTask,
+    resources: Dict,
+    operatorList: OperatorList,
+    initialState: State | null = null,
+    fallbackFontDict: Dict | null = null
+  ) {
+    return new GeneratorOperatorHandler(
+      this.context, stream, task, resources, operatorList, initialState, fallbackFontDict
+    );
   }
 
-  createTextContentOperator() {
-    return new TextContentOperator();
+  createTextContentHandler(
+    stream: BaseStream,
+    task: WorkerTask,
+    resources: Dict | null,
+    sink: StreamSink<EvaluatorTextContent>,
+    viewBox: number[],
+    includeMarkedContent = false,
+    keepWhiteSpace = false,
+    seenStyles = new Set<string>(),
+    stateManager: StateManager | null = null,
+    lang: string | null = null,
+    markedContentData: { level: 0 } | null = null,
+    disableNormalization = false,
+  ) {
+    return new GetTextContentHandler(
+      this.context, stream, task, resources, sink, viewBox,
+      includeMarkedContent, keepWhiteSpace, seenStyles,
+      stateManager, lang, markedContentData, disableNormalization
+    );
   }
 }
 
@@ -4541,7 +4567,7 @@ export class TranslatedFont {
       return this.type3Loaded;
     }
     if (!this.font.isType3Font) {
-      throw new Error("Must be a Type3 font.");
+      throw new Error("Must be a Type3 pfont.");
     }
     // When parsing Type3 glyphs, always ignore them if there are errors.
     // Compared to the parsing of e.g. an entire page, it doesn't really

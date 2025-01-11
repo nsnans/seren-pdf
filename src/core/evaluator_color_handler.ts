@@ -1,6 +1,7 @@
 import { TransformType } from "../display/display_utils";
 import { CommonObjType, ObjType } from "../shared/message_handler";
 import { AbortException, FormatError, OPS, warn } from "../shared/util";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { lookupMatrix } from "./core_utils";
@@ -21,7 +22,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
   handleColorN(
     operatorList: OperatorList,
     fn: OPS, // 值应当是OPS.setFillColorN | OPS.setFillColorN,
-    args: any[],
+    args: MutableArray<any>,
     cs: ColorSpace,
     patterns: Dict,
     resources: Dict,
@@ -31,7 +32,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
     localShadingPatternCache: Map<Dict, string | null>
   ) {
     // compile tiling patterns
-    const patternName = args.pop();
+    const patternName = (<any[]>args).pop();
     // SCN/scn applies patterns along with normal colors
     if (patternName instanceof Name) {
       const rawPattern = <Ref | BaseStream | Dict>patterns.getRaw(<DictKey>patternName.name);
@@ -131,33 +132,34 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
       this.context.xref, [patternDict.get(DictKey.Resources), resources], false
     );
 
-    return this.context.operatorFactory.createGeneralOperator()
-      .handle(pattern, task, patternResources, tilingOpList).then(() => {
-        const operatorListIR = tilingOpList.getIR();
-        const tilingPatternIR = getTilingPatternIR(
-          operatorListIR, patternDict, color
-        );
+    return this.context.operatorFactory.createGeneralHandler(
+      pattern, task, patternResources, tilingOpList
+    ).handle().then(() => {
+      const operatorListIR = tilingOpList.getIR();
+      const tilingPatternIR = getTilingPatternIR(
+        operatorListIR, patternDict, color
+      );
 
-        // Add the dependencies to the parent operator list so they are
-        // resolved before the sub operator list is executed synchronously.
-        operatorList.addDependencies(tilingOpList.dependencies);
-        operatorList.addOp(fn, tilingPatternIR);
+      // Add the dependencies to the parent operator list so they are
+      // resolved before the sub operator list is executed synchronously.
+      operatorList.addDependencies(tilingOpList.dependencies);
+      operatorList.addOp(fn, tilingPatternIR);
 
-        if (patternDict.objId) {
-          localTilingPatternCache.set(null, patternDict.objId, {
-            operatorListIR, dict: patternDict,
-          });
-        }
-      }).catch((reason: unknown) => {
-        if (reason instanceof AbortException) {
-          return;
-        }
-        if (this.context.options.ignoreErrors) {
-          warn(`handleTilingType - ignoring pattern: "${reason}".`);
-          return;
-        }
-        throw reason;
-      });
+      if (patternDict.objId) {
+        localTilingPatternCache.set(null, patternDict.objId, {
+          operatorListIR, dict: patternDict,
+        });
+      }
+    }).catch((reason: unknown) => {
+      if (reason instanceof AbortException) {
+        return;
+      }
+      if (this.context.options.ignoreErrors) {
+        warn(`handleTilingType - ignoring pattern: "${reason}".`);
+        return;
+      }
+      throw reason;
+    });
   }
 
 }

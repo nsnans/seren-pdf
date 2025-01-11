@@ -1,6 +1,5 @@
 import { DocumentEvaluatorOptions } from "../display/api";
 import { OPS } from "../pdf";
-import { MessageHandler } from "../shared/message_handler";
 import { AbortException, FormatError, info, warn } from "../shared/util";
 import { shiftable } from "../types";
 import { BaseStream } from "./base_stream";
@@ -34,7 +33,9 @@ function handle(ops: OPS) {
 // 所有的处理都围绕着ProcessContext来，包括next方法
 // 所有的处理方法都是静态函数，避免大量的创建对象
 export interface ProcessContext extends ProcessOperation {
-  handler: MessageHandler;
+  fallbackFontDict: Dict | null;
+  task: WorkerTask;
+  patterns: Dict;
   options: DocumentEvaluatorOptions;
   xref: XRef;
   pageIndex: number;
@@ -53,9 +54,7 @@ export interface ProcessContext extends ProcessOperation {
   localShadingPatternCache: Map<Dict, string | null>;
   regionalImageCache: RegionalImageCache;
   globalImageCache: GlobalImageCache;
-  next: (promise: Promise<unknown>) => void;
-  // 要考虑自己调自己的这种情况
-  handle: () => Promise<void>;
+  next: (promise: Promise<unknown> | undefined) => void;
 }
 
 class GeneralOperator {
@@ -86,7 +85,7 @@ class GeneralOperator {
 
   execute(ops: OPS, context: ProcessContext): void | 1 | 2 {
     const fn = this.operator.get(ops);
-    return !fn ? this.handleDefault(context) : fn(context);
+    return fn ? fn(context) : this.handleDefault(context);
   }
 
 
@@ -143,13 +142,19 @@ class GeneralOperator {
 
       if (type.name === "Form") {
         ctx.stateManager.save();
-        this.generalHandler.buildFormXObject(ctx).then(() => {
+        this.generalHandler.buildFormXObject(
+          ctx.resources, xobj, null, ctx.operatorList, ctx.task,
+          ctx.stateManager.state.clone(), ctx.localColorSpaceCache
+        ).then(() => {
           ctx.stateManager.restore();
           resolve();
         }, reject);
         return;
       } else if (type.name === "Image") {
-        this.imageHandler.buildPaintImageXObject(ctx).then(resolve, reject);
+        this.imageHandler.buildPaintImageXObject(
+          ctx.resources, xobj, false, ctx.operatorList, name,
+          ctx.localImageCache, ctx.localColorSpaceCache
+        ).then(resolve, reject);
         return;
       } else if (type.name === "PS") {
         // PostScript XObjects are unused when viewing documents.
@@ -177,7 +182,10 @@ class GeneralOperator {
   @handle(OPS.setFont)
   setFont(ctx: ProcessContext) {
     const fontSize = ctx.args![1];
-    ctx.next(this.fontHandler.handleSetFont(ctx).then(loadedName => {
+    ctx.next(this.fontHandler.handleSetFont(
+      ctx.resources, <[Name | string, number]>ctx.args, null,
+      ctx.operatorList, ctx.task, ctx.stateManager.state, ctx.fallbackFontDict
+    ).then(loadedName => {
       ctx.operatorList.addDependency(loadedName);
       ctx.operatorList.addOp(OPS.setFont, [loadedName, fontSize])
     }));
@@ -203,7 +211,10 @@ class GeneralOperator {
         return
       }
     }
-    ctx.next(this.imageHandler.buildPaintImageXObject(ctx))
+    ctx.next(this.imageHandler.buildPaintImageXObject(
+      ctx.resources, ctx.args![0], true, ctx.operatorList,
+      cacheKey, ctx.localImageCache, ctx.localColorSpaceCache
+    ))
     return OVER
   }
 
@@ -370,7 +381,10 @@ class GeneralOperator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(this.colorHandler.handleColorN(ctx)!);
+      ctx.next(this.colorHandler.handleColorN(
+        ctx.operatorList, OPS.setFillColorN, ctx.args!, cs, ctx.patterns, ctx.resources,
+        ctx.task, ctx.localColorSpaceCache, ctx.localTilingPatternCache, ctx.localShadingPatternCache
+      ));
       return OVER
     }
     ctx.args = cs.getRgb(ctx.args!, 0);
@@ -391,7 +405,11 @@ class GeneralOperator {
       return
     }
     if (cs.name === "Pattern") {
-      ctx.next(this.colorHandler.handleColorN(ctx)!);
+      ctx.next(this.colorHandler.handleColorN(
+        ctx.operatorList, OPS.setStrokeColorN, ctx.args!, cs, ctx.patterns,
+        ctx.resources, ctx.task, ctx.localColorSpaceCache,
+        ctx.localTilingPatternCache, ctx.localShadingPatternCache
+      ));
       return OVER;
     }
     ctx.args = cs.getRgb(ctx.args!, 0);
@@ -420,7 +438,9 @@ class GeneralOperator {
       }
       throw reason;
     }
-    const patternId = this.colorHandler.parseShading(shading);
+    const patternId = this.colorHandler.parseShading(
+      shading, ctx.resources, ctx.localColorSpaceCache, ctx.localShadingPatternCache
+    );
     if (!patternId) {
       return SKIP
     }
@@ -436,7 +456,7 @@ class GeneralOperator {
     if (isValidName) {
       const localGStateObj = ctx.localGStateCache.getByName(name);
       if (localGStateObj) {
-        if (localGStateObj.length > 0) {
+        if ((<[DictKey, any][]>localGStateObj).length > 0) {
           ctx.operatorList.addOp(OPS.setGState, [localGStateObj]);
         }
         ctx.args = null;
@@ -461,7 +481,10 @@ class GeneralOperator {
         throw new FormatError("GState should be a dictionary.");
       }
 
-      this.generalHandler.setGState(gState, name).then(resolve, reject);
+      this.generalHandler.setGState(
+        ctx.resources, gState, ctx.operatorList, name, ctx.task,
+        ctx.stateManager, ctx.localGStateCache, ctx.localColorSpaceCache
+      ).then(resolve, reject);
     }).catch(reason => {
       if (reason instanceof AbortException) {
         return OVER;
@@ -594,25 +617,23 @@ export class GetOperatorListHandler implements OperatorListHandler {
   protected operator: GeneralOperator;
 
   constructor(
+    evalCtx: EvaluatorContext,
     stream: BaseStream,
     task: WorkerTask,
-    xref: XRef,
     resources: Dict,
     operatorList: OperatorList,
-    initialState: State = new EvalState(),
-    fallbackFontDict: Dict | null = null,
-    ignoreErrors: boolean,
-    evalCtx: EvaluatorContext
+    initialState: State | null = null,
+    fallbackFontDict: Dict | null = null
   ) {
     if (!operatorList) {
       throw new Error('getOperatorList: missing "operatorList" parameter');
     }
     this.resources = resources;
-    this.stateManager = new StateManager(initialState);
+    this.stateManager = new StateManager(initialState ?? new EvalState());
     this.task = task;
     this.operatorList = operatorList;
-    this.preprocessor = new EvaluatorPreprocessor(stream, xref, this.stateManager)
-    this.ignoreErrors = ignoreErrors;
+    this.preprocessor = new EvaluatorPreprocessor(stream, evalCtx.xref, this.stateManager)
+    this.ignoreErrors = evalCtx.options.ignoreErrors;
     this.evalCtx = evalCtx;
     this.fallbackFontDict = fallbackFontDict;
     this.operator = new GeneralOperator(evalCtx);
@@ -640,16 +661,24 @@ export class GetOperatorListHandler implements OperatorListHandler {
         localGStateCache: new LocalGStateCache(),
         localTilingPatternCache: new LocalTilingPatternCache(),
         localShadingPatternCache: new Map<Dict, string | null>(),
-        next: (promise: Promise<unknown>) => {
+        next: (promise: Promise<unknown> | undefined) => {
           Promise.all([promise, operatorList.ready]).then(() => {
             try {
-              this.process(resolve, reject, context)
+              this.process(resolve, reject, context);
             } catch (ex) {
               reject(ex);
             }
           }, reject);
         },
-        handle: this.handle
+        fallbackFontDict: this.fallbackFontDict,
+        task: this.task,
+        patterns: this.resources.getValue(DictKey.Pattern) || Dict.empty,
+        options: this.evalCtx.options,
+        xref: this.evalCtx.xref,
+        pageIndex: this.evalCtx.pageIndex,
+        xobjs: this.resources.getValue(DictKey.XObject) || Dict.empty,
+        regionalImageCache: new RegionalImageCache,
+        globalImageCache: new GlobalImageCache,
       }
       this.process(resolve, reject, context);
     });

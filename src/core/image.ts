@@ -432,7 +432,7 @@ class PDFImage {
   }
 
   static async createMask(
-    imgArray: Uint8Array,
+    imgArray: Uint8Array<ArrayBuffer>,
     width: number,
     height: number,
     imageIsFromDecodeStream: boolean,

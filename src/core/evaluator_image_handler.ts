@@ -101,7 +101,7 @@ export class EvaluatorImageHandler extends EvaluatorBaseHandler {
       }
 
       const result = await PDFImage.createMask(
-        imgArray, w, h, image instanceof DecodeStream,
+        <Uint8Array<ArrayBuffer>>imgArray, w, h, image instanceof DecodeStream,
         decode?.[0] > 0, interpolate, this.context.options.isOffscreenCanvasSupported,
       );
 

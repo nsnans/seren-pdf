@@ -1,13 +1,14 @@
-import { TextContent } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/api";
 import { TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
-import { AbortException, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, Util, warn } from "../shared/util";
+import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, Util, warn } from "../shared/util";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "./core_types";
 import { lookupMatrix } from "./core_utils";
-import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState } from "./evaluator";
-import { DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState, TimeSlotManager } from "./evaluator";
+import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
@@ -16,6 +17,7 @@ import { Font } from "./fonts";
 import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
 import { Dict, DictKey, Name, Ref } from "./primitives";
 import { WorkerTask } from "./worker";
+import { XRef } from "./xref";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -33,6 +35,16 @@ function handle(ops: OPS) {
 }
 
 interface ProcessContext extends ProcessOperation {
+  previousState: TextState | null;
+  idFactory: any;
+  options: DocumentEvaluatorOptions;
+  markedContentData: { level: 0; } | null;
+  lang: string | null;
+  xref: XRef;
+  xobjs: Dict | null;
+  sink: StreamSink<EvaluatorTextContent>;
+  viewBox: number[];
+  task: WorkerTask;
   textContent: EvaluatorTextContent;
   textContentItem: DefaultTextContentItem;
   globalImageCache: GlobalImageCache;
@@ -45,6 +57,10 @@ interface ProcessContext extends ProcessOperation {
   textState: TextState | null;
   stateManager: StateManager;
   preprocessor: EvaluatorPreprocessor;
+  timeSlotManager: TimeSlotManager;
+  keepWhiteSpace: boolean;
+  disableNormalization: boolean;
+  seenStyles: Set<string>;
   next: (promise: Promise<unknown>) => void;
 }
 
@@ -94,35 +110,13 @@ class OperatorAssist {
 
   protected twoLastCharsPos = 0;
 
-  protected textContent: EvaluatorTextContent;
-
-  protected keepWhiteSpace: boolean;
-
-  protected textContentItem: DefaultTextContentItem;
-
-  protected disableNormalization: boolean;
-
-  protected viewBox: number[];
+  protected ctx: ProcessContext;
 
   protected evalCtx: EvaluatorContext;
 
-  protected fontHandler: EvaluatorFontHandler;
-
-  constructor(
-    keepWhiteSpace: boolean,
-    textContent: EvaluatorTextContent,
-    textContentItem: DefaultTextContentItem,
-    disableNormalization: boolean,
-    viewBox: number[],
-    evalCtx: EvaluatorContext,
-  ) {
-    this.textContent = textContent;
-    this.keepWhiteSpace = keepWhiteSpace;
-    this.textContentItem = textContentItem;
-    this.disableNormalization = disableNormalization;
-    this.viewBox = viewBox;
+  constructor(ctx: ProcessContext, evalCtx: EvaluatorContext) {
+    this.ctx = ctx;
     this.evalCtx = evalCtx;
-    this.fontHandler = evalCtx.fontHandler;
   }
 
   saveLastChar(char: string): boolean {
@@ -130,12 +124,12 @@ class OperatorAssist {
     const ret = this.twoLastChars[this.twoLastCharsPos] !== " " && this.twoLastChars[nextPos] === " ";
     this.twoLastChars[this.twoLastCharsPos] = char;
     this.twoLastCharsPos = nextPos;
-    return !this.keepWhiteSpace && ret;
+    return !this.ctx.keepWhiteSpace && ret;
   }
 
   shouldAddWhitepsace() {
     return (
-      !this.keepWhiteSpace &&
+      !this.ctx.keepWhiteSpace &&
       this.twoLastChars[this.twoLastCharsPos] !== " " &&
       this.twoLastChars[(this.twoLastCharsPos + 1) % 2] === " "
     );
@@ -148,10 +142,10 @@ class OperatorAssist {
 
   pushWhitespace(
     width = 0, height = 0,
-    transform = this.textContentItem.prevTransform,
-    fontName = this.textContentItem.fontName,
+    transform = this.ctx.textContentItem.prevTransform,
+    fontName = this.ctx.textContentItem.fontName,
   ): void {
-    this.textContent.items.push({
+    this.ctx.textContent.items.push({
       str: " ",
       dir: "ltr",
       width,
@@ -162,35 +156,39 @@ class OperatorAssist {
     });
   }
 
-  getCurrentTextTransform(textState: TextState) {
+  getCurrentTextTransform() {
+    const textState = this.ctx.textState!;
     // 9.4.4 Text Space Details
-    const font = textState!.font!;
-    const fontSize = textState!.fontSize;
-    const textHScale = textState!.textHScale;
-    const textRise = textState!.textRise;
+    const font = textState.font!;
+    const fontSize = textState.fontSize;
+    const textHScale = textState.textHScale;
+    const textRise = textState.textRise;
     const tsm = [fontSize * textHScale, 0, 0, fontSize, 0, textRise];
 
     if (
       font.isType3Font &&
-      (textState!.fontSize <= 1 || font.isCharBBox) &&
-      !isArrayEqual(textState!.fontMatrix, FONT_IDENTITY_MATRIX)
+      (textState.fontSize <= 1 || font.isCharBBox) &&
+      !isArrayEqual(textState.fontMatrix, FONT_IDENTITY_MATRIX)
     ) {
       const glyphHeight = (<Font>font).bbox![3] - (<Font>font).bbox![1];
       if (glyphHeight > 0) {
-        tsm[3] *= glyphHeight * textState!.fontMatrix[3];
+        tsm[3] *= glyphHeight * textState.fontMatrix[3];
       }
     }
 
     return Util.transform(
-      textState!.ctm, Util.transform(textState!.textMatrix, tsm)
+      textState.ctm, Util.transform(textState.textMatrix, tsm)
     );
   }
 
-  ensureTextContentItem(textState: TextState, seenStyles: Set<string>) {
-    if (this.textContentItem.initialized) {
-      return this.textContentItem;
+  ensureTextContentItem() {
+    if (this.ctx.textContentItem.initialized) {
+      return this.ctx.textContentItem;
     }
-    const font = textState!.font!;
+    const ctx = this.ctx;
+    const textState = ctx.textState!;
+    const seenStyles = ctx.seenStyles;
+    const font = textState.font!;
     const loadedName = textState!.loadedName!;
     if (!seenStyles.has(loadedName)) {
       const validFont = <Font>font;
@@ -203,24 +201,24 @@ class OperatorAssist {
         fontSubstitution: null,
         fontSubstitutionLoadedName: null,
       }
-      this.textContent.styles.set(loadedName, style);
+      this.ctx.textContent.styles.set(loadedName, style);
       if (this.evalCtx.options.fontExtraProperties && (validFont).systemFontInfo) {
-        const style = this.textContent.styles.get(loadedName)!;
+        const style = this.ctx.textContent.styles.get(loadedName)!;
         style.fontSubstitution = (validFont).systemFontInfo!.css;
         style.fontSubstitutionLoadedName = (validFont).systemFontInfo!.loadedName;
       }
     }
-    this.textContentItem.fontName = loadedName;
+    this.ctx.textContentItem.fontName = loadedName;
 
-    const trm = (this.textContentItem.transform = this.getCurrentTextTransform(textState));
+    const trm = (this.ctx.textContentItem.transform = this.getCurrentTextTransform());
     if (!font.vertical) {
-      this.textContentItem.width = this.textContentItem.totalWidth = 0;
-      this.textContentItem.height = this.textContentItem.totalHeight = Math.hypot(trm[2], trm[3]);
-      this.textContentItem.vertical = false;
+      ctx.textContentItem.width = ctx.textContentItem.totalWidth = 0;
+      ctx.textContentItem.height = ctx.textContentItem.totalHeight = Math.hypot(trm[2], trm[3]);
+      ctx.textContentItem.vertical = false;
     } else {
-      this.textContentItem.width = this.textContentItem.totalWidth = Math.hypot(trm[0], trm[1]);
-      this.textContentItem.height = this.textContentItem.totalHeight = 0;
-      this.textContentItem.vertical = true;
+      ctx.textContentItem.width = ctx.textContentItem.totalWidth = Math.hypot(trm[0], trm[1]);
+      ctx.textContentItem.height = ctx.textContentItem.totalHeight = 0;
+      ctx.textContentItem.vertical = true;
     }
 
     const scaleLineX = Math.hypot(
@@ -228,22 +226,22 @@ class OperatorAssist {
     );
 
     const scaleCtmX = Math.hypot(textState!.ctm[0], textState!.ctm[1]);
-    this.textContentItem.textAdvanceScale = scaleCtmX * scaleLineX;
+    ctx.textContentItem.textAdvanceScale = scaleCtmX * scaleLineX;
 
     const { fontSize } = textState!;
-    this.textContentItem.trackingSpaceMin = fontSize * this.TRACKING_SPACE_FACTOR;
-    this.textContentItem.notASpace = fontSize * this.NOT_A_SPACE_FACTOR;
-    this.textContentItem.negativeSpaceMax = fontSize * this.NEGATIVE_SPACE_FACTOR;
-    this.textContentItem.spaceInFlowMin = fontSize * this.SPACE_IN_FLOW_MIN_FACTOR;
-    this.textContentItem.spaceInFlowMax = fontSize * this.SPACE_IN_FLOW_MAX_FACTOR;
-    this.textContentItem.hasEOL = false;
+    ctx.textContentItem.trackingSpaceMin = fontSize * this.TRACKING_SPACE_FACTOR;
+    ctx.textContentItem.notASpace = fontSize * this.NOT_A_SPACE_FACTOR;
+    ctx.textContentItem.negativeSpaceMax = fontSize * this.NEGATIVE_SPACE_FACTOR;
+    ctx.textContentItem.spaceInFlowMin = fontSize * this.SPACE_IN_FLOW_MIN_FACTOR;
+    ctx.textContentItem.spaceInFlowMax = fontSize * this.SPACE_IN_FLOW_MAX_FACTOR;
+    ctx.textContentItem.hasEOL = false;
 
-    this.textContentItem.initialized = true;
-    return this.textContentItem;
+    ctx.textContentItem.initialized = true;
+    return ctx.textContentItem;
   }
 
   updateAdvanceScale(textState: TextState) {
-    const textContentItem = this.textContentItem;
+    const textContentItem = this.ctx.textContentItem;
     if (!textContentItem.initialized) {
       return;
     }
@@ -258,7 +256,7 @@ class OperatorAssist {
       return;
     }
 
-    if (!this.textContentItem.vertical) {
+    if (!textContentItem.vertical) {
       textContentItem.totalWidth += textContentItem.width * textContentItem.textAdvanceScale;
       textContentItem.width = 0;
     } else {
@@ -271,7 +269,7 @@ class OperatorAssist {
 
   runBidiTransform(textChunk: DefaultTextContentItem) {
     let text = textChunk.str.join("");
-    if (!this.disableNormalization) {
+    if (!this.ctx.disableNormalization) {
       text = normalizeUnicode(text);
     }
     const bidiResult = bidi(text, -1, textChunk.vertical);
@@ -286,21 +284,23 @@ class OperatorAssist {
     };
   }
 
-  async handleSetFont(fontName: string | null, fontRef: Ref | null, textState: TextState) {
-    const translated = await this.fontHandler.loadFont(fontName, fontRef, resources!);
+  async handleSetFont(fontName: string | null, fontRef: Ref | null) {
+    const translated = await this.evalCtx.fontHandler.loadFont(
+      fontName, fontRef, this.ctx.resources
+    );
 
     if (translated.font.isType3Font) {
       try {
-        await translated.loadType3Data(this.evalCtx, resources!, task);
+        await translated.loadType3Data(this.evalCtx, this.ctx.resources!, this.ctx.task);
       } catch {
         // Ignore Type3-parsing errors, since we only use `loadType3Data`
         // here to ensure that we'll always obtain a useful /FontBBox.
       }
     }
 
-    textState!.loadedName = translated.loadedName;
-    textState!.font = translated.font!;
-    textState!.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
+    this.ctx.textState!.loadedName = translated.loadedName;
+    this.ctx.textState!.font = translated.font!;
+    this.ctx.textState!.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
   }
 
   applyInverseRotation(x: number, y: number, matrix: TransformType) {
@@ -311,32 +311,33 @@ class OperatorAssist {
     ];
   }
 
-  compareWithLastPosition(glyphWidth: number, textState: TextState) {
-    const currentTransform = this.getCurrentTextTransform(textState);
-    const textContentItem = this.textContentItem;
+  compareWithLastPosition(glyphWidth: number) {
+    const currentTransform = this.getCurrentTextTransform();
+    const textContentItem = this.ctx.textContentItem;
     let posX = currentTransform[4];
     let posY = currentTransform[5];
 
     // Check if the glyph is in the viewbox.
-    if (textState!.font?.vertical) {
+    const viewBox = this.ctx.viewBox;
+    if (this.ctx.textState!.font?.vertical) {
       if (
-        posX < this.viewBox[0] ||
-        posX > this.viewBox[2] ||
-        posY + glyphWidth < this.viewBox[1] ||
-        posY > this.viewBox[3]
+        posX < viewBox[0] ||
+        posX > viewBox[2] ||
+        posY + glyphWidth < viewBox[1] ||
+        posY > viewBox[3]
       ) {
         return false;
       }
     } else if (
-      posX + glyphWidth < this.viewBox[0] ||
-      posX > this.viewBox[2] ||
-      posY < this.viewBox[1] ||
-      posY > this.viewBox[3]
+      posX + glyphWidth < viewBox[0] ||
+      posX > viewBox[2] ||
+      posY < viewBox[1] ||
+      posY > viewBox[3]
     ) {
       return false;
     }
 
-    if (!textState!.font || !textContentItem.prevTransform) {
+    if (!this.ctx.textState!.font || !textContentItem.prevTransform) {
       return true;
     }
 
@@ -389,7 +390,7 @@ class OperatorAssist {
         );
     }
 
-    if (textState!.font.vertical) {
+    if (this.ctx.textState!.font.vertical) {
       const advanceY = (lastPosY - posY) / textContentItem.textAdvanceScale;
       const advanceX = posX - lastPosX;
 
@@ -399,7 +400,7 @@ class OperatorAssist {
       if (advanceY < textOrientation * textContentItem.negativeSpaceMax) {
         /* not the same column */
         if (Math.abs(advanceX) > 0.5 * textContentItem.width) {
-          this.appendEOL(textState);
+          this.appendEOL();
           return true;
         }
 
@@ -409,7 +410,7 @@ class OperatorAssist {
       }
 
       if (Math.abs(advanceX) > textContentItem.width) {
-        this.appendEOL(textState);
+        this.appendEOL();
         return true;
       }
 
@@ -455,7 +456,7 @@ class OperatorAssist {
     if (advanceX < textOrientation * textContentItem.negativeSpaceMax) {
       /* not the same line */
       if (Math.abs(advanceY) > 0.5 * textContentItem.height) {
-        this.appendEOL(textState);
+        this.appendEOL();
         return true;
       }
 
@@ -467,7 +468,7 @@ class OperatorAssist {
     }
 
     if (Math.abs(advanceY) > textContentItem.height) {
-      this.appendEOL(textState);
+      this.appendEOL();
       return true;
     }
 
@@ -503,28 +504,27 @@ class OperatorAssist {
     return true;
   }
 
-  buildTextContentItem(chars: string, extraSpacing: number, textState: TextState) {
-    const font = textState!.font!;
+  buildTextContentItem(chars: string, extraSpacing: number) {
+    const textState = this.ctx.textState!;
+    const font = textState.font!;
     if (!chars) {
       // Just move according to the space we have.
-      const charSpacing = textState!.charSpacing + extraSpacing;
+      const charSpacing = textState.charSpacing + extraSpacing;
       if (charSpacing) {
         if (!font!.vertical) {
-          textState!.translateTextMatrix(charSpacing * textState!.textHScale, 0);
+          textState.translateTextMatrix(charSpacing * textState.textHScale, 0);
         } else {
-          textState!.translateTextMatrix(0, -charSpacing);
+          textState.translateTextMatrix(0, -charSpacing);
         }
       }
-
-      if (this.keepWhiteSpace) {
-        this.compareWithLastPosition(0, textState);
+      if (this.ctx.keepWhiteSpace) {
+        this.compareWithLastPosition(0);
       }
-
       return;
     }
 
     const glyphs = font!.charsToGlyphs(chars);
-    const scale = textState!.fontMatrix[0] * textState!.fontSize;
+    const scale = textState.fontMatrix[0] * textState.fontSize;
 
     for (let i = 0, ii = glyphs.length; i < ii; i++) {
       const glyph = glyphs[i];
@@ -541,7 +541,7 @@ class OperatorAssist {
       }
       let scaledDim = glyphWidth * scale;
 
-      if (!this.keepWhiteSpace && category.isWhitespace) {
+      if (!this.ctx.keepWhiteSpace && category.isWhitespace) {
         // Don't push a " " in the textContentItem
         // (except when it's between two non-spaces chars),
         // it will be done (if required) in next call to
@@ -558,7 +558,7 @@ class OperatorAssist {
         continue;
       }
 
-      if (!category.isZeroWidthDiacritic && !this.compareWithLastPosition(scaledDim, textState)) {
+      if (!category.isZeroWidthDiacritic && !this.compareWithLastPosition(scaledDim)) {
         // The glyph is not in page so just skip it but move the cursor.
         if (!font!.vertical) {
           textState!.translateTextMatrix(scaledDim * textState!.textHScale, 0);
@@ -570,7 +570,7 @@ class OperatorAssist {
 
       // Must be called after compareWithLastPosition because
       // the textContentItem could have been flushed.
-      const textChunk = this.ensureTextContentItem(textState);
+      const textChunk = this.ensureTextContentItem();
       if (category.isZeroWidthDiacritic) {
         scaledDim = 0;
       }
@@ -587,7 +587,7 @@ class OperatorAssist {
 
       if (scaledDim) {
         // Save the position of the last visible character.
-        textChunk.prevTransform = this.getCurrentTextTransform(textState);
+        textChunk.prevTransform = this.getCurrentTextTransform();
       }
 
       const glyphUnicode = glyph.unicode;
@@ -611,40 +611,41 @@ class OperatorAssist {
     }
   }
 
-  appendEOL(textState: TextState) {
+  appendEOL() {
     this.resetLastChars();
-    if (this.textContentItem.initialized) {
-      this.textContentItem.hasEOL = true;
+    if (this.ctx.textContentItem.initialized) {
+      this.ctx.textContentItem.hasEOL = true;
       this.flushTextContentItem();
     } else {
-      this.textContent.items.push({
+      this.ctx.textContent.items.push({
         str: "",
         dir: "ltr",
         width: 0,
         height: 0,
-        transform: this.getCurrentTextTransform(textState),
-        fontName: textState!.loadedName!,
+        transform: this.getCurrentTextTransform(),
+        fontName: this.ctx.textState!.loadedName!,
         hasEOL: true,
       });
     }
   }
 
   addFakeSpaces(width: number, transf: TransformType | null, textOrientation: number) {
+    const textContentItem = this.ctx.textContentItem;
     if (
-      textOrientation * this.textContentItem.spaceInFlowMin <= width &&
-      width <= textOrientation * this.textContentItem.spaceInFlowMax
+      textOrientation * textContentItem.spaceInFlowMin <= width &&
+      width <= textOrientation * textContentItem.spaceInFlowMax
     ) {
-      if (this.textContentItem.initialized) {
+      if (textContentItem.initialized) {
         this.resetLastChars();
-        this.textContentItem.str.push(" ");
+        textContentItem.str.push(" ");
       }
       return false;
     }
 
-    const fontName = this.textContentItem.fontName;
+    const fontName = textContentItem.fontName;
 
     let height = 0;
-    if (this.textContentItem.vertical) {
+    if (textContentItem.vertical) {
       height = width;
       width = 0;
     }
@@ -659,7 +660,7 @@ class OperatorAssist {
   }
 
   flushTextContentItem() {
-    const { textContentItem, textContent } = this;
+    const { textContentItem, textContent } = this.ctx;
     if (!textContentItem.initialized || !textContentItem.str) {
       return;
     }
@@ -679,20 +680,23 @@ class OperatorAssist {
   }
 
   enqueueChunk(batch = false) {
-    const length = this.textContent.items.length;
+    const textContent = this.ctx.textContent;
+    const length = textContent.items.length;
     if (length === 0) {
       return;
     }
     if (batch && length < this.TEXT_CHUNK_BATCH_SIZE) {
       return;
     }
-    sink.enqueue(this.textContent, length);
-    this.textContent.items = [];
-    this.textContent.styles = new Map();
+    this.ctx.sink.enqueue(textContent, length);
+    textContent.items = [];
+    textContent.styles = new Map();
   }
 }
 
 export class TextContentOperator {
+
+  protected context: EvaluatorContext;
 
   protected generalHandler: EvaluatorGeneralHandler;
 
@@ -702,20 +706,26 @@ export class TextContentOperator {
 
   protected colorHandler: EvaluatorColorHandler;
 
-  protected operator = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
+  protected operator = new Map<OPS, (context: ProcessContext, assist: OperatorAssist) => void | /*SKIP*/1 | /*OVER*/2>();
 
   constructor(context: EvaluatorContext) {
     this.generalHandler = context.generalHandler;
     this.fontHandler = context.fontHandler;
     this.imageHandler = context.imageHandler;
     this.colorHandler = context.colorHandler;
+    this.context = context;
     for (const [k, v] of MethodMap) {
       const fn = this[v];
       if (fn == null || typeof fn !== 'function') {
         throw new Error("操作符和操作方法不匹配");
       }
-      this.operator.set(k, <(context: ProcessContext) => void | 1 | 2>fn);
+      this.operator.set(k, <(context: ProcessContext, assist: OperatorAssist) => void | 1 | 2>fn);
     }
+  }
+
+  execute(ops: OPS, context: ProcessContext, assist: OperatorAssist): void | 1 | 2 {
+    const fn = this.operator.get(ops);
+    return fn ? fn(context, assist) : undefined;
   }
 
   @handle(OPS.setFont)
@@ -723,75 +733,75 @@ export class TextContentOperator {
     const fontNameArg = ctx.args![0].name;
     const fontSizeArg = ctx.args![1];
     if (
-      ctx.textState.font &&
-      fontNameArg === ctx.textState.fontName &&
-      fontSizeArg === ctx.textState.fontSize
+      ctx.textState!.font &&
+      fontNameArg === ctx.textState!.fontName &&
+      fontSizeArg === ctx.textState!.fontSize
     ) {
       return
     }
 
     assist.flushTextContentItem();
-    ctx.textState.fontName = fontNameArg;
-    ctx.textState.fontSize = fontSizeArg;
+    ctx.textState!.fontName = fontNameArg;
+    ctx.textState!.fontSize = fontSizeArg;
     ctx.next(assist.handleSetFont(fontNameArg, null));
     return OVER
   }
 
   @handle(OPS.setTextRise)
   setTextRise(ctx: ProcessContext) {
-    ctx.textState.textRise = ctx.args![0];
+    ctx.textState!.textRise = ctx.args![0];
   }
 
   @handle(OPS.setHScale)
   setHScale(ctx: ProcessContext) {
-    ctx.textState.textHScale = ctx.args![0] / 100;
+    ctx.textState!.textHScale = ctx.args![0] / 100;
   }
 
   @handle(OPS.setLeading)
   setLeading(ctx: ProcessContext) {
-    ctx.textState.leading = ctx.args![0];
+    ctx.textState!.leading = ctx.args![0];
   }
 
   @handle(OPS.moveText)
   moveText(ctx: ProcessContext) {
-    ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
-    ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
+    ctx.textState!.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
+    ctx.textState!.textMatrix = ctx.textState!.textLineMatrix.slice();
   }
 
   @handle(OPS.setLeadingMoveText)
   setLeadingMoveText(ctx: ProcessContext) {
-    ctx.textState.leading = -ctx.args![1];
-    ctx.textState.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
-    ctx.textState.textMatrix = ctx.textState.textLineMatrix.slice();
+    ctx.textState!.leading = -ctx.args![1];
+    ctx.textState!.translateTextLineMatrix(ctx.args![0], ctx.args![1]);
+    ctx.textState!.textMatrix = ctx.textState!.textLineMatrix.slice();
   }
 
   @handle(OPS.nextLine)
   nextLine(ctx: ProcessContext) {
-    ctx.textState.carriageReturn();
+    ctx.textState!.carriageReturn();
   }
 
   @handle(OPS.setTextMatrix)
   setTextMatrix(ctx: ProcessContext, assist: OperatorAssist) {
     const args = ctx.args!;
-    ctx.textState.setTextMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
-    ctx.textState.setTextLineMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
-    assist.updateAdvanceScale(ctx.textState);
+    ctx.textState!.setTextMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
+    ctx.textState!.setTextLineMatrix(args[0], args[1], args[2], args[3], args[4], args[5]);
+    assist.updateAdvanceScale(ctx.textState!);
   }
 
   @handle(OPS.setCharSpacing)
   setCharSpacing(ctx: ProcessContext) {
-    ctx.textState.charSpacing = ctx.args![0];
+    ctx.textState!.charSpacing = ctx.args![0];
   }
 
   @handle(OPS.setWordSpacing)
   setWordSpacing(ctx: ProcessContext) {
-    ctx.textState.wordSpacing = ctx.args![0];
+    ctx.textState!.wordSpacing = ctx.args![0];
   }
 
   @handle(OPS.beginText)
   beginText(ctx: ProcessContext) {
-    ctx.textState.textMatrix = IDENTITY_MATRIX.slice();
-    ctx.textState.textLineMatrix = IDENTITY_MATRIX.slice();
+    ctx.textState!.textMatrix = IDENTITY_MATRIX.slice();
+    ctx.textState!.textLineMatrix = IDENTITY_MATRIX.slice();
   }
 
   @handle(OPS.showSpacedText)
@@ -801,7 +811,7 @@ export class TextContentOperator {
       return SKIP
     }
 
-    const textState = ctx.textState;
+    const textState = ctx.textState!;
     const spaceFactor = ((textState.font!.vertical ? 1 : -1) * textState.fontSize) / 1000;
     const elements = ctx.args![0];
     for (let i = 0, ii = elements.length; i < ii; i++) {
@@ -819,14 +829,14 @@ export class TextContentOperator {
         // the left or down by the given amount.
         const str = ctx.showSpacedTextBuffer.join("");
         ctx.showSpacedTextBuffer.length = 0;
-        assist.buildTextContentItem(str, item * spaceFactor, textState);
+        assist.buildTextContentItem(str, item * spaceFactor);
       }
     }
 
     if (ctx.showSpacedTextBuffer.length > 0) {
       const str = ctx.showSpacedTextBuffer.join("");
       ctx.showSpacedTextBuffer.length = 0;
-      assist.buildTextContentItem(str, 0, textState);
+      assist.buildTextContentItem(str, 0);
     }
   }
 
@@ -836,7 +846,7 @@ export class TextContentOperator {
       this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
-    assist.buildTextContentItem(ctx.args![0], 0, ctx.textState);
+    assist.buildTextContentItem(ctx.args![0], 0);
   }
 
   @handle(OPS.nextLineShowText)
@@ -845,8 +855,8 @@ export class TextContentOperator {
       this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP
     }
-    ctx.textState.carriageReturn();
-    assist.buildTextContentItem(ctx.args![0], 0, ctx.textState);
+    ctx.textState!.carriageReturn();
+    assist.buildTextContentItem(ctx.args![0], 0);
   }
 
   @handle(OPS.nextLineSetSpacingShowText)
@@ -855,10 +865,10 @@ export class TextContentOperator {
       this.fontHandler.ensureStateFont(ctx.stateManager.state);
       return SKIP;
     }
-    ctx.textState.wordSpacing = ctx.args![0];
-    ctx.textState.charSpacing = ctx.args![1];
-    ctx.textState.carriageReturn();
-    assist.buildTextContentItem(ctx.args![2], 0, ctx.textState);
+    ctx.textState!.wordSpacing = ctx.args![0];
+    ctx.textState!.charSpacing = ctx.args![1];
+    ctx.textState!.carriageReturn();
+    assist.buildTextContentItem(ctx.args![2], 0);
   }
 
   @handle(OPS.paintXObject)
@@ -926,20 +936,11 @@ export class TextContentOperator {
 
       const sinkWrapper = new TextContentSinkProxy(ctx.sink);
 
-      self.getTextContent(
-        xobj,
-        task,
-        xobj.dict!.getValue(DictKey.Resources) || resources,
-        sinkWrapper,
-        viewBox,
-        includeMarkedContent,
-        keepWhiteSpace,
-        seenStyles,
-        xObjStateManager,
-        lang,
-        markedContentData,
-        disableNormalization,
-      ).then(() => {
+      this.context.operatorFactory.createTextContentHandler(
+        xobj, ctx.task, xobj.dict!.getValue(DictKey.Resources) || ctx.resources,
+        sinkWrapper, ctx.viewBox, ctx.includeMarkedContent, ctx.keepWhiteSpace, ctx.seenStyles,
+        xObjStateManager, ctx.lang, ctx.markedContentData, ctx.disableNormalization
+      ).handle().then(() => {
         if (!sinkWrapper.enqueueInvoked) {
           ctx.emptyXObjectCache.set(name, xobj.dict!.objId, true);
         }
@@ -1069,7 +1070,7 @@ export class TextContentOperator {
   @handle(OPS.restore)
   restore(ctx: ProcessContext, assist: OperatorAssist) {
     const previousState = ctx.previousState;
-    const textState = ctx.textState;
+    const textState = ctx.textState!;
     if (
       previousState &&
       (previousState.font !== textState.font ||
@@ -1081,6 +1082,12 @@ export class TextContentOperator {
   }
 }
 
+const deferred = Promise.resolve();
+
+
+/**
+ * 一个handler代表着一次获取方法的执行。
+ */
 export class GetTextContentHandler implements OperatorListHandler {
 
   protected stream: BaseStream;
@@ -1095,7 +1102,7 @@ export class GetTextContentHandler implements OperatorListHandler {
 
   protected includeMarkedContent: boolean;
 
-  protected keepWithSpace: boolean;
+  protected keepWhiteSpace: boolean;
 
   protected seenStyles: Set<string>;
 
@@ -1109,7 +1116,12 @@ export class GetTextContentHandler implements OperatorListHandler {
 
   protected evalCtx: EvaluatorContext;
 
+  protected operator: TextContentOperator;
+
+  protected assist: OperatorAssist | null = null;
+
   constructor(
+    evalCtx: EvaluatorContext,
     stream: BaseStream,
     task: WorkerTask,
     resources: Dict | null,
@@ -1122,7 +1134,6 @@ export class GetTextContentHandler implements OperatorListHandler {
     lang: string | null = null,
     markedContentData: { level: 0 } | null = null,
     disableNormalization = false,
-    evalCtx: EvaluatorContext,
   ) {
     this.stream = stream;
     this.task = task;
@@ -1130,7 +1141,7 @@ export class GetTextContentHandler implements OperatorListHandler {
     this.sink = sink;
     this.viewBox = viewBox;
     this.includeMarkedContent = includeMarkedContent;
-    this.keepWithSpace = keepWhiteSpace;
+    this.keepWhiteSpace = keepWhiteSpace;
     this.seenStyles = seenStyles;
     this.stateManager = stateManager ?? new StateManager(new TextState());
     this.includeMarkedContent = includeMarkedContent;
@@ -1141,58 +1152,142 @@ export class GetTextContentHandler implements OperatorListHandler {
     this.lang = lang;
     this.disableNormalization = disableNormalization;
     this.evalCtx = evalCtx;
+    this.operator = new TextContentOperator(evalCtx);
   }
 
   async handle(): Promise<void> {
 
     const preprocessor = new EvaluatorPreprocessor(this.stream, this.evalCtx.xref, this.stateManager);
-
-    const context: ProcessContext = {
-      textContent: {
-        items: [],
-        styles: new Map(),
+    const handler = new Promise<void>((resolve, reject) => {
+      const context: ProcessContext = {
+        fn: null,
+        args: null,
+        textContent: {
+          items: [],
+          styles: new Map(),
+          lang: this.lang,
+        },
+        textContentItem: {
+          initialized: false,
+          str: [],
+          totalWidth: 0,
+          totalHeight: 0,
+          width: 0,
+          height: 0,
+          vertical: false,
+          prevTransform: null,
+          textAdvanceScale: 0,
+          spaceInFlowMin: 0,
+          spaceInFlowMax: 0,
+          trackingSpaceMin: Infinity,
+          negativeSpaceMax: -Infinity,
+          notASpace: -Infinity,
+          transform: null,
+          fontName: null,
+          hasEOL: false,
+        },
+        showSpacedTextBuffer: [],
+        emptyXObjectCache: new LocalConditionCache(),
+        emptyGStateCache: new LocalGStateCache(),
+        globalImageCache: this.evalCtx.globalImageCache,
+        textState: null,
+        preprocessor,
+        /**
+         * 因为next需要用到assist相关的方法，因此不能够直接在这里初始化。
+         * 直接将next设置为null也不合适，因为这会给后续的代码开发带来很多不必要的烦恼。
+         * */
+        next: () => { },
+        includeMarkedContent: this.includeMarkedContent,
+        pageIndex: this.evalCtx.pageIndex,
+        resources: this.resources,
+        stateManager: this.stateManager,
+        timeSlotManager: new TimeSlotManager(),
+        seenStyles: this.seenStyles,
+        keepWhiteSpace: this.keepWhiteSpace,
+        previousState: null,
+        idFactory: undefined,
+        options: this.evalCtx.options,
+        markedContentData: this.markedContent,
         lang: this.lang,
-      },
-      textContentItem: {
-        initialized: false,
-        str: [],
-        totalWidth: 0,
-        totalHeight: 0,
-        width: 0,
-        height: 0,
-        vertical: false,
-        prevTransform: <TransformType | null>null,
-        textAdvanceScale: 0,
-        spaceInFlowMin: 0,
-        spaceInFlowMax: 0,
-        trackingSpaceMin: Infinity,
-        negativeSpaceMax: -Infinity,
-        notASpace: -Infinity,
-        transform: <TransformType | null>null,
-        fontName: <string | null>null,
-        hasEOL: false,
-      },
-      showSpacedTextBuffer: [],
-      emptyXObjectCache: new LocalConditionCache(),
-      emptyGStateCache: new LocalGStateCache(),
-      textState: null,
-      preprocessor,
-      next: (promise: Promise<unknown>) => {
-        Promise.all([promise, operatorList.ready]).then(() => {
+        xref: this.evalCtx.xref,
+        xobjs: null,
+        sink: this.sink,
+        viewBox: this.viewBox,
+        task: this.task,
+        disableNormalization: this.disableNormalization
+      }
+
+      this.assist = new OperatorAssist(context, this.evalCtx);
+      context.next = (promise: Promise<unknown>) => {
+        this.assist!.enqueueChunk(true);
+        Promise.all([promise, this.sink.ready]).then(() => {
           try {
-            this.process(resolve, reject, context)
+            this.process(resolve, reject, context, this.assist!);
           } catch (ex) {
             reject(ex);
           }
         }, reject);
-      },
+      };
+    });
+    try {
+      return await handler;
+    } catch (reason) {
+      if (reason instanceof AbortException) {
+        return;
+      }
+      if (this.evalCtx.options.ignoreErrors) {
+        // Error(s) in the TextContent -- allow text-extraction to continue.
+        warn(`getTextContent - ignoring errors during "${this.task.name}" task: "${reason}".`);
+        this.assist!.flushTextContentItem();
+        this.assist!.enqueueChunk();
+        return;
+      }
+      throw reason;
     }
   }
 
   process(
     resolve: (value: void | PromiseLike<void>) => void,
-    reject: (reason?: any) => void, context: ProcessContext
+    _reject: (reason?: any) => void, ctx: ProcessContext, assist: OperatorAssist
   ): void {
+    this.task.ensureNotTerminated();
+    ctx.timeSlotManager.reset();
 
+    let stop: boolean;
+    let args: MutableArray<any> = [];
+    while (!(stop = ctx.timeSlotManager.check())) {
+      // The arguments parsed by read() are not used beyond this loop, so
+      // we can reuse the same array on every iteration, thus avoiding
+      // unnecessary allocations.
+      ctx.args!.length = 0;
+      ctx.args = args;
+      if (!ctx.preprocessor.read(ctx)) {
+        break;
+      }
+
+      ctx.previousState = ctx.textState;
+      ctx.textState = <TextState>ctx.stateManager.state;
+      assert(ctx.textState instanceof TextState, "textState应当是TextState类型");
+      const ret = this.operator.execute(ctx.fn!, ctx, assist);
+      if (ret === SKIP) {
+        continue;
+      }
+      if (ret === OVER) {
+        return;
+      }
+      if (ctx.textContent.items.length >= this.sink.desiredSize) {
+        // Wait for ready, if we reach highWaterMark.
+        stop = true;
+        break;
+      }
+    }
+    if (stop) {
+      ctx.next(deferred);
+      return;
+    }
+
+    assist.flushTextContentItem();
+    assist.enqueueChunk();
+    resolve();
   }
 }

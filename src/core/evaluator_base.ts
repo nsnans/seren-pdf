@@ -191,9 +191,9 @@ export class EvaluatorBaseHandler {
     const args: [TransformType | null, RectType | null] = group ? [matrix, null] : [matrix, bbox];
     operatorList.addOp(OPS.paintFormXObjectBegin, args);
 
-    await this.context.operatorFactory.createGeneralOperator().handle(
+    await this.context.operatorFactory.createGeneralHandler(
       xobj, task, dict.getValue(DictKey.Resources) || resources, operatorList, initialState
-    );
+    ).handle();
     operatorList.addOp(OPS.paintFormXObjectEnd, []);
 
     if (group) {
