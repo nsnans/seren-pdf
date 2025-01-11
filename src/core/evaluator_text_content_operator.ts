@@ -1,20 +1,21 @@
+import { TextContent } from "../display/api";
 import { TransformType } from "../display/display_utils";
 import { OPS } from "../pdf";
 import { AbortException, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, Util, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
-import { DefaultTextContentItem, EvaluatorTextContent, TextContentSinkProxy } from "./core_types";
+import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "./core_types";
 import { lookupMatrix } from "./core_utils";
-import { EvaluatorContext, StateManager, TextState } from "./evaluator";
+import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState } from "./evaluator";
 import { DEFAULT, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
-import { ProcessContext } from "./evaluator_general_operator";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "./fonts";
-import { GlobalImageCache, LocalConditionCache } from "./image_utils";
+import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
 import { Dict, DictKey, Name, Ref } from "./primitives";
+import { WorkerTask } from "./worker";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -32,14 +33,18 @@ function handle(ops: OPS) {
 }
 
 interface ProcessContext extends ProcessOperation {
+  textContent: EvaluatorTextContent;
+  textContentItem: DefaultTextContentItem;
   globalImageCache: GlobalImageCache;
   emptyXObjectCache: LocalConditionCache;
+  emptyGStateCache: LocalGStateCache;
   includeMarkedContent: boolean;
   pageIndex: number;
   resources: Dict;
   showSpacedTextBuffer: string[];
-  textState: TextState;
+  textState: TextState | null;
   stateManager: StateManager;
+  preprocessor: EvaluatorPreprocessor;
   next: (promise: Promise<unknown>) => void;
 }
 
@@ -99,18 +104,25 @@ class OperatorAssist {
 
   protected viewBox: number[];
 
+  protected evalCtx: EvaluatorContext;
+
+  protected fontHandler: EvaluatorFontHandler;
+
   constructor(
     keepWhiteSpace: boolean,
     textContent: EvaluatorTextContent,
     textContentItem: DefaultTextContentItem,
     disableNormalization: boolean,
-    viewBox: number[]
+    viewBox: number[],
+    evalCtx: EvaluatorContext,
   ) {
     this.textContent = textContent;
     this.keepWhiteSpace = keepWhiteSpace;
     this.textContentItem = textContentItem;
     this.disableNormalization = disableNormalization;
     this.viewBox = viewBox;
+    this.evalCtx = evalCtx;
+    this.fontHandler = evalCtx.fontHandler;
   }
 
   saveLastChar(char: string): boolean {
@@ -192,7 +204,7 @@ class OperatorAssist {
         fontSubstitutionLoadedName: null,
       }
       this.textContent.styles.set(loadedName, style);
-      if (this.options.fontExtraProperties && (validFont).systemFontInfo) {
+      if (this.evalCtx.options.fontExtraProperties && (validFont).systemFontInfo) {
         const style = this.textContent.styles.get(loadedName)!;
         style.fontSubstitution = (validFont).systemFontInfo!.css;
         style.fontSubstitutionLoadedName = (validFont).systemFontInfo!.loadedName;
@@ -275,11 +287,11 @@ class OperatorAssist {
   }
 
   async handleSetFont(fontName: string | null, fontRef: Ref | null, textState: TextState) {
-    const translated = await self.loadFont(fontName, fontRef, resources!);
+    const translated = await this.fontHandler.loadFont(fontName, fontRef, resources!);
 
     if (translated.font.isType3Font) {
       try {
-        await translated.loadType3Data(self, resources!, task);
+        await translated.loadType3Data(this.evalCtx, resources!, task);
       } catch {
         // Ignore Type3-parsing errors, since we only use `loadType3Data`
         // here to ensure that we'll always obtain a useful /FontBBox.
@@ -852,8 +864,8 @@ export class TextContentOperator {
   @handle(OPS.paintXObject)
   paintXObject(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
-    if (!xobjs) {
-      xobjs = ctx.resources.getValue(DictKey.XObject) || Dict.empty;
+    if (!ctx.xobjs) {
+      ctx.xobjs = ctx.resources.getValue(DictKey.XObject) || Dict.empty;
     }
 
     var isValidName = ctx.args![0] instanceof Name;
@@ -867,7 +879,7 @@ export class TextContentOperator {
       if (!isValidName) {
         throw new FormatError("XObject must be referred to by name.");
       }
-      let xobj = xobjs!.getRaw(name);
+      let xobj = ctx.xobjs!.getRaw(name);
       if (xobj instanceof Ref) {
         if (ctx.emptyXObjectCache.getByRef(xobj)) {
           resolveXObject();
@@ -929,7 +941,7 @@ export class TextContentOperator {
         disableNormalization,
       ).then(() => {
         if (!sinkWrapper.enqueueInvoked) {
-          emptyXObjectCache.set(name, xobj.dict!.objId, true);
+          ctx.emptyXObjectCache.set(name, xobj.dict!.objId, true);
         }
         resolveXObject();
       }, rejectXObject);
@@ -937,7 +949,7 @@ export class TextContentOperator {
       if (reason instanceof AbortException) {
         return;
       }
-      if (self.options.ignoreErrors) {
+      if (ctx.options.ignoreErrors) {
         // Error(s) in the XObject -- allow text-extraction to
         // continue.
         warn(`getTextContent - ignoring XObject: "${reason}".`);
@@ -977,7 +989,7 @@ export class TextContentOperator {
 
       const gStateFont = <[Ref, number]>gState.getValue(DictKey.Font);
       if (!gStateFont) {
-        emptyGStateCache.set(name, gState.objId!, true);
+        ctx.emptyGStateCache.set(name, gState.objId!, true);
         resolveGState(undefined);
         return;
       }
@@ -1006,7 +1018,7 @@ export class TextContentOperator {
   beginMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
-      markedContentData!.level++;
+      ctx.markedContentData!.level++;
 
       ctx.textContent.items.push({
         type: "beginMarkedContent",
@@ -1020,7 +1032,7 @@ export class TextContentOperator {
   beginMarkedContentProps(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (ctx.includeMarkedContent) {
-      markedContentData!.level++;
+      ctx.markedContentData!.level++;
 
       let mcid = null;
       if (ctx.args![1] instanceof Dict) {
@@ -1029,7 +1041,7 @@ export class TextContentOperator {
       ctx.textContent.items.push({
         type: "beginMarkedContentProps",
         id: Number.isInteger(mcid)
-          ? `${self.idFactory.getPageObjId()}_mc${mcid}`
+          ? `${ctx.idFactory.getPageObjId()}_mc${mcid}`
           : null,
         tag: ctx.args![0] instanceof Name ? ctx.args![0].name : null,
       });
@@ -1039,13 +1051,13 @@ export class TextContentOperator {
   @handle(OPS.endMarkedContent)
   endMarkedContent(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
-    if (includeMarkedContent) {
-      if (markedContentData!.level === 0) {
+    if (ctx.includeMarkedContent) {
+      if (ctx.markedContentData!.level === 0) {
         // Handle unbalanced beginMarkedContent/endMarkedContent
         // operators (fixes issue15629.pdf).
-        break;
+        return
       }
-      markedContentData!.level--;
+      ctx.markedContentData!.level--;
 
       ctx.textContent.items.push({
         id: null, tag: null,
@@ -1071,8 +1083,116 @@ export class TextContentOperator {
 
 export class GetTextContentHandler implements OperatorListHandler {
 
-  handle(): Promise<void> {
-    throw new Error("Method not implemented.");
+  protected stream: BaseStream;
+
+  protected task: WorkerTask;
+
+  protected resources: Dict;
+
+  protected sink: StreamSink<EvaluatorTextContent>;
+
+  protected viewBox: number[];
+
+  protected includeMarkedContent: boolean;
+
+  protected keepWithSpace: boolean;
+
+  protected seenStyles: Set<string>;
+
+  protected stateManager: StateManager;
+
+  protected lang: string | null;
+
+  protected markedContent: { level: 0 } | null = null;
+
+  protected disableNormalization: boolean;
+
+  protected evalCtx: EvaluatorContext;
+
+  constructor(
+    stream: BaseStream,
+    task: WorkerTask,
+    resources: Dict | null,
+    sink: StreamSink<EvaluatorTextContent>,
+    viewBox: number[],
+    includeMarkedContent = false,
+    keepWhiteSpace = false,
+    seenStyles = new Set<string>(),
+    stateManager: StateManager | null = null,
+    lang: string | null = null,
+    markedContentData: { level: 0 } | null = null,
+    disableNormalization = false,
+    evalCtx: EvaluatorContext,
+  ) {
+    this.stream = stream;
+    this.task = task;
+    this.resources = resources ?? Dict.empty;
+    this.sink = sink;
+    this.viewBox = viewBox;
+    this.includeMarkedContent = includeMarkedContent;
+    this.keepWithSpace = keepWhiteSpace;
+    this.seenStyles = seenStyles;
+    this.stateManager = stateManager ?? new StateManager(new TextState());
+    this.includeMarkedContent = includeMarkedContent;
+    if (includeMarkedContent) {
+      markedContentData ||= { level: 0 };
+    }
+    this.markedContent = markedContentData;
+    this.lang = lang;
+    this.disableNormalization = disableNormalization;
+    this.evalCtx = evalCtx;
   }
 
+  async handle(): Promise<void> {
+
+    const preprocessor = new EvaluatorPreprocessor(this.stream, this.evalCtx.xref, this.stateManager);
+
+    const context: ProcessContext = {
+      textContent: {
+        items: [],
+        styles: new Map(),
+        lang: this.lang,
+      },
+      textContentItem: {
+        initialized: false,
+        str: [],
+        totalWidth: 0,
+        totalHeight: 0,
+        width: 0,
+        height: 0,
+        vertical: false,
+        prevTransform: <TransformType | null>null,
+        textAdvanceScale: 0,
+        spaceInFlowMin: 0,
+        spaceInFlowMax: 0,
+        trackingSpaceMin: Infinity,
+        negativeSpaceMax: -Infinity,
+        notASpace: -Infinity,
+        transform: <TransformType | null>null,
+        fontName: <string | null>null,
+        hasEOL: false,
+      },
+      showSpacedTextBuffer: [],
+      emptyXObjectCache: new LocalConditionCache(),
+      emptyGStateCache: new LocalGStateCache(),
+      textState: null,
+      preprocessor,
+      next: (promise: Promise<unknown>) => {
+        Promise.all([promise, operatorList.ready]).then(() => {
+          try {
+            this.process(resolve, reject, context)
+          } catch (ex) {
+            reject(ex);
+          }
+        }, reject);
+      },
+    }
+  }
+
+  process(
+    resolve: (value: void | PromiseLike<void>) => void,
+    reject: (reason?: any) => void, context: ProcessContext
+  ): void {
+
+  }
 }

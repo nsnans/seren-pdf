@@ -420,7 +420,7 @@ class GeneralOperator {
       }
       throw reason;
     }
-    const patternId = this.colorHandler.parseShading(ctx, shading);
+    const patternId = this.colorHandler.parseShading(shading);
     if (!patternId) {
       return SKIP
     }
@@ -573,8 +573,6 @@ const deferred = Promise.resolve();
 
 export class GetOperatorListHandler implements OperatorListHandler {
 
-  protected operators: Operators;
-
   protected operatorList: OperatorList;
 
   protected task: WorkerTask;
@@ -587,9 +585,13 @@ export class GetOperatorListHandler implements OperatorListHandler {
 
   protected resources: Dict;
 
+  protected fallbackFontDict: Dict | null;
+
   protected ignoreErrors: boolean;
 
   protected evalCtx: EvaluatorContext;
+
+  protected operator: GeneralOperator;
 
   constructor(
     stream: BaseStream,
@@ -610,9 +612,10 @@ export class GetOperatorListHandler implements OperatorListHandler {
     this.task = task;
     this.operatorList = operatorList;
     this.preprocessor = new EvaluatorPreprocessor(stream, xref, this.stateManager)
-    this.operators = new Operators();
     this.ignoreErrors = ignoreErrors;
-    this.evalCtx = evalCtx
+    this.evalCtx = evalCtx;
+    this.fallbackFontDict = fallbackFontDict;
+    this.operator = new GeneralOperator(evalCtx);
   }
 
   async handle() {
@@ -674,7 +677,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
         break;
       }
       let fn = context.fn!;
-      const ret = this.operators.execute(fn, context);
+      const ret = this.operator.execute(fn, context);
       if (ret === SKIP) {
         continue;
       } else if (ret === OVER) {
