@@ -1,11 +1,14 @@
+import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType } from "../display/display_utils";
+import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import { info, OPS, TextRenderingMode, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
-import { EvaluatorContext, normalizeBlendMode, PartialEvaluator, State, StateManager } from "./evaluator";
+import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
+import { Font, Glyph } from "./fonts";
 import { isPDFFunction } from "./function";
 import { LocalColorSpaceCache, LocalGStateCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
@@ -21,6 +24,8 @@ import { WorkerTask } from "./worker";
  * 状态信息统一使用Context来进行管理。修改也是同一修改全局的Context。
  */
 export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
+
+  protected static _fallbackFontDict: Dict | null = null;
 
   constructor(context: EvaluatorContext) {
     super(context);
@@ -400,11 +405,54 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
         isAddToPathSet || state.fillColorSpace!.name === "Pattern" ||
         font!.disableFontFace || this.context.options.disableFontFace
       ) {
-        PartialEvaluator.buildFontPaths(
+        EvaluatorGeneralHandler.buildFontPaths(
           font!, glyphs, this.context.handler, this.context.options
         );
       }
     }
     return glyphs;
+  }
+
+  static buildFontPaths(
+    font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocumentEvaluatorOptions
+  ) {
+    function buildPath(fontChar: string) {
+      const glyphName = `${font.loadedName}_path_${fontChar}`;
+      try {
+        if (font.renderer.hasBuiltPath(fontChar)) {
+          return;
+        }
+        const pathJs = font.renderer.getPathJs(fontChar);
+        handler.commonobj(glyphName, CommonObjType.FontPath, pathJs);
+      } catch (reason) {
+        if (evaluatorOptions.ignoreErrors) {
+          warn(`buildFontPaths - ignoring ${glyphName} glyph: "${reason}".`);
+          return;
+        }
+        throw reason;
+      }
+    }
+
+    for (const glyph of glyphs) {
+      buildPath(glyph.fontChar);
+
+      // If the glyph has an accent we need to build a path for its
+      // fontChar too, otherwise CanvasGraphics_paintChar will fail.
+      const accent = glyph.accent;
+      if (accent?.fontChar) {
+        buildPath(accent.fontChar);
+      }
+    }
+  }
+
+  static get fallbackFontDict() {
+    if (this._fallbackFontDict === null) {
+      this._fallbackFontDict = new Dict();
+      this._fallbackFontDict.set(DictKey.BaseFont, Name.get("Helvetica"));
+      this._fallbackFontDict.set(DictKey.Type, Name.get("FallbackType"));
+      this._fallbackFontDict.set(DictKey.Subtype, Name.get("FallbackType"));
+      this._fallbackFontDict.set(DictKey.Encoding, Name.get("WinAnsiEncoding"));
+    }
+    return this._fallbackFontDict!;
   }
 }

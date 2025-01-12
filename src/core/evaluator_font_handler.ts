@@ -10,6 +10,7 @@ import { lookupNormalRect, lookupMatrix, isNumberArray } from "./core_utils";
 import { DecodeStream } from "./decode_stream";
 import { getEncoding, StandardEncoding, WinAnsiEncoding, MacRomanEncoding, SymbolSetEncoding, ZapfDingbatsEncoding } from "./encodings";
 import { EvaluatorContext, CssFontInfo, TranslatedFont, EvaluatorProperties, PartialEvaluator, State } from "./evaluator";
+import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { getFontSubstitution } from "./font_substitutions";
 import { Font, ErrorFont } from "./fonts";
 import { FontFlags } from "./fonts_utils";
@@ -1083,7 +1084,7 @@ export class EvaluatorFontHandler {
 
       // Falling back to a default font to avoid completely broken rendering,
       // but note that there're no guarantees that things will look "correct".
-      font = fallbackFontDict || PartialEvaluator.fallbackFontDict;
+      font = fallbackFontDict || EvaluatorGeneralHandler.fallbackFontDict;
     }
 
     // We are holding `font.cacheKey` references only for `fontRef`s that
