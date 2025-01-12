@@ -278,8 +278,8 @@ export class EvaluatorFontHandler {
 
   /**
    * Builds a char code to unicode map based on section 9.10 of the spec.
-   * @param {Object} properties Font properties object.
-   * @returns {Promise} A Promise that is resolved with a
+   * @param properties Font properties object.
+   * @returns A Promise that is resolved with a
    *   {ToUnicodeMap|IdentityToUnicodeMap} object.
    */
   async buildToUnicode(properties: EvaluatorProperties): Promise<ToUnicodeMap | IdentityToUnicodeMap> {
