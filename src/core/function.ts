@@ -383,7 +383,7 @@ class PDFFunction {
       src: MutableArray<number>, srcOffset: number,
       dest: MutableArray<number>, destOffset: number
     ) => {
-      const clip = (v: number, min: number, max: number) {
+      const clip = (v: number, min: number, max: number) => {
         if (v > max) {
           v = max;
         } else if (v < min) {

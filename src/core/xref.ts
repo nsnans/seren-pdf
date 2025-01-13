@@ -34,6 +34,7 @@ import { CipherTransformFactory } from "./crypto";
 import { PDFManager } from "./pdf_manager";
 import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
+import { Uint8TypedArray } from "../common/typed_array";
 
 interface StreamState {
 
@@ -48,7 +49,7 @@ interface StreamState {
 
 export class XRef {
 
-  #firstXRefStmPos = null;
+  protected _firstXRefStmPos: number | null = null;
 
   public stream: Stream;
 
@@ -249,8 +250,8 @@ export class XRef {
     let dict = parser.getObj();
 
     // The pdflib PDF generator can generate a nested trailer dictionary
-    if (!(dict instanceof Dict) && dict.dict) {
-      dict = dict.dict;
+    if (!(dict instanceof Dict) && dict!.dict) {
+      dict = dict!.dict;
     }
     if (!(dict instanceof Dict)) {
       throw new FormatError(
@@ -464,18 +465,15 @@ export class XRef {
   }
 
   indexObjects() {
+
     // Simple scan through the PDF content to find objects,
     // trailers and XRef streams.
-    const TAB = 0x9,
-      LF = 0xa,
-      CR = 0xd,
-      SPACE = 0x20;
-    const PERCENT = 0x25,
-      LT = 0x3c;
+    const TAB = 0x9, LF = 0xa, CR = 0xd, SPACE = 0x20;
+    const PERCENT = 0x25, LT = 0x3c;
 
-    function readToken(data: Uint8Array, offset: number) {
-      let token = "",
-        ch = data[offset];
+    function readToken(data: Uint8TypedArray, offset: number) {
+      let token = "";
+      let ch = data[offset];
       while (ch !== LF && ch !== CR && ch !== LT) {
         if (++offset >= data.length) {
           break;
@@ -485,9 +483,9 @@ export class XRef {
       }
       return token;
     }
-    function skipUntil(data: Uint8Array, offset: number, what: Uint8Array) {
-      const length = what.length,
-        dataLength = data.length;
+    function skipUntil(data: Uint8TypedArray, offset: number, what: Uint8Array) {
+      const length = what.length;
+      const dataLength = data.length;
       let skipped = 0;
       // finding byte sequence
       while (offset < dataLength) {
@@ -519,12 +517,12 @@ export class XRef {
 
     const stream = this.stream;
     stream.pos = 0;
-    const buffer = stream.getBytes(),
-      bufferStr = bytesToString(buffer),
-      length = buffer.length;
+    const buffer = stream.getBytes();
+    const bufferStr = bytesToString(buffer);
+    const length = buffer.length;
     let position = stream.start;
-    const trailers = [],
-      xrefStms = [];
+    const trailers = [];
+    const xrefStms = [];
     while (position < length) {
       let ch = buffer[position];
       if (ch === TAB || ch === LF || ch === CR || ch === SPACE) {
@@ -775,7 +773,7 @@ export class XRef {
             // (possible infinite recursion)
             this._xrefStms.add(obj);
             this.startXRefQueue.push(obj);
-            this.#firstXRefStmPos ??= obj;
+            this._firstXRefStmPos ??= obj;
           }
         } else if (Number.isInteger(obj)) {
           // Parse in-stream XRef
@@ -826,7 +824,7 @@ export class XRef {
 
   get lastXRefStreamPos() {
     return (
-      this.#firstXRefStmPos ??
+      this._firstXRefStmPos ??
       (this._xrefStms.size > 0 ? Math.max(...this._xrefStms) : null)
     );
   }
@@ -937,10 +935,9 @@ export class XRef {
       }
       throw new XRefEntryException(`Bad (uncompressed) XRef entry: ${ref}`);
     }
-    xrefEntry =
-      this.encrypt && !suppressEncryption
-        ? parser.getObj(this.encrypt.createCipherTransform(num, gen))
-        : parser.getObj();
+    xrefEntry = this.encrypt && !suppressEncryption
+      ? parser.getObj(this.encrypt.createCipherTransform(num, gen))
+      : parser.getObj();
     if (!(xrefEntry instanceof BaseStream)) {
       if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
         assert(

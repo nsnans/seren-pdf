@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { DecodeStream } from "./decode_stream";
 import { Stream } from "./stream";
 
@@ -21,9 +22,12 @@ const chunkSize = 512;
 class DecryptStream extends DecodeStream {
   public str: Stream;
   protected initialized: boolean;
-  protected nextChunk: Uint8Array | null;
-  protected decrypt: (data: Uint8Array, finalize: boolean) => Uint8Array;
-  constructor(str: Stream, maybeLength: number, decrypt: (data: Uint8Array, finalize: boolean) => Uint8Array) {
+  protected nextChunk: Uint8TypedArray | null;
+  protected decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray;
+  constructor(
+    str: Stream, maybeLength: number,
+    decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray
+  ) {
     super(maybeLength);
 
     this.str = str;

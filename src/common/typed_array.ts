@@ -121,6 +121,6 @@ export interface Uint8TypedArray extends GenericTypedArray<ArrayBuffer> { }
 
 // 很多地方一会儿传 number[]，一会儿传Uint8ClampedArray，一会儿传Uin8Array
 // 最好统一成 Iterable<number>，不做特殊抽象的话，就要做大量的兼容了。
-export interface Iterable<T> {
+export interface Iterable {
 
 }
