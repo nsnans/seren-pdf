@@ -21,12 +21,14 @@ import {
   getSizeInBytes,
   numberToString
 } from "./core_utils";
-import { calculateMD5, CipherTransform } from "./crypto";
+import { calculateMD5, CipherTransform, CipherTransformFactory } from "./crypto";
 import { Dict, DictKey, isName, Name, Ref } from "./primitives";
 import { Stream } from "./stream";
 import { XRef } from "./xref";
 
-async function writeObject(ref: Ref, obj: unknown, buffer: string[], { encrypt = null }: XRef) {
+export async function writeObject(
+  ref: Ref, obj: unknown, buffer: string[], encrypt: CipherTransformFactory | null = null
+) {
   const transform = encrypt?.createCipherTransform(ref.num, ref.gen);
   buffer.push(`${ref.num} ${ref.gen} obj\n`);
   if (obj instanceof Dict) {
@@ -39,7 +41,7 @@ async function writeObject(ref: Ref, obj: unknown, buffer: string[], { encrypt =
   buffer.push("\nendobj\n");
 }
 
-async function writeDict(dict: Dict, buffer: string[], transform?: CipherTransform) {
+export async function writeDict(dict: Dict, buffer: string[], transform?: CipherTransform) {
   buffer.push("<<");
   for (const key of dict.getKeys()) {
     buffer.push(` /${escapePDFName(key)} `);
@@ -71,13 +73,10 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
       const cs = new CompressionStream("deflate");
       const writer = cs.writable.getWriter();
       await writer.ready;
-      writer
-        .write(bytes)
-        .then(async () => {
-          await writer.ready;
-          await writer.close();
-        })
-        .catch(() => { });
+      writer.write(bytes).then(async () => {
+        await writer.ready;
+        await writer.close();
+      }).catch(() => { });
 
       // Response::text doesn't return the correct data.
       const buf = await new Response(cs.readable).arrayBuffer();
@@ -158,7 +157,7 @@ async function writeValue(value: any, buffer: string[], transform?: CipherTransf
   }
 }
 
-function writeInt(number: number, size: number, offset: number, buffer) {
+function writeInt(number: number, size: number, offset: number, buffer: Uint8Array<ArrayBuffer>) {
   for (let i = size + offset - 1; i > offset - 1; i--) {
     buffer[i] = number & 0xff;
     number >>= 8;
@@ -172,7 +171,7 @@ function writeString(string: string, offset: number, buffer: Uint8Array) {
   }
 }
 
-function computeMD5(filesize: number, xrefInfo) {
+function computeMD5(filesize: number, xrefInfo: IncrementalXRefInfo) {
   const time = Math.floor(Date.now() / 1000);
   const filename = xrefInfo.filename || "";
   const md5Buffer = [time.toString(), filename, filesize.toString()];
@@ -193,44 +192,33 @@ function computeMD5(filesize: number, xrefInfo) {
   return bytesToString(calculateMD5(array, offset, array.length));
 }
 
-
-interface UpdateAcroformParameter {
-  xref: XRef | null;
-  acroForm: Dict;
-  acroFormRef: Ref | null;
-  needAppearances: boolean;
-  newRefs: { ref: Ref, data: string }[];
-}
-
-async function updateAcroform({
-  xref,
-  acroForm,
-  acroFormRef,
-  needAppearances,
-  newRefs,
-}: UpdateAcroformParameter) {
-
-
+async function updateAcroform(
+  xref: XRef | null,
+  acroForm: Dict,
+  acroFormRef: Ref | null,
+  needAppearances: boolean,
+  newRefs: { ref: Ref, data: string }[],
+) {
   if (!needAppearances) {
     return;
   }
-
   const dict = acroForm.clone();
-
   if (needAppearances) {
     dict.set(DictKey.NeedAppearances, true);
   }
 
   const buffer = <string[]>[];
-  await writeObject(acroFormRef!, dict, buffer, xref!);
+  await writeObject(acroFormRef!, dict, buffer, xref!.encrypt);
 
   newRefs.push({ ref: acroFormRef!, data: buffer.join("") });
 }
 
-
-async function getXRefTable(xrefInfo: IncrementalXRefInfo, baseOffset: number,
+async function getXRefTable(
+  xrefInfo: IncrementalXRefInfo,
+  baseOffset: number,
   newRefs: { ref: Ref, data: string }[],
-  newXref: Dict, buffer: string[]) {
+  newXref: Dict, buffer: string[]
+) {
   buffer.push("xref\n");
   const indexes = getIndexes(newRefs);
   let indexesPosition = 0;
@@ -250,9 +238,7 @@ async function getXRefTable(xrefInfo: IncrementalXRefInfo, baseOffset: number,
       baseOffset += data.length;
     } else {
       buffer.push(
-        `0000000000 ${Math.min(ref.gen + 1, 0xffff)
-          .toString()
-          .padStart(5, "0")} f\r\n`
+        `0000000000 ${Math.min(ref.gen + 1, 0xffff).toString().padStart(5, "0")} f\r\n`
       );
     }
   }
@@ -316,7 +302,7 @@ async function getXRefStreamTable(
     offset = writeInt(gen, sizes[2], offset, data);
   }
 
-  await writeObject(xrefInfo.newRef!, stream, buffer, {});
+  await writeObject(xrefInfo.newRef!, stream, buffer, null);
   buffer.push("startxref\n", baseOffset.toString(), "\n%%EOF\n");
 }
 
@@ -352,17 +338,6 @@ function getTrailerDict(xrefInfo: IncrementalXRefInfo,
   return newXref;
 }
 
-export interface IncrementalUpdateParameter {
-  originalData: Uint8Array;
-  xrefInfo: IncrementalXRefInfo;
-  newRefs: { ref: Ref, data: string }[];
-  xref: XRef | null;
-  needAppearances: boolean;
-  acroFormRef: Ref | null;
-  acroForm: Dict;
-  useXrefStream: boolean;
-}
-
 // 推断应该都是Ref类型，可能会有误；
 interface IncrementalXRefInfo {
   rootRef: Ref,
@@ -375,23 +350,19 @@ interface IncrementalXRefInfo {
   filename: string,
 }
 
-async function incrementalUpdate({
-  originalData,
-  xrefInfo,
-  newRefs,
-  xref/* = null*/,
-  needAppearances,
-  acroFormRef = null,
-  acroForm /* = null*/,
+export async function incrementalUpdate(
+  originalData: Uint8Array<ArrayBuffer>,
+  xrefInfo: IncrementalXRefInfo,
+  newRefs: { ref: Ref, data: string }[],
+  xref: XRef | null,
+  needAppearances: boolean,
+  acroFormRef: Ref | null = null,
+  acroForm: Dict | null = null,
   useXrefStream = false,
-}: IncrementalUpdateParameter) {
-  await updateAcroform({
-    xref,
-    acroForm,
-    acroFormRef,
-    needAppearances,
-    newRefs,
-  });
+) {
+  await updateAcroform(
+    xref, acroForm!, acroFormRef, needAppearances, newRefs,
+  );
 
   const buffer = [];
   let baseOffset = originalData.length;
@@ -435,4 +406,3 @@ async function incrementalUpdate({
   return array;
 }
 
-export { incrementalUpdate, writeDict, writeObject };

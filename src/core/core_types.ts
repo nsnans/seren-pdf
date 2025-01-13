@@ -24,7 +24,7 @@ export interface SingleOpaquePixelImageMask {
 export interface SMaskOptions {
   transferMap?: Uint8Array<ArrayBuffer>;
   subtype: string;
-  backdrop: number[];
+  backdrop: number[] | Uint8ClampedArray;
 }
 
 export interface StreamGetOperatorListParameters {

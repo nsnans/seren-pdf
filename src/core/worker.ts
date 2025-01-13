@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { DocumentParameter } from "../display/api";
+import { ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
-import { GetDocMessage, SaveDocumentMessage } from "../shared/message_handler_types";
+import { GetDocMessage } from "../shared/message_handler_types";
 import {
   AbortException,
   assert,
@@ -35,7 +37,6 @@ import {
 } from "../shared/util";
 import { AnnotationFactory } from "./annotation";
 import { clearGlobalCaches } from "./cleanup_helper";
-import { StreamGetOperatorListParameters, StreamSink } from "./core_types";
 import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
@@ -43,11 +44,9 @@ import {
 } from "./core_utils";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
 import { Dict, DictKey, isDict, Ref } from "./primitives";
-import { Stream } from "./stream";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFWorkerStream } from "./worker_stream";
 import { incrementalUpdate } from "./writer";
-import { XRef } from "./xref";
 
 class WorkerTask {
 
@@ -208,7 +207,7 @@ class WorkerMessageHandler {
         return pdfManagerCapability.promise;
       }
 
-      let pdfStream, cachedChunks: ArrayBufferLike[] = [], loaded = 0;
+      let pdfStream, cachedChunks: ArrayBuffer[] = [], loaded = 0;
       try {
         pdfStream = new PDFWorkerStream(handler!);
       } catch (ex) {
@@ -245,7 +244,7 @@ class WorkerMessageHandler {
         });
 
       new Promise(function (_resolve, reject) {
-        const readChunk = function ({ value, done }: { value: ArrayBufferLike | undefined, done: boolean }) {
+        const readChunk = ({ value, done }: ReadResult) => {
           try {
             ensureNotTerminated();
             if (done) {
@@ -554,11 +553,7 @@ class WorkerMessageHandler {
           promises.push(
             Promise.all(newAnnotationPromises).then(async newRefs => {
               await StructTreeRoot.createStructureTree(
-                newAnnotationsByPage,
-                xref,
-                catalogRef,
-                pdfManager!,
-                newRefs,
+                newAnnotationsByPage, xref, catalogRef, pdfManager!, newRefs,
               );
               return newRefs;
             })
@@ -630,21 +625,14 @@ class WorkerMessageHandler {
         };
       }
 
-      return incrementalUpdate({
-        originalData: stream.bytes,
-        xrefInfo: newXrefInfo,
-        newRefs,
-        xref,
-        needAppearances,
-        acroFormRef,
-        acroForm,
+      return incrementalUpdate(
+        <Uint8Array<ArrayBuffer>>stream.bytes,
+        newXrefInfo, newRefs, xref,
+        needAppearances, acroFormRef, acroForm!,
         // Use the same kind of XRef as the previous one.
-        useXrefStream: isDict(xref.topDict, "XRef"),
-      }).finally(() => {
-        xref.resetNewTemporaryRef();
-      });
-    }
-    );
+        isDict(xref.topDict, "XRef"),
+      ).finally(() => xref.resetNewTemporaryRef());
+    });
 
     handler.onGetOperatorList((data, sink) => {
       const pageIndex = data.pageIndex;

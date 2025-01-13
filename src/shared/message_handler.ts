@@ -340,12 +340,12 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetPermissions(): Promise<string[] | null> {
+  GetPermissions(): Promise<number[] | null> {
     const action = MessageHandlerAction.GetPermissions;
     return this.sendWithPromise(action, null);
   }
 
-  onGetPermissions(fn: () => Promise<string[] | null>) {
+  onGetPermissions(fn: () => Promise<number[] | null>) {
     const action = MessageHandlerAction.GetPermissions;
     this.on(action, fn);
   }

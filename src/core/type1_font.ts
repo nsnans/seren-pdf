@@ -30,8 +30,9 @@ import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 import { CharStringObjectType, Type1Parser } from "./type1_parser";
 import { EvaluatorProperties } from "./evaluator";
+import { Uint8TypedArray } from "../common/typed_array";
 
-function findBlock(streamBytes, signature: number[], startIndex: number) {
+function findBlock(streamBytes: Uint8TypedArray, signature: number[], startIndex: number) {
   const streamBytesLength = streamBytes.length;
   const signatureLength = signature.length;
   const scanLength = streamBytesLength - signatureLength;
@@ -80,14 +81,14 @@ function getHeaderBlock(stream: Stream, suggestedLength: number) {
     // Otherwise we (potentially) check the entire stream to prevent errors in
     // `Type1Parser` (fixes issue5686.pdf).
     block = findBlock(
-      headerBytes,
+      headerBytes!,
       EEXEC_SIGNATURE,
       suggestedLength - 2 * EEXEC_SIGNATURE.length
     );
 
     if (block.found && block.length === suggestedLength) {
       return {
-        stream: new Stream(headerBytes!),
+        stream: new Stream(<Uint8Array<ArrayBuffer>>headerBytes!),
         length: suggestedLength,
       };
     }
@@ -115,13 +116,13 @@ function getHeaderBlock(stream: Stream, suggestedLength: number) {
 
   if (actualLength) {
     return {
-      stream: new Stream(stream.getBytes(actualLength)),
+      stream: new Stream(<Uint8Array<ArrayBuffer>>stream.getBytes(actualLength)),
       length: actualLength,
     };
   }
   warn('Unable to recover "Length1" property in Type1 font -- using as is.');
   return {
-    stream: new Stream(stream.getBytes(suggestedLength)),
+    stream: new Stream(<Uint8Array<ArrayBuffer>>stream.getBytes(suggestedLength)),
     length: suggestedLength,
   };
 }
@@ -145,7 +146,7 @@ function getEexecBlock(stream: Stream, _suggestedLength: number | null) {
     throw new FormatError("getEexecBlock - no font program found.");
   }
   return {
-    stream: new Stream(eexecBytes),
+    stream: new Stream(<Uint8Array<ArrayBuffer>>eexecBytes),
     length: eexecBytes.length,
   };
 }
@@ -215,11 +216,7 @@ class Type1Font {
 
     this.charstrings = charstrings;
     this.data = this.wrap(
-      name,
-      type2Charstrings,
-      this.charstrings,
-      subrs,
-      properties
+      name, type2Charstrings, this.charstrings, subrs, properties
     );
     this.seacs = this.getSeacs(data.charstrings);
   }
@@ -305,7 +302,7 @@ class Type1Font {
     return type2Charstrings;
   }
 
-  getType2Subrs(type1Subrs) {
+  getType2Subrs(type1Subrs: (number[] | Uint8Array<ArrayBuffer>)[]) {
     let bias = 0;
     const count = type1Subrs.length;
     if (count < 1133) {
@@ -317,7 +314,7 @@ class Type1Font {
     }
 
     // Add a bunch of empty subrs to deal with the Type2 bias
-    const type2Subrs = [];
+    const type2Subrs: (number[] | Uint8Array<ArrayBuffer>)[] = [];
     let i;
     for (i = 0; i < bias; i++) {
       type2Subrs.push([0x0b]);
@@ -330,8 +327,10 @@ class Type1Font {
     return type2Subrs;
   }
 
-  wrap(name: string, glyphs: number[][], charstrings: CharStringObjectType[]
-    , subrs, properties: EvaluatorProperties) {
+  wrap(
+    name: string, glyphs: number[][], charstrings: CharStringObjectType[],
+    subrs: (number[] | Uint8Array<ArrayBuffer>)[], properties: EvaluatorProperties
+  ) {
     const cff = new CFF();
     cff.header = new CFFHeader(1, 0, 4, 4);
 

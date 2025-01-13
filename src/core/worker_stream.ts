@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { PDFStreamReader, WorkerStreamRangeReader, WorkerStreamReader } from "../interfaces";
+import { PDFStreamReader, ReadResult, WorkerStreamRangeReader, WorkerStreamReader } from "../interfaces";
 import { MessageHandler } from "../shared/message_handler";
 import { ReaderHeadersReadyResult } from "../shared/message_handler_types";
 import { assert } from "../shared/util";
@@ -112,7 +112,7 @@ class PDFWorkerStreamReader implements WorkerStreamReader {
     return this._isRangeSupported;
   }
 
-  async read() {
+  async read(): Promise<ReadResult> {
     const { value, done } = await this._reader.read();
     if (done) {
       return { value: null, done: true };

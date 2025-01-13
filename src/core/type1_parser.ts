@@ -19,6 +19,7 @@ import { Stream } from "./stream";
 import { warn } from "../shared/util";
 import { EvaluatorProperties } from "./evaluator";
 import { TransformType } from "../display/display_utils";
+import { Uint8TypedArray } from "../common/typed_array";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -100,7 +101,7 @@ class Type1CharString {
     this.stack = [];
   }
 
-  convert(encoded: Uint8Array, subrs: Uint8Array[], seacAnalysisEnabled: boolean): boolean {
+  convert(encoded: Uint8Array<ArrayBuffer>, subrs: Uint8Array<ArrayBuffer>[], seacAnalysisEnabled: boolean): boolean {
     const count = encoded.length;
     let error = false;
     let wx, sbx, subrNumber;
@@ -384,7 +385,7 @@ function isHexDigit(code: number) {
   );
 }
 
-function decrypt(data: Uint8Array, key: number, discardNumber: number) {
+function decrypt(data: Uint8TypedArray, key: number, discardNumber: number) {
   if (discardNumber >= data.length) {
     return new Uint8Array(0);
   }
@@ -406,12 +407,11 @@ function decrypt(data: Uint8Array, key: number, discardNumber: number) {
   return decrypted;
 }
 
-function decryptAscii(data: Uint8Array, key: number, discardNumber: number) {
-  const c1 = 52845,
-    c2 = 22719;
+function decryptAscii(data: Uint8TypedArray, key: number, discardNumber: number) {
+  const c1 = 52845, c2 = 22719;
   let r = key | 0;
-  const count = data.length,
-    maybeLength = count >>> 1;
+  const count = data.length;
+  const maybeLength = count >>> 1;
   const decrypted = new Uint8Array(maybeLength);
   let i, j;
   for (i = 0, j = 0; i < count; i++) {
@@ -561,7 +561,7 @@ class Type1Parser {
     return token;
   }
 
-  readCharStrings(bytes: Uint8Array, lenIV: number) {
+  readCharStrings(bytes: Uint8Array<ArrayBuffer>, lenIV: number) {
     if (lenIV === -1) {
       // This isn't in the spec, but Adobe's tx program handles -1
       // as plain text.
@@ -616,7 +616,7 @@ class Type1Parser {
             this.getToken(); // read in 'RD' or '-|'
             data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
             lenIV = program.properties.privateData.lenIV;
-            const encoded = this.readCharStrings(data, lenIV);
+            const encoded = this.readCharStrings(<Uint8Array<ArrayBuffer>>data, lenIV);
             this.nextChar();
             token = this.getToken(); // read in 'ND' or '|-'
             if (token === "noaccess") {
@@ -641,7 +641,7 @@ class Type1Parser {
             this.getToken(); // read in 'RD' or '-|'
             data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
             lenIV = program.properties.privateData.lenIV;
-            const encoded = this.readCharStrings(data, lenIV);
+            const encoded = this.readCharStrings(<Uint8Array<ArrayBuffer>>data, lenIV);
             this.nextChar();
             token = this.getToken(); // read in 'NP' or '|'
             if (token === "noaccess") {

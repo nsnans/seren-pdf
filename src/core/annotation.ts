@@ -386,7 +386,7 @@ class AnnotationFactory {
             baseFont.set(DictKey.Encoding, Name.get("WinAnsiEncoding"));
             const buffer = <string[]>[];
             baseFontRef = xref.getNewTemporaryRef();
-            await writeObject(baseFontRef, baseFont, buffer, xref);
+            await writeObject(baseFontRef, baseFont, buffer, xref.encrypt);
             dependencies.push({ ref: baseFontRef, data: buffer.join("") });
           }
           promises.push(
@@ -427,13 +427,13 @@ class AnnotationFactory {
             const buffer = <string[]>[];
             if (smaskStream) {
               const smaskRef = xref.getNewTemporaryRef();
-              await writeObject(smaskRef, smaskStream, buffer, xref);
+              await writeObject(smaskRef, smaskStream, buffer, xref.encrypt);
               dependencies.push({ ref: smaskRef, data: buffer.join("") });
               imageStream.dict!.set(DictKey.SMask, smaskRef);
               buffer.length = 0;
             }
             const imageRef = (image.imageRef = xref.getNewTemporaryRef());
-            await writeObject(imageRef, imageStream, buffer, xref);
+            await writeObject(imageRef, imageStream, buffer, xref.encrypt);
             dependencies.push({ ref: imageRef, data: buffer.join("") });
             image.imageStream = image.smaskStream = null;
           }
@@ -1942,7 +1942,7 @@ class MarkupAnnotation extends Annotation {
       annotationDict = this.createNewDict(annotation, xref, {
         apRef,
       });
-      await writeObject(apRef, ap, buffer, xref);
+      await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
       annotationDict = this.createNewDict(annotation, xref, {});
@@ -1952,7 +1952,7 @@ class MarkupAnnotation extends Annotation {
     }
 
     buffer.length = 0;
-    await writeObject(annotationRef, annotationDict, buffer, xref);
+    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
 
     return { ref: annotationRef, data: buffer.join("") };
   }
@@ -2400,7 +2400,7 @@ class WidgetAnnotation extends Annotation {
         appearanceDict.set(DictKey.Matrix, rotationMatrix);
       }
 
-      await writeObject(newRef, appearanceStream, buffer, xref);
+      await writeObject(newRef, appearanceStream, buffer, xref.encrypt);
 
       changes.push(
         // data for the new AP
@@ -2414,7 +2414,7 @@ class WidgetAnnotation extends Annotation {
     }
 
     dict.set(DictKey.M, `D:${getModificationDate()}`);
-    await writeObject(this.ref!, dict, buffer, xref);
+    await writeObject(this.ref!, dict, buffer, xref.encrypt);
 
     changes[0].data = buffer.join("");
 
@@ -3311,7 +3311,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
 
     const buffer = <string[]>[];
-    await writeObject(this.ref!, dict, buffer, evaluator.xref);
+    await writeObject(this.ref!, dict, buffer, evaluator.xref.encrypt);
 
     return [{ ref: this.ref, data: buffer.join("") }];
   }
@@ -3358,7 +3358,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       if (this.parent instanceof Ref) {
         const parent = evaluator.xref.fetch(this.parent);
         parent.set(DictKey.V, name);
-        await writeObject(this.parent, parent, buffer, evaluator.xref);
+        await writeObject(this.parent, parent, buffer, evaluator.xref.encrypt);
         parentData = buffer.join("");
         buffer.length = 0;
       } else if (this.parent instanceof Dict) {
@@ -3382,7 +3382,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       dict.set(DictKey.MK, maybeMK);
     }
 
-    await writeObject(this.ref!, dict, buffer, evaluator.xref);
+    await writeObject(this.ref!, dict, buffer, evaluator.xref.encrypt);
     const newRefs = [{ ref: this.ref, data: buffer.join("") }];
     if (parentData) {
       newRefs.push({ ref: <Ref>this.parent, data: parentData });

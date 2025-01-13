@@ -19,27 +19,22 @@ import { RectType, TransformType } from "../display/display_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {
-  AbortException,
   assert,
   FONT_IDENTITY_MATRIX,
   FormatError,
   IDENTITY_MATRIX,
   info,
-  isArrayEqual,
-  normalizeUnicode,
   OPS,
   shadow,
   TextRenderingMode,
   Util,
   warn
 } from "../shared/util";
-import { MutableArray, TypedArray } from "../types";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
-import { bidi } from "./bidi";
 import { CMap, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
-import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "./core_types";
-import { isNumberArray, lookupMatrix } from "./core_utils";
+import { EvaluatorTextContent, StreamSink } from "./core_types";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
@@ -47,7 +42,7 @@ import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GetTextContentHandler } from "./evaluator_text_content_operator";
 import { FontSubstitutionInfo } from "./font_substitutions";
-import { ErrorFont, Font, Glyph } from "./fonts";
+import { ErrorFont, Font } from "./fonts";
 import { PDFFunctionFactory } from "./function";
 import { GlobalIdFactory } from "./global_id_factory";
 import { ImageResizer } from "./image_resizer";
@@ -55,10 +50,6 @@ import {
   GlobalImageCache,
   ImageCacheData,
   ImageMaskXObject,
-  LocalColorSpaceCache,
-  LocalGStateCache,
-  LocalImageCache,
-  LocalTilingPatternCache,
   OptionalContent,
   RegionalImageCache
 } from "./image_utils";
@@ -151,19 +142,6 @@ export enum PatternType {
   TILING = 1,
   SHADING = 2,
 };
-
-// Optionally avoid sending individual, or very few, text chunks to reduce
-// `postMessage` overhead with ReadableStream (see issue 13962).
-//
-// PLEASE NOTE: This value should *not* be too large (it's used as a lower limit
-// in `enqueueChunk`), since that would cause streaming of textContent to become
-// essentially useless in practice by sending all (or most) chunks at once.
-// Also, a too large value would (indirectly) affect the main-thread `textLayer`
-// building negatively by forcing all textContent to be handled at once, which
-// could easily end up hurting *overall* performance (e.g. rendering as well).
-const TEXT_CHUNK_BATCH_SIZE = 10;
-
-const deferred = Promise.resolve();
 
 // Convert PDF blend mode names to HTML5 blend mode names.
 export function normalizeBlendMode(value: Name | Name[], parsingArray = false): string | null {
@@ -271,7 +249,7 @@ export class TimeSlotManager {
   }
 }
 
-interface EvaluatorCMapData {
+export interface EvaluatorCMapData {
   cMapData: Uint8Array<ArrayBuffer>;
   isCompressed: boolean;
 }
@@ -406,6 +384,17 @@ export class EvaluatorContext {
     return !!this.type3FontRefs;
   }
 
+  clone(ignoreErrors: boolean) {
+    const options = Object.assign(
+      Object.create(null), this.options, { ignoreErrors }
+    );
+    return new EvaluatorContext(
+      this.xref, this.handler, this.pageIndex, this.idFactory,
+      this.fontCache, this.builtInCMapCache, this.standardFontDataCache,
+      this.globalImageCache, this.systemFontCache, options
+    )
+  }
+
 }
 
 class PartialEvaluator {
@@ -512,14 +501,8 @@ class PartialEvaluator {
     )
   }
 
-  static get fallbackFontDict() {
-    const dict = new Dict();
-    dict.set(DictKey.BaseFont, Name.get("Helvetica"));
-    dict.set(DictKey.Type, Name.get("FallbackType"));
-    dict.set(DictKey.Subtype, Name.get("FallbackType"));
-    dict.set(DictKey.Encoding, Name.get("WinAnsiEncoding"));
-
-    return shadow(this, "fallbackFontDict", dict);
+  hasBlendModes(resources: Dict, nonBlendModesSet: RefSet) {
+    return this.context.generalHandler.hasBlendModes(resources, nonBlendModesSet);
   }
 }
 
@@ -531,7 +514,7 @@ export class TranslatedFont {
 
   public font: Font | ErrorFont;
 
-  protected dict: Dict;
+  public dict: Dict;
 
   protected _evaluatorOptions;
 
@@ -581,7 +564,7 @@ export class TranslatedFont {
   }
 
   // 这里这个函数只要做个改写就好了
-  loadType3Data(evaluator: PartialEvaluator, resources: Dict, task: WorkerTask) {
+  loadType3Data(context: EvaluatorContext, resources: Dict, task: WorkerTask) {
     if (this.type3Loaded) {
       return this.type3Loaded;
     }
@@ -591,13 +574,13 @@ export class TranslatedFont {
     // When parsing Type3 glyphs, always ignore them if there are errors.
     // Compared to the parsing of e.g. an entire page, it doesn't really
     // make sense to only be able to render a Type3 glyph partially.
-    const type3Evaluator = evaluator.clone(false);
+    const type3Context = context.clone(false);
     // Prevent circular references in Type3 fonts.
-    const type3FontRefs = new RefSet(evaluator.type3FontRefs);
+    const type3FontRefs = new RefSet(context.type3FontRefs);
     if (this.dict.objId && !type3FontRefs.has(this.dict.objId)) {
       type3FontRefs.put(this.dict.objId);
     }
-    type3Evaluator.type3FontRefs = type3FontRefs;
+    type3Context.type3FontRefs = type3FontRefs;
 
     const translatedFont = this.font;
     const type3Dependencies = this.type3Dependencies;
@@ -615,34 +598,28 @@ export class TranslatedFont {
       loadCharProcsPromise = loadCharProcsPromise.then(async () => {
         const glyphStream = charProcs.get(key);
         const operatorList = new OperatorList();
-        return type3Evaluator
-          .getOperatorList({
-            stream: glyphStream,
-            task,
-            resources: fontResources,
-            operatorList,
-          })
-          .then(() => {
-            // According to the PDF specification, section "9.6.5 Type 3 Fonts"
-            // and "Table 113":
-            //  "A glyph description that begins with the d1 operator should
-            //   not execute any operators that set the colour (or other
-            //   colour-related parameters) in the graphics state;
-            //   any use of such operators shall be ignored."
-            if (operatorList.fnArray[0] === OPS.setCharWidthAndBounds) {
-              this._removeType3ColorOperators(operatorList, fontBBoxSize);
-            }
-            charProcOperatorList.set(key, operatorList.getIR());
+        return type3Context.operatorFactory.createGeneralHandler(
+          glyphStream, task, fontResources, operatorList
+        ).handle().then(() => {
+          // According to the PDF specification, section "9.6.5 Type 3 Fonts"
+          // and "Table 113":
+          //  "A glyph description that begins with the d1 operator should
+          //   not execute any operators that set the colour (or other
+          //   colour-related parameters) in the graphics state;
+          //   any use of such operators shall be ignored."
+          if (operatorList.fnArray[0] === OPS.setCharWidthAndBounds) {
+            this._removeType3ColorOperators(operatorList, fontBBoxSize);
+          }
+          charProcOperatorList.set(key, operatorList.getIR());
 
-            for (const dependency of operatorList.dependencies) {
-              type3Dependencies!.add(dependency);
-            }
-          })
-          .catch(function (_reason: unknown) {
-            warn(`Type3 font resource "${key}" is not available.`);
-            const dummyOperatorList = new OperatorList();
-            charProcOperatorList.set(key, dummyOperatorList.getIR());
-          });
+          for (const dependency of operatorList.dependencies) {
+            type3Dependencies!.add(dependency);
+          }
+        }).catch(function (_reason: unknown) {
+          warn(`Type3 font resource "${key}" is not available.`);
+          const dummyOperatorList = new OperatorList();
+          charProcOperatorList.set(key, dummyOperatorList.getIR());
+        });
       });
     }
     this.type3Loaded = loadCharProcsPromise.then(() => {

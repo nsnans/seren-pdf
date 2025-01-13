@@ -136,7 +136,7 @@ export class XRef {
     return Ref.get(this._newTemporaryRefNum++, 0);
   }
 
-  resetNewTemporaryRef() {
+  resetNewTemporaryRef(): void {
     // Called once saving is finished.
     this._newTemporaryRefNum = null;
     if (this._persistentRefsCache) {

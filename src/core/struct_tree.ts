@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
+import { RectType } from "../display/display_utils";
 import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
-import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "./primitives";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
-import { writeObject } from "./writer";
 import { PDFManager } from "./pdf_manager";
+import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "./primitives";
+import { writeObject } from "./writer";
 import { XRef } from "./xref";
-import { StructTreeNode } from "../display/api";
-import { RectType } from "../display/display_utils";
 
 const MAX_DEPTH = 40;
 
@@ -169,7 +168,7 @@ export class StructTreeRoot {
     const buffer: string[] = [];
     for (const [ref, obj] of cache.items()) {
       buffer.length = 0;
-      await writeObject(ref, obj, buffer, xref);
+      await writeObject(ref, obj, buffer, xref.encrypt);
       newRefs.push({ ref, data: buffer.join("") });
     }
   }
@@ -310,7 +309,7 @@ export class StructTreeRoot {
     const buffer: string[] = [];
     for (const [ref, obj] of cache.items()) {
       buffer.length = 0;
-      await writeObject(ref, obj, buffer, xref);
+      await writeObject(ref, obj, buffer, xref.encrypt);
       newRefs.push({ ref, data: buffer.join("") });
     }
   }
@@ -370,7 +369,7 @@ export class StructTreeRoot {
             const tagDict = xref.fetch(objRef).clone();
             StructTreeRoot.#writeProperties(tagDict, accessibilityData);
             buffer.length = 0;
-            await writeObject(objRef, tagDict, buffer, xref);
+            await writeObject(objRef, tagDict, buffer, xref.encrypt);
             newRefs.push({ ref: objRef, data: buffer.join("") });
             continue;
           }

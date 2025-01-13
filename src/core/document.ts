@@ -59,7 +59,7 @@ import {
 } from "./core_utils";
 import { calculateMD5 } from "./crypto";
 import { StreamsSequenceStream } from "./decode_stream";
-import { PartialEvaluator } from "./evaluator";
+import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "./evaluator";
 import { FontSubstitutionInfo } from "./font_substitutions";
 import { GlobalIdFactory, LocalIdFactory } from "./global_id_factory";
 import { GlobalImageCache } from "./image_utils";
@@ -96,11 +96,11 @@ class Page {
 
   public ref: Ref | null;
 
-  protected fontCache: RefSetCache;
+  protected fontCache: RefSetCache<string, Promise<TranslatedFont>>;
 
-  protected builtInCMapCache: Map<string, any>;
+  protected builtInCMapCache: Map<string, EvaluatorCMapData>;
 
-  protected standardFontDataCache: Map<string, any>;
+  protected standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>;
 
   protected globalImageCache: GlobalImageCache;
 
@@ -108,7 +108,7 @@ class Page {
 
   protected systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
-  protected nonBlendModesSet: RefSet;
+  protected nonBlendModesSet: RefSet | null;
 
   protected evaluatorOptions;
 
@@ -123,12 +123,12 @@ class Page {
     pageDict: Dict,
     ref: Ref | null,
     globalIdFactory: GlobalIdFactory,
-    fontCache: RefSetCache,
+    fontCache: RefSetCache<string, Promise<TranslatedFont>>,
     builtInCMapCache: Map<string, any>,
     standardFontDataCache: Map<string, any>,
     globalImageCache: GlobalImageCache,
     systemFontCache: Map<string, FontSubstitutionInfo | null>,
-    nonBlendModesSet: RefSet,
+    nonBlendModesSet: RefSet | null,
   ) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
@@ -374,7 +374,7 @@ class Page {
     const savedDict = pageDict.getValue(DictKey.Annots);
     pageDict.set(DictKey.Annots, annotationsArray);
     const buffer = <string[]>[];
-    await writeObject(this.ref!, pageDict, buffer, this.xref);
+    await writeObject(this.ref!, pageDict, buffer, this.xref.encrypt);
     if (savedDict) {
       pageDict.set(DictKey.Annots, savedDict);
     }
@@ -543,7 +543,7 @@ class Page {
       resourcesPromise,
     ]).then(async ([contentStream]) => {
       const opList = new OperatorList(intent, sink);
-      const hasBlendModes = partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet);
+      const hasBlendModes = partialEvaluator.hasBlendModes(this.resources, this.nonBlendModesSet!);
       handler.StartRenderPage(hasBlendModes, this.pageIndex, cacheKey);
       return partialEvaluator.getOperatorList(contentStream, task, this.resources, opList).then(() => opList);
     });
@@ -663,9 +663,7 @@ class Page {
     const langPromise = this.pdfManager.ensureCatalog(catalog => catalog.lang);
 
     const [contentStream, , lang] = await Promise.all([
-      contentStreamPromise,
-      resourcesPromise,
-      langPromise,
+      contentStreamPromise, resourcesPromise, langPromise,
     ]);
     const partialEvaluator = new PartialEvaluator(
       this.xref,

@@ -13,6 +13,21 @@
  * limitations under the License.
  */
 
+import { MessageHandler } from "../shared/message_handler";
+import {
+  createValidAbsoluteUrl,
+  DocumentActionEventType,
+  FormatError,
+  info,
+  PermissionFlag,
+  shadow,
+  stringToPDFString,
+  stringToUTF8String,
+  warn
+} from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { clearGlobalCaches } from "./cleanup_helper";
+import { ColorSpace } from "./colorspace";
 import {
   collectActions,
   isNumberArray,
@@ -22,18 +37,13 @@ import {
   toRomanNumerals,
   XRefEntryException,
 } from "./core_utils";
-import {
-  createValidAbsoluteUrl,
-  DocumentActionEventType,
-  FormatError,
-  info,
-  objectSize,
-  PermissionFlag,
-  shadow,
-  stringToPDFString,
-  stringToUTF8String,
-  warn,
-} from "../shared/util";
+import { TranslatedFont } from "./evaluator";
+import { FileSpec, FileSpecSerializable } from "./file_spec";
+import { FontSubstitutionInfo } from "./font_substitutions";
+import { GlobalImageCache } from "./image_utils";
+import { MetadataParser, PDFMetadataInfo } from "./metadata_parser";
+import { NameTree, NumberTree } from "./name_number_tree";
+import { PDFManager } from "./pdf_manager";
 import {
   Dict,
   DictKey,
@@ -45,18 +55,8 @@ import {
   RefSet,
   RefSetCache,
 } from "./primitives";
-import { NameTree, NumberTree } from "./name_number_tree";
-import { BaseStream } from "./base_stream";
-import { clearGlobalCaches } from "./cleanup_helper";
-import { ColorSpace } from "./colorspace";
-import { FileSpec, FileSpecSerializable } from "./file_spec";
-import { GlobalImageCache } from "./image_utils";
-import { MetadataParser, PDFMetadataInfo } from "./metadata_parser";
 import { StructTreeRoot } from "./struct_tree";
-import { PDFManager } from "./pdf_manager";
 import { XRef } from "./xref";
-import { MessageHandler } from "../shared/message_handler";
-import { FontSubstitutionInfo } from "./font_substitutions";
 
 export type DestinationType = [Ref, Name, ...number[]];
 
@@ -258,7 +258,7 @@ export class Catalog {
 
   protected xref: XRef;
 
-  public fontCache = new RefSetCache();
+  public fontCache = new RefSetCache<string, Promise<TranslatedFont>>();
 
   public builtInCMapCache = new Map<string, any>();
 
@@ -266,11 +266,11 @@ export class Catalog {
 
   public globalImageCache = new GlobalImageCache();
 
-  public pageKidsCountCache = new RefSetCache();
+  public pageKidsCountCache = new RefSetCache<Ref | string, number>();
 
-  public pageIndexCache = new RefSetCache();
+  public pageIndexCache = new RefSetCache<Ref, number>();
 
-  protected pageDictCache = new RefSetCache();
+  protected pageDictCache = new RefSetCache<Ref, Promise<Dict>>();
 
   public nonBlendModesSet = new RefSet();
 
@@ -607,11 +607,14 @@ export class Catalog {
     // complement binary integer so we can use regular bitwise operations on it.
     flags += 2 ** 32;
 
-    const permissions = [];
+
+    const permissions: number[] = [];
     for (const key in PermissionFlag) {
       const value = PermissionFlag[key];
-      if (flags & value) {
-        permissions.push(value);
+      if (typeof value === 'number') {
+        if (flags & value) {
+          permissions.push(value);
+        }
       }
     }
     return permissions;
@@ -1279,7 +1282,7 @@ export class Catalog {
       }
     }
     // Append OpenAction "JavaScript" actions, if any, to the JavaScript map.
-    const openAction = this._catDict.getValue(DictKey.OpenAction);
+    const openAction = <Dict>this._catDict.getValue(DictKey.OpenAction);
     if (openAction) {
       appendIfJavaScriptDict("OpenAction", openAction);
     }
@@ -1321,8 +1324,10 @@ export class Catalog {
   }
 
   async cleanup(manuallyTriggered = false) {
+
     clearGlobalCaches();
-    this.globalImageCache.clear(/* onlyData = */ manuallyTriggered);
+
+    this.globalImageCache.clear(manuallyTriggered);
     this.pageKidsCountCache.clear();
     this.pageIndexCache.clear();
     this.pageDictCache.clear();
@@ -1347,17 +1352,17 @@ export class Catalog {
     if (pagesRef instanceof Ref) {
       visitedNodes.put(pagesRef);
     }
-    const xref = this.xref,
-      pageKidsCountCache = this.pageKidsCountCache,
-      pageIndexCache = this.pageIndexCache,
-      pageDictCache = this.pageDictCache;
+    const xref = this.xref;
+    const pageKidsCountCache = this.pageKidsCountCache;
+    const pageIndexCache = this.pageIndexCache;
+    const pageDictCache = this.pageDictCache;
     let currentPageIndex = 0;
 
     while (nodesToVisit.length) {
       const currentNode = nodesToVisit.pop();
 
       if (currentNode instanceof Ref) {
-        const count = pageKidsCountCache.get(currentNode);
+        const count = pageKidsCountCache.get(currentNode)!;
         // Skip nodes where the page can't be.
         if (count >= 0 && currentPageIndex + count <= pageIndex) {
           currentPageIndex += count;
@@ -1415,7 +1420,7 @@ export class Catalog {
         // Cache the Kids count, since it can reduce redundant lookups in
         // documents where all nodes are found at *one* level of the tree.
         if (objId && !pageKidsCountCache.has(objId)) {
-          pageKidsCountCache.put(objId, count);
+          pageKidsCountCache.put(objId, <number>count);
         }
 
         // Skip nodes where the page can't be.
@@ -1727,9 +1732,8 @@ export class Catalog {
       return;
     }
 
-    let action: Dict | string | number[] = destDict.getValue(DictKey.A),
-      url,
-      dest;
+    let action: Dict | Name | DestinationType | string | number[] = destDict.getValue(DictKey.A);
+    let url, dest;
     if (!(action instanceof Dict)) {
       if (destDict.has(DictKey.Dest)) {
         // A /Dest entry should *only* contain a Name or an Array, but some bad
@@ -1825,7 +1829,7 @@ export class Catalog {
             const name = target.getValue(DictKey.N);
 
             if (isName(relationship, "C") && typeof name === "string") {
-              attachment = docAttachments[stringToPDFString(name)];
+              attachment = docAttachments.get(stringToPDFString(name));
             }
           }
 

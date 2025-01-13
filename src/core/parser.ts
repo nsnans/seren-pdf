@@ -134,7 +134,7 @@ class Parser {
 
 
   // 应该弄个token类型出来，不然这么多原始类型，不得搞死人啊
-  getObj(cipherTransform: CipherTransform | null = null): string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | (boolean | string | number | Ref | Dict | Cmd | BaseStream | Name | null)[] {
+  getObj(cipherTransform: CipherTransform | null = null): string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | Symbol | (boolean | string | number | Ref | Dict | Cmd | BaseStream | Name | Symbol | null)[] {
     const buf1 = this.buf1;
     this.shift();
 
