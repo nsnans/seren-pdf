@@ -799,7 +799,7 @@ class Parser {
     return stream;
   }
 
-  makeFilter(stream: Stream, name: string, maybeLength: number, params) {
+  makeFilter(stream: Stream, name: string, maybeLength: number, params: Dict) {
     // Since the 'Length' entry in the stream dictionary can be completely
     // wrong, e.g. zero for non-empty streams, only skip parsing the stream
     // when we can be absolutely certain that it actually is empty.
@@ -814,9 +814,7 @@ class Parser {
         case "FlateDecode":
           if (params) {
             return new PredictorStream(
-              new FlateStream(stream, maybeLength),
-              maybeLength,
-              params
+              new FlateStream(stream, maybeLength), maybeLength, params
             );
           }
           return new FlateStream(stream, maybeLength);
@@ -824,8 +822,8 @@ class Parser {
         case "LZWDecode":
           let earlyChange = 1;
           if (params) {
-            if (params.has("EarlyChange")) {
-              earlyChange = params.get("EarlyChange");
+            if (params.has(DictKey.EarlyChange)) {
+              earlyChange = params.get(DictKey.EarlyChange);
             }
             return new PredictorStream(
               new LZWStream(stream, maybeLength, earlyChange),

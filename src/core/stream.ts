@@ -18,15 +18,7 @@ import { stringToBytes } from "../shared/util";
 import { Dict } from "./primitives";
 import { Uint8TypedArray } from "../common/typed_array";
 
-class Stream extends BaseStream {
-
-  public start: number;
-
-  public end: number;
-
-  public bytes: Uint8TypedArray;
-
-  public dict: Dict | null;
+export class Stream extends BaseStream {
 
   constructor(
     arrayBuffer: Uint8Array<ArrayBuffer> | ArrayBuffer,
@@ -100,16 +92,15 @@ class Stream extends BaseStream {
   }
 }
 
-class StringStream extends Stream {
+export class StringStream extends Stream {
   constructor(str: string) {
     super(stringToBytes(str));
   }
 }
 
-class NullStream extends Stream {
+export class NullStream extends Stream {
   constructor() {
     super(new Uint8Array(0));
   }
 }
 
-export { NullStream, Stream, StringStream };

@@ -28,7 +28,7 @@ class LZWStream extends DecodeStream {
 
   protected lastCode = null;
 
-  constructor(str: Stream, maybeLength: number, earlyChange) {
+  constructor(str: Stream, maybeLength: number, earlyChange: number) {
     super(maybeLength);
 
     this.str = str;

@@ -390,6 +390,7 @@ export enum DictKey {
   WhitePoint = "WhitePoint",
   BlackPoint = "BlackPoint",
   Gamma = "Gamma",
+  EarlyChange = "EarlyChange",
 }
 
 /**
@@ -433,11 +434,11 @@ type DictValueTypeMapping = {
   [DictKey.CreationDate]: string,
   [DictKey.DA]: string,
   [DictKey.DOS]: string | Ref,
-  [DictKey.DP]: "DP",
+  [DictKey.DP]: Dict,
   [DictKey.DR]: Dict,
   [DictKey.DW]: number,
   [DictKey.D]: number[] | Dict | Name | DestinationType,
-  [DictKey.DecodeParms]: "DecodeParms",
+  [DictKey.DecodeParms]: Dict,
   [DictKey.Decode]: number[],
   [DictKey.Desc]: string,
   [DictKey.DescendantFonts]: Ref[],
@@ -696,6 +697,7 @@ type DictValueTypeMapping = {
   [DictKey.WhitePoint]: [number, number, number],
   [DictKey.BlackPoint]: [number, number, number],
   [DictKey.Gamma]: number,
+  [DictKey.EarlyChange]: number,
 }
 
 

@@ -109,7 +109,7 @@ abstract class DecodeStream extends BaseStream {
     return this.buffer.subarray(pos, end);
   }
 
-  async getImageData(length: number, decoderOptions = null) {
+  async getImageData(length: number, decoderOptions: JpxDecoderOptions | null = null) {
     if (!this.canAsyncDecodeImageFromBuffer) {
       return this.getBytes(length, decoderOptions);
     }
@@ -124,12 +124,12 @@ abstract class DecodeStream extends BaseStream {
   makeSubStream(start: number, length: number, dict: Dict | null = null) {
     if (length === undefined) {
       while (!this.eof) {
-        this.readBlock();
+        this.readBlock(null);
       }
     } else {
       const end = start + length;
       while (this.bufferLength <= end && !this.eof) {
-        this.readBlock();
+        this.readBlock(null);
       }
     }
     return new Stream(this.buffer, start, length, dict);
@@ -154,13 +154,9 @@ class StreamsSequenceStream extends DecodeStream {
 
   constructor(streams, onError: (reason: unknown, objId: string | null) => void /*= null*/) {
     const baseStreams = streams.filter(s => s instanceof BaseStream);
-
     let maybeLength = 0;
     for (const stream of baseStreams) {
-      maybeLength +=
-        stream instanceof DecodeStream
-          ? stream._rawMinBufferLength
-          : stream.length;
+      maybeLength += stream instanceof DecodeStream ? stream._rawMinBufferLength : stream.length;
     }
     super(maybeLength);
 

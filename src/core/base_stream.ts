@@ -14,7 +14,7 @@
  */
 
 import { Uint8TypedArray } from "../common/typed_array";
-import { bytesToString, shadow, unreachable } from "../shared/util";
+import { bytesToString, unreachable } from "../shared/util";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
 
@@ -41,7 +41,7 @@ export abstract class BaseStream {
   abstract get isEmpty(): boolean;
 
   get isDataLoaded() {
-    return shadow(this, "isDataLoaded", true);
+    return true;
   }
 
   abstract getByte(): number;

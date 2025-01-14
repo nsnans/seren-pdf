@@ -20,6 +20,7 @@ import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { PDFNetworkStream } from "../display/network";
 import { MessageHandler } from "../shared/message_handler";
+import { ReadResult } from "../interfaces";
 
 class ChunkedStream extends Stream {
 
@@ -37,13 +38,7 @@ class ChunkedStream extends Stream {
   protected manager: ChunkedStreamManager;
 
   constructor(length: number, chunkSize: number, manager: ChunkedStreamManager) {
-    super(
-      /* arrayBuffer = */ new Uint8Array(length),
-      /* start = */ 0,
-      /* length = */ length,
-      /* dict = */ null
-    );
-
+    super(new Uint8Array(length), 0, length, null);
     this.chunkSize = chunkSize;
     this.numChunks = Math.ceil(length / chunkSize);
     this.manager = manager;
@@ -69,7 +64,7 @@ class ChunkedStream extends Stream {
     return this.numChunksLoaded === this.numChunks;
   }
 
-  onReceiveData(begin: number, chunk) {
+  onReceiveData(begin: number, chunk: Uint8Array<ArrayBuffer>) {
     const chunkSize = this.chunkSize;
     if (begin % chunkSize !== 0) {
       throw new Error(`Bad begin offset: ${begin}`);
@@ -93,17 +88,14 @@ class ChunkedStream extends Stream {
     }
   }
 
-  onReceiveProgressiveData(data) {
+  onReceiveProgressiveData(data: Uint8Array<ArrayBuffer>) {
     let position = this.progressiveDataLength;
     const beginChunk = Math.floor(position / this.chunkSize);
 
     this.bytes.set(new Uint8Array(data), position);
     position += data.byteLength;
     this.progressiveDataLength = position;
-    const endChunk =
-      position >= this.end
-        ? this.numChunks
-        : Math.floor(position / this.chunkSize);
+    const endChunk = position >= this.end ? this.numChunks : Math.floor(position / this.chunkSize);
 
     for (let curChunk = beginChunk; curChunk < endChunk; ++curChunk) {
       // Since a value can only occur *once* in a `Set`, there's no need to
@@ -261,14 +253,18 @@ class ChunkedStream extends Stream {
 
     const subStream = new ChunkedStreamSubstream();
     subStream.pos = subStream.start = start;
-    subStream.end = start + length || this.end;
+    subStream.end = start + length! || this.end;
     subStream.dict = dict;
     return subStream;
   }
 
   getBaseStreams(): BaseStream[] {
-    return [this as BaseStream];
+    return [<BaseStream>this];
   }
+}
+
+class ChunkedStreamSubstream extends ChunkedStream {
+
 }
 
 class ChunkedStreamManager {
@@ -314,12 +310,12 @@ class ChunkedStreamManager {
       rangeReader.onProgress = this.onProgress.bind(this);
     }
 
-    let chunks = [], loaded = 0;
-    return new Promise((resolve, reject) => {
-      const readChunk = ({ value, done }) => {
+    let chunks: ArrayBuffer[] | null = [], loaded = 0;
+    return new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => {
+      const readChunk = ({ value, done }: ReadResult) => {
         try {
           if (done) {
-            const chunkData = arrayBuffersToBytes(chunks);
+            const chunkData = arrayBuffersToBytes(chunks!);
             chunks = null;
             resolve(chunkData);
             return;
@@ -330,13 +326,13 @@ class ChunkedStreamManager {
               "readChunk (sendRequest) - expected an ArrayBuffer."
             );
           }
-          loaded += value.byteLength;
+          loaded += value!.byteLength;
 
           if (rangeReader.isStreamingSupported) {
             this.onProgress(loaded);
           }
 
-          chunks.push(value);
+          chunks!.push(value!);
           rangeReader.read().then(readChunk, reject);
         } catch (e) {
           reject(e);
@@ -347,7 +343,7 @@ class ChunkedStreamManager {
       if (this.aborted) {
         return; // Ignoring any data after abort.
       }
-      this.onReceiveData({ chunk: data, begin });
+      this.onReceiveData(data, begin);
     });
   }
 
@@ -484,23 +480,19 @@ class ChunkedStreamManager {
     this.msgHandler.DocProgress(loaded, this.length);
   }
 
-  onReceiveData(args) {
-    const chunk = args.chunk;
-    const isProgressive = args.begin === undefined;
-    const begin = isProgressive ? this.progressiveDataLength : args.begin;
-    const end = begin + chunk.byteLength;
+  onReceiveData(chunk: Uint8Array<ArrayBuffer>, begin: number | null = null) {
+    const isProgressive = begin === null;
+    begin = isProgressive ? this.progressiveDataLength : begin;
+    const end = begin! + chunk.byteLength;
 
-    const beginChunk = Math.floor(begin / this.chunkSize);
-    const endChunk =
-      end < this.length
-        ? Math.floor(end / this.chunkSize)
-        : Math.ceil(end / this.chunkSize);
+    const beginChunk = Math.floor(begin! / this.chunkSize);
+    const endChunk = end < this.length ? Math.floor(end / this.chunkSize) : Math.ceil(end / this.chunkSize);
 
     if (isProgressive) {
       this.stream.onReceiveProgressiveData(chunk);
       this.progressiveDataLength = end;
     } else {
-      this.stream.onReceiveData(begin, chunk);
+      this.stream.onReceiveData(begin!, chunk);
     }
 
     if (this.stream.isDataLoaded) {

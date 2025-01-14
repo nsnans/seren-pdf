@@ -1,7 +1,7 @@
 
 // 使用TypedArray来统一抽象所有的TypeArray，不然会造成很多问题
 // 到处使用 “|” 来将各种各样的类型强制绑定在一起，也真是醉了
-export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike> {
+export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike, THIS> {
 
   readonly BYTES_PER_ELEMENT: number;
 
@@ -19,19 +19,19 @@ export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike> {
 
   [Symbol.iterator](): ArrayIterator<number>;
 
-  copyWithin(target: number, start: number, end?: number): GenericTypedArray<TArrayBuffer>;
+  copyWithin(target: number, start: number, end?: number): THIS;
 
-  every(predicate: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => unknown, thisArg?: any): boolean;
+  every(predicate: (value: number, index: number, array: THIS) => unknown, thisArg?: any): boolean;
 
-  fill(value: number, start?: number, end?: number): GenericTypedArray<TArrayBuffer>;
+  fill(value: number, start?: number, end?: number): THIS;
 
-  filter(predicate: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => any, thisArg?: any): GenericTypedArray<TArrayBuffer>;
+  filter(predicate: (value: number, index: number, array: THIS) => any, thisArg?: any): THIS;
 
-  find(predicate: (value: number, index: number, obj: GenericTypedArray<TArrayBuffer>) => boolean, thisArg?: any): number | undefined;
+  find(predicate: (value: number, index: number, obj: THIS) => boolean, thisArg?: any): number | undefined;
 
-  findIndex(predicate: (value: number, index: number, obj: GenericTypedArray<TArrayBuffer>) => boolean, thisArg?: any): number;
+  findIndex(predicate: (value: number, index: number, obj: THIS) => boolean, thisArg?: any): number;
 
-  forEach(callbackfn: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => void, thisArg?: any): void;
+  forEach(callbackfn: (value: number, index: number, array: THIS) => void, thisArg?: any): void;
 
   indexOf(searchElement: number, fromIndex?: number): number;
 
@@ -39,37 +39,37 @@ export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike> {
 
   lastIndexOf(searchElement: number, fromIndex?: number): number;
 
-  map(callbackfn: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => number, thisArg?: any): GenericTypedArray<TArrayBuffer>;
+  map(callbackfn: (value: number, index: number, array: THIS) => number, thisArg?: any): THIS;
 
-  reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => number): number;
+  reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: THIS) => number): number;
 
-  reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => number, initialValue: number): number;
+  reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: THIS) => number, initialValue: number): number;
 
-  reduce<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => U, initialValue: U): U;
+  reduce<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: THIS) => U, initialValue: U): U;
 
-  reduceRight(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => number): number;
+  reduceRight(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: THIS) => number): number;
 
-  reduceRight(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => number, initialValue: number): number;
+  reduceRight(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: THIS) => number, initialValue: number): number;
 
-  reduceRight<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: GenericTypedArray<TArrayBuffer>) => U, initialValue: U): U;
+  reduceRight<U>(callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: THIS) => U, initialValue: U): U;
 
-  reverse(): GenericTypedArray<TArrayBuffer>;
+  reverse(): THIS;
 
   set(array: ArrayLike<number>, offset?: number): void;
 
-  slice(start?: number, end?: number): GenericTypedArray<TArrayBuffer>;
+  slice(start?: number, end?: number): THIS;
 
-  some(predicate: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => unknown, thisArg?: any): boolean;
+  some(predicate: (value: number, index: number, array: THIS) => unknown, thisArg?: any): boolean;
 
-  sort(compareFn?: (a: number, b: number) => number): GenericTypedArray<TArrayBuffer>;
+  sort(compareFn?: (a: number, b: number) => number): THIS;
 
-  subarray(begin?: number, end?: number): GenericTypedArray<TArrayBuffer>;
+  subarray(begin?: number, end?: number): THIS;
 
   toLocaleString(): string;
 
   toString(): string;
 
-  valueOf(): GenericTypedArray<TArrayBuffer>;
+  valueOf(): THIS;
 
   toLocaleString(locales: string | string[], options?: Intl.NumberFormatOptions): string;
 
@@ -94,30 +94,30 @@ export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike> {
     predicate: (
       value: number,
       index: number,
-      array: GenericTypedArray<TArrayBuffer>,
+      array: THIS,
     ) => value is S,
     thisArg?: any,
   ): S | undefined;
   findLast(
-    predicate: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => unknown,
+    predicate: (value: number, index: number, array: THIS) => unknown,
     thisArg?: any,
   ): number | undefined;
 
   findLastIndex(
-    predicate: (value: number, index: number, array: GenericTypedArray<TArrayBuffer>) => unknown,
+    predicate: (value: number, index: number, array: THIS) => unknown,
     thisArg?: any,
   ): number;
 
-  toReversed(): GenericTypedArray<TArrayBuffer>;
+  toReversed(): THIS;
 
-  toSorted(compareFn?: (a: number, b: number) => number): GenericTypedArray<TArrayBuffer>;
+  toSorted(compareFn?: (a: number, b: number) => number): THIS;
 
-  with(index: number, value: number): GenericTypedArray<TArrayBuffer>;
+  with(index: number, value: number): THIS;
 
 }
 
 // 主要是为了抽象出Uint8Array和Uint8ClampArray，这两个到处拼接，太操蛋了
-export interface Uint8TypedArray extends GenericTypedArray<ArrayBuffer> { }
+export interface Uint8TypedArray extends GenericTypedArray<ArrayBuffer, Uint8TypedArray> { }
 
 // 很多地方一会儿传 number[]，一会儿传Uint8ClampedArray，一会儿传Uin8Array
 // 最好统一成 Iterable<number>，不做特殊抽象的话，就要做大量的兼容了。

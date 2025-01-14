@@ -575,30 +575,28 @@ const calculateSHA512 = (function calculateSHA512Closure() {
     for (i = 0; i < 80; i++) {
       w[i] = new Word64(0, 0);
     }
-    let a = new Word64(0, 0),
-      b = new Word64(0, 0),
-      c = new Word64(0, 0);
-    let d = new Word64(0, 0),
-      e = new Word64(0, 0),
-      f = new Word64(0, 0);
-    let g = new Word64(0, 0),
-      h = new Word64(0, 0);
-    const t1 = new Word64(0, 0),
-      t2 = new Word64(0, 0);
-    const tmp1 = new Word64(0, 0),
-      tmp2 = new Word64(0, 0);
+    let a = new Word64(0, 0);
+    let b = new Word64(0, 0);
+    let c = new Word64(0, 0);
+    let d = new Word64(0, 0);
+    let e = new Word64(0, 0);
+    let f = new Word64(0, 0);
+    let g = new Word64(0, 0);
+    let h = new Word64(0, 0);
+    const t1 = new Word64(0, 0);
+    const t2 = new Word64(0, 0);
+    const tmp1 = new Word64(0, 0);
+    const tmp2 = new Word64(0, 0);
     let tmp3;
 
     // for each 1024 bit block
     for (i = 0; i < paddedLength;) {
       for (j = 0; j < 16; ++j) {
-        w[j].high =
-          (padded[i] << 24) |
+        w[j].high = (padded[i] << 24) |
           (padded[i + 1] << 16) |
           (padded[i + 2] << 8) |
           padded[i + 3];
-        w[j].low =
-          (padded[i + 4] << 24) |
+        w[j].low = (padded[i + 4] << 24) |
           (padded[i + 5] << 16) |
           (padded[i + 6] << 8) |
           padded[i + 7];
