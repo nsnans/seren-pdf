@@ -14,24 +14,24 @@
  */
 
 import { Uint8TypedArray } from "../common/typed_array";
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Stream } from "./stream";
 
 const chunkSize = 512;
 
 class DecryptStream extends DecodeStream {
-  public str: Stream;
+  public stream: BaseStream;
   protected initialized: boolean;
   protected nextChunk: Uint8TypedArray | null;
   protected decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray;
   constructor(
-    str: Stream, maybeLength: number,
+    stream: BaseStream, maybeLength: number,
     decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray
   ) {
     super(maybeLength);
 
-    this.str = str;
-    this.dict = str.dict;
+    this.stream = stream;
+    this.dict = stream.dict;
     this.decrypt = decrypt;
     this.nextChunk = null;
     this.initialized = false;
@@ -42,14 +42,14 @@ class DecryptStream extends DecodeStream {
     if (this.initialized) {
       chunk = this.nextChunk;
     } else {
-      chunk = this.str.getBytes(chunkSize);
+      chunk = this.stream.getBytes(chunkSize);
       this.initialized = true;
     }
     if (!chunk || chunk.length === 0) {
       this.eof = true;
       return;
     }
-    this.nextChunk = this.str.getBytes(chunkSize);
+    this.nextChunk = this.stream.getBytes(chunkSize);
     const hasMoreData = this.nextChunk?.length > 0;
 
     const decrypt = this.decrypt;

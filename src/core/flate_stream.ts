@@ -20,6 +20,7 @@
  */
 
 import { FormatError, info } from "../shared/util";
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Stream } from "./stream";
 
@@ -121,18 +122,18 @@ const fixedDistCodeTab: [Int32Array, number] = [
   5,
 ];
 
-class FlateStream extends DecodeStream {
+export class FlateStream extends DecodeStream {
 
   protected codeSize = 0;
 
   protected codeBuf = 0;
 
-  public str: Stream;
+  public stream: BaseStream;
 
-  constructor(stream: Stream, maybeLength: number) {
+  constructor(stream: BaseStream, maybeLength: number) {
     super(maybeLength);
 
-    this.str = stream;
+    this.stream = stream;
     this.dict = stream.dict;
 
     const cmf = stream.getByte();
@@ -162,8 +163,8 @@ class FlateStream extends DecodeStream {
   }
 
   async asyncGetBytes() {
-    this.str.reset();
-    const bytes = this.str.getBytes();
+    this.stream.reset();
+    const bytes = this.stream.getBytes();
 
     try {
       const { readable, writable } = new DecompressionStream("deflate");
@@ -213,11 +214,11 @@ class FlateStream extends DecodeStream {
       // decoder.
       // We already get the bytes from the underlying stream, so we just reuse
       // them to avoid get them again.
-      this.str = new Stream(
-        bytes,
+      this.stream = new Stream(
+        <Uint8Array<ArrayBuffer>>bytes,
         2 /* = header size (see ctor) */,
         bytes.length,
-        this.str.dict
+        this.stream.dict
       );
       this.reset();
       return null;
@@ -229,7 +230,7 @@ class FlateStream extends DecodeStream {
   }
 
   getBits(bits: number) {
-    const str = this.str;
+    const str = this.stream;
     let codeSize = this.codeSize;
     let codeBuf = this.codeBuf;
 
@@ -249,7 +250,7 @@ class FlateStream extends DecodeStream {
   }
 
   getCode(table: [Int32Array, number]) {
-    const str = this.str;
+    const str = this.stream;
     const codes = table[0];
     const maxLen = table[1];
     let codeSize = this.codeSize;
@@ -325,7 +326,7 @@ class FlateStream extends DecodeStream {
 
   readBlock() {
     let buffer, hdr, len;
-    const str = this.str;
+    const str = this.stream;
     // read block header
     try {
       hdr = this.getBits(3);
@@ -492,5 +493,3 @@ class FlateStream extends DecodeStream {
     }
   }
 }
-
-export { FlateStream };

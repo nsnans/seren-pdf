@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+
 // Table C-2
 const QeTable = [
   { qe: 0x5601, nmps: 1, nlps: 1, switchFlag: 1 },
@@ -73,24 +75,24 @@ const QeTable = [
  * The arithmetic decoder is used in conjunction with context models to decode
  * JPEG2000 and JBIG2 streams.
  */
-class ArithmeticDecoder {
+export class ArithmeticDecoder {
 
   public bp: number;
 
   public dataEnd: number;
-  
+
   public chigh: number;
-  
+
   public clow: number;
-  
+
   public ct: number = 0;
-  
+
   public a: number;
 
-  protected data: Uint8Array;
+  protected data: Uint8TypedArray;
 
   // C.3.5 Initialisation of the decoder (INITDEC)
-  constructor(data: Uint8Array, start: number, end: number) {
+  constructor(data: Uint8TypedArray, start: number, end: number) {
     this.data = data;
     this.bp = start;
     this.dataEnd = end;
@@ -193,5 +195,3 @@ class ArithmeticDecoder {
     return d;
   }
 }
-
-export { ArithmeticDecoder };

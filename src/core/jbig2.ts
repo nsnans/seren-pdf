@@ -18,8 +18,9 @@ import { log2, readInt8, readUint16, readUint32 } from "./core_utils";
 import { ArithmeticDecoder } from "./arithmetic_decoder";
 import { CCITTFaxDecoder } from "./ccitt";
 import { PlatformHelper } from "../platform/platform_helper";
+import { Uint8TypedArray } from "../common/typed_array";
 
-class Jbig2Error extends BaseException {
+export class Jbig2Error extends BaseException {
   constructor(msg: string) {
     super(msg, "Jbig2Error");
   }
@@ -45,9 +46,9 @@ class DecodingContext {
 
   public end: number;
 
-  public data: Uint8Array;
+  public data: Uint8TypedArray;
 
-  constructor(data: Uint8Array, start: number, end: number) {
+  constructor(data: Uint8TypedArray, start: number, end: number) {
     this.data = data;
     this.start = start;
     this.end = end;
@@ -592,7 +593,7 @@ function decodeRefinement(
 function decodeSymbolDictionary(
   huffman: boolean,
   refinement: boolean,
-  symbols: Uint8Array[][],
+  symbols: Uint8Array<ArrayBuffer>[][],
   numberOfNewSymbols: number,
   _numberOfExportedSymbols: number,
   huffmanTables: {
@@ -607,7 +608,7 @@ function decodeSymbolDictionary(
   refinementAt: { x: number; y: number; }[] | null,
   decodingContext: DecodingContext,
   huffmanInput: Reader
-): Uint8Array[][] {
+): Uint8Array<ArrayBuffer>[][] {
   if (huffman && refinement) {
     throw new Jbig2Error("symbol refinement with Huffman is not supported");
   }
@@ -763,16 +764,13 @@ function decodeSymbolDictionary(
   }
 
   // 6.5.10 Exported symbols
-  const exportedSymbols: Uint8Array[][] = [],
-    flags = [];
-  let currentFlag = false,
-    i,
-    ii;
+  const exportedSymbols: Uint8Array<ArrayBuffer>[][] = [];
+  const flags = [];
+  let currentFlag = false;
+  let i, ii;
   const totalSymbolsLength = symbols.length + numberOfNewSymbols;
   while (flags.length < totalSymbolsLength) {
-    let runLength = huffman
-      ? tableB1!.decode(huffmanInput)!
-      : decodeInteger(contextCache, "IAEX", decoder)!;
+    let runLength = huffman ? tableB1!.decode(huffmanInput)! : decodeInteger(contextCache, "IAEX", decoder)!;
     while (runLength--) {
       flags.push(currentFlag);
     }
@@ -1191,7 +1189,7 @@ interface SegmentHeaderType {
   headerEnd?: number;
 }
 
-function readSegmentHeader(data: Uint8Array, start: number): SegmentHeaderType {
+function readSegmentHeader(data: Uint8TypedArray, start: number): SegmentHeaderType {
   const segmentHeader: SegmentHeaderType = {};
   segmentHeader.number = readUint32(data, start);
   const flags = data[start + 4];
@@ -1294,20 +1292,19 @@ function readSegmentHeader(data: Uint8Array, start: number): SegmentHeaderType {
 
 interface SegmentWrapper {
   header: SegmentHeaderType;
-  data: Uint8Array;
+  data: Uint8TypedArray;
   start?: number;
   end?: number;
 }
 
-function readSegments(header: { randomAccess?: boolean }, data: Uint8Array, start: number, end: number) {
+function readSegments(header: { randomAccess?: boolean }, data: Uint8TypedArray, start: number, end: number) {
   const segments: SegmentWrapper[] = [];
   let position = start;
   while (position < end) {
     const segmentHeader = readSegmentHeader(data, position);
     position = segmentHeader.headerEnd!;
     const segment: SegmentWrapper = {
-      header: segmentHeader,
-      data,
+      header: segmentHeader, data
     };
     if (!header.randomAccess) {
       segment.start = position;
@@ -1330,7 +1327,7 @@ function readSegments(header: { randomAccess?: boolean }, data: Uint8Array, star
 }
 
 // 7.4.1 Region segment information field
-function readRegionSegmentInformation(data: Uint8Array, start: number) {
+function readRegionSegmentInformation(data: Uint8TypedArray, start: number) {
   return {
     width: readUint32(data, start),
     height: readUint32(data, start + 4),
@@ -1679,7 +1676,7 @@ function processSegments(segments: SegmentWrapper[], visitor: SimpleSegmentVisit
   }
 }
 
-function parseJbig2Chunks(chunks: { data: Uint8Array, start: number, end: number }[]) {
+function parseJbig2Chunks(chunks: { data: Uint8TypedArray, start: number, end: number }[]) {
   const visitor = new SimpleSegmentVisitor();
   for (let i = 0, ii = chunks.length; i < ii; i++) {
     const chunk = chunks[i];
@@ -1689,7 +1686,7 @@ function parseJbig2Chunks(chunks: { data: Uint8Array, start: number, end: number
   return visitor.buffer;
 }
 
-function parseJbig2(data: Uint8Array) {
+function parseJbig2(data: Uint8TypedArray) {
   if (PlatformHelper.testImageDecoders()) {
     throw new Error("Not implemented: parseJbig2");
   }
@@ -1745,7 +1742,7 @@ function parseJbig2(data: Uint8Array) {
 
 class SimpleSegmentVisitor {
 
-  protected symbols: Record<number, Uint8Array[][]> | null = null;
+  protected symbols: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
 
   public buffer: Uint8ClampedArray | null = null;
 
@@ -1753,7 +1750,7 @@ class SimpleSegmentVisitor {
 
   protected customTables: Record<number, HuffmanTable> | null = null;
 
-  protected patterns: Record<number, Uint8Array[][]> | null = null;
+  protected patterns: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
 
   onPageInformation(info: SegmentPageInfo) {
     this.currentPageInfo = info;
@@ -1828,7 +1825,7 @@ class SimpleSegmentVisitor {
     }
   }
 
-  onImmediateGenericRegion(region: SegmentGenericRegion, data: Uint8Array, start: number, end: number) {
+  onImmediateGenericRegion(region: SegmentGenericRegion, data: Uint8TypedArray, start: number, end: number) {
     const regionInfo = region.info;
     const decodingContext = new DecodingContext(data, start, end);
     const bitmap = decodeBitmap(
@@ -1845,7 +1842,10 @@ class SimpleSegmentVisitor {
   }
 
   onImmediateLosslessGenericRegion() {
-    this.onImmediateGenericRegion(...arguments);
+    const [region, data, start, end] = arguments as unknown as [
+      SegmentGenericRegion, Uint8TypedArray, number, number
+    ]
+    this.onImmediateGenericRegion(region, data, start, end);
   }
 
 
@@ -1855,7 +1855,7 @@ class SimpleSegmentVisitor {
     dictionary: SegmentDictionary,
     currentSegment: number,
     referredSegments: number[],
-    data: Uint8Array,
+    data: Uint8TypedArray,
     start: number,
     end: number
   ) {
@@ -1881,7 +1881,7 @@ class SimpleSegmentVisitor {
       this.symbols = symbols = {};
     }
 
-    const inputSymbols: Uint8Array[][] = [];
+    const inputSymbols: Uint8Array<ArrayBuffer>[][] = [];
     for (const referredSegment of referredSegments) {
       const referredSymbols = symbols[referredSegment];
       // referredSymbols is undefined when we have a reference to a Tables
@@ -1908,8 +1908,13 @@ class SimpleSegmentVisitor {
     );
   }
 
-  onImmediateTextRegion(region: SegmentTextRegion, referredSegments: number[]
-    , data: Uint8Array, start: number, end: number) {
+  onImmediateTextRegion(
+    region: SegmentTextRegion,
+    referredSegments: number[],
+    data: Uint8TypedArray,
+    start: number,
+    end: number
+  ) {
     const regionInfo = region.info;
     let huffmanTables: {
       symbolIDTable: HuffmanTable;
@@ -1968,12 +1973,18 @@ class SimpleSegmentVisitor {
   }
 
   onImmediateLosslessTextRegion() {
-    this.onImmediateTextRegion(...arguments);
+    const [region, referredSegments, data, start, end] = arguments as unknown as [
+      SegmentTextRegion, number[], Uint8TypedArray, number, number
+    ]
+    this.onImmediateTextRegion(region, referredSegments, data, start, end);
   }
 
   onPatternDictionary(
-    dictionary: SegmentPatternDictionary, currentSegment: number,
-    data: Uint8Array, start: number, end: number
+    dictionary: SegmentPatternDictionary,
+    currentSegment: number,
+    data: Uint8TypedArray,
+    start: number,
+    end: number
   ) {
     let patterns = this.patterns;
     if (!patterns) {
@@ -1992,7 +2003,7 @@ class SimpleSegmentVisitor {
 
   onImmediateHalftoneRegion(
     region: SegmentHalftoneRegion, referredSegments: number[],
-    data: Uint8Array, start: number, end: number
+    data: Uint8TypedArray, start: number, end: number
   ) {
     // HalftoneRegion refers to exactly one PatternDictionary.
     const patterns = this.patterns![referredSegments[0]];
@@ -2019,10 +2030,18 @@ class SimpleSegmentVisitor {
   }
 
   onImmediateLosslessHalftoneRegion() {
-    this.onImmediateHalftoneRegion(...arguments);
+    const [region, referredSegments, data, start, end] = arguments as unknown as [
+      SegmentHalftoneRegion, number[], Uint8TypedArray, number, number
+    ];
+    this.onImmediateHalftoneRegion(region, referredSegments, data, start, end);
   }
 
-  onTables(currentSegment: number, data: Uint8Array, start: number, end: number) {
+  onTables(
+    currentSegment: number,
+    data: Uint8TypedArray,
+    start: number,
+    end: number
+  ) {
     let customTables = this.customTables;
     if (!customTables) {
       this.customTables = customTables = {};
@@ -2189,7 +2208,7 @@ class HuffmanTable {
   }
 }
 
-function decodeTablesSegment(data: Uint8Array, start: number, end: number) {
+function decodeTablesSegment(data: Uint8TypedArray, start: number, end: number) {
   // Decodes a Tables segment, i.e., a custom Huffman table.
   // Annex B.2 Code table structure.
   const flags = data[start];
@@ -2509,9 +2528,9 @@ class Reader {
 
   protected currentByte: number;
 
-  protected data: Uint8Array;
+  protected data: Uint8TypedArray;
 
-  constructor(data: Uint8Array, start: number, end: number) {
+  constructor(data: Uint8TypedArray, start: number, end: number) {
     this.data = data;
     this.start = start;
     this.end = end;
@@ -2836,17 +2855,17 @@ function decodeMMRBitmap(input: Reader, width: number, height: number, endOfBloc
   return bitmap;
 }
 
-class Jbig2Image {
+export class Jbig2Image {
 
   width: number | null = null;
 
   height: number | null = null;
 
-  parseChunks(chunks: { data: Uint8Array, start: number, end: number }[]) {
+  parseChunks(chunks: { data: Uint8TypedArray, start: number, end: number }[]) {
     return parseJbig2Chunks(chunks);
   }
 
-  parse(data: Uint8Array) {
+  parse(data: Uint8TypedArray) {
     if (PlatformHelper.testImageDecoders()) {
       throw new Error("Not implemented: Jbig2Image.parse");
     }
@@ -2856,5 +2875,3 @@ class Jbig2Image {
     return imgData;
   }
 }
-
-export { Jbig2Error, Jbig2Image };

@@ -28,13 +28,8 @@ export abstract class BaseStream {
 
   public end: number = 0;
 
+  // 可能最后还是要写成byte getter的形式，
   public bytes: Uint8TypedArray = new Uint8Array(0);
-
-  // 相当于是一个代理
-  public str: BaseStream | null = null;
-
-  constructor() {
-  }
 
   abstract get length(): number;
 
@@ -126,10 +121,7 @@ export abstract class BaseStream {
 
   abstract makeSubStream(_start: number, _length: number, _dict: Dict | null): BaseStream;
 
-  /**
-   * @returns {Array | null}
-   */
-  abstract getBaseStreams(): Array<BaseStream> | null;
+  abstract getBaseStreams(): BaseStream[] | null;
 
 }
 

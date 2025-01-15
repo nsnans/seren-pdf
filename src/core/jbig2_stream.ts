@@ -13,25 +13,26 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { shadow } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Dict, DictKey } from "./primitives";
 import { Jbig2Image } from "./jbig2";
-import { shadow } from "../shared/util";
-import { Stream } from "./stream";
+import { Dict, DictKey } from "./primitives";
 
 /**
  * For JBIG2's we use a library to decode these images and
  * the stream behaves like all the other DecodeStreams.
  */
-class Jbig2Stream extends DecodeStream {
+export class Jbig2Stream extends DecodeStream {
 
-  protected stream;
-  protected dict;
+  protected stream: BaseStream;
+
   protected maybeLength: number;
-  protected params;
 
-  constructor(stream: Stream, maybeLength: number, params) {
+  protected params: Dict | null;
+
+  constructor(stream: BaseStream, maybeLength: number, params: Dict | null) {
     super(maybeLength);
 
     this.stream = stream;
@@ -40,7 +41,7 @@ class Jbig2Stream extends DecodeStream {
     this.params = params;
   }
 
-  get bytes(): Uint8Array {
+  get bytes(): Uint8TypedArray {
     // If `this.maybeLength` is null, we'll get the entire stream.
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
@@ -54,14 +55,14 @@ class Jbig2Stream extends DecodeStream {
     this.decodeImage();
   }
 
-  decodeImage(bytes: Uint8Array | null = null) {
+  decodeImage(bytes: Uint8TypedArray | null = null) {
     if (this.eof) {
       return this.buffer;
     }
     bytes ||= this.bytes;
     const jbig2Image = new Jbig2Image();
 
-    const chunks: { data: Uint8Array, start: number, end: number }[] = [];
+    const chunks: { data: Uint8TypedArray, start: number, end: number }[] = [];
     if (this.params instanceof Dict) {
       const globalsStream = this.params.getValue(DictKey.JBIG2Globals);
       if (globalsStream instanceof BaseStream) {
@@ -88,5 +89,3 @@ class Jbig2Stream extends DecodeStream {
     return this.stream.isAsync;
   }
 }
-
-export { Jbig2Stream };

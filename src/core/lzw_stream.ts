@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Stream } from "./stream";
 
-class LZWStream extends DecodeStream {
+export class LZWStream extends DecodeStream {
 
   protected cachedData = 0;
 
@@ -24,15 +24,15 @@ class LZWStream extends DecodeStream {
 
   protected lzwState;
 
-  public str;
+  public stream: BaseStream;
 
   protected lastCode = null;
 
-  constructor(str: Stream, maybeLength: number, earlyChange: number) {
+  constructor(stream: BaseStream, maybeLength: number, earlyChange: number) {
     super(maybeLength);
 
-    this.str = str;
-    this.dict = str.dict;
+    this.stream = stream;
+    this.dict = stream.dict;
     this.cachedData = 0;
     this.bitsCached = 0;
 
@@ -58,7 +58,7 @@ class LZWStream extends DecodeStream {
     let bitsCached = this.bitsCached;
     let cachedData = this.cachedData;
     while (bitsCached < n) {
-      const c = this.str.getByte();
+      const c = this.stream.getByte();
       if (c === -1) {
         this.eof = true;
         return null;
@@ -158,5 +158,3 @@ class LZWStream extends DecodeStream {
     this.bufferLength = currentBufferLength;
   }
 }
-
-export { LZWStream };

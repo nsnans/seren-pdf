@@ -13,27 +13,29 @@
  * limitations under the License.
  */
 
+import { FormatError } from "../shared/util";
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
-import { FormatError } from "../shared/util";
-import { Stream } from "./stream";
 
-class PredictorStream extends DecodeStream {
+export class PredictorStream extends DecodeStream {
 
   protected pixBytes: number = 0;
 
   protected rowBytes: number = 0;
 
-  constructor(str: Stream, maybeLength: number, params: Dict) {
+  protected predictor: number | null = null;
+
+  constructor(stream: BaseStream, maybeLength: number, params: Dict) {
     super(maybeLength);
 
     if (!(params instanceof Dict)) {
-      return str; // no prediction
+      return stream; // no prediction
     }
     const predictor = (this.predictor = params.getValue(DictKey.Predictor) || 1);
 
     if (predictor <= 1) {
-      return str; // no prediction
+      return stream; // no prediction
     }
     if (predictor !== 2 && (predictor < 10 || predictor > 15)) {
       throw new FormatError(`Unsupported predictor: ${predictor}`);
@@ -41,8 +43,8 @@ class PredictorStream extends DecodeStream {
 
     this.readBlock = predictor === 2 ? this.readBlockTiff : this.readBlockPng;
 
-    this.str = str;
-    this.dict = str.dict;
+    this.stream = stream;
+    this.dict = stream.dict;
 
     const colors = (this.colors = params.getValue(DictKey.Colors) || 1);
     const bits = (this.bits = params.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent) || 8);
@@ -63,7 +65,7 @@ class PredictorStream extends DecodeStream {
     const bits = this.bits;
     const colors = this.colors;
 
-    const rawBytes = this.str.getBytes(rowBytes);
+    const rawBytes = this.stream.getBytes(rowBytes);
     this.eof = !rawBytes.length;
     if (this.eof) {
       return;
@@ -144,8 +146,8 @@ class PredictorStream extends DecodeStream {
     const rowBytes = this.rowBytes;
     const pixBytes = this.pixBytes;
 
-    const predictor = this.str.getByte();
-    const rawBytes = this.str.getBytes(rowBytes);
+    const predictor = this.stream.getByte();
+    const rawBytes = this.stream.getBytes(rowBytes);
     this.eof = !rawBytes.length;
     if (this.eof) {
       return;
@@ -236,5 +238,3 @@ class PredictorStream extends DecodeStream {
     this.bufferLength += rowBytes;
   }
 }
-
-export { PredictorStream };

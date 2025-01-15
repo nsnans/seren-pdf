@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Stream } from "./stream";
 
 class AsciiHexStream extends DecodeStream {
 
   protected firstDigit: number = -1;
 
-  public str: Stream;
+  public stream: BaseStream;
 
-  constructor(str: Stream, maybeLength: number) {
+  constructor(stream: BaseStream, maybeLength: number) {
     // Most streams increase in size when decoded, but AsciiHex streams shrink
     // by 50%.
     if (maybeLength) {
@@ -30,13 +30,13 @@ class AsciiHexStream extends DecodeStream {
     }
     super(maybeLength);
 
-    this.str = str;
-    this.dict = str.dict;
+    this.stream = stream;
+    this.dict = stream.dict;
   }
 
   readBlock() {
     const UPSTREAM_BLOCK_SIZE = 8000;
-    const bytes = this.str.getBytes(UPSTREAM_BLOCK_SIZE);
+    const bytes = this.stream.getBytes(UPSTREAM_BLOCK_SIZE);
     if (!bytes.length) {
       this.eof = true;
       return;

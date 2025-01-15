@@ -13,19 +13,21 @@
  * limitations under the License.
  */
 
+import { BaseStream } from "./base_stream";
 import { CCITTFaxDecoder } from "./ccitt";
 import { DecodeStream } from "./decode_stream";
 import { Dict, DictKey } from "./primitives";
-import { Stream } from "./stream";
 
-class CCITTFaxStream extends DecodeStream {
+export class CCITTFaxStream extends DecodeStream {
 
   protected ccittFaxDecoder: CCITTFaxDecoder;
 
-  constructor(str: Stream, maybeLength: number, params: Dict) {
+  public stream: BaseStream;
+
+  constructor(str: BaseStream, maybeLength: number, params: Dict | null = null) {
     super(maybeLength);
 
-    this.str = str;
+    this.stream = str;
     this.dict = str.dict;
 
     if (!(params instanceof Dict)) {
@@ -60,5 +62,3 @@ class CCITTFaxStream extends DecodeStream {
     }
   }
 }
-
-export { CCITTFaxStream };

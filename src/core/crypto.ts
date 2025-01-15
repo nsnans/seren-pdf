@@ -29,6 +29,7 @@ import { DecryptStream } from "./decrypt_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { Stream } from "./stream";
 import { Uint8TypedArray } from "../common/typed_array";
+import { BaseStream } from "./base_stream";
 
 class ARCFourCipher implements StreamClipher, StringClipher {
 
@@ -1462,7 +1463,7 @@ export class CipherTransform {
     this.createStreamCipher = createStreamCipher;
   }
 
-  createStream(stream: Stream, length: number) {
+  createStream(stream: BaseStream, length: number) {
     const cipher = this.createStreamCipher();
     return new DecryptStream(
       stream, length, (data, finalize) => cipher.decryptBlock(data, finalize)

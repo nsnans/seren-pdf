@@ -13,24 +13,26 @@
  * limitations under the License.
  */
 
-import { shadow, warn } from "../shared/util";
-import { DecodeStream } from "./decode_stream";
-import { Dict, DictKey } from "./primitives";
-import { JpegImage } from "./jpg";
-import { Stream } from "./stream";
 import { ImageDecoder } from "../global";
+import { shadow, warn } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { DecodeStream } from "./decode_stream";
+import { JpegImage } from "./jpg";
+import { Dict, DictKey } from "./primitives";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves
  * like all the other DecodeStreams.
  */
-class JpegStream extends DecodeStream {
+export class JpegStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  protected stream: Stream;
+  protected stream: BaseStream;
 
-  constructor(stream: Stream, maybeLength: number, params?) {
+  protected params: Dict | null;
+
+  constructor(stream: BaseStream, maybeLength: number, params: Dict | null = null) {
     super(maybeLength);
 
     this.stream = stream;
@@ -117,7 +119,7 @@ class JpegStream extends DecodeStream {
     return data;
   }
 
-  decodeImage(bytes: Uint8Array | null) {
+  decodeImage(bytes: Uint8Array<ArrayBuffer> | null) {
     if (this.eof) {
       return this.buffer;
     }
@@ -190,5 +192,3 @@ class JpegStream extends DecodeStream {
     }
   }
 }
-
-export { JpegStream };

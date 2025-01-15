@@ -250,7 +250,6 @@ export class ChunkedStream extends Stream {
       start: this.start,
       end: this.end,
       bytes: this.bytes,
-      str: this.str,
       length: this.length,
     }
   }
@@ -273,7 +272,6 @@ class ChunkedStreamSubstream extends ChunkedStream {
     this.start = state.start;
     this.end = state.end;
     this.bytes = state.bytes;
-    this.str = state.str;
   }
 
   get isDataLoaded() {
@@ -394,7 +392,7 @@ export class ChunkedStreamManager {
     return this._loadedStreamCapability.promise;
   }
 
-  _requestChunks(chunks: number[]) {
+  async _requestChunks(chunks: number[]) {
     const requestId = this.currRequestId++;
 
     const chunksNeeded = new Set<number>();

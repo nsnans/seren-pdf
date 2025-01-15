@@ -63,18 +63,6 @@ function getInlineImageCacheKey(bytes: Uint8TypedArray) {
   return ii + "_" + String.fromCharCode.apply(null, strBuf);
 }
 
-
-interface ParserOptions {
-
-  lexer: Lexer;
-
-  xref?: XRef | null;
-
-  allowStreams?: boolean;
-
-  recoveryMode?: boolean;
-}
-
 class Parser {
 
   public lexer: Lexer;
@@ -182,9 +170,7 @@ class Parser {
           // Stream objects are not allowed inside content streams or
           // object streams.
           if (isCmd(this.buf2, "stream")) {
-            return this.allowStreams
-              ? this.makeStream(dict, cipherTransform)
-              : dict;
+            return this.allowStreams ? this.makeStream(dict, cipherTransform) : dict;
           }
           this.shift();
           return dict;
@@ -217,21 +203,20 @@ class Parser {
 
   /**
    * Find the end of the stream by searching for the /EI\s/.
-   * @returns {number} The inline stream length.
+   * @returns The inline stream length.
    */
   findDefaultInlineStreamEnd(stream: BaseStream) {
-    const E = 0x45,
-      I = 0x49,
-      SPACE = 0x20,
-      LF = 0xa,
-      CR = 0xd,
-      NUL = 0x0;
-    const { knownCommands } = this.lexer,
-      startPos = stream.pos,
-      n = 15;
-    let state = 0,
-      ch,
-      maybeEIPos;
+    const E = 0x45;
+    const I = 0x49;
+    const SPACE = 0x20;
+    const LF = 0xa;
+    const CR = 0xd;
+    const NUL = 0x0;
+    const { knownCommands } = this.lexer;
+    const startPos = stream.pos;
+    const n = 15;
+    let state = 0;
+    let ch, maybeEIPos;
     while ((ch = stream.getByte()) !== -1) {
       if (state === 0) {
         state = ch === E ? 1 : 0;
@@ -285,7 +270,7 @@ class Parser {
           // Check that the "EI" sequence isn't part of the image data, since
           // that would cause the image to be truncated (fixes issue11124.pdf).
           const tmpLexer = new Lexer(
-            new Stream(followingBytes.slice()),
+            new Stream(<Uint8Array<ArrayBuffer>>followingBytes.slice()),
             knownCommands
           );
           // Reduce the number of (potential) warning messages.
@@ -354,13 +339,12 @@ class Parser {
 
   /**
    * Find the EOI (end-of-image) marker 0xFFD9 of the stream.
-   * @returns {number} The inline stream length.
+   * @returns The inline stream length.
    */
   findDCTDecodeInlineStreamEnd(stream: BaseStream) {
     const startPos = stream.pos;
-    let foundEOI = false,
-      b,
-      markerLength;
+    let foundEOI = false;
+    let b, markerLength;
     while ((b = stream.getByte()) !== -1) {
       if (b !== 0xff) {
         // Not a valid marker.
@@ -456,11 +440,10 @@ class Parser {
 
   /**
    * Find the EOD (end-of-data) marker '~>' (i.e. TILDE + GT) of the stream.
-   * @returns {number} The inline stream length.
+   * @returns The inline stream length.
    */
   findASCII85DecodeInlineStreamEnd(stream: BaseStream) {
-    const TILDE = 0x7e,
-      GT = 0x3e;
+    const TILDE = 0x7e, GT = 0x3e;
     const startPos = stream.pos;
     let ch;
     while ((ch = stream.getByte()) !== -1) {
@@ -503,7 +486,7 @@ class Parser {
 
   /**
    * Find the EOD (end-of-data) marker '>' (i.e. GT) of the stream.
-   * @returns {number} The inline stream length.
+   * @returns The inline stream length.
    */
   findASCIIHexDecodeInlineStreamEnd(stream: BaseStream) {
     const GT = 0x3e;
@@ -531,10 +514,9 @@ class Parser {
    * Skip over the /EI/ for streams where we search for an EOD marker.
    */
   inlineStreamSkipEI(stream: BaseStream) {
-    const E = 0x45,
-      I = 0x49;
-    let state = 0,
-      ch;
+    const E = 0x45;
+    const I = 0x49;
+    let state = 0, ch;
     while ((ch = stream.getByte()) !== -1) {
       if (state === 0) {
         state = ch === E ? 1 : 0;
@@ -627,7 +609,7 @@ class Parser {
     for (const key in dictMap) {
       dict.set(<DictKey>key, dictMap[key]);
     }
-    let imageStream: Stream = <Stream>stream.makeSubStream(startPos, length, dict);
+    let imageStream = stream.makeSubStream(startPos, length, dict);
     if (cipherTransform) {
       imageStream = cipherTransform.createStream(imageStream, length);
     }
@@ -766,9 +748,9 @@ class Parser {
     return stream;
   }
 
-  filter(stream: Stream, dict: Dict, length: number) {
+  filter(stream: BaseStream, dict: Dict, length: number) {
     let filter = dict.getValueWithFallback(DictKey.F, DictKey.Filter);
-    let params = dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
+    let params: Dict | null = dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
 
     if (filter instanceof Name) {
       if (Array.isArray(params)) {
@@ -777,7 +759,7 @@ class Parser {
       return this.makeFilter(stream, filter.name, length, params);
     }
 
-    let maybeLength = length;
+    let maybeLength: number | null = length;
     if (Array.isArray(filter)) {
       const filterArray = filter;
       const paramsArray = params;
@@ -791,7 +773,7 @@ class Parser {
         if (Array.isArray(paramsArray) && i in paramsArray) {
           params = this.xref!.fetchIfRef(paramsArray[i]);
         }
-        stream = this.makeFilter(stream, filter.name, maybeLength, params);
+        stream = this.makeFilter(stream, filter.name, maybeLength!, params);
         // After the first stream the `length` variable is invalid.
         maybeLength = null;
       }
@@ -799,7 +781,7 @@ class Parser {
     return stream;
   }
 
-  makeFilter(stream: Stream, name: string, maybeLength: number, params: Dict) {
+  makeFilter(stream: BaseStream, name: string, maybeLength: number, params: Dict | null): BaseStream {
     // Since the 'Length' entry in the stream dictionary can be completely
     // wrong, e.g. zero for non-empty streams, only skip parsing the stream
     // when we can be absolutely certain that it actually is empty.
@@ -904,7 +886,7 @@ class Lexer {
 
   public stream: BaseStream;
 
-  protected strBuf;
+  protected strBuf: string[];
 
   protected currentChar: number;
 
@@ -1211,8 +1193,7 @@ class Lexer {
     const strBuf = this.strBuf;
     strBuf.length = 0;
     let ch = this.currentChar;
-    let firstDigit = -1,
-      digit = -1;
+    let firstDigit = -1, digit = -1;
     this._hexStringNumWarn = 0;
 
     while (true) {

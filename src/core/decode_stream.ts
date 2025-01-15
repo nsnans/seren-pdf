@@ -38,6 +38,9 @@ abstract class DecodeStream extends BaseStream {
 
   public _rawMinBufferLength: number;
 
+  // 相当于是一个代理
+  public stream: BaseStream | null = null;
+
   constructor(maybeMinBufferLength: number) {
     super();
     this._rawMinBufferLength = maybeMinBufferLength || 0;
@@ -113,8 +116,15 @@ abstract class DecodeStream extends BaseStream {
     if (!this.canAsyncDecodeImageFromBuffer) {
       return this.getBytes(length, decoderOptions);
     }
-    const data = await this.stream.asyncGetBytes();
+    const data = await this.stream!.asyncGetBytes();
     return this.decodeImage(data, decoderOptions);
+  }
+
+  decodeImage(
+    _data: Uint8TypedArray | null,
+    _decoderOptions: JpxDecoderOptions | null = null
+  ): Uint8TypedArray | null {
+    return null;
   }
 
   reset() {
@@ -136,7 +146,7 @@ abstract class DecodeStream extends BaseStream {
   }
 
   getBaseStreams() {
-    return this.str ? this.str.getBaseStreams() : null;
+    return this.stream ? this.stream.getBaseStreams() : null;
   }
 
   get length(): number {
@@ -176,7 +186,7 @@ class StreamsSequenceStream extends DecodeStream {
       chunk = stream.getBytes();
     } catch (reason) {
       if (this._onError) {
-        this._onError(reason, stream.dict?.objId);
+        this._onError(reason, stream.dict?.objId ?? null);
         return;
       }
       throw reason;

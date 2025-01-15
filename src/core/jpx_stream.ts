@@ -13,24 +13,26 @@
  * limitations under the License.
  */
 
+import { shadow } from "../shared/util";
+import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpxImage } from "./jpx";
-import { shadow } from "../shared/util";
-import { Stream } from "./stream";
+import { Dict } from "./primitives";
 
 /**
  * For JPEG 2000's we use a library to decode these images and
  * the stream behaves like all the other DecodeStreams.
  */
-class JpxStream extends DecodeStream {
+export class JpxStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  protected stream: Stream;
+  protected stream: BaseStream;
 
-  constructor(stream: Stream, maybeLength: number, params) {
+  protected params: Dict | null;
+
+  constructor(stream: BaseStream, maybeLength: number, params: Dict | null) {
     super(maybeLength);
-
     this.stream = stream;
     this.dict = stream.dict;
     this.maybeLength = maybeLength;
@@ -67,5 +69,3 @@ class JpxStream extends DecodeStream {
     return this.stream.isAsync;
   }
 }
-
-export { JpxStream };
