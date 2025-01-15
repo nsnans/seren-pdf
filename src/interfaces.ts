@@ -57,16 +57,7 @@ export interface ReadResult {
   done: boolean,
 }
 
-export interface WorkerStreamRangeReader {
-
-  get isStreamingSupported(): boolean;
-
-  read(): Promise<ReadResult>;
-
-  cancel(reason: any): void;
-}
-
-export interface WorkerStreamReader {
+export interface WorkerStreamReader extends PDFStreamReader {
 
   get headersReady(): Promise<void>;
 
@@ -90,11 +81,11 @@ export interface WorkerStreamReader {
 export interface PDFStreamReader {
 
   /**
-     * Sets or gets the progress callback. The callback can be useful when the
-     * isStreamingSupported property of the object is defined as false.
-     * The callback is called with one parameter: an object with the loaded and
-     * total properties.
-     */
+   * Sets or gets the progress callback. The callback can be useful when the
+   * isStreamingSupported property of the object is defined as false.
+   * The callback is called with one parameter: an object with the loaded and
+   * total properties.
+   */
   onProgress: ((loaded: number, total?: number) => void) | null;
 
   /**

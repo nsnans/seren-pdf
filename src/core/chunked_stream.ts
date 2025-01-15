@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-import { arrayBuffersToBytes, MissingDataException } from "./core_utils";
-import { AbortException, assert } from "../shared/util";
-import { Stream } from "./stream";
-import { BaseStream } from "./base_stream";
+import { PDFStream, ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
-import { PDFNetworkStream } from "../display/network";
 import { MessageHandler } from "../shared/message_handler";
-import { ReadResult } from "../interfaces";
+import { AbortException, assert } from "../shared/util";
+import { BaseStream } from "./base_stream";
+import { arrayBuffersToBytes, MissingDataException } from "./core_utils";
+import { Stream } from "./stream";
 
-class ChunkedStream extends Stream {
+export class ChunkedStream extends Stream {
 
   protected chunkSize: number;
 
@@ -227,31 +226,7 @@ class ChunkedStream extends Stream {
       this.ensureByte(start);
     }
 
-    function ChunkedStreamSubstream() { }
-    ChunkedStreamSubstream.prototype = Object.create(this);
-    ChunkedStreamSubstream.prototype.getMissingChunks = function () {
-      const chunkSize = this.chunkSize;
-      const beginChunk = Math.floor(this.start / chunkSize);
-      const endChunk = Math.floor((this.end - 1) / chunkSize) + 1;
-      const missingChunks = [];
-      for (let chunk = beginChunk; chunk < endChunk; ++chunk) {
-        if (!this._loadedChunks.has(chunk)) {
-          missingChunks.push(chunk);
-        }
-      }
-      return missingChunks;
-    };
-    Object.defineProperty(ChunkedStreamSubstream.prototype, "isDataLoaded", {
-      get() {
-        if (this.numChunksLoaded === this.numChunks) {
-          return true;
-        }
-        return this.getMissingChunks().length === 0;
-      },
-      configurable: true,
-    });
-
-    const subStream = new ChunkedStreamSubstream();
+    const subStream = new ChunkedStreamSubstream(this);
     subStream.pos = subStream.start = start;
     subStream.end = start + length! || this.end;
     subStream.dict = dict;
@@ -261,13 +236,68 @@ class ChunkedStream extends Stream {
   getBaseStreams(): BaseStream[] {
     return [<BaseStream>this];
   }
+
+  cloneState() {
+    return {
+      chunkSize: this.chunkSize,
+      numChunks: this.numChunks,
+      _loadedChunks: this._loadedChunks,
+      progressiveDataLength: this.progressiveDataLength,
+      lastSuccessfulEnsureByteChunk: this.lastSuccessfulEnsureByteChunk,
+      manager: this.manager,
+      pos: this.pos,
+      dict: this.dict,
+      start: this.start,
+      end: this.end,
+      bytes: this.bytes,
+      str: this.str,
+      length: this.length,
+    }
+  }
 }
 
 class ChunkedStreamSubstream extends ChunkedStream {
 
+  constructor(parent: ChunkedStream) {
+    const state = parent.cloneState();
+    // 先初始化一个空的，然后recover
+    super(0, 0, state.manager);
+    this.chunkSize = state.chunkSize;
+    this.numChunks = state.numChunks;
+    this._loadedChunks = state._loadedChunks;
+    this.progressiveDataLength = state.progressiveDataLength;
+    this.lastSuccessfulEnsureByteChunk = state.lastSuccessfulEnsureByteChunk;
+    this.manager = state.manager;
+    this.pos = state.pos;
+    this.dict = state.dict;
+    this.start = state.start;
+    this.end = state.end;
+    this.bytes = state.bytes;
+    this.str = state.str;
+  }
+
+  get isDataLoaded() {
+    if (this.numChunksLoaded === this.numChunks) {
+      return true;
+    }
+    return this.getMissingChunks().length === 0;
+  }
+
+  getMissingChunks() {
+    const chunkSize = this.chunkSize;
+    const beginChunk = Math.floor(this.start / chunkSize);
+    const endChunk = Math.floor((this.end - 1) / chunkSize) + 1;
+    const missingChunks = [];
+    for (let chunk = beginChunk; chunk < endChunk; ++chunk) {
+      if (!this._loadedChunks.has(chunk)) {
+        missingChunks.push(chunk);
+      }
+    }
+    return missingChunks;
+  };
 }
 
-class ChunkedStreamManager {
+export class ChunkedStreamManager {
 
   protected length: number;
 
@@ -295,23 +325,29 @@ class ChunkedStreamManager {
 
   protected msgHandler: MessageHandler;
 
-  constructor(pdfNetworkStream: PDFNetworkStream, args) {
-    this.length = args.length;
-    this.chunkSize = args.rangeChunkSize;
+  constructor(
+    pdfNetworkStream: PDFStream,
+    msgHandler: MessageHandler,
+    length: number,
+    disableAutoFetch: boolean,
+    rangeChunkSize: number
+  ) {
+    this.length = length;
+    this.chunkSize = rangeChunkSize;
     this.stream = new ChunkedStream(this.length, this.chunkSize, this);
     this.pdfNetworkStream = pdfNetworkStream;
-    this.disableAutoFetch = args.disableAutoFetch;
-    this.msgHandler = args.msgHandler;
+    this.disableAutoFetch = disableAutoFetch;
+    this.msgHandler = msgHandler;
   }
 
-  sendRequest(begin: number, end: number) {
-    const rangeReader = this.pdfNetworkStream.getRangeReader(begin, end);
+  async sendRequest(begin: number, end: number) {
+    const rangeReader = this.pdfNetworkStream.getRangeReader(begin, end)!;
     if (!rangeReader.isStreamingSupported) {
       rangeReader.onProgress = this.onProgress.bind(this);
     }
 
     let chunks: ArrayBuffer[] | null = [], loaded = 0;
-    return new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => {
+    const data = await new Promise<Uint8Array<ArrayBuffer>>((resolve, reject) => {
       const readChunk = ({ value, done }: ReadResult) => {
         try {
           if (done) {
@@ -339,12 +375,11 @@ class ChunkedStreamManager {
         }
       };
       rangeReader.read().then(readChunk, reject);
-    }).then(data => {
-      if (this.aborted) {
-        return; // Ignoring any data after abort.
-      }
-      this.onReceiveData(data, begin);
     });
+    if (this.aborted) {
+      return; // Ignoring any data after abort.
+    }
+    this.onReceiveData(data, begin);
   }
 
   /**
@@ -572,5 +607,3 @@ class ChunkedStreamManager {
     }
   }
 }
-
-export { ChunkedStream, ChunkedStreamManager };

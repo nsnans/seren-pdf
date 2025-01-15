@@ -14,21 +14,18 @@
  */
 
 import { DocumentEvaluatorOptions } from "../display/api";
-import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AbortException,
   createValidAbsoluteUrl,
   FeatureTest,
-  unreachable,
-  warn,
+  warn
 } from "../shared/util";
 import { Catalog } from "./catalog";
 import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";
 import { Page, PDFDocument } from "./document";
 import { Stream } from "./stream";
-import { WorkerTask } from "./worker";
 import { PDFWorkerStream } from "./worker_stream";
 import { XRef } from "./xref";
 
@@ -235,12 +232,13 @@ class NetworkPDFManager extends BasePDFManager {
   constructor(args: PDFManagerArgs) {
     super(args);
 
-    this.streamManager = new ChunkedStreamManager(args.source, {
-      msgHandler: args.handler,
-      length: args.length,
-      disableAutoFetch: args.disableAutoFetch,
-      rangeChunkSize: args.rangeChunkSize,
-    });
+    this.streamManager = new ChunkedStreamManager(
+      <PDFWorkerStream>args.source!,
+      args.handler,
+      args.length,
+      args.disableAutoFetch,
+      args.rangeChunkSize,
+    );
     this.pdfDocument = new PDFDocument(this, this.streamManager.getStream());
   }
 

@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import { PDFStreamReader, ReadResult, WorkerStreamRangeReader, WorkerStreamReader } from "../interfaces";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult } from "../interfaces";
 import { MessageHandler } from "../shared/message_handler";
-import { ReaderHeadersReadyResult } from "../shared/message_handler_types";
 import { assert } from "../shared/util";
 
-/** @implements {IPDFStream} */
-class PDFWorkerStream {
+class PDFWorkerStream implements PDFStream {
 
   protected _msgHandler: MessageHandler;
 
@@ -60,11 +58,11 @@ class PDFWorkerStream {
   }
 }
 
-class PDFWorkerStreamReader implements WorkerStreamReader {
+class PDFWorkerStreamReader implements PDFStreamReader {
 
   protected _messageHandler: MessageHandler;
 
-  protected onProgress: null;
+  public onProgress: ((loaded: number, total?: number) => void) | null;
 
   protected _contentLength: number | null;
 
@@ -94,6 +92,9 @@ class PDFWorkerStreamReader implements WorkerStreamReader {
       this._isRangeSupported = data.isRangeSupported;
       this._contentLength = data.contentLength;
     });
+  }
+  get filename(): string | null {
+    return null;
   }
 
   get headersReady() {
@@ -127,14 +128,13 @@ class PDFWorkerStreamReader implements WorkerStreamReader {
   }
 }
 
-/** @implements {IPDFStreamRangeReader} */
-class PDFWorkerStreamRangeReader implements WorkerStreamRangeReader {
+class PDFWorkerStreamRangeReader implements PDFStreamRangeReader {
 
   protected _messageHandler: MessageHandler;
 
   protected _reader: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>;
 
-  protected onProgress: null;
+  public onProgress: ((loaded: number, total?: number) => void) | null;
 
   constructor(begin: number, end: number, messageHandler: MessageHandler) {
     this._messageHandler = messageHandler;
