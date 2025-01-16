@@ -130,95 +130,58 @@ function decodeIAID(contextCache: ContextCache, decoder: ArithmeticDecoder, code
 }
 
 enum SegmentType {
-  SymbolDictionary = "SymbolDictionary",
-  IntermediateTextRegion = "IntermediateTextRegion",
-  ImmediateTextRegion = "ImmediateTextRegion",
-  ImmediateLosslessTextRegion = "ImmediateLosslessTextRegion",
-  PatternDictionary = "PatternDictionary",
-  IntermediateHalftoneRegion = "IntermediateHalftoneRegion",
-  ImmediateHalftoneRegion = "ImmediateHalftoneRegion",
-  ImmediateLosslessHalftoneRegion = "ImmediateLosslessHalftoneRegion",
-  IntermediateGenericRegion = "IntermediateGenericRegion",
-  ImmediateGenericRegion = "ImmediateGenericRegion",
-  ImmediateLosslessGenericRegion = "ImmediateLosslessGenericRegion",
-  IntermediateGenericRefinementRegion = "IntermediateGenericRefinementRegion",
-  ImmediateGenericRefinementRegion = "ImmediateGenericRefinementRegion",
-  ImmediateLosslessGenericRefinementRegion = "ImmediateLosslessGenericRefinementRegion",
-  PageInformation = "PageInformation",
-  EndOfPage = "EndOfPage",
-  EndOfStripe = "EndOfStripe",
-  EndOfFile = "EndOfFile",
-  Profiles = "Profiles",
-  Tables = "Tables",
-  Extension = "Extension"
+  SymbolDictionary = 0,
+  IntermediateTextRegion = 4,
+  ImmediateTextRegion = 6,
+  ImmediateLosslessTextRegion = 7,
+  PatternDictionary = 16,
+  IntermediateHalftoneRegion = 20,
+  ImmediateHalftoneRegion = 22,
+  ImmediateLosslessHalftoneRegion = 23,
+  IntermediateGenericRegion = 36,
+  ImmediateGenericRegion = 38,
+  ImmediateLosslessGenericRegion = 39,
+  IntermediateGenericRefinementRegion = 40,
+  ImmediateGenericRefinementRegion = 42,
+  ImmediateLosslessGenericRefinementRegion = 43,
+  PageInformation = 48,
+  EndOfPage = 49,
+  EndOfStripe = 50,
+  EndOfFile = 51,
+  Profiles = 52,
+  Tables = 53,
+  Extension = 62,
 }
 
-// 7.3 Segment types
-const SegmentTypes: (SegmentType | null)[] = [
-  SegmentType.SymbolDictionary,
-  null,
-  null,
-  null,
-  SegmentType.IntermediateTextRegion,
-  null,
-  SegmentType.ImmediateTextRegion,
-  SegmentType.ImmediateLosslessTextRegion,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  SegmentType.PatternDictionary,
-  null,
-  null,
-  null,
-  SegmentType.IntermediateHalftoneRegion,
-  null,
-  SegmentType.ImmediateHalftoneRegion,
-  SegmentType.ImmediateLosslessHalftoneRegion,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  SegmentType.IntermediateGenericRegion,
-  null,
-  SegmentType.ImmediateGenericRegion,
-  SegmentType.ImmediateLosslessGenericRegion,
-  SegmentType.IntermediateGenericRefinementRegion,
-  null,
-  SegmentType.ImmediateGenericRefinementRegion,
-  SegmentType.ImmediateLosslessGenericRefinementRegion,
-  null,
-  null,
-  null,
-  null,
-  SegmentType.PageInformation,
-  SegmentType.EndOfPage,
-  SegmentType.EndOfStripe,
-  SegmentType.EndOfFile,
-  SegmentType.Profiles,
-  SegmentType.Tables,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  SegmentType.Extension,
-];
+const SegmentTypeSet = new Set(Object.values(SegmentType).filter(t => Number.isInteger(t)));
+
+function isValidSegment(segementType: number) {
+  return SegmentTypeSet.has(segementType);
+}
+
+const SegmentTypeName = {
+  [SegmentType.SymbolDictionary]: "SymbolDictionary",
+  [SegmentType.IntermediateTextRegion]: "IntermediateTextRegion",
+  [SegmentType.ImmediateTextRegion]: "ImmediateTextRegion",
+  [SegmentType.ImmediateLosslessTextRegion]: "ImmediateLosslessTextRegion",
+  [SegmentType.PatternDictionary]: "PatternDictionary",
+  [SegmentType.IntermediateHalftoneRegion]: "IntermediateHalftoneRegion",
+  [SegmentType.ImmediateHalftoneRegion]: "ImmediateHalftoneRegion",
+  [SegmentType.ImmediateLosslessHalftoneRegion]: "ImmediateLosslessHalftoneRegion",
+  [SegmentType.IntermediateGenericRegion]: "IntermediateGenericRegion",
+  [SegmentType.ImmediateGenericRegion]: "ImmediateGenericRegion",
+  [SegmentType.ImmediateLosslessGenericRegion]: "ImmediateLosslessGenericRegion",
+  [SegmentType.IntermediateGenericRefinementRegion]: "IntermediateGenericRefinementRegion",
+  [SegmentType.ImmediateGenericRefinementRegion]: "ImmediateGenericRefinementRegion",
+  [SegmentType.ImmediateLosslessGenericRefinementRegion]: "ImmediateLosslessGenericRefinementRegion",
+  [SegmentType.PageInformation]: "PageInformation",
+  [SegmentType.EndOfPage]: "EndOfPage",
+  [SegmentType.EndOfStripe]: "EndOfStripe",
+  [SegmentType.EndOfFile]: "EndOfFile",
+  [SegmentType.Profiles]: "Profiles",
+  [SegmentType.Tables]: "Tables",
+  [SegmentType.Extension]: "Extension"
+} as const;
 
 const CodingTemplates = [
   [
@@ -1203,8 +1166,7 @@ function decodeHalftoneRegion(
 
 interface SegmentHeaderType {
   number?: number,
-  type?: number,
-  typeName?: SegmentType | null,
+  type?: SegmentType,
   deferredNonRetain?: boolean,
   retainBits?: number[],
   referredTo?: number[],
@@ -1218,11 +1180,10 @@ function readSegmentHeader(data: Uint8TypedArray, start: number): SegmentHeaderT
   segmentHeader.number = readUint32(data, start);
   const flags = data[start + 4];
   const segmentType = flags & 0x3f;
-  if (!SegmentTypes[segmentType]) {
+  if (!isValidSegment(segmentType)) {
     throw new Jbig2Error("invalid segment type: " + segmentType);
   }
   segmentHeader.type = segmentType;
-  segmentHeader.typeName = SegmentTypes[segmentType];
   segmentHeader.deferredNonRetain = !!(flags & 0x80);
 
   const pageAssociationFieldSize = !!(flags & 0x40);
@@ -1336,7 +1297,7 @@ function readSegments(randomAccess: boolean, data: Uint8TypedArray, start: numbe
       segment.end = position;
     }
     segments.push(segment);
-    if (segmentHeader.type === 51) {
+    if (segmentHeader.type === SegmentType.EndOfFile) {
       break; // end of file is found
     }
   }
@@ -1453,7 +1414,7 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
   let position = segment.start!;
   let args: unknown[] = [], at, i, atLength;
   switch (header.type) {
-    case 0: // SymbolDictionary
+    case SegmentType.SymbolDictionary: // SymbolDictionary
       // 7.4.2 Symbol dictionary segment syntax
       const dictionaryFlags = readUint16(data, position); // 7.4.2.1.1
       const dictionary: SegmentDictionary = {
@@ -1509,8 +1470,8 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
         end,
       ];
       break;
-    case 6: // ImmediateTextRegion
-    case 7: // ImmediateLosslessTextRegion
+    case SegmentType.ImmediateTextRegion: // ImmediateTextRegion
+    case SegmentType.ImmediateLosslessTextRegion: // ImmediateLosslessTextRegion
       // 这两行代码移动了位置
       position += RegionSegmentInformationFieldLength;
       const textRegionSegmentFlags = readUint16(data, position);
@@ -1568,7 +1529,7 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
       position += 4;
       args = [textRegion, header.referredTo, data, position, end];
       break;
-    case 16: // PatternDictionary
+    case SegmentType.PatternDictionary: // PatternDictionary
       // 7.4.4. Pattern dictionary segment syntax
       const patternDictionaryFlags = data[position++];
       const patternDictionary: SegmentPatternDictionary = {
@@ -1581,8 +1542,8 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
       position += 4;
       args = [patternDictionary, header.number, data, position, end];
       break;
-    case 22: // ImmediateHalftoneRegion
-    case 23: // ImmediateLosslessHalftoneRegion
+    case SegmentType.ImmediateHalftoneRegion: // ImmediateHalftoneRegion
+    case SegmentType.ImmediateLosslessHalftoneRegion: // ImmediateLosslessHalftoneRegion
       {
         // 7.4.5 Halftone region segment syntax
         const info = readRegionSegmentInformation(data, position);
@@ -1612,8 +1573,8 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
         args = [halftoneRegion, header.referredTo, data, position, end];
       }
       break;
-    case 38: // ImmediateGenericRegion
-    case 39: // ImmediateLosslessGenericRegion
+    case SegmentType.ImmediateGenericRegion: // ImmediateGenericRegion
+    case SegmentType.ImmediateLosslessGenericRegion: // ImmediateLosslessGenericRegion
       {
         const info = readRegionSegmentInformation(data, position);
         position += RegionSegmentInformationFieldLength;
@@ -1639,7 +1600,7 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
         args = [genericRegion, data, position, end];
       }
       break;
-    case 48: // PageInformation
+    case SegmentType.PageInformation: // PageInformation
       const pageInfo = {
         width: readUint32(data, position),
         height: <number | null>readUint32(data, position + 4),
@@ -1668,25 +1629,25 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
       }
       args = [segmentPageInfo];
       break;
-    case 49: // EndOfPage
+    case SegmentType.EndOfPage: // EndOfPage
       break;
-    case 50: // EndOfStripe
+    case SegmentType.EndOfStripe: // EndOfStripe
       break;
-    case 51: // EndOfFile
+    case SegmentType.EndOfFile: // EndOfFile
       break;
-    case 53: // Tables
+    case SegmentType.Tables: // Tables
       args = [header.number, data, position, end];
       break;
-    case 62: // 7.4.15 defines 2 extension types which
+    case SegmentType.Extension: // 7.4.15 defines 2 extension types which
       // are comments and can be ignored.
       break;
     default:
       throw new Jbig2Error(
-        `segment type ${header.typeName}(${header.type}) is not implemented`
+        `segment type ${SegmentTypeName[header.type!]}(${header.type}) is not implemented`
       );
   }
-  const callback = header.typeName;
-  if (callback != null) {
+  const callback = header.type;
+  if (callback != null && isValidSegment(callback)) {
     // eslint-disable-next-line prefer-spread
     visitor.callback(callback, args);
   }
@@ -1760,6 +1721,17 @@ function parseJbig2(data: Uint8TypedArray) {
   return { imgData, width, height: <number | null>height };
 }
 
+const Methods = new Map<SegmentType, keyof SimpleSegmentVisitor>;
+
+function callback(segmentType: SegmentType) {
+  return function (_target: SimpleSegmentVisitor, propertyKey: keyof SimpleSegmentVisitor) {
+    if (Methods.has(segmentType)) {
+      throw new Error("不能够为一个操作配置多个方法");
+    }
+    Methods.set(segmentType, propertyKey);
+  }
+}
+
 class SimpleSegmentVisitor {
 
   protected symbols: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
@@ -1772,10 +1744,13 @@ class SimpleSegmentVisitor {
 
   protected patterns: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
 
-  public callback(segment: SegmentType, args: unknown[]) {
-
+  public callback(segmentType: SegmentType, args: unknown[]) {
+    if (Methods.has(segmentType)) {
+      (<Function>this[Methods.get(segmentType)!]).apply(this, args)
+    }
   }
 
+  @callback(SegmentType.PageInformation)
   onPageInformation(info: SegmentPageInfo) {
     this.currentPageInfo = info;
     const rowSize = (info.width + 7) >> 3;
@@ -1849,6 +1824,7 @@ class SimpleSegmentVisitor {
     }
   }
 
+  @callback(SegmentType.ImmediateGenericRegion)
   onImmediateGenericRegion(region: SegmentGenericRegion, data: Uint8TypedArray, start: number, end: number) {
     const regionInfo = region.info;
     const decodingContext = new DecodingContext(data, start, end);
@@ -1865,16 +1841,12 @@ class SimpleSegmentVisitor {
     this.drawBitmap(regionInfo, bitmap);
   }
 
-  onImmediateLosslessGenericRegion() {
-    const [region, data, start, end] = arguments as unknown as [
-      SegmentGenericRegion, Uint8TypedArray, number, number
-    ]
+  @callback(SegmentType.ImmediateLosslessGenericRegion)
+  onImmediateLosslessGenericRegion(region: SegmentGenericRegion, data: Uint8TypedArray, start: number, end: number) {
     this.onImmediateGenericRegion(region, data, start, end);
   }
 
-
-  // on开头的，都是通过反射来进行调用的。
-  // 连个注册的地方都没有，很容易就跟丢了。
+  @callback(SegmentType.SymbolDictionary)
   onSymbolDictionary(
     dictionary: SegmentDictionary,
     currentSegment: number,
@@ -1892,9 +1864,7 @@ class SimpleSegmentVisitor {
     let huffmanInput: Reader | null = null;
     if (dictionary.huffman) {
       huffmanTables = getSymbolDictionaryHuffmanTables(
-        dictionary,
-        referredSegments,
-        this.customTables!
+        dictionary, referredSegments, this.customTables!
       );
       huffmanInput = new Reader(data, start, end);
     }
@@ -1932,6 +1902,7 @@ class SimpleSegmentVisitor {
     );
   }
 
+  @callback(SegmentType.ImmediateTextRegion)
   onImmediateTextRegion(
     region: SegmentTextRegion,
     referredSegments: number[],
@@ -1996,13 +1967,18 @@ class SimpleSegmentVisitor {
     this.drawBitmap(regionInfo, bitmap);
   }
 
-  onImmediateLosslessTextRegion() {
-    const [region, referredSegments, data, start, end] = arguments as unknown as [
-      SegmentTextRegion, number[], Uint8TypedArray, number, number
-    ]
+  @callback(SegmentType.ImmediateLosslessTextRegion)
+  onImmediateLosslessTextRegion(
+    region: SegmentTextRegion,
+    referredSegments: number[],
+    data: Uint8TypedArray,
+    start: number,
+    end: number
+  ) {
     this.onImmediateTextRegion(region, referredSegments, data, start, end);
   }
 
+  @callback(SegmentType.PatternDictionary)
   onPatternDictionary(
     dictionary: SegmentPatternDictionary,
     currentSegment: number,
@@ -2025,9 +2001,13 @@ class SimpleSegmentVisitor {
     );
   }
 
+  @callback(SegmentType.ImmediateHalftoneRegion)
   onImmediateHalftoneRegion(
-    region: SegmentHalftoneRegion, referredSegments: number[],
-    data: Uint8TypedArray, start: number, end: number
+    region: SegmentHalftoneRegion,
+    referredSegments: number[],
+    data: Uint8TypedArray,
+    start: number,
+    end: number
   ) {
     // HalftoneRegion refers to exactly one PatternDictionary.
     const patterns = this.patterns![referredSegments[0]];
@@ -2053,19 +2033,19 @@ class SimpleSegmentVisitor {
     this.drawBitmap(regionInfo, bitmap);
   }
 
-  onImmediateLosslessHalftoneRegion() {
-    const [region, referredSegments, data, start, end] = arguments as unknown as [
-      SegmentHalftoneRegion, number[], Uint8TypedArray, number, number
-    ];
-    this.onImmediateHalftoneRegion(region, referredSegments, data, start, end);
-  }
-
-  onTables(
-    currentSegment: number,
+  @callback(SegmentType.ImmediateHalftoneRegion)
+  onImmediateLosslessHalftoneRegion(
+    region: SegmentHalftoneRegion,
+    referredSegments: number[],
     data: Uint8TypedArray,
     start: number,
     end: number
   ) {
+    this.onImmediateHalftoneRegion(region, referredSegments, data, start, end);
+  }
+
+  @callback(SegmentType.Tables)
+  onTables(currentSegment: number, data: Uint8TypedArray, start: number, end: number) {
     let customTables = this.customTables;
     if (!customTables) {
       this.customTables = customTables = {};

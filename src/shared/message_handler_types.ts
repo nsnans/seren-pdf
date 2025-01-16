@@ -1,5 +1,3 @@
-import { Ref } from "../core/primitives";
-import { RectType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { WorkerMessageHandler } from "../pdf.worker";
 
