@@ -129,32 +129,40 @@ function decodeIAID(contextCache: ContextCache, decoder: ArithmeticDecoder, code
   return prev & 0x7fffffff;
 }
 
+enum SegmentType {
+  SymbolDictionary = "SymbolDictionary",
+  IntermediateTextRegion = "IntermediateTextRegion",
+  ImmediateTextRegion = "ImmediateTextRegion",
+  ImmediateLosslessTextRegion = "ImmediateLosslessTextRegion",
+  PatternDictionary = "PatternDictionary",
+  IntermediateHalftoneRegion = "IntermediateHalftoneRegion",
+  ImmediateHalftoneRegion = "ImmediateHalftoneRegion",
+  ImmediateLosslessHalftoneRegion = "ImmediateLosslessHalftoneRegion",
+  IntermediateGenericRegion = "IntermediateGenericRegion",
+  ImmediateGenericRegion = "ImmediateGenericRegion",
+  ImmediateLosslessGenericRegion = "ImmediateLosslessGenericRegion",
+  IntermediateGenericRefinementRegion = "IntermediateGenericRefinementRegion",
+  ImmediateGenericRefinementRegion = "ImmediateGenericRefinementRegion",
+  ImmediateLosslessGenericRefinementRegion = "ImmediateLosslessGenericRefinementRegion",
+  PageInformation = "PageInformation",
+  EndOfPage = "EndOfPage",
+  EndOfStripe = "EndOfStripe",
+  EndOfFile = "EndOfFile",
+  Profiles = "Profiles",
+  Tables = "Tables",
+  Extension = "Extension"
+}
+
 // 7.3 Segment types
-const SegmentTypes = [
-  "SymbolDictionary",
+const SegmentTypes: (SegmentType | null)[] = [
+  SegmentType.SymbolDictionary,
   null,
   null,
   null,
-  "IntermediateTextRegion",
+  SegmentType.IntermediateTextRegion,
   null,
-  "ImmediateTextRegion",
-  "ImmediateLosslessTextRegion",
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  "PatternDictionary",
-  null,
-  null,
-  null,
-  "IntermediateHalftoneRegion",
-  null,
-  "ImmediateHalftoneRegion",
-  "ImmediateLosslessHalftoneRegion",
+  SegmentType.ImmediateTextRegion,
+  SegmentType.ImmediateLosslessTextRegion,
   null,
   null,
   null,
@@ -163,28 +171,14 @@ const SegmentTypes = [
   null,
   null,
   null,
+  SegmentType.PatternDictionary,
   null,
   null,
   null,
+  SegmentType.IntermediateHalftoneRegion,
   null,
-  "IntermediateGenericRegion",
-  null,
-  "ImmediateGenericRegion",
-  "ImmediateLosslessGenericRegion",
-  "IntermediateGenericRefinementRegion",
-  null,
-  "ImmediateGenericRefinementRegion",
-  "ImmediateLosslessGenericRefinementRegion",
-  null,
-  null,
-  null,
-  null,
-  "PageInformation",
-  "EndOfPage",
-  "EndOfStripe",
-  "EndOfFile",
-  "Profiles",
-  "Tables",
+  SegmentType.ImmediateHalftoneRegion,
+  SegmentType.ImmediateLosslessHalftoneRegion,
   null,
   null,
   null,
@@ -193,7 +187,37 @@ const SegmentTypes = [
   null,
   null,
   null,
-  "Extension",
+  null,
+  null,
+  null,
+  null,
+  SegmentType.IntermediateGenericRegion,
+  null,
+  SegmentType.ImmediateGenericRegion,
+  SegmentType.ImmediateLosslessGenericRegion,
+  SegmentType.IntermediateGenericRefinementRegion,
+  null,
+  SegmentType.ImmediateGenericRefinementRegion,
+  SegmentType.ImmediateLosslessGenericRefinementRegion,
+  null,
+  null,
+  null,
+  null,
+  SegmentType.PageInformation,
+  SegmentType.EndOfPage,
+  SegmentType.EndOfStripe,
+  SegmentType.EndOfFile,
+  SegmentType.Profiles,
+  SegmentType.Tables,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  SegmentType.Extension,
 ];
 
 const CodingTemplates = [
@@ -1180,7 +1204,7 @@ function decodeHalftoneRegion(
 interface SegmentHeaderType {
   number?: number,
   type?: number,
-  typeName?: string | null,
+  typeName?: SegmentType | null,
   deferredNonRetain?: boolean,
   retainBits?: number[],
   referredTo?: number[],
@@ -1297,7 +1321,7 @@ interface SegmentWrapper {
   end?: number;
 }
 
-function readSegments(header: { randomAccess?: boolean }, data: Uint8TypedArray, start: number, end: number) {
+function readSegments(randomAccess: boolean, data: Uint8TypedArray, start: number, end: number) {
   const segments: SegmentWrapper[] = [];
   let position = start;
   while (position < end) {
@@ -1306,7 +1330,7 @@ function readSegments(header: { randomAccess?: boolean }, data: Uint8TypedArray,
     const segment: SegmentWrapper = {
       header: segmentHeader, data
     };
-    if (!header.randomAccess) {
+    if (!randomAccess) {
       segment.start = position;
       position += segmentHeader.length!;
       segment.end = position;
@@ -1316,7 +1340,7 @@ function readSegments(header: { randomAccess?: boolean }, data: Uint8TypedArray,
       break; // end of file is found
     }
   }
-  if (header.randomAccess) {
+  if (randomAccess) {
     for (let i = 0, ii = segments.length; i < ii; i++) {
       segments[i].start = position;
       position += segments[i].header.length!;
@@ -1412,7 +1436,7 @@ interface SegmentGenericRegion {
 
 interface SegmentPageInfo {
   width: number;
-  height: number | undefined;
+  height: number | null;
   resolutionX: number;
   resolutionY: number;
   lossless: boolean;
@@ -1425,11 +1449,9 @@ interface SegmentPageInfo {
 
 function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) {
   const header = segment.header;
-
-  const data = segment.data,
-    end = segment.end;
+  const data = segment.data, end = segment.end;
   let position = segment.start!;
-  let args, at, i, atLength;
+  let args: unknown[] = [], at, i, atLength;
   switch (header.type) {
     case 0: // SymbolDictionary
       // 7.4.2 Symbol dictionary segment syntax
@@ -1620,13 +1642,13 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
     case 48: // PageInformation
       const pageInfo = {
         width: readUint32(data, position),
-        height: <number | undefined>readUint32(data, position + 4),
+        height: <number | null>readUint32(data, position + 4),
         resolutionX: readUint32(data, position + 8),
         resolutionY: readUint32(data, position + 12),
       };
       if (pageInfo.height === 0xffffffff) {
         // delete pageInfo.height;
-        pageInfo.height = undefined;
+        pageInfo.height = null;
       }
       const pageSegmentFlags = data[position + 16];
       readUint16(data, position + 17); // pageStripingInformation
@@ -1663,10 +1685,10 @@ function processSegment(segment: SegmentWrapper, visitor: SimpleSegmentVisitor) 
         `segment type ${header.typeName}(${header.type}) is not implemented`
       );
   }
-  const callbackName = "on" + header.typeName;
-  if (callbackName in visitor) {
+  const callback = header.typeName;
+  if (callback != null) {
     // eslint-disable-next-line prefer-spread
-    visitor[callbackName].apply(visitor, args);
+    visitor.callback(callback, args);
   }
 }
 
@@ -1680,14 +1702,14 @@ function parseJbig2Chunks(chunks: { data: Uint8TypedArray, start: number, end: n
   const visitor = new SimpleSegmentVisitor();
   for (let i = 0, ii = chunks.length; i < ii; i++) {
     const chunk = chunks[i];
-    const segments = readSegments({}, chunk.data, chunk.start, chunk.end);
+    const segments = readSegments(false, chunk.data, chunk.start, chunk.end);
     processSegments(segments, visitor);
   }
   return visitor.buffer;
 }
 
 function parseJbig2(data: Uint8TypedArray) {
-  if (PlatformHelper.testImageDecoders()) {
+  if (PlatformHelper.hasImageDecoders()) {
     throw new Error("Not implemented: parseJbig2");
   }
   const end = data.length;
@@ -1715,18 +1737,16 @@ function parseJbig2(data: Uint8TypedArray) {
     position += 4;
   }
 
-  const segments = readSegments(header, data, position, end);
+  const segments = readSegments(header.randomAccess, data, position, end);
   const visitor = new SimpleSegmentVisitor();
   processSegments(segments, visitor);
 
   const { width, height } = visitor.currentPageInfo!;
   const bitPacked = visitor.buffer;
   const imgData = new Uint8ClampedArray(width * height!);
-  let q = 0,
-    k = 0;
+  let q = 0, k = 0;
   for (let i = 0; i < height!; i++) {
-    let mask = 0,
-      buffer;
+    let mask = 0, buffer;
     for (let j = 0; j < width; j++) {
       if (!mask) {
         mask = 128;
@@ -1751,6 +1771,10 @@ class SimpleSegmentVisitor {
   protected customTables: Record<number, HuffmanTable> | null = null;
 
   protected patterns: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
+
+  public callback(segment: SegmentType, args: unknown[]) {
+
+  }
 
   onPageInformation(info: SegmentPageInfo) {
     this.currentPageInfo = info;
@@ -2866,7 +2890,7 @@ export class Jbig2Image {
   }
 
   parse(data: Uint8TypedArray) {
-    if (PlatformHelper.testImageDecoders()) {
+    if (PlatformHelper.hasImageDecoders()) {
       throw new Error("Not implemented: Jbig2Image.parse");
     }
     const { imgData, width, height } = parseJbig2(data);

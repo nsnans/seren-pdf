@@ -48,7 +48,7 @@ class JpxImage {
     bitsPerComponent: number,
     componentsCount: number
   } {
-    if (PlatformHelper.testImageDecoders()) {
+    if (PlatformHelper.hasImageDecoders()) {
       if (stream instanceof ArrayBuffer || ArrayBuffer.isView(stream)) {
         stream = new Stream(stream);
       } else {

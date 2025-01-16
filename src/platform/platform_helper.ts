@@ -1,3 +1,4 @@
+import { ImageDecoder } from "../global";
 
 
 /**
@@ -34,8 +35,8 @@ class PlatformHelper {
     return false;
   }
 
-  static testImageDecoders() {
-    return false;
+  static hasImageDecoders() {
+    return ImageDecoder != null;
   }
 
   static bundleVersion() {
