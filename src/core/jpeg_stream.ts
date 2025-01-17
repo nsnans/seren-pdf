@@ -31,10 +31,10 @@ export class JpegStream extends DecodeStream {
   protected stream: BaseStream;
 
   protected params: Dict | null;
-  forceRGBA: boolean | undefined;
-  forceRGB: boolean | undefined;
-  drawHeight: number;
-  drawWidth: number;
+  public forceRGBA: boolean | null = null;
+   public forceRGB: boolean | null = null;
+  public drawHeight: number | null = null;
+  public drawWidth: number | null = null;
 
   constructor(stream: BaseStream, maybeLength: number, params: Dict | null = null) {
     super(maybeLength);

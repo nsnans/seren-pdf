@@ -280,8 +280,7 @@ class Page {
         }
         if (Array.isArray(content)) {
           return new StreamsSequenceStream(
-            content,
-            this._onSubStreamError.bind(this)
+            content, this._onSubStreamError.bind(this)
           );
         }
         // Replace non-existent page content with empty content.

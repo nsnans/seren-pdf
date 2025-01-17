@@ -143,7 +143,7 @@ abstract class DecodeStream extends BaseStream {
         this.readBlock(null);
       }
     }
-    return new Stream(this.buffer, start, length, dict);
+    return new Stream(<Uint8Array<ArrayBuffer>>this.buffer, start, length, dict);
   }
 
   getBaseStreams() {
@@ -163,7 +163,7 @@ class StreamsSequenceStream extends DecodeStream {
 
   protected streams: BaseStream[];
 
-  constructor(streams, onError: (reason: unknown, objId: string | null) => void /*= null*/) {
+  constructor(streams: unknown[], onError: (reason: unknown, objId: string | null) => void /*= null*/) {
     const baseStreams = streams.filter(s => s instanceof BaseStream);
     let maybeLength = 0;
     for (const stream of baseStreams) {

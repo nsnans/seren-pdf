@@ -1,3 +1,4 @@
+import { Uint8TypedArray } from "../common/typed_array";
 import { TextItem, TextMarkedContent, TextStyle } from "../display/api";
 import { TransformType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
@@ -7,7 +8,7 @@ import { CssFontInfo } from "./evaluator";
 import { Dict, Name, Ref } from "./primitives";
 
 export interface ImageMask {
-  data: Uint8Array<ArrayBuffer> | null;
+  data: Uint8TypedArray | null;
   width: number;
   height: number;
   interpolate: number[];

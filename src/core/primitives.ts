@@ -691,7 +691,7 @@ type DictValueTypeMapping = {
   [DictKey.BlackIs1]: boolean,
   [DictKey.StructParents]: number
   [DictKey.SMaskInData]: "SMaskInData",
-  [DictKey.Matte]: boolean,
+  [DictKey.Matte]: number[],
   [DictKey.Alt]: string,
   [DictKey.E]: string,
   [DictKey.ActualText]: string,

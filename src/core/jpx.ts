@@ -18,6 +18,7 @@ import { BaseException, warn } from "../shared/util";
 import OpenJPEG from "../external/openjpeg/openjpeg";
 import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
+import { BaseStream } from "./base_stream";
 
 class JpxError extends BaseException {
   constructor(msg: string) {
@@ -42,7 +43,7 @@ class JpxImage {
     this.#module = null;
   }
 
-  static parseImageProperties(stream): {
+  static parseImageProperties(stream: BaseStream): {
     width: number,
     height: number,
     bitsPerComponent: number,
@@ -50,7 +51,7 @@ class JpxImage {
   } {
     if (PlatformHelper.hasImageDecoders()) {
       if (stream instanceof ArrayBuffer || ArrayBuffer.isView(stream)) {
-        stream = new Stream(stream);
+        stream = new Stream(<ArrayBuffer>stream);
       } else {
         throw new JpxError("Invalid data format, must be a TypedArray.");
       }
