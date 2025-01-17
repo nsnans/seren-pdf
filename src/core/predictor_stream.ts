@@ -16,9 +16,28 @@
 import { FormatError } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
+import { JpxDecoderOptions } from "./image";
 import { Dict, DictKey } from "./primitives";
 
 export class PredictorStream extends DecodeStream {
+
+
+  public static predictIfPossible(stream: BaseStream, maybeLength: number, params: Dict): BaseStream {
+    if (!(params instanceof Dict)) {
+      return stream; // no prediction
+    }
+    const predictor = params.getValue(DictKey.Predictor) || 1;
+    if (predictor <= 1) {
+      return stream; // no prediction
+    }
+    return new PredictorStream(stream, maybeLength, params)
+  }
+
+  protected colors: number;
+
+  protected bits: number;
+
+  protected columns: number;
 
   protected pixBytes: number = 0;
 
@@ -26,17 +45,12 @@ export class PredictorStream extends DecodeStream {
 
   protected predictor: number | null = null;
 
+  public stream: BaseStream;
+
   constructor(stream: BaseStream, maybeLength: number, params: Dict) {
+
     super(maybeLength);
-
-    if (!(params instanceof Dict)) {
-      return stream; // no prediction
-    }
     const predictor = (this.predictor = params.getValue(DictKey.Predictor) || 1);
-
-    if (predictor <= 1) {
-      return stream; // no prediction
-    }
     if (predictor !== 2 && (predictor < 10 || predictor > 15)) {
       throw new FormatError(`Unsupported predictor: ${predictor}`);
     }
@@ -54,6 +68,10 @@ export class PredictorStream extends DecodeStream {
     this.rowBytes = (columns * colors * bits + 7) >> 3;
 
     return this;
+  }
+
+  readBlock(_options: JpxDecoderOptions | null): void {
+
   }
 
   readBlockTiff() {

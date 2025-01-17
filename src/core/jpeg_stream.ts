@@ -31,6 +31,10 @@ export class JpegStream extends DecodeStream {
   protected stream: BaseStream;
 
   protected params: Dict | null;
+  forceRGBA: boolean | undefined;
+  forceRGB: boolean | undefined;
+  drawHeight: number;
+  drawWidth: number;
 
   constructor(stream: BaseStream, maybeLength: number, params: Dict | null = null) {
     super(maybeLength);
@@ -64,7 +68,7 @@ export class JpegStream extends DecodeStream {
   }
 
   readBlock() {
-    this.decodeImage();
+    this.decodeImage(null);
   }
 
   get jpegOptions(): {
@@ -72,8 +76,8 @@ export class JpegStream extends DecodeStream {
     colorTransform: number | null
   } {
     const jpegOptions = {
-      decodeTransform: null,
-      colorTransform: null,
+      decodeTransform: <Int32Array<ArrayBuffer> | null>null,
+      colorTransform: <number | null>null,
     };
 
     // Checking if values need to be transformed before conversion.
@@ -97,7 +101,7 @@ export class JpegStream extends DecodeStream {
     }
     // Fetching the 'ColorTransform' entry, if it exists.
     if (this.params instanceof Dict) {
-      const colorTransform = this.params.get("ColorTransform");
+      const colorTransform = this.params.getValue(DictKey.ColorTransform);
       if (Number.isInteger(colorTransform)) {
         jpegOptions.colorTransform = colorTransform;
       }

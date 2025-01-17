@@ -14,6 +14,7 @@
  */
 
 import { Uint8TypedArray } from "../common/typed_array";
+import { unreachable } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
@@ -123,8 +124,8 @@ abstract class DecodeStream extends BaseStream {
   decodeImage(
     _data: Uint8TypedArray | null,
     _decoderOptions: JpxDecoderOptions | null = null
-  ): Uint8TypedArray | null {
-    return null;
+  ): Uint8TypedArray {
+    unreachable('method is not implemented');
   }
 
   reset() {

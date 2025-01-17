@@ -16,13 +16,25 @@
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 
+interface LZWState {
+  prevCode: number | null;
+  earlyChange: number;
+  codeLength: number;
+  nextCode: number;
+  dictionaryValues: Uint8Array<ArrayBuffer>;
+  dictionaryLengths: Uint16Array<ArrayBuffer>;
+  dictionaryPrevCodes: Uint16Array<ArrayBuffer>;
+  currentSequence: Uint8Array<ArrayBuffer>;
+  currentSequenceLength: number;
+}
+
 export class LZWStream extends DecodeStream {
 
   protected cachedData = 0;
 
   protected bitsCached = 0;
 
-  protected lzwState;
+  protected lzwState: LZWState | null;
 
   public stream: BaseStream;
 
@@ -37,7 +49,7 @@ export class LZWStream extends DecodeStream {
     this.bitsCached = 0;
 
     const maxLzwDictionarySize = 4096;
-    const lzwState = {
+    const lzwState: LZWState = {
       earlyChange,
       codeLength: 9,
       nextCode: 258,
@@ -46,6 +58,7 @@ export class LZWStream extends DecodeStream {
       dictionaryPrevCodes: new Uint16Array(maxLzwDictionarySize),
       currentSequence: new Uint8Array(maxLzwDictionarySize),
       currentSequenceLength: 0,
+      prevCode: null
     };
     for (let i = 0; i < 256; ++i) {
       lzwState.dictionaryValues[i] = i;
@@ -120,22 +133,17 @@ export class LZWStream extends DecodeStream {
         continue;
       } else {
         this.eof = true;
-        delete this.lzwState;
+        this.lzwState = null;
         break;
       }
 
       if (hasPrev) {
-        dictionaryPrevCodes[nextCode] = prevCode;
-        dictionaryLengths[nextCode] = dictionaryLengths[prevCode] + 1;
+        dictionaryPrevCodes[nextCode] = prevCode!;
+        dictionaryLengths[nextCode] = dictionaryLengths[prevCode!] + 1;
         dictionaryValues[nextCode] = currentSequence[0];
         nextCode++;
-        codeLength =
-          (nextCode + earlyChange) & (nextCode + earlyChange - 1)
-            ? codeLength
-            : Math.min(
-              Math.log(nextCode + earlyChange) / 0.6931471805599453 + 1,
-              12
-            ) | 0;
+        codeLength = (nextCode + earlyChange) & (nextCode + earlyChange - 1)
+          ? codeLength : Math.min(Math.log(nextCode + earlyChange) / 0.6931471805599453 + 1, 12) | 0;
       }
       prevCode = code;
 

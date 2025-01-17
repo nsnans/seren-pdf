@@ -64,7 +64,7 @@ export abstract class BaseStream {
     return false;
   }
 
-  async getTransferableImage() {
+  async getTransferableImage(): Promise<VideoFrame | null> {
     return null;
   }
 

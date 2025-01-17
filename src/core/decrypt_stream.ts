@@ -19,11 +19,16 @@ import { DecodeStream } from "./decode_stream";
 
 const chunkSize = 512;
 
-class DecryptStream extends DecodeStream {
+export class DecryptStream extends DecodeStream {
+
   public stream: BaseStream;
+
   protected initialized: boolean;
+
   protected nextChunk: Uint8TypedArray | null;
+
   protected decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray;
+
   constructor(
     stream: BaseStream, maybeLength: number,
     decrypt: (data: Uint8TypedArray, finalize: boolean) => Uint8TypedArray
@@ -55,12 +60,10 @@ class DecryptStream extends DecodeStream {
     const decrypt = this.decrypt;
     chunk = decrypt(chunk, !hasMoreData);
 
-    const bufferLength = this.bufferLength,
-      newLength = bufferLength + chunk.length,
-      buffer = this.ensureBuffer(newLength);
+    const bufferLength = this.bufferLength;
+    const newLength = bufferLength + chunk.length;
+    const buffer = this.ensureBuffer(newLength);
     buffer.set(chunk, bufferLength);
     this.bufferLength = newLength;
   }
 }
-
-export { DecryptStream };

@@ -18,7 +18,7 @@ import { grayToRGBA } from "../shared/image_utils";
 import { readUint16 } from "./core_utils";
 import { PlatformHelper } from "../platform/platform_helper";
 
-class JpegError extends BaseException {
+export class JpegError extends BaseException {
   constructor(msg: string) {
     super(msg, "JpegError");
   }
@@ -850,7 +850,7 @@ interface JpegImageComponent {
   blocksPerColumn: number,
 }
 
-class JpegImage {
+export class JpegImage {
 
   protected _decodeTransform: Int32Array | null;
 
@@ -1358,7 +1358,7 @@ class JpegImage {
     return false;
   }
 
-  _convertYccToRgb(data: Uint8ClampedArray) {
+  _convertYccToRgb(data: Uint8ClampedArray<ArrayBuffer>) {
     let Y, Cb, Cr;
     for (let i = 0, length = data.length; i < length; i += 3) {
       Y = data[i];
@@ -1371,7 +1371,7 @@ class JpegImage {
     return data;
   }
 
-  _convertYccToRgba(data: Uint8ClampedArray, out: Uint8ClampedArray) {
+  _convertYccToRgba(data: Uint8ClampedArray, out: Uint8ClampedArray<ArrayBuffer>) {
     for (let i = 0, j = 0, length = data.length; i < length; i += 3, j += 4) {
       const Y = data[i];
       const Cb = data[i + 1];
@@ -1384,7 +1384,7 @@ class JpegImage {
     return out;
   }
 
-  _convertYcckToRgb(data: Uint8ClampedArray) {
+  _convertYcckToRgb(data: Uint8ClampedArray<ArrayBuffer>) {
     let Y, Cb, Cr, k;
     let offset = 0;
     for (let i = 0, length = data.length; i < length; i += 4) {
@@ -1454,7 +1454,7 @@ class JpegImage {
     return data.subarray(0, offset);
   }
 
-  _convertYcckToRgba(data: Uint8ClampedArray) {
+  _convertYcckToRgba(data: Uint8ClampedArray<ArrayBuffer>) {
     for (let i = 0, length = data.length; i < length; i += 4) {
       const Y = data[i];
       const Cb = data[i + 1];
@@ -1522,7 +1522,7 @@ class JpegImage {
     return data;
   }
 
-  _convertYcckToCmyk(data: Uint8ClampedArray) {
+  _convertYcckToCmyk(data: Uint8ClampedArray<ArrayBuffer>) {
     let Y, Cb, Cr;
     for (let i = 0, length = data.length; i < length; i += 4) {
       Y = data[i];
@@ -1536,7 +1536,7 @@ class JpegImage {
     return data;
   }
 
-  _convertCmykToRgb(data: Uint8ClampedArray) {
+  _convertCmykToRgb(data: Uint8ClampedArray<ArrayBuffer>) {
     let c, m, y, k;
     let offset = 0;
     for (let i = 0, length = data.length; i < length; i += 4) {
@@ -1606,7 +1606,7 @@ class JpegImage {
     return data.subarray(0, offset);
   }
 
-  _convertCmykToRgba(data: Uint8ClampedArray) {
+  _convertCmykToRgba(data: Uint8ClampedArray<ArrayBuffer>) {
     for (let i = 0, length = data.length; i < length; i += 4) {
       const c = data[i];
       const m = data[i + 1];
@@ -1674,18 +1674,9 @@ class JpegImage {
     return data;
   }
 
-  getData(
-    width: number,
-    height: number,
-    forceRGBA = false,
-    forceRGB = false,
-    isSourcePDF = false,
-  ) {
+  getData(width: number, height: number, forceRGBA = false, forceRGB = false, isSourcePDF = false): Uint8ClampedArray<ArrayBuffer> {
     if (PlatformHelper.isTesting()) {
-      assert(
-        isSourcePDF === true,
-        'JpegImage.getData: Unexpected "isSourcePDF" value for PDF files.'
-      );
+      assert(isSourcePDF, 'JpegImage.getData: Unexpected "isSourcePDF" value for PDF files.');
     }
     if (this.numComponents! > 4) {
       throw new JpegError("Unsupported color mode");
@@ -1732,4 +1723,3 @@ class JpegImage {
   }
 }
 
-export { JpegError, JpegImage };

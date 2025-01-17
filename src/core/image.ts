@@ -78,11 +78,8 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
   }
   const xRatio = w1 / w2;
   const yRatio = h1 / h2;
-  let i,
-    j,
-    py,
-    newIndex = 0,
-    oldIndex;
+  let i, j, py;
+  let newIndex = 0, oldIndex;
   const xScaled = new Uint16Array(w2);
   const w1Scanline = w1;
 
@@ -109,7 +106,7 @@ export interface JpxDecoderOptions {
 
 }
 
-class PDFImage {
+export class PDFImage {
 
   // 这个变量似乎没有用到
   protected xref: XRef;
@@ -142,7 +139,7 @@ class PDFImage {
 
   protected smask: PDFImage | null = null;
 
-  protected mask: PDFImage | null = null;
+  protected mask: PDFImage | number[] | null = null;
 
   protected numComp: number = 0;
 
@@ -303,42 +300,26 @@ class PDFImage {
       for (let i = 0, j = 0; i < this.decode.length; i += 2, ++j) {
         const dmin = this.decode[i];
         const dmax = this.decode[i + 1];
-        this.decodeCoefficients[j] = isIndexed
-          ? (dmax - dmin) / max
-          : dmax - dmin;
+        this.decodeCoefficients[j] = isIndexed ? (dmax - dmin) / max : dmax - dmin;
         this.decodeAddends[j] = isIndexed ? dmin : max * dmin;
       }
     }
 
     if (smask) {
       this.smask = new PDFImage(
-        xref,
-        res,
-        /* image */smask,
-        isInline,
-        /*smask*/ null,
-        /*mask*/ null,
-        /*isMask*/ false,
-        pdfFunctionFactory,
-        localColorSpaceCache,
+        xref, res, smask, isInline, null, null, false,
+        pdfFunctionFactory, localColorSpaceCache,
       );
     } else if (mask) {
       if (mask instanceof BaseStream) {
-        const maskDict = mask.dict!,
-          imageMask = maskDict.getValueWithFallback(DictKey.IM, DictKey.ImageMask);
+        const maskDict = mask.dict!;
+        const imageMask = maskDict.getValueWithFallback(DictKey.IM, DictKey.ImageMask);
         if (!imageMask) {
           warn("Ignoring /Mask in image without /ImageMask.");
         } else {
           this.mask = new PDFImage(
-            xref,
-            res,
-            /*image*/mask,
-            isInline,
-            /*smask*/null,
-            /*mask*/null,
-            /*isMask*/ true,
-            pdfFunctionFactory,
-            localColorSpaceCache,
+            xref, res, mask, isInline, null, null, true,
+            pdfFunctionFactory, localColorSpaceCache,
           );
         }
       } else {
@@ -378,20 +359,15 @@ class PDFImage {
     }
 
     return new PDFImage(
-      xref,
-      res,
-      /*image*/imageData,
-      isInline,
-      /*smask*/smaskData,
-      /*mask*/ maskData,
-      false,
-      pdfFunctionFactory,
-      localColorSpaceCache,
+      xref, res, imageData, isInline, smaskData, maskData, false,
+      pdfFunctionFactory, localColorSpaceCache,
     );
   }
 
   static createRawMask(
-    imgArray: Uint8TypedArray, width: number, height: number,
+    imgArray: Uint8TypedArray,
+    width: number,
+    height: number,
     imageIsFromDecodeStream: boolean,
     inverseDecode: boolean,
     interpolate: number[],
@@ -1098,8 +1074,7 @@ class PDFImage {
     this.image.forceRGBA = !!forceRGBA;
     this.image.forceRGB = !!forceRGB;
     const imageBytes = await this.image.getImageData(
-      length,
-      this.jpxDecoderOptions
+      length, this.jpxDecoderOptions
     );
 
     // If imageBytes came from a DecodeStream, we're safe to transfer it
@@ -1117,5 +1092,3 @@ class PDFImage {
     return new Uint8Array(imageBytes);
   }
 }
-
-export { PDFImage };

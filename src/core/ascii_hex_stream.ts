@@ -16,7 +16,7 @@
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 
-class AsciiHexStream extends DecodeStream {
+export class AsciiHexStream extends DecodeStream {
 
   protected firstDigit: number = -1;
 
@@ -83,5 +83,3 @@ class AsciiHexStream extends DecodeStream {
     throw new Error("Unsupoort Method length");
   }
 }
-
-export { AsciiHexStream };

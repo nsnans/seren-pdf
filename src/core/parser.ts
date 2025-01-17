@@ -46,8 +46,8 @@ import { XRef } from "./xref";
 const MAX_LENGTH_TO_CACHE = 1000;
 
 function getInlineImageCacheKey(bytes: Uint8TypedArray) {
-  const strBuf = [],
-    ii = bytes.length;
+  const strBuf = [];
+  const ii = bytes.length;
   let i = 0;
   while (i < ii - 1) {
     strBuf.push((bytes[i++] << 8) | bytes[i++]);
@@ -585,7 +585,7 @@ class Parser {
 
     // Cache all images below the MAX_LENGTH_TO_CACHE threshold by their
     // stringified content, to prevent possible hash collisions.
-    let cacheKey;
+    let cacheKey = null;
     if (length < MAX_LENGTH_TO_CACHE && dictLength! > 0) {
       const initialStreamPos = stream.pos;
       // Set the stream position to the beginning of the dictionary data...
@@ -616,7 +616,7 @@ class Parser {
 
     imageStream = this.filter(imageStream, dict, length);
     imageStream.dict = dict;
-    if (cacheKey !== undefined) {
+    if (cacheKey !== null) {
       imageStream.cacheKey = `inline_img_${++this._imageId}`;
       this.imageCache[cacheKey] = imageStream;
     }
@@ -795,7 +795,7 @@ class Parser {
         case "Fl":
         case "FlateDecode":
           if (params) {
-            return new PredictorStream(
+            return PredictorStream.predictIfPossible(
               new FlateStream(stream, maybeLength), maybeLength, params
             );
           }
@@ -807,10 +807,8 @@ class Parser {
             if (params.has(DictKey.EarlyChange)) {
               earlyChange = params.get(DictKey.EarlyChange);
             }
-            return new PredictorStream(
-              new LZWStream(stream, maybeLength, earlyChange),
-              maybeLength,
-              params
+            return PredictorStream.predictIfPossible(
+              new LZWStream(stream, maybeLength, earlyChange), maybeLength, params
             );
           }
           return new LZWStream(stream, maybeLength, earlyChange);
