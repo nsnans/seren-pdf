@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { PDFStream, ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
@@ -257,6 +258,8 @@ export class ChunkedStream extends Stream {
 
 class ChunkedStreamSubstream extends ChunkedStream {
 
+  protected _bytes: Uint8TypedArray;
+
   constructor(parent: ChunkedStream) {
     const state = parent.cloneState();
     // 先初始化一个空的，然后recover
@@ -271,7 +274,11 @@ class ChunkedStreamSubstream extends ChunkedStream {
     this.dict = state.dict;
     this.start = state.start;
     this.end = state.end;
-    this.bytes = state.bytes;
+    this._bytes = state.bytes;
+  }
+
+  get bytes() {
+    return this._bytes;
   }
 
   get isDataLoaded() {
@@ -392,7 +399,7 @@ export class ChunkedStreamManager {
     return this._loadedStreamCapability.promise;
   }
 
-  async _requestChunks(chunks: number[]) {
+  async _requestChunks(chunks: number[]): Promise<void> {
     const requestId = this.currRequestId++;
 
     const chunksNeeded = new Set<number>();
@@ -407,7 +414,7 @@ export class ChunkedStreamManager {
       return Promise.resolve();
     }
 
-    const capability = Promise.withResolvers();
+    const capability = Promise.withResolvers<void>();
     this._promisesByRequest.set(requestId, capability);
 
     const chunksToRequest = <number[]>[];

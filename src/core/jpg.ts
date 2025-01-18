@@ -17,6 +17,7 @@ import { assert, BaseException, warn } from "../shared/util";
 import { grayToRGBA } from "../shared/image_utils";
 import { readUint16 } from "./core_utils";
 import { PlatformHelper } from "../platform/platform_helper";
+import { Uint8TypedArray } from "../common/typed_array";
 
 export class JpegError extends BaseException {
   constructor(msg: string) {
@@ -80,10 +81,7 @@ const dctSqrt2 = 5793; // sqrt(2)
 const dctSqrt1d2 = 2896; // sqrt(2) / 2
 
 function buildHuffmanTable(codeLengths: Uint8Array, values: Uint8Array) {
-  let k = 0,
-    i,
-    j,
-    length = 16;
+  let k = 0, i, j, length = 16;
   while (length > 0 && !codeLengths[length - 1]) {
     length--;
   }
@@ -121,7 +119,7 @@ function getBlockBufferOffset(component: FrameComponent, row: number, col: numbe
 }
 
 function decodeScan(
-  data: Uint8Array,
+  data: Uint8TypedArray,
   offset: number,
   frame: JpegImageParserFrame,
   components: FrameComponent[],
@@ -136,8 +134,8 @@ function decodeScan(
   const progressive = frame.progressive;
 
   const startOffset = offset;
-  let bitsData = 0,
-    bitsCount = 0;
+  let bitsData = 0;
+  let bitsCount = 0;
 
   function readBit() {
     if (bitsCount > 0) {
@@ -149,8 +147,8 @@ function decodeScan(
       const nextByte = data[offset++];
       if (nextByte) {
         if (nextByte === /* DNL = */ 0xdc && parseDNLMarker) {
-          offset += 2; // Skip marker length.
 
+          offset += 2; // Skip marker length.
           const scanLines = readUint16(data, offset);
           offset += 2;
           if (scanLines > 0 && scanLines !== frame.scanLines) {
@@ -393,12 +391,11 @@ function decodeScan(
     decodeFn = decodeBaseline;
   }
 
-  let mcu = 0,
-    fileMarker;
-  const mcuExpected =
-    componentsLength === 1
-      ? components[0].blocksPerLine! * components[0].blocksPerColumn!
-      : mcusPerLine! * frame.mcusPerColumn!;
+  let mcu = 0;
+  let fileMarker;
+  const mcuExpected = componentsLength === 1
+    ? components[0].blocksPerLine! * components[0].blocksPerColumn!
+    : mcusPerLine! * frame.mcusPerColumn!;
 
   let h, v;
   while (mcu <= mcuExpected) {
@@ -729,7 +726,7 @@ function buildComponentData(_frame: JpegImageParserFrame, component: FrameCompon
   return component.blockData;
 }
 
-function findNextFileMarker(data: Uint8Array, currentPos: number, startPos = currentPos) {
+function findNextFileMarker(data: Uint8TypedArray, currentPos: number, startPos = currentPos) {
   const maxPos = data.length - 1;
   let newPos = startPos < currentPos ? startPos : currentPos;
 
@@ -781,7 +778,7 @@ function prepareComponents(frame: JpegImageParserFrame) {
   frame.mcusPerColumn = mcusPerColumn;
 }
 
-function readDataBlock(data: Uint8Array, offset: number) {
+function readDataBlock(data: Uint8TypedArray, offset: number) {
   const length = readUint16(data, offset);
   offset += 2;
   let endOffset = offset + length - 2;
@@ -800,7 +797,7 @@ function readDataBlock(data: Uint8Array, offset: number) {
   return { appData: array, newOffset: offset };
 }
 
-function skipData(data: Uint8Array, offset: number) {
+function skipData(data: Uint8TypedArray, offset: number) {
   const length = readUint16(data, offset);
   offset += 2;
   const endOffset = offset + length - 2;
@@ -881,7 +878,7 @@ export class JpegImage {
     yDensity: number;
     thumbWidth: number;
     thumbHeight: number;
-    thumbData: Uint8Array;
+    thumbData: Uint8TypedArray;
   } | null = null;
 
   constructor(decodeTransform: Int32Array | null = null, colorTransform: number = -1) {
@@ -889,7 +886,7 @@ export class JpegImage {
     this._colorTransform = colorTransform;
   }
 
-  static canUseImageDecoder(data: Uint8Array<ArrayBuffer>, colorTransform = -1) {
+  static canUseImageDecoder(data: Uint8TypedArray, colorTransform = -1) {
     let offset = 0;
     let numComponents = null;
     let fileMarker = readUint16(data, offset);
@@ -931,7 +928,7 @@ export class JpegImage {
     return true;
   }
 
-  parse(data: Uint8Array<ArrayBuffer>, { dnlScanLines }: { dnlScanLines: number | null } = { dnlScanLines: null }): undefined {
+  parse(data: Uint8TypedArray, dnlScanLines: number | null = null): void {
     let offset = 0;
     let jfif = null;
     let adobe = null;
@@ -1172,7 +1169,7 @@ export class JpegImage {
           } catch (ex) {
             if (ex instanceof DNLMarkerError) {
               warn(`${ex.message} -- attempting to re-parse the JPEG image.`);
-              return this.parse(data, { dnlScanLines: ex.scanLines });
+              return this.parse(data, ex.scanLines);
             } else if (ex instanceof EOIMarkerError) {
               warn(`${ex.message} -- ignoring the rest of the image data.`);
               break markerLoop;

@@ -20,6 +20,8 @@ import { Uint8TypedArray } from "../common/typed_array";
 
 export class Stream extends BaseStream {
 
+  protected _bytes: Uint8TypedArray;
+
   constructor(
     arrayBuffer: Uint8Array<ArrayBuffer> | ArrayBuffer,
     start = 0,
@@ -27,11 +29,15 @@ export class Stream extends BaseStream {
     dict: Dict | null = null
   ) {
     super();
-    this.bytes = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer);
+    this._bytes = arrayBuffer instanceof Uint8Array ? arrayBuffer : new Uint8Array(arrayBuffer);
     this.start = start || 0;
     this.pos = this.start;
     this.end = length != undefined ? start + length : this.bytes.length;
     this.dict = dict;
+  }
+
+  get bytes(){
+    return this._bytes;
   }
 
   get length() {

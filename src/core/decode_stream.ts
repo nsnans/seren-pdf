@@ -15,16 +15,10 @@
 
 import { Uint8TypedArray } from "../common/typed_array";
 import { unreachable } from "../shared/util";
-import { BaseStream } from "./base_stream";
+import { BaseStream, emptyBuffer } from "./base_stream";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
 import { Stream } from "./stream";
-
-// Lots of DecodeStreams are created whose buffers are never used.  For these
-// we share a single empty buffer. This is (a) space-efficient and (b) avoids
-// having special cases that would be required if we used |null| for an empty
-// buffer.
-export const emptyBuffer = new Uint8Array(0);
 
 // Super class for the decoding streams.
 abstract class DecodeStream extends BaseStream {
@@ -38,9 +32,6 @@ abstract class DecodeStream extends BaseStream {
   public buffer: Uint8TypedArray = emptyBuffer;
 
   public _rawMinBufferLength: number;
-
-  // 相当于是一个代理
-  public stream: BaseStream | null = null;
 
   constructor(maybeMinBufferLength: number) {
     super();

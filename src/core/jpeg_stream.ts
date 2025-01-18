@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { ImageDecoder } from "../global";
 import { shadow, warn } from "../shared/util";
-import { BaseStream } from "./base_stream";
+import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpegImage } from "./jpg";
 import { Dict, DictKey } from "./primitives";
@@ -28,12 +29,16 @@ export class JpegStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  protected stream: BaseStream;
-
   protected params: Dict | null;
+
+  public stream: BaseStream;
+
   public forceRGBA: boolean | null = null;
-   public forceRGB: boolean | null = null;
+
+  public forceRGB: boolean | null = null;
+
   public drawHeight: number | null = null;
+
   public drawWidth: number | null = null;
 
   constructor(stream: BaseStream, maybeLength: number, params: Dict | null = null) {
@@ -47,13 +52,8 @@ export class JpegStream extends DecodeStream {
 
   static get canUseImageDecoder() {
     return shadow(
-      this,
-      "canUseImageDecoder",
-      // eslint-disable-next-line no-undef
-      typeof ImageDecoder === "undefined"
-        ? Promise.resolve(false)
-        : // eslint-disable-next-line no-undef
-        ImageDecoder.isTypeSupported("image/jpeg")
+      this, "canUseImageDecoder", typeof ImageDecoder === "undefined" ? Promise.resolve(false)
+      : ImageDecoder.isTypeSupported("image/jpeg")
     );
   }
 
@@ -65,23 +65,22 @@ export class JpegStream extends DecodeStream {
   ensureBuffer() {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
+    // 不知道这个方法会不会调，还是返回一个吧
+    return emptyBuffer;
   }
 
   readBlock() {
     this.decodeImage(null);
   }
 
-  get jpegOptions(): {
-    decodeTransform: Int32Array | null,
-    colorTransform: number | null
-  } {
+  get jpegOptions() {
     const jpegOptions = {
       decodeTransform: <Int32Array<ArrayBuffer> | null>null,
       colorTransform: <number | null>null,
     };
 
     // Checking if values need to be transformed before conversion.
-    const decodeArr = this.dict!.getArrayWithFallback(DictKey.D, DictKey.Decode);
+    const decodeArr = <number[]>this.dict!.getArrayWithFallback(DictKey.D, DictKey.Decode);
     if ((this.forceRGBA || this.forceRGB) && Array.isArray(decodeArr)) {
       const bitsPerComponent = this.dict?.getValueWithFallback(DictKey.BPC, DictKey.BitsPerComponent) || 8;
       const decodeArrLength = decodeArr.length;
@@ -109,7 +108,7 @@ export class JpegStream extends DecodeStream {
     return shadow(this, "jpegOptions", jpegOptions);
   }
 
-  #skipUselessBytes(data: Uint8Array) {
+  protected _skipUselessBytes(data: Uint8TypedArray) {
     // Some images may contain 'junk' before the SOI (start-of-image) marker.
     // Note: this seems to mainly affect inline images.
     for (let i = 0, ii = data.length - 1; i < ii; i++) {
@@ -123,11 +122,11 @@ export class JpegStream extends DecodeStream {
     return data;
   }
 
-  decodeImage(bytes: Uint8Array<ArrayBuffer> | null) {
+  decodeImage(bytes: Uint8TypedArray | null) {
     if (this.eof) {
       return this.buffer;
     }
-    bytes = this.#skipUselessBytes(bytes || this.bytes);
+    bytes = this._skipUselessBytes(bytes || this.bytes);
 
     // TODO: if an image has a mask we need to combine the data.
     // So ideally get a VideoFrame from getTransferableImage and then use
@@ -137,10 +136,10 @@ export class JpegStream extends DecodeStream {
     const jpegImage = new JpegImage(options.decodeTransform, options.colorTransform ?? -1);
     jpegImage.parse(bytes);
     const data = jpegImage.getData(
-      this.drawWidth,
-      this.drawHeight,
-      this.forceRGBA,
-      this.forceRGB,
+      this.drawWidth!,
+      this.drawHeight!,
+      this.forceRGBA!,
+      this.forceRGB!,
       true,
     );
     this.buffer = data;
@@ -169,14 +168,11 @@ export class JpegStream extends DecodeStream {
       // TODO: If the stream is Flate & DCT we could try to just pipe the
       // the DecompressionStream into the ImageDecoder: it'll avoid the
       // intermediate ArrayBuffer.
-      const bytes =
-        (this.canAsyncDecodeImageFromBuffer &&
-          (await this.stream.asyncGetBytes())) ||
-        this.bytes;
+      const bytes = (this.canAsyncDecodeImageFromBuffer && (await this.stream.asyncGetBytes())) || this.bytes;
       if (!bytes) {
         return null;
       }
-      const data = this.#skipUselessBytes(bytes);
+      const data = this._skipUselessBytes(bytes);
       if (!JpegImage.canUseImageDecoder(data, jpegOptions.colorTransform ?? -1)) {
         return null;
       }

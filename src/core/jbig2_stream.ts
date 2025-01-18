@@ -15,7 +15,7 @@
 
 import { Uint8TypedArray } from "../common/typed_array";
 import { shadow } from "../shared/util";
-import { BaseStream } from "./base_stream";
+import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Jbig2Image } from "./jbig2";
 import { Dict, DictKey } from "./primitives";
@@ -26,11 +26,11 @@ import { Dict, DictKey } from "./primitives";
  */
 export class Jbig2Stream extends DecodeStream {
 
-  protected stream: BaseStream;
-
   protected maybeLength: number;
 
   protected params: Dict | null;
+
+  public stream: BaseStream;
 
   constructor(stream: BaseStream, maybeLength: number, params: Dict | null) {
     super(maybeLength);
@@ -46,9 +46,10 @@ export class Jbig2Stream extends DecodeStream {
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
 
-  ensureBuffer(_requested) {
+  ensureBuffer(_requested: number) {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
+    return emptyBuffer;
   }
 
   readBlock() {
@@ -78,6 +79,7 @@ export class Jbig2Stream extends DecodeStream {
     for (let i = 0; i < dataLength; i++) {
       data[i] ^= 0xff;
     }
+
     this.buffer = data;
     this.bufferLength = dataLength;
     this.eof = true;

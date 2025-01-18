@@ -1736,7 +1736,7 @@ class SimpleSegmentVisitor {
 
   protected symbols: Record<number, Uint8Array<ArrayBuffer>[][]> | null = null;
 
-  public buffer: Uint8ClampedArray | null = null;
+  public buffer: Uint8ClampedArray<ArrayBuffer> | null = null;
 
   public currentPageInfo: SegmentPageInfo | null = null;
 

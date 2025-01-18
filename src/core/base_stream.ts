@@ -18,6 +18,14 @@ import { bytesToString, unreachable } from "../shared/util";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "./primitives";
 
+// Lots of DecodeStreams are created whose buffers are never used.  For these
+// we share a single empty buffer. This is (a) space-efficient and (b) avoids
+// having special cases that would be required if we used |null| for an empty
+// buffer.
+export const emptyBuffer = new Uint8Array(0);
+// 不要让别人试图修改这个变量
+emptyBuffer.set = () => unreachable('empty buffer cannot set');
+
 export abstract class BaseStream {
 
   public pos: number = 0;
@@ -28,8 +36,12 @@ export abstract class BaseStream {
 
   public end: number = 0;
 
+  public stream: BaseStream | null = null;
+
   // 可能最后还是要写成byte getter的形式，
-  public bytes: Uint8TypedArray = new Uint8Array(0);
+  get bytes(): Uint8TypedArray {
+    return emptyBuffer;
+  }
 
   abstract get length(): number;
 

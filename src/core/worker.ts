@@ -341,7 +341,7 @@ class WorkerMessageHandler {
             onFailure(reason);
             return;
           }
-          pdfManager!.requestLoadedStream().then(function () {
+          pdfManager!.requestLoadedStream(false).then(function () {
             ensureNotTerminated();
             loadDocument(true).then(onSuccess, onFailure);
           });
@@ -359,7 +359,7 @@ class WorkerMessageHandler {
         }
         pdfManager = newPdfManager;
 
-        pdfManager.requestLoadedStream(/* noFetch = */ true).then(
+        pdfManager.requestLoadedStream(true).then(
           stream => handler!.DataLoaded(stream.bytes.byteLength)
         );
       }).then(pdfManagerReady, onFailure);
@@ -449,7 +449,7 @@ class WorkerMessageHandler {
     );
 
     handler.onGetData(
-      () => pdfManager!.requestLoadedStream().then(
+      () => pdfManager!.requestLoadedStream(false).then(
         stream => <Uint8Array<ArrayBuffer>>stream.bytes
       )
     );
@@ -489,7 +489,7 @@ class WorkerMessageHandler {
     handler.onSaveDocument(async data => {
       const { numPages, annotationStorage, filename } = data;
       const globalPromises = [
-        pdfManager!.requestLoadedStream(),
+        pdfManager!.requestLoadedStream(false),
         pdfManager!.ensureCatalog(catalog => catalog.acroForm),
         pdfManager!.ensureCatalog(catalog => catalog.acroFormRef),
         pdfManager!.ensureDoc(doc => doc.startXRef),

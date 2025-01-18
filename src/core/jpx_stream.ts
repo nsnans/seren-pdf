@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { shadow } from "../shared/util";
-import { BaseStream } from "./base_stream";
+import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
+import { JpxDecoderOptions } from "./image";
 import { JpxImage } from "./jpx";
 import { Dict } from "./primitives";
 
@@ -27,9 +29,9 @@ export class JpxStream extends DecodeStream {
 
   protected maybeLength: number;
 
-  protected stream: BaseStream;
-
   protected params: Dict | null;
+
+  public stream: BaseStream;
 
   constructor(stream: BaseStream, maybeLength: number, params: Dict | null) {
     super(maybeLength);
@@ -44,16 +46,17 @@ export class JpxStream extends DecodeStream {
     return shadow(this, "bytes", this.stream.getBytes(this.maybeLength));
   }
 
-  ensureBuffer(_requested) {
+  ensureBuffer(_requested: number) {
     // No-op, since `this.readBlock` will always parse the entire image and
     // directly insert all of its data into `this.buffer`.
+    return emptyBuffer;
   }
 
-  readBlock(decoderOptions) {
+  readBlock(decoderOptions: JpxDecoderOptions | null) {
     this.decodeImage(null, decoderOptions);
   }
 
-  decodeImage(bytes, decoderOptions) {
+  decodeImage(bytes: Uint8TypedArray | null, decoderOptions: JpxDecoderOptions | null) {
     if (this.eof) {
       return this.buffer;
     }

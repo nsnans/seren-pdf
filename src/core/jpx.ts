@@ -19,20 +19,22 @@ import OpenJPEG from "../external/openjpeg/openjpeg";
 import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { BaseStream } from "./base_stream";
+import { Uint8TypedArray } from "../common/typed_array";
+import { JpxDecoderOptions } from "./image";
 
-class JpxError extends BaseException {
+export class JpxError extends BaseException {
   constructor(msg: string) {
     super(msg, "JpxError");
   }
 }
 
-class JpxImage {
+export class JpxImage {
   static #module = null;
 
-  static decode(data, decoderOptions) {
-    decoderOptions ||= {};
+  static decode(data: Uint8TypedArray, decoderOptions: JpxDecoderOptions | null) {
+    const options = decoderOptions ?? {};
     this.#module ||= OpenJPEG({ warn });
-    const imageData = this.#module!.decode(data, decoderOptions);
+    const imageData = this.#module!.decode(data, options);
     if (typeof imageData === "string") {
       throw new JpxError(imageData);
     }
@@ -43,12 +45,7 @@ class JpxImage {
     this.#module = null;
   }
 
-  static parseImageProperties(stream: BaseStream): {
-    width: number,
-    height: number,
-    bitsPerComponent: number,
-    componentsCount: number
-  } {
+  static parseImageProperties(stream: BaseStream) {
     if (PlatformHelper.hasImageDecoders()) {
       if (stream instanceof ArrayBuffer || ArrayBuffer.isView(stream)) {
         stream = new Stream(<ArrayBuffer>stream);
@@ -85,4 +82,3 @@ class JpxImage {
   }
 }
 
-export { JpxError, JpxImage };

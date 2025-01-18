@@ -1255,7 +1255,7 @@ export class EvaluatorFontHandler {
 
       if (toUnicode instanceof BaseStream) {
         // stream可能不是DecodeStream，这里的强转可能存在问题
-        const stream = <DecodeStream>(toUnicode.str || toUnicode);
+        const stream = <DecodeStream>(toUnicode.stream || toUnicode);
         const uint8array = stream.buffer
           ? new Uint8Array(stream.buffer.buffer, 0, stream.bufferLength)
           : new Uint8Array(stream.bytes.buffer, stream.start, stream.end - stream.start);

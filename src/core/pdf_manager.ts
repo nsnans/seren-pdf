@@ -78,7 +78,7 @@ interface PDFManager {
 
   requestRange(_begin: number, _end: number): Promise<unknown>;
 
-  requestLoadedStream(noFetch?: boolean): Promise<Stream>;
+  requestLoadedStream(noFetch: boolean): Promise<Stream>;
 
   sendProgressiveData(chunk: ArrayBufferLike): void;
 
@@ -267,7 +267,7 @@ class NetworkPDFManager extends BasePDFManager {
   }
 
   sendProgressiveData(chunk: ArrayBufferLike) {
-    this.streamManager.onReceiveData({ chunk });
+    this.streamManager.onReceiveData(chunk);
   }
 
   terminate(reason: AbortException) {
