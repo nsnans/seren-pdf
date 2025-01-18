@@ -503,48 +503,6 @@ function validateFontName(fontFamily: string, mustWarn = false) {
   return true;
 }
 
-function validateCSSFont(cssFontInfo) {
-  // See https://developer.mozilla.org/en-US/docs/Web/CSS/font-style.
-  const DEFAULT_CSS_FONT_OBLIQUE = "14";
-  // See https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight.
-  const DEFAULT_CSS_FONT_WEIGHT = "400";
-  const CSS_FONT_WEIGHT_VALUES = new Set([
-    "100",
-    "200",
-    "300",
-    "400",
-    "500",
-    "600",
-    "700",
-    "800",
-    "900",
-    "1000",
-    "normal",
-    "bold",
-    "bolder",
-    "lighter",
-  ]);
-
-  const { fontFamily, fontWeight, italicAngle } = cssFontInfo;
-
-  if (!validateFontName(fontFamily, true)) {
-    return false;
-  }
-
-  const weight = fontWeight ? fontWeight.toString() : "";
-  cssFontInfo.fontWeight = CSS_FONT_WEIGHT_VALUES.has(weight)
-    ? weight
-    : DEFAULT_CSS_FONT_WEIGHT;
-
-  const angle = parseFloat(italicAngle);
-  cssFontInfo.italicAngle =
-    isNaN(angle) || angle < -90 || angle > 90
-      ? DEFAULT_CSS_FONT_OBLIQUE
-      : italicAngle.toString();
-
-  return true;
-}
-
 function recoverJsURL(str: string) {
   // Attempt to recover valid URLs from `JS` entries with certain
   // white-listed formats:
@@ -701,7 +659,6 @@ export {
   stringToUTF16HexString,
   stringToUTF16String,
   toRomanNumerals,
-  validateCSSFont,
   validateFontName,
   XRefEntryException,
   XRefParseException,

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+
 const ON_CURVE_POINT = 1 << 0;
 const X_SHORT_VECTOR = 1 << 1;
 const Y_SHORT_VECTOR = 1 << 2;
@@ -51,8 +53,12 @@ class GlyfTable {
 
   protected glyphs: Glyph[];
 
-  constructor(glyfTable: Uint8Array, isGlyphLocationsLong: number
-    , locaTable: Uint8Array, numGlyphs: number) {
+  constructor(
+    glyfTable: Uint8TypedArray,
+    isGlyphLocationsLong: number,
+    locaTable: Uint8TypedArray,
+    numGlyphs: number
+  ) {
     this.glyphs = [];
     const loca = new DataView(
       locaTable.buffer,

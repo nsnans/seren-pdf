@@ -83,8 +83,8 @@ function resizeRgbaImage(
     for (let i = 0; i < w2; i++) {
       xScaled[i] = Math.floor(i * xRatio);
     }
-    const src32 = new Uint32Array(src.buffer!);
-    const dest32 = new Uint32Array(dest.buffer!);
+    const src32 = new Uint32Array((<Uint8Array<ArrayBuffer>>src).buffer);
+    const dest32 = new Uint32Array((<Uint8Array<ArrayBuffer>>dest).buffer);
     const rgbMask = FeatureTest.isLittleEndian ? 0x00ffffff : 0xffffff00;
     for (let i = 0; i < h2; i++) {
       const buf = src32.subarray(Math.floor(i * yRatio) * w1);
@@ -213,7 +213,7 @@ class ColorSpace {
   fillRgb(
     dest: Uint8ClampedArray<ArrayBuffer>, oriWidth: number, oriHeight: number,
     width: number, height: number, actualHeight: number, bpc: number,
-    comps: MutableArray<number>, alpha01: number
+    comps: Uint8Array<ArrayBuffer> | Uint16Array<ArrayBuffer> | Uint32Array<ArrayBuffer>, alpha01: number
   ) {
 
     const count = oriWidth * oriHeight;
@@ -275,10 +275,10 @@ class ColorSpace {
 
     if (rgbBuf) {
       if (needsResizing) {
-        resizeRgbImage(rgbBuf, dest, oriWidth, oriHeight,width, height, alpha01);
+        resizeRgbImage(rgbBuf, dest, oriWidth, oriHeight, width, height, alpha01);
       } else {
         let destPos = 0;
-          let rgbPos = 0;
+        let rgbPos = 0;
         for (let i = 0, ii = width * actualHeight; i < ii; i++) {
           dest[destPos++] = rgbBuf[rgbPos++];
           dest[destPos++] = rgbBuf[rgbPos++];
@@ -471,14 +471,14 @@ class ColorSpace {
           whitePoint = params.getArrayValue(DictKey.WhitePoint);
           blackPoint = params.getArrayValue(DictKey.BlackPoint);
           gamma = params.getValue(DictKey.Gamma);
-          return new CalGrayCS(whitePoint, blackPoint, gamma);
+          return new CalGrayCS(whitePoint, blackPoint, <number>gamma);
         case "CalRGB":
           params = <Dict>xref.fetchIfRef(cs[1]);
           whitePoint = params.getArrayValue(DictKey.WhitePoint);
           blackPoint = params.getArrayValue(DictKey.BlackPoint);
           gamma = params.getArrayValue(DictKey.Gamma);
           const matrix = params.getArrayValue(DictKey.Matrix);
-          return new CalRGBCS(whitePoint, blackPoint, gamma, matrix);
+          return new CalRGBCS(whitePoint, blackPoint, <Number3Array>gamma, <Number9Array>matrix);
         case "ICCBased":
           const stream = <Stream>xref.fetchIfRef(cs[1]);
           const dict = stream.dict!;
@@ -596,7 +596,8 @@ class AlternateCS extends ColorSpace {
   protected tintFn: (src: MutableArray<number>, srcOffset: number, tmpBuf: MutableArray<number>, _unknow: number) => void;
 
   constructor(numComps: number, base: ColorSpace
-    , tintFn: (src: MutableArray<number>, srcOffset: number, tmpBuf: MutableArray<number>, _unknow: number) => void) {
+    , tintFn: (src: MutableArray<number>, srcOffset: number, tmpBuf: MutableArray<number>, _unknow: number) => void
+  ) {
     super("Alternate", numComps);
     this.base = base;
     this.tintFn = tintFn;
@@ -880,7 +881,7 @@ class DeviceRgbaCS extends ColorSpace {
     height: number,
     _actualHeight: number,
     _bpc: number,
-    comps: MutableArray<number>,
+    comps: Uint8Array<ArrayBuffer> | Uint16Array<ArrayBuffer> | Uint32Array<ArrayBuffer>,
     alpha01: number
   ) {
     if (PlatformHelper.isTesting()) {

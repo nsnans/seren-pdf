@@ -504,7 +504,7 @@ abstract class AbstractMessageHandler {
     }
   }
 
-  protected async deleteStreamController(streamController: StreamController, streamId: number) {
+  protected async deleteStreamController(streamController: StreamController<unknown>, streamId: number) {
     // Delete the `streamController` only when the start, pull, and cancel
     // capabilities have settled, to prevent `TypeError`s.
     await Promise.allSettled([

@@ -604,7 +604,7 @@ function parseCMapName(cMap: CMap, lexer: Lexer) {
   }
 }
 type FetchBuiltInCMapType = (name: string) => Promise<{
-  cMapData: Uint8Array;
+  cMapData: Uint8Array<ArrayBuffer>;
   isCompressed: boolean;
 }>;
 

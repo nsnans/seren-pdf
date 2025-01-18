@@ -392,6 +392,7 @@ export enum DictKey {
   Gamma = "Gamma",
   EarlyChange = "EarlyChange",
   ColorTransform = "ColorTransform",
+  Alternate = "Alternate",
 }
 
 /**
@@ -697,9 +698,10 @@ type DictValueTypeMapping = {
   [DictKey.ActualText]: string,
   [DictKey.WhitePoint]: [number, number, number],
   [DictKey.BlackPoint]: [number, number, number],
-  [DictKey.Gamma]: number,
+  [DictKey.Gamma]: number | [number, number, number],
   [DictKey.EarlyChange]: number,
-  [DictKey.ColorTransform]: number
+  [DictKey.ColorTransform]: number,
+  [DictKey.Alternate]: Ref | Name | (Ref | Name)[]
 }
 
 

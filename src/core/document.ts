@@ -289,7 +289,7 @@ class Page {
   }
 
 
-  async #replaceIdByRef(annotations: Record<string, any>[], deletedAnnotations: RefSetCache | RefSet, existingAnnotations: RefSet | null) {
+  async #replaceIdByRef(annotations: Record<string, any>[], deletedAnnotations: RefSetCache<Ref, Ref> | RefSet, existingAnnotations: RefSet | null) {
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.id) {
@@ -328,9 +328,10 @@ class Page {
     await Promise.all(promises);
   }
 
-  async saveNewAnnotations(handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[]
-    , imagePromises: Map<string, Promise<CreateStampImageResult>> | null) {
-
+  async saveNewAnnotations(
+    handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[],
+    imagePromises: Map<string, Promise<CreateStampImageResult>> | null
+  ) {
     const partialEvaluator = new PartialEvaluator(
       this.xref,
       handler,
@@ -344,12 +345,10 @@ class Page {
       this.evaluatorOptions
     );
 
-    const deletedAnnotations = new RefSetCache();
+    const deletedAnnotations = new RefSetCache<Ref, Ref>();
     const existingAnnotations = new RefSet();
     await this.#replaceIdByRef(
-      annotations,
-      deletedAnnotations,
-      existingAnnotations
+      annotations, deletedAnnotations, existingAnnotations
     );
 
     const pageDict = this.pageDict;
@@ -357,10 +356,7 @@ class Page {
       a => !(a instanceof Ref && deletedAnnotations.has(a))
     );
     const newData = await AnnotationFactory.saveNewAnnotations(
-      partialEvaluator,
-      task,
-      annotations,
-      imagePromises
+      partialEvaluator, task, annotations, imagePromises
     );
 
     for (const { ref } of newData.annotations) {
@@ -390,7 +386,10 @@ class Page {
     return objects;
   }
 
-  save(handler: MessageHandler, task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
+  async save(
+    handler: MessageHandler, task: WorkerTask,
+    annotationStorage: Map<string, Record<string, any>> | null
+  ) {
     const partialEvaluator = new PartialEvaluator(
       this.xref,
       handler,
@@ -409,19 +408,13 @@ class Page {
     return this._parsedAnnotations.then(function (annotations) {
       const newRefsPromises = [];
       for (const annotation of annotations) {
-        newRefsPromises.push(
-          annotation
-            .save(partialEvaluator, task, annotationStorage)
-            .catch(function (reason: unknown) {
-              warn(
-                "save - ignoring annotation data during " +
-                `"${task.name}" task: "${reason}".`
-              );
-              return null;
-            })
+        newRefsPromises.push(annotation.save(partialEvaluator, task, annotationStorage)
+          .catch(function (reason: unknown) {
+            warn(`save - ignoring annotation data during ${task.name} task:${reason}.`);
+            return null;
+          })
         );
       }
-
       return Promise.all(newRefsPromises).then(function (newRefs) {
         return newRefs.filter(newRef => !!newRef);
       });
@@ -1438,8 +1431,7 @@ class PDFDocument {
               catalog.standardFontDataCache,
               catalog.globalImageCache,
               catalog.systemFontCache,
-              catalog.nonBlendModesSet,
-              null,
+              catalog.nonBlendModesSet
             )
           );
         }
@@ -1467,7 +1459,7 @@ class PDFDocument {
     promises: Map<string, Promise<FieldObject | null>[]>,
     annotationGlobals: AnnotationGlobals,
     visitedRefs: RefSet,
-    orphanFields: RefSetCache
+    orphanFields: RefSetCache<Ref, Ref>
   ) {
     const { xref } = this;
 
@@ -1517,19 +1509,11 @@ class PDFDocument {
     }
     promises.get(name)!.push(
       AnnotationFactory.create(
-        xref,
-        fieldRef,
-        annotationGlobals,
-        /* idFactory = */ null,
-        /* collectFields */ true,
-        orphanFields,
-        /* pageRef */ null
-      )
-        .then(annotation => annotation?.getFieldObject())
-        .catch(function (reason) {
-          warn(`#collectFieldObjects: "${reason}".`);
-          return null;
-        })
+        xref, fieldRef, annotationGlobals, null, true, orphanFields, null
+      ).then(annotation => annotation?.getFieldObject()).catch(function (reason) {
+        warn(`#collectFieldObjects: "${reason}".`);
+        return null;
+      })
     );
 
     if (!field.has(DictKey.Kids)) {
@@ -1539,13 +1523,7 @@ class PDFDocument {
     if (Array.isArray(kids)) {
       for (const kid of kids) {
         await this.#collectFieldObjects(
-          name,
-          fieldRef,
-          kid,
-          promises,
-          annotationGlobals,
-          visitedRefs,
-          orphanFields
+          name, fieldRef, kid, promises, annotationGlobals, visitedRefs, orphanFields
         );
       }
     }
@@ -1568,16 +1546,10 @@ class PDFDocument {
       const visitedRefs = new RefSet();
       const allFields = new Map<string, FieldObject[]>();
       const fieldPromises = new Map<string, Promise<FieldObject | null>[]>();
-      const orphanFields = new RefSetCache();
+      const orphanFields = new RefSetCache<Ref, Ref>();
       for (const fieldRef of await acroForm!.getAsyncValue(DictKey.Fields)) {
         await this.#collectFieldObjects(
-          "",
-          null,
-          fieldRef,
-          fieldPromises,
-          annotationGlobals,
-          visitedRefs,
-          orphanFields
+          "", null, fieldRef, fieldPromises, annotationGlobals, visitedRefs, orphanFields
         );
       }
 

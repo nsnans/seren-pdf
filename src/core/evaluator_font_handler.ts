@@ -482,11 +482,10 @@ export class EvaluatorFontHandler {
             }
             j++;
           }
-          newProperties.widths = glyphWidths;
+          newProperties.widths = <Record<number, number>>glyphWidths;
         } else {
-          newProperties.widths = this.buildCharCodeToWidth(
-            metrics.widths,
-            newProperties
+          newProperties.widths = <Record<number, number>>this.buildCharCodeToWidth(
+            metrics.widths, newProperties
           );
         }
         return new Font(baseFontName, file!, newProperties);
@@ -644,7 +643,7 @@ export class EvaluatorFontHandler {
       cssFontInfo,
       scaleFactors: <number[]>glyphScaleFactors!,
       systemFontInfo,
-      widths: [],
+      widths: <Record<number, number>>[],
       defaultWidth: 0,
       isSimulatedFlags: false,
       cidSystemInfo: null,
@@ -875,7 +874,7 @@ export class EvaluatorFontHandler {
     }
 
     properties.defaultWidth = defaultWidth;
-    properties.widths = glyphsWidths;
+    properties.widths = <Record<number, number>>glyphsWidths;
     properties.defaultVMetrics = defaultVMetrics!;
     properties.vmetrics = glyphsVMetrics;
   }

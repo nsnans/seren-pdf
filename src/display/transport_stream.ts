@@ -20,7 +20,7 @@ import { isPdfFile } from "./display_utils";
 
 class PDFDataTransportStream implements PDFStream {
 
-  protected _queuedChunks: ArrayBufferLike[] | null;
+  protected _queuedChunks: ArrayBuffer[] | null;
 
   public _fullRequestReader: PDFDataTransportStreamReader | null;
 
@@ -57,7 +57,7 @@ class PDFDataTransportStream implements PDFStream {
       // completely "utilizes" its underlying ArrayBuffer.
       const buffer = initialData instanceof Uint8Array &&
         initialData.byteLength === initialData.buffer.byteLength
-        ? initialData.buffer : new Uint8Array(initialData!).buffer;
+        ? <ArrayBuffer>initialData.buffer : new Uint8Array(initialData!).buffer;
       this._queuedChunks.push(buffer);
     }
 
@@ -92,11 +92,8 @@ class PDFDataTransportStream implements PDFStream {
   _onReceiveData({ begin, chunk }: { begin?: number, chunk: Uint8Array | null }) {
     // Prevent any possible issues by only transferring a Uint8Array that
     // completely "utilizes" its underlying ArrayBuffer.
-    const buffer =
-      chunk instanceof Uint8Array &&
-        chunk.byteLength === chunk.buffer.byteLength
-        ? chunk.buffer
-        : new Uint8Array(chunk!).buffer;
+    const buffer = chunk instanceof Uint8Array && chunk.byteLength === chunk.buffer.byteLength
+      ? <ArrayBuffer>chunk.buffer : new Uint8Array(chunk!).buffer;
 
     if (begin === undefined) {
       if (this._fullRequestReader) {

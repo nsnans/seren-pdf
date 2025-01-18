@@ -168,13 +168,10 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
             }
             break;
           case OPS.setFillColorSpace:
-            result.fillColorSpace = ColorSpace.parse({
-              cs: args[0],
-              xref: this.xref,
-              resources: this.resources,
-              pdfFunctionFactory: this._pdfFunctionFactory,
-              localColorSpaceCache: this._localColorSpaceCache,
-            });
+            result.fillColorSpace = ColorSpace.parse(
+              args[0], this.xref, this.resources,
+              this._pdfFunctionFactory, this._localColorSpaceCache,
+            );
             break;
           case OPS.setFillColor:
             const cs = result.fillColorSpace;

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   bytesToString,
   FormatError,
@@ -24,12 +26,9 @@ import {
   utf8StringToString,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, isName, Name } from "./primitives";
-import { DecryptStream } from "./decrypt_stream";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Stream } from "./stream";
-import { Uint8TypedArray } from "../common/typed_array";
 import { BaseStream } from "./base_stream";
+import { DecryptStream } from "./decrypt_stream";
+import { Dict, DictKey, isName, Name } from "./primitives";
 
 class ARCFourCipher implements StreamClipher, StringClipher {
 
@@ -1919,5 +1918,5 @@ export {
   calculateSHA512,
   CipherTransformFactory,
   PDF17,
-  PDF20,
+  PDF20
 };

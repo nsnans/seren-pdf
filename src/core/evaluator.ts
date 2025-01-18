@@ -79,7 +79,7 @@ export interface EvaluatorProperties {
   subtype: string | null;
   loadedName: string | null;
   systemFontInfo: FontSubstitutionInfo | null;
-  widths: number[];
+  widths: Record<string | number, number>;
   defaultWidth: number;
   isSimulatedFlags: boolean;
   flags: number;

@@ -15,6 +15,7 @@
 
 import { readUint32 } from "./core_utils";
 import { string32 } from "../shared/util";
+import { Uint8TypedArray } from "../common/typed_array";
 
 function writeInt16(dest: Uint8Array, offset: number, num: number) {
   dest[offset] = (num >> 8) & 0xff;
@@ -50,7 +51,7 @@ class OpenTypeFileBuilder {
 
   protected readonly sfnt: string;
 
-  protected readonly tables: Map<string, string | Uint8Array | number[]>;
+  protected readonly tables: Map<string, string | Uint8TypedArray | number[]>;
 
   constructor(sfnt: string) {
     this.sfnt = sfnt;
@@ -149,7 +150,7 @@ class OpenTypeFileBuilder {
   }
 
   // 应该是string和Uint8Array
-  addTable(tag: string, data: Uint8Array | string | number[]) {
+  addTable(tag: string, data: Uint8TypedArray | string | number[]) {
     if (this.tables.has(tag)) {
       throw new Error("Table " + tag + " already exists");
     }

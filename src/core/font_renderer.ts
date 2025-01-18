@@ -132,13 +132,11 @@ type CFFInfo = {
   fdArray: CFFDict[];
 }
 
-function parseCff(data: Uint8Array, start: number, end: number, seacAnalysisEnabled: boolean): CFFInfo {
+function parseCff(data: Uint8Array<ArrayBuffer>, start: number, end: number, seacAnalysisEnabled: boolean): CFFInfo {
   // 这个变量根本就没有用到过
   const properties = {};
   const parser = new CFFParser(
-    new Stream(data, start, end - start),
-    properties,
-    seacAnalysisEnabled
+    new Stream(data, start, end - start), properties, seacAnalysisEnabled
   );
   const cff = parser.parse();
   return {
@@ -770,11 +768,10 @@ class Commands {
   add(cmd: number, args?: number[]) {
     if (args) {
       if (!isNumberArray(args, null)) {
-        warn(
-          `Commands.add - "${cmd}" has at least one non-number arg: "${args}".`
-        );
+        warn(`Commands.add - "${cmd}" has at least one non-number arg: "${args}".`);
         // "Fix" the wrong args by replacing them with 0.
-        const newArgs = args.map(arg => (typeof arg === "number" ? arg : 0));
+        // 按理来说应该全是数字，但是如果出现不是数字的情况，那么那么需要把非数字部分过滤掉
+        const newArgs = (<unknown[]>args).map(arg => (typeof arg === "number" ? arg : 0));
         this.cmds.push(cmd, ...newArgs);
       } else {
         this.cmds.push(cmd, ...args);

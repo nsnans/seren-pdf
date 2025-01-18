@@ -42,6 +42,10 @@ export interface StreamSink<Chunk> {
 
   desiredSize: number;
 
+  sinkCapability: PromiseWithResolvers<void>;
+
+  isCancelled: boolean;
+
   /**
    * 这是一个非常关键的函数，生产者通过这个函数向Stream队列里传递数据
    * 而ReadableStream.read()会从这里面来进行数据的调用
@@ -71,6 +75,18 @@ export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
   constructor(sink: StreamSink<EvaluatorTextContent>) {
     this.sink = sink;
   }
+
+  get isCancelled(){
+    return this.sink.isCancelled;
+  }
+
+  set isCancelled(isCancelled: boolean){
+    this.sink.isCancelled = isCancelled;
+  }
+
+  get sinkCapability() {
+    return this.sink.sinkCapability;
+  };
 
   get ready() {
     return this.sink.ready;
