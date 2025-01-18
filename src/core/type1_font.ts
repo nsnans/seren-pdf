@@ -17,6 +17,7 @@ import {
   CFF,
   CFFCharset,
   CFFCompiler,
+  CFFDictKey,
   CFFHeader,
   CFFIndex,
   CFFPrivateDict,
@@ -154,7 +155,7 @@ function getEexecBlock(stream: Stream, _suggestedLength: number | null) {
 /**
  * Type1Font is also a CIDFontType0.
  */
-class Type1Font {
+export class Type1Font {
 
   public charstrings: CharStringObjectType[];
 
@@ -339,17 +340,17 @@ class Type1Font {
     const topDict = new CFFTopDict();
     // CFF strings IDs 0...390 are predefined names, so refering
     // to entries in our own String INDEX starts at SID 391.
-    topDict.setByName("version", 391);
-    topDict.setByName("Notice", 392);
-    topDict.setByName("FullName", 393);
-    topDict.setByName("FamilyName", 394);
-    topDict.setByName("Weight", 395);
-    topDict.setByName("Encoding", null); // placeholder
-    topDict.setByName("FontMatrix", properties.fontMatrix);
-    topDict.setByName("FontBBox", properties.bbox);
-    topDict.setByName("charset", null); // placeholder
-    topDict.setByName("CharStrings", null); // placeholder
-    topDict.setByName("Private", null); // placeholder
+    topDict.setByName(CFFDictKey.version, 391);
+    topDict.setByName(CFFDictKey.Notice, 392);
+    topDict.setByName(CFFDictKey.FullName, 393);
+    topDict.setByName(CFFDictKey.FamilyName, 394);
+    topDict.setByName(CFFDictKey.Weight, 395);
+    topDict.setByName(CFFDictKey.Encoding, null); // placeholder
+    topDict.setByName(CFFDictKey.FontMatrix, properties.fontMatrix);
+    topDict.setByName(CFFDictKey.FontBBox, properties.bbox);
+    topDict.setByName(CFFDictKey.charset, null); // placeholder
+    topDict.setByName(CFFDictKey.CharStrings, null); // placeholder
+    topDict.setByName(CFFDictKey.Private, null); // placeholder
     cff.topDict = topDict;
 
     const strings = new CFFStrings();
@@ -383,22 +384,22 @@ class Type1Font {
     cff.charStrings = charStringsIndex;
 
     const privateDict = new CFFPrivateDict();
-    privateDict.setByName("Subrs", null); // placeholder
-    const fields = [
-      "BlueValues",
-      "OtherBlues",
-      "FamilyBlues",
-      "FamilyOtherBlues",
-      "StemSnapH",
-      "StemSnapV",
-      "BlueShift",
-      "BlueFuzz",
-      "BlueScale",
-      "LanguageGroup",
-      "ExpansionFactor",
-      "ForceBold",
-      "StdHW",
-      "StdVW",
+    privateDict.setByName(CFFDictKey.Subrs, null); // placeholder
+    const fields: CFFDictKey[] = [
+      CFFDictKey.BlueValues,
+      CFFDictKey.OtherBlues,
+      CFFDictKey.FamilyBlues,
+      CFFDictKey.FamilyOtherBlues,
+      CFFDictKey.StemSnapH,
+      CFFDictKey.StemSnapV,
+      CFFDictKey.BlueShift,
+      CFFDictKey.BlueFuzz,
+      CFFDictKey.BlueScale,
+      CFFDictKey.LanguageGroup,
+      CFFDictKey.ExpansionFactor,
+      CFFDictKey.ForceBold,
+      CFFDictKey.StdHW,
+      CFFDictKey.StdVW,
     ];
     for (i = 0, ii = fields.length; i < ii; i++) {
       const field = fields[i];
@@ -427,5 +428,3 @@ class Type1Font {
     return compiler.compile();
   }
 }
-
-export { Type1Font };

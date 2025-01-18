@@ -46,6 +46,14 @@ function isWhitespaceString(s: string) {
   return true;
 }
 
+interface XMLTagProperty {
+
+  name: string;
+
+  value: string;
+
+}
+
 abstract class XMLParserBase {
   _resolveEntities(s: string) {
     return s.replaceAll(/&([^;]+);/g, (_all, entity) => {
@@ -71,7 +79,7 @@ abstract class XMLParserBase {
   }
 
   _parseContent(s: string, start: number) {
-    const attributes = [];
+    const attributes: XMLTagProperty[] = [];
     let pos = start;
 
     function skipWs() {
@@ -286,7 +294,7 @@ abstract class XMLParserBase {
 
   abstract onText(_text: string): void;
 
-  abstract onBeginElement(_name: string, _attributes: unknown, _isEmpty: boolean): void;
+  abstract onBeginElement(_name: string, _attributes: XMLTagProperty[], _isEmpty: boolean): void;
 
   abstract onEndElement(_name: string): void;
 
@@ -297,15 +305,15 @@ class SimpleDOMNode {
 
   public nodeName: string;
 
-  public nodeValue?: string;
+  public nodeValue: string | null;
 
   public parentNode: SimpleDOMNode | null;
 
-  public childNodes = [] as SimpleDOMNode[];
+  public childNodes: SimpleDOMNode[] = [];
 
   public attributes: XMLTagProperty[] = [];
 
-  constructor(nodeName: string, nodeValue?: string) {
+  constructor(nodeName: string, nodeValue: string | null = null) {
     this.nodeName = nodeName;
     this.nodeValue = nodeValue;
     // 原来的代码里是null，我想应该也是null，或者是要

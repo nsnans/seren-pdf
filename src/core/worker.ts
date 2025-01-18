@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../common/typed_array";
 import { DocumentParameter } from "../display/api";
 import { ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";

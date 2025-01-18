@@ -440,7 +440,7 @@ type DictValueTypeMapping = {
   [DictKey.DR]: Dict,
   [DictKey.DW]: number,
   [DictKey.D]: number[] | Dict | Name | DestinationType,
-  [DictKey.DecodeParms]: Dict,
+  [DictKey.DecodeParms]: Dict | (Dict | null)[],
   [DictKey.Decode]: number[],
   [DictKey.Desc]: string,
   [DictKey.DescendantFonts]: Ref[],

@@ -156,7 +156,7 @@ class Glyph {
     this.composites = composites;
   }
 
-  static parse(pos: number, glyf: DataView) {
+  static parse(pos: number, glyf: DataView<ArrayBuffer>) {
     const [read, header] = GlyphHeader.parse(pos, glyf);
     pos += read;
 
@@ -304,7 +304,7 @@ class SimpleGlyph {
     this.instructions = instructions;
   }
 
-  static parse(pos: number, glyf: DataView, numberOfContours: number): SimpleGlyph {
+  static parse(pos: number, glyf: DataView<ArrayBuffer>, numberOfContours: number): SimpleGlyph {
     const endPtsOfContours = [];
     for (let i = 0; i < numberOfContours; i++) {
       const endPt = glyf.getUint16(pos);
@@ -314,10 +314,7 @@ class SimpleGlyph {
     const numberOfPt = endPtsOfContours[numberOfContours - 1] + 1;
     const instructionLength = glyf.getUint16(pos);
     pos += 2;
-    const instructions = new Uint8Array(glyf).slice(
-      pos,
-      pos + instructionLength
-    );
+    const instructions = new Uint8Array(glyf).slice(pos, pos + instructionLength);
     pos += instructionLength;
 
     const flags = [];

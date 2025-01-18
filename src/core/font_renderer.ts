@@ -21,7 +21,7 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { CFFDict, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
+import { CFFDict, CFFDictKey, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
 import { getGlyphsUnicode } from "./glyphlist";
 import { isNumberArray } from "./core_utils";
 import { StandardEncoding } from "./encodings";
@@ -853,7 +853,7 @@ class CompiledFont {
       const fdIndex = this.fdSelect!.getFDIndex(glyphId);
       if (fdIndex >= 0 && fdIndex < this.fdArray.length) {
         const fontDict = this.fdArray[fdIndex];
-        fontMatrix = fontDict.getByName("FontMatrix") || FONT_IDENTITY_MATRIX;
+        fontMatrix = fontDict.getByName(CFFDictKey.FontMatrix) || FONT_IDENTITY_MATRIX;
       } else {
         warn("Invalid fd index for glyph index.");
       }

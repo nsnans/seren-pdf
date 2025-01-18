@@ -59,9 +59,7 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
     dict.getAsyncValue(DictKey.DecodeParms),
   ]);
 
-  const filterZero = Array.isArray(filter)
-    ? await dict.xref!.fetchIfRefAsync(filter[0])
-    : filter;
+  const filterZero = Array.isArray(filter) ? await dict.xref!.fetchIfRefAsync(filter[0]) : filter;
   const isFilterZeroFlateDecode = isName(filterZero, "FlateDecode");
 
   // If the string is too small there is no real benefit in compressing it.
@@ -82,17 +80,14 @@ async function writeStream(stream: BaseStream, buffer: string[], transform?: Cip
       const buf = await new Response(cs.readable).arrayBuffer();
       bytes = new Uint8Array(buf);
 
-      let newFilter, newParams;
+      let newFilter, newParams: (Dict | null)[] = [];
       if (!filter) {
         newFilter = Name.get("FlateDecode");
       } else if (!isFilterZeroFlateDecode) {
-        newFilter = Array.isArray(filter)
-          ? [Name.get("FlateDecode"), ...filter]
+        newFilter = Array.isArray(filter) ? [Name.get("FlateDecode"), ...filter]
           : [Name.get("FlateDecode"), filter];
         if (params) {
-          newParams = Array.isArray(params)
-            ? [null, ...params]
-            : [null, params];
+          newParams = Array.isArray(params) ? [null, ...params] : [null, params];
         }
       }
       if (newFilter) {

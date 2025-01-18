@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { RectType, TransformType } from "../display/display_utils";
 import {
   bytesToString,
   FormatError,
@@ -281,7 +282,7 @@ class CFFParser {
 
     const topDictParsed = this.parseDict(topDictIndex.obj.get(0));
 
-    const topDict = this.createDict(CFFTopDict, topDictParsed, cff.strings);
+    const topDict = this.createDict(new CFFTopDict(cff.strings), topDictParsed);
 
     cff.header = header.obj;
     cff.names = this.parseNameIndex(nameIndex.obj);
@@ -291,17 +292,17 @@ class CFFParser {
 
     this.parsePrivateDict(cff.topDict);
 
-    cff.isCIDFont = topDict.hasName("ROS");
+    cff.isCIDFont = topDict.hasName(CFFDictKey.ROS);
 
-    const charStringOffset = topDict.getByName("CharStrings");
+    const charStringOffset = topDict.getByName(CFFDictKey.CharStrings)!;
     const charStringIndex = this.parseIndex(charStringOffset).obj;
 
-    const fontMatrix = topDict.getByName("FontMatrix");
+    const fontMatrix = topDict.getByName(CFFDictKey.FontMatrix);
     if (fontMatrix) {
-      properties.fontMatrix = fontMatrix;
+      properties.fontMatrix = <TransformType>fontMatrix;
     }
 
-    const fontBBox = topDict.getByName("FontBBox");
+    const fontBBox = topDict.getByName(CFFDictKey.FontBBox);
     if (fontBBox) {
       // adjusting ascent/descent
       properties.ascent = Math.max(fontBBox[3], fontBBox[1]);
@@ -311,38 +312,34 @@ class CFFParser {
 
     let charset, encoding;
     if (cff.isCIDFont) {
-      const fdArrayIndex = this.parseIndex(topDict.getByName("FDArray")).obj;
+      const fdArrayIndex = this.parseIndex(topDict.getByName(CFFDictKey.FDArray)).obj;
       for (let i = 0, ii = fdArrayIndex.count; i < ii; ++i) {
         const dictRaw = fdArrayIndex.get(i);
-        const fontDict = <CFFTopDict>this.createDict(
-          CFFTopDict,
-          this.parseDict(dictRaw),
-          cff.strings
-        );
+        const fontDict = this.createDict(new CFFTopDict(cff.strings), this.parseDict(dictRaw));
         this.parsePrivateDict(fontDict);
         cff.fdArray.push(fontDict);
       }
       // cid fonts don't have an encoding
       encoding = null;
       charset = this.parseCharsets(
-        topDict.getByName("charset"),
+        topDict.getByName(CFFDictKey.charset),
         charStringIndex.count,
         cff.strings,
         true
       );
       cff.fdSelect = this.parseFDSelect(
-        topDict.getByName("FDSelect"),
+        topDict.getByName(CFFDictKey.FDSelect),
         charStringIndex.count
       );
     } else {
       charset = this.parseCharsets(
-        topDict.getByName("charset"),
+        topDict.getByName(CFFDictKey.charset),
         charStringIndex.count,
         cff.strings,
         false
       );
       encoding = this.parseEncoding(
-        topDict.getByName("Encoding"),
+        topDict.getByName(CFFDictKey.Encoding),
         properties,
         cff.strings,
         charset.charset
@@ -523,9 +520,7 @@ class CFFParser {
     return strings;
   }
 
-  createDict<T extends CFFDict>(Type: new (...args: any) => T
-    , dict: ((number | number[])[])[], strings: CFFStrings): T {
-    const cffDict = new Type(strings);
+  createDict<T extends CFFDict>(cffDict: T, dict: ((number | number[])[])[]): T {
     for (const [key, value] of dict) {
       cffDict.setByKey(<number>key, <number[]>value);
     }
@@ -791,10 +786,10 @@ class CFFParser {
         );
       }
       if (state.width !== null) {
-        const nominalWidth = <number>privateDictToUse.getByName("nominalWidthX");
+        const nominalWidth = privateDictToUse.getByName(CFFDictKey.nominalWidthX);
         widths[i] = nominalWidth + state.width;
       } else {
-        const defaultWidth = privateDictToUse.getByName("defaultWidthX");
+        const defaultWidth = privateDictToUse.getByName(CFFDictKey.defaultWidthX);
         widths[i] = defaultWidth;
       }
       if (state.seac !== null) {
@@ -809,21 +804,21 @@ class CFFParser {
   }
 
   emptyPrivateDictionary(parentDict: CFFTopDict) {
-    const privateDict = this.createDict(CFFPrivateDict, [], parentDict.strings);
+    const privateDict = this.createDict(new CFFPrivateDict(parentDict.strings), []);
     parentDict.setByKey(18, [0, 0]);
     parentDict.privateDict = privateDict;
   }
 
   parsePrivateDict(parentDict: CFFTopDict) {
     // no private dict, do nothing
-    if (!parentDict.hasName("Private")) {
+    if (!parentDict.hasName(CFFDictKey.Private)) {
       this.emptyPrivateDictionary(parentDict);
       return;
     }
-    const privateOffset = parentDict.getByName("Private");
+    const privateOffset = parentDict.getByName(CFFDictKey.Private);
     // make sure the params are formatted correctly
     if (!Array.isArray(privateOffset) || privateOffset.length !== 2) {
-      parentDict.removeByName("Private");
+      parentDict.removeByName(CFFDictKey.Private);
       return;
     }
     const size = privateOffset[0];
@@ -837,24 +832,21 @@ class CFFParser {
     const privateDictEnd = offset + size;
     const dictData = this.bytes.subarray(offset, privateDictEnd);
     const dict = this.parseDict(dictData);
-    const privateDict = this.createDict(
-      CFFPrivateDict,
-      dict,
-      parentDict.strings
-    );
+    const privateDict = this.createDict(new CFFPrivateDict(parentDict.strings), dict);
+
     parentDict.privateDict = privateDict;
 
-    if (privateDict.getByName("ExpansionFactor") === 0) {
+    if (privateDict.getByName(CFFDictKey.ExpansionFactor) === 0) {
       // Firefox doesn't render correctly such a font on Windows (see issue
       // 15289), hence we just reset it to its default value.
-      privateDict.setByName("ExpansionFactor", 0.06);
+      privateDict.setByName(CFFDictKey.ExpansionFactor, 0.06);
     }
 
     // Parse the Subrs index also since it's relative to the private dict.
-    if (!privateDict.getByName("Subrs")) {
+    if (!privateDict.getByName(CFFDictKey.Subrs)) {
       return;
     }
-    const subrsOffset = privateDict.getByName("Subrs");
+    const subrsOffset = privateDict.getByName(CFFDictKey.Subrs);
     const relativeOffset = offset + subrsOffset;
     // Validate the offset.
     if (subrsOffset === 0 || relativeOffset >= this.bytes.length) {
@@ -1202,31 +1194,139 @@ class CFFIndex {
 }
 
 type CFFDictTable = {
-  keyToNameMap: Record<number, string>;
-  nameToKeyMap: Record<string, number>;
-  defaults: Record<number, number | number[] | null>;
-  types: Record<number, string | string[]>;
-  opcodes: Record<number, Array<number>>;
+  keyToNameMap: Map<number, CFFDictKey>;
+  nameToKeyMap: Map<CFFDictKey, number>;
+  defaults: Map<number, CFFDictValueMapping[CFFDictKey]>;
+  types: Map<number, string | string[]>;
+  opcodes: Map<number, Array<number>>;
   order: number[];
+}
+
+export enum CFFDictKey {
+  BlueValues = "BlueValues",
+  OtherBlues = "OtherBlues",
+  FamilyBlues = "FamilyBlues",
+  FamilyOtherBlues = "FamilyOtherBlues",
+  StemSnapH = "StemSnapH",
+  StemSnapV = "StemSnapV",
+  BlueShift = "BlueShift",
+  BlueFuzz = "BlueFuzz",
+  BlueScale = "BlueScale",
+  LanguageGroup = "LanguageGroup",
+  ExpansionFactor = "ExpansionFactor",
+  ForceBold = "ForceBold",
+  StdHW = "StdHW",
+  StdVW = "StdVW",
+  FontMatrix = "FontMatrix",
+  charset = "charset",
+  version = "version",
+  Notice = "Notice",
+  FullName = "FullName",
+  FamilyName = "FamilyName",
+  Weight = "Weight",
+  Encoding = "Encoding",
+  FontBBox = "FontBBox",
+  CharStrings = "CharStrings",
+  Private = "Private",
+  Subrs = "Subrs",
+  XUID = "XUID",
+  CIDFontVersion = "CIDFontVersion",
+  CIDFontRevision = "CIDFontRevision",
+  CIDFontType = "CIDFontType",
+  CIDCount = "CIDCount",
+  UIDBase = "UIDBase",
+  defaultWidthX = "defaultWidthX",
+  nominalWidthX = "nominalWidthX",
+  FDSelect = "FDSelect",
+  FDArray = "FDArray",
+  ROS = "ROS",
+  FontName = "FontName",
+  SyntheticBase = "SyntheticBase",
+  Copyright = "Copyright",
+  isFixedPitch = "isFixedPitch",
+  ItalicAngle = "ItalicAngle",
+  UnderlinePosition = "UnderlinePosition",
+  UnderlineThickness = "UnderlineThickness",
+  PaintType = "PaintType",
+  CharstringType = "CharstringType",
+  UniqueID = "UniqueID",
+  StrokeWidth = "StrokeWidth",
+  PostScript = "PostScript",
+  BaseFontBlend = "BaseFontBlend",
+  initialRandomSeed = "initialRandomSeed",
+}
+
+type CFFDictValueMapping = {
+  [CFFDictKey.BlueValues]: number,
+  [CFFDictKey.OtherBlues]: number,
+  [CFFDictKey.FamilyBlues]: number,
+  [CFFDictKey.FamilyOtherBlues]: number,
+  [CFFDictKey.StemSnapH]: number,
+  [CFFDictKey.StemSnapV]: number,
+  [CFFDictKey.BlueShift]: number,
+  [CFFDictKey.BlueFuzz]: number,
+  [CFFDictKey.BlueScale]: number,
+  [CFFDictKey.LanguageGroup]: number,
+  [CFFDictKey.ExpansionFactor]: number,
+  [CFFDictKey.ForceBold]: number,
+  [CFFDictKey.StdHW]: number,
+  [CFFDictKey.StdVW]: number,
+  [CFFDictKey.FontMatrix]: TransformType,
+  [CFFDictKey.charset]: number,
+  [CFFDictKey.version]: number,
+  [CFFDictKey.Notice]: number,
+  [CFFDictKey.FullName]: number,
+  [CFFDictKey.FamilyName]: number,
+  [CFFDictKey.Weight]: number,
+  [CFFDictKey.Encoding]: number,
+  [CFFDictKey.FontBBox]: RectType,
+  [CFFDictKey.CharStrings]: number,
+  [CFFDictKey.Private]: [number, number],
+  [CFFDictKey.Subrs]: number,
+  [CFFDictKey.XUID]: number[],
+  [CFFDictKey.CIDFontVersion]: number,
+  [CFFDictKey.CIDFontRevision]: number,
+  [CFFDictKey.CIDFontType]: number,
+  [CFFDictKey.CIDCount]: number,
+  [CFFDictKey.UIDBase]: number,
+  [CFFDictKey.defaultWidthX]: number,
+  [CFFDictKey.nominalWidthX]: number,
+  [CFFDictKey.FDSelect]: number,
+  [CFFDictKey.FDArray]: number,
+  [CFFDictKey.ROS]: [number, number, number],
+  [CFFDictKey.FontName]: number,
+  [CFFDictKey.SyntheticBase]: number,
+  [CFFDictKey.Copyright]: number,
+  [CFFDictKey.isFixedPitch]: number,
+  [CFFDictKey.ItalicAngle]: number,
+  [CFFDictKey.UnderlinePosition]: number,
+  [CFFDictKey.UnderlineThickness]: number,
+  [CFFDictKey.PaintType]: number,
+  [CFFDictKey.CharstringType]: number,
+  [CFFDictKey.UniqueID]: number,
+  [CFFDictKey.StrokeWidth]: number,
+  [CFFDictKey.PostScript]: number,
+  [CFFDictKey.BaseFontBlend]: number,
+  [CFFDictKey.initialRandomSeed]: number,
 }
 
 export class CFFDict {
 
   public strings: CFFStrings;
 
-  public keyToNameMap: Record<number, string>;
+  public keyToNameMap: Map<number, CFFDictKey>;
 
-  public nameToKeyMap: Record<string, number>;
+  public nameToKeyMap: Map<CFFDictKey, number>;
 
-  public defaults: Record<number, number | number[] | null>;
+  public defaults: Map<number, CFFDictValueMapping[CFFDictKey]>;;
 
-  public types: Record<number, string | string[]>;
+  public types: Map<number, string | string[]>;
 
-  public opcodes: Record<number, number[]>;
+  public opcodes: Map<number, number[]>;
 
   public order: number[];
 
-  public values;
+  public values: Map<number, CFFDictValueMapping[CFFDictKey] | null>;
 
   constructor(tables: CFFDictTable, strings: CFFStrings) {
     this.keyToNameMap = tables.keyToNameMap;
@@ -1236,7 +1336,7 @@ export class CFFDict {
     this.opcodes = tables.opcodes;
     this.order = tables.order;
     this.strings = strings;
-    this.values = Object.create(null);
+    this.values = new Map();
   }
 
   // value should always be an array
@@ -1255,107 +1355,104 @@ export class CFFDict {
         return true;
       }
     }
-    const type = this.types[key];
+    const type = this.types.get(key);
     let retVal: number | number[] = value;
     // remove the array wrapping these types of values
     if (type === "num" || type === "sid" || type === "offset") {
       retVal = value[0];
     }
-    this.values[key] = retVal;
+    this.values.set(key, retVal);
     return true;
   }
 
-  setByName(name: string, value: number | number[] | null) {
-    if (!(name in this.nameToKeyMap)) {
+  setByName<T extends CFFDictKey>(name: T, value: CFFDictValueMapping[T] | null) {
+    if (!(this.nameToKeyMap.has(name))) {
       throw new FormatError(`Invalid dictionary name "${name}"`);
     }
-    this.values[this.nameToKeyMap[name]] = value;
+    this.values.set(this.nameToKeyMap.get(name)!, value);
   }
 
-  hasName(name: string) {
-    return this.nameToKeyMap[name] in this.values;
+  hasName(name: CFFDictKey) {
+    return this.values.has(this.nameToKeyMap.get(name)!);
   }
 
-  getByName(name: string) {
+  getByName<T extends CFFDictKey>(name: T): CFFDictValueMapping[T] {
     if (!(name in this.nameToKeyMap)) {
       throw new FormatError(`Invalid dictionary name ${name}"`);
     }
-    const key = this.nameToKeyMap[name];
-    if (!(key in this.values)) {
-      return this.defaults[key];
+    const key = this.nameToKeyMap.get(name)!;
+    if (!(this.values.has(key))) {
+      return <CFFDictValueMapping[T]>this.defaults.get(key)!;
     }
-    return this.values[key];
+    return <CFFDictValueMapping[T]>this.values.get(key)!;
   }
 
-  removeByName(name: string) {
-    delete this.values[this.nameToKeyMap[name]];
+  removeByName(name: CFFDictKey) {
+    this.values.delete(this.nameToKeyMap.get(name)!);
   }
 
   static createTables(layout: CFFDictLayoutType): CFFDictTable {
     const tables: CFFDictTable = {
-      keyToNameMap: <Record<number, string>>{},
-      nameToKeyMap: <Record<string, number>>{},
-      defaults: <Record<number, number | number[] | null>>{},
-      types: <Record<number, string | string[]>>{},
-      opcodes: <Record<number, Array<number>>>{},
-      order: <number[]>[],
+      keyToNameMap: new Map(),
+      nameToKeyMap: new Map(),
+      defaults: new Map(),
+      types: new Map(),
+      opcodes: new Map(),
+      order: [],
     };
     for (const entry of layout) {
-      const key = Array.isArray(entry[0])
-        ? (entry[0][0] << 8) + entry[0][1]
-        : entry[0];
-      tables.keyToNameMap[key] = entry[1];
-      tables.nameToKeyMap[entry[1]] = key;
-      tables.types[key] = entry[2];
-      tables.defaults[key] = entry[3];
-      tables.opcodes[key] = Array.isArray(entry[0]) ? entry[0] : [entry[0]];
+      const key = Array.isArray(entry[0]) ? (entry[0][0] << 8) + entry[0][1] : entry[0];
+      tables.keyToNameMap.set(key, entry[1]);
+      tables.nameToKeyMap.set(entry[1], key);
+      tables.types.set(key, entry[2]);
+      tables.defaults.set(key, entry[3]!);
+      tables.opcodes.set(key, Array.isArray(entry[0]) ? entry[0] : [entry[0]]);
       tables.order.push(key);
     }
     return tables;
   }
 }
 
-type CFFDictLayoutType = [number | [number, number], string, string | string[], number | number[] | null][]
+type CFFDictLayoutType = [number | [number, number], CFFDictKey, string | string[], number | number[] | null][]
 
 const CFFTopDictLayout: CFFDictLayoutType = [
-  [[12, 30], "ROS", ["sid", "sid", "num"], null],
-  [[12, 20], "SyntheticBase", "num", null],
-  [0, "version", "sid", null],
-  [1, "Notice", "sid", null],
-  [[12, 0], "Copyright", "sid", null],
-  [2, "FullName", "sid", null],
-  [3, "FamilyName", "sid", null],
-  [4, "Weight", "sid", null],
-  [[12, 1], "isFixedPitch", "num", 0],
-  [[12, 2], "ItalicAngle", "num", 0],
-  [[12, 3], "UnderlinePosition", "num", -100],
-  [[12, 4], "UnderlineThickness", "num", 50],
-  [[12, 5], "PaintType", "num", 0],
-  [[12, 6], "CharstringType", "num", 2],
+  [[12, 30], CFFDictKey.ROS, ["sid", "sid", "num"], null],
+  [[12, 20], CFFDictKey.SyntheticBase, "num", null],
+  [0, CFFDictKey.version, "sid", null],
+  [1, CFFDictKey.Notice, "sid", null],
+  [[12, 0], CFFDictKey.Copyright, "sid", null],
+  [2, CFFDictKey.FullName, "sid", null],
+  [3, CFFDictKey.FamilyName, "sid", null],
+  [4, CFFDictKey.Weight, "sid", null],
+  [[12, 1], CFFDictKey.isFixedPitch, "num", 0],
+  [[12, 2], CFFDictKey.ItalicAngle, "num", 0],
+  [[12, 3], CFFDictKey.UnderlinePosition, "num", -100],
+  [[12, 4], CFFDictKey.UnderlineThickness, "num", 50],
+  [[12, 5], CFFDictKey.PaintType, "num", 0],
+  [[12, 6], CFFDictKey.CharstringType, "num", 2],
   // prettier-ignore
-  [[12, 7], "FontMatrix", ["num", "num", "num", "num", "num", "num"],
-  [0.001, 0, 0, 0.001, 0, 0]],
-  [13, "UniqueID", "num", null],
-  [5, "FontBBox", ["num", "num", "num", "num"], [0, 0, 0, 0]],
-  [[12, 8], "StrokeWidth", "num", 0],
-  [14, "XUID", "array", null],
-  [15, "charset", "offset", 0],
-  [16, "Encoding", "offset", 0],
-  [17, "CharStrings", "offset", 0],
-  [18, "Private", ["offset", "offset"], null],
-  [[12, 21], "PostScript", "sid", null],
-  [[12, 22], "BaseFontName", "sid", null],
-  [[12, 23], "BaseFontBlend", "delta", null],
-  [[12, 31], "CIDFontVersion", "num", 0],
-  [[12, 32], "CIDFontRevision", "num", 0],
-  [[12, 33], "CIDFontType", "num", 0],
-  [[12, 34], "CIDCount", "num", 8720],
-  [[12, 35], "UIDBase", "num", null],
+  [[12, 7], CFFDictKey.FontMatrix, ["num", "num", "num", "num", "num", "num"], [0.001, 0, 0, 0.001, 0, 0]],
+  [13, CFFDictKey.UniqueID, "num", null],
+  [5, CFFDictKey.FontBBox, ["num", "num", "num", "num"], [0, 0, 0, 0]],
+  [[12, 8], CFFDictKey.StrokeWidth, "num", 0],
+  [14, CFFDictKey.XUID, "array", null],
+  [15, CFFDictKey.charset, "offset", 0],
+  [16, CFFDictKey.Encoding, "offset", 0],
+  [17, CFFDictKey.CharStrings, "offset", 0],
+  [18, CFFDictKey.Private, ["offset", "offset"], null],
+  [[12, 21], CFFDictKey.PostScript, "sid", null],
+  [[12, 22], CFFDictKey.FontName, "sid", null],
+  [[12, 23], CFFDictKey.BaseFontBlend, "delta", null],
+  [[12, 31], CFFDictKey.CIDFontVersion, "num", 0],
+  [[12, 32], CFFDictKey.CIDFontRevision, "num", 0],
+  [[12, 33], CFFDictKey.CIDFontType, "num", 0],
+  [[12, 34], CFFDictKey.CIDCount, "num", 8720],
+  [[12, 35], CFFDictKey.UIDBase, "num", null],
   // XXX: CID Fonts on DirectWrite 6.1 only seem to work if FDSelect comes
   // before FDArray.
-  [[12, 37], "FDSelect", "offset", null],
-  [[12, 36], "FDArray", "offset", null],
-  [[12, 38], "FontName", "sid", null],
+  [[12, 37], CFFDictKey.FDSelect, "offset", null],
+  [[12, 36], CFFDictKey.FDArray, "offset", null],
+  [[12, 38], CFFDictKey.FontName, "sid", null],
 ];
 
 class CFFTopDict extends CFFDict {
@@ -1373,24 +1470,24 @@ class CFFTopDict extends CFFDict {
 }
 
 const CFFPrivateDictLayout: CFFDictLayoutType = [
-  [6, "BlueValues", "delta", null],
-  [7, "OtherBlues", "delta", null],
-  [8, "FamilyBlues", "delta", null],
-  [9, "FamilyOtherBlues", "delta", null],
-  [[12, 9], "BlueScale", "num", 0.039625],
-  [[12, 10], "BlueShift", "num", 7],
-  [[12, 11], "BlueFuzz", "num", 1],
-  [10, "StdHW", "num", null],
-  [11, "StdVW", "num", null],
-  [[12, 12], "StemSnapH", "delta", null],
-  [[12, 13], "StemSnapV", "delta", null],
-  [[12, 14], "ForceBold", "num", 0],
-  [[12, 17], "LanguageGroup", "num", 0],
-  [[12, 18], "ExpansionFactor", "num", 0.06],
-  [[12, 19], "initialRandomSeed", "num", 0],
-  [20, "defaultWidthX", "num", 0],
-  [21, "nominalWidthX", "num", 0],
-  [19, "Subrs", "offset", null],
+  [6, CFFDictKey.BlueValues, "delta", null],
+  [7, CFFDictKey.OtherBlues, "delta", null],
+  [8, CFFDictKey.FamilyBlues, "delta", null],
+  [9, CFFDictKey.FamilyOtherBlues, "delta", null],
+  [[12, 9], CFFDictKey.BlueScale, "num", 0.039625],
+  [[12, 10], CFFDictKey.BlueShift, "num", 7],
+  [[12, 11], CFFDictKey.BlueFuzz, "num", 1],
+  [10, CFFDictKey.StdHW, "num", null],
+  [11, CFFDictKey.StdVW, "num", null],
+  [[12, 12], CFFDictKey.StemSnapH, "delta", null],
+  [[12, 13], CFFDictKey.StemSnapV, "delta", null],
+  [[12, 14], CFFDictKey.ForceBold, "num", 0],
+  [[12, 17], CFFDictKey.LanguageGroup, "num", 0],
+  [[12, 18], CFFDictKey.ExpansionFactor, "num", 0.06],
+  [[12, 19], CFFDictKey.initialRandomSeed, "num", 0],
+  [20, CFFDictKey.defaultWidthX, "num", 0],
+  [21, CFFDictKey.nominalWidthX, "num", 0],
+  [19, CFFDictKey.Subrs, "offset", null],
 ];
 
 class CFFPrivateDict extends CFFDict {
@@ -1577,26 +1674,26 @@ class CFFCompiler {
       // - If neither have matrices, use default.
       // To make this work on all platforms we move the top matrix into each
       // sub top dict and concat if necessary.
-      if (cff.topDict!.hasName("FontMatrix")) {
-        const base = cff.topDict!.getByName("FontMatrix");
-        cff.topDict!.removeByName("FontMatrix");
+      if (cff.topDict!.hasName(CFFDictKey.FontMatrix)) {
+        const base = cff.topDict!.getByName(CFFDictKey.FontMatrix);
+        cff.topDict!.removeByName(CFFDictKey.FontMatrix);
         for (const subDict of cff.fdArray) {
           let matrix = base.slice(0);
-          if (subDict.hasName("FontMatrix")) {
-            matrix = Util.transform(matrix, subDict.getByName("FontMatrix"));
+          if (subDict.hasName(CFFDictKey.FontMatrix)) {
+            matrix = Util.transform(matrix, subDict.getByName(CFFDictKey.FontMatrix));
           }
-          subDict.setByName("FontMatrix", matrix);
+          subDict.setByName(CFFDictKey.FontMatrix, <TransformType>matrix);
         }
       }
     }
 
-    const xuid = cff.topDict!.getByName("XUID");
+    const xuid = cff.topDict!.getByName(CFFDictKey.XUID)!;
     if (xuid?.length > 16) {
       // Length of XUID array must not be greater than 16 (issue #12399).
-      cff.topDict!.removeByName("XUID");
+      cff.topDict!.removeByName(CFFDictKey.XUID);
     }
 
-    cff.topDict!.setByName("charset", 0);
+    cff.topDict!.setByName(CFFDictKey.charset, 0);
     let compiled = this.compileTopDicts(
       [cff.topDict!],
       output.length,
@@ -1612,7 +1709,7 @@ class CFFCompiler {
     output.add(globalSubrIndex);
 
     // Now start on the other entries that have no specific order.
-    if (cff.encoding && cff.topDict!.hasName("Encoding")) {
+    if (cff.encoding && cff.topDict!.hasName(CFFDictKey.Encoding)) {
       if (cff.encoding.predefined) {
         topDictTracker.setEntryLocation(
           "Encoding",
@@ -1783,11 +1880,11 @@ class CFFCompiler {
     let fdArrayIndex = new CFFIndex();
     for (const fontDict of dicts) {
       if (removeCidKeys) {
-        fontDict.removeByName("CIDFontVersion");
-        fontDict.removeByName("CIDFontRevision");
-        fontDict.removeByName("CIDFontType");
-        fontDict.removeByName("CIDCount");
-        fontDict.removeByName("UIDBase");
+        fontDict.removeByName(CFFDictKey.CIDFontVersion);
+        fontDict.removeByName(CFFDictKey.CIDFontRevision);
+        fontDict.removeByName(CFFDictKey.CIDFontType);
+        fontDict.removeByName(CFFDictKey.CIDCount);
+        fontDict.removeByName(CFFDictKey.UIDBase);
       }
       const fontDictTracker = new CFFOffsetTracker();
       const fontDictData = this.compileDict(fontDict, fontDictTracker);
@@ -1813,7 +1910,7 @@ class CFFCompiler {
       const fontDict = dicts[i];
       // 这种写法也是有毛病的
       const privateDict = fontDict instanceof CFFTopDict ? fontDict.privateDict : null;
-      if (!privateDict || !fontDict.hasName("Private")) {
+      if (!privateDict || !fontDict.hasName(CFFDictKey.Private)) {
         throw new FormatError("There must be a private dictionary.");
       }
       const privateDictTracker = new CFFOffsetTracker();
@@ -1835,7 +1932,7 @@ class CFFCompiler {
       );
       output.add(privateDictData);
 
-      if (privateDict.subrsIndex && privateDict.hasName("Subrs")) {
+      if (privateDict.subrsIndex && privateDict.hasName(CFFDictKey.Subrs)) {
         const subrs = this.compileIndex(privateDict.subrsIndex);
         privateDictTracker.setEntryLocation(
           "Subrs",
@@ -1854,8 +1951,8 @@ class CFFCompiler {
       if (!(key in dict.values)) {
         continue;
       }
-      let values = dict.values[key];
-      let types = dict.types[key];
+      let values = <number | number[]>dict.values.get(key)!;
+      let types = dict.types.get(key)!;
       if (!Array.isArray(types)) {
         types = [types];
       }
@@ -1880,7 +1977,7 @@ class CFFCompiler {
             // For offsets we just insert a 32bit integer so we don't have to
             // deal with figuring out the length of the offset when it gets
             // replaced later on by the compiler.
-            const name = dict.keyToNameMap[key];
+            const name = dict.keyToNameMap.get(key)!;
             // Some offsets have the offset and the length, so just record the
             // position of the first one.
             if (!offsetTracker.isTracking(name)) {
@@ -1899,7 +1996,7 @@ class CFFCompiler {
             throw new FormatError(`Unknown data type of ${type}`);
         }
       }
-      out.push(...dict.opcodes[key]);
+      out.push(...dict.opcodes.get(key)!);
     }
     return out;
   }

@@ -33,11 +33,9 @@ import {
   VerbosityLevel,
 } from "./shared/util";
 import {
-  build,
   getDocument,
   PDFDataRangeTransport,
   PDFWorker,
-  version,
 } from "./display/api";
 import {
   fetchData,
@@ -84,7 +82,6 @@ export {
   AnnotationEditorUIManager,
   AnnotationLayer,
   AnnotationMode,
-  build,
   ColorPicker,
   createValidAbsoluteUrl,
   DOMSVGFactory,
@@ -117,5 +114,4 @@ export {
   UnexpectedResponseException,
   Util,
   VerbosityLevel,
-  version
 };
