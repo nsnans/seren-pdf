@@ -393,12 +393,16 @@ export enum DictKey {
   EarlyChange = "EarlyChange",
   ColorTransform = "ColorTransform",
   Alternate = "Alternate",
+  MediaBox = "MediaBox",
+  CropBox = "CropBox",
+  Q = "Q",
+  MaxLen = "MaxLen",
 }
 
 /**
  * 为了实现一下
  */
-type DictValueTypeMapping = {
+export type DictValueTypeMapping = {
   [DictKey.AA]: Dict,
   [DictKey.AP]: Dict,
   [DictKey.AS]: Name,
@@ -701,7 +705,11 @@ type DictValueTypeMapping = {
   [DictKey.Gamma]: number | [number, number, number],
   [DictKey.EarlyChange]: number,
   [DictKey.ColorTransform]: number,
-  [DictKey.Alternate]: Ref | Name | (Ref | Name)[]
+  [DictKey.Alternate]: Ref | Name | (Ref | Name)[];
+  [DictKey.MediaBox]: RectType;
+  [DictKey.CropBox]: RectType;
+  [DictKey.Q]: number,
+  [DictKey.MaxLen]: number,
 }
 
 

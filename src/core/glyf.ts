@@ -75,9 +75,7 @@ class GlyfTable {
     let pos = 0;
     for (let i = 0; i < numGlyphs; i++) {
       pos += offsetSize;
-      const next = isGlyphLocationsLong
-        ? loca.getUint32(pos)
-        : 2 * loca.getUint16(pos);
+      const next = isGlyphLocationsLong ? loca.getUint32(pos) : 2 * loca.getUint16(pos);
       if (next === prev) {
         this.glyphs.push(new Glyph());
         continue;
@@ -299,7 +297,7 @@ class SimpleGlyph {
 
   protected instructions: Uint8Array;
 
-  constructor(contours: Contour[], instructions: Uint8Array) {
+  constructor(contours: Contour[], instructions: Uint8Array<ArrayBuffer>) {
     this.contours = contours;
     this.instructions = instructions;
   }
@@ -587,7 +585,7 @@ class CompositeGlyph {
     this.instructions = instructions;
   }
 
-  static parse(pos: number, glyf: DataView): [number, CompositeGlyph] {
+  static parse(pos: number, glyf: DataView<ArrayBuffer>): [number, CompositeGlyph] {
     const spos = pos;
     const transf: number[] = [];
     let flags = glyf.getUint16(pos);

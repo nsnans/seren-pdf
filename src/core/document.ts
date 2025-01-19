@@ -48,7 +48,7 @@ import { clearGlobalCaches } from "./cleanup_helper";
 import { EvaluatorTextContent, FieldObject, StreamSink } from "./core_types";
 import {
   collectActions,
-  getInheritableProperty,
+  getArrayInheritableProperty,
   getNewAnnotationsMap,
   isWhiteSpace,
   lookupNormalRect,
@@ -78,7 +78,7 @@ import {
   RefSetCache,
 } from "./primitives";
 import { NullStream, Stream } from "./stream";
-import { StructTreeSerialNode, StructTreePage, StructTreeRoot } from "./struct_tree";
+import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XRef } from "./xref";
@@ -154,9 +154,9 @@ class Page {
   /**
    * @private
    */
-  _getInheritableProperty(key: string, getArray = false) {
-    const value = getInheritableProperty(
-      this.pageDict, key, getArray, false,
+  _getInheritableProperty(key: DictKey, getArray = false) {
+    const value = getArrayInheritableProperty(
+      this.pageDict, key, getArray
     );
     if (!Array.isArray(value)) {
       return value;
@@ -164,7 +164,7 @@ class Page {
     if (value.length === 1 || !(value[0] instanceof Dict)) {
       return value[0];
     }
-    return Dict.merge(this.xref, value, false);
+    return Dict.merge(this.xref, <Dict[]>value, false);
   }
 
   get content() {
@@ -175,7 +175,7 @@ class Page {
     // For robustness: The spec states that a \Resources entry has to be
     // present, but can be empty. Some documents still omit it; in this case
     // we return an empty dictionary.
-    const resources = this._getInheritableProperty("Resources");
+    const resources = this._getInheritableProperty(DictKey.Resources);
 
     return shadow(
       this,
@@ -184,11 +184,8 @@ class Page {
     );
   }
 
-  _getBoundingBox(name: string): RectType | null {
-    const box = lookupNormalRect(
-      this._getInheritableProperty(name, /* getArray = */ true),
-      null
-    );
+  _getBoundingBox(name: DictKey): RectType | null {
+    const box = lookupNormalRect(<RectType>this._getInheritableProperty(name, true), null);
 
     if (box) {
       if (box[2] - box[0] > 0 && box[3] - box[1] > 0) {
@@ -201,20 +198,12 @@ class Page {
 
   get mediaBox(): RectType {
     // Reset invalid media box to letter size.
-    return shadow(
-      this,
-      "mediaBox",
-      this._getBoundingBox("MediaBox") || LETTER_SIZE_MEDIABOX
-    );
+    return shadow(this, "mediaBox", this._getBoundingBox(DictKey.MediaBox) || LETTER_SIZE_MEDIABOX);
   }
 
   get cropBox() {
     // Reset invalid crop box to media box.
-    return shadow(
-      this,
-      "cropBox",
-      this._getBoundingBox("CropBox") || this.mediaBox
-    );
+    return shadow(this, "cropBox", this._getBoundingBox(DictKey.CropBox) || this.mediaBox);
   }
 
   get userUnit() {
@@ -243,7 +232,7 @@ class Page {
   }
 
   get rotate() {
-    let rotate = <number>this._getInheritableProperty("Rotate") || 0;
+    let rotate = <number>this._getInheritableProperty(DictKey.Rotate) || 0;
 
     // Normalize rotation so it's a multiple of 90 and between 0 and 270.
     if (rotate % 90 !== 0) {
@@ -759,7 +748,7 @@ class Page {
 
   // annts里肯定不止Ref，但是目前我们先当它是Ref[]
   get annotations() {
-    const annots = this._getInheritableProperty("Annots");
+    const annots = this._getInheritableProperty(DictKey.Annots);
     return shadow(this, "annotations", Array.isArray(annots) ? annots : []);
   }
 

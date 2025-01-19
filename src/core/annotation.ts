@@ -51,15 +51,15 @@ import { EvaluatorTextContent, FieldObject, isFullTextContentItem, StreamSink } 
 import {
   collectActions,
   escapeString,
-  getInheritableProperty,
   getRotationMatrix,
+  getSingleInheritableProperty,
   isNumberArray,
   lookupMatrix,
   lookupNormalRect,
   lookupRect,
   numberToString,
   stringToAsciiOrUTF16BE,
-  stringToUTF16String,
+  stringToUTF16String
 } from "./core_utils";
 import {
   createDefaultAppearance,
@@ -224,7 +224,7 @@ class AnnotationFactory {
         return new TextAnnotation(parameters);
 
       case "Widget":
-        let fieldType = getInheritableProperty(dict, "FT");
+        let fieldType = getSingleInheritableProperty(dict, DictKey.FT);
         fieldType = fieldType instanceof Name ? fieldType.name : null;
 
         switch (fieldType) {
@@ -1023,8 +1023,7 @@ class Annotation {
   setDefaultAppearance(params: AnnotationParameters) {
     const { dict, annotationGlobals } = params;
 
-    const defaultAppearance =
-      getInheritableProperty(dict, "DA") ||
+    const defaultAppearance = getSingleInheritableProperty(dict, DictKey.DA) ||
       annotationGlobals.acroForm.getValue(DictKey.DA);
     this._defaultAppearance =
       typeof defaultAppearance === "string" ? defaultAppearance : "";
@@ -2016,12 +2015,10 @@ class WidgetAnnotation extends Annotation {
       data.actions = collectActions(xref, dict, AnnotationActionEventType);
     }
 
-    let fieldValue = getInheritableProperty(dict, "V", true);
+    let fieldValue = getSingleInheritableProperty(dict, DictKey.V, true);
     data.fieldValue = this._decodeFormValue(fieldValue);
 
-    const defaultFieldValue = getInheritableProperty(
-      dict, "DV", true
-    );
+    const defaultFieldValue = getSingleInheritableProperty(dict, DictKey.DV, true);
     data.defaultFieldValue = this._decodeFormValue(defaultFieldValue);
 
 
@@ -2040,10 +2037,10 @@ class WidgetAnnotation extends Annotation {
       data.fieldValue !== undefined &&
       data.fieldValue !== null;
 
-    const fieldType = getInheritableProperty(dict, "FT");
+    const fieldType = getSingleInheritableProperty(dict, DictKey.FT);
     data.fieldType = fieldType instanceof Name ? fieldType.name : null;
 
-    const localResources = <Dict>getInheritableProperty(dict, DictKey.DR);
+    const localResources = <Dict>getSingleInheritableProperty(dict, DictKey.DR);
     const acroFormResources = annotationGlobals.acroForm.getValue(DictKey.DR);
     const appearanceResources = this.appearance?.dict!.getValue(DictKey.Resources)!;
 
@@ -2056,7 +2053,7 @@ class WidgetAnnotation extends Annotation {
       ),
     };
 
-    const fieldFlags = <number>getInheritableProperty(dict, "Ff");
+    const fieldFlags = <number>getSingleInheritableProperty(dict, DictKey.Ff);
     if (!Number.isInteger(fieldFlags) || fieldFlags < 0) {
       data.fieldFlags = 0;
     } else {
@@ -2921,14 +2918,14 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     }
 
     // Determine the alignment of text in the field.
-    let alignment: number | null = <number>getInheritableProperty(dict, "Q");
+    let alignment: number | null = <number>getSingleInheritableProperty(dict, DictKey.Q);
     if (!Number.isInteger(alignment) || alignment < 0 || alignment > 2) {
       alignment = null;
     }
     this.data.textAlignment = alignment;
 
     // Determine the maximum length of text in the field.
-    let maximumLength = <number>getInheritableProperty(dict, "MaxLen");
+    let maximumLength = <number>getSingleInheritableProperty(dict, DictKey.MaxLen);
     if (!Number.isInteger(maximumLength) || maximumLength < 0) {
       maximumLength = 0;
     }
@@ -3652,7 +3649,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     // inherit the options from a parent annotation (issue 8094).
     this.data.options = [];
 
-    const options = getInheritableProperty(dict, "Opt");
+    const options = getSingleInheritableProperty(dict, DictKey.Opt);
     if (Array.isArray(options)) {
       for (let i = 0, ii = options.length; i < ii; i++) {
         const option = xref.fetchIfRef(options[i]);

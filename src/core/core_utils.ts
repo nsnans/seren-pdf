@@ -23,7 +23,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, isName, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "./primitives";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
@@ -119,30 +119,30 @@ function arrayBuffersToBytes(arr: ArrayBuffer[]): Uint8Array<ArrayBuffer> {
  * the value for the key is returned or, if `stopWhenFound` is `false`, a list
  * of values is returned.
  *
- * @param {Dict} dict - Dictionary from where to start the traversal.
- * @param {string} key - The key of the property to find the value for.
- * @param {boolean} getArray - Whether or not the value should be fetched as an
+ * @param dict - Dictionary from where to start the traversal.
+ * @param key - The key of the property to find the value for.
+ * @param getArray - Whether or not the value should be fetched as an
  *   array. The default value is `false`.
- * @param {boolean} stopWhenFound - Whether or not to stop the traversal when
+ * @param stopWhenFound - Whether or not to stop the traversal when
  *   the key is found. If set to `false`, we always walk up the entire parent
  *   chain, for example to be able to find `\Resources` placed on multiple
  *   levels of the tree. The default value is `true`.
  */
-function getInheritableProperty(
+function getInheritableProperty<T extends DictKey>(
   dict: Dict | Ref,
-  key: string,
+  key: T,
   getArray = false,
   stopWhenFound = true
-) {
-  let values;
+): DictValueTypeMapping[T] | DictValueTypeMapping[T][] | null {
+  let values = null;
   const visited = new RefSet();
 
   while (dict instanceof Dict && !(dict.objId && visited.has(dict.objId))) {
     if (dict.objId) {
       visited.put(dict.objId);
     }
-    const value = getArray ? dict.getArrayValue(<DictKey>key) : dict.getValue(<DictKey>key);
-    if (value !== undefined) {
+    const value = getArray ? dict.getArrayValue(key) : dict.getValue(key);
+    if (value !== null) {
       if (stopWhenFound) {
         return value;
       }
@@ -151,6 +151,18 @@ function getInheritableProperty(
     dict = dict.getValue(DictKey.Parent);
   }
   return values;
+}
+
+export function getSingleInheritableProperty<T extends DictKey>(
+  dict: Dict | Ref, key: T, getArray = false
+) {
+  return <DictValueTypeMapping[T] | null>getInheritableProperty(dict, key, getArray, true);
+}
+
+export function getArrayInheritableProperty<T extends DictKey>(
+  dict: Dict | Ref, key: T, getArray = false
+) {
+  return <DictValueTypeMapping[T][] | null>getInheritableProperty(dict, key, getArray, false);
 }
 
 // prettier-ignore
@@ -380,8 +392,8 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
 
 function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string>) {
   const actions = new Map<string, string[]>();
-  const additionalActionsDicts = getInheritableProperty(
-    dict, "AA", false, false,
+  const additionalActionsDicts = getArrayInheritableProperty(
+    dict, DictKey.AA, false,
   );
   if (additionalActionsDicts) {
     // additionalActionsDicts contains dicts from ancestors
@@ -634,7 +646,6 @@ export {
   encodeToXmlString,
   escapePDFName,
   escapeString,
-  getInheritableProperty,
   getLookupTableFactory,
   getNewAnnotationsMap,
   getRotationMatrix,
