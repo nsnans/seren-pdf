@@ -497,7 +497,7 @@ class WorkerMessageHandler {
       ] as const;
       const promises = <Promise<any>[]>[];
 
-      const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
+    const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
       const [
         streamResult,
         acroForm,
@@ -537,25 +537,21 @@ class WorkerMessageHandler {
         );
         const newAnnotationPromises = structTreeRoot === undefined ? promises : [];
         for (const [pageIndex, annotations] of newAnnotationsByPage) {
-          newAnnotationPromises.push(
-            pdfManager!.getPage(pageIndex).then(async page => {
-              const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
-              return page.saveNewAnnotations(handler!, task, annotations, imagePromises).finally(() => {
-                finishWorkerTask(task);
-              });
-            })
-          );
+          newAnnotationPromises.push(pdfManager!.getPage(pageIndex).then(async page => {
+            const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
+            return page.saveNewAnnotations(handler!, task, annotations, imagePromises).finally(() => {
+              finishWorkerTask(task);
+            });
+          }));
         }
         if (structTreeRoot === null) {
           // No structTreeRoot exists, so we need to create one.
-          promises.push(
-            Promise.all(newAnnotationPromises).then(async newRefs => {
-              await StructTreeRoot.createStructureTree(
-                newAnnotationsByPage, xref, catalogRef, pdfManager!, newRefs,
-              );
-              return newRefs;
-            })
-          );
+          promises.push(Promise.all(newAnnotationPromises).then(async newRefs => {
+            await StructTreeRoot.createStructureTree(
+              newAnnotationsByPage, xref, catalogRef, pdfManager!, newRefs,
+            );
+            return newRefs;
+          }));
         } else if (structTreeRoot) {
           promises.push(Promise.all(newAnnotationPromises).then(async newRefs => {
             await structTreeRoot!.updateStructureTree(

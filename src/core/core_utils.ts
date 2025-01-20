@@ -29,6 +29,7 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";
 import { RectType, TransformType } from "../display/display_utils";
 import { Uint8TypedArray } from "../common/typed_array";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -560,7 +561,7 @@ function numberToString(value: number) {
   return value.toFixed(2);
 }
 
-function getNewAnnotationsMap(annotationStorage: Map<string, Record<string, any>> | null) {
+function getNewAnnotationsMap(annotationStorage: Map<string, AnnotationEditorSerial> | null) {
   if (!annotationStorage) {
     return null;
   }

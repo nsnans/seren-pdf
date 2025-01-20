@@ -129,10 +129,10 @@ export class StructTreeRoot {
     xref: XRef,
     catalogRef: Ref,
     pdfManager: PDFManager,
-    newRefs,
+    newRefs: { ref: Ref; data: string | null; }[],
   ) {
     const root = pdfManager.catalog.cloneDict();
-    const cache = new RefSetCache();
+    const cache = new RefSetCache<Ref, Dict | Ref[]>();
     cache.put(catalogRef, root);
 
     const structTreeRootRef = xref.getNewTemporaryRef();
@@ -253,11 +253,12 @@ export class StructTreeRoot {
 
   async updateStructureTree(
     newAnnotationsByPage: Map<number, Record<string, any>[]>,
-    pdfManager: PDFManager, newRefs) {
+    pdfManager: PDFManager, newRefs: { ref: Ref, data: string }[]
+  ) {
     const xref = this.dict.xref!;
     const structTreeRoot = this.dict.clone();
     const structTreeRootRef = this.ref!;
-    const cache = new RefSetCache();
+    const cache = new RefSetCache<Ref, Dict>();
     cache.put(structTreeRootRef, structTreeRoot);
 
     let parentTreeRef = structTreeRoot.getRaw(DictKey.ParentTree);
@@ -284,15 +285,7 @@ export class StructTreeRoot {
     }
 
     const newNextKey = await StructTreeRoot.#writeKids(
-      newAnnotationsByPage,
-      structTreeRootRef,
-      this,
-      null,
-      nums,
-      xref,
-      pdfManager,
-      newRefs,
-      cache,
+      newAnnotationsByPage, structTreeRootRef, this, null, nums, xref, pdfManager, newRefs, cache,
     );
 
     if (newNextKey === -1) {
@@ -322,8 +315,8 @@ export class StructTreeRoot {
     nums: (Ref | number)[],
     xref: XRef,
     pdfManager: PDFManager,
-    newRefs,
-    cache: RefSetCache,
+    newRefs: { ref: Ref, data: string | null }[],
+    cache: RefSetCache<Ref, Dict | Ref[]>,
   ) {
     const objr = Name.get("OBJR");
     let nextKey = -1;
@@ -482,7 +475,7 @@ export class StructTreeRoot {
       const pageKid = <Dict>xref.fetch(kidRef);
       const k = pageKid.getValue(DictKey.K);
       if (Number.isInteger(k)) {
-        updateElement(k, pageKid, kidRef);
+        updateElement(<number>k, pageKid, kidRef);
         continue;
       }
 
@@ -490,8 +483,8 @@ export class StructTreeRoot {
         continue;
       }
       for (let kid of k) {
-        kid = xref.fetchIfRef(kid);
-        if (Number.isInteger(kid) && updateElement(kid, pageKid, kidRef)) {
+        const kidValue = xref.fetchIfRef(kid);
+        if (Number.isInteger(kid) && updateElement(<number>kidValue, pageKid, kidRef)) {
           break;
         }
         if (!(kid instanceof Dict)) {
@@ -515,7 +508,7 @@ export class StructTreeRoot {
     structTreeRootRef: Ref,
     fallbackKids: Ref[],
     xref: XRef,
-    cache: RefSetCache,
+    cache: RefSetCache<Ref, Dict | Ref[]>,
   ) {
     let ref = null;
     let parentRef;
@@ -537,25 +530,22 @@ export class StructTreeRoot {
       return;
     }
 
-    let cachedParentDict = cache.get(<Ref>parentRef);
+    let cachedParentDict = <Dict | null>cache.get(<Ref>parentRef);
     if (!cachedParentDict) {
       cachedParentDict = parentDict.clone();
-      cache.put(<Ref>parentRef, cachedParentDict);
+      cache.put(<Ref>parentRef, cachedParentDict!);
     }
-    const parentKidsRaw = cachedParentDict.getRaw(DictKey.K);
-    let cachedParentKids =
-      parentKidsRaw instanceof Ref ? cache.get(parentKidsRaw) : null;
+    const parentKidsRaw = <Ref>cachedParentDict!.getRaw(DictKey.K);
+    let cachedParentKids = parentKidsRaw instanceof Ref ? <Ref[]>cache.get(parentKidsRaw) : null;
     if (!cachedParentKids) {
-      cachedParentKids = xref.fetchIfRef(parentKidsRaw);
-      cachedParentKids = Array.isArray(cachedParentKids)
-        ? cachedParentKids.slice()
-        : [parentKidsRaw];
+      cachedParentKids = <Ref[]>xref.fetchIfRef(parentKidsRaw);
+      cachedParentKids = Array.isArray(cachedParentKids) ? cachedParentKids.slice() : [parentKidsRaw];
       const parentKidsRef = xref.getNewTemporaryRef();
-      cachedParentDict.set("K", parentKidsRef);
+      cachedParentDict!.set(DictKey.K, parentKidsRef);
       cache.put(parentKidsRef, cachedParentKids);
     }
 
-    const index = cachedParentKids.indexOf(ref);
+    const index = cachedParentKids.indexOf(ref!);
     cachedParentKids.splice(
       index >= 0 ? index + 1 : cachedParentKids.length,
       0,

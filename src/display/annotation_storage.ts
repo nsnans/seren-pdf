@@ -186,9 +186,6 @@ class AnnotationStorage {
     }
   }
 
-  /**
-   * @returns {PrintAnnotationStorage}
-   */
   get print() {
     return new PrintAnnotationStorage(this);
   }
@@ -312,7 +309,7 @@ class PrintAnnotationStorage extends AnnotationStorage {
     super();
     const { map, hash, transfer } = parent.serializable;
     // Create a *copy* of the data, since Objects are passed by reference in JS.
-    const clone = structuredClone(map, transfer ? { transfer } : null);
+    const clone = structuredClone(map, transfer ? { transfer } : undefined);
 
     this.#serializable = { map: clone, hash, transfer };
   }

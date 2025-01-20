@@ -498,7 +498,7 @@ export type DictValueTypeMapping = {
   [DictKey.JBIG2Globals]: BaseStream,
   [DictKey.JS]: BaseStream | string,
   [DictKey.JavaScript]: string,
-  [DictKey.K]: Dict | number | Ref[],
+  [DictKey.K]: Dict | number | Ref | Ref[],
   [DictKey.Kids]: (string | Dict | Ref)[], // 某种类型的数组，具体还要仔细分析
   [DictKey.LE]: Name[],
   [DictKey.L]: RectType,

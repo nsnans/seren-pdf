@@ -14,6 +14,7 @@
  */
 
 import { RectType } from "../display/display_utils";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
 import { MessageHandler } from "../shared/message_handler";
@@ -426,7 +427,7 @@ class Page {
     task: WorkerTask,
     intent: number,
     cacheKey: string,
-    annotationStorage: Map<string, Record<string, any>> | null = null,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null = null,
     modifiedIds: Set<string> | null = null,
   ) {
     const contentStreamPromise = this.getContentStream();
@@ -1265,7 +1266,7 @@ class PDFDocument {
       const obj = await xref.fetchAsync(ref);
       // Ensure that the object that was found is actually a Page dictionary.
       if (obj instanceof Dict) {
-        let type = obj.getRaw(DictKey.Type);
+        let type : Name | unknown = obj.getRaw(DictKey.Type);
         if (type instanceof Ref) {
           type = await xref.fetchAsync(type);
         }
@@ -1464,9 +1465,9 @@ class PDFDocument {
       const partName = stringToPDFString(<string>await field.getAsyncValue(DictKey.T));
       name = name === "" ? partName : `${name}.${partName}`;
     } else {
-      let obj: Ref | Dict = field;
+      let obj: Ref | Dict | unknown = field;
       while (true) {
-        obj = obj.getRaw(DictKey.Parent) || parentRef;
+        obj = (<Dict>obj).getRaw(DictKey.Parent) || parentRef;
         if (obj instanceof Ref) {
           if (visitedRefs.has(obj)) {
             break;
