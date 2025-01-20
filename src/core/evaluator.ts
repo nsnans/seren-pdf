@@ -518,6 +518,8 @@ export class TranslatedFont {
 
   public dict: Dict;
 
+  public cacheKey: string| null;
+
   protected _evaluatorOptions;
 
   protected type3Loaded: Promise<void> | null;

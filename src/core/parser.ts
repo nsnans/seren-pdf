@@ -74,7 +74,7 @@ class Parser {
 
   protected recoveryMode: boolean;
 
-  protected imageCache: Record<string, any>;
+  protected imageCache: Record<string, BaseStream>;
 
   protected _imageId = 0;
 
