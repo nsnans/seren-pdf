@@ -15,10 +15,6 @@
 
 import { unreachable } from "../shared/util";
 
-interface ToUnicodeMapInterface {
-
-}
-
 class ToUnicodeMap {
 
   protected _map: (number | string)[];

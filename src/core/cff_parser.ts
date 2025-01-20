@@ -1254,15 +1254,17 @@ export enum CFFDictKey {
   PostScript = "PostScript",
   BaseFontBlend = "BaseFontBlend",
   initialRandomSeed = "initialRandomSeed",
+  /* 这种类型不确定和其他的是不是同一个情况，解析可能会解析出这个数据，是我为了解析数据而添加的 */
+  lenIV = "lenIV"
 }
 
 type CFFDictValueMapping = {
-  [CFFDictKey.BlueValues]: number,
-  [CFFDictKey.OtherBlues]: number,
-  [CFFDictKey.FamilyBlues]: number,
-  [CFFDictKey.FamilyOtherBlues]: number,
-  [CFFDictKey.StemSnapH]: number,
-  [CFFDictKey.StemSnapV]: number,
+  [CFFDictKey.BlueValues]: number[],
+  [CFFDictKey.OtherBlues]: number[],
+  [CFFDictKey.FamilyBlues]: number[],
+  [CFFDictKey.FamilyOtherBlues]: number[],
+  [CFFDictKey.StemSnapH]: number[],
+  [CFFDictKey.StemSnapV]: number[],
   [CFFDictKey.BlueShift]: number,
   [CFFDictKey.BlueFuzz]: number,
   [CFFDictKey.BlueScale]: number,
@@ -1308,6 +1310,7 @@ type CFFDictValueMapping = {
   [CFFDictKey.PostScript]: number,
   [CFFDictKey.BaseFontBlend]: number,
   [CFFDictKey.initialRandomSeed]: number,
+  [CFFDictKey.lenIV]: number,
 }
 
 export class CFFDict {

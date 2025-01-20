@@ -40,7 +40,7 @@ export class StructTreeRoot {
 
   public dict: Dict;
 
-  public structParentIds: RefSetCache | null;
+  public structParentIds: RefSetCache<Ref, [number, number][]> | null;
 
   constructor(rootDict: Dict, rootRef: object) {
     this.dict = rootDict;
@@ -208,7 +208,7 @@ export class StructTreeRoot {
         // contents but a page can just have tagged annotations.
         continue;
       }
-      const id = pageDict.get(DictKey.StructParents);
+      const id = pageDict.getValue(DictKey.StructParents);
       if (!Number.isInteger(id) || !Array.isArray(numberTree.get(id))) {
         warn(`Cannot save the struct tree: page ${pageIndex} has a wrong id.`);
         return false;
@@ -452,7 +452,7 @@ export class StructTreeRoot {
       }
     }
 
-    const id = pageDict.get(DictKey.StructParents);
+    const id = pageDict.getValue(DictKey.StructParents);
     if (!Number.isInteger(id)) {
       return;
     }
@@ -480,7 +480,7 @@ export class StructTreeRoot {
         continue;
       }
       const pageKid = <Dict>xref.fetch(kidRef);
-      const k = pageKid.get(DictKey.K);
+      const k = pageKid.getValue(DictKey.K);
       if (Number.isInteger(k)) {
         updateElement(k, pageKid, kidRef);
         continue;
@@ -584,7 +584,7 @@ class StructElementNode {
   }
 
   get role() {
-    const nameObj = this.dict.get(DictKey.S);
+    const nameObj = this.dict.getValue(DictKey.S);
     const name = nameObj instanceof Name ? nameObj.name : "";
     const { root } = this.tree;
     if (root.roleMap.has(name)) {
@@ -599,7 +599,7 @@ class StructElementNode {
     if (objRef instanceof Ref) {
       pageObjId = objRef.toString();
     }
-    const kids = this.dict.get(DictKey.K);
+    const kids = this.dict.getValue(DictKey.K);
     if (Array.isArray(kids)) {
       for (const kid of kids) {
         const element = this.parseKid(pageObjId, kid);
@@ -756,7 +756,7 @@ export class StructTreePage {
       return null;
     }
 
-    const parentTree = this.rootDict.get(DictKey.ParentTree);
+    const parentTree = this.rootDict.getValue(DictKey.ParentTree);
     if (!parentTree) {
       return null;
     }
@@ -782,11 +782,11 @@ export class StructTreePage {
       return;
     }
 
-    const parentTree = this.rootDict.get(DictKey.ParentTree);
+    const parentTree = this.rootDict.getValue(DictKey.ParentTree);
     if (!parentTree) {
       return;
     }
-    const id = this.pageDict.get(DictKey.StructParents);
+    const id = this.pageDict.getValue(DictKey.StructParents);
     const ids = this.root.structParentIds?.get(pageRef);
     if (!Number.isInteger(id) && !ids) {
       return;
@@ -869,7 +869,7 @@ export class StructTreePage {
   }
 
   addTopLevelNode(dict: Dict, element: StructElementNode) {
-    const obj = this.rootDict!.get(DictKey.K);
+    const obj = this.rootDict!.getValue(DictKey.K);
     if (!obj) {
       return false;
     }

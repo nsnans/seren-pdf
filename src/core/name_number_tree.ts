@@ -23,7 +23,7 @@ import { PlatformHelper } from "../platform/platform_helper";
  * see the specification (7.9.6 and 7.9.7) for additional details.
  * TODO: implement all the Dict functions and make this more efficient.
  */
-class NameOrNumberTree {
+class NameOrNumberTree<T> {
 
   protected root: Ref | string;
 
@@ -82,7 +82,7 @@ class NameOrNumberTree {
     return map;
   }
 
-  getRaw(key: string) {
+  getRaw(key: T) {
     if (!this.root) {
       return null;
     }
@@ -150,21 +150,19 @@ class NameOrNumberTree {
     return null;
   }
 
-  get(key: string) {
+  get(key: T) {
     return this.xref.fetchIfRef(this.getRaw(key));
   }
 }
 
-class NameTree extends NameOrNumberTree {
+export class NameTree extends NameOrNumberTree<string> {
   constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Names");
   }
 }
 
-class NumberTree extends NameOrNumberTree {
+export class NumberTree extends NameOrNumberTree<number> {
   constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Nums");
   }
 }
-
-export { NameTree, NumberTree };

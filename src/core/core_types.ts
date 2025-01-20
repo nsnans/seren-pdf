@@ -14,7 +14,7 @@ export interface ImageMask {
   interpolate: number[];
   cached?: boolean;
   dataLen?: number;
-  bitmap?: ImageBitmap;
+  bitmap?: ImageBitmap | VideoFrame;
   ref?: string | null;
 }
 
@@ -76,11 +76,11 @@ export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
     this.sink = sink;
   }
 
-  get isCancelled(){
+  get isCancelled() {
     return this.sink.isCancelled;
   }
 
-  set isCancelled(isCancelled: boolean){
+  set isCancelled(isCancelled: boolean) {
     this.sink.isCancelled = isCancelled;
   }
 

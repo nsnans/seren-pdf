@@ -1374,8 +1374,8 @@ export class Catalog {
         }
         visitedNodes.put(currentNode);
 
-        const obj = await (pageDictCache.get(currentNode) ||
-          xref.fetchAsync(currentNode));
+        const obj = await (pageDictCache.get(currentNode) || xref.fetchAsync(currentNode));
+        
         if (obj instanceof Dict) {
           let type = obj.getRaw(DictKey.Type);
           if (type instanceof Ref) {

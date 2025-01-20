@@ -107,6 +107,7 @@ export interface JpxDecoderOptions {
 }
 
 export interface PDFImageData {
+  bitmap?: ImageBitmap | VideoFrame;
   width: number;
   height: number;
   interpolate: number[];
@@ -875,7 +876,7 @@ export class PDFImage {
     const imgArray = await this.getImageBytes(oriHeight * rowBytes,
       null, null, false, false, true,
     );
-    
+
     // imgArray can be incomplete (e.g. after CCITT fax encoding).
     const actualHeight = 0 | (((imgArray.length / rowBytes) * drawHeight) / oriHeight);
 

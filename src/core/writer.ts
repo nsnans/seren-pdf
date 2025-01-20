@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
 import { bytesToString, info, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import {
@@ -346,7 +347,7 @@ interface IncrementalXRefInfo {
 }
 
 export async function incrementalUpdate(
-  originalData: Uint8Array<ArrayBuffer>,
+  originalData: Uint8TypedArray,
   xrefInfo: IncrementalXRefInfo,
   newRefs: { ref: Ref, data: string }[],
   xref: XRef | null,

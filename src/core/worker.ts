@@ -557,44 +557,32 @@ class WorkerMessageHandler {
             })
           );
         } else if (structTreeRoot) {
-          promises.push(
-            Promise.all(newAnnotationPromises).then(async newRefs => {
-              await structTreeRoot!.updateStructureTree(
-                newAnnotationsByPage,
-                pdfManager!,
-                newRefs,
-              );
-              return newRefs;
-            })
-          );
+          promises.push(Promise.all(newAnnotationPromises).then(async newRefs => {
+            await structTreeRoot!.updateStructureTree(
+              newAnnotationsByPage, pdfManager!, newRefs,
+            );
+            return newRefs;
+          }));
         }
       }
 
-
       for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
-        promises.push(
-          pdfManager!.getPage(pageIndex).then(async function (page) {
-            const task = new WorkerTask(`Save: page ${pageIndex}`);
-            return page
-              .save(handler!, task, annotationStorage)
-              .finally(function () {
-                finishWorkerTask(task);
-              });
-          })
-        );
+        promises.push(pdfManager!.getPage(pageIndex).then(async page => {
+          const task = new WorkerTask(`Save: page ${pageIndex}`);
+          return page.save(handler!, task, annotationStorage).finally(() => finishWorkerTask(task));
+        }));
       }
 
       const refs = await Promise.all(promises);
-      let newRefs = [];
-      newRefs = refs.flat(2);
+      let newRefs = refs.flat(2);
       if (newRefs.length === 0) {
         // No new refs so just return the initial bytes
         return stream.bytes;
       }
 
       // 这类加了 双感叹号，判断Ref状况
-      const needAppearances: boolean = !!acroFormRef
-        && acroForm instanceof Dict && newRefs.some(ref => ref.needAppearances);
+      const needAppearances: boolean = !!acroFormRef && acroForm instanceof Dict
+        && newRefs.some(ref => ref.needAppearances);
 
       let newXrefInfo = Object.create(null);
       if (xref.trailer) {
@@ -616,16 +604,13 @@ class WorkerMessageHandler {
           infoRef: xref.trailer.getRaw(DictKey.Info) || null,
           info: infoObj,
           fileIds: xref.trailer.getValue(DictKey.ID) || null,
-          startXRef: linearization
-            ? startXRef
-            : (xref.lastXRefStreamPos ?? startXRef),
+          startXRef: linearization ? startXRef : (xref.lastXRefStreamPos ?? startXRef),
           filename,
         };
       }
 
       return incrementalUpdate(
-        <Uint8Array<ArrayBuffer>>stream.bytes,
-        newXrefInfo, newRefs, xref,
+        stream.bytes, newXrefInfo, newRefs, xref,
         needAppearances, acroFormRef, acroForm!,
         // Use the same kind of XRef as the previous one.
         isDict(xref.topDict, "XRef"),

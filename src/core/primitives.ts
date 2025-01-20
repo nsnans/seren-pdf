@@ -786,12 +786,12 @@ export class Dict {
 
   // 为了获取到更精确的参数类型和返回类型，而编写的兼容性代码
   async getAsyncValue<T extends DictKey>(key: T): Promise<DictValueTypeMapping[T]> {
-    return await this.getAsync(key);
+    return <DictValueTypeMapping[T]>await this.getAsync(key);
   }
 
   async getAsyncWithFallback<T1 extends DictKey, T2 extends DictKey>(key1: T1, key2: T2):
     Promise<DictValueTypeMapping[T1] | DictValueTypeMapping[T2]> {
-    return await this.getAsync(key1, key2);
+    return <DictValueTypeMapping[T1] | DictValueTypeMapping[T2]>await this.getAsync(key1, key2);
   }
 
   // Same as get(), but returns a promise and uses fetchIfRefAsync().

@@ -20,6 +20,7 @@ import { warn } from "../shared/util";
 import { EvaluatorProperties } from "./evaluator";
 import { TransformType } from "../display/display_utils";
 import { Uint8TypedArray } from "../common/typed_array";
+import { CFFDictKey } from "./cff_parser";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -101,7 +102,7 @@ class Type1CharString {
     this.stack = [];
   }
 
-  convert(encoded: Uint8Array<ArrayBuffer>, subrs: Uint8Array<ArrayBuffer>[], seacAnalysisEnabled: boolean): boolean {
+  convert(encoded: Uint8TypedArray, subrs: Uint8TypedArray[], seacAnalysisEnabled: boolean): boolean {
     const count = encoded.length;
     let error = false;
     let wx, sbx, subrNumber;
@@ -447,6 +448,24 @@ function isSpecial(c: number) {
 
 export type CharStringObjectType = { glyphName: string | null; charstring: number[]; width: number; lsb: number; seac: number[]; }
 
+export interface FontProgramPrivateData {
+  [CFFDictKey.BlueValues]?: number[];
+  [CFFDictKey.OtherBlues]?: number[];
+  [CFFDictKey.FamilyBlues]?: number[];
+  [CFFDictKey.FamilyOtherBlues]?: number[];
+  [CFFDictKey.StemSnapH]?: number[];
+  [CFFDictKey.StemSnapV]?: number[];
+  [CFFDictKey.StdHW]?: number;
+  [CFFDictKey.StdVW]?: number;
+  [CFFDictKey.BlueShift]?: number;
+  [CFFDictKey.BlueFuzz]?: number;
+  [CFFDictKey.BlueScale]?: number;
+  [CFFDictKey.LanguageGroup]?: number;
+  [CFFDictKey.ExpansionFactor]?: number;
+  [CFFDictKey.ForceBold]?: number;
+  [CFFDictKey.lenIV]: number;
+}
+
 /**
  * Type1Parser encapsulate the needed code for parsing a Type1 font program.
  * Some of its logic depends on the Type2 charstrings structure.
@@ -454,7 +473,7 @@ export type CharStringObjectType = { glyphName: string | null; charstring: numbe
  *       of PostScript, but it is possible in most cases to extract what we need
  *       without a full parse.
  */
-class Type1Parser {
+export class Type1Parser {
 
   protected seacAnalysisEnabled: boolean;
 
@@ -561,7 +580,7 @@ class Type1Parser {
     return token;
   }
 
-  readCharStrings(bytes: Uint8Array<ArrayBuffer>, lenIV: number) {
+  readCharStrings(bytes: Uint8TypedArray, lenIV: number) {
     if (lenIV === -1) {
       // This isn't in the spec, but Adobe's tx program handles -1
       // as plain text.
@@ -579,7 +598,7 @@ class Type1Parser {
 
     const subrs = [];
     const charstrings = [];
-    const privateData = Object.create(null);
+    const privateData: FontProgramPrivateData = Object.create(null);
     privateData.lenIV = 4;
     const program = {
       subrs: [],
@@ -595,7 +614,7 @@ class Type1Parser {
       }
       token = this.getToken();
       switch (token) {
-        case "CharStrings":
+        case CFFDictKey.CharStrings:
           // The number immediately following CharStrings must be greater or
           // equal to the number of CharStrings.
           this.getToken();
@@ -615,8 +634,8 @@ class Type1Parser {
             length = this.readInt();
             this.getToken(); // read in 'RD' or '-|'
             data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
-            lenIV = program.properties.privateData.lenIV;
-            const encoded = this.readCharStrings(<Uint8Array<ArrayBuffer>>data, lenIV);
+            lenIV = program.properties.privateData.lenIV!;
+            const encoded = this.readCharStrings(data, lenIV);
             this.nextChar();
             token = this.getToken(); // read in 'ND' or '|-'
             if (token === "noaccess") {
@@ -632,7 +651,7 @@ class Type1Parser {
             });
           }
           break;
-        case "Subrs":
+        case CFFDictKey.Subrs:
           this.readInt(); // num
           this.getToken(); // read in 'array'
           while (this.getToken() === "dup") {
@@ -640,8 +659,8 @@ class Type1Parser {
             length = this.readInt();
             this.getToken(); // read in 'RD' or '-|'
             data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
-            lenIV = program.properties.privateData.lenIV;
-            const encoded = this.readCharStrings(<Uint8Array<ArrayBuffer>>data, lenIV);
+            lenIV = program.properties.privateData.lenIV!;
+            const encoded = this.readCharStrings(data, lenIV);
             this.nextChar();
             token = this.getToken(); // read in 'NP' or '|'
             if (token === "noaccess") {
@@ -650,10 +669,10 @@ class Type1Parser {
             subrs[index] = encoded;
           }
           break;
-        case "BlueValues":
-        case "OtherBlues":
-        case "FamilyBlues":
-        case "FamilyOtherBlues":
+        case CFFDictKey.BlueValues:
+        case CFFDictKey.OtherBlues:
+        case CFFDictKey.FamilyBlues:
+        case CFFDictKey.FamilyOtherBlues:
           const blueArray = this.readNumberArray();
           // *Blue* values may contain invalid data: disables reading of
           // those values when hinting is disabled.
@@ -665,28 +684,28 @@ class Type1Parser {
             program.properties.privateData[token] = blueArray;
           }
           break;
-        case "StemSnapH":
-        case "StemSnapV":
+        case CFFDictKey.StemSnapH:
+        case CFFDictKey.StemSnapV:
           program.properties.privateData[token] = this.readNumberArray();
           break;
-        case "StdHW":
-        case "StdVW":
+        case CFFDictKey.StdHW:
+        case CFFDictKey.StdVW:
           program.properties.privateData[token] = this.readNumberArray()[0];
           break;
-        case "BlueShift":
-        case "lenIV":
-        case "BlueFuzz":
-        case "BlueScale":
-        case "LanguageGroup":
+        case CFFDictKey.BlueShift:
+        case CFFDictKey.lenIV:
+        case CFFDictKey.BlueFuzz:
+        case CFFDictKey.BlueScale:
+        case CFFDictKey.LanguageGroup:
           program.properties.privateData[token] = this.readNumber();
           break;
-        case "ExpansionFactor":
+        case CFFDictKey.ExpansionFactor:
           // Firefox doesn't render correctly a font with a null factor on
           // Windows (see issue 15289), hence we just reset it to its default
           // value (0.06).
           program.properties.privateData[token] = this.readNumber() || 0.06;
           break;
-        case "ForceBold":
+        case CFFDictKey.ForceBold:
           program.properties.privateData[token] = this.readBoolean();
           break;
       }
@@ -694,11 +713,7 @@ class Type1Parser {
 
     for (const { encoded, glyph } of charstrings) {
       const charString = new Type1CharString();
-      const error = charString.convert(
-        encoded,
-        subrs,
-        this.seacAnalysisEnabled
-      );
+      const error = charString.convert(encoded, subrs, this.seacAnalysisEnabled);
       let output = charString.output;
       if (error) {
         // It seems when FreeType encounters an error while evaluating a glyph
@@ -793,5 +808,3 @@ class Type1Parser {
     }
   }
 }
-
-export { Type1Parser };

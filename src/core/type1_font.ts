@@ -207,9 +207,8 @@ export class Type1Font {
       SEAC_ANALYSIS_ENABLED
     );
     const data = eexecBlockParser.extractFontProgram(properties);
-    for (const key in data.properties) {
-      properties[key] = data.properties[key];
-    }
+
+    properties.privateData = data.properties.privateData;
 
     const charstrings = data.charstrings;
     const type2Charstrings = this.getType2Charstrings(charstrings);
@@ -385,7 +384,7 @@ export class Type1Font {
 
     const privateDict = new CFFPrivateDict();
     privateDict.setByName(CFFDictKey.Subrs, null); // placeholder
-    const fields: CFFDictKey[] = [
+    const fields = [
       CFFDictKey.BlueValues,
       CFFDictKey.OtherBlues,
       CFFDictKey.FamilyBlues,
@@ -400,7 +399,7 @@ export class Type1Font {
       CFFDictKey.ForceBold,
       CFFDictKey.StdHW,
       CFFDictKey.StdVW,
-    ];
+    ] as const;
     for (i = 0, ii = fields.length; i < ii; i++) {
       const field = fields[i];
       if (!(field in properties.privateData)) {
@@ -414,7 +413,7 @@ export class Type1Font {
           value[j] -= value[j - 1]; // ... difference from previous value
         }
       }
-      privateDict.setByName(field, value);
+      privateDict.setByName(field, <number | number[] | null>value);
     }
     cff.topDict.privateDict = privateDict;
 

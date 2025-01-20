@@ -226,7 +226,10 @@ class ImageResizer {
     let newWidth = width;
     let newHeight = height;
     const result = await imagePromise;
-    let bitmap = result.image || result;
+
+    // 这里应该要给一个VideoFrame或者ImageBitmap
+    // Bitmap的image属性不存在，如果是ImageBitmap
+    let bitmap = result instanceof ImageBitmap ? result : result.image;
 
     for (const step of steps) {
       const prevWidth = newWidth;
@@ -240,9 +243,8 @@ class ImageResizer {
 
       const canvas = new OffscreenCanvas(newWidth, newHeight);
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(
-        bitmap, 0, 0, prevWidth, prevHeight, 0, 0, newWidth, newHeight
-      );
+      
+      ctx.drawImage(bitmap, 0, 0, prevWidth, prevHeight, 0, 0, newWidth, newHeight);
 
       // Release the resources associated with the bitmap.
       bitmap.close();
