@@ -119,6 +119,8 @@ const TextRenderingMode = {
 };
 
 enum ImageKind {
+  /* NONE是添加了用来解决ImageKind和数字混用的问题*/
+  NONE = 0,
   GRAYSCALE_1BPP = 1,
   RGB_24BPP = 2,
   RGBA_32BPP = 3,

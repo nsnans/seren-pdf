@@ -122,7 +122,7 @@ function arrayBuffersToBytes(arr: ArrayBuffer[]): Uint8Array<ArrayBuffer> {
  * @param dict - Dictionary from where to start the traversal.
  * @param key - The key of the property to find the value for.
  * @param getArray - Whether or not the value should be fetched as an
- *   array. The default value is `false`.
+ *   array. The default value is `false`. 
  * @param stopWhenFound - Whether or not to stop the traversal when
  *   the key is found. If set to `false`, we always walk up the entire parent
  *   chain, for example to be able to find `\Resources` placed on multiple

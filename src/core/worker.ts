@@ -236,8 +236,7 @@ class WorkerMessageHandler {
           cachedChunks = [];
           pdfManagerCapability.resolve(newPdfManager);
           cancelXHRs = null;
-        })
-        .catch(function (reason) {
+        }).catch(function (reason) {
           pdfManagerCapability.reject(reason);
           cancelXHRs = null;
         });

@@ -250,8 +250,8 @@ export class XRef {
     let dict = parser.getObj();
 
     // The pdflib PDF generator can generate a nested trailer dictionary
-    if (!(dict instanceof Dict) && dict!.dict) {
-      dict = dict!.dict;
+    if (!(dict instanceof Dict) && (<{ dict?: Dict }>dict)!.dict) {
+      dict = (<{ dict?: Dict }>dict)!.dict!;
     }
     if (!(dict instanceof Dict)) {
       throw new FormatError(
@@ -798,11 +798,11 @@ export class XRef {
         // Recursively get previous dictionary, if any
         obj = dict.getValue(DictKey.Prev);
         if (Number.isInteger(obj)) {
-          this.startXRefQueue.push(obj);
-        } else if (obj instanceof Ref) {
+          this.startXRefQueue.push(<number>obj);
+        } else if (<Ref | unknown>obj instanceof Ref) {
           // The spec says Prev must not be a reference, i.e. "/Prev NNN"
           // This is a fallback for non-compliant PDFs, i.e. "/Prev NNN 0 R"
-          this.startXRefQueue.push(obj.num);
+          this.startXRefQueue.push((<Ref>obj).num);
         }
       } catch (e) {
         if (e instanceof MissingDataException) {
@@ -940,10 +940,7 @@ export class XRef {
       : parser.getObj();
     if (!(xrefEntry instanceof BaseStream)) {
       if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-        assert(
-          xrefEntry !== undefined,
-          'fetchUncompressed: The "xrefEntry" cannot be undefined.'
-        );
+        assert(xrefEntry !== undefined, 'fetchUncompressed: The "xrefEntry" cannot be undefined.');
       }
       this._cacheMap.set(num, xrefEntry);
     }
@@ -1024,7 +1021,7 @@ export class XRef {
     return obj;
   }
 
-  async fetchAsync(ref: Ref, suppressEncryption?: boolean): Promise {
+  async fetchAsync(ref: Ref, suppressEncryption?: boolean): Promise<unknown> {
     try {
       return this.fetch(ref, suppressEncryption);
     } catch (ex) {

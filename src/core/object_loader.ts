@@ -18,6 +18,7 @@ import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { warn } from "../shared/util";
 import { XRef } from "./xref";
+import { ChunkedStream } from "./chunked_stream";
 
 function mayHaveChildren(value: unknown) {
   return (
@@ -28,15 +29,15 @@ function mayHaveChildren(value: unknown) {
   );
 }
 
-function addChildren(node, nodesToVisit) {
+function addChildren(node: Dict | BaseStream | object | object[], nodesToVisit: object[]) {
   if (node instanceof Dict) {
     node = node.getRawValues();
   } else if (node instanceof BaseStream) {
-    node = node.dict.getRawValues();
+    node = node.dict!.getRawValues();
   } else if (!Array.isArray(node)) {
     return;
   }
-  for (const rawValue of node) {
+  for (const rawValue of <object[]>node) {
     if (mayHaveChildren(rawValue)) {
       nodesToVisit.push(rawValue);
     }
@@ -80,18 +81,18 @@ class ObjectLoader {
     const { keys, dict } = this;
     this.refSet = new RefSet();
     // Setup the initial nodes to visit.
-    const nodesToVisit = [];
+    const nodesToVisit: object[] = [];
     for (const key of keys) {
       const rawValue = dict.getRaw(<DictKey>key);
       // Skip nodes that are guaranteed to be empty.
-      if (rawValue !== undefined) {
+      if (rawValue != null) {
         nodesToVisit.push(rawValue);
       }
     }
     return this._walk(nodesToVisit);
   }
 
-  async _walk(nodesToVisit) {
+  async _walk(nodesToVisit: object[]): Promise<void | ChunkedStream> {
     const nodesToRevisit = [];
     const pendingRequests = [];
     // DFS walk of the object graph.
@@ -112,10 +113,10 @@ class ObjectLoader {
             warn(`ObjectLoader._walk - requesting all data: "${ex}".`);
             this.refSet = null;
 
-            const { manager } = this.xref.stream;
+            const { manager } = <ChunkedStream>this.xref.stream;
             return manager.requestAllChunks();
           }
-          nodesToRevisit.push(currentNode);
+          nodesToRevisit.push(currentNode!);
           pendingRequests.push({ begin: ex.begin, end: ex.end });
         }
       }
@@ -136,11 +137,11 @@ class ObjectLoader {
         }
       }
 
-      addChildren(currentNode, nodesToVisit);
+      addChildren(currentNode!, nodesToVisit);
     }
 
     if (pendingRequests.length) {
-      await this.xref.stream.manager.requestRanges(pendingRequests);
+      await (<ChunkedStream>this.xref.stream).manager.requestRanges(pendingRequests);
 
       for (const node of nodesToRevisit) {
         // Remove any reference nodes from the current `RefSet` so they

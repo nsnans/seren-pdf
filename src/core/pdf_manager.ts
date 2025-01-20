@@ -266,7 +266,7 @@ class NetworkPDFManager extends BasePDFManager {
     return <Promise<Stream>>this.streamManager.requestAllChunks(noFetch);
   }
 
-  sendProgressiveData(chunk: ArrayBufferLike) {
+  sendProgressiveData(chunk: ArrayBuffer) {
     this.streamManager.onReceiveData(chunk);
   }
 

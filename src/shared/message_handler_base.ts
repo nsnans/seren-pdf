@@ -137,7 +137,7 @@ abstract class AbstractMessageHandler {
       if (data.callback === CallbackKind.DATA) {
         capability.resolve(data.data);
       } else if (data.callback === CallbackKind.ERROR) {
-        capability.reject(wrapReason(data.reason));
+        capability.reject(wrapReason(data.reason)); 
       } else {
         throw new Error("Unexpected callback case");
       }

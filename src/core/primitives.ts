@@ -547,7 +547,7 @@ export type DictValueTypeMapping = {
   [DictKey.Pg]: Ref,
   [DictKey.Predictor]: number,
   [DictKey.PreserveRB]: boolean,
-  [DictKey.Prev]: number,
+  [DictKey.Prev]: number | Ref,
   [DictKey.PrintState]: Name,
   [DictKey.Print]: Dict,
   [DictKey.QuadPoints]: number[],

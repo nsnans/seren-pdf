@@ -1306,7 +1306,7 @@ const getMetrics = getLookupTableFactory(() => {
       }
     }),
     // eslint-disable-next-line no-shadow
-    Symbol = getLookupTableFactory(() => {
+    Symbol : getLookupTableFactory(() => {
       return {
         space: 250 as const,
         exclam: 333 as const,

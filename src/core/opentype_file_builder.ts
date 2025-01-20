@@ -29,7 +29,7 @@ function writeInt32(dest: Uint8Array, offset: number, num: number) {
   dest[offset + 3] = num & 0xff;
 }
 
-function writeData(dest: Uint8Array, offset: number, data: Uint8Array | string | number[]) {
+function writeData(dest: Uint8TypedArray, offset: number, data: Uint8TypedArray | string | number[]) {
   if (data instanceof Uint8Array) {
     dest.set(data, offset);
   } else if (typeof data === "string") {

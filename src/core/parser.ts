@@ -32,6 +32,7 @@ import {
   ParserEOFException,
 } from "./core_utils";
 import { CipherTransform } from "./crypto";
+import { EvaluatorOpMap } from "./evaluator";
 import { FlateStream } from "./flate_stream";
 import { Jbig2Stream } from "./jbig2_stream";
 import { JpegStream } from "./jpeg_stream";
@@ -750,7 +751,7 @@ class Parser {
 
   filter(stream: BaseStream, dict: Dict, length: number) {
     let filter = dict.getValueWithFallback(DictKey.F, DictKey.Filter);
-    let params: Dict | null = dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
+    let params = <Dict | null>dict.getValueWithFallback(DictKey.DP, DictKey.DecodeParms);
 
     if (filter instanceof Name) {
       if (Array.isArray(params)) {
@@ -888,13 +889,13 @@ class Lexer {
 
   protected currentChar: number;
 
-  public knownCommands;
+  public knownCommands: EvaluatorOpMap | null;
 
   protected _hexStringNumWarn = 0;
 
   public beginInlineImagePos = -1;
 
-  constructor(stream: BaseStream, knownCommands = null) {
+  constructor(stream: BaseStream, knownCommands: EvaluatorOpMap | null = null) {
 
     this.stream = stream;
 
@@ -1323,7 +1324,7 @@ class Lexer {
       // Stop if a known command is found and next character does not make
       // the string a command.
       const possibleCommand = str + String.fromCharCode(ch);
-      if (knownCommandFound && knownCommands[possibleCommand] === undefined) {
+      if (knownCommandFound && knownCommands![possibleCommand] === undefined) {
         break;
       }
       if (str.length === 128) {

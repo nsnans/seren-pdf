@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { Dict, DictKey, Ref } from "./primitives";
 import {
   FeatureTest,
   FormatError,
@@ -21,12 +20,13 @@ import {
   shadow,
   unreachable,
 } from "../shared/util";
-import { PostScriptLexer, PostScriptParser } from "./ps_parser";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
+import { Dict, DictKey, Ref } from "./primitives";
+import { PostScriptLexer, PostScriptParser } from "./ps_parser";
 import { XRef } from "./xref";
-import { MutableArray } from "../types";
 
 export type ParserConstructFunction = (src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) => void;
 
@@ -129,7 +129,7 @@ function toNumberArray(arr: number[]) {
   }
   if (!isNumberArray(arr, null)) {
     // Non-number is found -- convert all items to numbers.
-    return arr.map(x => +x);
+    return (<string[]>arr).map(x => +x);
   }
   return arr;
 }
@@ -262,7 +262,9 @@ class PDFFunction {
     // const mask = 2 ** bps - 1;
 
     // 目前可以确定的类型有Float32Array，但不确定是不是只有Float32Array
-    return function constructSampledFn(src: Float32Array, srcOffset: number, dest: Float32Array, destOffset: number) {
+    return function constructSampledFn(
+      src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number
+    ) {
       // See chapter 3, page 110 of the PDF reference.
 
       // Building the cube vertices: its part and sample index
@@ -481,7 +483,7 @@ class PDFFunction {
 
       const cachedValue = cache[key];
       if (cachedValue !== undefined) {
-        dest.set(cachedValue, destOffset);
+        dest.set!(cachedValue, destOffset);
         return;
       }
 
@@ -505,7 +507,7 @@ class PDFFunction {
         cache_available--;
         cache[key] = output;
       }
-      dest.set(output, destOffset);
+      dest.set!(output, destOffset);
     };
   }
 }
@@ -1291,5 +1293,6 @@ export {
   isPDFFunction,
   PDFFunctionFactory,
   PostScriptCompiler,
-  PostScriptEvaluator,
+  PostScriptEvaluator
 };
+

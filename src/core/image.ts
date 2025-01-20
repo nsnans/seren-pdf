@@ -106,6 +106,14 @@ export interface JpxDecoderOptions {
 
 }
 
+export interface PDFImageData {
+  width: number;
+  height: number;
+  interpolate: number[];
+  kind: ImageKind;
+  data: Uint8TypedArray | null;
+}
+
 export class PDFImage {
 
   // 这个变量似乎没有用到
@@ -702,11 +710,11 @@ export class PDFImage {
   async createImageData(forceRGBA = false, isOffscreenCanvasSupported = false) {
     const drawWidth = this.drawWidth;
     const drawHeight = this.drawHeight;
-    const imgData = {
+    const imgData: PDFImageData = {
       width: drawWidth,
       height: drawHeight,
       interpolate: this.interpolate,
-      kind: 0,
+      kind: ImageKind.NONE,
       data: <Uint8TypedArray | null>null,
       // Other fields are filled in below.
     };
@@ -720,8 +728,7 @@ export class PDFImage {
 
     // Rows start at byte boundary.
     const rowBytes = (oriWidth * numComps * bpc + 7) >> 3;
-    const mustBeResized =
-      isOffscreenCanvasSupported &&
+    const mustBeResized = isOffscreenCanvasSupported &&
       ImageResizer.needsToBeResized(drawWidth, drawHeight);
 
     if (!this.smask && !this.mask && this.colorSpace!.name === "DeviceRGBA") {
@@ -868,9 +875,9 @@ export class PDFImage {
     const imgArray = await this.getImageBytes(oriHeight * rowBytes,
       null, null, false, false, true,
     );
+    
     // imgArray can be incomplete (e.g. after CCITT fax encoding).
-    const actualHeight =
-      0 | (((imgArray.length / rowBytes) * drawHeight) / oriHeight);
+    const actualHeight = 0 | (((imgArray.length / rowBytes) * drawHeight) / oriHeight);
 
     const comps = this.getComponents(imgArray);
 

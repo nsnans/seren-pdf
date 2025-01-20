@@ -35,7 +35,7 @@ export class ChunkedStream extends Stream {
   // Single-entry cache
   protected lastSuccessfulEnsureByteChunk = -1;
 
-  protected manager: ChunkedStreamManager;
+  public manager: ChunkedStreamManager;
 
   constructor(length: number, chunkSize: number, manager: ChunkedStreamManager) {
     super(new Uint8Array(length), 0, length, null);
@@ -64,7 +64,7 @@ export class ChunkedStream extends Stream {
     return this.numChunksLoaded === this.numChunks;
   }
 
-  onReceiveData(begin: number, chunk: Uint8Array<ArrayBuffer>) {
+  onReceiveData(begin: number, chunk: Uint8Array<ArrayBuffer> | ArrayBuffer) {
     const chunkSize = this.chunkSize;
     if (begin % chunkSize !== 0) {
       throw new Error(`Bad begin offset: ${begin}`);
@@ -88,7 +88,7 @@ export class ChunkedStream extends Stream {
     }
   }
 
-  onReceiveProgressiveData(data: Uint8Array<ArrayBuffer>) {
+  onReceiveProgressiveData(data: Uint8Array<ArrayBuffer> | ArrayBuffer) {
     let position = this.progressiveDataLength;
     const beginChunk = Math.floor(position / this.chunkSize);
 
@@ -520,7 +520,7 @@ export class ChunkedStreamManager {
     this.msgHandler.DocProgress(loaded, this.length);
   }
 
-  onReceiveData(chunk: Uint8Array<ArrayBuffer>, begin: number | null = null) {
+  onReceiveData(chunk: Uint8Array<ArrayBuffer> | ArrayBuffer, begin: number | null = null) {
     const isProgressive = begin === null;
     begin = isProgressive ? this.progressiveDataLength : begin;
     const end = begin! + chunk.byteLength;

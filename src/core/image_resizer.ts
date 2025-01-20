@@ -15,6 +15,7 @@
 
 import { ImageDecoder } from "../global";
 import { FeatureTest, ImageKind, shadow, warn } from "../shared/util";
+import { PDFImageData } from "./image";
 
 const MIN_IMAGE_DIM = 2048;
 
@@ -40,11 +41,11 @@ class ImageResizer {
 
   static _hasMaxArea = false;
 
-  protected _imgData;
+  protected _imgData: PDFImageData;
 
   protected _isMask: boolean;
 
-  constructor(imgData, isMask: boolean) {
+  constructor(imgData: PDFImageData, isMask: boolean) {
     this._imgData = imgData;
     this._isMask = isMask;
   }
@@ -167,7 +168,7 @@ class ImageResizer {
     return start;
   }
 
-  static async createImage(imgData, isMask = false) {
+  static async createImage(imgData: PDFImageData, isMask = false) {
     return new ImageResizer(imgData, isMask)._createImage();
   }
 
@@ -199,9 +200,7 @@ class ImageResizer {
       });
     } else {
       imagePromise = createImageBitmap(
-        new Blob([data.buffer], {
-          type: "image/bmp",
-        })
+        new Blob([data.buffer], { type: "image/bmp" })
       );
     }
 
@@ -242,15 +241,7 @@ class ImageResizer {
       const canvas = new OffscreenCanvas(newWidth, newHeight);
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(
-        bitmap,
-        0,
-        0,
-        prevWidth,
-        prevHeight,
-        0,
-        0,
-        newWidth,
-        newHeight
+        bitmap, 0, 0, prevWidth, prevHeight, 0, 0, newWidth, newHeight
       );
 
       // Release the resources associated with the bitmap.
@@ -268,7 +259,7 @@ class ImageResizer {
 
   _encodeBMP() {
     const { width, height, kind } = this._imgData;
-    let data = this._imgData.data;
+    let data = this._imgData.data!;
     let bitPerPixel;
     let colorTable = new Uint8Array(0);
     let maskTable = colorTable;
@@ -281,9 +272,7 @@ class ImageResizer {
       case ImageKind.GRAYSCALE_1BPP: {
         bitPerPixel = 1;
         colorTable = new Uint8Array(
-          this._isMask
-            ? [255, 255, 255, 255, 0, 0, 0, 0]
-            : [0, 0, 0, 0, 255, 255, 255, 255]
+          this._isMask ? [255, 255, 255, 255, 0, 0, 0, 0] : [0, 0, 0, 0, 255, 255, 255, 255]
         );
         const rowLen = (width + 7) >> 3;
         const rowSize = (rowLen + 3) & -4;
