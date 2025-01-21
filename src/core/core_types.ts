@@ -142,7 +142,7 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
     this.onClose = onClose;
   }
 
-  enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
+   enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
     if (this.isCancelled) {
       return;
     }

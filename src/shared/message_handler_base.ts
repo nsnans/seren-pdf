@@ -24,22 +24,22 @@ import {
   unreachable,
 } from "./util";
 
-const CallbackKind = {
-  UNKNOWN: 0,
-  DATA: 1,
-  ERROR: 2,
+enum CallbackKind {
+  UNKNOWN = 0,
+  DATA = 1,
+  ERROR = 2,
 };
 
-export const StreamKind = {
-  UNKNOWN: 0,
-  CANCEL: 1,
-  CANCEL_COMPLETE: 2,
-  CLOSE: 3,
-  ENQUEUE: 4,
-  ERROR: 5,
-  PULL: 6,
-  PULL_COMPLETE: 7,
-  START_COMPLETE: 8,
+export enum StreamKind {
+  UNKNOWN = 0,
+  CANCEL = 1,
+  CANCEL_COMPLETE = 2,
+  CLOSE = 3,
+  ENQUEUE = 4,
+  ERROR = 5,
+  PULL = 6,
+  PULL_COMPLETE = 7,
+  START_COMPLETE = 8,
 };
 
 export function wrapReason(reason: any) {
@@ -81,6 +81,23 @@ interface StreamController<T> {
   isClosed: boolean;
 }
 
+interface HandlerMessage {
+  action: string;
+  sourceName: string;
+  targetName: string;
+  callbackId: number;
+  stream?: StreamKind;
+  streamId?: number;
+  // 这个chunk不是通过sendWithStream发过来的
+  // 而是通过comObj.postMessage发过来的
+  chunk: unknown;
+  callback?: CallbackKind;
+  data?: unknown;
+  desiredSize?: number;
+  success?: boolean;
+  reason?: unknown;
+}
+
 abstract class AbstractMessageHandler {
 
   protected _messageAC: AbortController | null = new AbortController();
@@ -118,7 +135,7 @@ abstract class AbstractMessageHandler {
     });
   }
 
-  protected _onMessage({ data }: MessageEvent) {
+  protected _onMessage({ data }: MessageEvent<HandlerMessage>) {
     if (data.targetName !== this.sourceName) {
       return;
     }
@@ -137,7 +154,7 @@ abstract class AbstractMessageHandler {
       if (data.callback === CallbackKind.DATA) {
         capability.resolve(data.data);
       } else if (data.callback === CallbackKind.ERROR) {
-        capability.reject(wrapReason(data.reason)); 
+        capability.reject(wrapReason(data.reason));
       } else {
         throw new Error("Unexpected callback case");
       }
@@ -272,20 +289,11 @@ abstract class AbstractMessageHandler {
       start: controller => {
         const startCapability = Promise.withResolvers<void>();
         const streamController: StreamController<T> = {
-          controller,
-          startCall: startCapability,
-          pullCall: null,
-          cancelCall: null,
-          isClosed: false,
+          controller, startCall: startCapability, pullCall: null, cancelCall: null, isClosed: false,
         }
         this.streamControllers.set(streamId, streamController);
         const message = {
-          sourceName,
-          targetName,
-          action: actionName,
-          streamId,
-          data,
-          desiredSize: controller.desiredSize,
+          sourceName, targetName, action: actionName, streamId, data, desiredSize: controller.desiredSize,
         };
         if (!!transfers) {
           comObj.postMessage(message, transfers);
@@ -300,11 +308,7 @@ abstract class AbstractMessageHandler {
         const pullCapability = Promise.withResolvers<void>();
         this.streamControllers.get(streamId)!.pullCall = pullCapability;
         const msg = {
-          sourceName,
-          targetName,
-          stream: StreamKind.PULL,
-          streamId,
-          desiredSize: controller.desiredSize,
+          sourceName, targetName, stream: StreamKind.PULL, streamId, desiredSize: controller.desiredSize,
         };
         comObj.postMessage(msg);
         // Returning Promise will not call "pull"
@@ -319,11 +323,7 @@ abstract class AbstractMessageHandler {
         streamController.cancelCall = cancelCapability;
         streamController.isClosed = true;
         comObj.postMessage({
-          sourceName,
-          targetName,
-          stream: StreamKind.CANCEL,
-          streamId,
-          reason: wrapReason(reason),
+          sourceName, targetName, stream: StreamKind.CANCEL, streamId, reason: wrapReason(reason),
         });
         // Return Promise to signal success or failure.
         return cancelCapability.promise;
@@ -333,9 +333,9 @@ abstract class AbstractMessageHandler {
     }, queueingStrategy);
   }
 
-  protected _createStreamSink(data) {
+  protected _createStreamSink(data: HandlerMessage) {
 
-    const streamId = data.streamId;
+    const streamId = data.streamId!;
     const sourceName = this.sourceName;
     const targetName = data.sourceName;
     const comObj = this.comObj;
@@ -344,38 +344,30 @@ abstract class AbstractMessageHandler {
     const action = this.actionHandler.get(data.action)!;
 
     const streamSink = new GeneralStreamSink(
-      this.comObj, sourceName, targetName, streamId, data.desiredSize,
+      this.comObj, sourceName, targetName, streamId, data.desiredSize!,
       (_id) => self.streamSinks.delete(_id)
     );
 
-    streamSink.sinkCapability.resolve(undefined);
+    streamSink.sinkCapability.resolve();
     streamSink.ready = streamSink.sinkCapability.promise;
     this.streamSinks.set(streamId, streamSink);
 
     new Promise(resolve => resolve(action(data.data, streamSink))).then(() => {
       const msg = {
-        sourceName,
-        targetName,
-        stream: StreamKind.START_COMPLETE,
-        streamId,
-        success: true,
+        sourceName, targetName, stream: StreamKind.START_COMPLETE, streamId, success: true,
       }
       comObj.postMessage(msg);
     }, reason => {
       const msg = {
-        sourceName,
-        targetName,
-        stream: StreamKind.START_COMPLETE,
-        streamId,
-        reason: wrapReason(reason),
+        sourceName, targetName, stream: StreamKind.START_COMPLETE, streamId, reason: wrapReason(reason),
       }
       comObj.postMessage(msg);
     });
   }
 
-  protected _processStreamMessage(data) {
+  protected _processStreamMessage(data: HandlerMessage) {
 
-    const streamId = data.streamId;
+    const streamId = data.streamId!;
     const sourceName = this.sourceName;
     const targetName = data.sourceName;
     const comObj = this.comObj;
@@ -402,39 +394,27 @@ abstract class AbstractMessageHandler {
         // Ignore any pull after close is called.
         if (!streamSink) {
           const msg = {
-            sourceName,
-            targetName,
-            stream: StreamKind.PULL_COMPLETE,
-            streamId,
-            success: true,
+            sourceName, targetName, stream: StreamKind.PULL_COMPLETE, streamId, success: true,
           }
           comObj.postMessage(msg);
           break;
         }
         // Pull increases the desiredSize property of sink, so when it changes
         // from negative to positive, set ready property as resolved promise.
-        if (streamSink.desiredSize <= 0 && data.desiredSize > 0) {
+        if (streamSink.desiredSize <= 0 && data.desiredSize! > 0) {
           streamSink.sinkCapability.resolve();
         }
         // Reset desiredSize property of sink on every pull.
-        streamSink.desiredSize = data.desiredSize;
+        streamSink.desiredSize = data.desiredSize!;
 
         new Promise(resolve => resolve(streamSink.onPull?.())).then(() => {
           const msg = {
-            sourceName,
-            targetName,
-            stream: StreamKind.PULL_COMPLETE,
-            streamId,
-            success: true,
+            sourceName, targetName, stream: StreamKind.PULL_COMPLETE, streamId, success: true,
           }
           comObj.postMessage(msg);
         }, reason => {
           const msg = {
-            sourceName,
-            targetName,
-            stream: StreamKind.PULL_COMPLETE,
-            streamId,
-            reason: wrapReason(reason),
+            sourceName, targetName, stream: StreamKind.PULL_COMPLETE, streamId, reason: wrapReason(reason),
           }
           comObj.postMessage(msg);
         });
@@ -445,7 +425,7 @@ abstract class AbstractMessageHandler {
           break;
         }
         // 通向sendWithStream.read的关键
-        streamController.controller.enqueue(data.chunk);
+        streamController.controller.enqueue(<Uint8Array<ArrayBuffer>>data.chunk);
         break;
       case StreamKind.CLOSE:
         assert(!!streamController, "close should have stream controller");
@@ -474,24 +454,14 @@ abstract class AbstractMessageHandler {
           break;
         }
 
-        new Promise(resolve =>
-          resolve(streamSink.onCancel?.(wrapReason(data.reason)))
-        ).then(() => {
+        new Promise(resolve => resolve(streamSink.onCancel?.(wrapReason(data.reason)))).then(() => {
           const msg = {
-            sourceName,
-            targetName,
-            stream: StreamKind.CANCEL_COMPLETE,
-            streamId,
-            success: true,
+            sourceName, targetName, stream: StreamKind.CANCEL_COMPLETE, streamId, success: true,
           };
           comObj.postMessage(msg);
         }, reason => {
           const msg = {
-            sourceName,
-            targetName,
-            stream: StreamKind.CANCEL_COMPLETE,
-            streamId,
-            reason: wrapReason(reason),
+            sourceName, targetName, stream: StreamKind.CANCEL_COMPLETE, streamId, reason: wrapReason(reason),
           }
           comObj.postMessage(msg);
         });

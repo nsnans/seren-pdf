@@ -618,7 +618,7 @@ class Parser {
     imageStream = this.filter(imageStream, dict, length);
     imageStream.dict = dict;
     if (cacheKey !== null) {
-      imageStream.cacheKey = `inline_img_${++this._imageId}`;
+      // imageStream的cacheKey在这里只有赋值，没有使用，因此我将它移除了
       this.imageCache[cacheKey] = imageStream;
     }
 
