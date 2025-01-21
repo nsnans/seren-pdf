@@ -46,6 +46,9 @@ import { XRef } from "./xref";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
+export type ParsedType = string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | Symbol;
+
+
 function getInlineImageCacheKey(bytes: Uint8TypedArray) {
   const strBuf = [];
   const ii = bytes.length;
@@ -78,9 +81,9 @@ class Parser {
 
   protected _imageId = 0;
 
-  public buf1: string | number | boolean | symbol | Name | Cmd | null = null;
+  public buf1: ParsedType = null;
 
-  public buf2: string | number | boolean | symbol | Name | Cmd | null = null;
+  public buf2: ParsedType = null;
 
   constructor(lexer: Lexer, xref: XRef | null = null, allowStreams = false, recoveryMode = false) {
     this.lexer = lexer;
@@ -123,7 +126,7 @@ class Parser {
 
 
   // 应该弄个token类型出来，不然这么多原始类型，不得搞死人啊
-  getObj(cipherTransform: CipherTransform | null = null): string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | Symbol | (boolean | string | number | Ref | Dict | Cmd | BaseStream | Name | Symbol | null)[] {
+  getObj(cipherTransform: CipherTransform | null = null): ParsedType | ParsedType[] {
     const buf1 = this.buf1;
     this.shift();
 
@@ -765,14 +768,14 @@ class Parser {
       const filterArray = filter;
       const paramsArray = params;
       for (let i = 0, ii = filterArray.length; i < ii; ++i) {
-        filter = this.xref!.fetchIfRef(filterArray[i]);
+        filter = <Name>this.xref!.fetchIfRef(filterArray[i]);
         if (!(filter instanceof Name)) {
           throw new FormatError(`Bad filter name "${filter}"`);
         }
 
         params = null;
         if (Array.isArray(paramsArray) && i in paramsArray) {
-          params = this.xref!.fetchIfRef(paramsArray[i]);
+          params = <Dict | null>this.xref!.fetchIfRef(paramsArray[i]);
         }
         stream = this.makeFilter(stream, filter.name, maybeLength!, params);
         // After the first stream the `length` variable is invalid.
@@ -806,7 +809,7 @@ class Parser {
           let earlyChange = 1;
           if (params) {
             if (params.has(DictKey.EarlyChange)) {
-              earlyChange = params.get(DictKey.EarlyChange);
+              earlyChange = params.getValue(DictKey.EarlyChange);
             }
             return PredictorStream.predictIfPossible(
               new LZWStream(stream, maybeLength, earlyChange), maybeLength, params

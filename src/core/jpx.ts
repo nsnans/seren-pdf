@@ -15,12 +15,14 @@
 
 import { BaseException, warn } from "../shared/util";
 // 这里仔细研究一下，如何引入外部的部件
-import OpenJPEG from "../external/openjpeg/openjpeg";
+// openjpeg这个组件，最后还是会被打到worker文件里的，而非单独一个文件
+import OpenJPEG from "../external/openjpeg";
 import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { BaseStream } from "./base_stream";
 import { Uint8TypedArray } from "../common/typed_array";
 import { JpxDecoderOptions } from "./image";
+import { OpenJPEGModule } from "../types";
 
 export class JpxError extends BaseException {
   constructor(msg: string) {
@@ -29,11 +31,11 @@ export class JpxError extends BaseException {
 }
 
 export class JpxImage {
-  static #module = null;
+  static #module: OpenJPEGModule | null = null;
 
   static decode(data: Uint8TypedArray, decoderOptions: JpxDecoderOptions | null) {
     const options = decoderOptions ?? {};
-    this.#module ||= OpenJPEG({ warn });
+    this.#module ||= <OpenJPEGModule>OpenJPEG({ warn });
     const imageData = this.#module!.decode(data, options);
     if (typeof imageData === "string") {
       throw new JpxError(imageData);

@@ -1735,7 +1735,7 @@ class CipherTransformFactory {
     }
     const self = this;
     const cryptFilter = cf.get(<DictKey>name.name);
-    const cfm = cryptFilter?.get("CFM");
+    const cfm = cryptFilter?.getValue(DictKey.CFM);
 
     if (!cfm || cfm.name === "None") {
       return () => new NullCipher();

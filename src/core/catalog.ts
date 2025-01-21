@@ -654,7 +654,7 @@ export class Catalog {
   }
 
   #readOptionalContentGroup(groupRef: Ref) {
-    const group: Dict = this.xref.fetch(groupRef);
+    const group = <Dict>this.xref.fetch(groupRef);
     const obj: OptionalContentGroup = {
       id: groupRef.toString(),
       name: null,
@@ -1375,7 +1375,7 @@ export class Catalog {
         visitedNodes.put(currentNode);
 
         const obj = await (pageDictCache.get(currentNode) || xref.fetchAsync(currentNode));
-        
+
         if (obj instanceof Dict) {
           let type = obj.getRaw(DictKey.Type);
           if (type instanceof Ref) {

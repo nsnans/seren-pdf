@@ -1,3 +1,5 @@
+import { Uint8TypedArray } from "./common/typed_array";
+import { JpxDecoderOptions } from "./core/image";
 
 export type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array |
   Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
@@ -21,4 +23,8 @@ export interface Popable<T> {
 
 export function shiftable<T>(obj: unknown): obj is Shiftable<T> {
   return !!((<any>obj)?.shift);
+}
+
+export interface OpenJPEGModule {
+  decode(data: Uint8TypedArray, option: JpxDecoderOptions | {} | null): Uint8Array<ArrayBuffer>;
 }

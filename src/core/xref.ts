@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   bytesToString,
@@ -21,20 +23,19 @@ import {
   InvalidPDFException,
   warn,
 } from "../shared/util";
-import { CIRCULAR_REF, Cmd, Dict, DictKey, isCmd, Ref, RefSet } from "./primitives";
-import { Lexer, Parser } from "./parser";
+import { BaseStream } from "./base_stream";
 import {
   MissingDataException,
   ParserEOFException,
   XRefEntryException,
   XRefParseException,
 } from "./core_utils";
-import { BaseStream } from "./base_stream";
 import { CipherTransformFactory } from "./crypto";
+import { Lexer, ParsedType, Parser } from "./parser";
 import { PDFManager } from "./pdf_manager";
+import { CIRCULAR_REF, Cmd, Dict, DictKey, isCmd, Ref, RefSet } from "./primitives";
 import { Stream } from "./stream";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Uint8TypedArray } from "../common/typed_array";
+
 
 interface StreamState {
 
@@ -47,6 +48,22 @@ interface StreamState {
   streamPos: number;
 }
 
+interface TableState {
+  entryNum: number;
+  streamPos: number;
+  parserBuf1: ParsedType;
+  parserBuf2: ParsedType;
+  entryCount: number | null;
+  firstEntryNum: number | null;
+};
+
+interface ParsedEntry {
+  offset: number;
+  gen: number;
+  free: boolean;
+  uncompressed: boolean;
+}
+
 export class XRef {
 
   protected _firstXRefStmPos: number | null = null;
@@ -57,7 +74,7 @@ export class XRef {
 
   protected _xrefStms = new Set<number>();
 
-  protected _cacheMap = new Map();
+  protected _cacheMap = new Map<number, unknown>();
 
   protected _pendingRefs = new RefSet();
 
@@ -67,7 +84,7 @@ export class XRef {
 
   protected _persistentRefsCache: Map<number, any> | null;
 
-  protected entries: Record<string, any>[];
+  protected entries: ParsedEntry[];
 
   protected root: Dict | null;
 
@@ -81,9 +98,9 @@ export class XRef {
 
   public encrypt: CipherTransformFactory | null;
 
-  protected streamState?: StreamState;
+  protected streamState: StreamState | null = null;
 
-  protected tableState?: Record<string, any>;
+  protected tableState: TableState | null = null;
 
   constructor(stream: Stream, pdfManager: PDFManager) {
     this.stream = stream;
@@ -219,7 +236,7 @@ export class XRef {
   }
 
   processXRefTable(parser: Parser) {
-    if (this.tableState === undefined) {
+    if (this.tableState === null) {
       // Stores state of the table as we process it so we can resume
       // from middle of table in case of missing data error
       this.tableState = {
@@ -227,6 +244,8 @@ export class XRef {
         streamPos: parser.lexer.stream.pos,
         parserBuf1: parser.buf1,
         parserBuf2: parser.buf2,
+        entryCount: null,
+        firstEntryNum: null,
       };
     }
 
@@ -258,7 +277,7 @@ export class XRef {
         "Invalid XRef table: could not parse trailer dictionary"
       );
     }
-    this.tableState = undefined;
+    this.tableState = null;
     return dict;
   }
 
@@ -283,16 +302,16 @@ export class XRef {
     let obj;
 
     while (true) {
-      if (!("firstEntryNum" in tableState) || !("entryCount" in tableState)) {
+      if (tableState.firstEntryNum == null || tableState.entryCount == null) {
         if (isCmd((obj = parser.getObj()), "trailer")) {
           break;
         }
-        tableState.firstEntryNum = obj;
-        tableState.entryCount = parser.getObj();
+        tableState.firstEntryNum = <number>obj;
+        tableState.entryCount = <number>parser.getObj();
       }
 
-      let first = tableState.firstEntryNum;
-      const count = tableState.entryCount;
+      let first = tableState.firstEntryNum!;
+      const count = tableState.entryCount!;
       if (!Number.isInteger(first) || !Number.isInteger(count)) {
         throw new FormatError(
           "Invalid XRef table: wrong types in subsection header"
@@ -305,9 +324,14 @@ export class XRef {
         tableState.parserBuf1 = parser.buf1;
         tableState.parserBuf2 = parser.buf2;
 
-        const entry: Record<string, any> = {};
-        entry.offset = parser.getObj();
-        entry.gen = parser.getObj();
+        const entry: ParsedEntry = {
+          offset: 0,
+          gen: 0,
+          free: false,
+          uncompressed: false
+        };
+        entry.offset = <number>parser.getObj();
+        entry.gen = <number>parser.getObj();
         const type = parser.getObj();
 
         if (type instanceof Cmd) {
@@ -347,8 +371,8 @@ export class XRef {
       tableState.streamPos = stream.pos;
       tableState.parserBuf1 = parser.buf1;
       tableState.parserBuf2 = parser.buf2;
-      delete tableState.firstEntryNum;
-      delete tableState.entryCount;
+      tableState.firstEntryNum = null;
+      tableState.entryCount = null;
     }
 
     // Sanity check: as per spec, first object must be free
@@ -360,7 +384,7 @@ export class XRef {
 
   processXRefStream(stream: BaseStream) {
     // 动态定义字段，或许是为了防止Object.keys影响？
-    if (this.streamState === undefined) {
+    if (this.streamState === null) {
       // Stores state of the stream as we process it so we can resume
       // from middle of stream in case of missing data error
       const streamParameters = stream.dict;
@@ -378,7 +402,7 @@ export class XRef {
       };
     }
     this.readXRefStream(stream);
-    this.streamState = undefined;
+    this.streamState = null;
 
     return stream.dict;
   }
@@ -438,7 +462,12 @@ export class XRef {
           }
           generation = (generation << 8) | generationByte;
         }
-        const entry: Record<string, any> = {};
+        const entry: ParsedEntry = {
+          offset: 0,
+          gen: 0,
+          free: false,
+          uncompressed: false
+        };
         entry.offset = offset;
         entry.gen = generation;
         switch (type) {
@@ -582,6 +611,7 @@ export class XRef {
             offset: position - stream.start,
             gen,
             uncompressed: true,
+            free: false
           };
         }
 
@@ -881,24 +911,25 @@ export class XRef {
     }
     this._pendingRefs.put(ref);
 
+    let parsedXrefEntry: ParsedEntry | ParsedType | ParsedType[];
+
     try {
-      xrefEntry = xrefEntry.uncompressed
-        ? <Record<string, any>>this.fetchUncompressed(ref, xrefEntry!, suppressEncryption)
-        : <Record<string, any>>this.fetchCompressed(ref, xrefEntry!, suppressEncryption);
+      parsedXrefEntry = xrefEntry.uncompressed ? this.fetchUncompressed(ref, xrefEntry!, suppressEncryption)
+        : this.fetchCompressed(ref, xrefEntry!, suppressEncryption);
       this._pendingRefs.remove(ref);
     } catch (ex) {
       this._pendingRefs.remove(ref);
       throw ex;
     }
-    if (xrefEntry instanceof Dict) {
-      xrefEntry.objId = ref.toString();
-    } else if (xrefEntry instanceof BaseStream) {
-      xrefEntry.dict!.objId = ref.toString();
+    if (parsedXrefEntry instanceof Dict) {
+      parsedXrefEntry.objId = ref.toString();
+    } else if (parsedXrefEntry instanceof BaseStream) {
+      parsedXrefEntry.dict!.objId = ref.toString();
     }
-    return xrefEntry;
+    return parsedXrefEntry;
   }
 
-  fetchUncompressed(ref: Ref, xrefEntry: Record<string, any>, suppressEncryption = false): Record<string, any> | number {
+  fetchUncompressed(ref: Ref, xrefEntry: ParsedEntry, suppressEncryption = false): ParsedType | ParsedType[] {
     const gen = ref.gen;
     let num = ref.num;
     if (xrefEntry.gen !== gen) {
@@ -907,9 +938,7 @@ export class XRef {
       if (this._generationFallback && xrefEntry.gen < gen) {
         warn(msg);
         return this.fetchUncompressed(
-          Ref.get(num, xrefEntry.gen),
-          xrefEntry,
-          suppressEncryption
+          Ref.get(num, xrefEntry.gen), xrefEntry, suppressEncryption
         );
       }
       throw new XRefEntryException(msg);
@@ -935,19 +964,19 @@ export class XRef {
       }
       throw new XRefEntryException(`Bad (uncompressed) XRef entry: ${ref}`);
     }
-    xrefEntry = this.encrypt && !suppressEncryption
+    const parsedXrefEntry = this.encrypt && !suppressEncryption
       ? parser.getObj(this.encrypt.createCipherTransform(num, gen))
       : parser.getObj();
-    if (!(xrefEntry instanceof BaseStream)) {
+    if (!(parsedXrefEntry instanceof BaseStream)) {
       if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-        assert(xrefEntry !== undefined, 'fetchUncompressed: The "xrefEntry" cannot be undefined.');
+        assert(parsedXrefEntry !== undefined, 'fetchUncompressed: The "xrefEntry" cannot be undefined.');
       }
-      this._cacheMap.set(num, xrefEntry);
+      this._cacheMap.set(num, parsedXrefEntry);
     }
-    return xrefEntry;
+    return parsedXrefEntry;
   }
 
-  fetchCompressed(ref: Ref, xrefEntry: Record<string, any>, _suppressEncryption = false) {
+  fetchCompressed(ref: Ref, xrefEntry: ParsedEntry, _suppressEncryption = false) {
     const tableOffset = xrefEntry.offset;
     const stream = this.fetch(Ref.get(tableOffset, 0));
     if (!(stream instanceof BaseStream)) {

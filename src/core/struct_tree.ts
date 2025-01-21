@@ -270,7 +270,7 @@ export class StructTreeRoot {
       parentTreeRef = xref.getNewTemporaryRef();
       structTreeRoot.set(DictKey.ParentTree, parentTreeRef);
     }
-    parentTree = parentTree.clone();
+    parentTree = parentTree!.clone();
     cache.put(parentTreeRef, parentTree);
 
     let nums = parentTree.getRaw("Nums");

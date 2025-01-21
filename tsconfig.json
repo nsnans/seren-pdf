@@ -12,6 +12,7 @@
     /* Bundler mode */
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
+    "allowJs": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
@@ -25,6 +26,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/global.d.ts"
+    "src/global.d.ts",
+    "src/openjpeg.d.ts",
   ]
 }
