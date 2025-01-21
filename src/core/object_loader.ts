@@ -107,7 +107,7 @@ class ObjectLoader {
         }
         try {
           this.refSet!.put(currentNode);
-          currentNode = this.xref.fetch(currentNode);
+          currentNode = <object>this.xref.fetch(currentNode);
         } catch (ex) {
           if (!(ex instanceof MissingDataException)) {
             warn(`ObjectLoader._walk - requesting all data: "${ex}".`);

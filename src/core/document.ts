@@ -1068,22 +1068,22 @@ class PDFDocument {
       return false;
     }
     return fields.every(field => {
-      field = this.xref.fetchIfRef(<Ref | object>field);
-      if (!(field instanceof Dict)) {
+      const value = <Dict | unknown>this.xref.fetchIfRef(<Ref | object>field);
+      if (!(value instanceof Dict)) {
         return false;
       }
-      if (field.has(DictKey.Kids)) {
+      if (value.has(DictKey.Kids)) {
         if (++recursionDepth > RECURSION_LIMIT) {
           warn("_hasOnlyDocumentSignatures: maximum recursion depth reached");
           return false;
         }
         return this._hasOnlyDocumentSignatures(
-          field.getValue(DictKey.Kids),
+          value.getValue(DictKey.Kids),
           recursionDepth
         );
       }
-      const isSignature = isName(field.getValue(DictKey.FT), "Sig");
-      const rectangle = field.getValue(DictKey.Rect);
+      const isSignature = isName(value.getValue(DictKey.FT), "Sig");
+      const rectangle = value.getValue(DictKey.Rect);
       const isInvisible =
         Array.isArray(rectangle) && rectangle.every(value => value === 0);
       return isSignature && isInvisible;
@@ -1266,7 +1266,7 @@ class PDFDocument {
       const obj = await xref.fetchAsync(ref);
       // Ensure that the object that was found is actually a Page dictionary.
       if (obj instanceof Dict) {
-        let type : Name | unknown = obj.getRaw(DictKey.Type);
+        let type: Name | unknown = obj.getRaw(DictKey.Type);
         if (type instanceof Ref) {
           type = await xref.fetchAsync(type);
         }

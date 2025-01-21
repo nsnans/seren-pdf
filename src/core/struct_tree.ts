@@ -258,13 +258,13 @@ export class StructTreeRoot {
     const xref = this.dict.xref!;
     const structTreeRoot = this.dict.clone();
     const structTreeRootRef = this.ref!;
-    const cache = new RefSetCache<Ref, Dict>();
+    const cache = new RefSetCache<Ref, Dict | (number | Ref)[]>();
     cache.put(structTreeRootRef, structTreeRoot);
 
     let parentTreeRef = structTreeRoot.getRaw(DictKey.ParentTree);
     let parentTree;
     if (parentTreeRef instanceof Ref) {
-      parentTree = xref.fetch(parentTreeRef);
+      parentTree = <Dict>xref.fetch(parentTreeRef);
     } else {
       parentTree = parentTreeRef;
       parentTreeRef = xref.getNewTemporaryRef();
@@ -273,15 +273,15 @@ export class StructTreeRoot {
     parentTree = parentTree!.clone();
     cache.put(parentTreeRef, parentTree);
 
-    let nums = parentTree.getRaw("Nums");
+    let nums = parentTree.getRaw(DictKey.Nums);
     let numsRef = null;
     if (nums instanceof Ref) {
       numsRef = nums;
-      nums = xref.fetch(numsRef);
+      nums = <(number | Ref)[]>xref.fetch(numsRef);
     }
     nums = nums.slice();
     if (!numsRef) {
-      parentTree.set("Nums", nums);
+      parentTree.set(DictKey.Nums, nums);
     }
 
     const newNextKey = await StructTreeRoot.#writeKids(
@@ -316,7 +316,7 @@ export class StructTreeRoot {
     xref: XRef,
     pdfManager: PDFManager,
     newRefs: { ref: Ref, data: string | null }[],
-    cache: RefSetCache<Ref, Dict | Ref[]>,
+    cache: RefSetCache<Ref, Dict | (number | Ref)[]>,
   ) {
     const objr = Name.get("OBJR");
     let nextKey = -1;
@@ -359,7 +359,7 @@ export class StructTreeRoot {
           const objRef = objs?.get(structParent);
           if (objRef) {
             // We update the existing tag.
-            const tagDict = xref.fetch(objRef).clone();
+            const tagDict = (<Dict>xref.fetch(objRef)).clone();
             StructTreeRoot.#writeProperties(tagDict, accessibilityData);
             buffer.length = 0;
             await writeObject(objRef, tagDict, buffer, xref.encrypt);
@@ -450,7 +450,7 @@ export class StructTreeRoot {
       return;
     }
     // The parentArray type has already been checked by the caller.
-    const parentArray = numberTree.get(id);
+    const parentArray = <Ref[]>numberTree.get(id);
 
     const updateElement = (kid: number, pageKid: Dict, kidRef: Ref) => {
       const elems = idToElements.get(kid);
@@ -508,7 +508,7 @@ export class StructTreeRoot {
     structTreeRootRef: Ref,
     fallbackKids: Ref[],
     xref: XRef,
-    cache: RefSetCache<Ref, Dict | Ref[]>,
+    cache: RefSetCache<Ref, Dict | (Ref | number)[]>,
   ) {
     let ref = null;
     let parentRef;
@@ -524,7 +524,7 @@ export class StructTreeRoot {
     tagDict.set(DictKey.P, parentRef);
 
     // We get the kids in order to insert a new tag at the right position.
-    const parentDict = xref.fetchIfRef(parentRef);
+    const parentDict = <Dict | null>xref.fetchIfRef(parentRef);
     if (!parentDict) {
       fallbackKids.push(newTagRef);
       return;
@@ -622,25 +622,24 @@ class StructElementNode {
     // Find the dictionary for the kid.
     let kidDict = null;
     if (kid instanceof Ref) {
-      kidDict = this.dict.xref!.fetch(kid);
+      kidDict = <Dict>this.dict.xref!.fetch(kid);
     } else if (kid instanceof Dict) {
       kidDict = kid;
     }
     if (!kidDict) {
       return null;
     }
-    const pageRef = kidDict.getRaw("Pg");
+    const pageRef = kidDict.getRaw(DictKey.Pg);
     if (pageRef instanceof Ref) {
       pageObjId = pageRef.toString();
     }
-
-    const type =
-      kidDict.get("Type") instanceof Name ? kidDict.get("Type").name : null;
+    const typeInDict = kidDict.getValue(DictKey.Type)
+    const type = typeInDict instanceof Name ? typeInDict.name : null;
     if (type === "MCR") {
       if (this.tree.pageDict.objId !== pageObjId) {
         return null;
       }
-      const kidRef = kidDict.getRaw("Stm");
+      const kidRef = kidDict.getRaw(DictKey.Stm);
       return new StructElement(
         StructElementType.STREAM_CONTENT,
         kidDict.getValue(DictKey.MCID),
@@ -653,7 +652,7 @@ class StructElementNode {
       if (this.tree.pageDict.objId !== pageObjId) {
         return null;
       }
-      const kidRef = kidDict.getRaw("Obj");
+      const kidRef = kidDict.getRaw(DictKey.Obj);
       return new StructElement(
         StructElementType.OBJECT,
         null,
@@ -790,7 +789,7 @@ export class StructTreePage {
       if (Array.isArray(parentArray)) {
         for (const ref of parentArray) {
           if (ref instanceof Ref) {
-            this.addNode(this.rootDict.xref!.fetch(ref), map);
+            this.addNode(<Dict>this.rootDict.xref!.fetch(ref), map);
           }
         }
       }
@@ -802,7 +801,7 @@ export class StructTreePage {
     for (const [elemId, type] of ids) {
       const obj = numberTree.get(elemId);
       if (obj) {
-        const elem = this.addNode(this.rootDict.xref!.fetchIfRef(obj), map);
+        const elem = this.addNode(<Dict>this.rootDict.xref!.fetchIfRef(obj), map);
         if (
           elem?.kids?.length === 1 &&
           elem.kids[0].type === StructElementType.OBJECT

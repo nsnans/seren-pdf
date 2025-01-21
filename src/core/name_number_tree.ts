@@ -23,7 +23,7 @@ import { PlatformHelper } from "../platform/platform_helper";
  * see the specification (7.9.6 and 7.9.7) for additional details.
  * TODO: implement all the Dict functions and make this more efficient.
  */
-class NameOrNumberTree<T> {
+class NameOrNumberTree<T extends number | string> {
 
   protected root: Ref | string;
 
@@ -87,7 +87,7 @@ class NameOrNumberTree<T> {
       return null;
     }
     const xref = this.xref;
-    let kidsOrEntries: Dict = xref.fetchIfRef(this.root);
+    let kidsOrEntries = <Dict>xref.fetchIfRef(this.root);
     let loopCount = 0;
     const MAX_LEVELS = 10;
 
@@ -108,12 +108,12 @@ class NameOrNumberTree<T> {
         r = kids.length - 1;
       while (l <= r) {
         const m = (l + r) >> 1;
-        const kid = xref.fetchIfRef(kids[m]);
+        const kid = <Dict>xref.fetchIfRef(kids[m]);
         const limits = kid.getValue(DictKey.Limits);
 
-        if (key < xref.fetchIfRef(limits[0])) {
+        if (key < <number | string>xref.fetchIfRef(limits[0])) {
           r = m - 1;
-        } else if (key > xref.fetchIfRef(limits[1])) {
+        } else if (key > <number | string>xref.fetchIfRef(limits[1])) {
           l = m + 1;
         } else {
           kidsOrEntries = kid;
@@ -137,7 +137,7 @@ class NameOrNumberTree<T> {
         // odd indices contain the actual data.
         const tmp = (l + r) >> 1,
           m = tmp + (tmp & 1);
-        const currentKey = xref.fetchIfRef(entries[m]);
+        const currentKey = <number | string>xref.fetchIfRef(entries[m]);
         if (key < currentKey) {
           r = m - 2;
         } else if (key > currentKey) {

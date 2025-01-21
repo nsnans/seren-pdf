@@ -1734,7 +1734,7 @@ class CipherTransformFactory {
       throw new FormatError("Invalid crypt filter name.");
     }
     const self = this;
-    const cryptFilter = cf.get(<DictKey>name.name);
+    const cryptFilter = <Dict>cf.getValue(<DictKey>name.name);
     const cfm = cryptFilter?.getValue(DictKey.CFM);
 
     if (!cfm || cfm.name === "None") {
@@ -1782,7 +1782,7 @@ class CipherTransformFactory {
         if (cfDict instanceof Dict && streamCryptoName instanceof Name) {
           cfDict.suppressEncryption = true; // See comment below.
           const handlerDict = <Dict>cfDict.getValue(<DictKey>streamCryptoName.name);
-          keyLength = handlerDict?.get(DictKey.Length) || 128;
+          keyLength = handlerDict?.getValue(DictKey.Length) || 128;
           if (keyLength < 40) {
             // Sometimes it's incorrect value of bits, generators specify
             // bytes.

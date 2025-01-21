@@ -874,6 +874,7 @@ export class XRef {
     return obj;
   }
 
+  // 应该要改成泛型，但是至于Ref怎么改，还需要进一步处理
   fetch(ref: Ref, suppressEncryption = false) {
     if (!(ref instanceof Ref)) {
       throw new Error("ref object is not a reference");

@@ -424,7 +424,7 @@ class GeneralOperator {
       if (!shadingRes) {
         throw new FormatError("No shading resource found");
       }
-      shading = shadingRes.get(ctx.args![0].name);
+      shading = <Dict>shadingRes.getValue(ctx.args![0].name);
       if (!shading) {
         throw new FormatError("No shading object found");
       }

@@ -1379,7 +1379,7 @@ export class Catalog {
         if (obj instanceof Dict) {
           let type = obj.getRaw(DictKey.Type);
           if (type instanceof Ref) {
-            type = await xref.fetchAsync(type);
+            type = <Name>await xref.fetchAsync(type);
           }
           if (isName(type, "Page") || !obj.has(DictKey.Kids)) {
             // Cache the Page reference, since it can *greatly* improve

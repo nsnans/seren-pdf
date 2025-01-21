@@ -518,7 +518,7 @@ export class TranslatedFont {
 
   public dict: Dict;
 
-  public cacheKey: string| null;
+  public cacheKey: string | null;
 
   protected _evaluatorOptions;
 
@@ -600,7 +600,7 @@ export class TranslatedFont {
 
     for (const key of charProcs.getKeys()) {
       loadCharProcsPromise = loadCharProcsPromise.then(async () => {
-        const glyphStream = charProcs.get(key);
+        const glyphStream = <BaseStream>charProcs.getValue(key);
         const operatorList = new OperatorList();
         return type3Context.operatorFactory.createGeneralHandler(
           glyphStream, task, fontResources, operatorList

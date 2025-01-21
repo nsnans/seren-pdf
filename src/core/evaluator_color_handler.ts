@@ -51,15 +51,15 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
         }
       }
 
-      const pattern = this.context.xref.fetchIfRef(rawPattern);
+      const pattern = <BaseStream | Dict | null>this.context.xref.fetchIfRef(rawPattern);
       if (pattern) {
-        const dict: Dict = pattern instanceof BaseStream ? pattern.dict : pattern;
+        const dict = pattern instanceof BaseStream ? pattern.dict! : pattern;
         const typeNum = dict.get(DictKey.PatternType);
 
         if (typeNum === PatternType.TILING) {
           const color = cs.base ? cs.base.getRgb(args, 0) : null;
           return this.handleTilingType(
-            fn, color, resources, pattern, dict, operatorList, task, localTilingPatternCache
+            fn, color, resources, <BaseStream>pattern, dict, operatorList, task, localTilingPatternCache
           );
         } else if (typeNum === PatternType.SHADING) {
           const shading = dict.getValue(DictKey.Shading);
@@ -129,7 +129,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
     // Merge the available resources, to prevent issues when the patternDict
     // is missing some /Resources entries (fixes issue6541.pdf).
     const patternResources = Dict.merge(
-      this.context.xref, [patternDict.get(DictKey.Resources), resources], false
+      this.context.xref, [patternDict.getValue(DictKey.Resources), resources], false
     );
 
     return this.context.operatorFactory.createGeneralHandler(

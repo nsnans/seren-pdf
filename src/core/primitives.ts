@@ -397,6 +397,8 @@ export enum DictKey {
   CropBox = "CropBox",
   Q = "Q",
   MaxLen = "MaxLen",
+  Stm = "Stm",
+  CFM = "CFM",
 }
 
 /**
@@ -710,6 +712,8 @@ export type DictValueTypeMapping = {
   [DictKey.CropBox]: RectType;
   [DictKey.Q]: number,
   [DictKey.MaxLen]: number,
+  [DictKey.Stm]: Ref,
+  [DictKey.CFM]: Name,
 }
 
 
@@ -749,11 +753,11 @@ export class Dict {
   }
 
   getValue<T extends DictKey>(key: T): DictValueTypeMapping[T] {
-    return this.get(key)
+    return <DictValueTypeMapping[T]>this.get(key)
   }
 
   getValueWithFallback<T1 extends DictKey, T2 extends DictKey>(key1: T1, key2: T2): DictValueTypeMapping[T1] | DictValueTypeMapping[T2] {
-    return this.get(key1, key2);
+    return <DictValueTypeMapping[T1] | DictValueTypeMapping[T2]>this.get(key1, key2);
   }
 
   // 自动将Ref对象解引用

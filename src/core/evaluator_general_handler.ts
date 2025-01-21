@@ -362,7 +362,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
     let numFns = 0;
     let numEffectfulFns = 0;
     for (const entry of transferArray) {
-      const transferObj = this.context.xref.fetchIfRef(entry);
+      const transferObj = <Dict | BaseStream>this.context.xref.fetchIfRef(entry);
       numFns++;
 
       if (isName(transferObj, "Identity")) {
