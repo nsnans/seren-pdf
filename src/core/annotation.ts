@@ -552,7 +552,7 @@ export class AnnotationFactory {
   }
 }
 
-function getRgbColor(color: MutableArray<number>, defaultColor: Uint8ClampedArray | null = new Uint8ClampedArray(3)) {
+function getRgbColor(color: MutableArray<number>, defaultColor: Uint8ClampedArray<ArrayBuffer> | null = new Uint8ClampedArray(3)) {
   if (!Array.isArray(color)) {
     return defaultColor;
   }
@@ -725,7 +725,7 @@ export interface AnnotationData {
   inkLists?: Float32Array[];
 }
 
-export class Annotation {
+export class Annotation<DATA extends AnnotationData> {
 
   public ref: Ref | null;
 
@@ -755,7 +755,7 @@ export class Annotation {
 
   protected oc: Dict | null = null;
 
-  public data: AnnotationData;
+  public data: DATA;
 
   protected _contents: { str: string, dir: string } = { str: "", dir: "" };
 
@@ -803,7 +803,7 @@ export class Annotation {
     const isContentLocked = !!(this.flags & AnnotationFlag.LOCKEDCONTENTS);
 
     // Expose public properties using a data object.
-    this.data = {
+    this.data = <DATA>{
       annotationFlags: this.flags,
       borderStyle: this.borderStyle,
       color: this.color,
@@ -861,8 +861,7 @@ export class Annotation {
       this.data.it = it.name;
     }
 
-    this._isOffscreenCanvasSupported =
-      params.evaluatorOptions.isOffscreenCanvasSupported;
+    this._isOffscreenCanvasSupported = params.evaluatorOptions.isOffscreenCanvasSupported;
     this._fallbackFontDict = null;
     this._needAppearances = false;
   }
