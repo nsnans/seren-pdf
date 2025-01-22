@@ -215,7 +215,7 @@ const AnnotationActionEventType = {
   F: "Format",
   V: "Validate",
   C: "Calculate",
-};
+} as const;
 
 const DocumentActionEventType = {
   WC: "WillClose",
@@ -223,12 +223,12 @@ const DocumentActionEventType = {
   DS: "DidSave",
   WP: "WillPrint",
   DP: "DidPrint",
-};
+} as const;
 
 const PageActionEventType = {
   O: "PageOpen",
   C: "PageClose",
-};
+} as const;
 
 const VerbosityLevel = {
   ERRORS: 0,
@@ -625,6 +625,7 @@ function isEvalSupported() {
 }
 
 class FeatureTest {
+
   static get isLittleEndian() {
     return shadow(this, "isLittleEndian", isLittleEndian());
   }

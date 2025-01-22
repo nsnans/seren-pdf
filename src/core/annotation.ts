@@ -42,7 +42,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { TypedArray } from "../types";
+import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { Catalog } from "./catalog";
@@ -105,10 +105,10 @@ export interface AnnotationGlobals {
   acroForm: Dict;
   structTreeRoot: StructTreeRoot | null;
   baseUrl: string;
-  attachments: Record<string, FileSpecSerializable> | null;
+  attachments: Map<string, FileSpecSerializable> | null;
 }
 
-class AnnotationFactory {
+export class AnnotationFactory {
 
   static createGlobals(pdfManager: PDFManager): Promise<AnnotationGlobals | null> {
     return Promise.all([
@@ -124,11 +124,8 @@ class AnnotationFactory {
       // eslint-disable-next-line arrow-body-style
       ([acroForm, structTreeRoot, baseUrl, attachments]) => {
         return {
-          pdfManager,
+          pdfManager, structTreeRoot, baseUrl, attachments,
           acroForm: acroForm instanceof Dict ? acroForm : Dict.empty,
-          structTreeRoot,
-          baseUrl,
-          attachments,
         };
       },
       reason => {
@@ -555,7 +552,7 @@ class AnnotationFactory {
   }
 }
 
-function getRgbColor(color: TypedArray, defaultColor: Uint8ClampedArray | null = new Uint8ClampedArray(3)) {
+function getRgbColor(color: MutableArray<number>, defaultColor: Uint8ClampedArray | null = new Uint8ClampedArray(3)) {
   if (!Array.isArray(color)) {
     return defaultColor;
   }
@@ -582,11 +579,11 @@ function getRgbColor(color: TypedArray, defaultColor: Uint8ClampedArray | null =
   }
 }
 
-function getPdfColorArray(color: TypedArray) {
+function getPdfColorArray(color: MutableArray<number>) {
   return Array.from(color, (c: number) => c / 255);
 }
 
-function getQuadPoints(dict: Dict, rect: number[] | null) {
+export function getQuadPoints(dict: Dict, rect: number[] | null) {
   // The region is described as a number of quadrilaterals.
   // Each quadrilateral must consist of eight coordinates.
   const quadPoints = dict.getArrayValue(DictKey.QuadPoints);
@@ -612,10 +609,7 @@ function getQuadPoints(dict: Dict, rect: number[] | null) {
     // lies outside the region specified by the rectangle. The rectangle
     // can be `null` for markup annotations since their rectangle may be
     // incorrect (fixes bug 1538111).
-    if (
-      rect !== null &&
-      (minX < rect[0] || maxX > rect[2] || minY < rect[1] || maxY > rect[3])
-    ) {
+    if (rect !== null && (minX < rect[0] || maxX > rect[2] || minY < rect[1] || maxY > rect[3])) {
       return null;
     }
     // The PDF specification states in section 12.5.6.10 (figure 64) that the
@@ -637,10 +631,8 @@ function getQuadPoints(dict: Dict, rect: number[] | null) {
 
 function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformType): TransformType {
   // 12.5.5: Algorithm: Appearance streams
-  const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox(
-    bbox,
-    matrix
-  );
+  const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox(bbox, matrix);
+
   if (minX === maxX || minY === maxY) {
     // From real-life file, bbox was [0, 0, 0, 0]. In this case,
     // just apply the transform for rect
@@ -649,14 +641,7 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
 
   const xRatio = (rect[2] - rect[0]) / (maxX - minX);
   const yRatio = (rect[3] - rect[1]) / (maxY - minY);
-  return [
-    xRatio,
-    0,
-    0,
-    yRatio,
-    rect[0] - minX * xRatio,
-    rect[1] - minY * yRatio,
-  ];
+  return [xRatio, 0, 0, yRatio, rect[0] - minX * xRatio, rect[1] - minY * yRatio];
 }
 
 // 这个对象可能要拆分成多个子类
@@ -740,7 +725,7 @@ export interface AnnotationData {
   inkLists?: Float32Array[];
 }
 
-class Annotation {
+export class Annotation {
 
   public ref: Ref | null;
 
@@ -760,9 +745,9 @@ class Annotation {
 
   protected rotation: number = 0;
 
-  protected borderColor: Uint8ClampedArray | null = null;
+  protected borderColor: Uint8ClampedArray<ArrayBuffer> | null = null;
 
-  protected backgroundColor: Uint8ClampedArray | null = null;
+  protected backgroundColor: Uint8ClampedArray<ArrayBuffer> | null = null;
 
   protected borderStyle: AnnotationBorderStyle = new AnnotationBorderStyle();
 
@@ -791,10 +776,10 @@ class Annotation {
       dict.set(DictKey.Parent, parentRef);
     }
 
-    this.setTitle(dict.getValue(DictKey.T));
+    this.setTitle(<string>dict.getValue(DictKey.T));
     this.setContents(dict.getValue(DictKey.Contents));
     this.setModificationDate(dict.getValue(DictKey.M));
-    this.setFlags(dict.getValue(DictKey.F));
+    this.setFlags(<number>dict.getValue(DictKey.F));
     this.setRectangle(dict.getArrayValue(DictKey.Rect));
     this.setColor(dict.getArrayValue(DictKey.C));
     this.setBorderStyle(dict);
@@ -1114,11 +1099,10 @@ class Annotation {
    *
    * @public
    * @memberof Annotation
-   * @param {Array} color - The color array containing either 0
-   *                        (transparent), 1 (grayscale), 3 (RGB) or
-   *                        4 (CMYK) elements
+   * @param color - The color array containing either 
+   * 0 (transparent), 1 (grayscale), 3 (RGB) or 4 (CMYK) elements
    */
-  setColor(color: TypedArray) {
+  setColor(color: MutableArray<number>) {
     this.color = getRgbColor(color);
   }
 
@@ -1214,7 +1198,7 @@ class Annotation {
         if (!dictType || isName(dictType, "Border")) {
           this.borderStyle.setWidth(<number>dict.getValue(DictKey.W), this.rectangle);
           this.borderStyle.setStyle(dict.getValue(DictKey.S));
-          this.borderStyle.setDashArray(dict.getArrayValue(DictKey.D));
+          this.borderStyle.setDashArray(<number[]>dict.getArrayValue(DictKey.D));
         }
       }
     } else if (borderStyle.has(DictKey.Border)) {
@@ -1448,9 +1432,7 @@ class Annotation {
       const matrix = lookupMatrix(appearanceDict!.getArrayValue(DictKey.Matrix), null);
 
       this.data.textPosition = this._transformPoint(
-        firstPosition,
-        bbox,
-        matrix
+        firstPosition, bbox, matrix
       );
       this.data.textContent = text;
     }
@@ -1579,13 +1561,20 @@ class Annotation {
 /**
  * Contains all data regarding an annotation's border style.
  */
-class AnnotationBorderStyle {
+export class AnnotationBorderStyle {
+
   public width: number;
+
   protected rawWidth: number;
+
   protected style: number;
+
   protected dashArray: number[];
+
   protected horizontalCornerRadius: number;
+
   protected verticalCornerRadius: number;
+
   constructor() {
     this.width = 1;
     this.rawWidth = 1;
@@ -1746,7 +1735,7 @@ class AnnotationBorderStyle {
   }
 }
 
-class MarkupAnnotation extends Annotation {
+export class MarkupAnnotation extends Annotation {
 
   protected creationDate: string | null = null;
 
@@ -1779,14 +1768,14 @@ class MarkupAnnotation extends Annotation {
       if (!parent.has(DictKey.CreationDate)) {
         this.data.creationDate = null;
       } else {
-        this.setCreationDate(parent.get(DictKey.CreationDate));
+        this.setCreationDate(parent.getValue(DictKey.CreationDate));
         this.data.creationDate = this.creationDate;
       }
 
       if (!parent.has(DictKey.M)) {
         this.data.modificationDate = null;
       } else {
-        this.setModificationDate(parent.get(DictKey.M));
+        this.setModificationDate(parent.getValue(DictKey.M));
         this.data.modificationDate = this.modificationDate;
       }
 
@@ -1988,7 +1977,7 @@ class MarkupAnnotation extends Annotation {
   }
 }
 
-class WidgetAnnotation extends Annotation {
+export class WidgetAnnotation extends Annotation {
 
   protected _hasText: boolean = false;
 
@@ -3970,7 +3959,7 @@ class LinkAnnotation extends Annotation {
   }
 }
 
-class PopupAnnotation extends Annotation {
+export class PopupAnnotation extends Annotation {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4958,9 +4947,7 @@ class UnderlineAnnotation extends MarkupAnnotation {
     if (quadPoints) {
       if (!this.appearance) {
         // Default color is black
-        const strokeColor = this.color
-          ? getPdfColorArray(this.color)
-          : [0, 0, 0];
+        const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
         const strokeAlpha = dict.getValue(DictKey.CA);
 
         // The values 0.571 and 1.3 below corresponds to what Acrobat is doing.
@@ -5051,14 +5038,7 @@ class StrikeOutAnnotation extends MarkupAnnotation {
         const strokeAlpha = dict.getValue(DictKey.CA);
 
         this._setDefaultAppearance(
-          xref,
-          "[] 0 d 1 w",
-          strokeColor,
-          null,
-          null,
-          strokeAlpha,
-          null,
-          (buffer, points) => {
+          xref, "[] 0 d 1 w", strokeColor, null, null, strokeAlpha, null, (buffer, points) => {
             buffer.push(
               `${(points[0] + points[4]) / 2} ` +
               `${(points[1] + points[5]) / 2} m`,
@@ -5119,9 +5099,7 @@ class StampAnnotation extends MarkupAnnotation {
     const data = ctx.getImageData(0, 0, width, height).data;
     const buf32 = new Uint32Array(data.buffer);
     const hasAlpha = buf32.some(
-      FeatureTest.isLittleEndian
-        ? x => x >>> 24 !== 0xff
-        : x => (x & 0xff) !== 0xff
+      FeatureTest.isLittleEndian ? x => x >>> 24 !== 0xff : x => (x & 0xff) !== 0xff
     );
 
     if (hasAlpha) {
@@ -5132,8 +5110,7 @@ class StampAnnotation extends MarkupAnnotation {
       ctx.drawImage(bitmap, 0, 0);
     }
 
-    const jpegBufferPromise = canvas
-      .convertToBlob({ type: "image/jpeg", quality: 1 })
+    const jpegBufferPromise = canvas.convertToBlob({ type: "image/jpeg", quality: 1 })
       .then(blob => blob.arrayBuffer());
 
     const xobjectName = Name.get("XObject");
@@ -5270,14 +5247,3 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
         : null;
   }
 }
-
-export {
-  Annotation,
-  AnnotationBorderStyle,
-  AnnotationFactory,
-  getQuadPoints,
-  MarkupAnnotation,
-  PopupAnnotation,
-  WidgetAnnotation
-};
-

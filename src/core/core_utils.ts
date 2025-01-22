@@ -435,13 +435,13 @@ function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string
   return objectSize(actions) > 0 ? actions : null;
 }
 
-const XMLEntities: Record<number, string> = {
+const XMLEntities = {
   /* < */ 0x3c: "&lt;",
   /* > */ 0x3e: "&gt;",
   /* & */ 0x26: "&amp;",
   /* " */ 0x22: "&quot;",
   /* ' */ 0x27: "&apos;",
-};
+} as const;
 
 function* codePointIter(str: string) {
   for (let i = 0, ii = str.length; i < ii; i++) {
@@ -461,7 +461,7 @@ function encodeToXmlString(str: string) {
     const char = str.codePointAt(i)!;
     if (0x20 <= char && char <= 0x7e) {
       // ascii
-      const entity = XMLEntities[char];
+      const entity = XMLEntities[<keyof typeof XMLEntities>char];
       if (entity) {
         if (start < i) {
           buffer.push(str.substring(start, i));
