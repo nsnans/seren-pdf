@@ -399,6 +399,8 @@ export enum DictKey {
   MaxLen = "MaxLen",
   Stm = "Stm",
   CFM = "CFM",
+  DV = "DV",
+  Ff = "Ff",
 }
 
 /**
@@ -714,6 +716,8 @@ export type DictValueTypeMapping = {
   [DictKey.MaxLen]: number,
   [DictKey.Stm]: Ref,
   [DictKey.CFM]: Name,
+  [DictKey.DV]: string[] | string | null,
+  [DictKey.Ff]: number,
 }
 
 

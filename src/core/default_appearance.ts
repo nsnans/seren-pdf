@@ -36,6 +36,7 @@ import { Stream, StringStream } from "./stream";
 import { XRef } from "./xref";
 import { PointType, RectType } from "../display/display_utils";
 import { DocumentEvaluatorOptions } from "../display/api";
+import { MutableArray } from "../types";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str: string) {
@@ -45,7 +46,7 @@ class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   parse() {
     const operation = {
       fn: 0,
-      args: [] as any[],
+      args: <MutableArray<any>>[],
     };
     const result = {
       fontSize: 0,

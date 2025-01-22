@@ -283,13 +283,13 @@ function isNumberArray(arr: unknown, len: number | null): arr is number[] {
 }
 
 // Returns the matrix, or the fallback value if it's invalid.
-function lookupMatrix(arr: unknown, fallback: number[] | null) {
-  return isNumberArray(arr, 6) ? arr : fallback;
+function lookupMatrix(arr: unknown, fallback: TransformType | null): TransformType | null {
+  return isNumberArray(arr, 6) ? <TransformType>arr : fallback;
 }
 
 // Returns the rectangle, or the fallback value if it's invalid.
-function lookupRect(arr: unknown, fallback: number[] | null) {
-  return isNumberArray(arr, 4) ? arr : fallback;
+function lookupRect(arr: unknown, fallback: RectType | null): RectType | null {
+  return isNumberArray(arr, 4) ? <RectType>arr : fallback;
 }
 
 // Returns the normalized rectangle, or the fallback value if it's invalid.

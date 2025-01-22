@@ -402,7 +402,7 @@ abstract class AbstractMessageHandler {
         // Pull increases the desiredSize property of sink, so when it changes
         // from negative to positive, set ready property as resolved promise.
         if (streamSink.desiredSize <= 0 && data.desiredSize! > 0) {
-          streamSink.sinkCapability.resolve();
+          streamSink.sinkCapability!.resolve();
         }
         // Reset desiredSize property of sink on every pull.
         streamSink.desiredSize = data.desiredSize!;
@@ -465,7 +465,7 @@ abstract class AbstractMessageHandler {
           }
           comObj.postMessage(msg);
         });
-        streamSink.sinkCapability.reject(wrapReason(data.reason));
+        streamSink.sinkCapability!.reject(wrapReason(data.reason));
         streamSink.isCancelled = true;
         this.streamSinks.delete(streamId);
         break;

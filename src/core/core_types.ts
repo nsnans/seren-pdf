@@ -42,7 +42,7 @@ export interface StreamSink<Chunk> {
 
   desiredSize: number;
 
-  sinkCapability: PromiseWithResolvers<void>;
+  sinkCapability: PromiseWithResolvers<void> | null;
 
   isCancelled: boolean;
 
@@ -85,7 +85,7 @@ export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
   }
 
   get sinkCapability() {
-    return this.sink.sinkCapability;
+    return this.sink.sinkCapability!;
   };
 
   get ready() {
@@ -142,7 +142,7 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
     this.onClose = onClose;
   }
 
-   enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
+  enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
     if (this.isCancelled) {
       return;
     }
@@ -200,7 +200,7 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
 
 export interface FieldObject {
   id: string;
-  actions: Record<string, string[]> | null;
+  actions: Map<string, string[]> | null;
   name: string;
   strokeColor: Uint8ClampedArray | null;
   fillColor: Uint8ClampedArray | null;

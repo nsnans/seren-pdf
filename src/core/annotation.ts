@@ -644,22 +644,20 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
   return [xRatio, 0, 0, yRatio, rect[0] - minX * xRatio, rect[1] - minY * yRatio];
 }
 
-// 这个对象可能要拆分成多个子类
 export interface AnnotationData {
   annotationFlags: number;
   borderStyle: AnnotationBorderStyle;
   // TODO 要再推断一下
-  color?: Uint8ClampedArray | null;
-  backgroundColor: Uint8ClampedArray | null;
-  borderColor: Uint8ClampedArray | null;
+  color: Uint8ClampedArray<ArrayBuffer> | null;
+  backgroundColor: Uint8ClampedArray<ArrayBuffer> | null;
+  borderColor: Uint8ClampedArray<ArrayBuffer> | null;
   rotation: number;
   contentsObj: { str: string, dir: string };
   hasAppearance: boolean;
   id: string;
   modificationDate: string | null;
   rect: RectType | null;
-  // TODO 要再推断一下
-  subtype: unknown;
+  subtype: string | null;
   hasOwnCanvas: boolean;
   noRotate: boolean;
   noHTML: boolean;
@@ -667,9 +665,9 @@ export interface AnnotationData {
   structParent: number;
   kidIds?: string[]
   fieldName?: string
-  pageIndex?: number | null;
+  pageIndex?: number;
   it?: string;
-  quadPoints?: Float32Array | null;
+  quadPoints?: Float32Array<ArrayBuffer>;
   defaultAppearanceData?: {
     fontSize: number;
     fontName: string;
@@ -677,52 +675,7 @@ export interface AnnotationData {
   };
   textPosition?: number[];
   textContent?: string[];
-  replyType?: string;
-  inReplyTo?: string | null;
-  titleObj?: { str: string; dir: string; };
-  creationDate?: string | null;
-  popupRef?: string | null;
-  annotationType?: AnnotationType;
-  // TODO 要再推断一下
-  richText?: unknown;
-  actions?: Record<string, string[]> | null;
-  fieldValue?: string | string[] | null;
-  defaultFieldValue?: string | string[] | null;
-  alternativeText?: string;
-  fieldType?: string | null;
-  hidden?: boolean;
-  required?: boolean;
-  readOnly?: boolean;
-  fieldFlags?: number;
-  combo?: boolean;
-  multiSelect?: boolean;
-  options?: {
-    exportValue: string | string[] | null,
-    displayValue: string | string[] | null
-  }[];
-  multiLine?: boolean;
-  comb?: boolean;
-  maxLen?: number;
-  isTooltipOnly?: boolean;
-  pushButton?: boolean;
-  radioButton?: boolean;
-  checkBox?: boolean;
-  buttonValue?: string | null;
-  exportValue?: string;
-  textAlignment?: number | null;
-  doNotScroll?: boolean;
-  name?: string;
-  // TODO 要再推断一下
-  stateModel?: unknown;
-  // TODO 要再推断一下
-  state?: unknown;
-  parentRect?: [number, number, number, number] | null;
-  open?: boolean;
-  lineCoordinates?: number[];
-  lineEndings?: string[];
-  vertices?: Float32Array | null;
-  opacity?: number;
-  inkLists?: Float32Array[];
+  actions?: Map<string, string[]>;
 }
 
 export class Annotation<DATA extends AnnotationData> {
@@ -763,7 +716,7 @@ export class Annotation<DATA extends AnnotationData> {
 
   protected _streams: BaseStream[];
 
-  protected color: Uint8ClampedArray | null = null;
+  protected color: Uint8ClampedArray<ArrayBuffer> | null = null;
 
   protected _fallbackFontDict: Dict | null;
 
@@ -851,9 +804,9 @@ export class Annotation<DATA extends AnnotationData> {
         }
       }
 
-      this.data.actions = collectActions(xref, dict, AnnotationActionEventType);
+      this.data.actions = collectActions(xref, dict, AnnotationActionEventType) ?? undefined;
       this.data.fieldName = this._constructFieldName(dict);
-      this.data.pageIndex = params.pageIndex;
+      this.data.pageIndex = params.pageIndex ?? undefined;
     }
 
     const it = dict.getValue(DictKey.IT);
@@ -1007,13 +960,9 @@ export class Annotation<DATA extends AnnotationData> {
   setDefaultAppearance(params: AnnotationParameters) {
     const { dict, annotationGlobals } = params;
 
-    const defaultAppearance = getSingleInheritableProperty(dict, DictKey.DA) ||
-      annotationGlobals.acroForm.getValue(DictKey.DA);
-    this._defaultAppearance =
-      typeof defaultAppearance === "string" ? defaultAppearance : "";
-    this.data.defaultAppearanceData = parseDefaultAppearance(
-      this._defaultAppearance
-    );
+    const defaultAppearance = getSingleInheritableProperty(dict, DictKey.DA) || annotationGlobals.acroForm.getValue(DictKey.DA);
+    this._defaultAppearance = typeof defaultAppearance === "string" ? defaultAppearance : "";
+    this.data.defaultAppearanceData = parseDefaultAppearance(this._defaultAppearance);
   }
 
   /**
@@ -1046,8 +995,7 @@ export class Annotation<DATA extends AnnotationData> {
    *                                    annotation was last modified
    */
   setModificationDate(modificationDate: string) {
-    this.modificationDate =
-      typeof modificationDate === "string" ? modificationDate : null;
+    this.modificationDate = typeof modificationDate === "string" ? modificationDate : null;
   }
 
   /**
@@ -1332,31 +1280,16 @@ export class Annotation<DATA extends AnnotationData> {
 
     let optionalContent;
     if (this.oc) {
-      optionalContent = await evaluator.parseMarkedContentProps(
-        this.oc,
-        /* resources = */ null
-      );
+      optionalContent = await evaluator.parseMarkedContentProps(this.oc, null);
     }
     if (optionalContent !== undefined) {
       opList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
 
-    opList.addOp(OPS.beginAnnotation, [
-      id,
-      rect,
-      transform,
-      matrix,
-      isUsingOwnCanvas,
-    ]);
+    opList.addOp(OPS.beginAnnotation, [id, rect, transform, matrix, isUsingOwnCanvas]);
 
-    await evaluator.getOperatorList(
-      appearance,
-      task,
-      resources!,
-      opList,
-      null,
-      this._fallbackFontDict,
-    );
+    await evaluator.getOperatorList(appearance, task, resources!, opList, null, this._fallbackFontDict);
+
     opList.addOp(OPS.endAnnotation, []);
 
     if (optionalContent !== undefined) {
@@ -1374,26 +1307,23 @@ export class Annotation<DATA extends AnnotationData> {
     return false;
   }
 
-  async extractTextContent(
-    evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType
-  ): Promise<void> {
+  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType): Promise<void> {
     if (!this.appearance) {
       return;
     }
 
     const resources = await this.loadResources(
-      ["ExtGState", "Font", "Properties", "XObject"],
-      this.appearance
+      ["ExtGState", "Font", "Properties", "XObject"], this.appearance
     );
 
-    const text = <string[]>[];
-    const buffer = <string[]>[];
-    let firstPosition = null;
+    const text: string[] = [];
+    const buffer: string[] = [];
+    let firstPosition: PointType | null = null;
 
     const sink: StreamSink<EvaluatorTextContent> = {
+
       desiredSize: Infinity,
-      // TODO TODO 原来是true，但是这段代码必须改，不然就是在瞎搞
-      // 不过改完可能会有bug，需要特别研究一下
+
       ready: Promise.resolve(),
 
       enqueue(chunk, _size: number) {
@@ -1401,7 +1331,7 @@ export class Annotation<DATA extends AnnotationData> {
           if (!isFullTextContentItem(item)) {
             continue;
           }
-          firstPosition ||= item.transform!.slice(-2);
+          firstPosition ||= <PointType>item.transform!.slice(-2);
           buffer.push(item.str);
           if (item.hasEOL) {
             text.push(buffer.join("").trimEnd());
@@ -1413,6 +1343,8 @@ export class Annotation<DATA extends AnnotationData> {
       error: (_reason: any) => { },
       onPull: null,
       onCancel: null,
+      sinkCapability: null,
+      isCancelled: false
     };
 
     await evaluator.getTextContent(
@@ -1427,11 +1359,11 @@ export class Annotation<DATA extends AnnotationData> {
 
     if (text.length > 1 || text[0]) {
       const appearanceDict = this.appearance.dict;
-      const bbox = lookupRect(appearanceDict!.getArrayValue(DictKey.BBox), null);
-      const matrix = lookupMatrix(appearanceDict!.getArrayValue(DictKey.Matrix), null);
+      const bbox = lookupRect(appearanceDict!.getArrayValue(DictKey.BBox), null)!;
+      const matrix = lookupMatrix(appearanceDict!.getArrayValue(DictKey.Matrix), null)!;
 
       this.data.textPosition = this._transformPoint(
-        firstPosition, bbox, matrix
+        firstPosition!, bbox, matrix
       );
       this.data.textContent = text;
     }
@@ -1734,7 +1666,15 @@ export class AnnotationBorderStyle {
   }
 }
 
-export class MarkupAnnotation extends Annotation {
+interface MarkupData extends AnnotationData {
+  replyType: string;
+  inReplyTo: string | null;
+  titleObj: { str: string; dir: string; };
+  creationDate: string | null;
+  popupRef: string | null;
+}
+
+export class MarkupAnnotation extends Annotation<MarkupData> {
 
   protected creationDate: string | null = null;
 
@@ -1748,8 +1688,7 @@ export class MarkupAnnotation extends Annotation {
       this.data.inReplyTo = rawIRT instanceof Ref ? rawIRT.toString() : null;
 
       const rt = dict.getValue(DictKey.RT);
-      this.data.replyType =
-        rt instanceof Name ? rt.name : AnnotationReplyType.REPLY;
+      this.data.replyType = rt instanceof Name ? rt.name : AnnotationReplyType.REPLY;
     }
     let popupRef = null;
 
@@ -1926,9 +1865,7 @@ export class MarkupAnnotation extends Annotation {
 
     if (ap) {
       const apRef = xref.getNewTemporaryRef();
-      annotationDict = this.createNewDict(annotation, xref, {
-        apRef,
-      });
+      annotationDict = this.createNewDict(annotation, xref, { apRef });
       await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
@@ -1956,16 +1893,11 @@ export class MarkupAnnotation extends Annotation {
   ) {
     const ap = await this.createNewAppearanceStream(annotation, xref, params);
     const annotationDict = this.createNewDict(
-      annotation,
-      xref,
-      ap ? { ap } : {}
+      annotation, xref, ap ? { ap } : {}
     );
 
     const newAnnotation = new this.prototype.constructor({
-      dict: annotationDict,
-      xref,
-      annotationGlobals,
-      evaluatorOptions: params.evaluatorOptions,
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
     });
 
     if (annotation.ref) {
@@ -1976,7 +1908,19 @@ export class MarkupAnnotation extends Annotation {
   }
 }
 
-export class WidgetAnnotation extends Annotation {
+interface WidgetData extends AnnotationData {
+  fieldValue: string | string[] | null;
+  annotationType: AnnotationType;
+  defaultFieldValue: string | string[] | null;
+  alternativeText: string;
+  fieldType: string | null;
+  fieldFlags: number;
+  hidden: boolean;
+  required: boolean;
+  readOnly: boolean;
+}
+
+export class WidgetAnnotation extends Annotation<WidgetData> {
 
   protected _hasText: boolean = false;
 
@@ -1986,6 +1930,8 @@ export class WidgetAnnotation extends Annotation {
     appearanceResources: Dict,
     mergedResources: Dict
   }
+
+  protected _needAppearances: boolean;
 
   constructor(params: AnnotationParameters) {
     super(params);
@@ -2000,7 +1946,7 @@ export class WidgetAnnotation extends Annotation {
     }
 
     if (data.actions === undefined) {
-      data.actions = collectActions(xref, dict, AnnotationActionEventType);
+      data.actions = collectActions(xref, dict, AnnotationActionEventType) ?? undefined;
     }
 
     let fieldValue = getSingleInheritableProperty(dict, DictKey.V, true);
@@ -2020,10 +1966,8 @@ export class WidgetAnnotation extends Annotation {
 
     this.setDefaultAppearance(params);
 
-    data.hasAppearance ||=
-      this._needAppearances &&
-      data.fieldValue !== undefined &&
-      data.fieldValue !== null;
+    data.hasAppearance ||= this._needAppearances &&
+      data.fieldValue !== undefined && data.fieldValue !== null;
 
     const fieldType = getSingleInheritableProperty(dict, DictKey.FT);
     data.fieldType = fieldType instanceof Name ? fieldType.name : null;
@@ -2041,7 +1985,7 @@ export class WidgetAnnotation extends Annotation {
       ),
     };
 
-    const fieldFlags = <number>getSingleInheritableProperty(dict, DictKey.Ff);
+    const fieldFlags = getSingleInheritableProperty(dict, DictKey.Ff)!;
     if (!Number.isInteger(fieldFlags) || fieldFlags < 0) {
       data.fieldFlags = 0;
     } else {
@@ -2050,8 +1994,7 @@ export class WidgetAnnotation extends Annotation {
 
     data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
     data.required = this.hasFieldFlag(AnnotationFieldFlag.REQUIRED);
-    data.hidden =
-      this._hasFlag(data.annotationFlags, AnnotationFlag.HIDDEN) ||
+    data.hidden = this._hasFlag(data.annotationFlags, AnnotationFlag.HIDDEN) ||
       this._hasFlag(data.annotationFlags, AnnotationFlag.NOVIEW);
   }
 
@@ -2064,10 +2007,9 @@ export class WidgetAnnotation extends Annotation {
    *   form value.
    * @returns {Array<string>|string|null}
    */
-  _decodeFormValue(formValue: Array<string> | Name | string | unknown): string | string[] | null {
+  _decodeFormValue(formValue: string[] | Name | string | unknown): string | string[] | null {
     if (Array.isArray(formValue)) {
-      return (formValue as string[])
-        .filter(item => typeof item === "string")
+      return (formValue as string[]).filter(item => typeof item === "string")
         .map(item => stringToPDFString(item));
     } else if (formValue instanceof Name) {
       return stringToPDFString(formValue.name);
@@ -2082,10 +2024,9 @@ export class WidgetAnnotation extends Annotation {
    *
    * @public
    * @memberof WidgetAnnotation
-   * @param {number} flag - Hexadecimal representation for an annotation
+   * @param flag - Hexadecimal representation for an annotation
    *                        field characteristic
-   * @returns {boolean}
-   * @see {@link shared/util.js}
+   * @see {@link ../shared/util.ts}
    */
   hasFieldFlag(flag: number): boolean {
     return !!(this.data.fieldFlags! & flag);
