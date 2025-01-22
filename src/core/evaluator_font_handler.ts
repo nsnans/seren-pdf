@@ -447,7 +447,12 @@ export class EvaluatorFontHandler {
           ascent: null,
           descent: null,
           cssFontInfo: null,
-          scaleFactors: null
+          scaleFactors: null,
+          builtInEncoding: [],
+          privateData: null,
+          glyphNames: [],
+          seacMap: null,
+          ascentScaled: false,
         };
         const widths = dict.getValue(DictKey.Widths);
 
@@ -533,9 +538,15 @@ export class EvaluatorFontHandler {
       throw new FormatError("invalid font name");
     }
 
-    let fontFile: BaseStream | null, subtype, length1, length2, length3;
+    let fontFile: BaseStream | null, subtype;
+    let length1: number | null = null;
+    let length2: number | null = null;
+    let length3: number | null = null;
     try {
-      fontFile = (<Dict>descriptor).get(DictKey.FontFile, DictKey.FontFile2, DictKey.FontFile3);
+
+      fontFile = (<Dict>descriptor).getValueWithFallback2(
+        DictKey.FontFile, DictKey.FontFile2, DictKey.FontFile3
+      );
 
       if (fontFile) {
         if (!(fontFile instanceof BaseStream)) {
@@ -560,9 +571,9 @@ export class EvaluatorFontHandler {
         if (subtypeEntry instanceof Name) {
           subtype = subtypeEntry.name;
         }
-        length1 = fontFile.dict.get(DictKey.Length1);
-        length2 = fontFile.dict.get(DictKey.Length2);
-        length3 = fontFile.dict.get(DictKey.Length3);
+        length1 = fontFile.dict.getValue(DictKey.Length1);
+        length2 = fontFile.dict.getValue(DictKey.Length2);
+        length3 = fontFile.dict.getValue(DictKey.Length3);
       }
     } else if (cssFontInfo) {
       // tomb for xfa
@@ -611,7 +622,7 @@ export class EvaluatorFontHandler {
     if (!Number.isInteger(flags)) {
       flags = 0;
     }
-    let italicAngle = (<Dict>descriptor).get(DictKey.ItalicAngle);
+    let italicAngle = (<Dict>descriptor).getValue(DictKey.ItalicAngle);
     if (typeof italicAngle !== "number") {
       italicAngle = 0;
     }
@@ -659,16 +670,21 @@ export class EvaluatorFontHandler {
       vertical: false,
       cidEncoding: "",
       defaultVMetrics: [],
-      vmetrics: []
+      vmetrics: [],
+      privateData: null,
+      glyphNames: [],
+      seacMap: null,
+      ascentScaled: false,
+      builtInEncoding: []
     };
 
     if (composite) {
-      const cidEncoding = baseDict.get(DictKey.Encoding);
+      const cidEncoding = baseDict.getValue(DictKey.Encoding);
       if (cidEncoding instanceof Name) {
         properties.cidEncoding = cidEncoding.name;
       }
       const cMap = await CMapFactory.create(
-        cidEncoding, this.context.fetchBuiltInCMapBound, null
+        <Name | BaseStream>cidEncoding, this.context.fetchBuiltInCMapBound, null
       );
       properties.cMap = cMap;
       properties.vertical = properties.cMap.vertical;
@@ -753,7 +769,7 @@ export class EvaluatorFontHandler {
       const widths = dict.getValue(DictKey.W);
       if (Array.isArray(widths)) {
         for (let i = 0, ii = widths.length; i < ii; i++) {
-          let start = xref.fetchIfRef(widths[i++]);
+          let start = <number>xref.fetchIfRef(widths[i++]);
           if (!Number.isInteger(start)) {
             break; // Invalid /W data.
           }
@@ -772,7 +788,7 @@ export class EvaluatorFontHandler {
             if (typeof width !== "number") {
               continue;
             }
-            for (let j = start; j <= code; j++) {
+            for (let j = start; j <= <number>code; j++) {
               glyphsWidths[j] = width;
             }
           } else {
@@ -785,10 +801,10 @@ export class EvaluatorFontHandler {
         const dw2 = dict.getArrayValue(DictKey.DW2);
         let vmetrics = isNumberArray(dw2, 2) ? dw2 : [880, -1000];
         defaultVMetrics = [vmetrics[1], defaultWidth * 0.5, vmetrics[0]];
-        vmetrics = dict.get(DictKey.W2);
+        vmetrics = <number[]>dict.getValue(DictKey.W2);
         if (Array.isArray(vmetrics)) {
           for (let i = 0, ii = vmetrics.length; i < ii; i++) {
-            let start = xref.fetchIfRef(vmetrics[i++]);
+            let start = <number>xref.fetchIfRef(vmetrics[i++]);
             if (!Number.isInteger(start)) {
               break; // Invalid /W2 data.
             }
@@ -797,9 +813,9 @@ export class EvaluatorFontHandler {
             if (Array.isArray(code)) {
               for (let j = 0, jj = code.length; j < jj; j++) {
                 const vmetric: number[] = [
-                  xref.fetchIfRef(code[j++]),
-                  xref.fetchIfRef(code[j++]),
-                  xref.fetchIfRef(code[j]),
+                  <number>xref.fetchIfRef(code[j++]),
+                  <number>xref.fetchIfRef(code[j++]),
+                  <number>xref.fetchIfRef(code[j]),
                 ];
                 if (isNumberArray(vmetric, null)) {
                   glyphsVMetrics[start] = vmetric;
@@ -815,7 +831,7 @@ export class EvaluatorFontHandler {
               if (!isNumberArray(vmetric, null)) {
                 continue;
               }
-              for (let j = start; j <= code; j++) {
+              for (let j = start; j <= <number>code; j++) {
                 glyphsVMetrics[j] = vmetric;
               }
             } else {
@@ -1066,7 +1082,7 @@ export class EvaluatorFontHandler {
       }
 
       try {
-        font = this.context.xref.fetchIfRef(fontRef);
+        font = <Dict>this.context.xref.fetchIfRef(fontRef);
       } catch (ex) {
         warn(`loadFont - lookup failed: "${ex}".`);
       }
@@ -1150,27 +1166,27 @@ export class EvaluatorFontHandler {
     if (fontRefIsRef) {
       this.context.fontCache.put(fontRef!.toString(), promise);
     } else {
-      font.cacheKey = `cacheKey_${fontID}`;
-      this.context.fontCache.put(font.cacheKey, promise);
+      const cacheKey = `cacheKey_${fontID}`;
+      this.context.fontKeyCache.set(font, cacheKey);
+      this.context.fontCache.put(cacheKey, promise);
     }
 
     // Keep track of each font we translated so the caller can
     // load them asynchronously before calling display on a page.
     font.loadedName = `${this.context.idFactory.getDocId()}_${fontID}`;
 
-    this.translateFont(preEvaluatedFont)
-      .then(translatedFont => {
-        resolve(new TranslatedFont(
-          font.loadedName!, translatedFont, font, this.context.options,
-        ));
-      }).catch(reason => {
-        // TODO reject?
-        warn(`loadFont - translateFont failed: "${reason}".`);
-        const errFont = new ErrorFont(reason instanceof Error ? reason.message : reason)
-        resolve(
-          new TranslatedFont(font.loadedName!, errFont, font, this.context.options)
-        );
-      });
+    this.translateFont(preEvaluatedFont).then(translatedFont => {
+      resolve(new TranslatedFont(
+        font.loadedName!, translatedFont, font, this.context.options,
+      ));
+    }).catch(reason => {
+      // TODO reject?
+      warn(`loadFont - translateFont failed: "${reason}".`);
+      const errFont = new ErrorFont(reason instanceof Error ? reason.message : reason)
+      resolve(
+        new TranslatedFont(font.loadedName!, errFont, font, this.context.options)
+      );
+    });
     return promise;
   }
 
@@ -1188,11 +1204,11 @@ export class EvaluatorFontHandler {
       //  - get the descendant font
       //  - set the type according to the descendant font
       //  - get the FontDescriptor from the descendant font
-      const df = dict.get(DictKey.DescendantFonts);
+      const df = dict.getValue(DictKey.DescendantFonts);
       if (!df) {
         throw new FormatError("Descendant fonts are not specified");
       }
-      dict = Array.isArray(df) ? this.context.xref.fetchIfRef(df[0]) : df;
+      dict = Array.isArray(df) ? <Dict>this.context.xref.fetchIfRef(df[0]) : df;
 
       if (!(dict instanceof Dict)) {
         throw new FormatError("Descendant font is not a dictionary.");

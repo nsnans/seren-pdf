@@ -760,6 +760,12 @@ export class Dict {
     return <DictValueTypeMapping[T1] | DictValueTypeMapping[T2]>this.get(key1, key2);
   }
 
+  getValueWithFallback2<T1 extends DictKey, T2 extends DictKey, T3 extends DictKey>(
+    key1: T1, key2: T2, key3: T3
+  ): DictValueTypeMapping[T1] | DictValueTypeMapping[T2] | DictValueTypeMapping[T3] {
+    return <DictValueTypeMapping[T1] | DictValueTypeMapping[T2] | DictValueTypeMapping[T3]>this.get(key1, key2, key3);
+  }
+
   // 自动将Ref对象解引用
   get(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map.get(key1);

@@ -120,7 +120,7 @@ class AnnotationFactory {
       // Only necessary to prevent the `Catalog.attachments`-getter, used
       // with "GoToE" actions, from throwing and thus breaking parsing:
       pdfManager.ensureCatalog(catalog => catalog.attachments),
-    ]).then(
+    ] as const).then(
       // eslint-disable-next-line arrow-body-style
       ([acroForm, structTreeRoot, baseUrl, attachments]) => {
         return {

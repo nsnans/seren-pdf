@@ -1321,10 +1321,8 @@ class Font {
         case "CIDFontType0":
           this.mimetype = "font/opentype";
 
-          const cff =
-            subtype === "Type1C" || subtype === "CIDFontType0C"
-              ? new CFFFont(file, properties)
-              : new Type1Font(name, file, properties);
+          const cff = subtype === "Type1C" || subtype === "CIDFontType0C"
+            ? new CFFFont(file, properties) : new Type1Font(name, file, properties);
 
           adjustWidths(properties);
 
@@ -1366,7 +1364,7 @@ class Font {
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
     this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
-    this.seacMap = properties.seacMap;
+    this.seacMap = properties.seacMap ?? new Map();
   }
 
   get renderer() {

@@ -412,7 +412,7 @@ class ColorSpace {
    * @private
    */
   static _parse(cs: Name | Ref | (Ref | Name)[], xref: XRef, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
-    cs = xref.fetchIfRef(cs);
+    cs = <Name | Ref[]>xref.fetchIfRef(cs);
     if (cs instanceof Name) {
       switch (cs.name) {
         case "G":
@@ -453,7 +453,7 @@ class ColorSpace {
       }
     }
     if (Array.isArray(cs)) {
-      const mode = xref.fetchIfRef(cs[0]).name;
+      const mode = (<Name>xref.fetchIfRef(cs[0])).name;
       let params, numComps, baseCS, whitePoint, blackPoint, gamma;
 
       switch (mode) {
@@ -510,8 +510,8 @@ class ColorSpace {
         case "I":
         case "Indexed":
           baseCS = this._parse(cs[1], xref, resources, pdfFunctionFactory);
-          const hiVal = Math.max(0, Math.min(xref.fetchIfRef(cs[2]), 255));
-          const lookup = xref.fetchIfRef(cs[3]);
+          const hiVal = Math.max(0, Math.min(<number>xref.fetchIfRef(cs[2]), 255));
+          const lookup = <BaseStream>xref.fetchIfRef(cs[3]);
           return new IndexedCS(baseCS, hiVal, lookup);
         case "Separation":
         case "DeviceN":

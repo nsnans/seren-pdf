@@ -49,7 +49,7 @@ class PDFFunctionFactory {
     const parsedFunction = PDFFunction.parse(
       this.xref,
       this.isEvalSupported,
-      fn instanceof Ref ? this.xref.fetch(fn) : fn,
+      fn instanceof Ref ? <BaseStream | Dict>this.xref.fetch(fn) : fn,
     );
 
     // Attempt to cache the parsed Function, by reference.
@@ -66,7 +66,7 @@ class PDFFunctionFactory {
     const parsedFunction = PDFFunction.parseArray(
       this.xref,
       this.isEvalSupported,
-      fnObj instanceof Ref ? this.xref.fetch(fnObj) : fnObj,
+      fnObj instanceof Ref ? <(BaseStream | Dict)[]>this.xref.fetch(fnObj) : <(BaseStream | Dict)[]>fnObj,
     );
 
     // Attempt to cache the parsed Function, by reference.
@@ -193,7 +193,7 @@ class PDFFunction {
     const fnArray: ParserConstructFunction[] = [];
     for (const fn of fnObj) {
       fnArray.push(
-        this.parse(xref, isEvalSupported, xref.fetchIfRef(fn))
+        this.parse(xref, isEvalSupported, <BaseStream | Dict>xref.fetchIfRef(fn))
       );
     }
     return (
@@ -374,7 +374,7 @@ class PDFFunction {
 
     const fns: ParserConstructFunction[] = [];
     for (const fn of dict.getValue(DictKey.Functions)) {
-      fns.push(this.parse(xref, isEvalSupported, xref.fetchIfRef(fn)));
+      fns.push(this.parse(xref, isEvalSupported, <BaseStream | Dict>xref.fetchIfRef(fn)));
     }
 
     const bounds = toNumberArray(dict.getArrayValue(DictKey.Bounds))!;

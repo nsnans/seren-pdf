@@ -29,6 +29,7 @@ import { Stream } from "./stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { TransformType } from "../display/display_utils";
 import { Font } from "./fonts";
+import { EvaluatorProperties } from "./evaluator";
 
 // TODO: use DataView and its methods.
 
@@ -132,9 +133,67 @@ type CFFInfo = {
   fdArray: CFFDict[];
 }
 
-function parseCff(data: Uint8Array<ArrayBuffer>, start: number, end: number, seacAnalysisEnabled: boolean): CFFInfo {
+function defaultEvaluatorProperties(): EvaluatorProperties {
+  const prop: EvaluatorProperties = {
+    privateData: null,
+    glyphNames: [],
+    seacMap: null,
+    ascentScaled: false,
+    builtInEncoding: [],
+    type: "",
+    name: "",
+    subtype: null,
+    loadedName: null,
+    systemFontInfo: null,
+    widths: {},
+    defaultWidth: 0,
+    isSimulatedFlags: false,
+    flags: 0,
+    firstChar: 0,
+    lastChar: 0,
+    toUnicode: null,
+    xHeight: 0,
+    capHeight: 0,
+    italicAngle: 0,
+    isType3Font: false,
+    composite: false,
+    cidSystemInfo: null,
+    defaultEncoding: null,
+    file: null,
+    hasIncludedToUnicodeMap: false,
+    dict: null,
+    hasEncoding: false,
+    baseEncodingName: null,
+    differences: [],
+    cidToGidMap: [],
+    fallbackToUnicode: [],
+    cMap: null,
+    vertical: false,
+    cidEncoding: "",
+    defaultVMetrics: [],
+    vmetrics: [],
+    length1: null,
+    length2: null,
+    length3: null,
+    fixedPitch: false,
+    fontMatrix: null,
+    bbox: null,
+    ascent: null,
+    descent: null,
+    cssFontInfo: null,
+    scaleFactors: null
+  }
+  return prop
+}
+
+function parseCff(
+  data: Uint8Array<ArrayBuffer>,
+  start: number,
+  end: number,
+  seacAnalysisEnabled: boolean
+): CFFInfo {
   // 这个变量根本就没有用到过
-  const properties = {};
+  const properties = defaultEvaluatorProperties();
   const parser = new CFFParser(
     new Stream(data, start, end - start), properties, seacAnalysisEnabled
   );

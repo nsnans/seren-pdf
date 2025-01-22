@@ -246,7 +246,7 @@ export interface CatalogOutlineItem {
   } | null;
   title: string;
   color: Uint8ClampedArray<ArrayBuffer>;
-  count: number;
+  count: number | null;
   bold: boolean;
   italic: boolean;
   items: CatalogOutlineItem[];
@@ -259,6 +259,8 @@ export class Catalog {
   protected xref: XRef;
 
   public fontCache = new RefSetCache<string, Promise<TranslatedFont>>();
+
+  public fontKeyCache = new Map<Dict, string>();
 
   public builtInCMapCache = new Map<string, any>();
 
@@ -515,7 +517,7 @@ export class Catalog {
 
     while (queue.length > 0) {
       const i = queue.shift()!;
-      const outlineDict: Dict | null = xref.fetchIfRef(i.obj);
+      const outlineDict = <Dict | null>xref.fetchIfRef(i.obj);
       if (outlineDict === null) {
         continue;
       }
@@ -530,10 +532,10 @@ export class Catalog {
         this.baseUrl,
         this.attachments,
       );
-      const title = outlineDict.get(DictKey.Title);
-      const flags = outlineDict.get(DictKey.F) || 0;
+      const title = outlineDict.getValue(DictKey.Title);
+      const flags = <number>outlineDict.getValue(DictKey.F) || 0;
       const color = outlineDict.getArrayValue(DictKey.C);
-      const count = outlineDict.get(DictKey.Count);
+      const count = <number>outlineDict.getValue(DictKey.Count);
       let rgbColor = blackColor;
 
       // We only need to parse the color when it's valid, and non-default.
@@ -1332,12 +1334,7 @@ export class Catalog {
     this.pageIndexCache.clear();
     this.pageDictCache.clear();
     this.nonBlendModesSet.clear();
-
-    const translatedFonts = await Promise.all(this.fontCache);
-
-    for (const { dict } of translatedFonts) {
-      delete dict.cacheKey;
-    }
+    this.fontKeyCache.clear();
     this.fontCache.clear();
     this.builtInCMapCache.clear();
     this.standardFontDataCache.clear();
@@ -1400,7 +1397,8 @@ export class Catalog {
             continue;
           }
         }
-        nodesToVisit.push(obj);
+        // 不太确定是不是这两种类型，需要实际的跑一下这个代码
+        nodesToVisit.push(<Ref | Dict>obj);
         continue;
       }
 
@@ -1414,7 +1412,7 @@ export class Catalog {
 
       let count = currentNode.getRaw(DictKey.Count);
       if (count instanceof Ref) {
-        count = await xref.fetchAsync(count);
+        count = <number>await xref.fetchAsync(count);
       }
       if (Number.isInteger(count) && <number>count >= 0) {
         // Cache the Kids count, since it can reduce redundant lookups in
@@ -1432,7 +1430,7 @@ export class Catalog {
 
       let kids = currentNode.getRaw(DictKey.Kids);
       if (kids instanceof Ref) {
-        kids = await xref.fetchAsync(kids);
+        kids = <(string | Ref | Dict)[]>await xref.fetchAsync(kids);
       }
       if (!Array.isArray(kids)) {
         // Prevent errors in corrupt PDF documents that violate the
@@ -1440,7 +1438,7 @@ export class Catalog {
         // array, rather than using indirect objects (fixes issue9540.pdf).
         let type = currentNode.getRaw(DictKey.Type);
         if (type instanceof Ref) {
-          type = await xref.fetchAsync(type);
+          type = <Name>await xref.fetchAsync(type);
         }
         if (isName(type, "Page") || !currentNode.has(DictKey.Kids)) {
           if (currentPageIndex === pageIndex) {
@@ -1464,10 +1462,9 @@ export class Catalog {
         // when looking for a page near the end, if all the pages are top level.
         if (
           currentNode === this.toplevelPagesDict &&
-          lastKid instanceof Ref &&
-          !pageDictCache.has(lastKid)
+          lastKid instanceof Ref && !pageDictCache.has(lastKid)
         ) {
-          pageDictCache.put(lastKid, xref.fetchAsync(lastKid));
+          pageDictCache.put(lastKid, <Promise<Dict>>xref.fetchAsync(lastKid));
         }
       }
     }
@@ -1477,7 +1474,6 @@ export class Catalog {
 
   /**
    * Eagerly fetches the entire /Pages-tree; should ONLY be used as a fallback.
-   * @returns {Promise<Map>}
    */
   async getAllPageDicts(recoveryMode = false) {
     const { ignoreErrors } = this.pdfManager.evaluatorOptions;
@@ -1489,9 +1485,8 @@ export class Catalog {
     if (pagesRef instanceof Ref) {
       visitedNodes.put(pagesRef);
     }
-    const map = new Map(),
-      xref = this.xref,
-      pageIndexCache = this.pageIndexCache;
+    const map = new Map(), xref = this.xref;
+    const pageIndexCache = this.pageIndexCache;
     let pageIndex = 0;
 
     function addPageDict(pageDict: Dict, pageRef: Ref | null) {
@@ -1522,7 +1517,7 @@ export class Catalog {
       let kids = currentNode.getRaw(DictKey.Kids);
       if (kids instanceof Ref) {
         try {
-          kids = await xref.fetchAsync(kids);
+          kids = <(string | Ref | Dict)[]>await xref.fetchAsync(kids);
         } catch (ex) {
           addPageError(ex);
           break;
@@ -1576,7 +1571,7 @@ export class Catalog {
       let type = obj.getRaw(DictKey.Type);
       if (type instanceof Ref) {
         try {
-          type = await xref.fetchAsync(type);
+          type = <Name>await xref.fetchAsync(type);
         } catch (ex) {
           addPageError(ex);
           break;
@@ -1592,10 +1587,10 @@ export class Catalog {
     return map;
   }
 
-  getPageIndex(pageRef: Ref) {
+  getPageIndex(pageRef: Ref): Promise<number> {
     const cachedPageIndex = this.pageIndexCache.get(pageRef);
     if (cachedPageIndex !== undefined) {
-      return Promise.resolve(cachedPageIndex);
+      return Promise.resolve(<number>cachedPageIndex);
     }
 
     // The page tree nodes have the count of all the leaves below them. To get
@@ -1603,81 +1598,71 @@ export class Catalog {
     // adding the count of siblings to the left of the node.
     const xref = this.xref;
 
-    function pagesBeforeRef(kidRef: Ref) {
+    async function pagesBeforeRef(kidRef: Ref): Promise<[number, Ref] | null> {
       let total = 0;
       let parentRef: Ref;
 
-      return xref
-        .fetchAsync(kidRef)
-        .then(function (node: Dict | Ref) {
-          if (
-            isRefsEqual(kidRef, pageRef) &&
-            !isDict(node, "Page") &&
-            !(node instanceof Dict && !node.has(DictKey.Type) && node.has(DictKey.Contents))
-          ) {
-            throw new FormatError(
-              "The reference does not point to a /Page dictionary."
-            );
+      return (<Promise<Dict | Ref>>xref.fetchAsync(kidRef)).then(node => {
+        if (
+          isRefsEqual(kidRef, pageRef) && !isDict(node, "Page") &&
+          !(node instanceof Dict && !node.has(DictKey.Type) && node.has(DictKey.Contents))
+        ) {
+          throw new FormatError(
+            "The reference does not point to a /Page dictionary."
+          );
+        }
+        if (!node) {
+          return null;
+        }
+        if (!(node instanceof Dict)) {
+          throw new FormatError("Node must be a dictionary.");
+        }
+        parentRef = <Ref>node.getRaw(DictKey.Parent);
+        return <Promise<Dict | null>>node.getAsyncValue(DictKey.Parent);
+      }).then(parent => {
+        if (!parent) {
+          return null;
+        }
+        if (!(parent instanceof Dict)) {
+          throw new FormatError("Parent must be a dictionary.");
+        }
+        return <Promise<Ref[]>>parent.getAsyncValue(DictKey.Kids);
+      }).then(kids => {
+        if (!kids) {
+          return null;
+        }
+        const kidPromises = [];
+        let found = false;
+        for (const kid of kids) {
+          if (!(kid instanceof Ref)) {
+            throw new FormatError("Kid must be a reference.");
           }
-          if (!node) {
-            return null;
+          if (isRefsEqual(kid, kidRef)) {
+            found = true;
+            break;
           }
-          if (!(node instanceof Dict)) {
-            throw new FormatError("Node must be a dictionary.");
-          }
-          parentRef = <Ref>node.getRaw(DictKey.Parent);
-          return node.getAsyncValue(DictKey.Parent);
-        })
-        .then(function (parent: Dict | null) {
-          if (!parent) {
-            return null;
-          }
-          if (!(parent instanceof Dict)) {
-            throw new FormatError("Parent must be a dictionary.");
-          }
-          return parent.getAsyncValue(DictKey.Kids);
-        })
-        .then(function (kids: Ref[]) {
-          if (!kids) {
-            return null;
-          }
-
-          const kidPromises = [];
-          let found = false;
-          for (const kid of kids) {
-            if (!(kid instanceof Ref)) {
-              throw new FormatError("Kid must be a reference.");
+          kidPromises.push((<Promise<Dict>>xref.fetchAsync(kid)).then(obj => {
+            if (!(obj instanceof Dict)) {
+              throw new FormatError("Kid node must be a dictionary.");
             }
-            if (isRefsEqual(kid, kidRef)) {
-              found = true;
-              break;
+            if (obj.has(DictKey.Count)) {
+              total += <number>obj.getValue(DictKey.Count);
+            } else {
+              // Page leaf node.
+              total++;
             }
-            kidPromises.push(
-              xref.fetchAsync(kid).then(function (obj: Dict) {
-                if (!(obj instanceof Dict)) {
-                  throw new FormatError("Kid node must be a dictionary.");
-                }
-                if (obj.has(DictKey.Count)) {
-                  total += <number>obj.getValue(DictKey.Count);
-                } else {
-                  // Page leaf node.
-                  total++;
-                }
-              })
-            );
-          }
-          if (!found) {
-            throw new FormatError("Kid reference not found in parent's kids.");
-          }
-          return Promise.all(kidPromises).then(function () {
-            return [total, parentRef];
-          });
-        });
+          }));
+        }
+        if (!found) {
+          throw new FormatError("Kid reference not found in parent's kids.");
+        }
+        return Promise.all(kidPromises).then(() => [total, parentRef]);
+      });
     }
 
     let total = 0;
-    const next = (ref: Ref) =>
-      pagesBeforeRef(ref).then((args: [number, Ref]) => {
+    const next: (ref: Ref) => Promise<number> = (ref: Ref) =>
+      pagesBeforeRef(ref).then(args => {
         if (!args) {
           this.pageIndexCache.put(pageRef, total);
           return total;

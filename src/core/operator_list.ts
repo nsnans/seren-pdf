@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, OPArg, RenderingIntentFlag, warn } from "../shared/util";
+import { ImageKind, OPS, RenderingIntentFlag, warn } from "../shared/util";
 import { MutableArray } from "../types";
 import { StreamSink } from "./core_types";
 import { OptionalContent } from "./image_utils";
@@ -501,7 +501,7 @@ class NullOptimizer {
 
   _optimize() { }
 
-  push(fn: OPS, args: OPArg[OPS]) {
+  push(fn: OPS, args: MutableArray<any> | null) {
     this.queue.fnArray.push(fn);
     this.queue.argsArray.push(<(any[] | null)>args);
     this._optimize();
@@ -700,7 +700,7 @@ export class OperatorList {
     return this._totalLength + this.length;
   }
 
-  // args为某种类型的数组或null
+  // args为某种类型的数组或null，这个日后了解更多之后，
   addOp(fn: OPS, args: MutableArray<any> | null) {
     this.optimizer.push(fn, args);
     this.weight++;

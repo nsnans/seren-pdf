@@ -37,14 +37,14 @@ export class EvaluatorBaseHandler {
     let optionalContent: Dict;
     if (contentProperties instanceof Name) {
       const properties = resources!.getValue(DictKey.Properties);
-      optionalContent = properties.get(<DictKey>contentProperties.name);
+      optionalContent = <Dict>properties.get(<DictKey>contentProperties.name);
     } else if (contentProperties instanceof Dict) {
       optionalContent = contentProperties;
     } else {
       throw new FormatError("Optional content properties malformed.");
     }
 
-    const optionalContentType = optionalContent.get(DictKey.Type)?.name;
+    const optionalContentType = (<Name>optionalContent.get(DictKey.Type))?.name;
     if (optionalContentType === "OCG") {
       return {
         type: optionalContentType,
@@ -82,7 +82,7 @@ export class EvaluatorBaseHandler {
           type: optionalContentType,
           ids: groupIds,
           policy: optionalContent.get(DictKey.P) instanceof Name
-            ? optionalContent.get(DictKey.P).name : null,
+            ? (<Name>optionalContent.get(DictKey.P)).name : null,
           expression: null,
         };
       } else if (optionalContentGroups instanceof Ref) {
@@ -160,8 +160,8 @@ export class EvaluatorBaseHandler {
       const groupSubtype = group.get(DictKey.S);
       let colorSpace = null;
       if (isName(groupSubtype, "Transparency")) {
-        groupOptions!.isolated = group.get(DictKey.I) || false;
-        groupOptions!.knockout = group.get(DictKey.K) || false;
+        groupOptions!.isolated = !!group.getValue(DictKey.I) || false;
+        groupOptions!.knockout = !!group.getValue(DictKey.K) || false;
         if (group.has(DictKey.CS)) {
           const cs = group.getRaw(DictKey.CS);
           const cachedColorSpace = ColorSpace.getCached(

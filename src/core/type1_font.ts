@@ -402,10 +402,10 @@ export class Type1Font {
     ] as const;
     for (i = 0, ii = fields.length; i < ii; i++) {
       const field = fields[i];
-      if (!(field in properties.privateData)) {
+      if (!(field in properties.privateData!)) {
         continue;
       }
-      const value = properties.privateData[field];
+      const value = properties.privateData![field];
       if (Array.isArray(value)) {
         // All of the private dictionary array data in CFF must be stored as
         // "delta-encoded" numbers.

@@ -71,9 +71,9 @@ export interface SeacMapValue {
 }
 
 export interface EvaluatorProperties {
-  privateData: FontProgramPrivateData;
+  privateData: FontProgramPrivateData | null;
   glyphNames: string[];
-  seacMap: Map<number, SeacMapValue>;
+  seacMap: Map<number, SeacMapValue> | null;
   ascentScaled: boolean;
   builtInEncoding: (string | number)[];
   type: string;
@@ -88,7 +88,7 @@ export interface EvaluatorProperties {
   firstChar: number;
   lastChar: number;
   // 应该弄个toUnicodeSource，这种像什么话
-  toUnicode: BaseStream | Name | ToUnicodeMap | IdentityToUnicodeMap;
+  toUnicode: BaseStream | Name | ToUnicodeMap | IdentityToUnicodeMap | null;
   xHeight: number;
   capHeight: number;
   italicAngle: number;
@@ -316,6 +316,8 @@ export class EvaluatorContext {
 
   readonly fontCache: RefSetCache<string, Promise<TranslatedFont>>;
 
+  readonly fontKeyCache: Map<Dict, string>;
+
   readonly builtInCMapCache: Map<string, EvaluatorCMapData>;
 
   readonly standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>;
@@ -350,6 +352,7 @@ export class EvaluatorContext {
     pageIndex: number,
     idFactory: GlobalIdFactory,
     fontCache: RefSetCache<string, Promise<TranslatedFont>>,
+    fontKeyCache: Map<Dict, string>,
     builtInCMapCache: Map<string, EvaluatorCMapData>,
     standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>,
     globalImageCache: GlobalImageCache,
@@ -361,6 +364,7 @@ export class EvaluatorContext {
     this.pageIndex = pageIndex;
     this.idFactory = idFactory;
     this.fontCache = fontCache;
+    this.fontKeyCache = fontKeyCache;
     this.builtInCMapCache = builtInCMapCache;
     this.standardFontDataCache = standardFontDataCache;
     this.globalImageCache = globalImageCache;
@@ -392,14 +396,14 @@ export class EvaluatorContext {
     );
     return new EvaluatorContext(
       this.xref, this.handler, this.pageIndex, this.idFactory,
-      this.fontCache, this.builtInCMapCache, this.standardFontDataCache,
+      this.fontCache, this.fontKeyCache, this.builtInCMapCache, this.standardFontDataCache,
       this.globalImageCache, this.systemFontCache, options
     )
   }
 
 }
 
-class PartialEvaluator {
+export class PartialEvaluator {
 
   protected readonly context: EvaluatorContext;
 
@@ -409,6 +413,7 @@ class PartialEvaluator {
     pageIndex: number,
     idFactory: GlobalIdFactory,
     fontCache: RefSetCache<string, Promise<TranslatedFont>>,
+    fontKeyCache: Map<Dict, string>,
     builtInCMapCache: Map<string, EvaluatorCMapData>,
     standardFontDataCache: Map<string, Uint8Array<ArrayBuffer>>,
     globalImageCache: GlobalImageCache,
@@ -416,7 +421,7 @@ class PartialEvaluator {
     options: DocumentEvaluatorOptions | null = null,
   ) {
     this.context = new EvaluatorContext(
-      xref, handler, pageIndex, idFactory, fontCache, builtInCMapCache, standardFontDataCache,
+      xref, handler, pageIndex, idFactory, fontCache, fontKeyCache, builtInCMapCache, standardFontDataCache,
       globalImageCache, systemFontCache, options || DefaultDocParamEvaluatorOptions
     )
     if (PlatformHelper.isMozCental()) {
@@ -437,11 +442,10 @@ class PartialEvaluator {
   // 这个克隆可能是一个麻烦的问题。
   clone(ignoreErrors = false): PartialEvaluator {
     const context = this.context;
-    const options = context.options;
-    Object.assign(Object.create(null), options, { ignoreErrors });
+    const options = Object.assign(Object.create(null), context.options, { ignoreErrors });
     const newEvaluator = new PartialEvaluator(
       context.xref, context.handler, context.pageIndex, context.idFactory,
-      context.fontCache, context.builtInCMapCache, context.standardFontDataCache,
+      context.fontCache, context.fontKeyCache, context.builtInCMapCache, context.standardFontDataCache,
       context.globalImageCache, context.systemFontCache, options
     )
     return newEvaluator;
@@ -517,8 +521,6 @@ export class TranslatedFont {
   public font: Font | ErrorFont;
 
   public dict: Dict;
-
-  public cacheKey: string | null;
 
   protected _evaluatorOptions;
 
@@ -1006,7 +1008,7 @@ export interface EvaluatorOpMap {
   [key: string]: EvaluatorOpType | null,
 }
 
-class EvaluatorPreprocessor {
+export class EvaluatorPreprocessor {
 
   // 是一个参数类型
   protected nonProcessedArgs: any[];
@@ -1225,8 +1227,7 @@ class EvaluatorPreprocessor {
           }
 
           if (argsLength < numArgs) {
-            const partialMsg =
-              `command ${cmd}: expected ${numArgs} args, ` +
+            const partialMsg = `command ${cmd}: expected ${numArgs} args, ` +
               `but received ${argsLength} args.`;
 
             // Incomplete path operators, in particular, can result in fairly
@@ -1292,5 +1293,3 @@ class EvaluatorPreprocessor {
     }
   }
 }
-
-export { EvaluatorPreprocessor, PartialEvaluator };

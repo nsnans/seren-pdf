@@ -74,7 +74,7 @@ interface PDFManager {
 
   ensureXRef<T>(fn: (xref: XRef) => T): Promise<T>;
 
-  ensureCatalog<T>(fn: (catalog: Catalog) => T): Promise<T>;
+  ensureCatalog<T>(fn: (catalog: Catalog) => T | Promise<T>): Promise<T>;
 
   requestRange(_begin: number, _end: number): Promise<unknown>;
 
@@ -155,7 +155,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.ensure(this.getPDFDocument().xref, fn);
   }
 
-  ensureCatalog<T>(fn: (catalog: Catalog) => T) {
+  ensureCatalog<T>(fn: (catalog: Catalog) => T | Promise<T>) {
     return this.ensure(this.getPDFDocument().catalog!, fn);
   }
 

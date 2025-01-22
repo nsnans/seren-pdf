@@ -87,7 +87,7 @@ import { XRef } from "./xref";
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX: RectType = [0, 0, 612, 792];
 
-class Page {
+export class Page {
 
   protected pdfManager: PDFManager;
 
@@ -98,6 +98,8 @@ class Page {
   public ref: Ref | null;
 
   protected fontCache: RefSetCache<string, Promise<TranslatedFont>>;
+
+  protected fontKeyCache: Map<Dict, string>;
 
   protected builtInCMapCache: Map<string, EvaluatorCMapData>;
 
@@ -124,24 +126,20 @@ class Page {
     pageDict: Dict,
     ref: Ref | null,
     globalIdFactory: GlobalIdFactory,
-    fontCache: RefSetCache<string, Promise<TranslatedFont>>,
-    builtInCMapCache: Map<string, any>,
-    standardFontDataCache: Map<string, any>,
-    globalImageCache: GlobalImageCache,
-    systemFontCache: Map<string, FontSubstitutionInfo | null>,
-    nonBlendModesSet: RefSet | null,
+    catalog: Catalog
   ) {
     this.pdfManager = pdfManager;
     this.pageIndex = pageIndex;
     this.pageDict = pageDict;
     this.xref = xref;
     this.ref = ref;
-    this.fontCache = fontCache;
-    this.builtInCMapCache = builtInCMapCache;
-    this.standardFontDataCache = standardFontDataCache;
-    this.globalImageCache = globalImageCache;
-    this.systemFontCache = systemFontCache;
-    this.nonBlendModesSet = nonBlendModesSet;
+    this.fontCache = catalog.fontCache;
+    this.fontKeyCache = catalog.fontKeyCache;
+    this.builtInCMapCache = catalog.builtInCMapCache;
+    this.standardFontDataCache = catalog.standardFontDataCache;
+    this.globalImageCache = catalog.globalImageCache;
+    this.systemFontCache = catalog.systemFontCache;
+    this.nonBlendModesSet = catalog.nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
 
@@ -328,6 +326,7 @@ class Page {
       this.pageIndex,
       this._localIdFactory,
       this.fontCache,
+      this.fontKeyCache,
       this.builtInCMapCache,
       this.standardFontDataCache,
       this.globalImageCache,
@@ -386,6 +385,7 @@ class Page {
       this.pageIndex,
       this._localIdFactory,
       this.fontCache,
+      this.fontKeyCache,
       this.builtInCMapCache,
       this.standardFontDataCache,
       this.globalImageCache,
@@ -447,6 +447,7 @@ class Page {
       this.pageIndex,
       this._localIdFactory,
       this.fontCache,
+      this.fontKeyCache,
       this.builtInCMapCache,
       this.standardFontDataCache,
       this.globalImageCache,
@@ -653,6 +654,7 @@ class Page {
       this.pageIndex,
       this._localIdFactory,
       this.fontCache,
+      this.fontKeyCache,
       this.builtInCMapCache,
       this.standardFontDataCache,
       this.globalImageCache,
@@ -721,6 +723,7 @@ class Page {
           this.pageIndex,
           this._localIdFactory,
           this.fontCache,
+          this.fontKeyCache,
           this.builtInCMapCache,
           this.standardFontDataCache,
           this.globalImageCache,
@@ -729,12 +732,9 @@ class Page {
         );
 
         textContentPromises.push(
-          annotation.extractTextContent(partialEvaluator, task, [
-            -Infinity,
-            -Infinity,
-            Infinity,
-            Infinity,
-          ]).catch(function (reason: unknown) {
+          annotation.extractTextContent(
+            partialEvaluator, task, [-Infinity, -Infinity, Infinity, Infinity]
+          ).catch(function (reason: unknown) {
             warn(
               `getAnnotationsData - ignoring textContent during "${task.name}" task: "${reason}".`
             );
@@ -907,7 +907,7 @@ export class PDFDocumentInfo {
 /**
  * The `PDFDocument` class holds all the (worker-thread) data of the PDF file.
  */
-class PDFDocument {
+export class PDFDocument {
 
   protected pdfManager: PDFManager;
 
@@ -1314,18 +1314,7 @@ class PDFDocument {
     // eslint-disable-next-line arrow-body-style
     const pagePromise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
       return new Page(
-        this.pdfManager,
-        this.xref,
-        pageIndex,
-        pageDict,
-        ref,
-        this._globalIdFactory,
-        catalog.fontCache,
-        catalog.builtInCMapCache,
-        catalog.standardFontDataCache,
-        catalog.globalImageCache,
-        catalog.systemFontCache,
-        catalog.nonBlendModesSet,
+        this.pdfManager, this.xref, pageIndex, pageDict, ref, this._globalIdFactory, catalog
       );
     });
 
@@ -1410,18 +1399,7 @@ class PDFDocument {
         } else {
           promise = Promise.resolve(
             new Page(
-              pdfManager,
-              this.xref,
-              pageIndex,
-              pageDict,
-              ref,
-              this._globalIdFactory,
-              catalog.fontCache,
-              catalog.builtInCMapCache,
-              catalog.standardFontDataCache,
-              catalog.globalImageCache,
-              catalog.systemFontCache,
-              catalog.nonBlendModesSet
+              pdfManager, this.xref, pageIndex, pageDict, ref, this._globalIdFactory, catalog
             )
           );
         }
@@ -1610,5 +1588,3 @@ class PDFDocument {
     );
   }
 }
-
-export { Page, PDFDocument };
