@@ -462,7 +462,7 @@ export type DictValueTypeMapping = {
   [DictKey.EncryptMetadata]: boolean,
   [DictKey.Encrypt]: Ref,
   [DictKey.ExtGState]: Dict,
-  [DictKey.FS]: string,
+  [DictKey.FS]: string | Dict,
   [DictKey.FT]: Name | string,
   [DictKey.F]: number | Dict,
   [DictKey.Fields]: (string | Ref | Dict)[],

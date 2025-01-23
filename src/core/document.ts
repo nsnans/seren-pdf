@@ -142,10 +142,7 @@ export class Page {
     this.nonBlendModesSet = catalog.nonBlendModesSet;
     this.evaluatorOptions = pdfManager.evaluatorOptions;
     this.resourcesPromise = null;
-
-    const idCounters = {
-      obj: 0,
-    };
+    const idCounters = { obj: 0 };
     // 匿名类
     this._localIdFactory = new LocalIdFactory(globalIdFactory, pageIndex, idCounters, ref!);
   }
@@ -175,12 +172,7 @@ export class Page {
     // present, but can be empty. Some documents still omit it; in this case
     // we return an empty dictionary.
     const resources = this._getInheritableProperty(DictKey.Resources);
-
-    return shadow(
-      this,
-      "resources",
-      resources instanceof Dict ? resources : Dict.empty
-    );
+    return shadow(this, "resources", resources instanceof Dict ? resources : Dict.empty);
   }
 
   _getBoundingBox(name: DictKey): RectType | null {
@@ -1581,10 +1573,6 @@ export class PDFDocument {
   }
 
   get annotationGlobals() {
-    return shadow(
-      this,
-      "annotationGlobals",
-      AnnotationFactory.createGlobals(this.pdfManager)
-    );
+    return shadow(this, "annotationGlobals", AnnotationFactory.createGlobals(this.pdfManager));
   }
 }

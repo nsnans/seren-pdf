@@ -108,6 +108,41 @@ export interface AnnotationGlobals {
   attachments: Map<string, FileSpecSerializable> | null;
 }
 
+export class MarkupAnnotationFactory {
+
+  static async createNewInkAnnotation() {
+
+  }
+
+  static async createNewPrintInkAnnotation() {
+
+  }
+
+  static async createNewHighlightAnnotation() {
+
+  }
+
+  static async createNewPrintHightlightAnnotation() {
+
+  }
+
+  static async createNewFreeTextAnnotation() {
+
+  }
+
+  static async createNewPrintFreeTextAnnotation() {
+
+  }
+
+  static async createNewStampAnnotation() {
+
+  }
+
+  static async createNewPrintAnnotation() {
+
+  }
+}
+
 export class AnnotationFactory {
 
   static createGlobals(pdfManager: PDFManager): Promise<AnnotationGlobals | null> {
@@ -161,7 +196,7 @@ export class AnnotationFactory {
   ): Promise<Annotation> {
 
     const pdfManager = annotationGlobals.pdfManager;
-    const pageIndex = collectFields ? <number>await this._getPageIndex(xref, ref, pdfManager) : null;
+    const pageIndex = collectFields ? await this._getPageIndex(xref, ref, pdfManager) : null;
 
     const createFn = (factory: typeof AnnotationFactory) => factory._create(
       xref, ref, annotationGlobals, idFactory!, collectFields, orphanFields, pageIndex, pageRef,
@@ -174,13 +209,8 @@ export class AnnotationFactory {
    * @private
    */
   static _create(
-    xref: XRef,
-    ref: Ref,
-    annotationGlobals: AnnotationGlobals,
-    idFactory: LocalIdFactory,
-    collectFields = false,
-    orphanFields: RefSetCache | null = null,
-    pageIndex: number | null = null,
+    xref: XRef, ref: Ref, annotationGlobals: AnnotationGlobals, idFactory: LocalIdFactory,
+    collectFields = false, orphanFields: RefSetCache | null = null, pageIndex: number | null = null,
     pageRef: Ref | null = null
   ) {
     const dict = xref.fetchIfRef(ref);
@@ -189,8 +219,7 @@ export class AnnotationFactory {
     }
 
     const { acroForm, pdfManager } = annotationGlobals;
-    const id =
-      ref instanceof Ref ? ref.toString() : `annot_${idFactory.createObjId()}`;
+    const id = ref instanceof Ref ? ref.toString() : `annot_${idFactory.createObjId()}`;
 
     // Determine the annotation's subtype.
     let subtypeVal = dict.getValue(DictKey.Subtype);
@@ -198,22 +227,13 @@ export class AnnotationFactory {
 
     // Return the right annotation object based on the subtype and field type.
     const parameters: AnnotationParameters = {
-      xref,
-      ref,
-      dict,
-      subtype,
-      id,
-      annotationGlobals,
-      collectFields,
-      orphanFields,
-      needAppearances:
-        !collectFields && acroForm.getValue(DictKey.NeedAppearances) === true,
-      pageIndex,
-      evaluatorOptions: pdfManager.evaluatorOptions,
-      pageRef,
+      xref, ref, dict, subtype, id, annotationGlobals, collectFields,
+      orphanFields, pageIndex, pageRef, evaluatorOptions: pdfManager.evaluatorOptions,
+      needAppearances: !collectFields && acroForm.getValue(DictKey.NeedAppearances) === true,
     };
 
     switch (subtype) {
+
       case "Link":
         return new LinkAnnotation(parameters);
 
@@ -388,37 +408,22 @@ export class AnnotationFactory {
           }
           promises.push(
             FreeTextAnnotation.createNewAnnotation(
-              xref,
-              annotation,
-              dependencies,
-              { evaluator, task, baseFontRef }
+              xref, annotation, dependencies, { evaluator, task, baseFontRef }
             )
           );
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(
-              HighlightAnnotation.createNewAnnotation(
-                xref,
-                annotation,
-                dependencies
-              )
-            );
+            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, dependencies));
           } else {
-            promises.push(
-              InkAnnotation.createNewAnnotation(xref, annotation, dependencies)
-            );
+            promises.push(InkAnnotation.createNewAnnotation(xref, annotation, dependencies));
           }
           break;
         case AnnotationEditorType.INK:
-          promises.push(
-            InkAnnotation.createNewAnnotation(xref, annotation, dependencies)
-          );
+          promises.push(InkAnnotation.createNewAnnotation(xref, annotation, dependencies));
           break;
         case AnnotationEditorType.STAMP:
-          const image = isOffscreenCanvasSupported
-            ? await imagePromises?.get(annotation.bitmapId)
-            : null;
+          const image = isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId) : null;
           if (image?.imageStream) {
             const { imageStream, smaskStream } = image;
             const buffer = <string[]>[];
@@ -435,21 +440,13 @@ export class AnnotationFactory {
             image.imageStream = image.smaskStream = null;
           }
           promises.push(
-            StampAnnotation.createNewAnnotation(
-              xref,
-              annotation,
-              dependencies,
-              { image }
-            )
+            StampAnnotation.createNewAnnotation(xref, annotation, dependencies, { image })
           );
           break;
       }
     }
 
-    return {
-      annotations: await Promise.all(promises),
-      dependencies,
-    };
+    return { annotations: await Promise.all(promises), dependencies };
   }
 
   static async printNewAnnotations(
@@ -1218,7 +1215,7 @@ export class Annotation<DATA extends AnnotationData> {
     }
   }
 
-  loadResources(keys: string[], appearance: BaseStream) {
+  async loadResources(keys: string[], appearance: BaseStream) {
     return appearance.dict!.getAsyncValue(DictKey.Resources).then((resources: Dict) => {
       if (!resources) {
         return undefined;
@@ -1246,19 +1243,11 @@ export class Annotation<DATA extends AnnotationData> {
     if (isUsingOwnCanvas && (rect[0] === rect[2] || rect[1] === rect[3])) {
       // Empty annotation, don't draw anything.
       this.data.hasOwnCanvas = false;
-      return {
-        opList: new OperatorList(),
-        separateForm: false,
-        separateCanvas: false,
-      };
+      return { opList: new OperatorList(), separateForm: false, separateCanvas: false };
     }
     if (!appearance) {
       if (!isUsingOwnCanvas) {
-        return {
-          opList: new OperatorList(),
-          separateForm: false,
-          separateCanvas: false,
-        };
+        return { opList: new OperatorList(), separateForm: false, separateCanvas: false };
       }
       appearance = new StringStream("");
       appearance.dict = new Dict();
@@ -1271,8 +1260,7 @@ export class Annotation<DATA extends AnnotationData> {
     );
     const bbox = <RectType>lookupRect(appearanceDict.getArrayValue(DictKey.BBox), [0, 0, 1, 1]);
     const matrix = <TransformType>lookupMatrix(
-      appearanceDict.getArrayValue(DictKey.Matrix),
-      IDENTITY_MATRIX
+      appearanceDict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX
     );
     const transform = getTransformMatrix(rect, bbox, matrix);
 
@@ -1520,10 +1508,10 @@ export class AnnotationBorderStyle {
    *
    * @public
    * @memberof AnnotationBorderStyle
-   * @param {number} width - The width.
-   * @param {Array} rect - The annotation `Rect` entry.
+   * @param width - The width.
+   * @param rect - The annotation `Rect` entry.
    */
-  setWidth(width: number | Name, rect = [0, 0, 0, 0]) {
+  setWidth(width: number | Name, rect: RectType = [0, 0, 0, 0]) {
     if (PlatformHelper.isTesting()) {
       assert(
         isNumberArray(rect, 4),
@@ -1565,7 +1553,7 @@ export class AnnotationBorderStyle {
    * @public
    * @memberof AnnotationBorderStyle
    * @param {Name} style - The annotation style.
-   * @see {@link shared/util.js}
+   * @see {@link shared/util.ts}
    */
   setStyle(style: Name) {
     if (!(style instanceof Name)) {
@@ -1602,8 +1590,8 @@ export class AnnotationBorderStyle {
    *
    * @public
    * @memberof AnnotationBorderStyle
-   * @param {Array} dashArray - The dash array with at least one element
-   * @param {boolean} [forceStyle]
+   * @param dashArray - The dash array with at least one element
+   * @param forceStyle
    */
   setDashArray(dashArray: number[], forceStyle = false) {
     // We validate the dash array, but we do not use it because CSS does not
@@ -2081,10 +2069,9 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     }
     const width = this.data.rect![2] - this.data.rect![0];
     const height = this.data.rect![3] - this.data.rect![1];
-    const rect =
-      rotation === 0 || rotation === 180
-        ? `0 0 ${width} ${height} re`
-        : `0 0 ${height} ${width} re`;
+    const rect = rotation === 0 || rotation === 180
+      ? `0 0 ${width} ${height} re`
+      : `0 0 ${height} ${width} re`;
 
     let str = "";
     if (this.backgroundColor) {
@@ -5169,7 +5156,7 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     super(params);
 
     const { dict, xref } = params;
-    const file = new FileSpec(dict.getValue(DictKey.FS), xref);
+    const file = new FileSpec(<Dict>dict.getValue(DictKey.FS), xref);
 
     this.data.annotationType = AnnotationType.FILEATTACHMENT;
     this.data.hasOwnCanvas = this.data.noRotate;
@@ -5177,13 +5164,10 @@ class FileAttachmentAnnotation extends MarkupAnnotation {
     this.data.file = file.serializable;
 
     const name = dict.getValue(DictKey.Name);
-    this.data.name =
-      name instanceof Name ? stringToPDFString(name.name) : "PushPin";
+    this.data.name = name instanceof Name ? stringToPDFString(name.name) : "PushPin";
 
     const fillAlpha = dict.getValue(DictKey.ca);
-    this.data.fillAlpha =
-      typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1
-        ? fillAlpha
-        : null;
+    this.data.fillAlpha = typeof fillAlpha === "number" && fillAlpha >= 0 && fillAlpha <= 1
+      ? fillAlpha : null;
   }
 }

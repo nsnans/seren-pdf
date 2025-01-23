@@ -296,8 +296,6 @@ export class Catalog {
     this.toplevelPagesDict; // eslint-disable-line no-unused-expressions
 
     this._actualNumPages = null;
-
-
   }
 
   cloneDict() {
