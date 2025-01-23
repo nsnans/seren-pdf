@@ -15,6 +15,7 @@
 
 import { DocumentEvaluatorOptions } from "../display/api";
 import { PointType, RectType, TransformType } from "../display/display_utils";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
 import {
@@ -115,7 +116,20 @@ export class MarkupAnnotationFactory {
   }
 
   static async createNewPrintInkAnnotation() {
+    const ap = await this.createNewAppearanceStream(annotation, xref, params);
+    const annotationDict = this.createNewDict(
+      annotation, xref, ap ? { ap } : {}
+    );
 
+    const newAnnotation = new InkAnnotation({
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+    });
+
+    if (annotation.ref) {
+      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
+    }
+
+    return newAnnotation;
   }
 
   static async createNewHighlightAnnotation() {
@@ -382,7 +396,12 @@ export class AnnotationFactory {
     return imagePromises;
   }
 
-  static async saveNewAnnotations(evaluator: PartialEvaluator, task: WorkerTask, annotations: Record<string, any>[], imagePromises: Map<string, Promise<CreateStampImageResult>> | null) {
+  static async saveNewAnnotations(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    annotations: AnnotationEditorSerial[],
+    imagePromises: Map<string, Promise<CreateStampImageResult>> | null
+  ) {
     const xref = evaluator.xref;
     let baseFontRef;
     const dependencies = <{ ref: Ref, data: string | null }[]>[];
@@ -453,7 +472,7 @@ export class AnnotationFactory {
     annotationGlobals: AnnotationGlobals,
     evaluator: PartialEvaluator,
     task: WorkerTask,
-    annotations: Record<string, any>[],
+    annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ): Promise<Annotation[] | null> {
     if (!annotations) {
@@ -1837,7 +1856,7 @@ export class MarkupAnnotation extends Annotation<MarkupData> {
     this._streams.push(this.appearance, appearanceStream);
   }
 
-  static async createNewAnnotation(xref: XRef, annotation: Record<string, any>,
+  static async createNewAnnotation(xref: XRef, annotation: AnnotationEditorSerial,
     dependencies: {
       ref: Ref;
       data: string | null;
@@ -1872,7 +1891,7 @@ export class MarkupAnnotation extends Annotation<MarkupData> {
   static async createNewPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
     xref: XRef,
-    annotation: Record<string, any>,
+    annotation: AnnotationEditorSerial,
     params: {
       evaluator?: PartialEvaluator,
       image?: CreateStampImageResult | null,
@@ -4057,7 +4076,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     return freetext;
   }
 
-  static async createNewAppearanceStream(annotation, xref: XRef, params) {
+  static async createNewAppearanceStream(annotation: AnnotationEditorSerial, xref: XRef, params) {
     const { baseFontRef, evaluator, task } = params;
     const { color, fontSize, rect, rotation, value } = annotation;
 
@@ -4077,13 +4096,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     resources.set(DictKey.Font, font);
 
     const helv = await WidgetAnnotation._getFontData(
-      evaluator,
-      task,
-      {
-        fontName: "Helv",
-        fontSize,
-      },
-      resources
+      evaluator, task, { fontName: "Helv", fontSize }, resources
     );
 
     const [x1, y1, x2, y2] = rect;

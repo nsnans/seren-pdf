@@ -497,7 +497,7 @@ class WorkerMessageHandler {
       ] as const;
       const promises = <Promise<any>[]>[];
 
-    const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
+      const newAnnotationsByPage = getNewAnnotationsMap(annotationStorage)
       const [
         streamResult,
         acroForm,
@@ -515,16 +515,14 @@ class WorkerMessageHandler {
       if (newAnnotationsByPage) {
         if (!_structTreeRoot) {
           const canCreate = await StructTreeRoot.canCreateStructureTree(
-            catalogRef, pdfManager!, newAnnotationsByPage
+            catalogRef, pdfManager!, newAnnotationsByPage!
           )
           if (canCreate) {
             structTreeRoot = null;
           }
         } else if (
           await _structTreeRoot.canUpdateStructTree(
-            pdfManager!,
-            xref,
-            newAnnotationsByPage,
+            pdfManager!, xref, newAnnotationsByPage
           )
         ) {
           structTreeRoot = _structTreeRoot;
@@ -615,7 +613,7 @@ class WorkerMessageHandler {
 
     handler.onGetOperatorList((data, sink) => {
       const pageIndex = data.pageIndex;
-      pdfManager!.getPage(pageIndex).then(function (page) {
+      pdfManager!.getPage(pageIndex).then(page => {
         const task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
         startWorkerTask(task);
 

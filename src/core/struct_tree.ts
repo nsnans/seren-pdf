@@ -14,6 +14,7 @@
  */
 
 import { RectType } from "../display/display_utils";
+import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
@@ -86,7 +87,7 @@ export class StructTreeRoot {
   static async canCreateStructureTree(
     catalogRef: Ref | object,
     pdfManager: PDFManager,
-    newAnnotationsByPage: Map<number, Record<string, any>[]>
+    newAnnotationsByPage: Map<number, AnnotationEditorSerial[]>
   ) {
     if (!(catalogRef instanceof Ref)) {
       warn("Cannot save the struct tree: no catalog reference.");
@@ -115,7 +116,7 @@ export class StructTreeRoot {
     if (hasNothingToUpdate) {
       for (const elements of newAnnotationsByPage.values()) {
         for (const element of elements) {
-          delete element.parentTreeId;
+          element.parentTreeId = null;
         }
       }
       return false;
@@ -174,9 +175,7 @@ export class StructTreeRoot {
   }
 
   async canUpdateStructTree(
-    pdfManager: PDFManager,
-    xref: XRef,
-    newAnnotationsByPage: Map<number, Record<string, any>[]>
+    pdfManager: PDFManager, xref: XRef, newAnnotationsByPage: Map<number, AnnotationEditorSerial[]>
   ) {
     if (!this.ref) {
       warn("Cannot update the struct tree: no root reference.");
@@ -241,8 +240,8 @@ export class StructTreeRoot {
     if (hasNothingToUpdate) {
       for (const elements of newAnnotationsByPage.values()) {
         for (const element of elements) {
-          delete element.parentTreeId;
-          delete element.structTreeParent;
+          element.parentTreeId = null;
+          element.structTreeParent = null;
         }
       }
       return false;

@@ -269,7 +269,7 @@ export class Page {
   }
 
 
-  async #replaceIdByRef(annotations: Record<string, any>[], deletedAnnotations: RefSetCache<Ref, Ref> | RefSet, existingAnnotations: RefSet | null) {
+  async #replaceIdByRef(annotations: AnnotationEditorSerial[], deletedAnnotations: RefSetCache<Ref, Ref> | RefSet, existingAnnotations: RefSet | null) {
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.id) {
@@ -302,14 +302,14 @@ export class Page {
             }
           )
         );
-        delete annotation.id;
+        annotation.id = null;
       }
     }
     await Promise.all(promises);
   }
 
   async saveNewAnnotations(
-    handler: MessageHandler, task: WorkerTask, annotations: Record<string, any>[],
+    handler: MessageHandler, task: WorkerTask, annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
     const partialEvaluator = new PartialEvaluator(

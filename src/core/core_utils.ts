@@ -565,7 +565,7 @@ function getNewAnnotationsMap(annotationStorage: Map<string, AnnotationEditorSer
   if (!annotationStorage) {
     return null;
   }
-  const newAnnotationsByPage = new Map<number, Record<string, any>[]>();
+  const newAnnotationsByPage = new Map<number, AnnotationEditorSerial[]>();
   // The concept of page in a XFA is very different, so
   // editing is just not implemented.
   for (const [key, value] of annotationStorage) {
