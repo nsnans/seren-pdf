@@ -18,3 +18,19 @@ export interface AnnotationEditorSerial {
   bitmapId: string | null;
   pageIndex: number;
 }
+
+export interface FreeTextEditorSerial extends AnnotationEditorSerial {
+
+}
+
+export interface InkEditorSerial extends AnnotationEditorSerial {
+
+}
+
+export interface StampEditorSerial extends AnnotationEditorSerial {
+
+}
+
+export interface HighlightEditorSerial extends AnnotationEditorSerial {
+
+}

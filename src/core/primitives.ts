@@ -486,7 +486,7 @@ export type DictValueTypeMapping = {
   [DictKey.Group]: Dict,
   [DictKey.H]: number,
   [DictKey.Height]: number,
-  [DictKey.Helv]: Dict,
+  [DictKey.Helv]: Dict | Ref,
   [DictKey.IC]: TypedArray,
   [DictKey.ID]: [string, string],
   [DictKey.IM]: boolean,

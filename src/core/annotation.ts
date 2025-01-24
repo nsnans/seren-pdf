@@ -15,7 +15,7 @@
 
 import { DocumentEvaluatorOptions } from "../display/api";
 import { PointType, RectType, TransformType } from "../display/display_utils";
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
+import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "../display/editor/state/editor_serializable";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
 import {
@@ -111,17 +111,170 @@ export interface AnnotationGlobals {
 
 export class MarkupAnnotationFactory {
 
-  static async createNewInkAnnotation() {
+  static async createNewFreeTextAnnotation(
+    xref: XRef,
+    annotation: FreeTextEditorSerial,
+    dependencies: { ref: Ref; data: string | null; }[],
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    baseFontRef: Ref | null,
+  ) {
+    if (!annotation.ref) {
+      annotation.ref = xref.getNewTemporaryRef();
+    }
 
+    const annotationRef = <Ref>annotation.ref;
+    const ap = await FreeTextAnnotation.createNewAppearanceStream(annotation, xref, evaluator, task, baseFontRef);
+    const buffer = <string[]>[];
+    let annotationDict;
+
+    if (ap) {
+      const apRef = xref.getNewTemporaryRef();
+      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, { apRef });
+      await writeObject(apRef, ap, buffer, xref.encrypt);
+      dependencies.push({ ref: apRef, data: buffer.join("") });
+    } else {
+      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, {});
+    }
+    if (Number.isInteger(annotation.parentTreeId)) {
+      annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
+    }
+
+    buffer.length = 0;
+    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
+
+    return { ref: annotationRef, data: buffer.join("") };
   }
 
-  static async createNewPrintInkAnnotation() {
-    const ap = await this.createNewAppearanceStream(annotation, xref, params);
-    const annotationDict = this.createNewDict(
+  static async createNewHighlightAnnotation(
+    xref: XRef,
+    annotation: AnnotationEditorSerial,
+    dependencies: { ref: Ref; data: string | null; }[]
+  ) {
+    if (!annotation.ref) {
+      annotation.ref = xref.getNewTemporaryRef();
+    }
+
+    const annotationRef = <Ref>annotation.ref;
+    const ap = await HighlightAnnotation.createNewAppearanceStream(annotation, xref);
+    const buffer = <string[]>[];
+    let annotationDict;
+
+    if (ap) {
+      const apRef = xref.getNewTemporaryRef();
+      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, { apRef });
+      await writeObject(apRef, ap, buffer, xref.encrypt);
+      dependencies.push({ ref: apRef, data: buffer.join("") });
+    } else {
+      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, {});
+    }
+    if (Number.isInteger(annotation.parentTreeId)) {
+      annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
+    }
+
+    buffer.length = 0;
+    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
+
+    return { ref: annotationRef, data: buffer.join("") };
+  }
+
+  static async createNewInkAnnotation(
+    xref: XRef,
+    annotation: AnnotationEditorSerial,
+    dependencies: { ref: Ref; data: string | null; }[]
+  ) {
+    if (!annotation.ref) {
+      annotation.ref = xref.getNewTemporaryRef();
+    }
+
+    const annotationRef = <Ref>annotation.ref;
+    const ap = await InkAnnotation.createNewAppearanceStream(annotation, xref);
+    const buffer = <string[]>[];
+    let annotationDict;
+
+    if (ap) {
+      const apRef = xref.getNewTemporaryRef();
+      annotationDict = InkAnnotation.createNewDict(annotation, xref, { apRef });
+      await writeObject(apRef, ap, buffer, xref.encrypt);
+      dependencies.push({ ref: apRef, data: buffer.join("") });
+    } else {
+      annotationDict = InkAnnotation.createNewDict(annotation, xref, {});
+    }
+    if (Number.isInteger(annotation.parentTreeId)) {
+      annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
+    }
+
+    buffer.length = 0;
+    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
+
+    return { ref: annotationRef, data: buffer.join("") };
+  }
+
+
+  static async createNewStampAnnotation(
+    xref: XRef,
+    annotation: AnnotationEditorSerial,
+    dependencies: { ref: Ref; data: string | null; }[],
+    image: CreateStampImageResult | null
+  ) {
+    if (!annotation.ref) {
+      annotation.ref = xref.getNewTemporaryRef();
+    }
+
+    const annotationRef = <Ref>annotation.ref;
+    const ap = await StampAnnotation.createNewAppearanceStream(annotation, xref, image);
+    const buffer = <string[]>[];
+    let annotationDict;
+
+    if (ap) {
+      const apRef = xref.getNewTemporaryRef();
+      annotationDict = StampAnnotation.createNewDict(annotation, xref, { apRef });
+      await writeObject(apRef, ap, buffer, xref.encrypt);
+      dependencies.push({ ref: apRef, data: buffer.join("") });
+    } else {
+      annotationDict = StampAnnotation.createNewDict(annotation, xref, {});
+    }
+    if (Number.isInteger(annotation.parentTreeId)) {
+      annotationDict.set(DictKey.StructParent, annotation.parentTreeId);
+    }
+
+    buffer.length = 0;
+    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
+
+    return { ref: annotationRef, data: buffer.join("") };
+  }
+
+  static async createNewInkPrintAnnotation(
+    annotationGlobals: AnnotationGlobals,
+    xref: XRef,
+    annotation: InkEditorSerial,
+    evaluatorOptions: DocumentEvaluatorOptions
+  ) {
+    const ap = await InkAnnotation.createNewAppearanceStream(annotation, xref);
+    const annotationDict = InkAnnotation.createNewDict(
       annotation, xref, ap ? { ap } : {}
     );
 
     const newAnnotation = new InkAnnotation({
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: evaluatorOptions,
+    });
+
+    if (annotation.ref) {
+      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
+    }
+
+    return newAnnotation;
+  }
+
+  static async createNewHightlightPrintAnnotation(
+    annotationGlobals: AnnotationGlobals, xref: XRef, annotation: HighlightEditorSerial
+  ) {
+    const ap = await HighlightAnnotation.createNewAppearanceStream(annotation, xref);
+    const annotationDict = HighlightAnnotation.createNewDict(
+      annotation, xref, ap ? { ap } : {}
+    );
+
+    const newAnnotation = new HighlightAnnotation({
       dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
     });
 
@@ -132,28 +285,50 @@ export class MarkupAnnotationFactory {
     return newAnnotation;
   }
 
-  static async createNewHighlightAnnotation() {
+  static async createNewFreeTextPrintAnnotation(
+    annotationGlobals: AnnotationGlobals,
+    xref: XRef,
+    annotation: FreeTextEditorSerial,
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    baseFontRef: Ref
+  ) {
+    const ap = await FreeTextAnnotation.createNewAppearanceStream(annotation, xref, evaluator, task, baseFontRef);
+    const annotationDict = FreeTextAnnotation.createNewDict(
+      annotation, xref, ap ? { ap } : {}
+    );
 
+    const newAnnotation = new FreeTextAnnotation({
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+    });
+
+    if (annotation.ref) {
+      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
+    }
+
+    return newAnnotation;
   }
 
-  static async createNewPrintHightlightAnnotation() {
+  static async createNewStampPrintAnnotation(
+    annotationGlobals: AnnotationGlobals,
+    xref: XRef,
+    annotation: AnnotationEditorSerial,
+    image: CreateStampImageResult | null,
+  ) {
+    const ap = await StampAnnotation.createNewAppearanceStream(annotation, xref, image!);
+    const annotationDict = StampAnnotation.createNewDict(
+      annotation, xref, ap ? { ap } : {}
+    );
 
-  }
+    const newAnnotation = new StampAnnotation({
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+    });
 
-  static async createNewFreeTextAnnotation() {
+    if (annotation.ref) {
+      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
+    }
 
-  }
-
-  static async createNewPrintFreeTextAnnotation() {
-
-  }
-
-  static async createNewStampAnnotation() {
-
-  }
-
-  static async createNewPrintAnnotation() {
-
+    return newAnnotation;
   }
 }
 
@@ -425,24 +600,22 @@ export class AnnotationFactory {
             await writeObject(baseFontRef, baseFont, buffer, xref.encrypt);
             dependencies.push({ ref: baseFontRef, data: buffer.join("") });
           }
-          promises.push(
-            FreeTextAnnotation.createNewAnnotation(
-              xref, annotation, dependencies, { evaluator, task, baseFontRef }
-            )
-          );
+          promises.push(MarkupAnnotationFactory.createNewFreeTextAnnotation(
+            xref, annotation, dependencies, evaluator, task, baseFontRef
+          ));
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, dependencies));
+            promises.push(MarkupAnnotationFactory.createNewHighlightAnnotation(xref, annotation, dependencies));
           } else {
-            promises.push(InkAnnotation.createNewAnnotation(xref, annotation, dependencies));
+            promises.push(MarkupAnnotationFactory.createNewInkAnnotation(xref, annotation, dependencies));
           }
           break;
         case AnnotationEditorType.INK:
-          promises.push(InkAnnotation.createNewAnnotation(xref, annotation, dependencies));
+          promises.push(MarkupAnnotationFactory.createNewInkAnnotation(xref, annotation, dependencies));
           break;
         case AnnotationEditorType.STAMP:
-          const image = isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId) : null;
+          const image = isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId!) : null;
           if (image?.imageStream) {
             const { imageStream, smaskStream } = image;
             const buffer = <string[]>[];
@@ -458,9 +631,9 @@ export class AnnotationFactory {
             dependencies.push({ ref: imageRef, data: buffer.join("") });
             image.imageStream = image.smaskStream = null;
           }
-          promises.push(
-            StampAnnotation.createNewAnnotation(xref, annotation, dependencies, { image })
-          );
+          promises.push(MarkupAnnotationFactory.createNewStampAnnotation(
+            xref, annotation, dependencies, <CreateStampImageResult | null>image
+          ));
           break;
       }
     }
@@ -474,7 +647,7 @@ export class AnnotationFactory {
     task: WorkerTask,
     annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
-  ): Promise<Annotation[] | null> {
+  ): Promise<Annotation<AnnotationData>[] | null> {
     if (!annotations) {
       return null;
     }
@@ -487,60 +660,28 @@ export class AnnotationFactory {
       }
       switch (annotation.annotationType) {
         case AnnotationEditorType.FREETEXT:
-          promises.push(
-            FreeTextAnnotation.createNewPrintAnnotation(
-              annotationGlobals,
-              xref,
-              annotation,
-              {
-                evaluator,
-                task,
-                evaluatorOptions: options,
-              }
-            )
-          );
+          promises.push(MarkupAnnotationFactory.createNewFreeTextPrintAnnotation(
+            annotationGlobals, xref, annotation, evaluator, task
+          ));
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(
-              HighlightAnnotation.createNewPrintAnnotation(
-                annotationGlobals,
-                xref,
-                annotation,
-                {
-                  evaluatorOptions: options,
-                }
-              )
-            );
+            promises.push(MarkupAnnotationFactory.createNewHightlightPrintAnnotation(
+              annotationGlobals, xref, annotation
+            ));
           } else {
-            promises.push(
-              InkAnnotation.createNewPrintAnnotation(
-                annotationGlobals,
-                xref,
-                annotation,
-                {
-                  evaluatorOptions: options,
-                }
-              )
-            );
+            promises.push(MarkupAnnotationFactory.createNewInkPrintAnnotation(
+              annotationGlobals, xref, annotation, options
+            ));
           }
           break;
         case AnnotationEditorType.INK:
-          promises.push(
-            InkAnnotation.createNewPrintAnnotation(
-              annotationGlobals,
-              xref,
-              annotation,
-              {
-                evaluatorOptions: options,
-              }
-            )
-          );
+          promises.push(MarkupAnnotationFactory.createNewInkPrintAnnotation(
+            annotationGlobals, xref, annotation, options
+          ));
           break;
         case AnnotationEditorType.STAMP:
-          const image = options.isOffscreenCanvasSupported
-            ? await imagePromises?.get(annotation.bitmapId)
-            : null;
+          const image = options.isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId) : null;
           if (image?.imageStream) {
             const { imageStream, smaskStream } = image;
             if (smaskStream) {
@@ -549,17 +690,9 @@ export class AnnotationFactory {
             image.imageRef = new JpegStream(imageStream, imageStream.length);
             image.imageStream = image.smaskStream = null;
           }
-          promises.push(
-            StampAnnotation.createNewPrintAnnotation(
-              annotationGlobals,
-              xref,
-              annotation,
-              {
-                image,
-                evaluatorOptions: options,
-              }
-            )
-          );
+          promises.push(MarkupAnnotationFactory.createNewStampPrintAnnotation(
+            annotationGlobals, xref, annotation, image || null,
+          ));
           break;
       }
     }
@@ -687,12 +820,13 @@ export interface AnnotationData {
   defaultAppearanceData?: {
     fontSize: number;
     fontName: string;
-    fontColor: Uint8ClampedArray;
+    fontColor: Uint8ClampedArray<ArrayBuffer>;
   };
   textPosition?: number[];
   textContent?: string[];
   actions?: Map<string, string[]>;
 }
+
 
 export class Annotation<DATA extends AnnotationData> {
 
@@ -1681,7 +1815,7 @@ interface MarkupData extends AnnotationData {
   popupRef: string | null;
 }
 
-export class MarkupAnnotation extends Annotation<MarkupData> {
+export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
 
   protected creationDate: string | null = null;
 
@@ -1854,64 +1988,6 @@ export class MarkupAnnotation extends Annotation<MarkupData> {
     // This method is only called if there is no appearance for the annotation,
     // so `this.appearance` is not pushed yet in the `Annotation` constructor.
     this._streams.push(this.appearance, appearanceStream);
-  }
-
-  static async createNewAnnotation(xref: XRef, annotation: AnnotationEditorSerial,
-    dependencies: {
-      ref: Ref;
-      data: string | null;
-    }[], params?) {
-    if (!annotation.ref) {
-      annotation.ref = xref.getNewTemporaryRef();
-    }
-
-    const annotationRef = <Ref>annotation.ref;
-    const ap = await this.createNewAppearanceStream(annotation, xref, params);
-    const buffer = <string[]>[];
-    let annotationDict;
-
-    if (ap) {
-      const apRef = xref.getNewTemporaryRef();
-      annotationDict = this.createNewDict(annotation, xref, { apRef });
-      await writeObject(apRef, ap, buffer, xref.encrypt);
-      dependencies.push({ ref: apRef, data: buffer.join("") });
-    } else {
-      annotationDict = this.createNewDict(annotation, xref, {});
-    }
-    if (Number.isInteger(annotation.parentTreeId)) {
-      annotationDict.set("StructParent", annotation.parentTreeId);
-    }
-
-    buffer.length = 0;
-    await writeObject(annotationRef, annotationDict, buffer, xref.encrypt);
-
-    return { ref: annotationRef, data: buffer.join("") };
-  }
-
-  static async createNewPrintAnnotation(
-    annotationGlobals: AnnotationGlobals,
-    xref: XRef,
-    annotation: AnnotationEditorSerial,
-    params: {
-      evaluator?: PartialEvaluator,
-      image?: CreateStampImageResult | null,
-      evaluatorOptions: DocumentEvaluatorOptions
-    }
-  ) {
-    const ap = await this.createNewAppearanceStream(annotation, xref, params);
-    const annotationDict = this.createNewDict(
-      annotation, xref, ap ? { ap } : {}
-    );
-
-    const newAnnotation = new this.prototype.constructor({
-      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
-    });
-
-    if (annotation.ref) {
-      newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
-    }
-
-    return newAnnotation;
   }
 }
 
@@ -2738,11 +2814,9 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       }
 
       const { fontName, fontColor } = this.data.defaultAppearanceData!;
-      this._defaultAppearance = createDefaultAppearance({
-        fontSize,
-        fontName,
-        fontColor,
-      });
+      this._defaultAppearance = createDefaultAppearance(
+        fontSize, fontName, fontColor,
+      );
     }
 
     return [this._defaultAppearance, fontSize, height / numberOfLines];
@@ -4002,13 +4076,9 @@ class FreeTextAnnotation extends MarkupAnnotation {
       this.data.defaultAppearanceData!.fontSize ||= 10;
       const { fontColor, fontSize } = this.data.defaultAppearanceData!;
       if (this._contents.str) {
-        this.data.textContent = this._contents.str
-          .split(/\r\n?|\n/)
-          .map(line => line.trimEnd());
+        this.data.textContent = this._contents.str.split(/\r\n?|\n/).map(line => line.trimEnd());
         const { coords, bbox, matrix } = FakeUnicodeFont.getFirstPositionInfo(
-          this.rectangle,
-          this.rotation,
-          fontSize
+          this.rectangle, this.rotation, fontSize
         );
         this.data.textPosition = this._transformPoint(coords, bbox, matrix!);
       }
@@ -4036,35 +4106,34 @@ class FreeTextAnnotation extends MarkupAnnotation {
     return this._hasAppearance;
   }
 
-  static createNewDict(annotation, xref: XRef, { apRef, ap }) {
-    const { color, fontSize, oldAnnotation, rect, rotation, user, value } =
-      annotation;
+  static createNewDict(annotation: FreeTextEditorSerial, xref: XRef, { apRef, ap }) {
+    const { color, fontSize, oldAnnotation, rect, rotation, user, value } = annotation;
     const freetext = oldAnnotation || new Dict(xref);
-    freetext.set("Type", Name.get("Annot"));
-    freetext.set("Subtype", Name.get("FreeText"));
+    freetext.set(DictKey.Type, Name.get("Annot"));
+    freetext.set(DictKey.Subtype, Name.get("FreeText"));
     if (oldAnnotation) {
-      freetext.set("M", `D:${getModificationDate()}`);
+      freetext.set(DictKey.M, `D:${getModificationDate()}`);
       // TODO: We should try to generate a new RC from the content we've.
       // For now we can just remove it to avoid any issues.
-      freetext.delete("RC");
+      freetext.delete(DictKey.RC);
     } else {
-      freetext.set("CreationDate", `D:${getModificationDate()}`);
+      freetext.set(DictKey.CreationDate, `D:${getModificationDate()}`);
     }
-    freetext.set("Rect", rect);
+    freetext.set(DictKey.Rect, rect);
     const da = `/Helv ${fontSize} Tf ${getPdfColor(color, /* isFill */ true)}`;
-    freetext.set("DA", da);
-    freetext.set("Contents", stringToAsciiOrUTF16BE(value));
-    freetext.set("F", 4);
-    freetext.set("Border", [0, 0, 0]);
-    freetext.set("Rotate", rotation);
+    freetext.set(DictKey.DA, da);
+    freetext.set(DictKey.Contents, stringToAsciiOrUTF16BE(value));
+    freetext.set(DictKey.F, 4);
+    freetext.set(DictKey.Border, [0, 0, 0]);
+    freetext.set(DictKey.Rotate, rotation);
 
     if (user) {
-      freetext.set("T", stringToAsciiOrUTF16BE(user));
+      freetext.set(DictKey.T, stringToAsciiOrUTF16BE(user));
     }
 
     if (apRef || ap) {
       const n = new Dict(xref);
-      freetext.set("AP", n);
+      freetext.set(DictKey.AP, n);
 
       if (apRef) {
         n.set(DictKey.N, apRef);
@@ -4076,13 +4145,18 @@ class FreeTextAnnotation extends MarkupAnnotation {
     return freetext;
   }
 
-  static async createNewAppearanceStream(annotation: AnnotationEditorSerial, xref: XRef, params) {
-    const { baseFontRef, evaluator, task } = params;
+  static async createNewAppearanceStream(
+    annotation: FreeTextEditorSerial,
+    xref: XRef,
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    baseFontRef: Ref | null,
+  ) {
+
     const { color, fontSize, rect, rotation, value } = annotation;
 
     const resources = new Dict(xref);
     const font = new Dict(xref);
-
     if (baseFontRef) {
       font.set(DictKey.Helv, baseFontRef);
     } else {
@@ -4471,7 +4545,13 @@ class CaretAnnotation extends MarkupAnnotation {
   }
 }
 
-class InkAnnotation extends MarkupAnnotation {
+interface InkAnnotationData extends MarkupData {
+  annotationType: AnnotationType;
+  inkLists: Float32Array[];
+  opacity: number;
+}
+
+class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4480,7 +4560,7 @@ class InkAnnotation extends MarkupAnnotation {
 
     const { dict, xref } = params;
     this.data.annotationType = AnnotationType.INK;
-    this.data.inkLists = <Float32Array[]>[];
+    this.data.inkLists = [];
     this.data.isEditable = !this.data.noHTML && this.data.it === "InkHighlight";
     // We want to be able to add mouse listeners to the annotation.
     this.data.noHTML = false;
@@ -4560,9 +4640,8 @@ class InkAnnotation extends MarkupAnnotation {
     }
   }
 
-  static createNewDict(annotation, xref: XRef, { apRef, ap }) {
-    const { color, opacity, paths, outlines, rect, rotation, thickness } =
-      annotation;
+  static createNewDict(annotation: InkEditorSerial, xref: XRef, { apRef, ap }) {
+    const { color, opacity, paths, outlines, rect, rotation, thickness } = annotation;
     const ink = new Dict(xref);
     ink.set(DictKey.Type, Name.get("Annot"));
     ink.set(DictKey.Subtype, Name.get("Ink"));
@@ -4606,12 +4685,10 @@ class InkAnnotation extends MarkupAnnotation {
     return ink;
   }
 
-  static async createNewAppearanceStream(annotation, xref: XRef, params) {
+  static async createNewAppearanceStream(annotation: InkEditorSerial, xref: XRef) {
     if (annotation.outlines) {
       return this.createNewAppearanceStreamForHighlight(
-        annotation,
-        xref,
-        params
+        annotation, xref
       );
     }
     const { color, rect, paths, thickness, opacity } = annotation;
@@ -4628,19 +4705,12 @@ class InkAnnotation extends MarkupAnnotation {
     const buffer = [];
     for (const { bezier } of paths) {
       buffer.length = 0;
-      buffer.push(
-        `${numberToString(bezier[0])} ${numberToString(bezier[1])} m`
-      );
+      buffer.push(`${numberToString(bezier[0])} ${numberToString(bezier[1])} m`);
       if (bezier.length === 2) {
-        buffer.push(
-          `${numberToString(bezier[0])} ${numberToString(bezier[1])} l S`
-        );
+        buffer.push(`${numberToString(bezier[0])} ${numberToString(bezier[1])} l S`);
       } else {
         for (let i = 2, ii = bezier.length; i < ii; i += 6) {
-          const curve = bezier
-            .slice(i, i + 6)
-            .map(numberToString)
-            .join(" ");
+          const curve = bezier.slice(i, i + 6).map(numberToString).join(" ");
           buffer.push(`${curve} c`);
         }
         buffer.push("S");
@@ -4673,7 +4743,7 @@ class InkAnnotation extends MarkupAnnotation {
     return ap;
   }
 
-  static async createNewAppearanceStreamForHighlight(annotation, xref: XRef, params) {
+  static async createNewAppearanceStreamForHighlight(annotation, xref: XRef) {
     const {
       color,
       rect,
@@ -4733,7 +4803,14 @@ class InkAnnotation extends MarkupAnnotation {
   }
 }
 
-class HighlightAnnotation extends MarkupAnnotation {
+interface HighlightData extends MarkupData {
+  annotationType: AnnotationType;
+  opacity: number;
+
+}
+
+class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
+
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4744,7 +4821,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     this.data.noHTML = false;
     this.data.opacity = dict.getValue(DictKey.CA) || 1;
 
-    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null));
+    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null) ?? undefined);
     if (quadPoints) {
       const resources = this.appearance?.dict?.getValue(DictKey.Resources);
 
@@ -4785,63 +4862,51 @@ class HighlightAnnotation extends MarkupAnnotation {
     }
   }
 
-  static createNewDict(annotation, xref: XRef, { apRef, ap }) {
-    const { color, oldAnnotation, opacity, rect, rotation, user, quadPoints } =
-      annotation;
+  static createNewDict(annotation: HighlightEditorSerial, xref: XRef, { apRef, ap }) {
+
+    const { color, oldAnnotation, opacity, rect, rotation, user, quadPoints } = annotation;
     const highlight = oldAnnotation || new Dict(xref);
-    highlight.set("Type", Name.get("Annot"));
-    highlight.set("Subtype", Name.get("Highlight"));
-    highlight.set(
-      oldAnnotation ? "M" : "CreationDate",
-      `D:${getModificationDate()}`
-    );
-    highlight.set("CreationDate", `D:${getModificationDate()}`);
-    highlight.set("Rect", rect);
-    highlight.set("F", 4);
-    highlight.set("Border", [0, 0, 0]);
-    highlight.set("Rotate", rotation);
-    highlight.set("QuadPoints", quadPoints);
+
+    highlight.set(DictKey.Type, Name.get("Annot"));
+    highlight.set(DictKey.Subtype, Name.get("Highlight"));
+    highlight.set(oldAnnotation ? DictKey.M : DictKey.CreationDate, `D:${getModificationDate()}`);
+    highlight.set(DictKey.CreationDate, `D:${getModificationDate()}`);
+    highlight.set(DictKey.Rect, rect);
+    highlight.set(DictKey.F, 4);
+    highlight.set(DictKey.Border, [0, 0, 0]);
+    highlight.set(DictKey.Rotate, rotation);
+    highlight.set(DictKey.QuadPoints, quadPoints);
 
     // Color.
-    highlight.set(
-      "C",
-      Array.from(color, (c: number) => c / 255)
-    );
+    highlight.set(DictKey.C, Array.from(color, (c: number) => c / 255));
 
     // Opacity.
-    highlight.set("CA", opacity);
+    highlight.set(DictKey.CA, opacity);
 
     if (user) {
-      highlight.set("T", stringToAsciiOrUTF16BE(user));
+      highlight.set(DictKey.T, stringToAsciiOrUTF16BE(user));
     }
 
     if (apRef || ap) {
       const n = new Dict(xref);
-      highlight.set("AP", n);
+      highlight.set(DictKey.AP, n);
       n.set(DictKey.N, apRef || ap);
     }
 
     return highlight;
   }
 
-  static async createNewAppearanceStream(annotation, xref: XRef, params) {
-    const { color, rect, outlines, opacity } = annotation;
+  static async createNewAppearanceStream(annotation: HighlightEditorSerial, xref: XRef) {
 
-    const appearanceBuffer = [
-      `${getPdfColor(color, /* isFill */ true)}`,
-      "/R0 gs",
-    ];
+    const { color, rect, outlines, opacity } = annotation;
+    const appearanceBuffer = [`${getPdfColor(color!, true)}`, "/R0 gs"];
 
     const buffer = [];
     for (const outline of outlines) {
       buffer.length = 0;
-      buffer.push(
-        `${numberToString(outline[0])} ${numberToString(outline[1])} m`
-      );
+      buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
       for (let i = 2, ii = outline.length; i < ii; i += 2) {
-        buffer.push(
-          `${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`
-        );
+        buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
       }
       buffer.push("h");
       appearanceBuffer.push(buffer.join("\n"));
@@ -4853,7 +4918,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
-    appearanceStreamDict.set(DictKey.BBox, rect);
+    appearanceStreamDict.set(DictKey.BBox, rect!);
     appearanceStreamDict.set(DictKey.Length, appearance.length);
 
     const resources = new Dict(xref);
@@ -5131,18 +5196,18 @@ class StampAnnotation extends MarkupAnnotation {
     return stamp;
   }
 
-  static async createNewAppearanceStream(annotation, xref: XRef, params) {
+  static async createNewAppearanceStream(annotation: StampEditorSerial, xref: XRef, image: CreateStampImageResult) {
     if (annotation.oldAnnotation) {
       // We'll use the AP we already have.
       return null;
     }
 
     const { rotation } = annotation;
-    const { imageRef, width, height } = params.image;
+    const { imageRef, width, height } = image;
     const resources = new Dict(xref);
     const xobject = new Dict(xref);
     resources.set(DictKey.XObject, xobject);
-    xobject.set(DictKey.Im0, imageRef);
+    xobject.set(DictKey.Im0, <Ref>imageRef!);
     const appearance = `q ${width} 0 0 ${height} 0 0 cm /Im0 Do Q`;
 
     const appearanceStreamDict = new Dict(xref);

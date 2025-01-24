@@ -226,7 +226,7 @@ function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluat
   return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 
-function getPdfColor(color: Uint8ClampedArray, isFill: boolean) {
+function getPdfColor(color: Uint8ClampedArray<ArrayBuffer>, isFill: boolean) {
   if (color[0] === color[1] && color[1] === color[2]) {
     const gray = color[0] / 255;
     return `${numberToString(gray)} ${isFill ? "g" : "G"}`;
@@ -238,11 +238,8 @@ function getPdfColor(color: Uint8ClampedArray, isFill: boolean) {
 }
 
 // Create default appearance string from some information.
-function createDefaultAppearance({ fontSize, fontName, fontColor }: { fontSize: number, fontName: string, fontColor: Uint8ClampedArray }) {
-  return `/${escapePDFName(fontName)} ${fontSize} Tf ${getPdfColor(
-    fontColor,
-    /* isFill */ true
-  )}`;
+function createDefaultAppearance(fontSize: number, fontName: string, fontColor: Uint8ClampedArray<ArrayBuffer>) {
+  return `/${escapePDFName(fontName)} ${fontSize} Tf ${getPdfColor(fontColor, true)}`;
 }
 
 class FakeUnicodeFont {
@@ -411,8 +408,14 @@ class FakeUnicodeFont {
     };
   }
 
-  createAppearance(text: string, rect: [number, number, number, number], rotation: number,
-    fontSize: number, bgColor: Uint8ClampedArray, strokeAlpha: number) {
+  createAppearance(
+    text: string,
+    rect: RectType,
+    rotation: number,
+    fontSize: number,
+    bgColor: Uint8ClampedArray<ArrayBuffer>,
+    strokeAlpha: number
+  ) {
     const ctx = this._createContext();
     const lines = [];
     let maxWidth = -Infinity;
