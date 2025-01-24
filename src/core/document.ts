@@ -368,8 +368,9 @@ export class Page {
   }
 
   async save(
-    handler: MessageHandler, task: WorkerTask,
-    annotationStorage: Map<string, Record<string, any>> | null
+    handler: MessageHandler,
+    task: WorkerTask,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
     const partialEvaluator = new PartialEvaluator(
       this.xref,
@@ -387,23 +388,21 @@ export class Page {
 
     // Fetch the page's annotations and save the content
     // in case of interactive form fields.
-    return this._parsedAnnotations.then(function (annotations) {
+    return this._parsedAnnotations.then(async annotations => {
       const newRefsPromises = [];
       for (const annotation of annotations) {
-        newRefsPromises.push(annotation.save(partialEvaluator, task, annotationStorage)
-          .catch(function (reason: unknown) {
-            warn(`save - ignoring annotation data during ${task.name} task:${reason}.`);
-            return null;
-          })
-        );
+        newRefsPromises.push(annotation.save(partialEvaluator, task, annotationStorage).catch(reason => {
+          warn(`save - ignoring annotation data during ${task.name} task:${reason}.`);
+          return null;
+        }));
       }
-      return Promise.all(newRefsPromises).then(function (newRefs) {
+      return Promise.all(newRefsPromises).then(newRefs => {
         return newRefs.filter(newRef => !!newRef);
       });
     });
   }
 
-  loadResources(keys: string[]) {
+  async loadResources(keys: string[]) {
     // TODO: add async `_getInheritableProperty` and remove this.
     this.resourcesPromise ||= <Promise<Dict>>this.pdfManager.ensure(this, (p) => p.resources);
 
@@ -449,12 +448,11 @@ export class Page {
 
     const newAnnotsByPage = getNewAnnotationsMap(annotationStorage)
     const newAnnots = newAnnotsByPage?.get(this.pageIndex);
-    let newAnnotationsPromise: Promise<any> = Promise.resolve(null);
+    let newAnnotationsPromise: Promise<Annotation<AnnotationData>[] | null> = Promise.resolve(null);
     let deletedAnnotations = null;
 
     if (newAnnots) {
-      const annotationGlobalsPromise =
-        this.pdfManager.ensureDoc(doc => doc.annotationGlobals);
+      const annotationGlobalsPromise = this.pdfManager.ensureDoc(doc => doc.annotationGlobals);
       let imagePromises;
 
       // An annotation can contain a reference to a bitmap, but this bitmap
@@ -526,10 +524,8 @@ export class Page {
     // Fetch the page's annotations and add their operator lists to the
     // page's operator list to render them.
     return Promise.all([
-      pageListPromise,
-      this._parsedAnnotations,
-      <Promise<Annotation[] | null>>newAnnotationsPromise,
-    ]).then(function ([pageOpList, annotations, newAnnotations]) {
+      pageListPromise, this._parsedAnnotations, newAnnotationsPromise,
+    ]).then(([pageOpList, annotations, newAnnotations]) => {
       if (newAnnotations) {
         // Some annotations can already exist (if it has the refToReplace
         // property). In this case, we replace the old annotation by the new
@@ -556,7 +552,7 @@ export class Page {
         annotations.length === 0 ||
         intent & RenderingIntentFlag.ANNOTATIONS_DISABLE
       ) {
-        pageOpList.flush(/* lastChunk = */ true);
+        pageOpList.flush(true);
         return { length: pageOpList.totalLength };
       }
       const renderForms = !!(intent & RenderingIntentFlag.ANNOTATIONS_FORMS),
@@ -580,35 +576,23 @@ export class Page {
             annotation.mustBeViewedWhenEditing(isEditing, modifiedIds)) ||
           (intentPrint && annotation.mustBePrinted(annotationStorage))
         ) {
-          const opListPromise = annotation
-            .getOperatorList(
-              partialEvaluator,
-              task,
-              intent,
-              annotationStorage
-            );
-          const catchPromise = opListPromise.catch(function (reason: unknown) {
+          const opListPromise = annotation.getOperatorList(
+            partialEvaluator, task, intent, annotationStorage
+          );
+          const catchPromise = opListPromise.catch(reason => {
             warn(
               "getOperatorList - ignoring annotation data during " +
               `"${task.name}" task: "${reason}".`
             );
-            return {
-              opList: null,
-              separateForm: false,
-              separateCanvas: false,
-            };
+            return { opList: null, separateForm: false, separateCanvas: false };
           });
           opListPromises.push(catchPromise);
         }
       }
 
-      return Promise.all(opListPromises).then(function (opLists: {
-        opList: OperatorList | null;
-        separateForm: boolean;
-        separateCanvas: boolean;
-      }[]) {
-        let form = false,
-          canvas = false;
+      return Promise.all(opListPromises).then(opLists => {
+        let form = false;
+        let canvas = false;
 
         for (const { opList, separateForm, separateCanvas } of opLists) {
           pageOpList.addOpList(opList!);
@@ -616,10 +600,7 @@ export class Page {
           form ||= separateForm;
           canvas ||= separateCanvas;
         }
-        pageOpList.flush(
-          /* lastChunk = */ true,
-          /* separateAnnots = */ { form, canvas }
-        );
+        pageOpList.flush(true, { form, canvas });
         return { length: pageOpList.totalLength };
       });
     });
@@ -746,68 +727,59 @@ export class Page {
   }
 
   get _parsedAnnotations() {
-    const promise = (<Promise<Ref[]>>this.pdfManager.ensure(this, p => p.annotations))
-      .then(async (annots: Ref[]) => {
-        if (annots.length === 0) {
-          return annots;
-        }
+    const promise = (<Promise<Ref[]>>this.pdfManager.ensure(this, p => p.annotations)).then(async annots => {
+      if (annots.length === 0) {
+        return annots;
+      }
 
-        const [annotationGlobals, fieldObjects] = await Promise.all([
-          this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
-          this.pdfManager.ensureDoc(doc => doc.fieldObjects),
-        ]);
-        if (!annotationGlobals) {
-          return [];
-        }
+      const [annotationGlobals, fieldObjects] = await Promise.all([
+        this.pdfManager.ensureDoc(doc => doc.annotationGlobals),
+        this.pdfManager.ensureDoc(doc => doc.fieldObjects),
+      ]);
+      if (!annotationGlobals) {
+        return [];
+      }
 
-        const orphanFields = fieldObjects?.orphanFields;
-        const annotationPromises = [];
-        for (const annotationRef of annots) {
-          annotationPromises.push(
-            AnnotationFactory.create(
-              this.xref,
-              annotationRef,
-              annotationGlobals,
-              this._localIdFactory,
-              /* collectFields */ false,
-              orphanFields,
-              this.ref
-            ).catch(function (reason) {
-              warn(`_parsedAnnotations: "${reason}".`);
-              return null;
-            })
-          );
-        }
+      const orphanFields = fieldObjects?.orphanFields ?? null;
+      const annotationPromises: Promise<Annotation<AnnotationData> | null>[] = [];
+      for (const annotationRef of annots) {
+        annotationPromises.push(AnnotationFactory.create(
+          this.xref, annotationRef, annotationGlobals, this._localIdFactory, false, orphanFields, this.ref
+        ).catch(reason => {
+          warn(`_parsedAnnotations: "${reason}".`);
+          return null;
+        }));
+      }
 
-        const sortedAnnotations = [];
-        let popupAnnotations, widgetAnnotations;
-        // Ensure that PopupAnnotations are handled last, since they depend on
-        // their parent Annotation in the display layer; fixes issue 11362.
-        for (const annotation of await Promise.all(annotationPromises)) {
-          if (!annotation) {
-            continue;
-          }
-          if (annotation instanceof WidgetAnnotation) {
-            (widgetAnnotations ||= []).push(annotation);
-            continue;
-          }
-          if (annotation instanceof PopupAnnotation) {
-            (popupAnnotations ||= []).push(annotation);
-            continue;
-          }
-          sortedAnnotations.push(annotation);
+      const sortedAnnotations = [];
+      let popupAnnotations, widgetAnnotations;
+      // Ensure that PopupAnnotations are handled last, since they depend on
+      // their parent Annotation in the display layer; fixes issue 11362.
+      for (const annotation of await Promise.all(annotationPromises)) {
+        if (!annotation) {
+          continue;
         }
-        if (widgetAnnotations) {
-          sortedAnnotations.push(...widgetAnnotations);
+        if (annotation instanceof WidgetAnnotation) {
+          (widgetAnnotations ||= []).push(annotation);
+          continue;
         }
-        if (popupAnnotations) {
-          sortedAnnotations.push(...popupAnnotations);
+        if (annotation instanceof PopupAnnotation) {
+          (popupAnnotations ||= []).push(annotation);
+          continue;
         }
+        sortedAnnotations.push(annotation);
+      }
+      if (widgetAnnotations) {
+        sortedAnnotations.push(...widgetAnnotations);
+      }
+      if (popupAnnotations) {
+        sortedAnnotations.push(...popupAnnotations);
+      }
 
-        return sortedAnnotations;
-      });
+      return sortedAnnotations;
+    });
 
-    return shadow(this, "_parsedAnnotations", <Promise<Annotation[]>>promise);
+    return shadow(this, "_parsedAnnotations", <Promise<Annotation<AnnotationData>[]>>promise);
   }
 
   get jsActions() {

@@ -36,7 +36,7 @@ export class Stream extends BaseStream {
     this.dict = dict;
   }
 
-  get bytes(){
+  get bytes() {
     return this._bytes;
   }
 

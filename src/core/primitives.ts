@@ -401,6 +401,7 @@ export enum DictKey {
   CFM = "CFM",
   DV = "DV",
   Ff = "Ff",
+  Opt = "Opt",
 }
 
 /**
@@ -518,7 +519,7 @@ export type DictValueTypeMapping = {
   [DictKey.Mask]: BaseStream | number[], // BaseStream或某种类型的数组，猜测是数字数组
   [DictKey.Matrix]: number[],
   [DictKey.Metadata]: Ref,
-  [DictKey.N]: Ref | StringStream | number,
+  [DictKey.N]: Ref | StringStream | number | null,
   [DictKey.Name]: Name | string,
   [DictKey.Names]: Dict,
   [DictKey.NeedAppearances]: boolean,
@@ -718,6 +719,7 @@ export type DictValueTypeMapping = {
   [DictKey.CFM]: Name,
   [DictKey.DV]: string[] | string | null,
   [DictKey.Ff]: number,
+  [DictKey.Opt]: unknown[]
 }
 
 

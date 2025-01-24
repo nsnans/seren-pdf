@@ -202,8 +202,8 @@ export interface FieldObject {
   id: string;
   actions: Map<string, string[]> | null;
   name: string;
-  strokeColor: Uint8ClampedArray | null;
-  fillColor: Uint8ClampedArray | null;
+  strokeColor: Uint8ClampedArray<ArrayBuffer> | null;
+  fillColor: Uint8ClampedArray<ArrayBuffer> | null;
   type: string;
   kidIds: string[] | null;
   page: number;
@@ -222,7 +222,6 @@ export interface PreEvaluatedFont {
   hash: string;
   cssFontInfo: CssFontInfo | null;
 }
-
 
 export interface DefaultTextContentItem {
   initialized: boolean;

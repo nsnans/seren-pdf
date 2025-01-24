@@ -46,7 +46,7 @@ import {
 import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
-import { Catalog } from "./catalog";
+import { Catalog, DestinationType } from "./catalog";
 import { ColorSpace } from "./colorspace";
 import { EvaluatorTextContent, FieldObject, isFullTextContentItem, StreamSink } from "./core_types";
 import {
@@ -93,7 +93,7 @@ export interface AnnotationParameters {
   // TODO 这里需要再次验证
   annotationGlobals: AnnotationGlobals,
   collectFields: boolean;
-  orphanFields: RefSetCache | null;
+  orphanFields: RefSetCache<Ref, Ref> | null;
   needAppearances: boolean;
   pageIndex: number | null;
   evaluatorOptions: DocumentEvaluatorOptions;
@@ -109,12 +109,14 @@ export interface AnnotationGlobals {
   attachments: Map<string, FileSpecSerializable> | null;
 }
 
+interface AnnotationDependency { ref: Ref; data: string | null; }
+
 export class MarkupAnnotationFactory {
 
   static async createNewFreeTextAnnotation(
     xref: XRef,
     annotation: FreeTextEditorSerial,
-    dependencies: { ref: Ref; data: string | null; }[],
+    dependencies: AnnotationDependency[],
     evaluator: PartialEvaluator,
     task: WorkerTask,
     baseFontRef: Ref | null,
@@ -130,11 +132,11 @@ export class MarkupAnnotationFactory {
 
     if (ap) {
       const apRef = xref.getNewTemporaryRef();
-      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, { apRef });
+      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, apRef, null);
       await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
-      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, {});
+      annotationDict = FreeTextAnnotation.createNewDict(annotation, xref, null, null);
     }
     if (Number.isInteger(annotation.parentTreeId)) {
       annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
@@ -149,7 +151,7 @@ export class MarkupAnnotationFactory {
   static async createNewHighlightAnnotation(
     xref: XRef,
     annotation: AnnotationEditorSerial,
-    dependencies: { ref: Ref; data: string | null; }[]
+    dependencies: AnnotationDependency[]
   ) {
     if (!annotation.ref) {
       annotation.ref = xref.getNewTemporaryRef();
@@ -162,11 +164,11 @@ export class MarkupAnnotationFactory {
 
     if (ap) {
       const apRef = xref.getNewTemporaryRef();
-      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, { apRef });
+      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, apRef, null);
       await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
-      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, {});
+      annotationDict = HighlightAnnotation.createNewDict(annotation, xref, null, null);
     }
     if (Number.isInteger(annotation.parentTreeId)) {
       annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
@@ -181,7 +183,7 @@ export class MarkupAnnotationFactory {
   static async createNewInkAnnotation(
     xref: XRef,
     annotation: AnnotationEditorSerial,
-    dependencies: { ref: Ref; data: string | null; }[]
+    dependencies: AnnotationDependency[]
   ) {
     if (!annotation.ref) {
       annotation.ref = xref.getNewTemporaryRef();
@@ -194,11 +196,11 @@ export class MarkupAnnotationFactory {
 
     if (ap) {
       const apRef = xref.getNewTemporaryRef();
-      annotationDict = InkAnnotation.createNewDict(annotation, xref, { apRef });
+      annotationDict = InkAnnotation.createNewDict(annotation, xref, apRef, null);
       await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
-      annotationDict = InkAnnotation.createNewDict(annotation, xref, {});
+      annotationDict = InkAnnotation.createNewDict(annotation, xref, null, null);
     }
     if (Number.isInteger(annotation.parentTreeId)) {
       annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
@@ -214,8 +216,8 @@ export class MarkupAnnotationFactory {
   static async createNewStampAnnotation(
     xref: XRef,
     annotation: AnnotationEditorSerial,
-    dependencies: { ref: Ref; data: string | null; }[],
-    image: CreateStampImageResult | null
+    dependencies: AnnotationDependency[],
+    image: CreateStampImageResult
   ) {
     if (!annotation.ref) {
       annotation.ref = xref.getNewTemporaryRef();
@@ -223,19 +225,19 @@ export class MarkupAnnotationFactory {
 
     const annotationRef = <Ref>annotation.ref;
     const ap = await StampAnnotation.createNewAppearanceStream(annotation, xref, image);
-    const buffer = <string[]>[];
+    const buffer: string[] = [];
     let annotationDict;
 
     if (ap) {
       const apRef = xref.getNewTemporaryRef();
-      annotationDict = StampAnnotation.createNewDict(annotation, xref, { apRef });
+      annotationDict = StampAnnotation.createNewDict(annotation, xref, apRef, null);
       await writeObject(apRef, ap, buffer, xref.encrypt);
       dependencies.push({ ref: apRef, data: buffer.join("") });
     } else {
-      annotationDict = StampAnnotation.createNewDict(annotation, xref, {});
+      annotationDict = StampAnnotation.createNewDict(annotation, xref, null, null);
     }
     if (Number.isInteger(annotation.parentTreeId)) {
-      annotationDict.set(DictKey.StructParent, annotation.parentTreeId);
+      annotationDict.set(DictKey.StructParent, <number>annotation.parentTreeId);
     }
 
     buffer.length = 0;
@@ -252,7 +254,7 @@ export class MarkupAnnotationFactory {
   ) {
     const ap = await InkAnnotation.createNewAppearanceStream(annotation, xref);
     const annotationDict = InkAnnotation.createNewDict(
-      annotation, xref, ap ? { ap } : {}
+      annotation, xref, null, ap
     );
 
     const newAnnotation = new InkAnnotation({
@@ -267,15 +269,18 @@ export class MarkupAnnotationFactory {
   }
 
   static async createNewHightlightPrintAnnotation(
-    annotationGlobals: AnnotationGlobals, xref: XRef, annotation: HighlightEditorSerial
+    annotationGlobals: AnnotationGlobals,
+    xref: XRef,
+    annotation: HighlightEditorSerial,
+    evaluatorOptions: DocumentEvaluatorOptions
   ) {
     const ap = await HighlightAnnotation.createNewAppearanceStream(annotation, xref);
     const annotationDict = HighlightAnnotation.createNewDict(
-      annotation, xref, ap ? { ap } : {}
+      annotation, xref, null, ap
     );
 
     const newAnnotation = new HighlightAnnotation({
-      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: evaluatorOptions,
     });
 
     if (annotation.ref) {
@@ -291,15 +296,17 @@ export class MarkupAnnotationFactory {
     annotation: FreeTextEditorSerial,
     evaluator: PartialEvaluator,
     task: WorkerTask,
-    baseFontRef: Ref
+    evaluatorOptions: DocumentEvaluatorOptions
   ) {
-    const ap = await FreeTextAnnotation.createNewAppearanceStream(annotation, xref, evaluator, task, baseFontRef);
+    const ap = await FreeTextAnnotation.createNewAppearanceStream(
+      annotation, xref, evaluator, task, null
+    );
     const annotationDict = FreeTextAnnotation.createNewDict(
-      annotation, xref, ap ? { ap } : {}
+      annotation, xref, null, ap
     );
 
     const newAnnotation = new FreeTextAnnotation({
-      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions,
     });
 
     if (annotation.ref) {
@@ -314,14 +321,15 @@ export class MarkupAnnotationFactory {
     xref: XRef,
     annotation: AnnotationEditorSerial,
     image: CreateStampImageResult | null,
+    evaluatorOptions: DocumentEvaluatorOptions
   ) {
     const ap = await StampAnnotation.createNewAppearanceStream(annotation, xref, image!);
     const annotationDict = StampAnnotation.createNewDict(
-      annotation, xref, ap ? { ap } : {}
+      annotation, xref, null, ap
     );
 
     const newAnnotation = new StampAnnotation({
-      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: params.evaluatorOptions,
+      dict: annotationDict, xref, annotationGlobals, evaluatorOptions,
     });
 
     if (annotation.ref) {
@@ -380,9 +388,9 @@ export class AnnotationFactory {
     annotationGlobals: AnnotationGlobals,
     idFactory: LocalIdFactory | null,
     collectFields: boolean,
-    orphanFields: RefSetCache,
+    orphanFields: RefSetCache<Ref, Ref> | null,
     pageRef: Ref | null
-  ): Promise<Annotation> {
+  ): Promise<Annotation<AnnotationData>> {
 
     const pdfManager = annotationGlobals.pdfManager;
     const pageIndex = collectFields ? await this._getPageIndex(xref, ref, pdfManager) : null;
@@ -394,17 +402,14 @@ export class AnnotationFactory {
     return pdfManager.ensure(AnnotationFactory, createFn);
   }
 
-  /**
-   * @private
-   */
-  static _create(
+  private static _create(
     xref: XRef, ref: Ref, annotationGlobals: AnnotationGlobals, idFactory: LocalIdFactory,
-    collectFields = false, orphanFields: RefSetCache | null = null, pageIndex: number | null = null,
+    collectFields = false, orphanFields: RefSetCache<Ref, Ref> | null = null, pageIndex: number | null = null,
     pageRef: Ref | null = null
-  ) {
+  ): Annotation<AnnotationData> | null {
     const dict = xref.fetchIfRef(ref);
     if (!(dict instanceof Dict)) {
-      return undefined;
+      return null;
     }
 
     const { acroForm, pdfManager } = annotationGlobals;
@@ -579,7 +584,7 @@ export class AnnotationFactory {
   ) {
     const xref = evaluator.xref;
     let baseFontRef;
-    const dependencies = <{ ref: Ref, data: string | null }[]>[];
+    const dependencies: AnnotationDependency[] = [];
     const promises = [];
     const { isOffscreenCanvasSupported } = evaluator.options;
 
@@ -606,13 +611,19 @@ export class AnnotationFactory {
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(MarkupAnnotationFactory.createNewHighlightAnnotation(xref, annotation, dependencies));
+            promises.push(MarkupAnnotationFactory.createNewHighlightAnnotation(
+              xref, annotation, dependencies
+            ));
           } else {
-            promises.push(MarkupAnnotationFactory.createNewInkAnnotation(xref, annotation, dependencies));
+            promises.push(MarkupAnnotationFactory.createNewInkAnnotation(
+              xref, annotation, dependencies
+            ));
           }
           break;
         case AnnotationEditorType.INK:
-          promises.push(MarkupAnnotationFactory.createNewInkAnnotation(xref, annotation, dependencies));
+          promises.push(MarkupAnnotationFactory.createNewInkAnnotation(
+            xref, annotation, dependencies
+          ));
           break;
         case AnnotationEditorType.STAMP:
           const image = isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId!) : null;
@@ -632,7 +643,7 @@ export class AnnotationFactory {
             image.imageStream = image.smaskStream = null;
           }
           promises.push(MarkupAnnotationFactory.createNewStampAnnotation(
-            xref, annotation, dependencies, <CreateStampImageResult | null>image
+            xref, annotation, dependencies, image!
           ));
           break;
       }
@@ -661,13 +672,13 @@ export class AnnotationFactory {
       switch (annotation.annotationType) {
         case AnnotationEditorType.FREETEXT:
           promises.push(MarkupAnnotationFactory.createNewFreeTextPrintAnnotation(
-            annotationGlobals, xref, annotation, evaluator, task
+            annotationGlobals, xref, annotation, evaluator, task, options
           ));
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
             promises.push(MarkupAnnotationFactory.createNewHightlightPrintAnnotation(
-              annotationGlobals, xref, annotation
+              annotationGlobals, xref, annotation, options
             ));
           } else {
             promises.push(MarkupAnnotationFactory.createNewInkPrintAnnotation(
@@ -681,7 +692,7 @@ export class AnnotationFactory {
           ));
           break;
         case AnnotationEditorType.STAMP:
-          const image = options.isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId) : null;
+          const image = options.isOffscreenCanvasSupported ? await imagePromises?.get(annotation.bitmapId!) : null;
           if (image?.imageStream) {
             const { imageStream, smaskStream } = image;
             if (smaskStream) {
@@ -691,7 +702,7 @@ export class AnnotationFactory {
             image.imageStream = image.smaskStream = null;
           }
           promises.push(MarkupAnnotationFactory.createNewStampPrintAnnotation(
-            annotationGlobals, xref, annotation, image || null,
+            annotationGlobals, xref, annotation, image || null, options
           ));
           break;
       }
@@ -827,6 +838,14 @@ export interface AnnotationData {
   actions?: Map<string, string[]>;
 }
 
+interface StringObj { str: string; dir: string; }
+
+interface AnnotationSaveRef {
+  ref: Ref | null;
+  data: string;
+  needAppearances?: boolean;
+}
+
 
 export class Annotation<DATA extends AnnotationData> {
 
@@ -860,9 +879,9 @@ export class Annotation<DATA extends AnnotationData> {
 
   public data: DATA;
 
-  protected _contents: { str: string, dir: string } = { str: "", dir: "" };
+  protected _contents: StringObj = { str: "", dir: "" };
 
-  protected _title: { str: string; dir: string; } = { str: "", dir: "" };
+  protected _title: StringObj = { str: "", dir: "" };
 
   protected _streams: BaseStream[];
 
@@ -980,7 +999,7 @@ export class Annotation<DATA extends AnnotationData> {
     let { flags } = this;
     if (noView === undefined) {
       if (noPrint === undefined) {
-        return undefined;
+        return null;
       }
       if (noPrint) {
         return flags & ~AnnotationFlag.PRINT;
@@ -1373,11 +1392,8 @@ export class Annotation<DATA extends AnnotationData> {
       if (!resources) {
         return undefined;
       }
-
       const objectLoader = new ObjectLoader(resources, keys, resources.xref!);
-      return objectLoader.load().then(function () {
-        return resources;
-      });
+      return objectLoader.load().then(() => resources);
     });
   }
 
@@ -1440,7 +1456,11 @@ export class Annotation<DATA extends AnnotationData> {
     return { opList, separateForm: false, separateCanvas: isUsingOwnCanvas };
   }
 
-  async save(_evaluator: PartialEvaluator, _task: WorkerTask, _annotationStorage: Map<string, Record<string, any>> | null) {
+  async save(
+    _evaluator: PartialEvaluator,
+    _task: WorkerTask,
+    _annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ): Promise<AnnotationSaveRef[] | null> {
     return null;
   }
 
@@ -1810,7 +1830,7 @@ export class AnnotationBorderStyle {
 interface MarkupData extends AnnotationData {
   replyType: string;
   inReplyTo: string | null;
-  titleObj: { str: string; dir: string; };
+  titleObj: StringObj;
   creationDate: string | null;
   popupRef: string | null;
 }
@@ -1992,6 +2012,18 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
 }
 
 interface WidgetData extends AnnotationData {
+  doNotScroll: boolean;
+  maxLen: number;
+  textAlignment: number | null;
+  comb: boolean;
+  multiLine: boolean;
+  options: {
+    // 这两个值从静态代码分析的角度来看，是有可能是string[]的
+    // 但根据代码的具体值来看，发现他们应该还是string类型的。
+    exportValue: string | null,
+    displayValue: string | null,
+  }[] | null;
+  combo: boolean | string | null;
   fieldValue: string | string[] | null;
   annotationType: AnnotationType;
   defaultFieldValue: string | string[] | null;
@@ -2003,7 +2035,21 @@ interface WidgetData extends AnnotationData {
   readOnly: boolean;
 }
 
-export class WidgetAnnotation extends Annotation<WidgetData> {
+interface CacheLine {
+  line: string;
+  glyphs: Glyph[];
+  positions: [number, number][];
+}
+
+function newCacheLine(): CacheLine {
+  return {
+    line: "",
+    glyphs: [],
+    positions: []
+  }
+}
+
+export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   protected _hasText: boolean = false;
 
@@ -2075,6 +2121,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       data.fieldFlags = fieldFlags;
     }
 
+    data.combo = null;
     data.readOnly = this.hasFieldFlag(AnnotationFieldFlag.READONLY);
     data.required = this.hasFieldFlag(AnnotationFieldFlag.REQUIRED);
     data.hidden = this._hasFlag(data.annotationFlags, AnnotationFlag.HIDDEN) ||
@@ -2153,8 +2200,8 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     return getRotationMatrix(rotation, width, height);
   }
 
-  getBorderAndBackgroundAppearances(annotationStorage: Map<string, Record<string, any>> | null) {
-    let rotation = annotationStorage?.get(this.data.id)?.rotation;
+  getBorderAndBackgroundAppearances(annotationStorage: Map<string, AnnotationEditorSerial> | null) {
+    let rotation = (<{ rotation?: number }>annotationStorage?.get(this.data.id))?.rotation;
     if (rotation === undefined) {
       rotation = this.rotation;
     }
@@ -2187,8 +2234,12 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     return str;
   }
 
-  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number
-    , annotationStorage: Map<string, Record<string, any>> | null) {
+  async getOperatorList(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    intent: number,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ) {
     // Do not render form elements on the canvas when interactive forms are
     // enabled. The display layer is responsible for rendering them instead.
     if (
@@ -2209,10 +2260,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     }
 
     const content = await this._getAppearance(
-      evaluator,
-      task,
-      intent,
-      annotationStorage
+      evaluator, task, intent, annotationStorage
     );
     if (this.appearance && content === null) {
       return super.getOperatorList(evaluator, task, intent, annotationStorage);
@@ -2241,10 +2289,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
     let optionalContent;
     if (this.oc) {
-      optionalContent = await evaluator.parseMarkedContentProps(
-        this.oc,
-        /* resources = */ null
-      );
+      optionalContent = await evaluator.parseMarkedContentProps(this.oc, null);
     }
     if (optionalContent !== undefined) {
       opList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
@@ -2258,7 +2303,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       isUsingOwnCanvas,
     ]);
 
-    const stream = new StringStream(content);
+    const stream = new StringStream(<string>content);
     await evaluator.getOperatorList(
       stream,
       task,
@@ -2287,47 +2332,47 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     return mk.size > 0 ? mk : null;
   }
 
-  amendSavedDict(_annotationStorage: Map<string, Record<string, any>> | null, _dict: Dict) { }
+  amendSavedDict(_annotationStorage: Map<string, AnnotationEditorSerial> | null, _dict: Dict) { }
 
-  async save(evaluator: PartialEvaluator, task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
-    const storageEntry = annotationStorage?.get(this.data.id);
+  async save(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ): Promise<AnnotationSaveRef[] | null> {
+    interface MaybeType {
+      noView?: boolean,
+      noPrint?: boolean,
+      value?: string | string[],
+      rotation?: number
+    }
+    const storageEntry = <MaybeType>annotationStorage?.get(this.data.id);
     const flags = this._buildFlags(storageEntry?.noView, storageEntry?.noPrint);
-    let value = storageEntry?.value,
-      rotation = storageEntry?.rotation;
-    if (value === this.data.fieldValue || value === undefined) {
-      if (
-        rotation === undefined &&
-        flags === undefined
-      ) {
+    let value = storageEntry ? storageEntry.value : null;
+    let rotation = storageEntry ? storageEntry.rotation : null;
+    if (value === this.data.fieldValue || value === null) {
+      if (rotation === null && flags === null) {
         return null;
       }
       value ||= this.data.fieldValue;
     }
 
     // Value can be an array (with choice list and multiple selections)
-    if (
-      rotation === undefined &&
-      Array.isArray(value) &&
-      Array.isArray(this.data.fieldValue) &&
-      isArrayEqual(value, this.data.fieldValue) &&
-      flags === undefined
+    if (rotation === null && Array.isArray(value) && Array.isArray(this.data.fieldValue) &&
+      isArrayEqual(value, this.data.fieldValue) && flags === null
     ) {
       return null;
     }
 
-    if (rotation === undefined) {
+    if (rotation === null) {
       rotation = this.rotation;
     }
 
     let appearance = null;
     if (!this._needAppearances) {
       appearance = await this._getAppearance(
-        evaluator,
-        task,
-        RenderingIntentFlag.SAVE,
-        annotationStorage
+        evaluator, task, RenderingIntentFlag.SAVE, annotationStorage
       );
-      if (appearance === null && flags === undefined) {
+      if (appearance === null && flags === null) {
         // Appearance didn't change.
         return null;
       }
@@ -2337,7 +2382,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     }
 
     let needAppearances = false;
-    if (appearance?.needAppearances) {
+    if ((<{ needAppearances: boolean; }>appearance)?.needAppearances) {
       needAppearances = true;
       appearance = null;
     }
@@ -2351,12 +2396,12 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
     const dict = new Dict(xref);
     for (const key of originalDict.getKeys()) {
-      if (key !== "AP") {
-        dict.set(key, <any>originalDict.getRaw(key));
+      if (key !== DictKey.AP) {
+        dict.set(key, <unknown>originalDict.getRaw(key));
       }
     }
     if (flags !== undefined) {
-      dict.set(DictKey.F, flags);
+      dict.set(DictKey.F, flags!);
       if (appearance === null && !needAppearances) {
         const ap = originalDict.getRaw(DictKey.AP);
         if (ap) {
@@ -2365,20 +2410,15 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       }
     }
 
-    dict.set(
-      DictKey.V,
-      Array.isArray(value)
-        ? value.map(stringToAsciiOrUTF16BE)
-        : stringToAsciiOrUTF16BE(value)
-    );
+    dict.set(DictKey.V, Array.isArray(value) ? value.map(stringToAsciiOrUTF16BE) : stringToAsciiOrUTF16BE(value!));
     this.amendSavedDict(annotationStorage, dict);
 
-    const maybeMK = this._getMKDict(rotation);
+    const maybeMK = this._getMKDict(rotation!);
     if (maybeMK) {
       dict.set(DictKey.MK, maybeMK);
     }
 
-    const buffer = <string[]>[];
+    const buffer: string[] = [];
     const changes = [
       // data for the original object
       // V field changed + reference for new AP
@@ -2391,15 +2431,12 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       AP.set(DictKey.N, newRef);
 
       const resources = this._getSaveFieldResources(xref);
-      const appearanceStream = new StringStream(appearance);
+      const appearanceStream = new StringStream(<string>appearance);
       const appearanceDict = (appearanceStream.dict = new Dict(xref));
       appearanceDict.set(DictKey.Subtype, Name.get("Form"));
       appearanceDict.set(DictKey.Resources, resources);
       appearanceDict.set(DictKey.BBox, [
-        0,
-        0,
-        this.data.rect![2] - this.data.rect![0],
-        this.data.rect![3] - this.data.rect![1],
+        0, 0, this.data.rect![2] - this.data.rect![0], this.data.rect![3] - this.data.rect![1],
       ]);
 
       const rotationMatrix = this.getRotationMatrix(annotationStorage);
@@ -2410,14 +2447,8 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
       await writeObject(newRef, appearanceStream, buffer, xref.encrypt);
 
-      changes.push(
-        // data for the new AP
-        {
-          ref: newRef,
-          data: buffer.join(""),
-          needAppearances: false,
-        }
-      );
+      // data for the new AP
+      changes.push({ ref: newRef, data: buffer.join(""), needAppearances: false });
       buffer.length = 0;
     }
 
@@ -2429,23 +2460,29 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     return changes;
   }
 
-  async _getAppearance(evaluator: PartialEvaluator, task: WorkerTask, intent: number, annotationStorage: Map<string, Record<string, any>> | null) {
+  async _getAppearance(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    intent: number,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ) {
     const isPassword = this.hasFieldFlag(AnnotationFieldFlag.PASSWORD);
     if (isPassword) {
       return null;
     }
-    const storageEntry = annotationStorage?.get(this.data.id);
+    interface MaybeType {
+      formattedValue: string | string[];
+      value: string | string[];
+      rotation: number;
+    }
+    const storageEntry = <MaybeType | undefined>annotationStorage?.get(this.data.id);
     let value, rotation;
     if (storageEntry) {
       value = storageEntry.formattedValue || storageEntry.value;
       rotation = storageEntry.rotation;
     }
 
-    if (
-      rotation === undefined &&
-      value === undefined &&
-      !this._needAppearances
-    ) {
+    if (rotation === undefined && value === undefined && !this._needAppearances) {
       if (this.appearance) {
         // The annotation hasn't been rendered so use the appearance.
         return null;
@@ -2468,14 +2505,14 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     }
 
     assert(typeof value === "string", "Expected `value` to be a string.");
-    let strVal = (<string>value).trimEnd();
+    let strVal = value.trimEnd();
 
     if (this.data.combo) {
       // The value can be one of the exportValue or any other values.
       const option = this.data.options!.find(
         ({ exportValue }) => strVal === exportValue
       );
-      strVal = option?.displayValue as string || strVal;
+      strVal = option?.displayValue || strVal;
     }
 
     if (strVal === "") {
@@ -2571,7 +2608,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       const newFont = <Dict>resources.getRaw(DictKey.Font);
 
       if (this._fieldResources.mergedResources.has(DictKey.Font)) {
-        const oldFont = this._fieldResources.mergedResources.get(DictKey.Font);
+        const oldFont = <Dict>this._fieldResources.mergedResources.getValue(DictKey.Font);
         for (const key of newFont.getKeys()) {
           oldFont.set(key, newFont.getRaw(key));
         }
@@ -2581,10 +2618,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
       const fontName = fakeUnicodeFont.fontName.name;
       font = await WidgetAnnotation._getFontData(
-        evaluator,
-        task,
-        { fontName, fontSize: 0 },
-        resources
+        evaluator, task, { fontName, fontSize: 0 }, resources
       );
 
       for (let i = 0, ii = encodedLines.length; i < ii; i++) {
@@ -2592,34 +2626,23 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       }
 
       const savedDefaultAppearance = Object.assign(
-        Object.create(null),
-        this.data.defaultAppearanceData
+        Object.create(null), this.data.defaultAppearanceData
       );
       this.data.defaultAppearanceData!.fontSize = 0;
       this.data.defaultAppearanceData!.fontName = fontName;
 
       [defaultAppearance, fontSize, lineHeight] = this._computeFontSize(
-        totalHeight - 2 * defaultPadding,
-        totalWidth - 2 * defaultHPadding,
-        strVal,
-        font!,
-        lineCount
+        totalHeight - 2 * defaultPadding, totalWidth - 2 * defaultHPadding, strVal, font!, lineCount
       );
 
       this.data.defaultAppearanceData = savedDefaultAppearance;
     } else {
       if (!this._isOffscreenCanvasSupported) {
-        warn(
-          "_getAppearance: OffscreenCanvas is not supported, annotation may not render correctly."
-        );
+        warn("_getAppearance: OffscreenCanvas is not supported, annotation may not render correctly.");
       }
 
       [defaultAppearance, fontSize, lineHeight] = this._computeFontSize(
-        totalHeight - 2 * defaultPadding,
-        totalWidth - 2 * defaultHPadding,
-        strVal,
-        font!,
-        lineCount
+        totalHeight - 2 * defaultPadding, totalWidth - 2 * defaultHPadding, strVal, font!, lineCount
       );
     }
 
@@ -2645,7 +2668,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
       return this._getMultilineAppearance(
         defaultAppearance,
         encodedLines,
-        font,
+        <Font>font,
         fontSize,
         totalWidth,
         totalHeight,
@@ -2661,7 +2684,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
     if (this.data.comb) {
       return this._getCombAppearance(
         defaultAppearance,
-        font,
+        <Font>font,
         encodedLines[0],
         fontSize,
         totalWidth,
@@ -2689,14 +2712,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
     const prevInfo = { shift: 0 };
     const renderedText = this._renderText(
-      encodedLines[0],
-      font!,
-      fontSize,
-      totalWidth,
-      alignment!,
-      prevInfo,
-      defaultHPadding,
-      bottomPadding
+      encodedLines[0], font!, fontSize, totalWidth, alignment!, prevInfo, defaultHPadding, bottomPadding
     );
     return (
       `/Tx BMC q ${colors}BT ` +
@@ -2731,10 +2747,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
   }
 
   _getTextWidth(text: string, font: Font | ErrorFont) {
-    return (
-      font.charsToGlyphs(text)
-        .reduce((width: number, glyph) => width + glyph.width, 0) / 1000
-    );
+    return (font.charsToGlyphs(text).reduce((width, glyph) => width + glyph.width, 0) / 1000);
   }
 
   _computeFontSize(height: number, width: number, text: string, font: Font | ErrorFont, lineCount: number): [string, number, number] {
@@ -2761,27 +2774,19 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
         numberOfLines = 1;
       } else {
         const lines = text.split(/\r\n?|\n/);
-        const cachedLines = <{
-          line: string,
-          glyphs: Glyph[],
-          positions: [number, number][]
-        }[]>[];
+        const cachedLines: CacheLine[] = [];
         for (const line of lines) {
           const encoded = font.encodeString(line).join("");
           const glyphs = font.charsToGlyphs(encoded);
           const positions = (<Font>font).getCharPositions(encoded);
-          cachedLines.push({
-            line: encoded,
-            glyphs,
-            positions,
-          });
+          cachedLines.push({ line: encoded, glyphs, positions });
         }
 
         const isTooBig = (fsize: number) => {
           // Return true when the text doesn't fit the given height.
           let totalHeight = 0;
           for (const cache of cachedLines) {
-            const chunks = this._splitLine(null, font, fsize, width, cache);
+            const chunks = this._splitLine(null, <Font>font, fsize, width, cache);
             totalHeight += chunks.length * fsize;
             if (totalHeight > height) {
               return true;
@@ -2824,7 +2829,7 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
 
   _renderText(
     text: string,
-    font: Font,
+    font: Font | ErrorFont,
     fontSize: number,
     totalWidth: number,
     alignment: number,
@@ -2899,9 +2904,52 @@ export class WidgetAnnotation extends Annotation<WidgetData> {
   getFieldObject() {
     return null;
   }
+
+  _getMultilineAppearance(
+    _defaultAppearance: string,
+    _lines: string[],
+    _font: Font,
+    _fontSize: number,
+    _width: number,
+    _height: number,
+    _alignment: number | null,
+    _hPadding: number,
+    _vPadding: number,
+    _descent: number,
+    _lineHeight: number,
+    _annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ) {
+    return "";
+  }
+
+  _getCombAppearance(
+    _defaultAppearance: string,
+    _font: Font | ErrorFont,
+    _text: string,
+    _fontSize: number,
+    _width: number,
+    _height: number,
+    _hPadding: number,
+    _vPadding: number,
+    _descent: number,
+    _lineHeight: number,
+    _annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ) {
+    return "";
+  }
+
+  _splitLine(
+    _line: string | null,
+    _font: Font,
+    _fontSize: number,
+    _width: number,
+    _cache: CacheLine
+  ): string[] {
+    return []
+  }
 }
 
-class TextWidgetAnnotation extends WidgetAnnotation {
+class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
 
   protected _hasText: boolean;
 
@@ -2966,7 +3014,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     vPadding: number,
     descent: number,
     _lineHeight: number,
-    annotationStorage: Map<string, Record<string, any>> | null
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
     const combWidth = width / this.data.maxLen!;
     // Empty or it has a trailing whitespace.
@@ -3001,7 +3049,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     vPadding: number,
     descent: number,
     lineHeight: number,
-    annotationStorage: Map<string, Record<string, any>> | null
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
     const buf = [];
     const totalWidth = width - 2 * hPadding;
@@ -3040,11 +3088,10 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     );
   }
 
-  _splitLine(line: string, font: Font, fontSize: number, width: number, cache: {
-    line?: string,
-    glyphs?: Glyph[],
-    positions?: [number, number][]
-  } = {}): string[] {
+  _splitLine(
+    line: string, font: Font, fontSize: number, width: number,
+    cache: CacheLine = newCacheLine()
+  ): string[] {
     line = cache.line || line;
 
     const glyphs = cache.glyphs || font.charsToGlyphs(line);
@@ -3058,11 +3105,11 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     const scale = fontSize / 1000;
     const chunks = [];
 
-    let lastSpacePosInStringStart = -1,
-      lastSpacePosInStringEnd = -1,
-      lastSpacePos = -1,
-      startChunk = 0,
-      currentWidth = 0;
+    let lastSpacePosInStringStart = -1;
+    let lastSpacePosInStringEnd = -1;
+    let lastSpacePos = -1;
+    let startChunk = 0;
+    let currentWidth = 0;
 
     for (let i = 0, ii = glyphs.length; i < ii; i++) {
       const [start, end] = positions[i];
@@ -3153,7 +3200,19 @@ class TextWidgetAnnotation extends WidgetAnnotation {
   }
 }
 
-class ButtonWidgetAnnotation extends WidgetAnnotation {
+interface ButtonWidgetData extends WidgetData {
+  buttonValue: string | null;
+  exportValue: string | null;
+  checkBox: boolean;
+  radioButton: boolean;
+  pushButton: boolean;
+  isTooltipOnly: boolean;
+  action: string | null;
+  url: string | null;
+  dest: string | DestinationType | null;
+}
+
+class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   protected checkedAppearance: BaseStream | null;
   protected uncheckedAppearance: BaseStream | null;
@@ -3165,11 +3224,9 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     this.checkedAppearance = null;
     this.uncheckedAppearance = null;
 
-    this.data.checkBox =
-      !this.hasFieldFlag(AnnotationFieldFlag.RADIO) &&
+    this.data.checkBox = !this.hasFieldFlag(AnnotationFieldFlag.RADIO) &&
       !this.hasFieldFlag(AnnotationFieldFlag.PUSHBUTTON);
-    this.data.radioButton =
-      this.hasFieldFlag(AnnotationFieldFlag.RADIO) &&
+    this.data.radioButton = this.hasFieldFlag(AnnotationFieldFlag.RADIO) &&
       !this.hasFieldFlag(AnnotationFieldFlag.PUSHBUTTON);
     this.data.pushButton = this.hasFieldFlag(AnnotationFieldFlag.PUSHBUTTON);
     this.data.isTooltipOnly = false;
@@ -3187,13 +3244,20 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     }
   }
 
-  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number, annotationStorage: Map<string, Record<string, any>> | null) {
+  async getOperatorList(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    intent: number,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ) {
+    // 这显然是一段废弃的代码，明明函数只有四个参数，但是却有五个参数，
+    // 而且是一个明显的错位
     if (this.data.pushButton) {
       return super.getOperatorList(
         evaluator,
         task,
         intent,
-        false, // we use normalAppearance to render the button 
+        // false, // we use normalAppearance to render the button 
         annotationStorage
       );
     }
@@ -3201,7 +3265,12 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     let value = null;
     let rotation = null;
     if (annotationStorage) {
-      const storageEntry = annotationStorage.get(this.data.id);
+      interface MaybeType {
+        // 不知道什么类型，确实也可以是unknown
+        value: unknown;
+        rotation: number;
+      }
+      const storageEntry = <MaybeType | undefined>annotationStorage.get(this.data.id);
       value = storageEntry ? storageEntry.value : null;
       rotation = storageEntry ? storageEntry.rotation : null;
     }
@@ -3215,13 +3284,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     if (value === null || value === undefined) {
       // There is no default appearance so use the one derived
       // from the field value.
-      value = this.data.checkBox
-        ? this.data.fieldValue === this.data.exportValue
+      value = this.data.checkBox ? this.data.fieldValue === this.data.exportValue
         : this.data.fieldValue === this.data.buttonValue;
     }
 
-    const appearance = value
-      ? this.checkedAppearance
+    const appearance = value ? this.checkedAppearance
       : this.uncheckedAppearance;
     if (appearance) {
       const savedAppearance = this.appearance;
@@ -3257,7 +3324,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     };
   }
 
-  async save(evaluator: PartialEvaluator, task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
+  async save(
+    evaluator: PartialEvaluator,
+    task: WorkerTask,
+    annotationStorage: Map<string, AnnotationEditorSerial> | null
+  ): Promise<AnnotationSaveRef[] | null> {
     if (this.data.checkBox) {
       return this._saveCheckbox(evaluator, task, annotationStorage);
     }
@@ -3270,14 +3341,20 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     return null;
   }
 
-  async _saveCheckbox(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
+  async _saveCheckbox(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (!annotationStorage) {
       return null;
     }
-    const storageEntry = annotationStorage.get(this.data.id);
+    interface MaybeType {
+      noView?: boolean,
+      noPrint?: boolean,
+      value?: boolean,
+      rotation?: number
+    }
+    const storageEntry = <MaybeType>annotationStorage.get(this.data.id);
     const flags = this._buildFlags(storageEntry?.noView, storageEntry?.noPrint);
-    let rotation = storageEntry?.rotation,
-      value = storageEntry?.value;
+    let rotation = storageEntry?.rotation;
+    let value = storageEntry?.value;
 
     if (rotation === undefined && flags === undefined) {
       if (value === undefined) {
@@ -3290,7 +3367,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       }
     }
 
-    let dict: Dict | null = evaluator.xref.fetchIfRef(this.ref!);
+    let dict = <Dict>evaluator.xref.fetchIfRef(this.ref!);
     if (!(dict instanceof Dict)) {
       return null;
     }
@@ -3308,7 +3385,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     dict.set(DictKey.AS, name);
     dict.set(DictKey.M, `D:${getModificationDate()}`);
     if (flags !== undefined) {
-      dict.set(DictKey.F, flags);
+      dict.set(DictKey.F, flags!);
     }
 
     const maybeMK = this._getMKDict(rotation);
@@ -3342,7 +3419,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       }
     }
 
-    let dict: Dict | null = evaluator.xref.fetchIfRef(this.ref!);
+    let dict = <Dict>evaluator.xref.fetchIfRef(this.ref!);
     if (!(dict instanceof Dict)) {
       return null;
     }
@@ -3362,7 +3439,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
 
     if (value) {
       if (this.parent instanceof Ref) {
-        const parent = evaluator.xref.fetch(this.parent);
+        const parent = <Dict>evaluator.xref.fetch(this.parent);
         parent.set(DictKey.V, name);
         await writeObject(this.parent, parent, buffer, evaluator.xref.encrypt);
         parentData = buffer.join("");
@@ -3380,7 +3457,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
     dict.set(DictKey.AS, name!);
     dict.set(DictKey.M, `D:${getModificationDate()}`);
     if (flags !== undefined) {
-      dict.set(DictKey.F, flags);
+      dict.set(DictKey.F, flags!);
     }
 
     const maybeMK = this._getMKDict(rotation);
@@ -3502,7 +3579,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
       this.data.fieldValue = "Off";
     }
 
-    this.data.exportValue = exportValues[1];
+    this.data.exportValue = <string>exportValues[1];
 
     const checkedAppearance = normalAppearance.getValue(<DictKey>this.data.exportValue!);
     this.checkedAppearance =
@@ -3633,7 +3710,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation {
   }
 }
 
-class ChoiceWidgetAnnotation extends WidgetAnnotation {
+interface ChoiceWidgetData extends WidgetData {
+  multiSelect: boolean;
+}
+
+class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
 
   hasIndices: boolean;
   // TODO 要再推断推断
@@ -3661,14 +3742,14 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     const options = getSingleInheritableProperty(dict, DictKey.Opt);
     if (Array.isArray(options)) {
       for (let i = 0, ii = options.length; i < ii; i++) {
-        const option = xref.fetchIfRef(options[i]);
+        const option = xref.fetchIfRef(<object>options[i]);
         const isOptionArray = Array.isArray(option);
 
         this.data.options[i] = {
-          exportValue: this._decodeFormValue(
+          exportValue: <string>this._decodeFormValue(
             isOptionArray ? xref.fetchIfRef(option[0]) : option
           ),
-          displayValue: this._decodeFormValue(
+          displayValue: <string>this._decodeFormValue(
             isOptionArray ? xref.fetchIfRef(option[1]) : option
           ),
         };
@@ -3749,23 +3830,24 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
   }
 
   async _getAppearance(evaluator: PartialEvaluator, task: WorkerTask, intent: number
-    , annotationStorage: Map<string, Record<string, any>> | null) {
+    , annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (this.data.combo) {
       return super._getAppearance(evaluator, task, intent, annotationStorage);
     }
 
-    let exportedValue, rotation;
-    const storageEntry = annotationStorage?.get(this.data.id);
+    let exportedValue: string | string[] | null = null;
+    let rotation: number | null = null;
+    interface StorageEntry {
+      rotation: number;
+      value: string;
+    }
+    const storageEntry = <StorageEntry | undefined>annotationStorage?.get(this.data.id);
     if (storageEntry) {
       rotation = storageEntry.rotation;
       exportedValue = storageEntry.value;
     }
 
-    if (
-      rotation === undefined &&
-      exportedValue === undefined &&
-      !this._needAppearances
-    ) {
+    if (rotation === null && exportedValue === null && !this._needAppearances) {
       // The annotation hasn't been rendered so use the appearance
       return null;
     }
@@ -3773,7 +3855,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
     if (exportedValue === undefined) {
       exportedValue = this.data.fieldValue;
     } else if (!Array.isArray(exportedValue)) {
-      exportedValue = [exportedValue];
+      exportedValue = [<string>exportedValue];
     }
 
     const defaultPadding = 1;
@@ -3897,7 +3979,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation {
   }
 }
 
-class SignatureWidgetAnnotation extends WidgetAnnotation {
+class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -3919,7 +4001,14 @@ class SignatureWidgetAnnotation extends WidgetAnnotation {
   }
 }
 
-class TextAnnotation extends MarkupAnnotation {
+interface TextData extends MarkupData {
+  stateModel: string | null;
+  state: Name[] | null;
+  annotationType: AnnotationType;
+  name: string;
+}
+
+class TextAnnotation extends MarkupAnnotation<TextData> {
   constructor(params: AnnotationParameters) {
     const DEFAULT_ICON_SIZE = 22; // px
 
@@ -3938,11 +4027,11 @@ class TextAnnotation extends MarkupAnnotation {
     } else {
       this.data.rect![1] = this.data.rect![3] - DEFAULT_ICON_SIZE;
       this.data.rect![2] = this.data.rect![0] + DEFAULT_ICON_SIZE;
-      this.data.name = dict.has(DictKey.Name) ? dict.getValue(DictKey.Name).name : "Note";
+      this.data.name = dict.has(DictKey.Name) ? (<Name>dict.getValue(DictKey.Name)).name : "Note";
     }
 
     if (dict.has(DictKey.State)) {
-      this.data.state = dict.getValue(DictKey.State) || null;
+      this.data.state = <Name[]>dict.getValue(DictKey.State) || null;
       this.data.stateModel = dict.getValue(DictKey.StateModel) || null;
     } else {
       this.data.state = null;
@@ -3951,7 +4040,14 @@ class TextAnnotation extends MarkupAnnotation {
   }
 }
 
-class LinkAnnotation extends Annotation {
+interface LinkData extends AnnotationData {
+  annotationType: AnnotationType;
+  action: string | null;
+  url: string | null;
+  dest: string | DestinationType | null;
+}
+
+class LinkAnnotation extends Annotation<LinkData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -3968,7 +4064,7 @@ class LinkAnnotation extends Annotation {
     }
 
     // The color entry for a link annotation is the color of the border.
-    this.data.borderColor ||= <Uint8ClampedArray | null>this.data.color;
+    this.data.borderColor ||= this.data.color;
 
     Catalog.parseDestDictionary(
       dict,
@@ -3979,7 +4075,14 @@ class LinkAnnotation extends Annotation {
   }
 }
 
-export class PopupAnnotation extends Annotation {
+interface PopupData extends AnnotationData {
+  titleObj: StringObj;
+  open: boolean;
+  annotationType: AnnotationType;
+  parentRect: RectType;
+}
+
+export class PopupAnnotation extends Annotation<PopupData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4004,17 +4107,17 @@ export class PopupAnnotation extends Annotation {
     }
     this.data.parentRect = lookupNormalRect(parentItem.getArrayValue(DictKey.Rect), null)!;
 
-    const rt = parentItem.get(DictKey.RT);
+    const rt = parentItem.getValue(DictKey.RT);
     if (isName(rt, AnnotationReplyType.GROUP)) {
       // Subordinate annotations in a group should inherit
       // the group attributes from the primary annotation.
-      parentItem = parentItem.get(DictKey.IRT);
+      parentItem = <Dict>parentItem.getValue(DictKey.IRT);
     }
 
     if (!parentItem.has(DictKey.M)) {
       this.data.modificationDate = null;
     } else {
-      this.setModificationDate(parentItem.get(DictKey.M));
+      this.setModificationDate(parentItem.getValue(DictKey.M));
       this.data.modificationDate = this.modificationDate;
     }
 
@@ -4030,24 +4133,35 @@ export class PopupAnnotation extends Annotation {
     // that is most likely a bug. Fallback to inherit the flags from the parent
     // annotation (this is consistent with the behaviour in Adobe Reader).
     if (!this.viewable) {
-      const parentFlags = parentItem.get(DictKey.F);
+      const parentFlags = <number>parentItem.getValue(DictKey.F);
       if (this._isViewable(parentFlags)) {
         this.setFlags(parentFlags);
       }
     }
 
-    this.setTitle(parentItem.get(DictKey.T));
+    this.setTitle(<string>parentItem.getValue(DictKey.T));
     this.data.titleObj = this._title;
 
-    this.setContents(parentItem.get(DictKey.Contents));
+    this.setContents(<string>parentItem.getValue(DictKey.Contents));
     this.data.contentsObj = this._contents;
 
     this.data.open = !!dict.getValue(DictKey.Open);
   }
 }
 
-class FreeTextAnnotation extends MarkupAnnotation {
+interface FreeTextData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
+
+  public ref: Ref | null = null;
+
+  public refToReplace: Ref | null = null;
+
   protected _hasAppearance: boolean;
+
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4066,7 +4180,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
 
     if (this._hasAppearance) {
       const { fontColor, fontSize } = parseAppearanceStream(
-        this.appearance,
+        <Stream>this.appearance!,
         evaluatorOptions,
         xref
       );
@@ -4106,7 +4220,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     return this._hasAppearance;
   }
 
-  static createNewDict(annotation: FreeTextEditorSerial, xref: XRef, { apRef, ap }) {
+  static createNewDict(annotation: FreeTextEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
     const { color, fontSize, oldAnnotation, rect, rotation, user, value } = annotation;
     const freetext = oldAnnotation || new Dict(xref);
     freetext.set(DictKey.Type, Name.get("Annot"));
@@ -4138,7 +4252,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
       if (apRef) {
         n.set(DictKey.N, apRef);
       } else {
-        n.set(DictKey.N, ap);
+        n.set(DictKey.N, ap!);
       }
     }
 
@@ -4273,7 +4387,13 @@ class FreeTextAnnotation extends MarkupAnnotation {
   }
 }
 
-class LineAnnotation extends MarkupAnnotation {
+interface LineData extends MarkupData {
+  lineEndings: string[];
+  lineCoordinates: RectType;
+  annotationType: AnnotationType;
+}
+
+class LineAnnotation extends MarkupAnnotation<LineData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4342,7 +4462,12 @@ class LineAnnotation extends MarkupAnnotation {
   }
 }
 
-class SquareAnnotation extends MarkupAnnotation {
+interface SquareData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class SquareAnnotation extends MarkupAnnotation<SquareData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4392,7 +4517,13 @@ class SquareAnnotation extends MarkupAnnotation {
   }
 }
 
-class CircleAnnotation extends MarkupAnnotation {
+interface CircleData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class CircleAnnotation extends MarkupAnnotation<CircleData> {
+
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4457,7 +4588,13 @@ class CircleAnnotation extends MarkupAnnotation {
   }
 }
 
-class PolylineAnnotation extends MarkupAnnotation {
+interface PolylineData extends MarkupData {
+  annotationType: AnnotationType;
+  vertices: Float32Array<ArrayBuffer> | null;
+  lineEndings: string[];
+}
+
+class PolylineAnnotation extends MarkupAnnotation<PolylineData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4537,7 +4674,11 @@ class PolygonAnnotation extends PolylineAnnotation {
   }
 }
 
-class CaretAnnotation extends MarkupAnnotation {
+interface CaretData extends MarkupData {
+  annotationType: AnnotationType;
+}
+
+class CaretAnnotation extends MarkupAnnotation<CaretData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4640,7 +4781,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     }
   }
 
-  static createNewDict(annotation: InkEditorSerial, xref: XRef, { apRef, ap }) {
+  static createNewDict(annotation: InkEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
     const { color, opacity, paths, outlines, rect, rotation, thickness } = annotation;
     const ink = new Dict(xref);
     ink.set(DictKey.Type, Name.get("Annot"));
@@ -4743,17 +4884,14 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     return ap;
   }
 
-  static async createNewAppearanceStreamForHighlight(annotation, xref: XRef) {
+  static async createNewAppearanceStreamForHighlight(annotation: InkEditorSerial, xref: XRef) {
     const {
       color,
       rect,
       outlines: { outline },
       opacity,
     } = annotation;
-    const appearanceBuffer = [
-      `${getPdfColor(color, /* isFill */ true)}`,
-      "/R0 gs",
-    ];
+    const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs",];
 
     appearanceBuffer.push(
       `${numberToString(outline[4])} ${numberToString(outline[5])} m`
@@ -4806,7 +4944,6 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
 interface HighlightData extends MarkupData {
   annotationType: AnnotationType;
   opacity: number;
-
 }
 
 class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
@@ -4862,7 +4999,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     }
   }
 
-  static createNewDict(annotation: HighlightEditorSerial, xref: XRef, { apRef, ap }) {
+  static createNewDict(annotation: HighlightEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
 
     const { color, oldAnnotation, opacity, rect, rotation, user, quadPoints } = annotation;
     const highlight = oldAnnotation || new Dict(xref);
@@ -4890,7 +5027,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     if (apRef || ap) {
       const n = new Dict(xref);
       highlight.set(DictKey.AP, n);
-      n.set(DictKey.N, apRef || ap);
+      n.set(DictKey.N, apRef || ap!);
     }
 
     return highlight;
@@ -4941,14 +5078,19 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
   }
 }
 
-class UnderlineAnnotation extends MarkupAnnotation {
+interface UnderlineData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class UnderlineAnnotation extends MarkupAnnotation<UnderlineData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
     this.data.annotationType = AnnotationType.UNDERLINE;
 
-    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null));
+    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null) ?? undefined);
     if (quadPoints) {
       if (!this.appearance) {
         // Default color is black
@@ -4980,14 +5122,19 @@ class UnderlineAnnotation extends MarkupAnnotation {
   }
 }
 
-class SquigglyAnnotation extends MarkupAnnotation {
+interface SquigglyData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class SquigglyAnnotation extends MarkupAnnotation<SquigglyData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
     this.data.annotationType = AnnotationType.SQUIGGLY;
 
-    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null));
+    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null) ?? undefined);
     if (quadPoints) {
       if (!this.appearance) {
         // Default color is black
@@ -5026,20 +5173,23 @@ class SquigglyAnnotation extends MarkupAnnotation {
   }
 }
 
-class StrikeOutAnnotation extends MarkupAnnotation {
+interface StrikeOutData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class StrikeOutAnnotation extends MarkupAnnotation<StrikeOutData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
     const { dict, xref } = params;
     this.data.annotationType = AnnotationType.STRIKEOUT;
 
-    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null));
+    const quadPoints = (this.data.quadPoints = getQuadPoints(dict, null) ?? undefined);
     if (quadPoints) {
       if (!this.appearance) {
         // Default color is black
-        const strokeColor = this.color
-          ? getPdfColorArray(this.color)
-          : [0, 0, 0];
+        const strokeColor = this.color ? getPdfColorArray(this.color) : [0, 0, 0];
         const strokeAlpha = dict.getValue(DictKey.CA);
 
         this._setDefaultAppearance(
@@ -5061,7 +5211,17 @@ class StrikeOutAnnotation extends MarkupAnnotation {
   }
 }
 
-class StampAnnotation extends MarkupAnnotation {
+interface StampData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+
+class StampAnnotation extends MarkupAnnotation<StampData> {
+
+  public refToReplace: Ref | null = null;
+
+  public ref: Ref | null = null;
+
   #savedHasOwnCanvas;
 
   constructor(params: AnnotationParameters) {
@@ -5163,28 +5323,27 @@ class StampAnnotation extends MarkupAnnotation {
     };
   }
 
-  static createNewDict(annotation, xref: XRef, { apRef, ap }) {
+  static createNewDict(annotation: StampEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
+
     const { oldAnnotation, rect, rotation, user } = annotation;
     const stamp = oldAnnotation || new Dict(xref);
-    stamp.set("Type", Name.get("Annot"));
-    stamp.set("Subtype", Name.get("Stamp"));
-    stamp.set(
-      oldAnnotation ? "M" : "CreationDate",
-      `D:${getModificationDate()}`
+    stamp.set(DictKey.Type, Name.get("Annot"));
+    stamp.set(DictKey.Subtype, Name.get("Stamp"));
+    stamp.set(oldAnnotation ? DictKey.M : DictKey.CreationDate, `D:${getModificationDate()}`
     );
-    stamp.set("CreationDate", `D:${getModificationDate()}`);
-    stamp.set("Rect", rect);
-    stamp.set("F", 4);
-    stamp.set("Border", [0, 0, 0]);
-    stamp.set("Rotate", rotation);
+    stamp.set(DictKey.CreationDate, `D:${getModificationDate()}`);
+    stamp.set(DictKey.Rect, rect);
+    stamp.set(DictKey.F, 4);
+    stamp.set(DictKey.Border, [0, 0, 0]);
+    stamp.set(DictKey.Rotate, rotation);
 
     if (user) {
-      stamp.set("T", stringToAsciiOrUTF16BE(user));
+      stamp.set(DictKey.T, stringToAsciiOrUTF16BE(user));
     }
 
     if (apRef || ap) {
       const n = new Dict(xref);
-      stamp.set("AP", n);
+      stamp.set(DictKey.AP, n);
 
       if (apRef) {
         n.set(DictKey.N, apRef);
@@ -5229,7 +5388,14 @@ class StampAnnotation extends MarkupAnnotation {
   }
 }
 
-class FileAttachmentAnnotation extends MarkupAnnotation {
+interface FileAttachmentData extends MarkupData {
+  fillAlpha: number | null;
+  name: string;
+  file: FileSpecSerializable;
+  annotationType: AnnotationType;
+}
+
+class FileAttachmentAnnotation extends MarkupAnnotation<FileAttachmentData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
