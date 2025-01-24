@@ -72,6 +72,10 @@ export declare global {
     decode(options?: ImageDecodeOption): Promise<{ image: VideoFrame, complete: boolean }>;
     reset(): void;
   }
+
+  declare var FontInspector = {
+    enabled: boolean
+  }
 }
 
 export declare var ImageDecoder: {
@@ -79,4 +83,5 @@ export declare var ImageDecoder: {
   new(options: ImageDecoderOption): ImageDecoder;
   static isTypeSupported(type: string): Promise<boolean>;
 };
+
 
