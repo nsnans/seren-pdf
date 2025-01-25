@@ -198,7 +198,9 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
   }
 }
 
-export interface FieldObject {
+export interface FieldObject { }
+
+export interface AnnotationFieldObject extends FieldObject {
   id: string;
   actions: Map<string, string[]> | null;
   name: string;

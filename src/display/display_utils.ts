@@ -555,7 +555,7 @@ export class PDFDateString {
   }
 }
 
-export function getRGB(color: string) {
+export function getRGB(color: string): number[] {
   if (color.startsWith("#")) {
     const colorRGB = parseInt(color.slice(1), 16);
     return [
@@ -607,12 +607,6 @@ export function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): Trans
   return [a, b, c, d, e, f];
 }
 
-/**
- * @param {HTMLDivElement} div
- * @param {PageViewport} viewport
- * @param {boolean} mustFlip
- * @param {boolean} mustRotate
- */
 export function setLayerDimensions(
   div: HTMLDivElement,
   viewport: PageViewport,
@@ -624,14 +618,10 @@ export function setLayerDimensions(
     const { style } = div;
     const useRound = FeatureTest.isCSSRoundSupported;
 
-    const w = `var(--scale-factor) * ${pageWidth}px`,
-      h = `var(--scale-factor) * ${pageHeight}px`;
-    const widthStr = useRound
-      ? `round(down, ${w}, var(--scale-round-x, 1px))`
-      : `calc(${w})`,
-      heightStr = useRound
-        ? `round(down, ${h}, var(--scale-round-y, 1px))`
-        : `calc(${h})`;
+    const w = `var(--scale-factor) * ${pageWidth}px`, h = `var(--scale-factor) * ${pageHeight}px`;
+
+    const widthStr = useRound ? `round(down, ${w}, var(--scale-round-x, 1px))` : `calc(${w})`,
+      heightStr = useRound ? `round(down, ${h}, var(--scale-round-y, 1px))` : `calc(${h})`;
 
     if (!mustFlip || viewport.rotation % 180 === 0) {
       style.width = widthStr;

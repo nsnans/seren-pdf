@@ -838,7 +838,7 @@ export interface AnnotationData {
   actions?: Map<string, string[]>;
 }
 
-interface StringObj { str: string; dir: string; }
+export interface StringObj { str: string; dir: string; }
 
 interface AnnotationSaveRef {
   ref: Ref | null;
@@ -1657,15 +1657,15 @@ export class AnnotationBorderStyle {
 
   public width: number;
 
+  public horizontalCornerRadius: number;
+
+  public verticalCornerRadius: number;
+
+  public style: number;
+
   protected rawWidth: number;
 
-  protected style: number;
-
   protected dashArray: number[];
-
-  protected horizontalCornerRadius: number;
-
-  protected verticalCornerRadius: number;
 
   constructor() {
     this.width = 1;

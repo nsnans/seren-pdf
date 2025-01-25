@@ -825,7 +825,7 @@ class Util {
   // Returns a rectangle [x1, y1, x2, y2] corresponding to the
   // intersection of rect1 and rect2. If no intersection, returns 'null'
   // The rectangle coordinates of rect1, rect2 should be [x1, y1, x2, y2]
-  static intersect(rect1: number[], rect2: number[]): [number, number, number, number] | null {
+  static intersect(rect1: RectType, rect2: RectType): RectType | null {
     const xLow = Math.max(
       Math.min(rect1[0], rect1[2]),
       Math.min(rect2[0], rect2[2])

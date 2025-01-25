@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { RectType } from "../display/display_utils";
+
 /**
  * PLEASE NOTE: This file is currently imported in both the `../display/` and
  *              `../scripting_api/` folders, hence be EXTREMELY careful about
@@ -30,10 +32,22 @@ function scaleAndClamp(x: number) {
   return Math.max(0, Math.min(255, 255 * x));
 }
 
-// PDF specifications section 10.3
-class ColorConverters {
+type CYMK = [number, number, number, number];
+export type RGBType = [number, number, number];
 
-  static CMYK_G([c, y, m, k]: [number, number, number, number]) {
+// PDF specifications section 10.3
+export class ColorConverters {
+
+  static executeHTML(method: keyof ColorConverters, colorArray: number[]): string {
+    return (<Function>ColorConverters[method])(colorArray);
+  }
+
+  /* 需要将小rgb和大RGB区分开来 */
+  static executeRgb(method: keyof ColorConverters, colorArray: number[]): [null] | RGBType {
+    return (<Function>ColorConverters[method])(colorArray);
+  }
+
+  static CMYK_G([c, y, m, k]: CYMK) {
     return ["G", 1 - Math.min(1, 0.3 * c + 0.59 * m + 0.11 * y + k)];
   }
 
@@ -55,15 +69,15 @@ class ColorConverters {
     return `#${G}${G}${G}`;
   }
 
-  static RGB_G([r, g, b]: [number, number, number]) {
+  static RGB_G([r, g, b]: RGBType) {
     return ["G", 0.3 * r + 0.59 * g + 0.11 * b];
   }
 
-  static RGB_rgb(color: [number, number, number]) {
-    return color.map(scaleAndClamp);
+  static RGB_rgb(color: RGBType): RGBType {
+    return <RGBType>color.map(scaleAndClamp);
   }
 
-  static RGB_HTML(color: [number, number, number]) {
+  static RGB_HTML(color: RGBType) {
     return `#${color.map(makeColorComp).join("")}`;
   }
 
@@ -75,7 +89,7 @@ class ColorConverters {
     return [null];
   }
 
-  static CMYK_RGB([c, y, m, k]: [number, number, number, number]): [string, number, number, number] {
+  static CMYK_RGB([c, y, m, k]: CYMK): [string, number, number, number] {
     return [
       "RGB",
       1 - Math.min(1, c + k),
@@ -84,7 +98,7 @@ class ColorConverters {
     ];
   }
 
-  static CMYK_rgb([c, y, m, k]: [number, number, number, number]) {
+  static CMYK_rgb([c, y, m, k]: CYMK): RGBType {
     return [
       scaleAndClamp(1 - Math.min(1, c + k)),
       scaleAndClamp(1 - Math.min(1, m + k)),
@@ -92,13 +106,13 @@ class ColorConverters {
     ];
   }
 
-  static CMYK_HTML(components: [number, number, number, number]) {
+  static CMYK_HTML(components: CYMK) {
     // TODO 这里应该注意下，slice(1)的含义
-    const rgb = this.CMYK_RGB(components).slice(1);
-    return this.RGB_HTML(rgb as [number, number, number]);
+    const rgb = <RGBType>this.CMYK_RGB(components).slice(1);
+    return this.RGB_HTML(rgb);
   }
 
-  static RGB_CMYK([r, g, b]: [number, number, number]) {
+  static RGB_CMYK([r, g, b]: RGBType) {
     const c = 1 - r;
     const m = 1 - g;
     const y = 1 - b;
@@ -106,5 +120,3 @@ class ColorConverters {
     return ["CMYK", c, m, y, k];
   }
 }
-
-export { ColorConverters };

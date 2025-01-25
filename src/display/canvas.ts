@@ -475,7 +475,7 @@ function compileType3Glyph(imgData) {
 
 class CanvasExtraState {
 
-  public clipBox: [number, number, number, number] | null = null;
+  public clipBox: RectType | null = null;
 
   protected alphaIsShape: boolean;
 
@@ -621,7 +621,7 @@ class CanvasExtraState {
   }
 
   getPathBoundingBox(pathType = PathType.FILL, transform: TransformType | null = null) {
-    const box = [this.minX!, this.minY!, this.maxX!, this.maxY!];
+    const box: RectType = [this.minX!, this.minY!, this.maxX!, this.maxY!];
     if (pathType === PathType.STROKE) {
       if (!transform) {
         unreachable("Stroke bounding box must include transform.");
@@ -2688,12 +2688,10 @@ class CanvasGraphics {
       getCurrentTransform(currentCtx)
     );
     // Clip the bounding box to the current canvas.
-    const canvasBounds = [
-      0,
-      0,
-      currentCtx.canvas.width,
-      currentCtx.canvas.height,
+    const canvasBounds: RectType = [
+      0, 0, currentCtx.canvas.width, currentCtx.canvas.height,
     ];
+
     bounds = Util.intersect(bounds, canvasBounds) || [0, 0, 0, 0];
     // Use ceil in case we're between sizes so we don't create canvas that is
     // too small and make the canvas at least 1x1 pixels.
@@ -2710,11 +2708,9 @@ class CanvasGraphics {
       cacheId += "_smask_" + (this.smaskCounter++ % 2);
     }
     const scratchCanvas = this.cachedCanvases.getCanvas(
-      cacheId,
-      drawnWidth,
-      drawnHeight
+      cacheId, drawnWidth, drawnHeight
     );
-    const groupCtx = scratchCanvas.context;
+    const groupCtx = scratchCanvas.context!;
 
     // Since we created a new canvas that is just the size of the bounding box
     // we have to translate the group ctx.
