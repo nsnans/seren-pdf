@@ -25,7 +25,6 @@
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationBorderStyle, StringObj } from "../core/annotation";
-import { DestinationType } from "../core/catalog";
 import { Ref } from "../core/primitives";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
@@ -100,30 +99,30 @@ class AnnotationElementFactory {
 
     switch (subtype) {
       case AnnotationType.LINK:
-        return new LinkAnnotationElement(parameters);
+        return new LinkAnnotationElement(<AnnotationElementParameters<LinkElementData>>parameters);
 
       case AnnotationType.TEXT:
-        return new TextAnnotationElement(parameters);
+        return new TextAnnotationElement(<AnnotationElementParameters<TextElementData>>parameters);
 
       case AnnotationType.WIDGET:
-        const fieldType = parameters.data.fieldType;
+        const fieldType = (<AnnotationElementParameters<WidgetElementData>>parameters).data.fieldType;
 
         switch (fieldType) {
           case "Tx":
-            return new TextWidgetAnnotationElement(parameters);
+            return new TextWidgetAnnotationElement(<AnnotationElementParameters<TextWidgetElementData>>parameters);
           case "Btn":
-            if (parameters.data.radioButton) {
-              return new RadioButtonWidgetAnnotationElement(parameters);
-            } else if (parameters.data.checkBox) {
-              return new CheckboxWidgetAnnotationElement(parameters);
+            if ((<{ radioButton?: boolean }>(parameters.data)).radioButton) {
+              return new RadioButtonWidgetAnnotationElement(<AnnotationElementParameters<RadioButtonElementData>>parameters);
+            } else if ((<{ checkBox?: boolean }>(parameters.data)).checkBox) {
+              return new CheckboxWidgetAnnotationElement(<AnnotationElementParameters<CheckboxElementData>>parameters);
             }
-            return new PushButtonWidgetAnnotationElement(parameters);
+            return new PushButtonWidgetAnnotationElement(<AnnotationElementParameters<PushButtonElementData>>parameters);
           case "Ch":
-            return new ChoiceWidgetAnnotationElement(parameters);
+            return new ChoiceWidgetAnnotationElement(<AnnotationElementParameters<ChoiceElementData>>parameters);
           case "Sig":
-            return new SignatureWidgetAnnotationElement(parameters);
+            return new SignatureWidgetAnnotationElement(<AnnotationElementParameters<WidgetElementData>>parameters);
         }
-        return new WidgetAnnotationElement(parameters);
+        return new WidgetAnnotationElement(<AnnotationElementParameters<WidgetElementData>>parameters);
 
       case AnnotationType.POPUP:
         return new PopupAnnotationElement(<AnnotationElementParameters<PopupAnnotationElementData>>parameters);
@@ -189,6 +188,7 @@ interface AnnotationElementData {
   titleObj: StringObj | null;
   contentObj: StringObj | null;
   richText: StringObj | null;
+  annotationType: AnnotationType;
 }
 
 interface PopupRefElementData extends AnnotationElementData {
@@ -277,7 +277,7 @@ class AnnotationElement<DATA extends AnnotationElementData> {
     );
   }
 
-  updateEdited(rect: RectType | null, popupContent: PopupContent | null = null) {
+  updateEdited(rect: RectType | null, popupContent: string | null = null) {
     if (!this.container) {
       return;
     }
@@ -1164,6 +1164,7 @@ class TextAnnotationElement extends AnnotationElement<TextElementData> {
 }
 
 interface WidgetElementData extends AnnotationElementData {
+  fieldType: any;
   defaultAppearanceData: {
     fontColor: RGBType;
     fontSize: number;
