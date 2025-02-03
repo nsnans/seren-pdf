@@ -836,6 +836,7 @@ export interface AnnotationData {
   textPosition?: number[];
   textContent?: string[];
   actions?: Map<string, string[]>;
+  annotationType?: AnnotationType;
 }
 
 export interface StringObj { str: string; dir: string; }
@@ -1827,7 +1828,7 @@ export class AnnotationBorderStyle {
   }
 }
 
-interface MarkupData extends AnnotationData {
+export interface MarkupData extends AnnotationData {
   replyType: string;
   inReplyTo: string | null;
   titleObj: StringObj;
@@ -2011,7 +2012,7 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
   }
 }
 
-interface WidgetData extends AnnotationData {
+export interface WidgetData extends AnnotationData {
   doNotScroll: boolean;
   maxLen: number;
   textAlignment: number | null;
@@ -3200,7 +3201,7 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   }
 }
 
-interface ButtonWidgetData extends WidgetData {
+export interface ButtonWidgetData extends WidgetData {
   buttonValue: string | null;
   exportValue: string | null;
   checkBox: boolean;
@@ -3710,7 +3711,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
   }
 }
 
-interface ChoiceWidgetData extends WidgetData {
+export interface ChoiceWidgetData extends WidgetData {
   multiSelect: boolean;
 }
 
@@ -4001,7 +4002,7 @@ class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   }
 }
 
-interface TextData extends MarkupData {
+export interface TextData extends MarkupData {
   stateModel: string | null;
   state: Name[] | null;
   annotationType: AnnotationType;
@@ -4040,11 +4041,29 @@ class TextAnnotation extends MarkupAnnotation<TextData> {
   }
 }
 
-interface LinkData extends AnnotationData {
+export interface LinkData extends AnnotationData {
   annotationType: AnnotationType;
-  action: string | null;
-  url: string | null;
-  dest: string | DestinationType | null;
+  setOCGState: {
+    state: string[],
+    preserveRB: boolean;
+  };
+  resetForm: {
+    fields: string[];
+    refs: string[];
+    include: boolean;
+  };
+  actions: Map<string, string[]>;
+  dest: string;
+  attachment: {
+    content: string;
+    filename: string;
+    description: string;
+  };
+  attachmentDest: string | null;
+  action: string;
+  isTooltipOnly: boolean;
+  url: string;
+  newWindow: boolean;
 }
 
 class LinkAnnotation extends Annotation<LinkData> {
@@ -4075,7 +4094,7 @@ class LinkAnnotation extends Annotation<LinkData> {
   }
 }
 
-interface PopupData extends AnnotationData {
+export interface PopupData extends AnnotationData {
   titleObj: StringObj;
   open: boolean;
   annotationType: AnnotationType;
@@ -4149,7 +4168,7 @@ export class PopupAnnotation extends Annotation<PopupData> {
   }
 }
 
-interface FreeTextData extends MarkupData {
+export interface FreeTextData extends MarkupData {
   annotationType: AnnotationType;
 
 }
@@ -4387,7 +4406,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
   }
 }
 
-interface LineData extends MarkupData {
+export interface LineData extends MarkupData {
   lineEndings: string[];
   lineCoordinates: RectType;
   annotationType: AnnotationType;
@@ -4462,9 +4481,8 @@ class LineAnnotation extends MarkupAnnotation<LineData> {
   }
 }
 
-interface SquareData extends MarkupData {
+export interface SquareData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class SquareAnnotation extends MarkupAnnotation<SquareData> {
@@ -4517,9 +4535,8 @@ class SquareAnnotation extends MarkupAnnotation<SquareData> {
   }
 }
 
-interface CircleData extends MarkupData {
+export interface CircleData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class CircleAnnotation extends MarkupAnnotation<CircleData> {
@@ -4588,7 +4605,7 @@ class CircleAnnotation extends MarkupAnnotation<CircleData> {
   }
 }
 
-interface PolylineData extends MarkupData {
+export interface PolylineData extends MarkupData {
   annotationType: AnnotationType;
   vertices: Float32Array<ArrayBuffer> | null;
   lineEndings: string[];
@@ -4674,7 +4691,7 @@ class PolygonAnnotation extends PolylineAnnotation {
   }
 }
 
-interface CaretData extends MarkupData {
+export interface CaretData extends MarkupData {
   annotationType: AnnotationType;
 }
 
@@ -4686,7 +4703,7 @@ class CaretAnnotation extends MarkupAnnotation<CaretData> {
   }
 }
 
-interface InkAnnotationData extends MarkupData {
+export interface InkAnnotationData extends MarkupData {
   annotationType: AnnotationType;
   inkLists: Float32Array[];
   opacity: number;
@@ -4941,7 +4958,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
   }
 }
 
-interface HighlightData extends MarkupData {
+export interface HighlightData extends MarkupData {
   annotationType: AnnotationType;
   opacity: number;
 }
@@ -5078,9 +5095,8 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
   }
 }
 
-interface UnderlineData extends MarkupData {
+export interface UnderlineData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class UnderlineAnnotation extends MarkupAnnotation<UnderlineData> {
@@ -5122,9 +5138,8 @@ class UnderlineAnnotation extends MarkupAnnotation<UnderlineData> {
   }
 }
 
-interface SquigglyData extends MarkupData {
+export interface SquigglyData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class SquigglyAnnotation extends MarkupAnnotation<SquigglyData> {
@@ -5173,9 +5188,8 @@ class SquigglyAnnotation extends MarkupAnnotation<SquigglyData> {
   }
 }
 
-interface StrikeOutData extends MarkupData {
+export interface StrikeOutData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class StrikeOutAnnotation extends MarkupAnnotation<StrikeOutData> {
@@ -5211,9 +5225,8 @@ class StrikeOutAnnotation extends MarkupAnnotation<StrikeOutData> {
   }
 }
 
-interface StampData extends MarkupData {
+export interface StampData extends MarkupData {
   annotationType: AnnotationType;
-
 }
 
 class StampAnnotation extends MarkupAnnotation<StampData> {
@@ -5388,7 +5401,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
   }
 }
 
-interface FileAttachmentData extends MarkupData {
+export interface FileAttachmentData extends MarkupData {
   fillAlpha: number | null;
   name: string;
   file: FileSpecSerializable;

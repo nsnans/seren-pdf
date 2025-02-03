@@ -24,7 +24,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
-import { AnnotationBorderStyle, StringObj } from "../core/annotation";
+import { AnnotationBorderStyle, AnnotationData, LinkData, StringObj, TextData, WidgetData } from "../core/annotation";
 import { Ref } from "../core/primitives";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
@@ -53,7 +53,7 @@ const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
 const GetElementsByNameSet = new WeakSet();
 
-function getRectDims(rect: number[]) {
+function getRectDims(rect: RectType) {
   return {
     width: rect[2] - rect[0],
     height: rect[3] - rect[1],
@@ -93,23 +93,23 @@ export interface AnnotationElementParameters<DATA> {
 
 class AnnotationElementFactory {
 
-  static create(parameters: AnnotationElementParameters<AnnotationElementData>): AnnotationElement<AnnotationElementData> {
+  static create(parameters: AnnotationElementParameters<AnnotationData>): AnnotationElement<AnnotationData> {
 
     const subtype = parameters.data.annotationType;
 
     switch (subtype) {
       case AnnotationType.LINK:
-        return new LinkAnnotationElement(<AnnotationElementParameters<LinkElementData>>parameters);
+        return new LinkAnnotationElement(<AnnotationElementParameters<LinkData>>parameters);
 
       case AnnotationType.TEXT:
-        return new TextAnnotationElement(<AnnotationElementParameters<TextElementData>>parameters);
+        return new TextAnnotationElement(<AnnotationElementParameters<TextData>>parameters);
 
       case AnnotationType.WIDGET:
-        const fieldType = (<AnnotationElementParameters<WidgetElementData>>parameters).data.fieldType;
+        const fieldType = (<AnnotationElementParameters<WidgetData>>parameters).data.fieldType;
 
         switch (fieldType) {
           case "Tx":
-            return new TextWidgetAnnotationElement(<AnnotationElementParameters<TextWidgetElementData>>parameters);
+            return new TextWidgetAnnotationElement(<AnnotationElementParameters<TextData>>parameters);
           case "Btn":
             if ((<{ radioButton?: boolean }>(parameters.data)).radioButton) {
               return new RadioButtonWidgetAnnotationElement(<AnnotationElementParameters<RadioButtonElementData>>parameters);
@@ -122,7 +122,7 @@ class AnnotationElementFactory {
           case "Sig":
             return new SignatureWidgetAnnotationElement(<AnnotationElementParameters<WidgetElementData>>parameters);
         }
-        return new WidgetAnnotationElement(<AnnotationElementParameters<WidgetElementData>>parameters);
+        return new WidgetAnnotationElement(<AnnotationElementParameters<WidgetData>>parameters);
 
       case AnnotationType.POPUP:
         return new PopupAnnotationElement(<AnnotationElementParameters<PopupAnnotationElementData>>parameters);
@@ -195,7 +195,7 @@ interface PopupRefElementData extends AnnotationElementData {
   popupRef: Ref | null;
 }
 
-class AnnotationElement<DATA extends AnnotationElementData> {
+class AnnotationElement<DATA extends AnnotationData> {
 
   protected _updates: { rect: RectType } | null = null;
 
@@ -848,7 +848,7 @@ interface LinkElementData extends AnnotationElementData {
   newWindow: boolean;
 }
 
-class LinkAnnotationElement<T extends LinkElementData> extends AnnotationElement<T> {
+class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
 
   protected isTooltipOnly: boolean;
 
@@ -1003,7 +1003,7 @@ class LinkAnnotationElement<T extends LinkElementData> extends AnnotationElement
    * @param {Object} data
    * @memberof LinkAnnotationElement
    */
-  _bindJSAction(link: HTMLAnchorElement, data: LinkElementData) {
+  _bindJSAction(link: HTMLAnchorElement, data: LinkData) {
     link.href = this.linkService.getAnchorUrl("");
     const map = new Map([
       ["Action", "onclick"],
@@ -1143,13 +1143,9 @@ class LinkAnnotationElement<T extends LinkElementData> extends AnnotationElement
   }
 }
 
-interface TextElementData extends PopupRefElementData {
-  name: string;
-}
+class TextAnnotationElement extends AnnotationElement<TextData> {
 
-class TextAnnotationElement extends AnnotationElement<TextElementData> {
-
-  constructor(parameters: AnnotationElementParameters<TextElementData>) {
+  constructor(parameters: AnnotationElementParameters<TextData>) {
     super(parameters, true);
   }
 
@@ -1188,7 +1184,7 @@ interface WidgetElementData extends AnnotationElementData {
   }[] | null;
 }
 
-class WidgetAnnotationElement<T extends WidgetElementData> extends AnnotationElement<T> {
+class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T> {
 
   constructor(
     parameters: AnnotationElementParameters<T>,
@@ -1377,8 +1373,8 @@ interface TextWidgetElementData extends WidgetElementData {
   hasAppearance: boolean;
 }
 
-class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextWidgetElementData> {
-  constructor(parameters: AnnotationElementParameters<TextWidgetElementData>) {
+class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
+  constructor(parameters: AnnotationElementParameters<TextData>) {
     const isRenderable = parameters.renderForms || parameters.data.hasOwnCanvas ||
       (!parameters.data.hasAppearance && !!parameters.data.fieldValue);
     super(parameters, isRenderable);
@@ -3381,13 +3377,13 @@ export class AnnotationLayer {
    * @memberof AnnotationLayer
    */
   async render(params) {
-    const { annotations } = params;
+    const annotations: AnnotationData[] = params.annotations;
     const layer = this.div;
     setLayerDimensions(layer, this.viewport);
 
     const popupToElements = new Map();
     const elementParams = {
-      data: null,
+      data: <AnnotationData | null>null,
       layer,
       linkService: params.linkService,
       downloadManager: params.downloadManager,
@@ -3408,7 +3404,7 @@ export class AnnotationLayer {
       }
       const isPopupAnnotation = data.annotationType === AnnotationType.POPUP;
       if (!isPopupAnnotation) {
-        const { width, height } = getRectDims(data.rect);
+        const { width, height } = getRectDims(data.rect!);
         if (width <= 0 || height <= 0) {
           continue; // Ignore empty annotations.
         }

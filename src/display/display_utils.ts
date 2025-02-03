@@ -275,14 +275,14 @@ export class PageViewport {
     offsetY = this.offsetY,
     dontFlip = false,
   }: PageViewportCloneParameters): PageViewport {
-    return new PageViewport({
-      viewBox: this.viewBox.slice() as RectType,
+    return new PageViewport(
+      <RectType>this.viewBox.slice(),
       scale,
       rotation,
       offsetX,
       offsetY,
       dontFlip,
-    });
+    );
   }
 
   /**
@@ -585,7 +585,7 @@ export function getRGB(color: string): number[] {
   return [0, 0, 0];
 }
 
-export function getColorValues(colors) {
+export function getColorValues(colors: Map<string, number[] | null>) {
   const span = document.createElement("span");
   span.style.visibility = "hidden";
   document.body.append(span);
@@ -609,7 +609,7 @@ export function getCurrentTransformInverse(ctx: CanvasRenderingContext2D): Trans
 
 export function setLayerDimensions(
   div: HTMLDivElement,
-  viewport: PageViewport,
+  viewport: PageViewport | { rotation: number },
   mustFlip = false,
   mustRotate = true
 ) {
