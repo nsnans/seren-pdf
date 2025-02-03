@@ -837,6 +837,8 @@ export interface AnnotationData {
   textContent?: string[];
   actions?: Map<string, string[]>;
   annotationType?: AnnotationType;
+  popupRef?: string | null;
+  hidden?: boolean;
 }
 
 export interface StringObj { str: string; dir: string; }
@@ -1833,7 +1835,6 @@ export interface MarkupData extends AnnotationData {
   inReplyTo: string | null;
   titleObj: StringObj;
   creationDate: string | null;
-  popupRef: string | null;
 }
 
 export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
@@ -3202,15 +3203,34 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
 }
 
 export interface ButtonWidgetData extends WidgetData {
+  multiSelect: boolean;
   buttonValue: string | null;
   exportValue: string | null;
   checkBox: boolean;
   radioButton: boolean;
   pushButton: boolean;
   isTooltipOnly: boolean;
-  action: string | null;
-  url: string | null;
+  action: string;
+  url: string;
   dest: string | DestinationType | null;
+  annotationType: AnnotationType;
+  setOCGState: {
+    state: string[],
+    preserveRB: boolean;
+  };
+  resetForm: {
+    fields: string[];
+    refs: string[];
+    include: boolean;
+  };
+  actions: Map<string, string[]>;
+  attachment: {
+    content: string;
+    filename: string;
+    description: string;
+  };
+  attachmentDest: string | null;
+  newWindow: boolean;
 }
 
 class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
@@ -4002,7 +4022,7 @@ class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   }
 }
 
-export interface TextData extends MarkupData {
+export interface TextData extends MarkupData, WidgetData {
   stateModel: string | null;
   state: Name[] | null;
   annotationType: AnnotationType;
@@ -4053,7 +4073,7 @@ export interface LinkData extends AnnotationData {
     include: boolean;
   };
   actions: Map<string, string[]>;
-  dest: string;
+  dest: string | DestinationType | null;
   attachment: {
     content: string;
     filename: string;

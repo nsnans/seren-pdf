@@ -1,4 +1,22 @@
+
+/**
+* Simple event bus for an application. Listeners are attached using the `on`
+* and `off` methods. To raise an event, the `dispatch` method shall be used.
+*/
+class EventBus {
+
+  on() {
+  }
+
+  off() { }
+
+  dispatch(_action: string, _data: unknown) {
+  }
+}
+
 export interface PDFLinkService {
+
+  eventBus: EventBus;
 
   addLinkAttributes(link: HTMLAnchorElement, url: string, newWindow: boolean): void;
 
@@ -18,7 +36,7 @@ export interface PDFLinkService {
 export interface DownloadManager {
 
   // content 有可能是 BlobPart
-  openOrDownloadData(content: string, filename: string, dest: string | null): void;
+  openOrDownloadData(content: string | Uint8Array<ArrayBuffer>, filename: string, dest: string | null): void;
 
 }
 

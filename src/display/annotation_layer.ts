@@ -24,7 +24,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
-import { AnnotationBorderStyle, AnnotationData, LinkData, StringObj, TextData, WidgetData } from "../core/annotation";
+import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
 import { Ref } from "../core/primitives";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
@@ -111,63 +111,63 @@ class AnnotationElementFactory {
           case "Tx":
             return new TextWidgetAnnotationElement(<AnnotationElementParameters<TextData>>parameters);
           case "Btn":
-            if ((<{ radioButton?: boolean }>(parameters.data)).radioButton) {
-              return new RadioButtonWidgetAnnotationElement(<AnnotationElementParameters<RadioButtonElementData>>parameters);
-            } else if ((<{ checkBox?: boolean }>(parameters.data)).checkBox) {
-              return new CheckboxWidgetAnnotationElement(<AnnotationElementParameters<CheckboxElementData>>parameters);
+            if ((<ButtonWidgetData>(parameters.data)).radioButton) {
+              return new RadioButtonWidgetAnnotationElement(<AnnotationElementParameters<ButtonWidgetData>>parameters);
+            } else if ((<ButtonWidgetData>(parameters.data)).checkBox) {
+              return new CheckboxWidgetAnnotationElement(<AnnotationElementParameters<ButtonWidgetData>>parameters);
             }
-            return new PushButtonWidgetAnnotationElement(<AnnotationElementParameters<PushButtonElementData>>parameters);
+            return new PushButtonWidgetAnnotationElement(<AnnotationElementParameters<ButtonWidgetData>>parameters);
           case "Ch":
-            return new ChoiceWidgetAnnotationElement(<AnnotationElementParameters<ChoiceElementData>>parameters);
+            return new ChoiceWidgetAnnotationElement(<AnnotationElementParameters<ButtonWidgetData>>parameters);
           case "Sig":
-            return new SignatureWidgetAnnotationElement(<AnnotationElementParameters<WidgetElementData>>parameters);
+            return new SignatureWidgetAnnotationElement(<AnnotationElementParameters<ButtonWidgetData>>parameters);
         }
         return new WidgetAnnotationElement(<AnnotationElementParameters<WidgetData>>parameters);
 
       case AnnotationType.POPUP:
-        return new PopupAnnotationElement(<AnnotationElementParameters<PopupAnnotationElementData>>parameters);
+        return new PopupAnnotationElement(<AnnotationElementParameters<PopupData>>parameters);
 
       case AnnotationType.FREETEXT:
-        return new FreeTextAnnotationElement(<AnnotationElementParameters<FreeTextElementData>>parameters);
+        return new FreeTextAnnotationElement(<AnnotationElementParameters<FreeTextData>>parameters);
 
       case AnnotationType.LINE:
-        return new LineAnnotationElement(<AnnotationElementParameters<LineElementData>>parameters);
+        return new LineAnnotationElement(<AnnotationElementParameters<LineData>>parameters);
 
       case AnnotationType.SQUARE:
-        return new SquareAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new SquareAnnotationElement(<AnnotationElementParameters<SquareData>>parameters);
 
       case AnnotationType.CIRCLE:
-        return new CircleAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new CircleAnnotationElement(<AnnotationElementParameters<CircleData>>parameters);
 
       case AnnotationType.POLYLINE:
-        return new PolylineAnnotationElement(<AnnotationElementParameters<PolylineElementData>>parameters);
+        return new PolylineAnnotationElement(<AnnotationElementParameters<PolylineData>>parameters);
 
       case AnnotationType.CARET:
-        return new CaretAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new CaretAnnotationElement(<AnnotationElementParameters<CaretData>>parameters);
 
       case AnnotationType.INK:
-        return new InkAnnotationElement(<AnnotationElementParameters<InkElementData>>parameters);
+        return new InkAnnotationElement(<AnnotationElementParameters<InkAnnotationData>>parameters);
 
       case AnnotationType.POLYGON:
-        return new PolygonAnnotationElement(<AnnotationElementParameters<PolylineElementData>>parameters);
+        return new PolygonAnnotationElement(<AnnotationElementParameters<PolylineData>>parameters);
 
       case AnnotationType.HIGHLIGHT:
-        return new HighlightAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new HighlightAnnotationElement(<AnnotationElementParameters<HighlightData>>parameters);
 
       case AnnotationType.UNDERLINE:
-        return new UnderlineAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new UnderlineAnnotationElement(<AnnotationElementParameters<UnderlineData>>parameters);
 
       case AnnotationType.SQUIGGLY:
-        return new SquigglyAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new SquigglyAnnotationElement(<AnnotationElementParameters<SquigglyData>>parameters);
 
       case AnnotationType.STRIKEOUT:
-        return new StrikeOutAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new StrikeOutAnnotationElement(<AnnotationElementParameters<StrikeOutData>>parameters);
 
       case AnnotationType.STAMP:
-        return new StampAnnotationElement(<AnnotationElementParameters<PopupRefElementData>>parameters);
+        return new StampAnnotationElement(<AnnotationElementParameters<StampData>>parameters);
 
       case AnnotationType.FILEATTACHMENT:
-        return new FileAttachmentAnnotationElement(<AnnotationElementParameters<FileAttachElementData>>parameters);
+        return new FileAttachmentAnnotationElement(<AnnotationElementParameters<FileAttachmentData>>parameters);
 
       default:
         return new AnnotationElement(parameters);
@@ -287,7 +287,7 @@ class AnnotationElement<DATA extends AnnotationData> {
     }
 
     this._updates ||= {
-      rect: <RectType>this.data.rect.slice(0),
+      rect: <RectType>this.data.rect!.slice(0),
     };
 
     if (rect) {
@@ -1362,17 +1362,6 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
   }
 }
 
-interface TextWidgetElementData extends WidgetElementData {
-  textContent: string[];
-  maxLen: number;
-  required: boolean;
-  fieldName: string;
-  readOnly: boolean;
-  doNotScroll: boolean;
-  comb: boolean;
-  hasAppearance: boolean;
-}
-
 class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
   constructor(parameters: AnnotationElementParameters<TextData>) {
     const isRenderable = parameters.renderForms || parameters.data.hasOwnCanvas ||
@@ -1409,7 +1398,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
       const storedData = storage.getValue(id, {
         value: this.data.fieldValue,
       });
-      let textContent = storedData.value || "";
+      let textContent: string = storedData.value || "";
       const maxLen = storage.getValue(id, {
         charLimit: this.data.maxLen,
       }).charLimit;
@@ -1452,7 +1441,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
       element.setAttribute("data-element-id", id);
 
       (<HTMLInputElement | HTMLTextAreaElement>element).disabled = this.data.readOnly;
-      element.name = this.data.fieldName;
+      element.name = <string>this.data.fieldName;
       element.tabIndex = DEFAULT_TAB_INDEX;
 
       this._setRequired(element, this.data.required);
@@ -1474,7 +1463,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
 
       element.addEventListener("resetform", _event => {
         const defaultValue = this.data.defaultFieldValue ?? "";
-        (<HTMLInputElement | HTMLTextAreaElement>element)!.value = elementData.userValue = defaultValue;
+        (<HTMLInputElement | HTMLTextAreaElement>element)!.value = elementData.userValue = <string>defaultValue;
         elementData.formattedValue = null;
       });
 
@@ -1498,7 +1487,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
           }
           elementData.lastCommittedValue = target.value;
           elementData.commitKey = 1;
-          if (!this.data.actions?.Focus) {
+          if (!this.data.actions?.has("Focus")) {
             elementData.focused = true;
           }
         });
@@ -1610,7 +1599,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
           if (!elementData.focused || !(<FocusEvent>event).relatedTarget) {
             return;
           }
-          if (!this.data.actions?.Blur) {
+          if (!this.data.actions?.has("Blur")) {
             elementData.focused = false;
           }
           const { value } = <HTMLInputElement>event.target;
@@ -1632,7 +1621,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
           _blurListener(event);
         });
 
-        if (this.data.actions?.Keystroke) {
+        if (this.data.actions?.has("Keystroke")) {
           element.addEventListener("beforeinput", event => {
             elementData.lastCommittedValue = null;
             const { data } = event;
@@ -1707,7 +1696,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
       }
 
       if (this.data.comb) {
-        const fieldWidth = this.data.rect[2] - this.data.rect[0];
+        const fieldWidth = this.data.rect![2] - this.data.rect![0];
         const combWidth = fieldWidth / maxLen;
 
         element.classList.add("comb");
@@ -1715,7 +1704,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
       }
     } else {
       element = document.createElement("div");
-      element.textContent = this.data.fieldValue;
+      element.textContent = <string | null>this.data.fieldValue;
       element.style.verticalAlign = "middle";
       element.style.display = "table-cell";
 
@@ -1733,24 +1722,14 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
   }
 }
 
-class SignatureWidgetAnnotationElement extends WidgetAnnotationElement<WidgetElementData> {
-  constructor(parameters: AnnotationElementParameters<WidgetElementData>) {
+class SignatureWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidgetData> {
+  constructor(parameters: AnnotationElementParameters<ButtonWidgetData>) {
     super(parameters, !!parameters.data.hasOwnCanvas);
   }
 }
 
-interface CheckboxElementData extends WidgetElementData {
-  defaultFieldValue: string;
-  fieldName: string;
-  required: boolean;
-  readOnly: boolean;
-  fieldValue: string | null;
-  exportValue: string | null;
-
-}
-
-class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxElementData> {
-  constructor(parameters: AnnotationElementParameters<CheckboxElementData>) {
+class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidgetData> {
+  constructor(parameters: AnnotationElementParameters<ButtonWidgetData>) {
     super(parameters, parameters.renderForms);
   }
 
@@ -1776,7 +1755,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxEl
     element.disabled = data.readOnly;
     this._setRequired(element, this.data.required);
     element.type = "checkbox";
-    element.name = data.fieldName;
+    element.name = data.fieldName!;
     if (value) {
       element.setAttribute("checked", "true");
     }
@@ -1836,18 +1815,9 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxEl
   }
 }
 
-interface RadioButtonElementData extends WidgetElementData {
-  defaultFieldValue: string | null;
-  required: boolean;
-  readOnly: boolean;
-  fieldName: string;
-  fieldValue: string;
-  buttonValue: string;
-}
+class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidgetData> {
 
-class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioButtonElementData> {
-
-  constructor(parameters: AnnotationElementParameters<RadioButtonElementData>) {
+  constructor(parameters: AnnotationElementParameters<ButtonWidgetData>) {
     super(parameters, parameters.renderForms);
   }
 
@@ -1872,7 +1842,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
       // unchecked (because of their value in the storage).
       // Consequently, the first checked radio button will be the only checked
       // one.
-      for (const radio of this._getElementsByName(data.fieldName, id)) {
+      for (const radio of this._getElementsByName(data.fieldName!, id)) {
         storage.setValue(radio.id, { value: false });
       }
     }
@@ -1884,7 +1854,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
     element.disabled = data.readOnly;
     this._setRequired(element, this.data.required);
     element.type = "radio";
-    element.name = data.fieldName;
+    element.name = data.fieldName!;
     if (value) {
       element.setAttribute("checked", "true");
     }
@@ -1948,12 +1918,8 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
   }
 }
 
-interface PushButtonElementData extends LinkElementData {
-  hasAppearance: boolean;
-}
-
-class PushButtonWidgetAnnotationElement extends LinkAnnotationElement<PushButtonElementData> {
-  constructor(parameters: AnnotationElementParameters<PushButtonElementData>) {
+class PushButtonWidgetAnnotationElement extends LinkAnnotationElement<ButtonWidgetData> {
+  constructor(parameters: AnnotationElementParameters<ButtonWidgetData>) {
     super(parameters, parameters.data.hasAppearance);
   }
 
@@ -1977,18 +1943,9 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement<PushButton
   }
 }
 
-interface ChoiceElementData extends WidgetElementData {
-  multiSelect: boolean;
-  combo: boolean;
-  fieldName: string;
-  required: boolean;
-  readOnly: boolean;
+class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidgetData> {
 
-}
-
-class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElementData> {
-
-  constructor(parameters: AnnotationElementParameters<ChoiceElementData>) {
+  constructor(parameters: AnnotationElementParameters<ButtonWidgetData>) {
     super(parameters, parameters.renderForms);
   }
 
@@ -2007,7 +1964,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
 
     selectElement.disabled = this.data.readOnly;
     this._setRequired(selectElement, this.data.required);
-    selectElement.name = this.data.fieldName;
+    selectElement.name = this.data.fieldName!;
     selectElement.tabIndex = DEFAULT_TAB_INDEX;
 
     let addAnEmptyEntry = this.data.combo && this.data.options!.length > 0;
@@ -2031,7 +1988,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
     for (const option of this.data.options!) {
       const optionElement = document.createElement("option");
       optionElement.textContent = option.displayValue;
-      optionElement.value = option.exportValue;
+      optionElement.value = option.exportValue!;
       if (storedData.value.includes(option.exportValue)) {
         optionElement.setAttribute("selected", "true");
         addAnEmptyEntry = false;
@@ -2246,13 +2203,13 @@ interface PopupAnnotationElementData extends AnnotationElementData {
   contentsObj: StringObj;
 }
 
-class PopupAnnotationElement extends AnnotationElement<PopupAnnotationElementData> {
+class PopupAnnotationElement extends AnnotationElement<PopupData> {
 
   public popup: PopupElement | null;
 
-  public elements: AnnotationElement<AnnotationElementData>[];
+  public elements: AnnotationElement<AnnotationData>[];
 
-  constructor(parameters: AnnotationElementParameters<PopupAnnotationElementData>) {
+  constructor(parameters: AnnotationElementParameters<PopupData>) {
     const { data, elements } = parameters;
     super(parameters, AnnotationElement._hasPopupData(
       data.titleObj, data.contentObj, data.richText
@@ -2343,7 +2300,7 @@ class PopupElement {
 
   #dateObj: Date | null = null;
 
-  #elements: AnnotationElement<AnnotationElementData>[];
+  #elements: AnnotationElement<AnnotationData>[];
 
   #parent = null;
 
@@ -2373,7 +2330,7 @@ class PopupElement {
   constructor(
     container: HTMLElement,
     color: RGBType,
-    elements: AnnotationElement<AnnotationElementData>[],
+    elements: AnnotationElement<AnnotationData>[],
     titleObj: StringObj,
     modificationDate: string,
     contentsObj: StringObj,
@@ -2607,7 +2564,7 @@ class PopupElement {
     let useParentRect = !!this.#parentRect;
     let rect = useParentRect ? this.#parentRect : this.#rect;
     for (const element of this.#elements) {
-      if (!rect || Util.intersect(element.data.rect, rect) !== null) {
+      if (!rect || Util.intersect(element.data.rect!, rect) !== null) {
         rect = element.data.rect;
         useParentRect = true;
         break;
@@ -2703,12 +2660,7 @@ class PopupElement {
   }
 }
 
-interface FreeTextElementData extends PopupRefElementData {
-  textContent: string[];
-  textPosition: PointType;
-}
-
-export class FreeTextAnnotationElement extends AnnotationElement<FreeTextElementData> {
+export class FreeTextAnnotationElement extends AnnotationElement<FreeTextData> {
 
   public annotationEditorType: AnnotationEditorType;
 
@@ -2716,10 +2668,10 @@ export class FreeTextAnnotationElement extends AnnotationElement<FreeTextElement
 
   protected textPosition: PointType;
 
-  constructor(parameters: AnnotationElementParameters<FreeTextElementData>) {
+  constructor(parameters: AnnotationElementParameters<FreeTextData>) {
     super(parameters, true, true);
-    this.textContent = parameters.data.textContent;
-    this.textPosition = parameters.data.textPosition;
+    this.textContent = parameters.data.textContent!;
+    this.textPosition = <PointType>parameters.data.textPosition;
     this.annotationEditorType = AnnotationEditorType.FREETEXT;
   }
 
@@ -2748,11 +2700,11 @@ interface LineElementData extends PopupRefElementData {
   lineCoordinates: RectType;
 }
 
-class LineAnnotationElement extends AnnotationElement<LineElementData> {
+class LineAnnotationElement extends AnnotationElement<LineData> {
 
   #line: SVGElement | null = null;
 
-  constructor(parameters: AnnotationElementParameters<LineElementData>) {
+  constructor(parameters: AnnotationElementParameters<LineData>) {
     super(parameters, true, true);
   }
 
@@ -2763,16 +2715,16 @@ class LineAnnotationElement extends AnnotationElement<LineElementData> {
     // that acts as the trigger for the popup. Only the line itself should
     // trigger the popup, not the entire container.
     const data = this.data;
-    const { width, height } = getRectDims(data.rect);
+    const { width, height } = getRectDims(data.rect!);
     const svg = this.svgFactory.create(width, height, true);
 
     // PDF coordinates are calculated from a bottom left origin, so transform
     // the line coordinates to a top left origin for the SVG element.
     const line = (this.#line = this.svgFactory.createElement("svg:line"));
-    line.setAttribute("x1", `${data.rect[2] - data.lineCoordinates[0]}`);
-    line.setAttribute("y1", `${data.rect[3] - data.lineCoordinates[1]}`);
-    line.setAttribute("x2", `${data.rect[2] - data.lineCoordinates[2]}`);
-    line.setAttribute("y2", `${data.rect[3] - data.lineCoordinates[3]}`);
+    line.setAttribute("x1", `${data.rect![2] - data.lineCoordinates[0]}`);
+    line.setAttribute("y1", `${data.rect![3] - data.lineCoordinates[1]}`);
+    line.setAttribute("x2", `${data.rect![2] - data.lineCoordinates[2]}`);
+    line.setAttribute("y2", `${data.rect![3] - data.lineCoordinates[3]}`);
     // Ensure that the 'stroke-width' is always non-zero, since otherwise it
     // won't be possible to open/close the popup (note e.g. issue 11122).
     line.setAttribute("stroke-width", `${data.borderStyle.width || 1}`);
@@ -2800,11 +2752,11 @@ class LineAnnotationElement extends AnnotationElement<LineElementData> {
   }
 }
 
-class SquareAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class SquareAnnotationElement extends AnnotationElement<SquareData> {
 
   #square: SVGElement | null = null;
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<SquareData>) {
     super(parameters, true, true);
   }
 
@@ -2815,7 +2767,7 @@ class SquareAnnotationElement extends AnnotationElement<PopupRefElementData> {
     // trigger for the popup. Only the square itself should trigger the
     // popup, not the entire container.
     const data = this.data;
-    const { width, height } = getRectDims(data.rect);
+    const { width, height } = getRectDims(data.rect!);
     const svg = this.svgFactory.create(width, height, true);
 
     // The browser draws half of the borders inside the square and half of
@@ -2854,11 +2806,11 @@ class SquareAnnotationElement extends AnnotationElement<PopupRefElementData> {
   }
 }
 
-class CircleAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class CircleAnnotationElement extends AnnotationElement<CircleData> {
 
   #circle: SVGElement | null = null;
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<CircleData>) {
     super(parameters, true, true);
   }
 
@@ -2869,7 +2821,7 @@ class CircleAnnotationElement extends AnnotationElement<PopupRefElementData> {
     // trigger for the popup. Only the circle itself should trigger the
     // popup, not the entire container.
     const data = this.data;
-    const { width, height } = getRectDims(data.rect);
+    const { width, height } = getRectDims(data.rect!);
     const svg = this.svgFactory.create(
       width, height, true
     );
@@ -2915,7 +2867,7 @@ interface PolylineElementData extends AnnotationElementData {
   vertices: number[]
 }
 
-class PolylineAnnotationElement extends AnnotationElement<PolylineElementData> {
+class PolylineAnnotationElement extends AnnotationElement<PolylineData> {
 
   #polyline: SVGElement | null = null;
 
@@ -2923,7 +2875,7 @@ class PolylineAnnotationElement extends AnnotationElement<PolylineElementData> {
 
   protected svgElementName: string;
 
-  constructor(parameters: AnnotationElementParameters<PolylineElementData>) {
+  constructor(parameters: AnnotationElementParameters<PolylineData>) {
     super(parameters, true, true);
 
     this.containerClassName = "polylineAnnotation";
@@ -2942,7 +2894,7 @@ class PolylineAnnotationElement extends AnnotationElement<PolylineElementData> {
     if (!vertices) {
       return this.container!;
     }
-    const { width, height } = getRectDims(rect);
+    const { width, height } = getRectDims(rect!);
     const svg = this.svgFactory.create(
       width, height, true
     );
@@ -2953,8 +2905,8 @@ class PolylineAnnotationElement extends AnnotationElement<PolylineElementData> {
     // coordinates to a top left origin for the SVG element.
     let points = [];
     for (let i = 0, ii = vertices.length; i < ii; i += 2) {
-      const x = vertices[i] - rect[0];
-      const y = rect[3] - vertices[i + 1];
+      const x = vertices[i] - rect![0];
+      const y = rect![3] - vertices[i + 1];
       points.push(`${x}, ${y}`);
     }
     const pointsStr = points.join(" ");
@@ -2992,7 +2944,7 @@ class PolylineAnnotationElement extends AnnotationElement<PolylineElementData> {
 
 class PolygonAnnotationElement extends PolylineAnnotationElement {
 
-  constructor(parameters: AnnotationElementParameters<PolylineElementData>) {
+  constructor(parameters: AnnotationElementParameters<PolylineData>) {
     // Polygons are specific forms of polylines, so reuse their logic.
     super(parameters);
 
@@ -3001,9 +2953,9 @@ class PolygonAnnotationElement extends PolylineAnnotationElement {
   }
 }
 
-class CaretAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class CaretAnnotationElement extends AnnotationElement<CaretData> {
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<CaretData>) {
     super(parameters, true, true);
   }
 
@@ -3017,12 +2969,7 @@ class CaretAnnotationElement extends AnnotationElement<PopupRefElementData> {
   }
 }
 
-interface InkElementData extends PopupRefElementData {
-  it: string;
-  inkLists: number[][];
-}
-
-export class InkAnnotationElement extends AnnotationElement<InkElementData> {
+export class InkAnnotationElement extends AnnotationElement<InkAnnotationData> {
 
   #polylines: SVGElement[] = [];
 
@@ -3032,7 +2979,7 @@ export class InkAnnotationElement extends AnnotationElement<InkElementData> {
 
   public annotationEditorType: AnnotationEditorType;
 
-  constructor(parameters: AnnotationElementParameters<InkElementData>) {
+  constructor(parameters: AnnotationElementParameters<InkAnnotationData>) {
     super(parameters, true, true);
 
     this.containerClassName = "inkAnnotation";
@@ -3051,7 +2998,7 @@ export class InkAnnotationElement extends AnnotationElement<InkElementData> {
     // Create an invisible polyline with the same points that acts as the
     // trigger for the popup.
     const { data: { rect, inkLists, borderStyle, popupRef } } = this;
-    const { width, height } = getRectDims(rect);
+    const { width, height } = getRectDims(rect!);
     const svg = this.svgFactory.create(
       width, height, true
     );
@@ -3063,8 +3010,8 @@ export class InkAnnotationElement extends AnnotationElement<InkElementData> {
       // coordinates to a top left origin for the SVG element.
       let points = [];
       for (let i = 0, ii = inkList.length; i < ii; i += 2) {
-        const x = inkList[i] - rect[0];
-        const y = rect[3] - inkList[i + 1];
+        const x = inkList[i] - rect![0];
+        const y = rect![3] - inkList[i + 1];
         points.push(`${x}, ${y}`);
       }
       const pointsStr = points.join(" ");
@@ -3100,11 +3047,11 @@ export class InkAnnotationElement extends AnnotationElement<InkElementData> {
   }
 }
 
-export class HighlightAnnotationElement extends AnnotationElement<PopupRefElementData> {
+export class HighlightAnnotationElement extends AnnotationElement<HighlightData> {
 
   public annotationEditorType: AnnotationEditorType;
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<HighlightData>) {
     super(parameters, true, true, true);
     this.annotationEditorType = AnnotationEditorType.HIGHLIGHT;
   }
@@ -3119,9 +3066,9 @@ export class HighlightAnnotationElement extends AnnotationElement<PopupRefElemen
   }
 }
 
-class UnderlineAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class UnderlineAnnotationElement extends AnnotationElement<UnderlineData> {
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<UnderlineData>) {
     super(parameters, true, true, true);
   }
 
@@ -3135,9 +3082,9 @@ class UnderlineAnnotationElement extends AnnotationElement<PopupRefElementData> 
   }
 }
 
-class SquigglyAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class SquigglyAnnotationElement extends AnnotationElement<SquigglyData> {
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<SquigglyData>) {
     super(parameters, true, true, true);
   }
 
@@ -3151,9 +3098,9 @@ class SquigglyAnnotationElement extends AnnotationElement<PopupRefElementData> {
   }
 }
 
-class StrikeOutAnnotationElement extends AnnotationElement<PopupRefElementData> {
+class StrikeOutAnnotationElement extends AnnotationElement<StrikeOutData> {
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<StrikeOutData>) {
     super(parameters, true, true, true);
   }
 
@@ -3167,11 +3114,11 @@ class StrikeOutAnnotationElement extends AnnotationElement<PopupRefElementData> 
   }
 }
 
-export class StampAnnotationElement extends AnnotationElement<PopupRefElementData> {
+export class StampAnnotationElement extends AnnotationElement<StampData> {
 
   public annotationEditorType: AnnotationEditorType;
 
-  constructor(parameters: AnnotationElementParameters<PopupRefElementData>) {
+  constructor(parameters: AnnotationElementParameters<StampData>) {
     super(parameters, true, true);
     this.annotationEditorType = AnnotationEditorType.STAMP;
   }
@@ -3199,20 +3146,20 @@ interface FileAttachElementData extends PopupRefElementData {
   }
 }
 
-class FileAttachmentAnnotationElement extends AnnotationElement<FileAttachElementData> {
+class FileAttachmentAnnotationElement extends AnnotationElement<FileAttachmentData> {
 
   #trigger: HTMLElement | null = null;
 
   protected filename;
 
-  protected content;
+  protected content: Uint8Array<ArrayBuffer>;
 
-  constructor(parameters: AnnotationElementParameters<FileAttachElementData>) {
+  constructor(parameters: AnnotationElementParameters<FileAttachmentData>) {
     super(parameters, true);
 
     const { file } = this.data;
     this.filename = file.filename;
-    this.content = file.content;
+    this.content = file.content!;
 
     this.linkService.eventBus?.dispatch("fileattachmentannotation", {
       source: this,
@@ -3314,7 +3261,7 @@ export class AnnotationLayer {
 
   #annotationCanvasMap: Map<string, HTMLCanvasElement>;
 
-  #editableAnnotations = new Map<string, AnnotationElement<AnnotationElementData>>();
+  #editableAnnotations = new Map<string, AnnotationElement<AnnotationData>>();
 
   #structTreeLayer = null;
 
@@ -3351,8 +3298,8 @@ export class AnnotationLayer {
     return this.#editableAnnotations.size > 0;
   }
 
-  async #appendElement(element, id) {
-    const contentElement = element.firstChild || element;
+  async #appendElement(element: HTMLElement, id: string) {
+    const contentElement = <HTMLElement>element.firstChild || element;
     const annotationId = (contentElement.id = `${AnnotationPrefix}${id} `);
     const ariaAttributes = await this.#structTreeLayer?.getAriaAttributes(annotationId);
     if (ariaAttributes) {

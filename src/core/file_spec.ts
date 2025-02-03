@@ -48,7 +48,7 @@ export interface FileSpecSerializable {
 
   filename: string;
 
-  content: Uint8Array | null;
+  content: Uint8Array<ArrayBuffer> | null;
 
   description: string;
 }
