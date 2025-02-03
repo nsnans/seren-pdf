@@ -49,6 +49,10 @@ export declare global {
     __originalBeginPath?: () => void;
   }
 
+  interface HTMLInputElement {
+    exportValue?: string;
+  }
+
   declare interface ImageDecoderOptions {
     type: string;
     data: ArrayBuffer | DataView | ReadableStream | TypedArray;
