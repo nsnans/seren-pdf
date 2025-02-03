@@ -469,11 +469,11 @@ class AnnotationElement<DATA extends AnnotationElementData> {
   }
 
   get _commonActions() {
-    const setColor = (jsName: string, styleName: string, event) => {
+    const setColor = (jsName: string, styleName: string, event: CustomEvent) => {
       const color = event.detail[jsName];
       const colorType = color[0];
       const colorArray = color.slice(1);
-      event.target.style[styleName] = ColorConverters.executeHTML(
+      (<HTMLElement>event.target!).style[styleName] = ColorConverters.executeHTML(
         <keyof ColorConverters>`${colorType}_HTML`, colorArray
       );
       this.annotationStorage.setValue(this.data.id, {
@@ -484,7 +484,7 @@ class AnnotationElement<DATA extends AnnotationElementData> {
     };
 
     return shadow(this, "_commonActions", {
-      display: event => {
+      display: (event: CustomEvent<{ display: number }>) => {
         const { display } = event.detail;
         // See scripting/constants.js for the values of `Display`.
         // 0 = visible, 1 = hidden, 2 = noPrint and 3 = noView.
@@ -495,12 +495,12 @@ class AnnotationElement<DATA extends AnnotationElementData> {
           noPrint: display === 1 || display === 2,
         });
       },
-      print: event => {
+      print: (event: CustomEvent<{ print: boolean }>) => {
         this.annotationStorage.setValue(this.data.id, {
           noPrint: !event.detail.print,
         });
       },
-      hidden: event => {
+      hidden: (event: CustomEvent<{ hidden: boolean }>) => {
         const { hidden } = event.detail;
         this.container!.style.visibility = hidden ? "hidden" : "visible";
         this.annotationStorage.setValue(this.data.id, {
@@ -508,38 +508,38 @@ class AnnotationElement<DATA extends AnnotationElementData> {
           noView: hidden,
         });
       },
-      focus: event => {
-        setTimeout(() => event.target.focus({ preventScroll: false }), 0);
+      focus: (event: Event) => {
+        setTimeout(() => (<HTMLElement>event.target).focus({ preventScroll: false }), 0);
       },
-      userName: event => {
+      userName: (event: CustomEvent<{ userName: string }>) => {
         // tooltip
-        event.target.title = event.detail.userName;
+        (<HTMLElement>event.target).title = event.detail.userName;
       },
-      readonly: event => {
-        event.target.disabled = event.detail.readonly;
+      readonly: (event: CustomEvent<{ readonly: boolean }>) => {
+        (<HTMLInputElement>event.target).disabled = event.detail.readonly;
       },
-      required: event => {
-        this._setRequired(event.target, event.detail.required);
+      required: (event: CustomEvent<{ required: boolean }>) => {
+        this._setRequired(<HTMLElement>event.target, event.detail.required);
       },
-      bgColor: event => {
+      bgColor: (event: CustomEvent) => {
         setColor("bgColor", "backgroundColor", event);
       },
-      fillColor: event => {
+      fillColor: (event: CustomEvent) => {
         setColor("fillColor", "backgroundColor", event);
       },
-      fgColor: event => {
+      fgColor: (event: CustomEvent) => {
         setColor("fgColor", "color", event);
       },
-      textColor: event => {
+      textColor: (event: CustomEvent) => {
         setColor("textColor", "color", event);
       },
-      borderColor: event => {
+      borderColor: (event: CustomEvent) => {
         setColor("borderColor", "borderColor", event);
       },
-      strokeColor: event => {
+      strokeColor: (event: CustomEvent) => {
         setColor("strokeColor", "borderColor", event);
       },
-      rotation: event => {
+      rotation: (event: CustomEvent) => {
         const angle = event.detail.rotation;
         this.setRotation(angle);
         this.annotationStorage.setValue(this.data.id, {
@@ -814,6 +814,8 @@ class AnnotationElement<DATA extends AnnotationElementData> {
       });
     });
   }
+
+  _setRequired(_element: HTMLElement, _isRequired: boolean) { }
 }
 
 interface LinkElementData extends AnnotationElementData {
@@ -1488,12 +1490,12 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextWidgetElem
         element.addEventListener("updatefromsandbox", jsEvent => {
           this.showElementAndHideCanvas(jsEvent.target);
           const actions = {
-            value(event) {
+            value(event: CustomEvent<{ value: string }>) {
               elementData.userValue = event.detail.value ?? "";
               storage.setValue(id, { value: elementData.userValue.toString() });
-              event.target.value = elementData.userValue;
+              (<HTMLInputElement>event.target).value = elementData.userValue;
             },
-            formattedValue(event) {
+            formattedValue(event: CustomEvent<{ formattedValue: string }>) {
               const { formattedValue } = event.detail;
               elementData.formattedValue = formattedValue;
               if (
@@ -1502,24 +1504,24 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextWidgetElem
                 event.target !== document.activeElement
               ) {
                 // Input hasn't the focus so display formatted string
-                event.target.value = formattedValue;
+                (<HTMLInputElement>event.target).value = formattedValue;
               }
               storage.setValue(id, {
                 formattedValue,
               });
             },
-            selRange(event) {
-              event.target.setSelectionRange(...event.detail.selRange);
+            selRange(event: CustomEvent<{ selRange: [number, number] }>) {
+              (<HTMLInputElement>event.target).setSelectionRange(...event.detail.selRange);
             },
-            charLimit: event => {
+            charLimit: (event: CustomEvent<{ charLimit: number }>) => {
               const { charLimit } = event.detail;
-              const { target } = event;
+              const target = <HTMLInputElement>event.target;
               if (charLimit === 0) {
                 target.removeAttribute("maxLength");
                 return;
               }
 
-              target.setAttribute("maxLength", charLimit);
+              target.setAttribute("maxLength", charLimit.toString());
               let value = elementData.userValue;
               if (!value || value.length <= charLimit) {
                 return;
@@ -1765,11 +1767,11 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxEl
     element.tabIndex = DEFAULT_TAB_INDEX;
 
     element.addEventListener("change", event => {
-      const { name, checked } = event.target;
+      const { name, checked } = <HTMLInputElement>event.target!;
       for (const checkbox of this._getElementsByName(name, id)) {
         const curChecked = checked && checkbox.exportValue === data.exportValue;
         if (checkbox.domElement) {
-          checkbox.domElement.checked = curChecked;
+          (<HTMLInputElement>checkbox.domElement).checked = curChecked;
         }
         storage.setValue(checkbox.id, { value: curChecked });
       }
@@ -1778,15 +1780,15 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxEl
 
     element.addEventListener("resetform", event => {
       const defaultValue = data.defaultFieldValue || "Off";
-      event.target.checked = defaultValue === data.exportValue;
+      (<HTMLInputElement>event.target).checked = defaultValue === data.exportValue;
     });
 
     if (this.enableScripting && this.hasJSActions) {
       element.addEventListener("updatefromsandbox", jsEvent => {
         const actions = {
-          value(event) {
-            event.target.checked = event.detail.value !== "Off";
-            storage.setValue(id, { value: event.target.checked });
+          value(event: CustomEvent<{ value: string }>) {
+            (<HTMLInputElement>event.target).checked = event.detail.value !== "Off";
+            storage.setValue(id, { value: (<HTMLInputElement>event.target).checked });
           },
         };
         this._dispatchEventFromSandbox(actions, jsEvent);
@@ -1805,7 +1807,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<CheckboxEl
           ["mouseleave", "Mouse Exit"],
           ["mouseup", "Mouse Up"],
         ],
-        event => event.target.checked
+        (event: CustomEvent<unknown>) => (<HTMLInputElement>event.target).checked
       );
     }
 
@@ -1872,7 +1874,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
     element.tabIndex = DEFAULT_TAB_INDEX;
 
     element.addEventListener("change", event => {
-      const { name, checked } = event.target;
+      const { name, checked } = <HTMLInputElement>event.target;
       for (const radio of this._getElementsByName(name, /* skipId = */ id)) {
         storage.setValue(radio.id, { value: false });
       }
@@ -1881,8 +1883,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
 
     element.addEventListener("resetform", event => {
       const defaultValue = data.defaultFieldValue;
-      event.target.checked =
-        defaultValue !== null &&
+      (<HTMLInputElement>event.target).checked = defaultValue !== null &&
         defaultValue !== undefined &&
         defaultValue === data.buttonValue;
     });
@@ -1891,12 +1892,12 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
       const pdfButtonValue = data.buttonValue;
       element.addEventListener("updatefromsandbox", jsEvent => {
         const actions = {
-          value: event => {
+          value: (event: CustomEvent<{ value: string }>) => {
             const checked = pdfButtonValue === event.detail.value;
-            for (const radio of this._getElementsByName(event.target.name)) {
+            for (const radio of this._getElementsByName((<HTMLInputElement>event.target).name)) {
               const curChecked = checked && radio.id === id;
               if (radio.domElement) {
-                radio.domElement.checked = curChecked;
+                (<HTMLInputElement>radio.domElement).checked = curChecked;
               }
               storage.setValue(radio.id, { value: curChecked });
             }
@@ -1918,7 +1919,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<RadioBu
           ["mouseleave", "Mouse Exit"],
           ["mouseup", "Mouse Up"],
         ],
-        event => event.target.checked
+        (event: CustomEvent<unknown>) => (<HTMLInputElement>event.target).checked
       );
     }
 
@@ -2050,8 +2051,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
 
     let selectedValues = getValue(/* isExport */ false);
 
-    const getItems = event => {
-      const options = event.target.options;
+    const getItems = (event: CustomEvent<unknown>) => {
+      const options = (<HTMLSelectElement>event.target).options;
       return Array.prototype.map.call(options, option => ({
         displayValue: option.textContent,
         exportValue: option.value,
@@ -2061,7 +2062,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
     if (this.enableScripting && this.hasJSActions) {
       selectElement.addEventListener("updatefromsandbox", jsEvent => {
         const actions = {
-          value(event) {
+
+          value(event: CustomEvent<{ value: string }>) {
             removeEmptyEntry?.();
             const value = event.detail.value;
             const values = new Set(Array.isArray(value) ? value : [value]);
@@ -2073,10 +2075,12 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
             });
             selectedValues = getValue(/* isExport */ false);
           },
-          multipleSelection(_event) {
+
+          multipleSelection(_event: CustomEvent<unknown>) {
             selectElement.multiple = true;
           },
-          remove(event) {
+
+          remove(event: CustomEvent<{ remove: number }>) {
             const options = selectElement.options;
             const index = event.detail.remove;
             options[index].selected = false;
@@ -2091,19 +2095,21 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ChoiceElemen
               }
             }
             storage.setValue(id, {
-              value: getValue(/* isExport */ true),
+              value: getValue(true),
               items: getItems(event),
             });
-            selectedValues = getValue(/* isExport */ false);
+            selectedValues = getValue(false);
           },
-          clear(_event) {
+          clear(_event: CustomEvent<unknown>) {
             while (selectElement.length !== 0) {
               selectElement.remove(0);
             }
             storage.setValue(id, { value: null, items: [] });
             selectedValues = getValue(/* isExport */ false);
           },
-          insert(event) {
+          insert(event: CustomEvent<{
+            insert: { index: boolean, displayValue: string, exportValue: string }
+          }>) {
             const { index, displayValue, exportValue } = event.detail.insert;
             const selectChild = selectElement.children[index];
             const optionElement = document.createElement("option");
