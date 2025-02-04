@@ -87,7 +87,7 @@ const AutoPrintRegExp = /\bprint\s*\(/;
  *   ignore elements that either: Contains marked content identifiers,
  *   or have the CSS-rule `overflow: hidden;` set. The default value is `false`.
  */
-function scrollIntoView(element: HTMLElement, spot, scrollMatches = false) {
+function scrollIntoView(element: HTMLElement, spot: { top: number, left: number }, scrollMatches = false) {
   // Assuming offsetParent is available (it's not available when viewer is in
   // hidden iframe or object). We have to scroll: if the offsetParent is not set
   // producing the error. See also animationStarted.
@@ -180,7 +180,7 @@ function watchScroll(viewAreaElement, callback, abortSignal = undefined) {
  * @param {string} query
  * @returns {Map}
  */
-function parseQueryString(query) {
+function parseQueryString(query: string) {
   const params = new Map();
   for (const [key, value] of new URLSearchParams(query)) {
     params.set(key.toLowerCase(), value);
@@ -194,7 +194,7 @@ const InvisibleCharsRegExp = /[\x00-\x1F]/g;
  * @param {string} str
  * @param {boolean} [replaceInvisible]
  */
-function removeNullCharacters(str, replaceInvisible = false) {
+function removeNullCharacters(str: string, replaceInvisible = false) {
   if (!InvisibleCharsRegExp.test(str)) {
     return str;
   }
@@ -293,7 +293,7 @@ function approximateFraction(x) {
  * @param {number} x - A positive number to round to a multiple of `div`.
  * @param {number} div - A natural number.
  */
-function floorToDivide(x, div) {
+function floorToDivide(x: number, div: number) {
   return x - (x % div);
 }
 

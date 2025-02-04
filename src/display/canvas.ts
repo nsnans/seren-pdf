@@ -963,7 +963,7 @@ class CanvasGraphics {
 
   protected pendingClip: typeof NORMAL_CLIP | typeof EO_CLIP | null = null;
 
-  protected markedContentStack: { visiable: boolean }[];
+  protected markedContentStack: { visible: boolean }[];
 
   protected pendingTextPaths: {
     transform: TransformType;
@@ -1100,8 +1100,7 @@ class CanvasGraphics {
       return i;
     }
 
-    const chunkOperations =
-      argsArrayLen - i > EXECUTION_STEPS &&
+    const chunkOperations = argsArrayLen - i > EXECUTION_STEPS &&
       typeof continueCallback === "function";
     const endTime = chunkOperations ? Date.now() + EXECUTION_TIME : 0;
     let steps = 0;
@@ -2959,7 +2958,7 @@ class CanvasGraphics {
         width,
         height
       );
-      const maskCtx = maskCanvas.context;
+      const maskCtx = maskCanvas.context!;
       maskCtx.save();
 
       const img = this.getObject(data, image);
@@ -2983,16 +2982,7 @@ class CanvasGraphics {
       ctx.transform(...transform);
       ctx.scale(1, -1);
       drawImageAtIntegerCoords(
-        ctx,
-        maskCanvas.canvas!,
-        0,
-        0,
-        width,
-        height,
-        0,
-        -1,
-        1,
-        1
+        ctx, maskCanvas.canvas!, 0, 0, width, height, 0, -1, 1, 1
       );
       ctx.restore();
     }
@@ -3056,7 +3046,7 @@ class CanvasGraphics {
       width,
       height
     );
-    const tmpCtx = tmpCanvas.context;
+    const tmpCtx = tmpCanvas.context!;
     tmpCtx.filter = this.current.transferMaps;
     tmpCtx.drawImage(bitmap, 0, 0);
     tmpCtx.filter = "none";
@@ -3359,11 +3349,9 @@ class CanvasGraphics {
 
 // 一段糟糕的代码，尝试用策略模式改写，但是怎么改，还是要好好想想
 for (const _op in OPS) {
-  const ops = OPS[_op]
-  if (CanvasGraphics.operatorMap.has(op))
-    if (CanvasGraphics.prototype[op] !== undefined) {
-      CanvasGraphics.prototype[OPS[op]] = CanvasGraphics.prototype[op];
-    }
+  if (CanvasGraphics.prototype[op] !== undefined) {
+    CanvasGraphics.prototype[OPS[op]] = CanvasGraphics.prototype[op];
+  }
 }
 
 export { CanvasGraphics };

@@ -277,7 +277,7 @@ class AnnotationElement<DATA extends AnnotationData> {
 
   get hasPopupData() {
     return AnnotationElement._hasPopupData(
-      this.data.titleObj, this.data.contentObj, this.data.richText
+      this.data.titleObj, this.data.contentsObj, this.data.richText
     );
   }
 
@@ -606,7 +606,7 @@ class AnnotationElement<DATA extends AnnotationData> {
       return;
     }
 
-    const [rectBlX, rectBlY, rectTrX, rectTrY] = this.data.rect.map(x =>
+    const [rectBlX, rectBlY, rectTrX, rectTrY] = this.data.rect!.map(x =>
       Math.fround(x)
     );
 
@@ -701,7 +701,7 @@ class AnnotationElement<DATA extends AnnotationData> {
         modificationDate: data.modificationDate,
         contentsObj: data.contentsObj,
         richText: data.richText,
-        parentRect: data.rect,
+        parentRect: data.rect!,
         borderStyle: 0,
         id: `popup_${data.id}`,
         rotation: data.rotation,
@@ -824,29 +824,6 @@ class AnnotationElement<DATA extends AnnotationData> {
   _setRequired(_element: HTMLElement, _isRequired: boolean) { }
 }
 
-interface LinkElementData extends AnnotationElementData {
-  setOCGState: {
-    state: string[],
-    preserveRB: boolean;
-  };
-  resetForm: {
-    fields: string[];
-    refs: string[];
-    include: boolean;
-  };
-  actions: Map<string, string[]>;
-  dest: string;
-  attachment: {
-    content: string;
-    filename: string;
-    description: string;
-  };
-  attachmentDest: string | null;
-  action: string;
-  isTooltipOnly: boolean;
-  url: string;
-  newWindow: boolean;
-}
 
 class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
 
@@ -876,7 +853,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       this.#bindSetOCGState(link, data.setOCGState);
       isBound = true;
     } else if (data.dest) {
-      this._bindLink(link, data.dest);
+      this._bindLink(link, <string>data.dest);
       isBound = true;
     } else {
       if (data.actions
@@ -1167,23 +1144,6 @@ class TextAnnotationElement extends AnnotationElement<TextData> {
   }
 }
 
-interface WidgetElementData extends AnnotationElementData {
-  fieldType: any;
-  defaultAppearanceData: {
-    fontColor: RGBType;
-    fontSize: number;
-  };
-  textAlignment: number | null;
-  multiLine: boolean;
-  backgroundColor: RGBType;
-  options: {
-    // 这两个值从静态代码分析的角度来看，是有可能是string[]的
-    // 但根据代码的具体值来看，发现他们应该还是string类型的。
-    exportValue: string | null,
-    displayValue: string | null,
-  }[] | null;
-}
-
 class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T> {
 
   constructor(
@@ -1209,13 +1169,13 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
     }
   }
 
-  _getKeyModifier(event) {
+  _getKeyModifier(event: KeyboardEvent) {
     return FeatureTest.platform.isMac ? event.metaKey : event.ctrlKey;
   }
 
   _setEventListener(
     element: HTMLElement,
-    elementData,
+    elementData: { focused: boolean },
     baseName: string,
     eventName: string,
     valueGetter: ((evt: CustomEvent) => string | boolean) | null
@@ -1230,7 +1190,7 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
             name: eventName,
             value: valueGetter!(<CustomEvent>event),
             shift: (<KeyboardEvent>event).shiftKey,
-            modifier: this._getKeyModifier(event),
+            modifier: this._getKeyModifier(<KeyboardEvent>event),
           },
         });
       });
@@ -1267,7 +1227,7 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
 
   _setEventListeners(
     element: HTMLElement,
-    elementData,
+    elementData: { focused: boolean } | null,
     names: [string, string][],
     getter: (evt: CustomEvent) => string | boolean
   ) {
@@ -1278,16 +1238,16 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
         }
         this._setEventListener(
           element,
-          elementData,
+          elementData!,
           baseName,
           eventName,
           getter
         );
-        if (eventName === "Focus" && !this.data.actions?.Blur) {
+        if (eventName === "Focus" && !this.data.actions?.has("Blur")) {
           // Ensure that elementData will have the correct value.
-          this._setEventListener(element, elementData, "blur", "Blur", null);
-        } else if (eventName === "Blur" && !this.data.actions?.Focus) {
-          this._setEventListener(element, elementData, "focus", "Focus", null);
+          this._setEventListener(element, elementData!, "blur", "Blur", null);
+        } else if (eventName === "Blur" && !this.data.actions?.has("Focus")) {
+          this._setEventListener(element, elementData!, "focus", "Focus", null);
         }
       }
     }
@@ -1308,8 +1268,8 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
    */
   _setTextStyle(element: HTMLElement) {
     const TEXT_ALIGNMENT = ["left", "center", "right"];
-    const { fontColor } = this.data.defaultAppearanceData;
-    const fontSize = this.data.defaultAppearanceData.fontSize || DEFAULT_FONT_SIZE;
+    const { fontColor } = this.data.defaultAppearanceData!;
+    const fontSize = this.data.defaultAppearanceData!.fontSize || DEFAULT_FONT_SIZE;
 
     const style = element.style;
 
@@ -1327,7 +1287,7 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
     const roundToOneDecimal = (x: number) => Math.round(10 * x) / 10;
     if (this.data.multiLine) {
       const height = Math.abs(
-        this.data.rect[3] - this.data.rect[1] - BORDER_SIZE
+        this.data.rect![3] - this.data.rect![1] - BORDER_SIZE
       );
       const numberOfLines = Math.round(height / (LINE_FACTOR * fontSize)) || 1;
       const lineHeight = height / numberOfLines;
@@ -1336,11 +1296,10 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
       );
     } else {
       const height = Math.abs(
-        this.data.rect[3] - this.data.rect[1] - BORDER_SIZE
+        this.data.rect![3] - this.data.rect![1] - BORDER_SIZE
       );
       computedFontSize = Math.min(
-        fontSize,
-        roundToOneDecimal(height / LINE_FACTOR)
+        fontSize, roundToOneDecimal(height / LINE_FACTOR)
       );
     }
     style.fontSize = `calc(${computedFontSize}px * var(--scale-factor))`;
@@ -1360,6 +1319,14 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
     }
     element.setAttribute("aria-required", isRequired ? "true" : "false");
   }
+}
+
+interface ElementData {
+  userValue: string;
+  formattedValue: string | null;
+  lastCommittedValue: string | null;
+  commitKey: number;
+  focused: boolean;
 }
 
 class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
@@ -1406,13 +1373,13 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
         textContent = textContent.slice(0, maxLen);
       }
 
-      let fieldFormattedValues =
-        storedData.formattedValue || this.data.textContent?.join("\n") || null;
+      let fieldFormattedValues: string | null = storedData.formattedValue
+        || this.data.textContent?.join("\n") || null;
       if (fieldFormattedValues && this.data.comb) {
         fieldFormattedValues = fieldFormattedValues.replaceAll(/\s+/g, "");
       }
 
-      const elementData = {
+      const elementData: ElementData = {
         userValue: textContent,
         formattedValue: fieldFormattedValues,
         lastCommittedValue: <string | null>null,
@@ -2196,13 +2163,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
   }
 }
 
-interface PopupAnnotationElementData extends AnnotationElementData {
-  open: boolean;
-  parentRect: RectType;
-  modificationDate: string;
-  contentsObj: StringObj;
-}
-
 class PopupAnnotationElement extends AnnotationElement<PopupData> {
 
   public popup: PopupElement | null;
@@ -2695,11 +2655,6 @@ export class FreeTextAnnotationElement extends AnnotationElement<FreeTextData> {
     return this.container!;
   }
 }
-
-interface LineElementData extends PopupRefElementData {
-  lineCoordinates: RectType;
-}
-
 class LineAnnotationElement extends AnnotationElement<LineData> {
 
   #line: SVGElement | null = null;
@@ -2860,11 +2815,6 @@ class CircleAnnotationElement extends AnnotationElement<CircleData> {
   addHighlightArea() {
     this.container!.classList.add("highlightArea");
   }
-}
-
-interface PolylineElementData extends AnnotationElementData {
-  popupRef: Ref | null,
-  vertices: number[]
 }
 
 class PolylineAnnotationElement extends AnnotationElement<PolylineData> {
@@ -3133,16 +3083,6 @@ export class StampAnnotationElement extends AnnotationElement<StampData> {
     this._editOnDoubleClick();
 
     return this.container!;
-  }
-}
-
-interface FileAttachElementData extends PopupRefElementData {
-  hasAppearance: boolean;
-  fillAlpha: number;
-  name: string;
-  file: {
-    filename: string;
-    content: string;
   }
 }
 

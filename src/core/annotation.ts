@@ -812,7 +812,7 @@ export interface AnnotationData {
   backgroundColor: Uint8ClampedArray<ArrayBuffer> | null;
   borderColor: Uint8ClampedArray<ArrayBuffer> | null;
   rotation: number;
-  contentsObj: { str: string, dir: string };
+  contentsObj: StringObj;
   hasAppearance: boolean;
   id: string;
   modificationDate: string | null;
