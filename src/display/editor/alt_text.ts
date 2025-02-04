@@ -156,7 +156,7 @@ class AltText {
       return;
     }
     this.#guessedText = guessedText;
-    this.#textWithDisclaimer = await AltText._l10n.get(
+    this.#textWithDisclaimer = await AltText._l10n!.get(
       "pdfjs-editor-new-alt-text-generated-alt-text-with-disclaimer",
       { generatedAltText: guessedText }
     );

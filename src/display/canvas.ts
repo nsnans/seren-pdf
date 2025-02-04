@@ -681,15 +681,13 @@ function putBinaryImageData(ctx: CanvasRenderingContext2D, imgData) {
   // will (conceptually) put pixels past the bounds of the canvas.  But
   // that's ok; any such pixels are ignored.
 
-  const height = imgData.height,
-    width = imgData.width;
+  const height = imgData.height, width = imgData.width;
   const partialChunkHeight = height % FULL_CHUNK_HEIGHT;
   const fullChunks = (height - partialChunkHeight) / FULL_CHUNK_HEIGHT;
   const totalChunks = partialChunkHeight === 0 ? fullChunks : fullChunks + 1;
 
   const chunkImgData = ctx.createImageData(width, FULL_CHUNK_HEIGHT);
-  let srcPos = 0,
-    destPos;
+  let srcPos = 0, destPos;
   const src = imgData.data;
   const dest = chunkImgData.data;
   let i, j, thisChunkHeight, elemsInThisChunk;
@@ -905,11 +903,11 @@ interface PositionTransformType {
 
 class CanvasGraphics {
 
-  public static operatorMap = new Map<OPS, any>;
-
   public ctx: CanvasRenderingContext2D;
 
   public current: CanvasExtraState;
+
+  protected operatorMap = new Map<OPS, Function>();
 
   protected pendingEOFill: boolean;
 
@@ -1027,6 +1025,11 @@ class CanvasGraphics {
     this._cachedScaleForStroking = [-1, 0];
     this._cachedGetSinglePixelWidth = null;
     this._cachedBitmapsMap = new Map();
+    this.initOperatorMap();
+  }
+
+  protected initOperatorMap() {
+
   }
 
   getObject(data: string | unknown, fallback = null) {
@@ -1298,9 +1301,7 @@ class CanvasGraphics {
       // to compute offsets (but not when filling patterns see #15573).
       // TODO: handle the case of a pattern fill if it's possible.
       cacheKey = JSON.stringify(
-        isPatternFill
-          ? currentTransform
-          : [currentTransform.slice(0, 4), fillColor]
+        isPatternFill ? currentTransform : [currentTransform.slice(0, 4), fillColor]
       );
 
       cache = this._cachedBitmapsMap.get(mainKey);
@@ -1384,14 +1385,9 @@ class CanvasGraphics {
     );
     fillCtx.globalCompositeOperation = "source-in";
 
-    const inverse = Util.transform(getCurrentTransformInverse(fillCtx), [
-      1,
-      0,
-      0,
-      1,
-      -offsetX,
-      -offsetY,
-    ]);
+    const inverse = Util.transform(
+      getCurrentTransformInverse(fillCtx), [1, 0, 0, 1, -offsetX, -offsetY]
+    );
     fillCtx.fillStyle = isPatternFill
       ? (fillColor as BaseShadingPattern | TilingPattern).getPattern(ctx, this, inverse, PathType.FILL)
       : fillColor;

@@ -117,7 +117,7 @@ export class AnnotationEditorHelper {
     );
   }
 
-  static deleteAnnotationElement(editor: AnnotationEditor) {
+  static deleteAnnotationElement(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     const fakeEditor = new FakeEditor({
       id: editor.parent!.getNextId(),
       parent: editor.parent,
@@ -178,8 +178,6 @@ export class AnnotationEditorHelper {
   /**
  * Check if this kind of editor is able to handle the given mime type for
  * pasting.
- * @param {string} mime
- * @returns {boolean}
  */
   static isHandlingMimeForPasting(_mime: string) {
     return false;
@@ -199,22 +197,21 @@ export class AnnotationEditorHelper {
   }
 
   /**
- * Get the default properties to set in the UI for this type of editor.
- * @returns {Array}
- */
+   * Get the default properties to set in the UI for this type of editor.
+   */
   static get defaultPropertiesToUpdate() {
     return [];
   }
 
   /**
- * Deserialize the editor.
- * The result of the deserialization is a new editor.
- *
- * @param {Object} data
- * @param {AnnotationEditorLayer} parent
- * @param {AnnotationEditorUIManager} uiManager
- * @returns {Promise<AnnotationEditor | null>}
- */
+   * Deserialize the editor.
+   * The result of the deserialization is a new editor.
+   *
+   * @param {Object} data
+   * @param {AnnotationEditorLayer} parent
+   * @param {AnnotationEditorUIManager} uiManager
+   * @returns {Promise<AnnotationEditor | null>}
+   */
   static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
     const editor = new this.prototype.constructor({
       parent,
@@ -298,7 +295,7 @@ class AnnotationEditor<
 
   protected _focusEventsAllowed = true;
 
-  protected parent: AnnotationEditorLayer | null;
+  public parent: AnnotationEditorLayer | null;
 
   protected id: string;
 
@@ -471,7 +468,7 @@ class AnnotationEditor<
       return;
     }
     if (!this.#hasBeenClicked) {
-      this.parent.setSelected(this);
+      this.parent!.setSelected(this);
     } else {
       this.#hasBeenClicked = false;
     }
@@ -842,7 +839,7 @@ class AnnotationEditor<
     const ac = new AbortController();
     const signal = this._uiManager.combinedSignal(ac);
 
-    this.parent.togglePointerEvents(false);
+    this.parent!.togglePointerEvents(false);
     window.addEventListener(
       "pointermove",
       this.#resizerPointermove.bind(this, name),
@@ -853,17 +850,17 @@ class AnnotationEditor<
     const savedY = this.y;
     const savedWidth = this.width;
     const savedHeight = this.height;
-    const savedParentCursor = this.parent.div.style.cursor;
+    const savedParentCursor = this.parent!.div.style.cursor;
     const savedCursor = this.div!.style.cursor;
-    this.div!.style.cursor = this.parent.div.style.cursor =
-      window.getComputedStyle(event.target).cursor;
+    this.div!.style.cursor = this.parent!.div.style.cursor =
+      window.getComputedStyle(<Element>event.target).cursor;
 
     const pointerUpCallback = () => {
       ac.abort();
-      this.parent.togglePointerEvents(true);
+      this.parent!.togglePointerEvents(true);
       this.#altText?.toggle(true);
       this._isDraggable = savedDraggable;
-      this.parent.div.style.cursor = savedParentCursor;
+      this.parent!.div.style.cursor = savedParentCursor;
       this.div!.style.cursor = savedCursor;
 
       this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
@@ -1075,7 +1072,7 @@ class AnnotationEditor<
     this.#altText?.destroy();
   }
 
-  addContainer(container) {
+  addContainer(container: HTMLCanvasElement) {
     const editToolbarDiv = this._editToolbar?.div;
     if (editToolbarDiv) {
       editToolbarDiv!.before(container);
@@ -1112,7 +1109,7 @@ class AnnotationEditor<
     if (!this.#altText) {
       return;
     }
-    this.#altText!.data = data;
+    this.#altText!.data = data!;
   }
 
   get guessedAltText() {
@@ -1871,7 +1868,12 @@ class AnnotationEditor<
 }
 
 // This class is used to fake an editor which has been deleted.
-class FakeEditor extends AnnotationEditor {
+class FakeEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+
+  public annotationElementId: string | null;
+
+  public deleted: boolean;
+
   constructor(params) {
     super(params);
     this.annotationElementId = params.annotationElementId;
