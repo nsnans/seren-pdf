@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { RectType } from "../display/display_utils";
 
 /**
  * PLEASE NOTE: This file is currently imported in both the `../display/` and

@@ -3,10 +3,11 @@
 * Simple event bus for an application. Listeners are attached using the `on`
 * and `off` methods. To raise an event, the `dispatch` method shall be used.
 */
-class EventBus {
+export class EventBus {
 
-  on() {
-  }
+  // 不应该一直是string，这个代码后面需要完善
+  on(_action: string, callback: Function, options?: unknown) { }
+  _on(_action: string, callback: Function, options?: unknown) { }
 
   off() { }
 
@@ -60,7 +61,7 @@ export interface IL10n {
    * @param {string} [fallback]
    * @returns {Promise<string>}
    */
-  get(ids: Array<string> | string, args: object | null, fallback: string): Promise<string>;
+  get(ids: Array<string> | string, args: object | null, fallback?: string): Promise<string>;
 
   /**
    * Translates HTML element.

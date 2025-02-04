@@ -13,12 +13,24 @@
  * limitations under the License.
  */
 
+import { IL10n } from "../../viewer/common/component_types";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
 
-class AltText {
+interface AltTextData {
+  alt: string | null,
+  altText: string | null,
+  decorative: boolean,
+  guessedText: string | null,
+  textWithDisclaimer: string | null,
+  cancel: boolean | null,
+}
 
-  #altText = null;
+export class AltText {
+
+  #altText: string | null = null;
 
   #altTextDecorative = false;
 
@@ -28,25 +40,25 @@ class AltText {
 
   #altTextTooltip: HTMLSpanElement | null = null;
 
-  #altTextTooltipTimeout = null;
+  #altTextTooltipTimeout: number | null = null;
 
   #altTextWasFromKeyBoard = false;
 
-  #badge = null;
+  #badge: HTMLDivElement | null = null;
 
-  #editor: AnnotationEditor;
+  #editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
 
-  #guessedText = null;
+  #guessedText: string | null = null;
 
-  #textWithDisclaimer = null;
+  #textWithDisclaimer: string | null = null;
 
   #useNewAltTextFlow = false;
 
   static #l10nNewButton: Record<string, string> | null = null;
 
-  static _l10n = null;
+  static _l10n: IL10n | null = null;
 
-  constructor(editor: AnnotationEditor) {
+  constructor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#editor = editor;
     this.#useNewAltTextFlow = editor._uiManager.useNewAltTextFlow;
 
@@ -60,7 +72,7 @@ class AltText {
     });
   }
 
-  static initialize(l10n) {
+  static initialize(l10n: IL10n | null = null) {
     AltText._l10n ??= l10n;
   }
 
@@ -96,7 +108,11 @@ class AltText {
       if (this.#useNewAltTextFlow) {
         this.#editor._reportTelemetry({
           action: "pdfjs.image.alt_text.image_status_label_clicked",
-          data: { label: this.#label },
+          data: {
+            label: this.#label,
+            alt_text_modal: false
+          },
+          type: null
         });
       }
     };
@@ -150,7 +166,7 @@ class AltText {
     return this.#guessedText;
   }
 
-  async setGuessedText(guessedText) {
+  async setGuessedText(guessedText: string | null) {
     if (this.#altText !== null) {
       // The user provided their own alt text, so we don't want to overwrite it.
       return;
@@ -172,7 +188,7 @@ class AltText {
     if (!this.#badge) {
       const badge = (this.#badge = document.createElement("div"));
       badge.className = "noAltTextBadge";
-      this.#editor.div.append(badge);
+      this.#editor.div!.append(badge);
     }
     this.#badge.classList.toggle("hidden", !visibility);
   }
@@ -190,10 +206,14 @@ class AltText {
     };
   }
 
-  get data() {
+  get data(): AltTextData {
     return {
       altText: this.#altText,
       decorative: this.#altTextDecorative,
+      guessedText: null,
+      textWithDisclaimer: null,
+      cancel: null,
+      alt: null
     };
   }
 
@@ -206,7 +226,7 @@ class AltText {
     guessedText,
     textWithDisclaimer,
     cancel = false,
-  }) {
+  }: AltTextData) {
     if (guessedText) {
       this.#guessedText = guessedText;
       this.#textWithDisclaimer = textWithDisclaimer;
@@ -235,7 +255,11 @@ class AltText {
   shown() {
     this.#editor._reportTelemetry({
       action: "pdfjs.image.alt_text.image_status_label_displayed",
-      data: { label: this.#label },
+      data: {
+        label: this.#label,
+        alt_text_modal: false
+      },
+      type: null
     });
   }
 
@@ -285,38 +309,26 @@ class AltText {
 
       const DELAY_TO_SHOW_TOOLTIP = 100;
       const signal = this.#editor!._uiManager._signal;
-      signal.addEventListener(
-        "abort",
-        () => {
+      signal.addEventListener("abort", () => {
+        clearTimeout(this.#altTextTooltipTimeout!);
+        this.#altTextTooltipTimeout = null;
+      }, { once: true });
+      button.addEventListener("mouseenter", () => {
+        this.#altTextTooltipTimeout = setTimeout(() => {
+          this.#altTextTooltipTimeout = null;
+          this.#altTextTooltip!.classList.add("show");
+          this.#editor!._reportTelemetry({
+            action: "alt_text_tooltip", data: null, type: null
+          });
+        }, DELAY_TO_SHOW_TOOLTIP);
+      }, { signal });
+      button.addEventListener("mouseleave", () => {
+        if (this.#altTextTooltipTimeout) {
           clearTimeout(this.#altTextTooltipTimeout);
           this.#altTextTooltipTimeout = null;
-        },
-        { once: true }
-      );
-      button.addEventListener(
-        "mouseenter",
-        () => {
-          this.#altTextTooltipTimeout = setTimeout(() => {
-            this.#altTextTooltipTimeout = null;
-            this.#altTextTooltip!.classList.add("show");
-            this.#editor!._reportTelemetry({
-              action: "alt_text_tooltip",
-            });
-          }, DELAY_TO_SHOW_TOOLTIP);
-        },
-        { signal }
-      );
-      button.addEventListener(
-        "mouseleave",
-        () => {
-          if (this.#altTextTooltipTimeout) {
-            clearTimeout(this.#altTextTooltipTimeout);
-            this.#altTextTooltipTimeout = null;
-          }
-          this.#altTextTooltip?.classList.remove("show");
-        },
-        { signal }
-      );
+        }
+        this.#altTextTooltip?.classList.remove("show");
+      }, { signal });
     }
     if (this.#altTextDecorative) {
       tooltip.setAttribute(
@@ -336,5 +348,3 @@ class AltText {
     element?.setAttribute("aria-describedby", tooltip.id);
   }
 }
-
-export { AltText };

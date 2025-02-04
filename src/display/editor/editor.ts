@@ -237,6 +237,8 @@ export class AnnotationEditorHelper {
 }
 
 
+export type DefaultAnnotationEditor = AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
+
 class AnnotationEditor<
   /* 核心属性 */ T extends AnnotationEditorState,
   /* 序列化结果 */ S extends AnnotationEditorSerial
@@ -293,33 +295,33 @@ class AnnotationEditor<
 
   protected _isVisible = true;
 
-  protected _focusEventsAllowed = true;
+  public _focusEventsAllowed = true;
 
   public parent: AnnotationEditorLayer | null;
 
-  protected id: string;
+  public id: string;
 
-  protected x: number;
+  public x: number;
 
-  protected y: number;
+  public y: number;
 
   protected _willKeepAspectRatio: boolean;
 
   public _uiManager: AnnotationEditorUIManager;
 
-  protected deleted: boolean;
+  public deleted: boolean;
 
-  protected isAttachedToDOM: boolean;
+  public isAttachedToDOM: boolean;
 
   protected width: number;
 
   protected height: number;
 
-  protected pageIndex: number;
+  public pageIndex: number;
 
   protected name: string;
 
-  protected div: HTMLDivElement | null;
+  public div: HTMLDivElement | null;
 
   public annotationElementId: string | null;
 
@@ -368,13 +370,9 @@ class AnnotationEditor<
     this.deleted = false;
   }
 
-  get editorType() {
+  get editorType(): string {
     return Object.getPrototypeOf(this).constructor._type;
   }
-
-
-
-
 
   /**
    * Get the properties to update in the UI for this editor.
@@ -427,8 +425,18 @@ class AnnotationEditor<
    * Add some commands into the CommandManager (undo/redo stuff).
    * @param {Object} params
    */
-  addCommands(params) {
-    this._uiManager.addCommands(params);
+  addCommands(
+    cmd: () => void,
+    undo: () => void,
+    post: () => void,
+    mustExec: boolean,
+    type = NaN,
+    overwriteIfSameType = false,
+    keepUndo = false
+  ) {
+    this._uiManager.addCommands(
+      cmd, undo, post, mustExec, type, overwriteIfSameType, keepUndo
+    );
   }
 
   get currentLayer() {
@@ -491,7 +499,7 @@ class AnnotationEditor<
     // is grabbing the focus.
     // So if the related target is an element under the div for this
     // editor, then the editor isn't unactive.
-    const target = event.relatedTarget;
+    const target = <HTMLElement>event.relatedTarget;
     if (target?.closest(`#${this.id}`)) {
       return;
     }
@@ -885,8 +893,8 @@ class AnnotationEditor<
       return;
     }
 
-    this.addCommands({
-      cmd: () => {
+    this.addCommands(
+      () => {
         this.width = newWidth;
         this.height = newHeight;
         this.x = newX;
@@ -895,7 +903,7 @@ class AnnotationEditor<
         this.setDims(parentWidth * newWidth, parentHeight * newHeight);
         this.fixAndSetPosition();
       },
-      undo: () => {
+      () => {
         this.width = savedWidth;
         this.height = savedHeight;
         this.x = savedX;
@@ -904,11 +912,12 @@ class AnnotationEditor<
         this.setDims(parentWidth * savedWidth, parentHeight * savedHeight);
         this.fixAndSetPosition();
       },
-      mustExec: true,
-    });
+      () => { },
+      true,
+    );
   }
 
-  #resizerPointermove(name: string, event: PointerEvent) {
+  #resizerPointermove(name: string, event: PointerEvent | { movementX: number; movementY: number; }) {
     const [parentWidth, parentHeight] = this.parentDimensions;
     const savedX = this.x;
     const savedY = this.y;
@@ -1116,7 +1125,7 @@ class AnnotationEditor<
     return this.#altText?.guessedText;
   }
 
-  async setGuessedAltText(text) {
+  async setGuessedAltText(text: string | null) {
     await this.#altText?.setGuessedText(text);
   }
 
@@ -1201,13 +1210,13 @@ class AnnotationEditor<
       event.shiftKey ||
       (event.metaKey && isMac)
     ) {
-      this.parent.toggleSelected(this);
+      this.parent!.toggleSelected(this);
     } else {
-      this.parent.setSelected(this);
+      this.parent!.setSelected(this);
     }
   }
 
-  #setUpDragSession(event) {
+  #setUpDragSession(event: PointerEvent) {
     const { isSelected } = this;
     this._uiManager.setUpDragSession();
 
@@ -1373,7 +1382,6 @@ class AnnotationEditor<
 
   /**
    * Check if the editor is edited.
-   * @returns {boolean}
    */
   isInEditMode() {
     return this.#isInEditMode;
@@ -1382,7 +1390,6 @@ class AnnotationEditor<
   /**
    * If it returns true, then this editor handles the keyboard
    * events itself.
-   * @returns {boolean}
    */
   shouldGetKeyboardEvents() {
     return this.#isResizerEnabledForKeyboard;
@@ -1390,7 +1397,6 @@ class AnnotationEditor<
 
   /**
    * Check if this editor needs to be rebuilt or not.
-   * @returns {boolean}
    */
   needsToBeRebuilt() {
     return this.div && !this.isAttachedToDOM;
@@ -1418,13 +1424,11 @@ class AnnotationEditor<
 
   /**
    * Rotate the editor.
-   * @param {number} angle
    */
   rotate(_angle: number) { }
 
   /**
    * Serialize the editor when it has been deleted.
-   * @returns {Object}
    */
   serializeDeleted() {
     return {
@@ -1593,19 +1597,19 @@ class AnnotationEditor<
 
     this.#setResizerTabIndex(0);
     this.#isResizerEnabledForKeyboard = true;
-    this.#resizersDiv!.firstChild!.focus({ focusVisible: true });
+    (<HTMLElement>this.#resizersDiv!.firstChild)!.focus({ focusVisible: true });
     event.preventDefault();
     event.stopImmediatePropagation();
   }
 
   #resizerKeydown(event: KeyboardEvent) {
-    AnnotationEditor._resizerKeyboardManager.exec(this, event);
+    AnnotationEditorHelper._resizerKeyboardManager.exec(this, event);
   }
 
   #resizerBlur(event: FocusEvent) {
     if (
       this.#isResizerEnabledForKeyboard &&
-      event.relatedTarget?.parentNode !== this.#resizersDiv
+      (<HTMLElement>event.relatedTarget).parentNode !== this.#resizersDiv
     ) {
       this.#stopResizing();
     }
@@ -1784,7 +1788,11 @@ class AnnotationEditor<
     return null;
   }
 
-  _reportTelemetry(data, mustWait = false) {
+  _reportTelemetry(data: {
+    action: string,
+    data: object | null,
+    type: string | null
+  }, mustWait = false) {
     if (mustWait) {
       this.#telemetryTimeouts ||= new Map();
       const { action } = data;
@@ -1814,7 +1822,6 @@ class AnnotationEditor<
 
   /**
    * Show or hide this editor.
-   * @param {boolean|undefined} visible
    */
   show(visible = this._isVisible) {
     this.div!.classList.toggle("hidden", !visible);

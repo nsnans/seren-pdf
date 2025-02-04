@@ -283,7 +283,7 @@ class ColorPicker {
       return;
     }
 
-    const i = this.#uiManager.highlightColors.values();
+    const i = this.#uiManager!.highlightColors.values();
     for (const child of this.#dropdown.children) {
       child.setAttribute("aria-selected", i.next().value === color);
     }

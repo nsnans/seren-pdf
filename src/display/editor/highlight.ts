@@ -33,11 +33,13 @@ import { ColorPicker } from "./color_picker";
 import { noContextMenu } from "../display_utils";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
  */
-class HighlightEditor extends AnnotationEditor {
+class HighlightEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
   #anchorNode = null;
 
   #anchorOffset = 0;
@@ -335,19 +337,19 @@ class HighlightEditor extends AnnotationEditor {
     };
     const savedColor = this.color;
     const savedOpacity = this.#opacity;
-    this.addCommands({
-      cmd: setColorAndOpacity.bind(
+    this.addCommands(
+      setColorAndOpacity.bind(
         this,
         color,
         HighlightEditor._defaultOpacity
       ),
-      undo: setColorAndOpacity.bind(this, savedColor, savedOpacity),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.HIGHLIGHT_COLOR,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+      setColorAndOpacity.bind(this, savedColor, savedOpacity),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.HIGHLIGHT_COLOR,
+      true,
+      true,
+    );
 
     this._reportTelemetry(
       {
@@ -368,15 +370,15 @@ class HighlightEditor extends AnnotationEditor {
       this.#thickness = th;
       this.#changeThickness(th);
     };
-    this.addCommands({
-      cmd: setThickness.bind(this, thickness),
-      undo: setThickness.bind(this, savedThickness),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_THICKNESS,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setThickness.bind(this, thickness),
+      setThickness.bind(this, savedThickness),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.INK_THICKNESS,
+      true,
+      true,
+    );
     this._reportTelemetry(
       { action: "thickness_changed", thickness },
       /* mustWait = */ true

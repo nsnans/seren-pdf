@@ -24,16 +24,18 @@ import { StampAnnotationElement } from "../annotation_layer";
 import { OutputScale, PixelsPerInch } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager } from "./tools";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
  */
-class StampEditor extends AnnotationEditor {
+export class StampEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
 
   #bitmap: ImageBitmap | HTMLImageElement | null = null;
 
-  #bitmapId = null;
+  #bitmapId: string | null = null;
 
   #bitmapPromise: Promise<void> | null = null;
 
@@ -183,7 +185,7 @@ class StampEditor extends AnnotationEditor {
   async mlGuessAltText(imageData: {
     width: number;
     height: number;
-    data: Uint8ClampedArray;
+    data: Uint8ClampedArray<ArrayBuffer>;
   } | null = null, updateAltTextData = true) {
     if (this.hasAltTextData()) {
       return null;
@@ -196,16 +198,13 @@ class StampEditor extends AnnotationEditor {
     if (!(await mlManager.isEnabledFor("altText"))) {
       throw new Error("ML isn't enabled for alt text.");
     }
-    const { data, width, height } =
-      imageData ||
-      this.copyCanvas(null, null, /* createImageData = */ true).imageData!;
+    const { data, width, height } = imageData ||
+      this.copyCanvas(null, null, true).imageData!;
     const response = await mlManager.guess({
       name: "altText",
       request: {
-        data,
-        width,
-        height,
-        channels: data.length / (width * height),
+        data, width, height,
+        channels: data.length / (width! * height!),
       },
     });
     if (!response) {
@@ -220,10 +219,17 @@ class StampEditor extends AnnotationEditor {
     if (!response.output) {
       throw new Error("No valid response from the AI service.");
     }
-    const altText = response.output;
+    const altText: string | null = response.output;
     await this.setGuessedAltText(altText);
     if (updateAltTextData && !this.hasAltTextData()) {
-      this.altTextData = { alt: altText, decorative: false };
+      this.altTextData = {
+        alt: altText,
+        decorative: false,
+        altText: null,
+        guessedText: null,
+        textWithDisclaimer: null,
+        cancel: null
+      };
     }
     return altText;
   }
@@ -282,7 +288,11 @@ class StampEditor extends AnnotationEditor {
             );
             this._reportTelemetry({
               action: "pdfjs.image.image_selected",
-              data: { alt_text_modal: this._uiManager.useNewAltTextFlow },
+              data: {
+                alt_text_modal: this._uiManager.useNewAltTextFlow,
+                label: ""
+              },
+              type: null
             });
             this.#getBitmapFetched(data);
           }
@@ -460,14 +470,14 @@ class StampEditor extends AnnotationEditor {
     // count the number of times an image is added to the page whatever the way
     // is.
     this._reportTelemetry({
-      action: "inserted_image",
+      action: "inserted_image", data: null, type: null
     });
     if (this.#bitmapFileName) {
       canvas.setAttribute("aria-label", this.#bitmapFileName);
     }
   }
 
-  copyCanvas(maxDataDimension, maxPreviewDimension, createImageData = false) {
+  copyCanvas(maxDataDimension: number | null, maxPreviewDimension: number | null, createImageData = false) {
     if (!maxDataDimension) {
       // TODO: get this value from Firefox
       //   (https://bugzilla.mozilla.org/show_bug.cgi?id=1908184)
@@ -479,15 +489,12 @@ class StampEditor extends AnnotationEditor {
     const outputScale = new OutputScale();
 
     let bitmap = this.#bitmap!;
-    let width = bitmapWidth,
-      height = bitmapHeight;
+    let width = bitmapWidth;
+    let height = bitmapHeight;
     let canvas = null;
 
     if (maxPreviewDimension) {
-      if (
-        bitmapWidth > maxPreviewDimension ||
-        bitmapHeight > maxPreviewDimension
-      ) {
+      if (bitmapWidth > maxPreviewDimension || bitmapHeight > maxPreviewDimension) {
         const ratio = Math.min(
           maxPreviewDimension / bitmapWidth,
           maxPreviewDimension / bitmapHeight
@@ -711,7 +718,7 @@ class StampEditor extends AnnotationEditor {
   #serializeBitmap(toUrl: boolean) {
     if (toUrl) {
       if (this.#isSvg) {
-        const url = this._uiManager.imageManager.getSvgUrl(this.#bitmapId);
+        const url = this._uiManager.imageManager.getSvgUrl(this.#bitmapId!);
         if (url) {
           return url;
         }
@@ -792,26 +799,23 @@ class StampEditor extends AnnotationEditor {
           page: { pageNumber },
         },
       } = data;
-      const canvas = container!.querySelector("canvas");
+      const canvas = container!.querySelector("canvas")!;
       const imageData = uiManager.imageManager.getFromCanvas(
-        container!.id,
-        canvas
+        container!.id, canvas
       );
-      canvas!.remove();
+      canvas.remove();
 
       // When switching to edit mode, we wait for the structure tree to be
       // ready (see pdf_viewer.js), so it's fine to use getAriaAttributesSync.
-      const altText =
-        (
-          await parent._structTree.getAriaAttributes(`${AnnotationPrefix}${id}`)
-        )?.get("aria-label") || "";
+      const altText = (await parent._structTree.getAriaAttributes(`${AnnotationPrefix}${id}`))
+        ?.get("aria-label") || "";
 
       initialData = data = {
         annotationType: AnnotationEditorType.STAMP,
         bitmapId: imageData.id,
         bitmap: imageData.bitmap,
         pageIndex: pageNumber - 1,
-        rect: rect.slice(0),
+        rect: rect!.slice(0),
         rotation,
         id,
         deleted: false,
@@ -956,5 +960,3 @@ class StampEditor extends AnnotationEditor {
     return null;
   }
 }
-
-export { StampEditor };

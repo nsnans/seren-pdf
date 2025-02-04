@@ -26,11 +26,13 @@ import { AnnotationEditorUIManager, opacityToHex } from "./tools";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { PlatformHelper } from "../../platform/platform_helper";
+import { AnnotationEditorState } from "./state/editor_state";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
 
 /**
  * Basic draw editor in order to generate an Ink annotation.
  */
-class InkEditor extends AnnotationEditor {
+class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
   #baseHeight = 0;
 
   #baseWidth = 0;
@@ -176,15 +178,15 @@ class InkEditor extends AnnotationEditor {
       this.#fitToContent();
     };
     const savedThickness = this.thickness!;
-    this.addCommands({
-      cmd: setThickness.bind(this, thickness),
-      undo: setThickness.bind(this, savedThickness),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_THICKNESS,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setThickness.bind(this, thickness),
+      setThickness.bind(this, savedThickness),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.INK_THICKNESS,
+      true,
+      true,
+    );
   }
 
   /**
@@ -197,15 +199,15 @@ class InkEditor extends AnnotationEditor {
       this.#redraw();
     };
     const savedColor = this.color;
-    this.addCommands({
-      cmd: setColor.bind(this, color),
-      undo: setColor.bind(this, savedColor!),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_COLOR,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setColor.bind(this, color),
+      setColor.bind(this, savedColor!),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.INK_COLOR,
+      true,
+      true,
+    );
   }
 
   /**
@@ -219,15 +221,15 @@ class InkEditor extends AnnotationEditor {
     };
     opacity /= 100;
     const savedOpacity = this.opacity;
-    this.addCommands({
-      cmd: setOpacity.bind(this, opacity),
-      undo: setOpacity.bind(this, savedOpacity!),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.INK_OPACITY,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setOpacity.bind(this, opacity),
+      setOpacity.bind(this, savedOpacity!),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.INK_OPACITY,
+      true,
+      true,
+    );
   }
 
   /** @inheritdoc */
@@ -359,11 +361,11 @@ class InkEditor extends AnnotationEditor {
    */
   #setStroke() {
     const { ctx, color, opacity, thickness, parentScale, scaleFactor } = this;
-    ctx.lineWidth = (thickness! * parentScale) / scaleFactor;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.miterLimit = 10;
-    ctx.strokeStyle = `${color}${opacityToHex(opacity!)}`;
+    ctx!.lineWidth = (thickness! * parentScale) / scaleFactor;
+    ctx!.lineCap = "round";
+    ctx!.lineJoin = "round";
+    ctx!.miterLimit = 10;
+    ctx!.strokeStyle = `${color}${opacityToHex(opacity!)}`;
   }
 
   /**
@@ -517,7 +519,7 @@ class InkEditor extends AnnotationEditor {
       }
     };
 
-    this.addCommands({ cmd, undo, mustExec: true });
+    this.addCommands(cmd, undo, () => { }, true);
   }
 
   #drawPoints() {
@@ -535,7 +537,7 @@ class InkEditor extends AnnotationEditor {
     const yMin = Math.min(...y) - thickness;
     const yMax = Math.max(...y) + thickness;
 
-    const { ctx } = this;
+    const ctx = this.ctx!;
     ctx.save();
 
     if (PlatformHelper.isMozCental()) {
@@ -619,7 +621,8 @@ class InkEditor extends AnnotationEditor {
     }
     this.#setStroke();
 
-    const { canvas, ctx } = this;
+    const { canvas } = this;
+    const ctx = this.ctx!
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas!.width, canvas!.height);
     this.#updateTransform();

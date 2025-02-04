@@ -53,6 +53,10 @@ export declare global {
     exportValue?: string;
   }
 
+  interface FocusOptions {
+    focusVisible?: boolean;
+  }
+
   declare interface ImageDecoderOptions {
     type: string;
     data: ArrayBuffer | DataView | ReadableStream | TypedArray;

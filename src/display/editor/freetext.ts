@@ -28,6 +28,8 @@ import {
 import { IL10n } from "../../viewer/common/component_types";
 import { FreeTextAnnotationElement } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
 import {
   AnnotationEditorUIManager,
   bindEvents,
@@ -39,7 +41,7 @@ const EOL_PATTERN = /\r\n?|\n/g;
 /**
  * Basic text editor in order to create a FreeTex annotation.
  */
-class FreeTextEditor extends AnnotationEditor {
+class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
 
   static _freeTextDefaultContent = "";
 
@@ -223,15 +225,15 @@ class FreeTextEditor extends AnnotationEditor {
       this.#setEditorDimensions();
     };
     const savedFontsize = this.#fontSize;
-    this.addCommands({
-      cmd: setFontsize.bind(this, fontSize),
-      undo: setFontsize.bind(this, savedFontsize),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.FREETEXT_SIZE,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setFontsize.bind(this, fontSize),
+      setFontsize.bind(this, savedFontsize),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.FREETEXT_SIZE,
+      true,
+      true,
+    );
   }
 
   /**
@@ -243,15 +245,15 @@ class FreeTextEditor extends AnnotationEditor {
       this.#color = this.editorDiv!.style.color = col;
     };
     const savedColor = this.#color;
-    this.addCommands({
-      cmd: setColor.bind(this, color),
-      undo: setColor.bind(this, savedColor),
-      post: this._uiManager.updateUI.bind(this._uiManager, this),
-      mustExec: true,
-      type: AnnotationEditorParamsType.FREETEXT_COLOR,
-      overwriteIfSameType: true,
-      keepUndo: true,
-    });
+    this.addCommands(
+      setColor.bind(this, color),
+      setColor.bind(this, savedColor),
+      this._uiManager.updateUI.bind(this._uiManager, this),
+      true,
+      AnnotationEditorParamsType.FREETEXT_COLOR,
+      true,
+      true,
+    );
   }
 
   /**
@@ -482,15 +484,16 @@ class FreeTextEditor extends AnnotationEditor {
       this._uiManager.rebuild(this);
       this.#setEditorDimensions();
     };
-    this.addCommands({
-      cmd: () => {
+    this.addCommands(
+      () => {
         setText(newText);
       },
-      undo: () => {
+      () => {
         setText(savedText);
       },
-      mustExec: false,
-    });
+      () => { },
+      false,
+    );
     this.#setEditorDimensions();
   }
 

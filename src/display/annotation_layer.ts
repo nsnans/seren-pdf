@@ -191,11 +191,7 @@ interface AnnotationElementData {
   annotationType: AnnotationType;
 }
 
-interface PopupRefElementData extends AnnotationElementData {
-  popupRef: Ref | null;
-}
-
-class AnnotationElement<DATA extends AnnotationData> {
+export class AnnotationElement<DATA extends AnnotationData> {
 
   protected _updates: { rect: RectType } | null = null;
 
