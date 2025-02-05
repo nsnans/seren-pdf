@@ -6,8 +6,8 @@
 export class EventBus {
 
   // 不应该一直是string，这个代码后面需要完善
-  on(_action: string, callback: Function, options?: unknown) { }
-  _on(_action: string, callback: Function, options?: unknown) { }
+  on(_action: string, _callback: Function, _options?: unknown) { }
+  _on(_action: string, _callback: Function, _options?: unknown) { }
 
   off() { }
 

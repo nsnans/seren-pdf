@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { RectType } from "../../display/display_utils";
+
 const DEFAULT_SCALE_VALUE = "auto";
 const DEFAULT_SCALE = 1.0;
 const DEFAULT_SCALE_DELTA = 1.1;
@@ -125,19 +127,26 @@ function scrollIntoView(element: HTMLElement, spot: { top: number, left: number 
   parent.scrollTop = offsetY;
 }
 
+interface State {
+  right: boolean;
+  down: boolean;
+  lastX: number;
+  lastY: number;
+  _eventHandler: () => void;
+}
+
 /**
  * Helper function to start monitoring the scroll event and converting them into
  * PDF.js friendly one: with scroll debounce and scroll direction.
  */
-function watchScroll(viewAreaElement, callback, abortSignal = undefined) {
-  const debounceScroll = function (evt) {
+function watchScroll(viewAreaElement: HTMLDivElement, callback: (state: State) => void, abortSignal: AbortSignal | null = null) {
+  const debounceScroll = () => {
     if (rAF) {
       return;
     }
     // schedule an invocation of scroll for next animation frame.
     rAF = window.requestAnimationFrame(function viewAreaElementScrolled() {
       rAF = null;
-
       const currentX = viewAreaElement.scrollLeft;
       const lastX = state.lastX;
       if (currentX !== lastX) {
@@ -162,14 +171,14 @@ function watchScroll(viewAreaElement, callback, abortSignal = undefined) {
     _eventHandler: debounceScroll,
   };
 
-  let rAF = null;
+  let rAF: number | null = null;
   viewAreaElement.addEventListener("scroll", debounceScroll, {
     useCapture: true,
-    signal: abortSignal,
+    signal: abortSignal!,
   });
   abortSignal?.addEventListener(
     "abort",
-    () => window.cancelAnimationFrame(rAF),
+    () => window.cancelAnimationFrame(rAF!),
     { once: true }
   );
   return state;
@@ -210,10 +219,10 @@ function removeNullCharacters(str: string, replaceInvisible = false) {
  * that if the condition is true for one item in the array, then it is also true
  * for all following items.
  *
- * @returns {number} Index of the first array element to pass the test,
+ * @returns Index of the first array element to pass the test,
  *                   or |items.length| if no such element exists.
  */
-function binarySearchFirstItem(items, condition, start = 0) {
+function binarySearchFirstItem<T>(items: T[], condition: (item: T) => boolean, start = 0) {
   let minIndex = start;
   let maxIndex = items.length - 1;
 
@@ -239,12 +248,11 @@ function binarySearchFirstItem(items, condition, start = 0) {
 /**
  *  Approximates float number as a fraction using Farey sequence (max order
  *  of 8).
- *  @param {number} x - Positive float number.
- *  @returns {Array} Estimated fraction: the first array item is a numerator,
- *                   the second one is a denominator.
- *                   They are both natural numbers.
+ *  @param x - Positive float number.
+ *  @returns Estimated fraction: the first array item is a numerator,
+ *  the second one is a denominator. They are both natural numbers.
  */
-function approximateFraction(x) {
+function approximateFraction(x: number): [number, number] {
   // Fast paths for int numbers or their inversions.
   if (Math.floor(x) === x) {
     return [x, 1];
@@ -259,15 +267,15 @@ function approximateFraction(x) {
 
   const x_ = x > 1 ? xinv : x;
   // a/b and c/d are neighbours in Farey sequence.
-  let a = 0,
-    b = 1,
-    c = 1,
-    d = 1;
+  let a = 0;
+  let b = 1;
+  let c = 1;
+  let d = 1;
   // Limiting search to order 8.
   while (true) {
     // Generating next term in sequence (order of q).
-    const p = a + c,
-      q = b + d;
+    const p = a + c;
+    const q = b + d;
     if (q > limit) {
       break;
     }
@@ -279,7 +287,7 @@ function approximateFraction(x) {
       b = q;
     }
   }
-  let result;
+  let result: [number, number];
   // Select closest of the neighbours to x.
   if (x_ - a / b < c / d - x_) {
     result = x_ === x ? [a, b] : [b, a];
@@ -315,7 +323,7 @@ function floorToDivide(x: number, div: number) {
  * @param {GetPageSizeInchesParameters} params
  * @returns {PageSize}
  */
-function getPageSizeInches({ view, userUnit, rotate }) {
+function getPageSizeInches(view: RectType, userUnit: number, rotate: number) {
   const [x1, y1, x2, y2] = view;
   // We need to take the page rotation into account as well.
   const changeOrientation = rotate % 180 !== 0;
@@ -340,7 +348,7 @@ function getPageSizeInches({ view, userUnit, rotate }) {
  *   this will be the first element in the first partially visible row in
  *   `views`, although sometimes it goes back one row further.)
  */
-function backtrackBeforeAllVisibleElements(index, views, top) {
+function backtrackBeforeAllVisibleElements(index: number, views, top: number) {
   // binarySearchFirstItem's assumption is that the input is ordered, with only
   // one index where the conditions flips from false to true: [false ...,
   // true...]. With vertical scrolling and spreads, it is possible to have
@@ -484,14 +492,11 @@ function getVisibleElements({
     return rtl ? elementLeft < right : elementRight > left;
   }
 
-  const visible = [],
-    ids = new Set(),
-    numViews = views.length;
+  const visible = [];
+  const ids = new Set();
+  const numViews = views.length;
   let firstVisibleElementInd = binarySearchFirstItem(
-    views,
-    horizontal
-      ? isElementNextAfterViewHorizontally
-      : isElementBottomAfterViewTop
+    views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop
   );
 
   // Please note the return value of the `binarySearchFirstItem` function when
@@ -507,9 +512,7 @@ function getVisibleElements({
     // pages with bottoms below. This function detects and corrects that error;
     // see it for more comments.
     firstVisibleElementInd = backtrackBeforeAllVisibleElements(
-      firstVisibleElementInd,
-      views,
-      top
+      firstVisibleElementInd, views, top
     );
   }
 
@@ -524,12 +527,10 @@ function getVisibleElements({
   let lastEdge = horizontal ? right : -1;
 
   for (let i = firstVisibleElementInd; i < numViews; i++) {
-    const view = views[i],
-      element = view.div;
+    const view = views[i], element = view.div;
     const currentWidth = element.offsetLeft + element.clientLeft;
     const currentHeight = element.offsetTop + element.clientTop;
-    const viewWidth = element.clientWidth,
-      viewHeight = element.clientHeight;
+    const viewWidth = element.clientWidth, viewHeight = element.clientHeight;
     const viewRight = currentWidth + viewWidth;
     const viewBottom = currentHeight + viewHeight;
 
@@ -615,8 +616,8 @@ function normalizeWheelEventDelta(evt) {
   return delta;
 }
 
-function isValidRotation(angle) {
-  return Number.isInteger(angle) && angle % 90 === 0;
+function isValidRotation(angle: unknown) {
+  return Number.isInteger(angle) && <number>angle % 90 === 0;
 }
 
 function isValidScrollMode(mode) {
@@ -635,7 +636,7 @@ function isValidSpreadMode(mode) {
   );
 }
 
-function isPortraitOrientation(size) {
+function isPortraitOrientation(size: { width: number, height: number }) {
   return size.width <= size.height;
 }
 
@@ -643,42 +644,28 @@ function isPortraitOrientation(size) {
  * Promise that is resolved when DOM window becomes visible.
  */
 const animationStarted = new Promise(function (resolve) {
-  if (
-    typeof PDFJSDev !== "undefined" &&
-    PDFJSDev.test("LIB") &&
-    typeof window === "undefined"
-  ) {
-    // Prevent "ReferenceError: window is not defined" errors when running the
-    // unit-tests in Node.js environments.
-    setTimeout(resolve, 20);
-    return;
-  }
   window.requestAnimationFrame(resolve);
 });
 
-const docStyle =
-  typeof PDFJSDev !== "undefined" &&
-    PDFJSDev.test("LIB") &&
-    typeof document === "undefined"
-    ? null
-    : document.documentElement.style;
+const docStyle = document.documentElement.style;
 
-function clamp(v, min, max) {
+function clamp(v: number, min: number, max: number) {
   return Math.min(Math.max(v, min), max);
 }
 
 class ProgressBar {
-  #classList = null;
 
-  #disableAutoFetchTimeout = null;
+  #classList: DOMTokenList;
+
+  #disableAutoFetchTimeout: number | null = null;
 
   #percent = 0;
 
-  #style = null;
+  #style: CSSStyleDeclaration;
 
   #visible = true;
 
-  constructor(bar) {
+  constructor(bar: HTMLElement) {
     this.#classList = bar.classList;
     this.#style = bar.style;
   }
@@ -699,11 +686,11 @@ class ProgressBar {
     this.#style.setProperty("--progressBar-percent", `${this.#percent}%`);
   }
 
-  setWidth(viewer) {
+  setWidth(viewer: HTMLElement | null) {
     if (!viewer) {
       return;
     }
-    const container = viewer.parentNode;
+    const container = <HTMLElement>viewer.parentNode;
     const scrollbarWidth = container.offsetWidth - viewer.offsetWidth;
     if (scrollbarWidth > 0) {
       this.#style.setProperty(
@@ -754,14 +741,13 @@ class ProgressBar {
  * @returns {Element} the truly active or focused element.
  */
 function getActiveOrFocusedElement() {
-  let curRoot = document;
+  let curRoot: Document | ShadowRoot = document;
   let curActiveOrFocused =
     curRoot.activeElement || curRoot.querySelector(":focus");
 
   while (curActiveOrFocused?.shadowRoot) {
     curRoot = curActiveOrFocused.shadowRoot;
-    curActiveOrFocused =
-      curRoot.activeElement || curRoot.querySelector(":focus");
+    curActiveOrFocused = curRoot.activeElement || curRoot.querySelector(":focus");
   }
 
   return curActiveOrFocused;
@@ -769,12 +755,11 @@ function getActiveOrFocusedElement() {
 
 /**
  * Converts API PageLayout values to the format used by `BaseViewer`.
- * @param {string} layout - The API PageLayout value.
- * @returns {Object}
+ * @param layout - The API PageLayout value.
  */
-function apiPageLayoutToViewerModes(layout) {
-  let scrollMode = ScrollMode.VERTICAL,
-    spreadMode = SpreadMode.NONE;
+function apiPageLayoutToViewerModes(layout: string) {
+  let scrollMode = ScrollMode.VERTICAL;
+  let spreadMode = SpreadMode.NONE;
 
   switch (layout) {
     case "SinglePage":
@@ -803,10 +788,10 @@ function apiPageLayoutToViewerModes(layout) {
  * NOTE: There's also a "FullScreen" parameter which is not possible to support,
  *       since the Fullscreen API used in browsers requires that entering
  *       fullscreen mode only occurs as a result of a user-initiated event.
- * @param {string} mode - The API PageMode value.
- * @returns {number} A value from {SidebarView}.
+ * @param mode - The API PageMode value.
+ * @returns A value from {SidebarView}.
  */
-function apiPageModeToSidebarView(mode) {
+function apiPageModeToSidebarView(mode: string): SidebarView {
   switch (mode) {
     case "UseNone":
       return SidebarView.NONE;
@@ -822,16 +807,16 @@ function apiPageModeToSidebarView(mode) {
   return SidebarView.NONE; // Default value.
 }
 
-function toggleCheckedBtn(button, toggle, view = null) {
+function toggleCheckedBtn(button: HTMLButtonElement, toggle: boolean, view: HTMLElement | null = null) {
   button.classList.toggle("toggled", toggle);
-  button.setAttribute("aria-checked", toggle);
+  button.setAttribute("aria-checked", `${toggle}`);
 
   view?.classList.toggle("hidden", !toggle);
 }
 
-function toggleExpandedBtn(button, toggle, view = null) {
+function toggleExpandedBtn(button: HTMLButtonElement, toggle: boolean, view: HTMLElement | null = null) {
   button.classList.toggle("toggled", toggle);
-  button.setAttribute("aria-expanded", toggle);
+  button.setAttribute("aria-expanded", `${toggle}`);
 
   view?.classList.toggle("hidden", !toggle);
 }
@@ -839,21 +824,12 @@ function toggleExpandedBtn(button, toggle, view = null) {
 // In Firefox, the css calc function uses f32 precision but the Chrome or Safari
 // are using f64 one. So in order to have the same rendering in all browsers, we
 // need to use the right precision in order to have correct dimensions.
-const calcRound =
-  typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")
-    ? Math.fround
-    : (function () {
-      if (
-        typeof PDFJSDev !== "undefined" &&
-        PDFJSDev.test("LIB") &&
-        typeof document === "undefined"
-      ) {
-        return x => x;
-      }
-      const e = document.createElement("div");
-      e.style.width = "round(down, calc(1.6666666666666665 * 792px), 1px)";
-      return e.style.width === "calc(1320px)" ? Math.fround : x => x;
-    })();
+// 这个地方需要仔细考量一下
+const calcRound = (function () {
+  const e = document.createElement("div");
+  e.style.width = "round(down, calc(1.6666666666666665 * 792px), 1px)";
+  return e.style.width === "calc(1320px)" ? Math.fround : (x: number) => x;
+})();
 
 export {
   animationStarted,

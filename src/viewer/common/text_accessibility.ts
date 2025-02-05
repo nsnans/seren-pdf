@@ -22,17 +22,17 @@ import { binarySearchFirstItem } from "./ui_utils.js";
  *    annotations in the annotationLayer. The goal is to help to know
  *    where the annotations are in the text flow.
  */
-class TextAccessibilityManager {
-  
+export class TextAccessibilityManager {
+
   #enabled = false;
 
-  #textChildren = null;
+  #textChildren: Node[] | null = null;
 
   #textNodes = new Map();
 
   #waitingElements = new Map();
 
-  setTextMapping(textDivs) {
+  setTextMapping(textDivs: Node[]) {
     this.#textChildren = textDivs;
   }
 
@@ -44,7 +44,7 @@ class TextAccessibilityManager {
    * @param {HTMLElement} e2
    * @returns {number}
    */
-  static #compareElementPositions(e1, e2) {
+  static #compareElementPositions(e1: HTMLElement, e2: HTMLElement) {
     const rect1 = e1.getBoundingClientRect();
     const rect2 = e2.getBoundingClientRect();
 
@@ -91,7 +91,7 @@ class TextAccessibilityManager {
 
     this.#enabled = true;
     this.#textChildren = this.#textChildren.slice();
-    this.#textChildren.sort(TextAccessibilityManager.#compareElementPositions);
+    this.#textChildren.sort(<(a: Node, b: Node) => number>TextAccessibilityManager.#compareElementPositions);
 
     if (this.#textNodes.size > 0) {
       // Some links have been made before this manager has been disabled, hence
@@ -105,7 +105,7 @@ class TextAccessibilityManager {
           this.#textNodes.delete(id);
           continue;
         }
-        this.#addIdToAriaOwns(id, textChildren[nodeIndex]);
+        this.#addIdToAriaOwns(id, <HTMLElement>textChildren[nodeIndex]);
       }
     }
 
@@ -132,7 +132,7 @@ class TextAccessibilityManager {
    * Remove an aria-owns id from a node in the text layer.
    * @param {HTMLElement} element
    */
-  removePointerInTextLayer(element) {
+  removePointerInTextLayer(element: HTMLElement) {
     if (!this.#enabled) {
       this.#waitingElements.delete(element);
       return;
@@ -149,7 +149,7 @@ class TextAccessibilityManager {
       return;
     }
 
-    const node = children[nodeIndex];
+    const node = <HTMLElement>children[nodeIndex];
 
     this.#textNodes.delete(id);
     let owns = node.getAttribute("aria-owns");
@@ -167,7 +167,7 @@ class TextAccessibilityManager {
     }
   }
 
-  #addIdToAriaOwns(id, node) {
+  #addIdToAriaOwns(id: string, node: HTMLElement) {
     const owns = node.getAttribute("aria-owns");
     if (!owns?.includes(id)) {
       node.setAttribute("aria-owns", owns ? `${owns} ${id}` : id);
@@ -178,11 +178,11 @@ class TextAccessibilityManager {
   /**
    * Find the text node which is the nearest and add an aria-owns attribute
    * in order to correctly position this editor in the text flow.
-   * @param {HTMLElement} element
-   * @param {boolean} isRemovable
-   * @returns {string|null} The id in the struct tree if any.
+   * @param element
+   * @param isRemovable
+   * @returns The id in the struct tree if any.
    */
-  addPointerInTextLayer(element, isRemovable) {
+  addPointerInTextLayer(element: HTMLElement, isRemovable: boolean) {
     const { id } = element;
     if (!id) {
       return null;
@@ -206,24 +206,24 @@ class TextAccessibilityManager {
     const index = binarySearchFirstItem(
       children,
       node =>
-        TextAccessibilityManager.#compareElementPositions(element, node) < 0
+        TextAccessibilityManager.#compareElementPositions(element, <HTMLElement>node) < 0
     );
 
     const nodeIndex = Math.max(0, index - 1);
     const child = children[nodeIndex];
-    this.#addIdToAriaOwns(id, child);
+    this.#addIdToAriaOwns(id, <HTMLElement>child);
     this.#textNodes.set(id, nodeIndex);
 
-    const parent = child.parentNode;
+    const parent = <HTMLElement>child.parentNode;
     return parent?.classList.contains("markedContent") ? parent.id : null;
   }
 
   /**
    * Move a div in the DOM in order to respect the visual order.
    * @param {HTMLDivElement} element
-   * @returns {string|null} The id in the struct tree if any.
+   * @returns The id in the struct tree if any.
    */
-  moveElementInDOM(container, element, contentElement, isRemovable) {
+  moveElementInDOM(container: HTMLDivElement, element: HTMLElement, contentElement: HTMLElement, isRemovable: boolean) {
     const id = this.addPointerInTextLayer(contentElement, isRemovable);
 
     if (!container.hasChildNodes()) {
@@ -244,8 +244,7 @@ class TextAccessibilityManager {
       children,
       node =>
         TextAccessibilityManager.#compareElementPositions(
-          elementToCompare,
-          node
+          elementToCompare, <HTMLElement>node
         ) < 0
     );
 
@@ -258,5 +257,3 @@ class TextAccessibilityManager {
     return id;
   }
 }
-
-export { TextAccessibilityManager };

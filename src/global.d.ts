@@ -57,6 +57,10 @@ export declare global {
     focusVisible?: boolean;
   }
 
+  interface AddEventListenerOptions {
+    useCapture?: boolean;
+  }
+
   declare interface ImageDecoderOptions {
     type: string;
     data: ArrayBuffer | DataView | ReadableStream | TypedArray;

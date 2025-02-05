@@ -90,6 +90,17 @@ class IdManager {
   }
 }
 
+interface CacheImage {
+  bitmap: ImageBitmap | HTMLImageElement | null;
+  id: string;
+  refCounter: number;
+  isSvg: boolean;
+  url: string | null;
+  file: File | null;
+  svgUrl: string | null;
+  blobPromise: Promise<Blob> | null;
+}
+
 /**
  * Class to manage the images used by the editors.
  * The main idea is to try to minimize the memory used by the images.
@@ -103,7 +114,7 @@ class ImageManager {
 
   #id = 0;
 
-  #cache: Map<any, any> | null = null;
+  #cache: Map<string, CacheImage | null> | null = null;
 
   static get _isSVGFittingCanvas() {
     // By default, Firefox doesn't rescale without preserving the aspect ratio
@@ -124,9 +135,9 @@ class ImageManager {
     return shadow(this, "_isSVGFittingCanvas", promise);
   }
 
-  async #get(key: string, rawData) {
+  async #get(key: string, rawData: string | File | Blob) {
     this.#cache ||= new Map();
-    let data = this.#cache!.get(key);
+    let data = this.#cache!.get(key) ?? null;
     if (data === null) {
       // We already tried to load the image but it failed.
       return null;
@@ -141,13 +152,17 @@ class ImageManager {
         id: `image_${this.#baseId}_${this.#id++}`,
         refCounter: 0,
         isSvg: false,
+        url: null,
+        file: null,
+        svgUrl: null,
+        blobPromise: null,
       };
       let image;
       if (typeof rawData === "string") {
-        data.url = rawData;
+        data!.url = rawData;
         image = await fetchData(rawData, "blob");
       } else if (rawData instanceof File) {
-        image = data.file = rawData;
+        image = data!.file = rawData;
       } else if (rawData instanceof Blob) {
         image = rawData;
       }
@@ -160,12 +175,12 @@ class ImageManager {
         const imageElement = new Image();
         const imagePromise = new Promise((resolve, reject) => {
           imageElement.onload = () => {
-            data.bitmap = imageElement;
-            data.isSvg = true;
+            data!.bitmap = imageElement;
+            data!.isSvg = true;
             resolve(undefined);
           };
           fileReader.onload = async () => {
-            const url = (data.svgUrl = fileReader.result);
+            const url = (data!.svgUrl = <string>fileReader.result);
             // We need to set the preserveAspectRatio to none in order to let
             // the image fits the canvas when resizing.
             imageElement.src = (await mustRemoveAspectRatioPromise)
@@ -177,9 +192,9 @@ class ImageManager {
         fileReader.readAsDataURL(image);
         await imagePromise;
       } else {
-        data.bitmap = await createImageBitmap(image);
+        data!.bitmap = await createImageBitmap(image);
       }
-      data.refCounter = 1;
+      data!.refCounter = 1;
     } catch (e) {
       console.error(e);
       data = null;
@@ -191,7 +206,7 @@ class ImageManager {
     return data;
   }
 
-  async getFromFile(file) {
+  async getFromFile(file: File) {
     const { lastModified, name, size, type } = file;
     return this.#get(`${lastModified}_${name}_${size}_${type}`, file);
   }
@@ -200,7 +215,7 @@ class ImageManager {
     return this.#get(url, url);
   }
 
-  async getFromBlob(id: string, blobPromise) {
+  async getFromBlob(id: string, blobPromise: Promise<Blob>) {
     const blob = await blobPromise;
     return this.#get(id, blob);
   }
@@ -221,10 +236,10 @@ class ImageManager {
     }
     if (data.blobPromise) {
       const { blobPromise } = data;
-      delete data.blobPromise;
+      data.blobPromise = null;
       return this.getFromBlob(data.id, blobPromise);
     }
-    return this.getFromUrl(data.url);
+    return this.getFromUrl(data.url!);
   }
 
   getFromCanvas(id: string, canvas: HTMLCanvasElement) {
@@ -242,6 +257,10 @@ class ImageManager {
       id: `image_${this.#baseId}_${this.#id++}`,
       refCounter: 1,
       isSvg: false,
+      url: null,
+      file: null,
+      svgUrl: null,
+      blobPromise: null,
     };
     this.#cache.set(id, data);
     this.#cache.set(data.id, data);
@@ -266,16 +285,16 @@ class ImageManager {
     if (data.refCounter !== 0) {
       return;
     }
-    const { bitmap } = data;
+    const bitmap = data.bitmap!;
     if (!data.url && !data.file) {
       // The image has no way to be restored (ctrl+z) so we must fix that.
       const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
       const ctx = canvas.getContext("bitmaprenderer")!;
-      ctx.transferFromImageBitmap(bitmap);
+      ctx.transferFromImageBitmap(<ImageBitmap>bitmap);
       data.blobPromise = canvas.convertToBlob();
     }
 
-    bitmap.close?.();
+    (<ImageBitmap>bitmap).close?.();
     data.bitmap = null;
   }
 
@@ -478,8 +497,6 @@ class KeyboardManager {
   /**
    * Serialize an event into a string in order to match a
    * potential key for a callback.
-   * @param {KeyboardEvent} event
-   * @returns {string}
    */
   #serialize(event: KeyboardEvent) {
     if (event.altKey) {
@@ -623,10 +640,10 @@ class AnnotationEditorUIManager {
      */
     const arrowChecker = self =>
       self.#container.contains(document.activeElement) &&
-      document.activeElement.tagName !== "BUTTON" &&
+      document.activeElement!.tagName !== "BUTTON" &&
       self.hasSomethingToControl();
 
-    const textInputChecker = (_self, { target: el }) => {
+    const textInputChecker = (_self, { target: el }: KeyboardEvent) => {
       if (el instanceof HTMLInputElement) {
         const { type } = el;
         return type !== "text" && type !== "number";
@@ -684,7 +701,7 @@ class AnnotationEditorUIManager {
             // Those shortcuts can be used in the toolbar for some other actions
             // like zooming, hence we need to check if the container has the
             // focus.
-            checker: (self, { target: el }) =>
+            checker: (self, { target: el }: KeyboardEvent) =>
               !(el instanceof HTMLButtonElement) &&
               self.#container.contains(el) &&
               !self.isEnterHandled,
@@ -697,7 +714,7 @@ class AnnotationEditorUIManager {
             // Those shortcuts can be used in the toolbar for some other actions
             // like zooming, hence we need to check if the container has the
             // focus.
-            checker: (self, { target: el }) =>
+            checker: (self, { target: el }: KeyboardEvent) =>
               !(el instanceof HTMLButtonElement) &&
               self.#container.contains(document.activeElement),
           },
@@ -1091,7 +1108,7 @@ class AnnotationEditorUIManager {
     const text = selection.toString();
     const anchorElement = this.#getAnchorElementForSelection(selection);
     const textLayer = (<HTMLElement>anchorElement).closest(".textLayer");
-    const boxes = this.getSelectionBoxes(textLayer);
+    const boxes = this.getSelectionBoxes(<HTMLDivElement>textLayer);
     if (!boxes) {
       return;
     }
@@ -1110,7 +1127,7 @@ class AnnotationEditorUIManager {
         text,
       });
       if (isNoneMode) {
-        this.showAllEditors("highlight", true, /* updateButton = */ true);
+        this.showAllEditors(AnnotationEditorType.HIGHLIGHT, true, true);
       }
     };
     if (isNoneMode) {
@@ -1127,7 +1144,7 @@ class AnnotationEditorUIManager {
     }
     const anchorElement = this.#getAnchorElementForSelection(selection);
     const textLayer = (<HTMLElement>anchorElement).closest(".textLayer");
-    const boxes = this.getSelectionBoxes(textLayer);
+    const boxes = this.getSelectionBoxes(<HTMLDivElement>textLayer);
     if (!boxes) {
       return;
     }
@@ -1193,7 +1210,7 @@ class AnnotationEditorUIManager {
     }
 
     if (this.#mode === AnnotationEditorType.HIGHLIGHT) {
-      this.showAllEditors("highlight", true, /* updateButton = */ true);
+      this.showAllEditors(AnnotationEditorType.HIGHLIGHT, true, true);
     }
 
     this.#highlightWhenShiftUp = this.isShiftKeyDown;
@@ -1343,11 +1360,11 @@ class AnnotationEditorUIManager {
     this.#removeCopyPasteListeners();
   }
 
-  dragOver(event) {
-    for (const { type } of event.dataTransfer.items) {
+  dragOver(event: DragEvent) {
+    for (const { type } of event.dataTransfer!.items) {
       for (const editorType of this.#editorTypes) {
         if (editorType.isHandlingMimeForPasting(type)) {
-          event.dataTransfer.dropEffect = "copy";
+          event.dataTransfer!.dropEffect = "copy";
           event.preventDefault();
           return;
         }
@@ -2114,7 +2131,7 @@ class AnnotationEditorUIManager {
    * Select the editors.
    * @param {Array<AnnotationEditor>} editors
    */
-  #selectEditors(editors: MapIterator<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>) {
+  #selectEditors(editors: IteratorObject<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>) {
     for (const editor of this.#selectedEditors) {
       editor.unselect();
     }
