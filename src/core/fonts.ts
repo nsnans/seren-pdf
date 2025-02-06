@@ -210,23 +210,30 @@ function amendFallbackToUnicode(properties: EvaluatorProperties) {
 
 export class Glyph {
 
-  protected originalCharCode;
+  protected originalCharCode: number;
 
-  public fontChar;
+  public fontChar: string;
 
-  public unicode;
+  public unicode: string;
+  public accent: {
+    fontChar: string;
+    offset: {
+      x: number;
+      y: number;
+    };
+  } | null;
 
-  public accent;
+  public width: number;
 
-  public width;
+  public vmetric: number[] | null;
 
-  public vmetric;
+  public operatorListId;
 
-  protected operatorListId;
+  public isSpace: boolean;
 
-  public isSpace;
+  public isInFont: boolean;
 
-  public isInFont;
+  public compiled: ((c: CanvasRenderingContext2D) => void) | null = null;
 
   constructor(
     originalCharCode: number,

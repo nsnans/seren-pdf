@@ -38,6 +38,9 @@ function applyBoundingBox(ctx: CanvasRenderingContext2D, bbox: RectType | null) 
 }
 
 export class BaseShadingPattern {
+
+  public matrix: TransformType | null = null;
+
   constructor() {
     if (PlatformHelper.isTesting() && this.constructor === BaseShadingPattern) {
       unreachable("Cannot initialize BaseShadingPattern.");
@@ -65,8 +68,6 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
   protected _r0: number | null;
 
   protected _r1: number | null;
-
-  protected matrix: TransformType | null;
 
   constructor(IR: RadialAxialShadingIR) {
     super();
@@ -349,9 +350,7 @@ class MeshShadingPattern extends BaseShadingPattern {
   protected _bbox: RectType | null;
 
   protected _background: Uint8ClampedArray | null;
-
-  protected matrix: TransformType | null;
-
+  
   constructor(IR: MeshShadingPatternIR) {
     super();
     this._coords = IR[2];

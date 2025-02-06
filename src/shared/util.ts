@@ -919,7 +919,13 @@ class Util {
   }
 
   // From https://github.com/adobe-webplatform/Snap.svg/blob/b365287722a72526000ac4bfcf0ce4cac2faa015/src/path.js#L852
-  static bezierBoundingBox(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, minMax: number[]): number[] {
+  static bezierBoundingBox(
+    x0: number, y0: number,
+    x1: number, y1: number,
+    x2: number, y2: number,
+    x3: number, y3: number,
+    minMax: RectType | null
+  ): number[] {
     if (minMax) {
       minMax[0] = Math.min(minMax[0], x0, x3);
       minMax[1] = Math.min(minMax[1], y0, y3);
@@ -934,32 +940,12 @@ class Util {
       ];
     }
     this.#getExtremum(
-      x0,
-      x1,
-      x2,
-      x3,
-      y0,
-      y1,
-      y2,
-      y3,
-      3 * (-x0 + 3 * (x1 - x2) + x3),
-      6 * (x0 - 2 * x1 + x2),
-      3 * (x1 - x0),
-      minMax
+      x0, x1, x2, x3, y0, y1, y2, y3, 3 * (-x0 + 3 * (x1 - x2) + x3),
+      6 * (x0 - 2 * x1 + x2), 3 * (x1 - x0), minMax
     );
     this.#getExtremum(
-      x0,
-      x1,
-      x2,
-      x3,
-      y0,
-      y1,
-      y2,
-      y3,
-      3 * (-y0 + 3 * (y1 - y2) + y3),
-      6 * (y0 - 2 * y1 + y2),
-      3 * (y1 - y0),
-      minMax
+      x0, x1, x2, x3, y0, y1, y2, y3, 3 * (-y0 + 3 * (y1 - y2) + y3),
+      6 * (y0 - 2 * y1 + y2), 3 * (y1 - y0), minMax
     );
     return minMax;
   }

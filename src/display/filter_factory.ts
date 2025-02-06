@@ -20,13 +20,13 @@ import { RGBType } from "../shared/scripting_utils";
 
 export interface FilterFactory {
 
-  addFilter(maps): string;
+  addFilter(maps: Uint8Array<ArrayBuffer>): string;
 
   addHCMFilter(fgColor: string, bgColor: string): string;
 
-  addAlphaFilter(map): string;
+  addAlphaFilter(map: Uint8Array<ArrayBuffer>): string;
 
-  addLuminosityFilter(map): string;
+  addLuminosityFilter(map: Uint8Array<ArrayBuffer> | null): string;
 
   addHighlightHCMFilter(
     filterName: string,
@@ -47,7 +47,7 @@ export class BaseFilterFactory implements FilterFactory {
     }
   }
 
-  addFilter(_maps) {
+  addFilter(_maps: Uint8Array<ArrayBuffer>) {
     return "none";
   }
 
@@ -55,11 +55,11 @@ export class BaseFilterFactory implements FilterFactory {
     return "none";
   }
 
-  addAlphaFilter(_map) {
+  addAlphaFilter(_map: Uint8Array<ArrayBuffer>) {
     return "none";
   }
 
-  addLuminosityFilter(_map) {
+  addLuminosityFilter(_map: Uint8Array<ArrayBuffer> | null) {
     return "none";
   }
 
@@ -94,7 +94,7 @@ export class DOMFilterFactory extends BaseFilterFactory {
 
   #baseUrl: string | null = null;
 
-  #_cache;
+  #_cache: Map<Uint8Array<ArrayBuffer> | string, string> | null = null;
 
   #_defs: SVGDefsElement | null = null;
 
@@ -112,7 +112,7 @@ export class DOMFilterFactory extends BaseFilterFactory {
     this.#document = ownerDocument;
   }
 
-  get #cache() {
+  get #cache(): Map<string | Uint8Array<ArrayBuffer>, string> {
     return (this.#_cache ||= new Map());
   }
 
@@ -142,9 +142,9 @@ export class DOMFilterFactory extends BaseFilterFactory {
     return this.#_defs;
   }
 
-  #createTables(maps) {
+  #createTables(maps: Uint8Array<ArrayBuffer> | Uint8Array<ArrayBuffer>[]) {
     if (maps.length === 1) {
-      const mapR = maps[0];
+      const mapR = <Uint8Array<ArrayBuffer>>maps[0];
       const buffer = new Array(256);
       for (let i = 0; i < 256; i++) {
         buffer[i] = mapR[i] / 255;
@@ -159,9 +159,9 @@ export class DOMFilterFactory extends BaseFilterFactory {
     const bufferG = new Array(256);
     const bufferB = new Array(256);
     for (let i = 0; i < 256; i++) {
-      bufferR[i] = mapR[i] / 255;
-      bufferG[i] = mapG[i] / 255;
-      bufferB[i] = mapB[i] / 255;
+      bufferR[i] = (<Uint8Array<ArrayBuffer>>mapR)[i] / 255;
+      bufferG[i] = (<Uint8Array<ArrayBuffer>>mapG)[i] / 255;
+      bufferB[i] = (<Uint8Array<ArrayBuffer>>mapB)[i] / 255;
     }
     return [bufferR.join(","), bufferG.join(","), bufferB.join(",")];
   }
@@ -183,7 +183,7 @@ export class DOMFilterFactory extends BaseFilterFactory {
     return `url(${this.#baseUrl}#${id})`;
   }
 
-  addFilter(maps) {
+  addFilter(maps: Uint8Array<ArrayBuffer>) {
     if (!maps) {
       return "none";
     }
@@ -298,7 +298,7 @@ export class DOMFilterFactory extends BaseFilterFactory {
     return info.url;
   }
 
-  addAlphaFilter(map) {
+  addAlphaFilter(map: Uint8Array<ArrayBuffer>) {
     // When a page is zoomed the page is re-drawn but the maps are likely
     // the same.
     let value = this.#cache.get(map);
@@ -326,7 +326,7 @@ export class DOMFilterFactory extends BaseFilterFactory {
     return url;
   }
 
-  addLuminosityFilter(map) {
+  addLuminosityFilter(map: Uint8Array<ArrayBuffer> | null) {
     // When a page is zoomed the page is re-drawn but the maps are likely
     // the same.
     let value = this.#cache.get(map || "luminosity");
@@ -344,13 +344,13 @@ export class DOMFilterFactory extends BaseFilterFactory {
 
     value = this.#cache.get(key);
     if (value) {
-      this.#cache.set(map, value);
+      this.#cache.set(map!, value);
       return value;
     }
 
     const id = `g_${this.#docId}_luminosity_map_${this.#id++}`;
     const url = this.#createUrl(id);
-    this.#cache.set(map, url);
+    this.#cache.set(map!, url);
     this.#cache.set(key, url);
 
     const filter = this.#createFilter(id);

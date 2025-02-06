@@ -373,7 +373,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
       }
 
       const transferFn = this.context.pdfFunctionFactory.create(transferObj);
-      const transferMap = new Uint8Array(256);
+      const transferMap: Uint8Array<ArrayBuffer> = new Uint8Array(256);
       const tmp = new Float32Array(1);
       for (let j = 0; j < 256; j++) {
         tmp[0] = j / 255;

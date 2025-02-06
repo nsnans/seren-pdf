@@ -22,6 +22,7 @@ import {
 } from "../shared/util";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { CatalogOptionalContentConfig, OptionalContentDataGroup } from "../core/catalog";
+import { OptionalContent } from "../core/image_utils";
 
 const INTERNAL = Symbol("INTERNAL");
 
@@ -182,7 +183,7 @@ class OptionalContentConfig {
     return operator === "And";
   }
 
-  isVisible(group) {
+  isVisible(group: OptionalContent) {
     if (this._groups.size === 0) {
       return true;
     }
@@ -191,11 +192,11 @@ class OptionalContentConfig {
       return true;
     }
     if (group.type === "OCG") {
-      if (!this._groups.has(group.id)) {
+      if (!this._groups.has(group.id!)) {
         warn(`Optional content group not found: ${group.id}`);
         return true;
       }
-      return this._groups.get(group.id)!.visible;
+      return this._groups.get(group.id!)!.visible;
     } else if (group.type === "OCMD") {
       // Per the spec, the expression should be preferred if available.
       if (group.expression) {
@@ -203,45 +204,45 @@ class OptionalContentConfig {
       }
       if (!group.policy || group.policy === "AnyOn") {
         // Default
-        for (const id of group.ids) {
-          if (!this._groups.has(id)) {
+        for (const id of group.ids!) {
+          if (!this._groups.has(id!)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (this._groups.get(id)!.visible) {
+          if (this._groups.get(id!)!.visible) {
             return true;
           }
         }
         return false;
       } else if (group.policy === "AllOn") {
-        for (const id of group.ids) {
-          if (!this._groups.has(id)) {
+        for (const id of group.ids!) {
+          if (!this._groups.has(id!)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (!this._groups.get(id)!.visible) {
+          if (!this._groups.get(id!)!.visible) {
             return false;
           }
         }
         return true;
       } else if (group.policy === "AnyOff") {
-        for (const id of group.ids) {
-          if (!this._groups.has(id)) {
+        for (const id of group.ids!) {
+          if (!this._groups.has(id!)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (!this._groups.get(id)!.visible) {
+          if (!this._groups.get(id!)!.visible) {
             return true;
           }
         }
         return false;
       } else if (group.policy === "AllOff") {
-        for (const id of group.ids) {
-          if (!this._groups.has(id)) {
+        for (const id of group.ids!) {
+          if (!this._groups.has(id!)) {
             warn(`Optional content group not found: ${id}`);
             return true;
           }
-          if (this._groups.get(id)!.visible) {
+          if (this._groups.get(id!)!.visible) {
             return false;
           }
         }
