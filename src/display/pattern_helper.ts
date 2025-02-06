@@ -123,12 +123,10 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       const height = Math.ceil(ownerBBox[3] - ownerBBox[1]) || 1;
 
       const tmpCanvas = owner.cachedCanvases.getCanvas(
-        "pattern",
-        width,
-        height
+        "pattern", width, height
       );
 
-      const tmpCtx = tmpCanvas.context;
+      const tmpCtx = tmpCanvas.context!;
       tmpCtx.clearRect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
       tmpCtx.beginPath();
       tmpCtx.rect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
@@ -137,12 +135,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       // smaller canvas based on the path, so we must account for the shift.
       tmpCtx.translate(-ownerBBox[0], -ownerBBox[1]);
       inverse = Util.transform(inverse, [
-        1,
-        0,
-        0,
-        1,
-        ownerBBox[0],
-        ownerBBox[1],
+        1, 0, 0, 1, ownerBBox[0], ownerBBox[1],
       ]);
 
       tmpCtx.transform(...owner.baseTransform!);
@@ -154,7 +147,7 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       tmpCtx.fillStyle = this._createGradient(tmpCtx);
       tmpCtx.fill();
 
-      pattern = ctx.createPattern(tmpCanvas.canvas, "no-repeat")!;
+      pattern = ctx.createPattern(tmpCanvas.canvas!, "no-repeat")!;
       const domMatrix = new DOMMatrix(inverse);
       pattern.setTransform(domMatrix);
     } else {
@@ -413,11 +406,9 @@ class MeshShadingPattern extends BaseShadingPattern {
     const paddedHeight = height + BORDER_SIZE * 2;
 
     const tmpCanvas = cachedCanvases.getCanvas(
-      "mesh",
-      paddedWidth,
-      paddedHeight
+      "mesh", paddedWidth, paddedHeight
     );
-    const tmpCtx = tmpCanvas.context;
+    const tmpCtx = tmpCanvas.context!;
 
     const data = tmpCtx.createImageData(width, height);
     if (backgroundColor) {
@@ -480,7 +471,7 @@ class MeshShadingPattern extends BaseShadingPattern {
     );
     ctx.scale(temporaryPatternCanvas.scaleX, temporaryPatternCanvas.scaleY);
 
-    return ctx.createPattern(temporaryPatternCanvas.canvas, "no-repeat")!;
+    return ctx.createPattern(temporaryPatternCanvas.canvas!, "no-repeat")!;
   }
 }
 
@@ -535,12 +526,15 @@ class TilingPattern {
 
   protected tilingType: number;
 
-  protected color: Uint8ClampedArray;
+  protected color: Uint8ClampedArray<ArrayBuffer>;
 
-  constructor(IR: TilingPatternIR, color: Uint8ClampedArray
-    , ctx: CanvasRenderingContext2D
-    , canvasGraphicsFactory: CanvasGraphicsFactory
-    , baseTransform: TransformType) {
+  constructor(
+    IR: TilingPatternIR,
+    color: Uint8ClampedArray<ArrayBuffer>,
+    ctx: CanvasRenderingContext2D,
+    canvasGraphicsFactory: CanvasGraphicsFactory,
+    baseTransform: TransformType
+  ) {
     this.operatorList = IR[2];
     this.matrix = IR[3];
     this.bbox = IR[4];
@@ -642,7 +636,7 @@ class TilingPattern {
       dimx.size,
       dimy.size
     );
-    const tmpCtx = tmpCanvas.context;
+    const tmpCtx = tmpCanvas.context!;
     const graphics = canvasGraphicsFactory.createCanvasGraphics(tmpCtx);
     graphics.groupLevel = owner.groupLevel;
 
@@ -699,7 +693,7 @@ class TilingPattern {
         xSize,
         ySize
       );
-      const tmpCtx2 = tmpCanvas2.context;
+      const tmpCtx2 = tmpCanvas2.context!;
       const ii = redrawHorizontally ? Math.floor(width / xstep) : 0;
       const jj = redrawVertically ? Math.floor(height / ystep) : 0;
 
@@ -707,7 +701,7 @@ class TilingPattern {
       for (let i = 0; i <= ii; i++) {
         for (let j = 0; j <= jj; j++) {
           tmpCtx2.drawImage(
-            image,
+            image!,
             xSize * i,
             ySize * j,
             xSize,
@@ -816,7 +810,7 @@ class TilingPattern {
       1 / temporaryPatternCanvas.scaleY
     );
 
-    const pattern = ctx.createPattern(temporaryPatternCanvas.canvas, "repeat")!;
+    const pattern = ctx.createPattern(temporaryPatternCanvas.canvas!, "repeat")!;
     pattern.setTransform(domMatrix);
 
     return pattern;

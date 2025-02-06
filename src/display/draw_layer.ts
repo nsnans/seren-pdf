@@ -13,30 +13,31 @@
  * limitations under the License.
  */
 
-import { DOMSVGFactory } from "./svg_factory";
 import { shadow } from "../shared/util";
+import { DOMSVGFactory } from "./svg_factory";
 
 /**
  * Manage the SVGs drawn on top of the page canvas.
  * It's important to have them directly on top of the canvas because we want to
  * be able to use mix-blend-mode for some of them.
  */
-class DrawLayer {
-  #parent = null;
+export class DrawLayer {
+
+  #parent: HTMLDivElement | null = null;
 
   #id = 0;
 
   #mapping = new Map();
 
-  #toUpdate = new Map();
+  #toUpdate = new Map<number, SVGElement>();
 
   protected pageIndex: number;
 
-  constructor({ pageIndex }: { pageIndex: number }) {
+  constructor(pageIndex: number) {
     this.pageIndex = pageIndex;
   }
 
-  setParent(parent) {
+  setParent(parent: HTMLDivElement) {
     if (!this.#parent) {
       this.#parent = parent;
       return;
@@ -57,7 +58,7 @@ class DrawLayer {
     return shadow(this, "_svgFactory", new DOMSVGFactory());
   }
 
-  static #setBox(element: HTMLElement, { x = 0, y = 0, width = 1, height = 1 } = {}) {
+  static #setBox(element: HTMLElement | SVGElement, { x = 0, y = 0, width = 1, height = 1 } = {}) {
     const { style } = element;
     style.top = `${100 * y}%`;
     style.left = `${100 * x}%`;
@@ -67,7 +68,7 @@ class DrawLayer {
 
   #createSVG(box) {
     const svg = DrawLayer._svgFactory.create(1, 1, /* skipDimensions = */ true);
-    this.#parent.append(svg);
+    this.#parent!.append(svg);
     svg.setAttribute("aria-hidden", "true");
     DrawLayer.#setBox(svg, box);
 
@@ -88,7 +89,7 @@ class DrawLayer {
     return clipPathId;
   }
 
-  draw(outlines, color, opacity, isPathUpdatable = false) {
+  draw(outlines, color: string, opacity, isPathUpdatable = false) {
     const id = this.#id++;
     const root = this.#createSVG(outlines.box);
     root.classList.add(...outlines.classNamesForDrawing);
@@ -241,5 +242,3 @@ class DrawLayer {
     this.#toUpdate.clear();
   }
 }
-
-export { DrawLayer };

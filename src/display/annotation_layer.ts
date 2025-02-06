@@ -20,12 +20,11 @@
 /** @typedef {import("../../web/interfaces").IDownloadManager} IDownloadManager */
 /** @typedef {import("../../web/interfaces").IPDFLinkService} IPDFLinkService */
 // eslint-disable-next-line max-len
-/** @typedef {import("../src/display/editor/tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
+/** @typedef AnnotationEditorUIManager */
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
-import { Ref } from "../core/primitives";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {

@@ -16,23 +16,30 @@
 import { getRGB, isDataScheme, SVG_NS } from "./display_utils";
 import { unreachable, Util, warn } from "../shared/util";
 import { PlatformHelper } from "../platform/platform_helper";
+import { RGBType } from "../shared/scripting_utils";
 
-interface FilterFactory {
+export interface FilterFactory {
 
   addFilter(maps): string;
 
-  addHCMFilter(fgColor, bgColor): string;
+  addHCMFilter(fgColor: string, bgColor: string): string;
 
   addAlphaFilter(map): string;
 
   addLuminosityFilter(map): string;
 
-  addHighlightHCMFilter(filterName, fgColor, bgColor, newFgColor, newBgColor): string;
+  addHighlightHCMFilter(
+    filterName: string,
+    fgColor: string,
+    bgColor: string,
+    newFgColor: string,
+    newBgColor: string
+  ): string;
 
-  destroy(keepHCM: boolean): void
+  destroy(keepHCM: boolean): void;
 }
 
-class BaseFilterFactory implements FilterFactory {
+export class BaseFilterFactory implements FilterFactory {
 
   constructor() {
     if (PlatformHelper.isTesting() && this.constructor === BaseFilterFactory) {
@@ -40,29 +47,40 @@ class BaseFilterFactory implements FilterFactory {
     }
   }
 
-  addFilter(maps) {
+  addFilter(_maps) {
     return "none";
   }
 
-  addHCMFilter(fgColor, bgColor) {
+  addHCMFilter(_fgColor: string, _bgColor: string) {
     return "none";
   }
 
-  addAlphaFilter(map) {
+  addAlphaFilter(_map) {
     return "none";
   }
 
-  addLuminosityFilter(map) {
+  addLuminosityFilter(_map) {
     return "none";
   }
 
-  addHighlightHCMFilter(filterName, fgColor, bgColor, newFgColor, newBgColor) {
+  addHighlightHCMFilter(
+    _filterName: string,
+    _fgColor: string,
+    _bgColor: string,
+    _newFgColor: string,
+    _newBgColor: string
+  ) {
     return "none";
   }
 
-  destroy(keepHCM = false) { }
+  destroy(_keepHCM = false) { }
 }
 
+interface HCMInfo {
+  key: string;
+  url: string;
+  filter: SVGFilterElement | null;
+}
 /**
  * FilterFactory aims to create some SVG filters we can use when drawing an
  * image (or whatever) on a canvas.
@@ -72,18 +90,19 @@ class BaseFilterFactory implements FilterFactory {
  * an image without the need to apply them on the pixel arrays: the renderer
  * does the magic for us.
  */
-class DOMFilterFactory extends BaseFilterFactory {
-  #baseUrl;
+export class DOMFilterFactory extends BaseFilterFactory {
+
+  #baseUrl: string | null = null;
 
   #_cache;
 
-  #_defs;
+  #_defs: SVGDefsElement | null = null;
 
   #docId: string;
 
   #document;
 
-  #_hcmCache;
+  #_hcmCache: Map<string, HCMInfo> | null = null;
 
   #id = 0;
 
@@ -98,7 +117,7 @@ class DOMFilterFactory extends BaseFilterFactory {
   }
 
   get #hcmCache() {
-    return (this.#_hcmCache ||= new Map());
+    return (this.#_hcmCache ||= new Map<string, HCMInfo>());
   }
 
   get #defs() {
@@ -107,14 +126,14 @@ class DOMFilterFactory extends BaseFilterFactory {
       const { style } = div;
       style.visibility = "hidden";
       style.contain = "strict";
-      style.width = style.height = 0;
+      style.width = style.height = "0";
       style.position = "absolute";
-      style.top = style.left = 0;
-      style.zIndex = -1;
+      style.top = style.left = "0";
+      style.zIndex = "-1";
 
       const svg = this.#document.createElementNS(SVG_NS, "svg");
-      svg.setAttribute("width", 0);
-      svg.setAttribute("height", 0);
+      svg.setAttribute("width", "0");
+      svg.setAttribute("height", "0");
       this.#_defs = this.#document.createElementNS(SVG_NS, "defs");
       div.append(svg);
       svg.append(this.#_defs);
@@ -147,8 +166,8 @@ class DOMFilterFactory extends BaseFilterFactory {
     return [bufferR.join(","), bufferG.join(","), bufferB.join(",")];
   }
 
-  #createUrl(id) {
-    if (this.#baseUrl === undefined) {
+  #createUrl(id: string) {
+    if (this.#baseUrl == null) {
       // Unless a `<base>`-element is present a relative URL should work.
       this.#baseUrl = "";
 
@@ -199,7 +218,7 @@ class DOMFilterFactory extends BaseFilterFactory {
     return url;
   }
 
-  addHCMFilter(fgColor, bgColor) {
+  addHCMFilter(fgColor: string, bgColor: string) {
     const key = `${fgColor}-${bgColor}`;
     const filterName = "base";
     let info = this.#hcmCache.get(filterName);
@@ -225,9 +244,9 @@ class DOMFilterFactory extends BaseFilterFactory {
       return info.url;
     }
 
-    const fgRGB = this.#getRGB(fgColor);
+    const fgRGB = <RGBType>this.#getRGB(fgColor);
     fgColor = Util.makeHexColor(...fgRGB);
-    const bgRGB = this.#getRGB(bgColor);
+    const bgRGB = <RGBType>this.#getRGB(bgColor);
     bgColor = Util.makeHexColor(...bgRGB);
     this.#defs.style.color = "";
 
@@ -259,7 +278,7 @@ class DOMFilterFactory extends BaseFilterFactory {
     this.#addTransferMapConversion(table, table, table, filter);
     this.#addGrayConversion(filter);
 
-    const getSteps = (c, n) => {
+    const getSteps = (c: number, n: number) => {
       const start = fgRGB[c] / 255;
       const end = bgRGB[c] / 255;
       const arr = new Array(n + 1);
@@ -337,13 +356,15 @@ class DOMFilterFactory extends BaseFilterFactory {
     const filter = this.#createFilter(id);
     this.#addLuminosityConversion(filter);
     if (map) {
-      this.#addTransferMapAlphaConversion(tableA, filter);
+      this.#addTransferMapAlphaConversion(tableA!, filter);
     }
 
     return url;
   }
 
-  addHighlightHCMFilter(filterName, fgColor, bgColor, newFgColor, newBgColor) {
+  addHighlightHCMFilter(
+    filterName: string, fgColor: string, bgColor: string, newFgColor: string, newBgColor: string
+  ) {
     const key = `${fgColor}-${bgColor}-${newFgColor}-${newBgColor}`;
     let info = this.#hcmCache.get(filterName);
     if (info?.key === key) {
@@ -379,12 +400,7 @@ class DOMFilterFactory extends BaseFilterFactory {
       this.#getRGB.bind(this)
     );
     if (bgGray < fgGray) {
-      [fgGray, bgGray, newFgRGB, newBgRGB] = [
-        bgGray,
-        fgGray,
-        newBgRGB,
-        newFgRGB,
-      ];
+      [fgGray, bgGray, newFgRGB, newBgRGB] = [bgGray, fgGray, newBgRGB, newFgRGB];
     }
     this.#defs.style.color = "";
 
@@ -401,7 +417,7 @@ class DOMFilterFactory extends BaseFilterFactory {
     //   then we are enable to map the red component on the new red components
     //   which can be different.
 
-    const getSteps = (fg, bg, n) => {
+    const getSteps = (fg: number, bg: number, n: number) => {
       const arr = new Array(256);
       const step = (bgGray - fgGray) / n;
       const newStart = fg / 255;
@@ -441,7 +457,7 @@ class DOMFilterFactory extends BaseFilterFactory {
       return;
     }
     if (this.#_defs) {
-      this.#_defs.parentNode.parentNode.remove();
+      (<Element>this.#_defs.parentNode!.parentNode!).remove();
       this.#_defs = null;
     }
     if (this.#_cache) {
@@ -451,23 +467,20 @@ class DOMFilterFactory extends BaseFilterFactory {
     this.#id = 0;
   }
 
-  #addLuminosityConversion(filter) {
+  #addLuminosityConversion(filter: SVGFilterElement) {
     const feColorMatrix = this.#document.createElementNS(
-      SVG_NS,
-      "feColorMatrix"
+      SVG_NS, "feColorMatrix"
     );
     feColorMatrix.setAttribute("type", "matrix");
     feColorMatrix.setAttribute(
-      "values",
-      "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0.59 0.11 0 0"
+      "values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0.59 0.11 0 0"
     );
     filter.append(feColorMatrix);
   }
 
-  #addGrayConversion(filter) {
+  #addGrayConversion(filter: SVGFilterElement) {
     const feColorMatrix = this.#document.createElementNS(
-      SVG_NS,
-      "feColorMatrix"
+      SVG_NS, "feColorMatrix"
     );
     feColorMatrix.setAttribute("type", "matrix");
     feColorMatrix.setAttribute(
@@ -477,7 +490,7 @@ class DOMFilterFactory extends BaseFilterFactory {
     filter.append(feColorMatrix);
   }
 
-  #createFilter(id) {
+  #createFilter(id: string) {
     const filter = this.#document.createElementNS(SVG_NS, "filter");
     filter.setAttribute("color-interpolation-filters", "sRGB");
     filter.setAttribute("id", id);
@@ -486,14 +499,14 @@ class DOMFilterFactory extends BaseFilterFactory {
     return filter;
   }
 
-  #appendFeFunc(feComponentTransfer, func, table) {
+  #appendFeFunc(feComponentTransfer: SVGFEComponentTransferElement, func: string, table: string) {
     const feFunc = this.#document.createElementNS(SVG_NS, func);
     feFunc.setAttribute("type", "discrete");
     feFunc.setAttribute("tableValues", table);
     feComponentTransfer.append(feFunc);
   }
 
-  #addTransferMapConversion(rTable, gTable, bTable, filter) {
+  #addTransferMapConversion(rTable: string, gTable: string, bTable: string, filter: SVGFilterElement) {
     const feComponentTransfer = this.#document.createElementNS(
       SVG_NS,
       "feComponentTransfer"
@@ -504,7 +517,7 @@ class DOMFilterFactory extends BaseFilterFactory {
     this.#appendFeFunc(feComponentTransfer, "feFuncB", bTable);
   }
 
-  #addTransferMapAlphaConversion(aTable, filter) {
+  #addTransferMapAlphaConversion(aTable: string, filter: SVGFilterElement) {
     const feComponentTransfer = this.#document.createElementNS(
       SVG_NS,
       "feComponentTransfer"
@@ -513,12 +526,8 @@ class DOMFilterFactory extends BaseFilterFactory {
     this.#appendFeFunc(feComponentTransfer, "feFuncA", aTable);
   }
 
-  #getRGB(color) {
+  #getRGB(color: string) {
     this.#defs.style.color = color;
     return getRGB(getComputedStyle(this.#defs).getPropertyValue("color"));
   }
 }
-
-export { BaseFilterFactory, DOMFilterFactory };
-
-export type { FilterFactory }

@@ -67,6 +67,15 @@ import { AnnotationEditorUIManager } from "./tools";
  */
 export class AnnotationEditorLayer {
 
+  static _initialized = false;
+
+  static #editorTypes = new Map(
+    [FreeTextEditor, InkEditor, StampEditor, HighlightEditor].map(type => [
+      type._editorType,
+      type,
+    ])
+  );
+
   #accessibilityManager: TextAccessibilityManager;
 
   #allowClick = false;
@@ -91,23 +100,15 @@ export class AnnotationEditorLayer {
 
   #uiManager: AnnotationEditorUIManager;
 
-  static _initialized = false;
-
-  static #editorTypes = new Map(
-    [FreeTextEditor, InkEditor, StampEditor, HighlightEditor].map(type => [
-      type._editorType,
-      type,
-    ])
-  );
-  public pageIndex: number;
-
   protected viewport: PageViewport;
-
-  isMultipleSelection: any;
 
   protected div: HTMLDivElement;
 
-  protected drawLayer: DrawLayer;
+  public pageIndex: number;
+
+  public isMultipleSelection: boolean | null = null;
+
+  public drawLayer: DrawLayer;
 
   /**
    * @param {AnnotationEditorLayerOptions} options

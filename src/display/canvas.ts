@@ -1642,7 +1642,7 @@ class CanvasGraphics {
           width,
           height
         );
-        const ctx = canvas.context;
+        const ctx = canvas.context!;
         ctx.drawImage(maskCanvas, -maskX, -maskY);
         ctx.globalCompositeOperation = "destination-atop";
         ctx.fillStyle = backdropRGB;

@@ -24,7 +24,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { TextContent } from "./api";
+import { TextContent, TextItem, TextMarkedContent, TextStyle } from "./api";
 import { PageViewport, setLayerDimensions, TransformType } from "./display_utils";
 
 /**
@@ -59,9 +59,21 @@ const MAX_TEXT_DIVS_TO_RENDER = 100000;
 const DEFAULT_FONT_SIZE = 30;
 const DEFAULT_FONT_ASCENT = 0.8;
 
-class TextLayer {
+interface LayoutTextParams {
+  div: HTMLElement | null,
+  properties: {
+    angle: number;
+    canvasWidth: number;
+    hasText: boolean;
+    hasEOL: boolean;
+    fontSize: number;
+  } | null,
+  ctx: CanvasRenderingContext2D | null,
+}
 
-  #capability = Promise.withResolvers();
+export class TextLayer {
+
+  #capability = Promise.withResolvers<void>();
 
   #container: HTMLElement | null = null;
 
@@ -69,15 +81,15 @@ class TextLayer {
 
   #fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
 
-  #lang = null;
+  #lang: string | null = null;
 
-  #layoutTextParams = null;
+  #layoutTextParams: LayoutTextParams | null = null;
 
   #pageHeight = 0;
 
   #pageWidth = 0;
 
-  #reader: ReadableStreamDefaultReader<any> | null = null;
+  #reader: ReadableStreamDefaultReader<TextContent> | null = null;
 
   #rootContainer: HTMLElement | null = null;
 
@@ -85,13 +97,13 @@ class TextLayer {
 
   #scale = 0;
 
-  #styleCache = Object.create(null);
+  #styleCache: Map<string, TextStyle> | null = new Map<string, TextStyle>();
 
-  #textContentItemsStr = [];
+  #textContentItemsStr: string[] = [];
 
-  #textContentSource: ReadableStream<any>;
+  #textContentSource: ReadableStream<TextContent>;
 
-  #textDivs = [];
+  #textDivs: HTMLSpanElement[] = [];
 
   #textDivProperties = new WeakMap();
 
@@ -99,11 +111,11 @@ class TextLayer {
 
   static #ascentCache = new Map();
 
-  static #canvasContexts = new Map();
+  static #canvasContexts = new Map<string, CanvasRenderingContext2D>();
 
   static #canvasCtxFonts = new WeakMap();
 
-  static #minFontSize = null;
+  static #minFontSize: number | null = null;
 
   static #pendingTextLayers = new Set();
 
@@ -113,10 +125,8 @@ class TextLayer {
   constructor({ textContentSource, container, viewport }: TextLayerParameters) {
     if (textContentSource instanceof ReadableStream) {
       this.#textContentSource = textContentSource;
-    } else if (PlatformHelper.isGeneric() &&
-      typeof textContentSource === "object"
-    ) {
-      this.#textContentSource = new ReadableStream({
+    } else if (typeof textContentSource === "object") {
+      this.#textContentSource = new ReadableStream<TextContent>({
         start(controller) {
           controller.enqueue(textContentSource);
           controller.close();
@@ -195,11 +205,13 @@ class TextLayer {
     const pump = () => {
       this.#reader!.read().then(({ value, done }) => {
         if (done) {
-          this.#capability.resolve(undefined);
+          this.#capability.resolve();
           return;
         }
         this.#lang ??= value.lang;
-        Object.assign(this.#styleCache, value.styles);
+        value.styles.forEach((v, k) => {
+          this.#styleCache!.set(k, v);
+        })
         this.#processItems(value.items);
         pump();
       }, this.#capability.reject);
@@ -229,7 +241,7 @@ class TextLayer {
     if (scale !== this.#scale) {
       onBefore?.();
       this.#scale = scale;
-      const params = {
+      const params: LayoutTextParams = {
         div: null,
         properties: null,
         ctx: TextLayer.#getCtx(this.#lang),
@@ -275,14 +287,14 @@ class TextLayer {
     return this.#textContentItemsStr;
   }
 
-  #processItems(items) {
+  #processItems(items: (TextItem | TextMarkedContent)[]) {
     if (this.#disableProcessItems) {
       return;
     }
     this.#layoutTextParams!.ctx ??= TextLayer.#getCtx(this.#lang);
 
-    const textDivs = this.#textDivs,
-      textContentItemsStr = this.#textContentItemsStr;
+    const textDivs = this.#textDivs;
+    const textContentItemsStr = this.#textContentItemsStr;
 
     for (const item of items) {
       // No point in rendering many divs as it would make the browser
@@ -294,29 +306,30 @@ class TextLayer {
         return;
       }
 
-      if (item.str === undefined) {
+      // 说明是TextItem
+      if ((<{ str?: string }>item).str === undefined) {
         if (
-          item.type === "beginMarkedContentProps" ||
-          item.type === "beginMarkedContent"
+          (<TextMarkedContent>item).type === "beginMarkedContentProps" ||
+          (<TextMarkedContent>item).type === "beginMarkedContent"
         ) {
-          const parent = this.#container;
+          const parent = this.#container!;
           this.#container = document.createElement("span");
           this.#container.classList.add("markedContent");
-          if (item.id !== null) {
-            this.#container.setAttribute("id", `${item.id}`);
+          if ((<TextMarkedContent>item).id !== null) {
+            this.#container.setAttribute("id", `${(<TextMarkedContent>item).id}`);
           }
           parent.append(this.#container);
-        } else if (item.type === "endMarkedContent") {
-          this.#container = this.#container.parentNode;
+        } else if ((<TextMarkedContent>item).type === "endMarkedContent") {
+          this.#container = <HTMLElement>this.#container!.parentNode;
         }
         continue;
       }
-      textContentItemsStr.push(item.str);
-      this.#appendText(item);
+      textContentItemsStr.push((<TextItem>item).str);
+      this.#appendText(<TextItem>item);
     }
   }
 
-  #appendText(geom) {
+  #appendText(geom: TextItem) {
     // Initialize all used properties to keep the caches monomorphic.
     const textDiv = document.createElement("span");
     const textDivProperties = {
@@ -328,22 +341,20 @@ class TextLayer {
     };
     this.#textDivs.push(textDiv);
 
-    const tx = Util.transform(this.#transform, geom.transform);
+    const tx = Util.transform(this.#transform!, geom.transform!);
     let angle = Math.atan2(tx[1], tx[0]);
-    const style = this.#styleCache[geom.fontName];
+    const style = this.#styleCache!.get(geom.fontName)!;
     if (style.vertical) {
       angle += Math.PI / 2;
     }
 
-    let fontFamily =
-      (this.#fontInspectorEnabled && style.fontSubstitution) ||
+    let fontFamily = (this.#fontInspectorEnabled && style.fontSubstitution) ||
       style.fontFamily;
 
     // Workaround for bug 1922063.
     fontFamily = TextLayer.fontFamilyMap.get(fontFamily) || fontFamily;
     const fontHeight = Math.hypot(tx[2], tx[3]);
-    const fontAscent =
-      fontHeight * TextLayer.#getAscent(fontFamily, this.#lang);
+    const fontAscent = fontHeight * TextLayer.#getAscent(fontFamily, this.#lang);
 
     let left, top;
     if (angle === 0) {
@@ -370,7 +381,7 @@ class TextLayer {
     // scale the element by 1/#minFontSize. This allows us to effectively
     // ignore the minimum font size enforced by the browser, so that the text
     // layer <span>s can always match the size of the text in the canvas.
-    divStyle.fontSize = `${scaleFactorStr}${(TextLayer.#minFontSize * fontHeight).toFixed(2)}px)`;
+    divStyle.fontSize = `${scaleFactorStr}${(TextLayer.#minFontSize! * fontHeight).toFixed(2)}px)`;
     divStyle.fontFamily = fontFamily;
 
     textDivProperties.fontSize = fontHeight;
@@ -397,9 +408,9 @@ class TextLayer {
     let shouldScaleText = false;
     if (geom.str.length > 1) {
       shouldScaleText = true;
-    } else if (geom.str !== " " && geom.transform[0] !== geom.transform[3]) {
-      const absScaleX = Math.abs(geom.transform[0]),
-        absScaleY = Math.abs(geom.transform[3]);
+    } else if (geom.str !== " " && geom.transform![0] !== geom.transform![3]) {
+      const absScaleX = Math.abs(geom.transform![0]),
+        absScaleY = Math.abs(geom.transform![3]);
       // When the horizontal/vertical scaling differs significantly, also scale
       // even single-char text to improve highlighting (fixes issue11713.pdf).
       if (
@@ -415,27 +426,29 @@ class TextLayer {
     this.#textDivProperties.set(textDiv, textDivProperties);
 
     // Finally, layout and append the text to the DOM.
-    this.#layoutTextParams.div = textDiv;
-    this.#layoutTextParams.properties = textDivProperties;
-    this.#layout(this.#layoutTextParams);
+    this.#layoutTextParams!.div = textDiv;
+    this.#layoutTextParams!.properties = textDivProperties;
+    this.#layout(this.#layoutTextParams!);
 
     if (textDivProperties.hasText) {
-      this.#container.append(textDiv);
+      this.#container!.append(textDiv);
     }
     if (textDivProperties.hasEOL) {
       const br = document.createElement("br");
       br.setAttribute("role", "presentation");
-      this.#container.append(br);
+      this.#container!.append(br);
     }
   }
 
-  #layout(params) {
-    const { div, properties, ctx } = params;
-    const { style } = div;
+  #layout(params: LayoutTextParams) {
+    const { div } = params;
+    const ctx = params.ctx!;
+    const properties = params.properties!
+    const { style } = div!;
 
     let transform = "";
-    if (TextLayer.#minFontSize > 1) {
-      transform = `scale(${1 / TextLayer.#minFontSize})`;
+    if (TextLayer.#minFontSize! > 1) {
+      transform = `scale(${1 / TextLayer.#minFontSize!})`;
     }
 
     if (properties.canvasWidth !== 0 && properties.hasText) {
@@ -444,7 +457,7 @@ class TextLayer {
 
       TextLayer.#ensureCtxFont(ctx, fontSize * this.#scale, fontFamily);
       // Only measure the width for multi-char text divs, see `appendText`.
-      const { width } = ctx.measureText(div.textContent);
+      const { width } = ctx.measureText(div!.textContent!);
 
       if (width > 0) {
         transform = `scaleX(${(canvasWidth * this.#scale) / width}) ${transform}`;
@@ -474,7 +487,7 @@ class TextLayer {
     this.#canvasContexts.clear();
   }
 
-  static #getCtx(lang = null) {
+  static #getCtx(lang: string | null = null) {
     let ctx = this.#canvasContexts.get((lang ||= ""));
     if (!ctx) {
       // We don't use an OffscreenCanvas here because we use serif/sans serif
@@ -494,7 +507,7 @@ class TextLayer {
       ctx = canvas.getContext("2d", {
         alpha: false,
         willReadFrequently: true,
-      });
+      })!;
       this.#canvasContexts.set(lang, ctx);
 
       // Also, initialize state for the `#ensureCtxFont` method.
@@ -503,7 +516,7 @@ class TextLayer {
     return ctx;
   }
 
-  static #ensureCtxFont(ctx, size, family) {
+  static #ensureCtxFont(ctx: CanvasRenderingContext2D, size: number, family: string) {
     const cached = this.#canvasCtxFonts.get(ctx);
     if (size === cached.size && family === cached.family) {
       return; // The font is already set.
@@ -521,8 +534,8 @@ class TextLayer {
       return;
     }
     const div = document.createElement("div");
-    div.style.opacity = 0;
-    div.style.lineHeight = 1;
+    div.style.opacity = "0";
+    div.style.lineHeight = "1";
     div.style.fontSize = "1px";
     div.style.position = "absolute";
     div.textContent = "X";
@@ -534,7 +547,7 @@ class TextLayer {
     div.remove();
   }
 
-  static #getAscent(fontFamily, lang) {
+  static #getAscent(fontFamily: string, lang: string | null) {
     const cachedAscent = this.#ascentCache.get(fontFamily);
     if (cachedAscent) {
       return cachedAscent;
@@ -598,5 +611,3 @@ class TextLayer {
     return ratio;
   }
 }
-
-export { TextLayer };

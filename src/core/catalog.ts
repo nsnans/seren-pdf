@@ -208,7 +208,7 @@ export interface OptionalContentOrder {
   order: (string | OptionalContentOrder)[];
 }
 
-export interface OptionalContentGroup {
+export interface OptionalContentDataGroup {
   id: string;
   name: string | null;
   intent: string[] | null;
@@ -230,7 +230,7 @@ export interface CatalogOptionalContentConfig {
   on: string[];
   off: string[];
   order: (string | OptionalContentOrder)[] | null;
-  groups: OptionalContentGroup[];
+  groups: OptionalContentDataGroup[];
 }
 
 export interface CatalogOutlineItem {
@@ -635,7 +635,7 @@ export class Catalog {
       if (!Array.isArray(groupsData)) {
         return shadow(this, "optionalContentConfig", null);
       }
-      const groupRefCache = new RefSetCache<Ref, OptionalContentGroup>();
+      const groupRefCache = new RefSetCache<Ref, OptionalContentDataGroup>();
       // Ensure all the optional content groups are valid.
       for (const groupRef of groupsData) {
         if (!(groupRef instanceof Ref) || groupRefCache.has(groupRef)) {
@@ -655,7 +655,7 @@ export class Catalog {
 
   #readOptionalContentGroup(groupRef: Ref) {
     const group = <Dict>this.xref.fetch(groupRef);
-    const obj: OptionalContentGroup = {
+    const obj: OptionalContentDataGroup = {
       id: groupRef.toString(),
       name: null,
       intent: null,
@@ -712,7 +712,7 @@ export class Catalog {
     return obj;
   }
 
-  #readOptionalContentConfig(config: Dict, groupRefCache: RefSetCache<Ref, OptionalContentGroup>) {
+  #readOptionalContentConfig(config: Dict, groupRefCache: RefSetCache<Ref, OptionalContentDataGroup>) {
     function parseOnOff(refs: Ref[]) {
       const onParsed = [];
       if (Array.isArray(refs)) {
