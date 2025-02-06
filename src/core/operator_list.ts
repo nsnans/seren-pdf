@@ -627,6 +627,13 @@ export interface OperatorListIR {
 
   length: number;
 
+  lastChunk: boolean;
+  
+  separateAnnots: {
+    form: boolean;
+    canvas: boolean;
+  } | null;
+
 }
 
 export interface OpertaorListChunk {

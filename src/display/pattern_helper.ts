@@ -760,11 +760,11 @@ class TilingPattern {
     graphics.endPath();
   }
 
-  setFillAndStrokeStyleToContext(graphics: CanvasGraphics
-    , paintType: number
-    , color: Uint8ClampedArray) {
-    const context = graphics.ctx,
-      current = graphics.current;
+  setFillAndStrokeStyleToContext(
+    graphics: CanvasGraphics, paintType: number, color: Uint8ClampedArray<ArrayBuffer>
+  ) {
+    const context = graphics.ctx;
+    const current = graphics.current;
     switch (paintType) {
       case PaintType.COLORED:
         const ctx = this.ctx;

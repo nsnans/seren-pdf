@@ -348,7 +348,7 @@ function getPageSizeInches(view: RectType, userUnit: number, rotate: number) {
  *   this will be the first element in the first partially visible row in
  *   `views`, although sometimes it goes back one row further.)
  */
-function backtrackBeforeAllVisibleElements(index: number, views, top: number) {
+function backtrackBeforeAllVisibleElements(index: number, views: { div: HTMLDivElement }[], top: number) {
   // binarySearchFirstItem's assumption is that the input is ordered, with only
   // one index where the conditions flips from false to true: [false ...,
   // true...]. With vertical scrolling and spreads, it is possible to have
@@ -453,21 +453,30 @@ function backtrackBeforeAllVisibleElements(index: number, views, top: number) {
  * question. For pages, that ends up being equivalent to the bounding box of the
  * rendering canvas. Earlier and later refer to index in `views`, not page
  * layout.)
- *
- * @param {GetVisibleElementsParameters} params
- * @returns {Object} `{ first, last, views: [{ id, x, y, view, percent }] }`
+ * @param scrollEl - A container that can possibly scroll.
+ * @param views - Objects with a `div` property that contains an
+ *   HTMLElement, which should all be descendants of `scrollEl` satisfying the
+ *   relevant layout assumptions.
+ * @param sortByVisibility - If `true`, the returned elements are
+ *   sorted in descending order of the percent of their padding box that is
+ *   visible. The default value is `false`.
+ * @param horizontal - If `true`, the elements are assumed to be
+ *   laid out horizontally instead of vertically. The default value is `false`.
+ * @param rtl - If `true`, the `scrollEl` container is assumed to
+ *   be in right-to-left mode. The default value is `false`.
+ * @return { first, last, views: [{ id, x, y, view, percent }] }
  */
-function getVisibleElements({
-  scrollEl,
-  views,
+function getVisibleElements(
+  scrollEl: HTMLElement,
+  views: { div: HTMLDivElement, id: number }[],
   sortByVisibility = false,
   horizontal = false,
   rtl = false,
-}) {
-  const top = scrollEl.scrollTop,
-    bottom = top + scrollEl.clientHeight;
-  const left = scrollEl.scrollLeft,
-    right = left + scrollEl.clientWidth;
+) {
+  const top = scrollEl.scrollTop;
+  const bottom = top + scrollEl.clientHeight;
+  const left = scrollEl.scrollLeft;
+  const right = left + scrollEl.clientWidth;
 
   // Throughout this "generic" function, comments will assume we're working with
   // PDF document pages, which is the most important and complex case. In this
@@ -479,13 +488,13 @@ function getVisibleElements({
   // offsetLeft/Top (which includes margin) and adding clientLeft/Top (which is
   // the border). Adding clientWidth/Height gets us the bottom-right corner of
   // the padding edge.
-  function isElementBottomAfterViewTop(view) {
+  function isElementBottomAfterViewTop(view: { div: HTMLDivElement }) {
     const element = view.div;
-    const elementBottom =
-      element.offsetTop + element.clientTop + element.clientHeight;
+    const elementBottom = element.offsetTop + element.clientTop + element.clientHeight;
     return elementBottom > top;
   }
-  function isElementNextAfterViewHorizontally(view) {
+
+  function isElementNextAfterViewHorizontally(view: { div: HTMLDivElement }) {
     const element = view.div;
     const elementLeft = element.offsetLeft + element.clientLeft;
     const elementRight = elementLeft + element.clientWidth;
@@ -493,7 +502,7 @@ function getVisibleElements({
   }
 
   const visible = [];
-  const ids = new Set();
+  const ids = new Set<number>();
   const numViews = views.length;
   let firstVisibleElementInd = binarySearchFirstItem(
     views, horizontal ? isElementNextAfterViewHorizontally : isElementBottomAfterViewTop
@@ -590,7 +599,7 @@ function getVisibleElements({
   return { first, last, views: visible, ids };
 }
 
-function normalizeWheelEventDirection(evt) {
+function normalizeWheelEventDirection(evt: WheelEvent) {
   let delta = Math.hypot(evt.deltaX, evt.deltaY);
   const angle = Math.atan2(evt.deltaY, evt.deltaX);
   if (-0.25 * Math.PI < angle && angle < 0.75 * Math.PI) {
@@ -600,7 +609,7 @@ function normalizeWheelEventDirection(evt) {
   return delta;
 }
 
-function normalizeWheelEventDelta(evt) {
+function normalizeWheelEventDelta(evt: WheelEvent) {
   const deltaMode = evt.deltaMode; // Avoid being affected by bug 1392460.
   let delta = normalizeWheelEventDirection(evt);
 
@@ -620,20 +629,24 @@ function isValidRotation(angle: unknown) {
   return Number.isInteger(angle) && <number>angle % 90 === 0;
 }
 
-function isValidScrollMode(mode) {
-  return (
-    Number.isInteger(mode) &&
-    Object.values(ScrollMode).includes(mode) &&
-    mode !== ScrollMode.UNKNOWN
-  );
+function isValidScrollMode(mode: unknown): mode is ScrollMode {
+  if (typeof mode !== 'number') {
+    return false;
+  }
+  const values = Object.values(ScrollMode).filter(
+    v => typeof v === 'number'
+  )
+  return values.includes(mode) && mode !== ScrollMode.UNKNOWN;
 }
 
-function isValidSpreadMode(mode) {
-  return (
-    Number.isInteger(mode) &&
-    Object.values(SpreadMode).includes(mode) &&
-    mode !== SpreadMode.UNKNOWN
-  );
+function isValidSpreadMode(mode: unknown): mode is SpreadMode {
+  if (typeof mode !== 'number') {
+    return false;
+  }
+  const values = Object.values(SpreadMode).filter(
+    v => typeof v === 'number'
+  )
+  return values.includes(mode) && mode !== SpreadMode.UNKNOWN;
 }
 
 function isPortraitOrientation(size: { width: number, height: number }) {
