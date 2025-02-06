@@ -14,19 +14,27 @@
  */
 
 import { noContextMenu } from "../display_utils";
+import { ColorPicker } from "./color_picker";
+import { AnnotationEditorUIManager } from "./tools";
 
 class EditorToolbar {
-  #toolbar = null;
 
-  #colorPicker = null;
+  #toolbar: HTMLDivElement | null = null;
+
+  #colorPicker: ColorPicker | null = null;
 
   #editor;
 
-  #buttons = null;
+  #buttons: HTMLDivElement | null = null;
 
   #altText = null;
 
-  static #l10nRemove = null;
+  static #l10nRemove: {
+    freetext: "pdfjs-editor-remove-freetext-button",
+    highlight: "pdfjs-editor-remove-highlight-button",
+    ink: "pdfjs-editor-remove-ink-button",
+    stamp: "pdfjs-editor-remove-stamp-button",
+  } | null = null;
 
   constructor(editor) {
     this.#editor = editor;
@@ -71,20 +79,20 @@ class EditorToolbar {
   }
 
   get div(): HTMLDivElement {
-    return this.#toolbar;
+    return this.#toolbar!;
   }
 
-  static #pointerDown(e) {
+  static #pointerDown(e: PointerEvent) {
     e.stopPropagation();
   }
 
-  #focusIn(e) {
+  #focusIn(e: FocusEvent) {
     this.#editor._focusEventsAllowed = false;
     e.preventDefault();
     e.stopPropagation();
   }
 
-  #focusOut(e) {
+  #focusOut(e: FocusEvent) {
     this.#editor._focusEventsAllowed = true;
     e.preventDefault();
     e.stopPropagation();
@@ -143,32 +151,40 @@ class EditorToolbar {
   async addAltText(altText) {
     const button = await altText.render();
     this.#addListenersToElement(button);
-    this.#buttons.prepend(button, this.#divider);
+    this.#buttons!.prepend(button, this.#divider);
     this.#altText = altText;
   }
 
-  addColorPicker(colorPicker) {
+  addColorPicker(colorPicker: ColorPicker) {
     this.#colorPicker = colorPicker;
     const button = colorPicker.renderButton();
     this.#addListenersToElement(button);
-    this.#buttons.prepend(button, this.#divider);
+    this.#buttons!.prepend(button, this.#divider);
   }
 
   remove() {
-    this.#toolbar.remove();
+    this.#toolbar!.remove();
     this.#colorPicker?.destroy();
     this.#colorPicker = null;
   }
 }
 
+interface BoxType {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 class HighlightToolbar {
-  #buttons = null;
 
-  #toolbar = null;
+  #buttons: HTMLDivElement | null = null;
 
-  #uiManager;
+  #toolbar: HTMLDivElement | null = null;
 
-  constructor(uiManager) {
+  #uiManager: AnnotationEditorUIManager;
+
+  constructor(uiManager: AnnotationEditorUIManager) {
     this.#uiManager = uiManager;
   }
 
@@ -177,7 +193,7 @@ class HighlightToolbar {
     editToolbar.className = "editToolbar";
     editToolbar.setAttribute("role", "toolbar");
     editToolbar.addEventListener("contextmenu", noContextMenu, {
-      signal: this.#uiManager._signal,
+      signal: this.#uiManager._signal!,
     });
 
     const buttons = (this.#buttons = document.createElement("div"));
@@ -189,7 +205,7 @@ class HighlightToolbar {
     return editToolbar;
   }
 
-  #getLastPoint(boxes, isLTR) {
+  #getLastPoint(boxes: BoxType[], isLTR: boolean) {
     let lastY = 0;
     let lastX = 0;
     for (const box of boxes) {
@@ -214,7 +230,7 @@ class HighlightToolbar {
     return [isLTR ? 1 - lastX : lastX, lastY];
   }
 
-  show(parent, boxes, isLTR) {
+  show(parent: HTMLDivElement, boxes: BoxType[], isLTR: boolean) {
     const [x, y] = this.#getLastPoint(boxes, isLTR);
     const { style } = (this.#toolbar ||= this.#render());
     parent.append(this.#toolbar);
@@ -223,7 +239,7 @@ class HighlightToolbar {
   }
 
   hide() {
-    this.#toolbar.remove();
+    this.#toolbar!.remove();
   }
 
   #addHighlightButton() {

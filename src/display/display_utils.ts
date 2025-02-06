@@ -462,7 +462,7 @@ export function isValidFetchUrl(url: string, baseUrl?: string) {
 /**
  * Event handler to suppress context menu.
  */
-export function noContextMenu(e: MouseEvent) {
+export function noContextMenu(e: Event) {
   e.preventDefault();
 }
 

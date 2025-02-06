@@ -24,7 +24,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
-import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
+import { AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {
@@ -39,7 +39,6 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { MutableArray } from "../types";
 import { DownloadManager, PDFLinkService } from "../viewer/common/component_types";
 import { TextAccessibilityManager } from "../viewer/common/text_accessibility";
 import { AnnotationStorage } from "./annotation_storage";
@@ -172,22 +171,6 @@ class AnnotationElementFactory {
         return new AnnotationElement(parameters);
     }
   }
-}
-
-interface AnnotationElementData {
-  borderColor: MutableArray<number> | null;
-  id: string;
-  borderStyle: AnnotationBorderStyle;
-  hasOwnCanvas: boolean;
-  noRotate: boolean;
-  alternativeText: string;
-  isEditable: boolean;
-  rect: RectType;
-  rotation: number;
-  titleObj: StringObj | null;
-  contentObj: StringObj | null;
-  richText: StringObj | null;
-  annotationType: AnnotationType;
 }
 
 export class AnnotationElement<DATA extends AnnotationData> {
