@@ -483,11 +483,11 @@ class CanvasExtraState {
 
   public fontSizeScale: number;
 
-  public textMatrix: number[];
+  public textMatrix: TransformType;
 
   public textMatrixScale: number;
 
-  public fontMatrix: number[];
+  public fontMatrix: TransformType;
 
   public leading: number;
 
@@ -1551,7 +1551,7 @@ class CanvasGraphics {
     }
     // The soft mask is done, now restore the suspended canvas as the main
     // drawing canvas.
-    this.ctx._removeMirroring();
+    this.ctx._removeMirroring?.();
     copyCtxState(this.ctx, this.suspendedCtx!);
     this.ctx = this.suspendedCtx!;
 
@@ -1613,7 +1613,7 @@ class CanvasGraphics {
   }
 
   genericComposeSMask(
-    maskCtx,
+    maskCtx: CanvasRenderingContext2D,
     layerCtx: CanvasRenderingContext2D,
     width: number,
     height: number,
@@ -1649,7 +1649,7 @@ class CanvasGraphics {
         ctx.fillRect(0, 0, width, height);
         ctx.globalCompositeOperation = "source-over";
 
-        maskCanvas = canvas.canvas;
+        maskCanvas = canvas.canvas!;
         maskX = maskY = 0;
       } else {
         maskCtx.save();
@@ -1745,8 +1745,8 @@ class CanvasGraphics {
   constructPath(ops, args, minMax) {
     const ctx = this.ctx;
     const current = this.current;
-    let x = current.x,
-      y = current.y;
+    let x = current.x;
+    let y = current.y;
     let startX, startY;
     const currentTransform = getCurrentTransform(ctx);
 
@@ -1756,8 +1756,7 @@ class CanvasGraphics {
     // transform (see Util.scaleMinMax).
     // For rectangle, moveTo and lineTo, min/max are computed in the
     // worker (see evaluator.js).
-    const isScalingMatrix =
-      (currentTransform[0] === 0 && currentTransform[3] === 0) ||
+    const isScalingMatrix = (currentTransform[0] === 0 && currentTransform[3] === 0) ||
       (currentTransform[1] === 0 && currentTransform[2] === 0);
     const minMaxForBezier = isScalingMatrix ? minMax.slice(0) : null;
 
@@ -2021,7 +2020,7 @@ class CanvasGraphics {
     for (const path of paths) {
       ctx.setTransform(...path.transform);
       ctx.translate(path.x, path.y);
-      path.addToPath(ctx, path.fontSize);
+      path.addToPath?.(ctx, path.fontSize);
     }
     ctx.restore();
     ctx.clip();
@@ -2204,13 +2203,11 @@ class CanvasGraphics {
     // Checks if anti-aliasing is enabled when scaled text is painted.
     // On Windows GDI scaled fonts looks bad.
     const { context: ctx } = this.cachedCanvases.getCanvas(
-      "isFontSubpixelAAEnabled",
-      10,
-      10
+      "isFontSubpixelAAEnabled", 10, 10
     );
-    ctx.scale(1.5, 1);
-    ctx.fillText("I", 0, 10);
-    const data = ctx.getImageData(0, 0, 10, 10).data;
+    ctx!.scale(1.5, 1);
+    ctx!.fillText("I", 0, 10);
+    const data = ctx!.getImageData(0, 0, 10, 10).data;
     let enabled = false;
     for (let i = 3; i < data.length; i += 4) {
       if (data[i] > 0 && data[i] < 255) {
@@ -2775,7 +2772,7 @@ class CanvasGraphics {
     }
   }
 
-  beginAnnotation(id, rect: RectType | null, transform: TransformType, matrix, hasOwnCanvas) {
+  beginAnnotation(id: string, rect: RectType | null, transform: TransformType, matrix: TransformType, hasOwnCanvas: boolean) {
     // The annotations are drawn just after the page content.
     // The page content drawing can potentially have set a transform,
     // a clipping path, whatever...
@@ -2913,12 +2910,7 @@ class CanvasGraphics {
     const mask = this._createMaskCanvas(img);
 
     ctx.setTransform(
-      1,
-      0,
-      0,
-      1,
-      mask.offsetX - currentTransform[4],
-      mask.offsetY - currentTransform[5]
+      1, 0, 0, 1, mask.offsetX - currentTransform[4], mask.offsetY - currentTransform[5]
     );
     for (let i = 0, ii = positions.length; i < ii; i += 2) {
       const trans = Util.transform(currentTransform, [
@@ -2998,7 +2990,7 @@ class CanvasGraphics {
     this.paintInlineImageXObject(imgData);
   }
 
-  paintImageXObjectRepeat(objId: string, scaleX: number, scaleY: number, positions) {
+  paintImageXObjectRepeat(objId: string, scaleX: number, scaleY: number, positions: number[]) {
     if (!this.contentVisible) {
       return;
     }

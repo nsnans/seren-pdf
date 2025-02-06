@@ -1078,7 +1078,7 @@ class DummyShading extends BaseShading {
 
 export type TilingPatternIR = [
   "TilingPattern",
-  Uint8ClampedArray | null,
+  Uint8ClampedArray<ArrayBuffer> | null,
   OperatorListIR,
   TransformType,
   RectType,
