@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { objectFromMap, shadow, unreachable } from "../shared/util";
 import { AnnotationEditor } from "./editor/editor";
-import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { AnnotationEditorSerial } from "./editor/state/editor_serializable";
 import { hasOwnBitmap } from "./editor/utils";
 
@@ -64,7 +64,7 @@ class AnnotationStorage {
    * @param {Object} defaultValue
    * @returns {Object}
    */
-  getValue(key, defaultValue) {
+  getValue(key: string, defaultValue) {
     const value = this.#storage.get(key);
     if (value === undefined) {
       return defaultValue;

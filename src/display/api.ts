@@ -3334,7 +3334,7 @@ class WorkerTransport {
     const action = MessageHandlerAction.GetOptionalContentConfig;
     const handler = this.messageHandler!;
     return this._cacheSimpleMethod(action, () => handler.GetOptionalContentConfig()).then(
-      data => new OptionalContentConfig(data, renderingIntent)
+      data => new OptionalContentConfig(data!, renderingIntent)
     );
   }
 

@@ -14,8 +14,9 @@
  */
 
 import { unreachable } from "../../../shared/util";
+import { RectType } from "../../display_utils";
 
-class Outline {
+export abstract class Outline {
   /**
    * @returns {string} The SVG path of the outline.
    */
@@ -27,29 +28,21 @@ class Outline {
    * @type {Object|null} The bounding box of the outline.
    */
   // eslint-disable-next-line getter-return
-  get box() : { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null {
+  get box(): { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null {
     throw new Error("抽象函数需要被继承者实现");
   }
 
-  serialize(_bbox, _rotation) {
+  serialize(_bbox: RectType, _rotation: number) {
     unreachable("Abstract method `serialize` must be implemented.");
   }
 
   // eslint-disable-next-line getter-return
-  get classNamesForDrawing() {
-    unreachable("Abstract getter `classNamesForDrawing` must be implemented.");
-  }
+  abstract get classNamesForDrawing(): string[];
 
   // eslint-disable-next-line getter-return
-  get classNamesForOutlining() {
-    unreachable(
-      "Abstract getter `classNamesForOutlining` must be implemented."
-    );
-  }
+  abstract get classNamesForOutlining(): string[];
 
   get mustRemoveSelfIntersections() {
     return false;
   }
 }
-
-export { Outline };

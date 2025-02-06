@@ -13,15 +13,23 @@
  * limitations under the License.
  */
 
+import { RectType } from "../../display_utils";
 import { FreeDrawOutline, FreeDrawOutliner } from "./freedraw";
 import { Outline } from "./outline";
+
+interface HighlightBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 class HighlightOutliner {
   #box;
 
   #verticalEdges: [number, number, number, boolean][] = [];
 
-  #intervals = [];
+  #intervals: number[] = [];
 
   /**
    * Construct an outliner.
@@ -35,7 +43,7 @@ class HighlightOutliner {
    * @param {boolean} isLTR - true if we're in LTR mode. It's used to determine
    *   the last point of the boxes.
    */
-  constructor(boxes, borderWidth = 0, innerMargin = 0, isLTR = true) {
+  constructor(boxes: HighlightBox[], borderWidth = 0, innerMargin = 0, isLTR = true) {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
@@ -176,7 +184,7 @@ class HighlightOutliner {
     return new HighlightOutline(outlines, this.#box);
   }
 
-  #binarySearch(y) {
+  #binarySearch(y: number) {
     const array = this.#intervals;
     let start = 0;
     let end = array.length - 1;
@@ -225,7 +233,7 @@ class HighlightOutliner {
     }
   }
 
-  #breakEdge(edge) {
+  #breakEdge(edge: [number, number, number, boolean]) {
     const [x, y1, y2] = edge;
     const results = [[x, y1, y2]];
     const index = this.#binarySearch(y2);
@@ -262,7 +270,7 @@ class HighlightOutliner {
   }
 }
 
-class HighlightOutline extends Outline {
+export class HighlightOutline extends Outline {
   #box;
 
   #outlines;
@@ -300,7 +308,7 @@ class HighlightOutline extends Outline {
    * @param {number} _rotation - the rotation of the annotation.
    * @returns {Array<Array<number>>}
    */
-  serialize([blX, blY, trX, trY], _rotation) {
+  serialize([blX, blY, trX, trY]: RectType, _rotation: number) {
     const outlines = [];
     const width = trX - blX;
     const height = trY - blY;
@@ -354,7 +362,9 @@ class FreeHighlightOutline extends FreeDrawOutline {
     return ["highlightOutline", "free"];
   }
 
-  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+  newOutliner(
+    point : { x: number, y: number}, 
+    box, scaleFactor, thickness, isLTR, innerMargin = 0) {
     return new FreeHighlightOutliner(
       point.x,
       point.y,

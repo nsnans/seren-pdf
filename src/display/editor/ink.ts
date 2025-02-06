@@ -21,7 +21,7 @@ import {
 } from "../../shared/util";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { InkAnnotationElement } from "../annotation_layer";
-import { noContextMenu, RectType } from "../display_utils";
+import { noContextMenu, PointType, RectType } from "../display_utils";
 import { AnnotationEditorUIManager, opacityToHex } from "./tools";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
@@ -33,6 +33,7 @@ import { AnnotationEditorSerial } from "./state/editor_serializable";
  * Basic draw editor in order to generate an Ink annotation.
  */
 class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+
   #baseHeight = 0;
 
   #baseWidth = 0;
@@ -74,8 +75,8 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
   protected opacity: number | null;
   protected canvas: HTMLCanvasElement | null = null;
   protected paths;
-  protected bezierPath2D;
-  protected allRawPaths;
+  protected bezierPath2D: Path2D[];
+  protected allRawPaths: [number, number][][];
   protected currentPath: [number, number][];
   protected scaleFactor: number;
   protected translationX: number;
@@ -375,7 +376,7 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
    */
   #startDrawing(x: number, y: number) {
     this.canvas!.addEventListener("contextmenu", noContextMenu, {
-      signal: this._uiManager._signal,
+      signal: this._uiManager._signal!,
     });
     this.#removePointerdownListener();
 
@@ -558,7 +559,7 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
     ctx.restore();
   }
 
-  #makeBezierCurve(path2D, x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
+  #makeBezierCurve(path2D: Path2D, x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) {
     const prevX = (x0 + x1) / 2;
     const prevY = (y0 + y1) / 2;
     const x3 = (x1 + x2) / 2;
@@ -688,8 +689,8 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
   }
 
   #removePointerdownListener() {
-    this.pointerdownAC?.abort();
-    this.pointerdownAC = null;
+    this.#pointerdownAC?.abort();
+    this.#pointerdownAC = null;
   }
 
   /**
@@ -794,14 +795,10 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
       }
     });
     this.#observer.observe(this.div!);
-    this._uiManager._signal.addEventListener(
-      "abort",
-      () => {
-        this.#observer?.disconnect();
-        this.#observer = null;
-      },
-      { once: true }
-    );
+    this._uiManager._signal!.addEventListener("abort", () => {
+      this.#observer?.disconnect();
+      this.#observer = null;
+    }, { once: true });
   }
 
   /** @inheritdoc */
@@ -934,7 +931,7 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
    * @param {Array<Array<number>>} bezier
    * @returns {Path2D}
    */
-  static #buildPath2D(bezier) {
+  static #buildPath2D(bezier: PointType[][]) {
     const path2D = new Path2D();
     for (let i = 0, ii = bezier.length; i < ii; i++) {
       const [first, control1, control2, second] = bezier[i];
@@ -1192,7 +1189,7 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
 
     for (let { bezier } of paths) {
       bezier = InkEditor.#fromPDFCoordinates(bezier, rect, rotation);
-      const path = [];
+      const path: PointType[][] = [];
       editor.paths.push(path);
       let p0 = scaleFactor * (bezier[0] - padding);
       let p1 = scaleFactor * (bezier[1] - padding);

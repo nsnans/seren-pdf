@@ -27,7 +27,7 @@ export class DrawLayer {
 
   #id = 0;
 
-  #mapping = new Map();
+  #mapping = new Map<number, SVGElement>();
 
   #toUpdate = new Map<number, SVGElement>();
 
@@ -75,7 +75,7 @@ export class DrawLayer {
     return svg;
   }
 
-  #createClipPath(defs, pathId) {
+  #createClipPath(defs: SVGElement, pathId: string) {
     const clipPath = DrawLayer._svgFactory.createElement("clipPath");
     defs.append(clipPath);
     const clipPathId = `clip_${pathId}`;
@@ -167,69 +167,69 @@ export class DrawLayer {
     const use2 = use1.cloneNode();
     root.append(use2);
     use1.classList.add("mainOutline");
-    use2.classList.add("secondaryOutline");
+    (<HTMLElement>use2).classList.add("secondaryOutline");
 
     this.#mapping.set(id, root);
 
     return id;
   }
 
-  finalizeLine(id, line) {
-    const path = this.#toUpdate.get(id);
+  finalizeLine(id: number, line) {
+    const path = this.#toUpdate.get(id)!;
     this.#toUpdate.delete(id);
     this.updateBox(id, line.box);
     path.setAttribute("d", line.toSVGPath());
   }
 
-  updateLine(id, line) {
-    const root = this.#mapping.get(id);
+  updateLine(id: number, line) {
+    const root = this.#mapping.get(id)!;
     const defs = root.firstChild;
-    const path = defs.firstChild;
-    path.setAttribute("d", line.toSVGPath());
+    const path = (<Element>defs).firstChild!;
+    (<Element>path).setAttribute("d", line.toSVGPath());
   }
 
-  updatePath(id, line) {
-    this.#toUpdate.get(id).setAttribute("d", line.toSVGPath());
+  updatePath(id: number, line) {
+    this.#toUpdate.get(id)!.setAttribute("d", line.toSVGPath());
   }
 
-  updateBox(id, box) {
-    DrawLayer.#setBox(this.#mapping.get(id), box);
+  updateBox(id: number, box) {
+    DrawLayer.#setBox(this.#mapping.get(id)!, box);
   }
 
-  show(id, visible) {
-    this.#mapping.get(id).classList.toggle("hidden", !visible);
+  show(id: number, visible: boolean) {
+    this.#mapping.get(id)!.classList.toggle("hidden", !visible);
   }
 
-  rotate(id, angle) {
-    this.#mapping.get(id).setAttribute("data-main-rotation", angle);
+  rotate(id: number, angle: number) {
+    this.#mapping.get(id)!.setAttribute("data-main-rotation", angle.toString());
   }
 
-  changeColor(id, color) {
-    this.#mapping.get(id).setAttribute("fill", color);
+  changeColor(id: number, color: string) {
+    this.#mapping.get(id)!.setAttribute("fill", color);
   }
 
-  changeOpacity(id, opacity) {
-    this.#mapping.get(id).setAttribute("fill-opacity", opacity);
+  changeOpacity(id: number, opacity: number) {
+    this.#mapping.get(id)!.setAttribute("fill-opacity", opacity.toString());
   }
 
-  addClass(id, className) {
-    this.#mapping.get(id).classList.add(className);
+  addClass(id: number, className: string) {
+    this.#mapping.get(id)!.classList.add(className);
   }
 
-  removeClass(id, className) {
-    this.#mapping.get(id).classList.remove(className);
+  removeClass(id: number, className: string) {
+    this.#mapping.get(id)!.classList.remove(className);
   }
 
-  getSVGRoot(id) {
+  getSVGRoot(id: number) {
     return this.#mapping.get(id);
   }
 
-  remove(id) {
+  remove(id: number) {
     this.#toUpdate.delete(id);
     if (this.#parent === null) {
       return;
     }
-    this.#mapping.get(id).remove();
+    this.#mapping.get(id)!.remove();
     this.#mapping.delete(id);
   }
 

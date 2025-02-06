@@ -31,7 +31,6 @@ import { TextAccessibilityManager } from "../../viewer/common/text_accessibility
 import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
-import { TextLayer } from "../text_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { FreeTextEditor } from "./freetext";
 import { HighlightEditor } from "./highlight";
@@ -84,7 +83,7 @@ export class AnnotationEditorLayer {
 
   #clickAC: AbortController | null = null;
 
-  #editorFocusTimeoutId = null;
+  #editorFocusTimeoutId: number | null = null;
 
   #editors = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
 
@@ -100,9 +99,9 @@ export class AnnotationEditorLayer {
 
   #uiManager: AnnotationEditorUIManager;
 
-  protected viewport: PageViewport;
-
   protected div: HTMLDivElement;
+
+  public viewport: PageViewport;
 
   public pageIndex: number;
 
@@ -410,11 +409,11 @@ export class AnnotationEditorLayer {
     }
   }
 
-  #textLayerPointerDown(event) {
+  #textLayerPointerDown(event: PointerEvent) {
     // Unselect all the editors in order to let the user select some text
     // without being annoyed by an editor toolbar.
     this.#uiManager.unselectAll();
-    const { target } = event;
+    const target = <HTMLElement>event.target;
     if (
       target === this.#textLayer.div ||
       ((target.getAttribute("role") === "img" ||
@@ -427,7 +426,7 @@ export class AnnotationEditorLayer {
         return;
       }
       this.#uiManager.showAllEditors(
-        "highlight",
+        AnnotationEditorType.HIGHLIGHT,
         true,
         /* updateButton = */ true
       );
@@ -483,7 +482,7 @@ export class AnnotationEditorLayer {
 
   detach(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#editors.delete(editor.id);
-    this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
+    this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv!);
 
     if (!this.#isDisabling && editor.annotationElementId) {
       this.#uiManager.addDeletedAnnotationElement(editor);
@@ -516,7 +515,7 @@ export class AnnotationEditorLayer {
     }
 
     if (editor.parent && editor.annotationElementId) {
-      this.#uiManager.addDeletedAnnotationElement(editor.annotationElementId);
+      this.#uiManager.addDeletedAnnotationElement(editor);
       AnnotationEditorHelper.deleteAnnotationElement(editor);
       editor.annotationElementId = null;
     }
@@ -555,13 +554,13 @@ export class AnnotationEditorLayer {
     editor._reportTelemetry(editor.telemetryInitialData);
   }
 
-  moveEditorInDOM(editor) {
+  moveEditorInDOM(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     if (!editor.isAttachedToDOM) {
       return;
     }
 
     const { activeElement } = document;
-    if (editor.div.contains(activeElement) && !this.#editorFocusTimeoutId) {
+    if (editor.div!.contains(activeElement) && !this.#editorFocusTimeoutId) {
       // When the div is moved in the DOM the focus can move somewhere else,
       // so we want to be sure that the focus will stay on the editor but we
       // don't want to call any focus callbacks, hence we disable them and only
@@ -569,15 +568,15 @@ export class AnnotationEditorLayer {
       editor._focusEventsAllowed = false;
       this.#editorFocusTimeoutId = setTimeout(() => {
         this.#editorFocusTimeoutId = null;
-        if (!editor.div.contains(document.activeElement)) {
-          editor.div.addEventListener(
+        if (!editor.div!.contains(document.activeElement)) {
+          editor.div!.addEventListener(
             "focusin",
             () => {
               editor._focusEventsAllowed = true;
             },
-            { once: true, signal: this.#uiManager._signal }
+            { once: true, signal: this.#uiManager._signal! }
           );
-          activeElement.focus();
+          (<HTMLElement>activeElement!).focus();
         } else {
           editor._focusEventsAllowed = true;
         }
@@ -585,10 +584,7 @@ export class AnnotationEditorLayer {
     }
 
     editor._structTreeParentId = this.#accessibilityManager?.moveElementInDOM(
-      this.div,
-      editor.div,
-      editor.contentDiv,
-      /* isRemovable = */ true
+      this.div, editor.div!, editor.contentDiv!, true
     );
   }
 

@@ -3205,10 +3205,10 @@ export class AnnotationLayer {
   protected viewport: PageViewport;
 
   protected _annotationEditorUIManager;
-
-  protected div: HTMLDivElement;
-
+  
   protected zIndex: number;
+  
+  public div: HTMLDivElement;
 
   constructor(
     div: HTMLDivElement,

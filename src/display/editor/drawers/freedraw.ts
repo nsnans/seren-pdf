@@ -15,8 +15,9 @@
 
 import { Outline } from "./outline";
 import { Util } from "../../../shared/util";
+import { RectType } from "../../display_utils";
 
-class FreeDrawOutliner {
+export class FreeDrawOutliner {
   #box;
 
   #bottom: number[] = [];
@@ -459,7 +460,8 @@ interface BBox {
   lastPoint: number[];
 }
 
-class FreeDrawOutline extends Outline {
+export class FreeDrawOutline extends Outline {
+
   #box;
 
   #bbox: BBox | null = null;
@@ -511,7 +513,7 @@ class FreeDrawOutline extends Outline {
     return buffer.join(" ");
   }
 
-  serialize([blX, blY, trX, trY]: [number, number, number, number], rotation: number) {
+  serialize([blX, blY, trX, trY]: RectType, rotation: number) {
     const width = trX - blX;
     const height = trY - blY;
     let outline: Float64Array | null = null;
@@ -660,6 +662,12 @@ class FreeDrawOutline extends Outline {
   get mustRemoveSelfIntersections() {
     return true;
   }
-}
 
-export { FreeDrawOutline, FreeDrawOutliner };
+  get classNamesForDrawing(): string[] {
+    throw new Error("Method not implemented.");
+  }
+  get classNamesForOutlining(): string[] {
+    throw new Error("Method not implemented.");
+  }
+
+}

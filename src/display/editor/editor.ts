@@ -325,7 +325,7 @@ class AnnotationEditor<
 
   public annotationElementId: string | null;
 
-  protected _structTreeParentId: string | null;
+  public _structTreeParentId: string | null;
 
   protected rotation: number;
 

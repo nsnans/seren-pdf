@@ -22,6 +22,7 @@ import {
 import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
 import {
   FreeHighlightOutliner,
+  HighlightOutline,
   HighlightOutliner,
 } from "./drawers/highlight";
 import {
@@ -30,7 +31,7 @@ import {
 } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { ColorPicker } from "./color_picker";
-import { noContextMenu } from "../display_utils";
+import { noContextMenu, RectType } from "../display_utils";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
@@ -40,41 +41,6 @@ import { AnnotationEditorState } from "./state/editor_state";
  * Basic draw editor in order to generate an Highlight annotation.
  */
 class HighlightEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
-  #anchorNode = null;
-
-  #anchorOffset = 0;
-
-  #boxes;
-
-  #clipPathId: string | null = null;
-
-  #colorPicker: ColorPicker | null = null;
-
-  #focusOutlines: HighlightOutliner | null = null;
-
-  #focusNode = null;
-
-  #focusOffset = 0;
-
-  #highlightDiv: HTMLDivElement | null = null;
-
-  #highlightOutlines: HighlightOutliner | null = null;
-
-  #id: string | null = null;
-
-  #isFreeHighlight = false;
-
-  #lastPoint: [number, number] | null = null;
-
-  #opacity;
-
-  #outlineId: number | null = null;
-
-  #text = "";
-
-  #thickness;
-
-  #methodOfCreation = "";
 
   static _defaultColor: string | null = null;
 
@@ -105,6 +71,42 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
       ])
     );
   }
+
+  #anchorNode = null;
+
+  #anchorOffset = 0;
+
+  #boxes;
+
+  #clipPathId: string | null = null;
+
+  #colorPicker: ColorPicker | null = null;
+
+  #focusOutlines: HighlightOutline | null = null;
+
+  #focusNode = null;
+
+  #focusOffset = 0;
+
+  #highlightDiv: HTMLDivElement | null = null;
+
+  #highlightOutlines: HighlightOutline | null = null;
+
+  #id: number | null = null;
+
+  #isFreeHighlight = false;
+
+  #lastPoint: [number, number] | null = null;
+
+  #opacity;
+
+  #outlineId: number | null = null;
+
+  #text = "";
+
+  #thickness;
+
+  #methodOfCreation = "";
 
   protected color: string;
 
@@ -205,18 +207,18 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
       this.#outlineId = this.parent!.drawLayer.drawOutline(this.#focusOutlines);
     } else if (this.parent) {
       const angle = this.parent.viewport.rotation;
-      this.parent.drawLayer.updateLine(this.#id, highlightOutlines);
+      this.parent.drawLayer.updateLine(this.#id!, highlightOutlines);
       this.parent.drawLayer.updateBox(
-        this.#id,
+        this.#id!,
         HighlightEditor.#rotateBbox(
           this.#highlightOutlines!.box,
           (angle - this.rotation + 360) % 360
         )
       );
 
-      this.parent.drawLayer.updateLine(this.#outlineId, this.#focusOutlines);
+      this.parent.drawLayer.updateLine(this.#outlineId!, this.#focusOutlines);
       this.parent.drawLayer.updateBox(
-        this.#outlineId,
+        this.#outlineId!,
         HighlightEditor.#rotateBbox(this.#focusOutlines!.box, angle)
       );
     }
@@ -330,10 +332,10 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
   #updateColor(color: string) {
     const setColorAndOpacity = (col: string, opa: number) => {
       this.color = col;
-      this.parent?.drawLayer.changeColor(this.#id, col);
+      this.parent?.drawLayer.changeColor(this.#id!, col);
       this.#colorPicker?.updateColor(col);
       this.#opacity = opa;
-      this.parent?.drawLayer.changeOpacity(this.#id, opa);
+      this.parent?.drawLayer.changeOpacity(this.#id!, opa);
     };
     const savedColor = this.color;
     const savedOpacity = this.#opacity;
@@ -392,7 +394,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
       return null;
     }
     if (this._uiManager.highlightColors) {
-      this.#colorPicker = new ColorPicker({ editor: this });
+      this.#colorPicker = new ColorPicker(this);
       toolbar.addColorPicker(this.#colorPicker);
     }
     return toolbar;
@@ -500,7 +502,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     }
     this.parent.drawLayer.remove(this.#id);
     this.#id = null;
-    this.parent.drawLayer.remove(this.#outlineId);
+    this.parent.drawLayer.remove(this.#outlineId!);
     this.#outlineId = null;
   }
 
@@ -508,7 +510,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     if (this.#id !== null) {
       return;
     }
-    ({ id: this.#id, clipPathId: this.#clipPathId } = parent.drawLayer.draw(
+    ({ id: this.#id, clipPathId: this.#clipPathId } = parent!.drawLayer.draw(
       this.#highlightOutlines,
       this.color,
       this.#opacity
@@ -558,17 +560,16 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     let box;
     if (this.#isFreeHighlight) {
       angle = (angle - this.rotation + 360) % 360;
-      box = HighlightEditor.#rotateBbox(this.#highlightOutlines.box, angle);
+      box = HighlightEditor.#rotateBbox(this.#highlightOutlines!.box, angle);
     } else {
       // An highlight annotation is always drawn horizontally.
       box = HighlightEditor.#rotateBbox(this, angle);
     }
-    drawLayer.rotate(this.#id, angle);
-    drawLayer.rotate(this.#outlineId, angle);
-    drawLayer.updateBox(this.#id, box);
+    drawLayer.rotate(this.#id!, angle);
+    drawLayer.rotate(this.#outlineId!, angle);
+    drawLayer.updateBox(this.#id!, box);
     drawLayer.updateBox(
-      this.#outlineId,
-      HighlightEditor.#rotateBbox(this.#focusOutlines!.box, angle)
+      this.#outlineId!, HighlightEditor.#rotateBbox(this.#focusOutlines!.box, angle)
     );
   }
 
@@ -578,7 +579,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
       return this.div;
     }
 
-    const div = super.render();
+    const div = super.render()!;
     if (this.#text) {
       div.setAttribute("aria-label", this.#text);
       div.setAttribute("role", "mark");
@@ -586,8 +587,8 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     if (this.#isFreeHighlight) {
       div.classList.add("free");
     } else {
-      this.div.addEventListener("keydown", this.#keydown.bind(this), {
-        signal: this._uiManager._signal,
+      this.div!.addEventListener("keydown", this.#keydown.bind(this), {
+        signal: this._uiManager._signal!,
       });
     }
     const highlightDiv = (this.#highlightDiv = document.createElement("div"));
@@ -606,13 +607,13 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
 
   pointerover() {
     if (!this.isSelected) {
-      this.parent!.drawLayer.addClass(this.#outlineId, "hovered");
+      this.parent!.drawLayer.addClass(this.#outlineId!, "hovered");
     }
   }
 
   pointerleave() {
     if (!this.isSelected) {
-      this.parent!.drawLayer.removeClass(this.#outlineId, "hovered");
+      this.parent!.drawLayer.removeClass(this.#outlineId!, "hovered");
     }
   }
 
@@ -677,8 +678,8 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
   show(visible = this._isVisible) {
     super.show(visible);
     if (this.parent) {
-      this.parent.drawLayer.show(this.#id, visible);
-      this.parent.drawLayer.show(this.#outlineId, visible);
+      this.parent.drawLayer.show(this.#id!, visible);
+      this.parent.drawLayer.show(this.#outlineId!, visible);
     }
   }
 
@@ -713,7 +714,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     return quadPoints;
   }
 
-  #serializeOutlines(rect) {
+  #serializeOutlines(rect: RectType) {
     return this.#highlightOutlines!.serialize(rect, this.#getRotation());
   }
 
@@ -808,7 +809,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
         quadPoints,
         boxes: null,
         pageIndex: pageNumber - 1,
-        rect: rect.slice(0),
+        rect: rect!.slice(0),
         rotation,
         id,
         deleted: false,
@@ -836,7 +837,7 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
         inkLists,
         boxes: null,
         pageIndex: pageNumber - 1,
-        rect: rect.slice(0),
+        rect: rect!.slice(0),
         rotation,
         id,
         deleted: false,
