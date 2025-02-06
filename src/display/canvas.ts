@@ -14,6 +14,7 @@
  */
 
 import { Glyph } from "../core/fonts";
+import { GroupOptions } from "../core/image_utils";
 import { TilingPatternIR } from "../core/pattern";
 import { PlatformHelper } from "../platform/platform_helper";
 import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
@@ -901,7 +902,20 @@ interface PositionTransformType {
   h: number,
 }
 
-class CanvasGraphics {
+const MethodMap = new Map<OPS, keyof CanvasGraphics>();
+
+// 这里应该要有handle完的arg类型，但是这种arg类型不太好强制管理起来
+// 强制起来得打开一个开关，开关检测args处理的对不对
+function handle(ops: OPS) {
+  return function (_target: CanvasGraphics, propertyKey: keyof CanvasGraphics) {
+    if (MethodMap.has(ops)) {
+      throw new Error("不能够为一个操作配置多个方法");
+    }
+    MethodMap.set(ops, propertyKey);
+  }
+}
+
+export class CanvasGraphics {
 
   public ctx: CanvasRenderingContext2D;
 
@@ -1029,7 +1043,14 @@ class CanvasGraphics {
   }
 
   protected initOperatorMap() {
-
+    for (const [ops, func] of MethodMap) {
+      if (typeof func === 'function') {
+        if (this.operatorMap.has(ops)) {
+          throw new Error(ops + '操作设置了多个处理方法');
+        }
+        this.operatorMap.set(ops, func);
+      }
+    }
   }
 
   getObject(data: string | unknown, fallback = null) {
@@ -1041,6 +1062,7 @@ class CanvasGraphics {
     return fallback;
   }
 
+  
   beginDrawing(
     transform: TransformType | null,
     viewport: PageViewport,
@@ -1259,29 +1281,16 @@ class CanvasGraphics {
         newWidth,
         newHeight
       );
-      tmpCtx = tmpCanvas.context;
+      tmpCtx = tmpCanvas.context!;
       tmpCtx.clearRect(0, 0, newWidth, newHeight);
-      tmpCtx.drawImage(
-        img,
-        0,
-        0,
-        paintWidth,
-        paintHeight,
-        0,
-        0,
-        newWidth,
-        newHeight
-      );
+      tmpCtx.drawImage(img, 0, 0, paintWidth, paintHeight, 0, 0, newWidth, newHeight);
       img = tmpCanvas.canvas;
       paintWidth = newWidth;
       paintHeight = newHeight;
       tmpCanvasId = tmpCanvasId === "prescale1" ? "prescale2" : "prescale1";
     }
-    return {
-      img,
-      paintWidth,
-      paintHeight,
-    };
+
+    return { img, paintWidth, paintHeight };
   }
 
   _createMaskCanvas(img) {
@@ -1390,7 +1399,7 @@ class CanvasGraphics {
     );
     fillCtx.fillStyle = isPatternFill
       ? (fillColor as BaseShadingPattern | TilingPattern).getPattern(ctx, this, inverse, PathType.FILL)
-      : fillColor;
+      : <string>fillColor;
 
     fillCtx.fillRect(0, 0, width, height);
 
@@ -1410,6 +1419,7 @@ class CanvasGraphics {
   }
 
   // Graphics state
+  @handle(OPS.setLineWidth)
   setLineWidth(width: number) {
     if (width !== this.current.lineWidth) {
       this._cachedScaleForStroking[0] = -1;
@@ -1418,19 +1428,23 @@ class CanvasGraphics {
     this.ctx.lineWidth = width;
   }
 
+  @handle(OPS.setLineCap)
   setLineCap(style: number) {
     this.ctx.lineCap = LINE_CAP_STYLES[style];
   }
 
+  @handle(OPS.setLineJoin)
   setLineJoin(style: number) {
     this.ctx.lineJoin = LINE_JOIN_STYLES[style];
   }
 
+  @handle(OPS.setMiterLimit)
   setMiterLimit(limit: number) {
     this.ctx.miterLimit = limit;
   }
 
-  setDash(dashArray, dashPhase) {
+  @handle(OPS.setDash)
+  setDash(dashArray, dashPhase: number) {
     const ctx = this.ctx;
     if (ctx.setLineDash !== undefined) {
       ctx.setLineDash(dashArray);
@@ -1438,28 +1452,31 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.setRenderingIntent)
   setRenderingIntent(_intent: unknown) {
     // This operation is ignored since we haven't found a use case for it yet.
   }
 
+  @handle(OPS.setFlatness)
   setFlatness(_flatness: unknown) {
     // This operation is ignored since we haven't found a use case for it yet.
   }
 
-  setGState(states) {
+  @handle(OPS.setGState)
+  setGState(states: [string, string | number][]) {
     for (const [key, value] of states) {
       switch (key) {
         case "LW":
-          this.setLineWidth(value);
+          this.setLineWidth(<number>value);
           break;
         case "LC":
-          this.setLineCap(value);
+          this.setLineCap(<number>value);
           break;
         case "LJ":
-          this.setLineJoin(value);
+          this.setLineJoin(<number>value);
           break;
         case "ML":
-          this.setMiterLimit(value);
+          this.setMiterLimit(<number>value);
           break;
         case "D":
           this.setDash(value[0], value[1]);
@@ -1474,14 +1491,14 @@ class CanvasGraphics {
           this.setFont(value[0], value[1]);
           break;
         case "CA":
-          this.current.strokeAlpha = value;
+          this.current.strokeAlpha = <number>value;
           break;
         case "ca":
-          this.current.fillAlpha = value;
-          this.ctx.globalAlpha = value;
+          this.current.fillAlpha = <number>value;
+          this.ctx.globalAlpha = <number>value;
           break;
         case "BM":
-          this.ctx.globalCompositeOperation = value;
+          this.ctx.globalCompositeOperation = <GlobalCompositeOperation>value;
           break;
         case "SMask":
           this.current.activeSMask = value ? this.tempSMask : null;
@@ -1531,18 +1548,14 @@ class CanvasGraphics {
       drawnWidth,
       drawnHeight
     );
-    this.suspendedCtx = this.ctx;
-    this.ctx = scratchCanvas.context;
+    this.suspendedCtx = this.ctx!;
+    this.ctx = scratchCanvas.context!;
     const ctx = this.ctx;
     ctx.setTransform(...getCurrentTransform(this.suspendedCtx));
     copyCtxState(this.suspendedCtx, ctx);
     mirrorContextOperations(ctx, this.suspendedCtx);
 
-    this.setGState([
-      ["BM", "source-over"],
-      ["ca", 1],
-      ["CA", 1],
-    ]);
+    this.setGState([["BM", "source-over"], ["ca", 1], ["CA", 1]]);
   }
 
   endSMaskMode() {
@@ -1680,19 +1693,12 @@ class CanvasGraphics {
     layerCtx.clip(clip);
     layerCtx.globalCompositeOperation = "destination-in";
     layerCtx.drawImage(
-      maskCanvas,
-      maskX,
-      maskY,
-      width,
-      height,
-      layerOffsetX,
-      layerOffsetY,
-      width,
-      height
+      maskCanvas, maskX, maskY, width, height, layerOffsetX, layerOffsetY, width, height
     );
     layerCtx.restore();
   }
 
+  @handle(OPS.save)
   save() {
     if (this.inSMaskMode) {
       // SMask mode may be turned on/off causing us to lose graphics state.
@@ -1710,6 +1716,7 @@ class CanvasGraphics {
     this.current = old.clone();
   }
 
+  @handle(OPS.restore)
   restore() {
     if (this.stateStack.length === 0 && this.inSMaskMode) {
       this.endSMaskMode();
@@ -1734,6 +1741,7 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.transform)
   transform(a: number, b: number, c: number, d: number, e: number, f: number) {
     this.ctx.transform(a, b, c, d, e, f);
 
@@ -1742,7 +1750,8 @@ class CanvasGraphics {
   }
 
   // Path
-  constructPath(ops, args, minMax) {
+  @handle(OPS.constructPath)
+  constructPath(ops, args: number[], minMax: RectType) {
     const ctx = this.ctx;
     const current = this.current;
     let x = current.x;
@@ -1886,10 +1895,12 @@ class CanvasGraphics {
     current.setCurrentPoint(x, y);
   }
 
+  @handle(OPS.closePath)
   closePath() {
     this.ctx.closePath();
   }
 
+  @handle(OPS.stroke)
   stroke(consumePath = true) {
     const ctx = this.ctx;
     const strokeColor = this.current.strokeColor;
@@ -1918,11 +1929,13 @@ class CanvasGraphics {
     ctx.globalAlpha = this.current.fillAlpha;
   }
 
+  @handle(OPS.closeStroke)
   closeStroke() {
     this.closePath();
     this.stroke();
   }
 
+  @handle(OPS.fill)
   fill(consumePath = true) {
     const ctx = this.ctx;
     const fillColor = this.current.fillColor;
@@ -1958,11 +1971,13 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.eoFill)
   eoFill() {
     this.pendingEOFill = true;
     this.fill();
   }
 
+  @handle(OPS.fillStroke)
   fillStroke() {
     this.fill(false);
     this.stroke(false);
@@ -1970,36 +1985,43 @@ class CanvasGraphics {
     this.consumePath();
   }
 
+  @handle(OPS.eoFillStroke)
   eoFillStroke() {
     this.pendingEOFill = true;
     this.fillStroke();
   }
 
+  @handle(OPS.closeFillStroke)
   closeFillStroke() {
     this.closePath();
     this.fillStroke();
   }
 
+  @handle(OPS.closeEOFillStroke)
   closeEOFillStroke() {
     this.pendingEOFill = true;
     this.closePath();
     this.fillStroke();
   }
 
+  @handle(OPS.endPath)
   endPath() {
     this.consumePath();
   }
 
   // Clipping
+  @handle(OPS.clip)
   clip() {
     this.pendingClip = NORMAL_CLIP;
   }
 
+  @handle(OPS.eoClip)
   eoClip() {
     this.pendingClip = EO_CLIP;
   }
 
   // Text
+  @handle(OPS.beginText)
   beginText() {
     this.current.textMatrix = IDENTITY_MATRIX;
     this.current.textMatrixScale = 1;
@@ -2007,6 +2029,7 @@ class CanvasGraphics {
     this.current.y = this.current.lineY = 0;
   }
 
+  @handle(OPS.endText)
   endText() {
     const paths = this.pendingTextPaths!;
     const ctx = this.ctx;
@@ -2029,22 +2052,27 @@ class CanvasGraphics {
     this.pendingTextPaths = null;
   }
 
+  @handle(OPS.setCharSpacing)
   setCharSpacing(spacing: number) {
     this.current.charSpacing = spacing;
   }
 
+  @handle(OPS.setWordSpacing)
   setWordSpacing(spacing: number) {
     this.current.wordSpacing = spacing;
   }
 
+  @handle(OPS.setHScale)
   setHScale(scale: number) {
     this.current.textHScale = scale / 100;
   }
 
+  @handle(OPS.setLeading)
   setLeading(leading: number) {
     this.current.leading = -leading;
   }
 
+  @handle(OPS.setFont)
   setFont(fontRefName: string, size: number) {
     const fontObj = this.commonObjs.get(fontRefName);
     const current = this.current;
@@ -2077,8 +2105,7 @@ class CanvasGraphics {
     }
 
     const name = fontObj.loadedName || "sans-serif";
-    const typeface =
-      fontObj.systemFontInfo?.css || `"${name}", ${fontObj.fallbackName}`;
+    const typeface = fontObj.systemFontInfo?.css || `"${name}", ${fontObj.fallbackName}`;
 
     let bold = "normal";
     if (fontObj.black) {
@@ -2103,24 +2130,29 @@ class CanvasGraphics {
     this.ctx.font = `${italic} ${bold} ${browserFontSize}px ${typeface}`;
   }
 
+  @handle(OPS.setTextRenderingMode)
   setTextRenderingMode(mode: number) {
     this.current.textRenderingMode = mode;
   }
 
+  @handle(OPS.setTextRise)
   setTextRise(rise: number) {
     this.current.textRise = rise;
   }
 
+  @handle(OPS.moveText)
   moveText(x: number, y: number) {
     this.current.x = this.current.lineX += x;
     this.current.y = this.current.lineY += y;
   }
 
+  @handle(OPS.setLeadingMoveText)
   setLeadingMoveText(x: number, y: number) {
     this.setLeading(-y);
     this.moveText(x, y);
   }
 
+  @handle(OPS.setTextMatrix)
   setTextMatrix(a: number, b: number, c: number, d: number, e: number, f: number) {
     this.current.textMatrix = [a, b, c, d, e, f];
     this.current.textMatrixScale = Math.hypot(a, b);
@@ -2129,6 +2161,7 @@ class CanvasGraphics {
     this.current.y = this.current.lineY = 0;
   }
 
+  @handle(OPS.nextLine)
   nextLine() {
     this.moveText(0, this.current.leading);
   }
@@ -2219,6 +2252,7 @@ class CanvasGraphics {
   }
 
   // 猜测是(numbler| Glyph)，调试时发现确实是这个值
+  @handle(OPS.showText)
   showText(glyphs: (number | Glyph)[]) {
     const current = this.current;
     const font = current.font;
@@ -2464,11 +2498,13 @@ class CanvasGraphics {
   }
 
   // Type3 fonts
+  @handle(OPS.setCharWidth)
   setCharWidth(_xWidth: unknown, _yWidth: unknown) {
     // We can safely ignore this since the width should be the same
     // as the width in the Widths array.
   }
 
+  @handle(OPS.setCharWidthAndBounds)
   setCharWidthAndBounds(_xWidth: unknown, _yWidth: unknown, llx: number, lly: number, urx: number, ury: number) {
     this.ctx.rect(llx, lly, urx - llx, ury - lly);
     this.ctx.clip();
@@ -2506,32 +2542,34 @@ class CanvasGraphics {
     return pattern;
   }
 
+  @handle(OPS.setStrokeColorN)
   setStrokeColorN() {
     this.current.strokeColor = this.getColorN_Pattern(arguments);
   }
 
+  @handle(OPS.setFillColorN)
   setFillColorN() {
     this.current.fillColor = this.getColorN_Pattern(arguments);
     this.current.patternFill = true;
   }
 
+  @handle(OPS.setStrokeRGBColor)
   setStrokeRGBColor(r: number, g: number, b: number) {
-    this.ctx.strokeStyle = this.current.strokeColor = Util.makeHexColor(
-      r,
-      g,
-      b
-    );
+    this.ctx.strokeStyle = this.current.strokeColor = Util.makeHexColor(r, g, b);
   }
 
+  @handle(OPS.setStrokeTransparent)
   setStrokeTransparent() {
     this.ctx.strokeStyle = this.current.strokeColor = "transparent";
   }
 
+  @handle(OPS.setFillRGBColor)
   setFillRGBColor(r: number, g: number, b: number) {
     this.ctx.fillStyle = this.current.fillColor = Util.makeHexColor(r, g, b);
     this.current.patternFill = false;
   }
 
+  @handle(OPS.setFillTransparent)
   setFillTransparent() {
     this.ctx.fillStyle = this.current.fillColor = "transparent";
     this.current.patternFill = false;
@@ -2551,6 +2589,7 @@ class CanvasGraphics {
     return pattern;
   }
 
+  @handle(OPS.shadingFill)
   shadingFill(objId: string) {
     if (!this.contentVisible) {
       return;
@@ -2590,15 +2629,18 @@ class CanvasGraphics {
   }
 
   // Images
+  @handle(OPS.beginInlineImage)
   beginInlineImage() {
     unreachable("Should not call beginInlineImage");
   }
 
+  @handle(OPS.beginImageData)
   beginImageData() {
     unreachable("Should not call beginImageData");
   }
 
-  paintFormXObjectBegin(matrix, bbox) {
+  @handle(OPS.paintFormXObjectBegin)
+  paintFormXObjectBegin(matrix: TransformType | null, bbox: RectType | null) {
     if (!this.contentVisible) {
       return;
     }
@@ -2620,6 +2662,7 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.paintFormXObjectEnd)
   paintFormXObjectEnd() {
     if (!this.contentVisible) {
       return;
@@ -2628,7 +2671,8 @@ class CanvasGraphics {
     this.baseTransform = this.baseTransformStack.pop()!;
   }
 
-  beginGroup(group) {
+  @handle(OPS.beginGroup)
+  beginGroup(group: GroupOptions) {
     if (!this.contentVisible) {
       return;
     }
@@ -2741,7 +2785,8 @@ class CanvasGraphics {
     this.groupLevel++;
   }
 
-  endGroup(group) {
+  @handle(OPS.endGroup)
+  endGroup(group: GroupOptions) {
     if (!this.contentVisible) {
       return;
     }
@@ -2772,6 +2817,7 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.beginAnnotation)
   beginAnnotation(id: string, rect: RectType | null, transform: TransformType, matrix: TransformType, hasOwnCanvas: boolean) {
     // The annotations are drawn just after the page content.
     // The page content drawing can potentially have set a transform,
@@ -2845,6 +2891,7 @@ class CanvasGraphics {
     this.transform(...matrix);
   }
 
+  @handle(OPS.endAnnotation)
   endAnnotation() {
     if (this.annotationCanvas) {
       this.ctx.restore();
@@ -2856,6 +2903,7 @@ class CanvasGraphics {
     }
   }
 
+  @handle(OPS.paintImageMaskXObject)
   paintImageMaskXObject(img) {
     if (!this.contentVisible) {
       return;
@@ -2889,6 +2937,7 @@ class CanvasGraphics {
     this.compose();
   }
 
+  @handle(OPS.paintImageMaskXObjectRepeat)
   paintImageMaskXObjectRepeat(
     img,
     scaleX: number,
@@ -2929,6 +2978,7 @@ class CanvasGraphics {
     this.compose();
   }
 
+  @handle(OPS.paintImageMaskXObjectGroup)
   paintImageMaskXObjectGroup(images) {
     if (!this.contentVisible) {
       return;
@@ -2954,20 +3004,15 @@ class CanvasGraphics {
 
       maskCtx.globalCompositeOperation = "source-in";
 
-      maskCtx.fillStyle = isPatternFill
-        ? (fillColor as BaseShadingPattern | TilingPattern).getPattern(
-          maskCtx,
-          this,
-          getCurrentTransformInverse(ctx),
-          PathType.FILL
-        )
-        : fillColor;
+      maskCtx.fillStyle = isPatternFill ? (<BaseShadingPattern | TilingPattern>fillColor).getPattern(
+        maskCtx, this, getCurrentTransformInverse(ctx), PathType.FILL
+      ) : <string>fillColor;
       maskCtx.fillRect(0, 0, width, height);
 
       maskCtx.restore();
 
       ctx.save();
-      ctx.transform(...transform);
+      ctx.transform(...<TransformType>transform);
       ctx.scale(1, -1);
       drawImageAtIntegerCoords(
         ctx, maskCanvas.canvas!, 0, 0, width, height, 0, -1, 1, 1
@@ -2977,6 +3022,7 @@ class CanvasGraphics {
     this.compose();
   }
 
+  @handle(OPS.paintImageXObject)
   paintImageXObject(objId: string) {
     if (!this.contentVisible) {
       return;
@@ -2990,6 +3036,7 @@ class CanvasGraphics {
     this.paintInlineImageXObject(imgData);
   }
 
+  @handle(OPS.paintImageXObjectRepeat)
   paintImageXObjectRepeat(objId: string, scaleX: number, scaleY: number, positions: number[]) {
     if (!this.contentVisible) {
       return;
@@ -3042,6 +3089,7 @@ class CanvasGraphics {
     return tmpCanvas.canvas;
   }
 
+  @handle(OPS.paintInlineImageXObject)
   paintInlineImageXObject(imgData) {
     if (!this.contentVisible) {
       return;
@@ -3103,6 +3151,7 @@ class CanvasGraphics {
     this.restore();
   }
 
+  @handle(OPS.paintInlineImageXObjectGroup)
   paintInlineImageXObjectGroup(imgData, map: PositionTransformType[]) {
     if (!this.contentVisible) {
       return;
@@ -3133,6 +3182,7 @@ class CanvasGraphics {
     this.compose();
   }
 
+  @handle(OPS.paintSolidColorImageMask)
   paintSolidColorImageMask() {
     if (!this.contentVisible) {
       return;
@@ -3142,21 +3192,24 @@ class CanvasGraphics {
   }
 
   // Marked content
-
+  @handle(OPS.markPoint)
   markPoint(_tag: unknown) {
     // TODO Marked content.
   }
 
+  @handle(OPS.markPointProps)
   markPointProps(_tag: unknown, _properties: unknown) {
     // TODO Marked content.
   }
 
+  @handle(OPS.beginMarkedContent)
   beginMarkedContent(_tag: unknown) {
     this.markedContentStack.push({
       visible: true,
     });
   }
 
+  @handle(OPS.beginMarkedContentProps)
   beginMarkedContentProps(tag: string, properties) {
     if (tag === "OC") {
       this.markedContentStack.push({
@@ -3170,23 +3223,24 @@ class CanvasGraphics {
     this.contentVisible = this.isContentVisible();
   }
 
+  @handle(OPS.endMarkedContent)
   endMarkedContent() {
     this.markedContentStack.pop();
     this.contentVisible = this.isContentVisible();
   }
 
   // Compatibility
-
+  @handle(OPS.beginCompat)
   beginCompat() {
     // TODO ignore undefined operators (should we do that anyway?)
   }
 
+  @handle(OPS.endCompat)
   endCompat() {
     // TODO stop ignoring undefined operators
   }
 
   // Helper functions
-
   consumePath(clipBox: RectType | null = null) {
     const isEmpty = this.current.isEmptyClip();
     if (this.pendingClip) {
@@ -3334,12 +3388,3 @@ class CanvasGraphics {
     return true;
   }
 }
-
-// 一段糟糕的代码，尝试用策略模式改写，但是怎么改，还是要好好想想
-for (const _op in OPS) {
-  if (CanvasGraphics.prototype[op] !== undefined) {
-    CanvasGraphics.prototype[OPS[op]] = CanvasGraphics.prototype[op];
-  }
-}
-
-export { CanvasGraphics };
