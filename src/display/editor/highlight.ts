@@ -40,7 +40,7 @@ import { AnnotationEditorState } from "./state/editor_state";
 /**
  * Basic draw editor in order to generate an Highlight annotation.
  */
-class HighlightEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
 
   static _defaultColor: string | null = null;
 
@@ -962,5 +962,3 @@ class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Annotation
     return false;
   }
 }
-
-export { HighlightEditor };

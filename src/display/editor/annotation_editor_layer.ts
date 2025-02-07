@@ -32,6 +32,7 @@ import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { EditorManager } from "./editor_manager";
 import { FreeTextEditor } from "./freetext";
 import { HighlightEditor } from "./highlight";
 import { InkEditor } from "./ink";
@@ -67,13 +68,6 @@ import { AnnotationEditorUIManager } from "./tools";
 export class AnnotationEditorLayer {
 
   static _initialized = false;
-
-  static #editorTypes = new Map(
-    [FreeTextEditor, InkEditor, StampEditor, HighlightEditor].map(type => [
-      type._editorType,
-      type,
-    ])
-  );
 
   #accessibilityManager: TextAccessibilityManager;
 
@@ -124,14 +118,14 @@ export class AnnotationEditorLayer {
     viewport: PageViewport,
     l10n: IL10n,
   ) {
-    const editorTypes = [...AnnotationEditorLayer.#editorTypes.values()];
+    const editorInitalizers = EditorManager.getL10nInitializer();
     if (!AnnotationEditorLayer._initialized) {
       AnnotationEditorLayer._initialized = true;
-      for (const editorType of editorTypes) {
-        editorType.initialize(l10n, uiManager);
+      for (const initializer of editorInitalizers) {
+        initializer(l10n, uiManager);
       }
     }
-    uiManager.registerEditorTypes(editorTypes);
+    uiManager.registerEditorTypes(editorInitalizers);
 
     this.#uiManager = uiManager;
     this.pageIndex = pageIndex;
@@ -197,11 +191,11 @@ export class AnnotationEditorLayer {
     }
 
     this.toggleAnnotationLayerPointerEvents(false);
-    const { classList } = this.div;
-    for (const editorType of AnnotationEditorLayer.#editorTypes.values()) {
+    const { classList } = this.div!;
+    for (const editorType of EditorManager.getEditorBasicInfo()) {
       classList.toggle(
-        `${editorType._type}Editing`,
-        mode === editorType._editorType
+        `${editorType.name}Editing`,
+        mode === editorType.type
       );
     }
     this.div!.hidden = false;
@@ -229,8 +223,7 @@ export class AnnotationEditorLayer {
     }
 
     const editor = this.createAndAddNewEditor(
-      { offsetX: 0, offsetY: 0 },
-      /* isCentered = */ false
+      { offsetX: 0, offsetY: 0 }, false
     );
     editor.setInBackground();
   }
@@ -358,8 +351,8 @@ export class AnnotationEditorLayer {
       this.div!.hidden = true;
     }
     const { classList } = this.div!;
-    for (const editorType of AnnotationEditorLayer.#editorTypes.values()) {
-      classList.remove(`${editorType._type}Editing`);
+    for (const editorType of EditorManager.getEditorBasicInfo()) {
+      classList.remove(`${editorType.type}Editing`);
     }
     this.disableTextSelection();
     this.toggleAnnotationLayerPointerEvents(true);
@@ -569,11 +562,8 @@ export class AnnotationEditorLayer {
       this.#editorFocusTimeoutId = setTimeout(() => {
         this.#editorFocusTimeoutId = null;
         if (!editor.div!.contains(document.activeElement)) {
-          editor.div!.addEventListener(
-            "focusin",
-            () => {
-              editor._focusEventsAllowed = true;
-            },
+          editor.div!.addEventListener("focusin",
+            () => { editor._focusEventsAllowed = true; },
             { once: true, signal: this.#uiManager._signal! }
           );
           (<HTMLElement>activeElement!).focus();
@@ -592,7 +582,7 @@ export class AnnotationEditorLayer {
    * Add or rebuild depending if it has been removed or not.
    * @param {AnnotationEditor} editor
    */
-  addOrRebuild(editor) {
+  addOrRebuild(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     if (editor.needsToBeRebuilt()) {
       editor.parent ||= this;
       editor.rebuild();
@@ -623,8 +613,8 @@ export class AnnotationEditorLayer {
     return this.#uiManager.getId();
   }
 
-  get #currentEditorType() {
-    return AnnotationEditorLayer.#editorTypes.get(this.#uiManager.getMode())!;
+  get #currentEditorDescriptor() {
+    return EditorManager.getDescriptor(this.#uiManager.getMode())!;
   }
 
   combinedSignal(ac: AbortController) {
@@ -637,12 +627,12 @@ export class AnnotationEditorLayer {
    * @returns {AnnotationEditor}
    */
   #createNewEditor(params) {
-    const editorType = this.#currentEditorType;
-    return editorType ? new editorType.prototype.constructor(params) : null;
+    const editorDescriptor = this.#currentEditorDescriptor;
+    return editorDescriptor ? editorDescriptor.create(params) : null;
   }
 
   canCreateNewEmptyEditor() {
-    return this.#currentEditorType?.canCreateNewEmptyEditor();
+    return this.#currentEditorDescriptor?.canCreateNewEmptyEditor;
   }
 
   /**
@@ -674,10 +664,8 @@ export class AnnotationEditorLayer {
    * @returns {AnnotationEditor | null}
    */
   async deserialize(data) {
-    return (
-      (await AnnotationEditorLayer.#editorTypes
-        .get(data.annotationType ?? data.annotationEditorType)
-        ?.deserialize(data, this, this.#uiManager)) || null
+    return ((await EditorManager.getDescriptor(data.annotationType ?? data.annotationEditorType)
+      ?.deserialize(data, this, this.#uiManager)) || null
     );
   }
 
@@ -688,7 +676,7 @@ export class AnnotationEditorLayer {
    * @param [Object] data
    * @returns {AnnotationEditor}
    */
-  createAndAddNewEditor(event: PointerEvent, isCentered: boolean, data = {}) {
+  createAndAddNewEditor(event: { offsetX: number, offsetY: number }, isCentered: boolean, data = {}) {
     const id = this.getNextId();
     const editor = this.#createNewEditor({
       parent: this,
@@ -714,10 +702,8 @@ export class AnnotationEditorLayer {
     const brY = Math.min(window.innerHeight, y + height);
     const centerX = (tlX + brX) / 2 - x;
     const centerY = (tlY + brY) / 2 - y;
-    const [offsetX, offsetY] =
-      this.viewport.rotation % 180 === 0
-        ? [centerX, centerY]
-        : [centerY, centerX];
+    const [offsetX, offsetY] = this.viewport.rotation % 180 === 0
+      ? [centerX, centerY] : [centerY, centerX];
 
     return { offsetX, offsetY };
   }

@@ -51,7 +51,7 @@ import { HighlightToolbar } from "./toolbar";
 function bindEvents(
   obj: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>,
   element: HTMLDivElement,
-  names: string[]
+  names: (keyof AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>)[]
 ) {
   for (const name of names) {
     element.addEventListener(name, obj[name].bind(obj));

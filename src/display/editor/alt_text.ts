@@ -96,7 +96,7 @@ export class AltText {
       label.setAttribute("data-l10n-id", "pdfjs-editor-alt-text-button-label");
     }
 
-    const signal = this.#editor._uiManager._signal;
+    const signal = this.#editor._uiManager._signal!;
     altText.addEventListener("contextmenu", noContextMenu, { signal });
     altText.addEventListener("pointerdown", event => event.stopPropagation(), {
       signal,
