@@ -14,6 +14,7 @@
  */
 
 import { shadow } from "../shared/util";
+import { BoxType } from "../types";
 import { DOMSVGFactory } from "./svg_factory";
 
 /**
@@ -66,7 +67,7 @@ export class DrawLayer {
     style.height = `${100 * height}%`;
   }
 
-  #createSVG(box) {
+  #createSVG(box: BoxType) {
     const svg = DrawLayer._svgFactory.create(1, 1, /* skipDimensions = */ true);
     this.#parent!.append(svg);
     svg.setAttribute("aria-hidden", "true");
@@ -192,7 +193,7 @@ export class DrawLayer {
     this.#toUpdate.get(id)!.setAttribute("d", line.toSVGPath());
   }
 
-  updateBox(id: number, box) {
+  updateBox(id: number, box: BoxType) {
     DrawLayer.#setBox(this.#mapping.get(id)!, box);
   }
 

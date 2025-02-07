@@ -66,7 +66,7 @@ class NetworkManager {
 
   protected pendingRequests: Map<number, PendingRequest>;
 
-  constructor({ url, httpHeaders, withCredentials }: PDFStreamSource) {
+  constructor(url: string, httpHeaders: Record<string, string>, withCredentials: boolean) {
     this.url = url;
     this.isHttp = /^https?:/i.test(url);
     this.headers = createHeaders(this.isHttp, httpHeaders);
@@ -223,7 +223,7 @@ class PDFNetworkStream implements PDFStream {
 
   constructor(source: PDFStreamSource) {
     this._source = source;
-    this._manager = new NetworkManager(source);
+    this._manager = new NetworkManager(source.url, source.httpHeaders, source.withCredentials);
     this._rangeChunkSize = source.rangeChunkSize;
     this._fullRequestReader = null;
     this._rangeRequestReaders = [];

@@ -108,7 +108,7 @@ interface DocumentInitParameters {
   data?: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView;
 
   /* Basic authentication headers */
-  httpHeaders?: object;
+  httpHeaders?: Record<string, string>;
 
   /** Indicates whether or not
    * cross-site Access-Control requests should be made using credentials such
@@ -600,7 +600,7 @@ function getDocument(src: DocumentInitParameters) {
 
   const url = src.url ? getUrlProp(src.url) : null;
   const data = src.data ? getDataProp(src.data) : null;
-  const httpHeaders = src.httpHeaders || null;
+  const httpHeaders = src.httpHeaders || Object.create(null);
   const withCredentials = src.withCredentials === true;
   const password = src.password ?? null;
   const rangeTransport = src.range instanceof PDFDataRangeTransport ? src.range : null;

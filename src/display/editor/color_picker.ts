@@ -90,7 +90,7 @@ export class ColorPicker {
     }
     this.#uiManager = editor?._uiManager || uiManager;
     this.#eventBus = this.#uiManager!._eventBus;
-    this.#defaultColor = editor?.color ||
+    this.#defaultColor = (<{ color?: string }>editor).color ||
       this.#uiManager?.highlightColors!.values().next().value ||
       "#FFFF98";
 

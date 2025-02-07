@@ -16,8 +16,8 @@
 export interface PDFStreamSource {
   url: string;
   length: number;
-  // TODO 此处需要再做检查
-  httpHeaders: unknown;
+  // 是一个JSON
+  httpHeaders: Record<string, string>;
   withCredentials: boolean,
   rangeChunkSize: number,
   disableRange: boolean,

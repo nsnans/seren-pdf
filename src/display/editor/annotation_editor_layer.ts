@@ -99,7 +99,7 @@ export class AnnotationEditorLayer {
 
   #uiManager: AnnotationEditorUIManager;
 
-  protected div: HTMLDivElement;
+  protected div: HTMLDivElement | null;
 
   public viewport: PageViewport;
 
@@ -204,7 +204,7 @@ export class AnnotationEditorLayer {
         mode === editorType._editorType
       );
     }
-    this.div.hidden = false;
+    this.div!.hidden = false;
   }
 
   hasTextLayer(textLayer: HTMLDivElement) {
@@ -250,11 +250,11 @@ export class AnnotationEditorLayer {
   }
 
   toggleDrawing(enabled = false) {
-    this.div.classList.toggle("drawing", !enabled);
+    this.div!.classList.toggle("drawing", !enabled);
   }
 
   togglePointerEvents(enabled = false) {
-    this.div.classList.toggle("disabled", !enabled);
+    this.div!.classList.toggle("disabled", !enabled);
   }
 
   toggleAnnotationLayerPointerEvents(enabled = false) {
@@ -266,7 +266,7 @@ export class AnnotationEditorLayer {
    * editor creation.
    */
   async enable() {
-    this.div.tabIndex = 0;
+    this.div!.tabIndex = 0;
     this.togglePointerEvents(true);
     const annotationElementIds = new Set();
     for (const editor of this.#editors.values()) {
@@ -306,7 +306,7 @@ export class AnnotationEditorLayer {
    */
   disable() {
     this.#isDisabling = true;
-    this.div.tabIndex = -1;
+    this.div!.tabIndex = -1;
     this.togglePointerEvents(false);
     const changedAnnotations = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
     const resetAnnotations = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
@@ -355,9 +355,9 @@ export class AnnotationEditorLayer {
 
     this.#cleanup();
     if (this.isEmpty) {
-      this.div.hidden = true;
+      this.div!.hidden = true;
     }
-    const { classList } = this.div;
+    const { classList } = this.div!;
     for (const editorType of AnnotationEditorLayer.#editorTypes.values()) {
       classList.remove(`${editorType._type}Editing`);
     }
@@ -385,7 +385,7 @@ export class AnnotationEditorLayer {
   }
 
   enableTextSelection() {
-    this.div.tabIndex = -1;
+    this.div!.tabIndex = -1;
     if (this.#textLayer?.div && !this.#textSelectionAC) {
       this.#textSelectionAC = new AbortController();
       const signal = this.#uiManager.combinedSignal(this.#textSelectionAC);
@@ -400,7 +400,7 @@ export class AnnotationEditorLayer {
   }
 
   disableTextSelection() {
-    this.div.tabIndex = 0;
+    this.div!.tabIndex = 0;
     if (this.#textLayer?.div && this.#textSelectionAC) {
       this.#textSelectionAC.abort();
       this.#textSelectionAC = null;
@@ -456,10 +456,10 @@ export class AnnotationEditorLayer {
     this.#clickAC = new AbortController();
     const signal = this.#uiManager.combinedSignal(this.#clickAC);
 
-    this.div.addEventListener("pointerdown", this.pointerdown.bind(this), {
+    this.div!.addEventListener("pointerdown", this.pointerdown.bind(this), {
       signal,
     });
-    this.div.addEventListener("pointerup", this.pointerup.bind(this), {
+    this.div!.addEventListener("pointerup", this.pointerup.bind(this), {
       signal,
     });
   }
@@ -525,7 +525,7 @@ export class AnnotationEditorLayer {
     editor.setParent(this);
     if (editor.div && editor.isAttachedToDOM) {
       editor.div.remove();
-      this.div.append(editor.div);
+      this.div!.append(editor.div);
     }
   }
 
@@ -543,7 +543,7 @@ export class AnnotationEditorLayer {
 
     if (!editor.isAttachedToDOM) {
       const div = editor.render()!;
-      this.div.append(div);
+      this.div!.append(div);
       editor.isAttachedToDOM = true;
     }
 
@@ -584,7 +584,7 @@ export class AnnotationEditorLayer {
     }
 
     editor._structTreeParentId = this.#accessibilityManager?.moveElementInDOM(
-      this.div, editor.div!, editor.contentDiv!, true
+      this.div!, editor.div!, editor.contentDiv!, true
     );
   }
 
@@ -624,10 +624,10 @@ export class AnnotationEditorLayer {
   }
 
   get #currentEditorType() {
-    return AnnotationEditorLayer.#editorTypes.get(this.#uiManager.getMode());
+    return AnnotationEditorLayer.#editorTypes.get(this.#uiManager.getMode())!;
   }
 
-  combinedSignal(ac) {
+  combinedSignal(ac: AbortController) {
     return this.#uiManager.combinedSignal(ac);
   }
 
@@ -688,7 +688,7 @@ export class AnnotationEditorLayer {
    * @param [Object] data
    * @returns {AnnotationEditor}
    */
-  createAndAddNewEditor(event, isCentered, data = {}) {
+  createAndAddNewEditor(event: PointerEvent, isCentered: boolean, data = {}) {
     const id = this.getNextId();
     const editor = this.#createNewEditor({
       parent: this,
@@ -707,7 +707,7 @@ export class AnnotationEditorLayer {
   }
 
   #getCenterPoint() {
-    const { x, y, width, height } = this.div.getBoundingClientRect();
+    const { x, y, width, height } = this.div!.getBoundingClientRect();
     const tlX = Math.max(0, x);
     const tlY = Math.max(0, y);
     const brX = Math.min(window.innerWidth, x + width);
@@ -733,7 +733,7 @@ export class AnnotationEditorLayer {
    * Set the last selected editor.
    * @param {AnnotationEditor} editor
    */
-  setSelected(editor) {
+  setSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#uiManager.setSelected(editor);
   }
 
@@ -741,7 +741,7 @@ export class AnnotationEditorLayer {
    * Add or remove an editor the current selection.
    * @param {AnnotationEditor} editor
    */
-  toggleSelected(editor) {
+  toggleSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#uiManager.toggleSelected(editor);
   }
 
@@ -749,7 +749,7 @@ export class AnnotationEditorLayer {
    * Unselect an editor.
    * @param {AnnotationEditor} editor
    */
-  unselect(editor) {
+  unselect(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#uiManager.unselect(editor);
   }
 
@@ -757,7 +757,7 @@ export class AnnotationEditorLayer {
    * Pointerup callback.
    * @param {PointerEvent} event
    */
-  pointerup(event) {
+  pointerup(event: PointerEvent) {
     const { isMac } = FeatureTest.platform;
     if (event.button !== 0 || (event.ctrlKey && isMac)) {
       // Don't create an editor on right click.
@@ -794,7 +794,7 @@ export class AnnotationEditorLayer {
    * Pointerdown callback.
    * @param {PointerEvent} event
    */
-  pointerdown(event) {
+  pointerdown(event: PointerEvent) {
     if (this.#uiManager.getMode() === AnnotationEditorType.HIGHLIGHT) {
       this.enableTextSelection();
     }
@@ -830,7 +830,7 @@ export class AnnotationEditorLayer {
    * @param {number} y
    * @returns
    */
-  findNewParent(editor, x, y) {
+  findNewParent(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>, x: number, y: number) {
     const layer = this.#uiManager.findParent(x, y);
     if (layer === null || layer === this) {
       return false;
@@ -855,10 +855,10 @@ export class AnnotationEditorLayer {
     }
 
     for (const editor of this.#editors.values()) {
-      this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv);
+      this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv!);
       editor.setParent(null);
       editor.isAttachedToDOM = false;
-      editor.div.remove();
+      editor.div!.remove();
     }
     this.div = null;
     this.#editors.clear();
@@ -882,9 +882,9 @@ export class AnnotationEditorLayer {
    * Render the main editor.
    * @param {RenderEditorLayerOptions} parameters
    */
-  render({ viewport }) {
+  render({ viewport }: { viewport: PageViewport }) {
     this.viewport = viewport;
-    setLayerDimensions(this.div, viewport);
+    setLayerDimensions(this.div!, viewport);
     for (const editor of this.#uiManager.getEditors(this.pageIndex)) {
       this.add(editor);
       editor.rebuild();
@@ -898,7 +898,7 @@ export class AnnotationEditorLayer {
    * Update the main editor.
    * @param {RenderEditorLayerOptions} parameters
    */
-  update({ viewport }) {
+  update({ viewport }: { viewport: PageViewport }) {
     // Editors have their dimensions/positions in percent so to avoid any
     // issues (see #15582), we must commit the current one before changing
     // the viewport.
@@ -908,7 +908,7 @@ export class AnnotationEditorLayer {
     const oldRotation = this.viewport.rotation;
     const rotation = viewport.rotation;
     this.viewport = viewport;
-    setLayerDimensions(this.div, { rotation });
+    setLayerDimensions(this.div!, { rotation });
     if (oldRotation !== rotation) {
       for (const editor of this.#editors.values()) {
         editor.rotate(rotation);

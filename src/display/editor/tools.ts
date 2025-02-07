@@ -2382,7 +2382,6 @@ class AnnotationEditorUIManager {
 
   /**
    * Get the current editor mode.
-   * @returns {number}
    */
   getMode() {
     return this.#mode;

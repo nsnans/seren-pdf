@@ -457,7 +457,7 @@ class AnnotationEditor<
     this.div!.style.zIndex = `${this.#zIndex}`;
   }
 
-  setParent(parent: AnnotationEditorLayer) {
+  setParent(parent: AnnotationEditorLayer | null) {
     if (parent !== null) {
       this.pageIndex = parent.pageIndex;
       this.pageDimensions = parent.pageDimensions;

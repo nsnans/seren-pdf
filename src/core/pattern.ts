@@ -1086,7 +1086,7 @@ export type TilingPatternIR = [
   number, number,
 ]
 
-function getTilingPatternIR(operatorList: OperatorListIR, dict: Dict, color: Uint8ClampedArray | null): TilingPatternIR {
+function getTilingPatternIR(operatorList: OperatorListIR, dict: Dict, color: Uint8ClampedArray<ArrayBuffer> | null): TilingPatternIR {
   const matrix = <TransformType>lookupMatrix(dict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX);
   const bbox = lookupNormalRect(dict.getArrayValue(DictKey.BBox), null);
   // Ensure that the pattern has a non-zero width and height, to prevent errors

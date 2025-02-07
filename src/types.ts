@@ -28,3 +28,10 @@ export function shiftable<T>(obj: unknown): obj is Shiftable<T> {
 export interface OpenJPEGModule {
   decode(data: Uint8TypedArray, option: JpxDecoderOptions | {} | null): Uint8Array<ArrayBuffer>;
 }
+
+export interface BoxType {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}

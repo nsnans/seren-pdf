@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { BoxType } from "../../types";
 import { noContextMenu } from "../display_utils";
 import { ColorPicker } from "./color_picker";
 import { AnnotationEditorUIManager } from "./tools";
@@ -167,13 +168,6 @@ class EditorToolbar {
     this.#colorPicker?.destroy();
     this.#colorPicker = null;
   }
-}
-
-interface BoxType {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
 }
 
 class HighlightToolbar {

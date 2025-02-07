@@ -23,7 +23,7 @@ import {
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
 
-function createHeaders(isHttp: boolean, httpHeaders) {
+function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
   const headers = new Headers();
 
   if (!isHttp || !httpHeaders || typeof httpHeaders !== "object") {
