@@ -55,7 +55,7 @@ class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, AnnotationE
   static get _keyboardManager() {
     const proto = FreeTextEditor.prototype;
 
-    const arrowChecker = self => self.isEmpty();
+    const arrowChecker = (self: FreeTextEditor) => self.isEmpty();
 
     const small = AnnotationEditorUIManager.TRANSLATE_SMALL;
     const big = AnnotationEditorUIManager.TRANSLATE_BIG;
@@ -63,7 +63,7 @@ class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, AnnotationE
     return shadow(
       this,
       "_keyboardManager",
-      new KeyboardManager([
+      new KeyboardManager<FreeTextEditor>([
         [
           // Commit the text in case the user use ctrl+s to save the document.
           // The event must bubble in order to be caught by the viewer.
@@ -541,7 +541,7 @@ class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, AnnotationE
   }
 
   editorDivInput(_event: Event) {
-    this.parent!.div.classList.toggle("freetextEditing", this.isEmpty());
+    this.parent!.div!.classList.toggle("freetextEditing", this.isEmpty());
   }
 
   /** @inheritdoc */

@@ -924,7 +924,7 @@ class Util {
     x1: number, y1: number,
     x2: number, y2: number,
     x3: number, y3: number,
-    minMax: RectType | null
+    minMax: RectType | null = null
   ): number[] {
     if (minMax) {
       minMax[0] = Math.min(minMax[0], x0, x3);

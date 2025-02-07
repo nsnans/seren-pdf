@@ -30,6 +30,8 @@ export type RectType = [number, number, number, number];
 
 export type PointType = [number, number]
 
+export interface PointXYType { x: number, y: number }
+
 export interface AvailableSpace {
   width: number,
   height: number

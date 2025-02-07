@@ -34,7 +34,7 @@ export class ColorPicker {
     return shadow(
       this,
       "_keyboardManager",
-      new KeyboardManager([
+      new KeyboardManager<ColorPicker>([
         [
           ["Escape", "mac+Escape"],
           ColorPicker.prototype._hideDropdownFromKeyboard,

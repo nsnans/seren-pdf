@@ -1,4 +1,4 @@
-import { AnnotationEditorType, info } from "../../shared/util";
+import { AnnotationEditorType } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { FreeTextEditor } from "./freetext";
 import { HighlightEditor } from "./highlight";

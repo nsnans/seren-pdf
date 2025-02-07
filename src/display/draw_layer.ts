@@ -15,6 +15,8 @@
 
 import { shadow } from "../shared/util";
 import { BoxType } from "../types";
+import { HighlightOutline } from "./editor/drawers/highlight";
+import { Outline } from "./editor/drawers/outline";
 import { DOMSVGFactory } from "./svg_factory";
 
 /**
@@ -90,9 +92,9 @@ export class DrawLayer {
     return clipPathId;
   }
 
-  draw(outlines, color: string, opacity, isPathUpdatable = false) {
+  draw(outlines: Outline, color: string, opacity: number, isPathUpdatable = false) {
     const id = this.#id++;
-    const root = this.#createSVG(outlines.box);
+    const root = this.#createSVG(outlines.box!);
     root.classList.add(...outlines.classNamesForDrawing);
 
     const defs = DrawLayer._svgFactory.createElement("defs");
@@ -113,7 +115,7 @@ export class DrawLayer {
     const use = DrawLayer._svgFactory.createElement("use");
     root.append(use);
     root.setAttribute("fill", color);
-    root.setAttribute("fill-opacity", opacity);
+    root.setAttribute("fill-opacity", `${opacity}`);
     use.setAttribute("href", `#${pathId}`);
 
     this.#mapping.set(id, root);
@@ -121,7 +123,7 @@ export class DrawLayer {
     return { id, clipPathId: `url(#${clipPathId})` };
   }
 
-  drawOutline(outlines) {
+  drawOutline(outlines: HighlightOutline) {
     // We cannot draw the outline directly in the SVG for highlights because
     // it composes with its parent with mix-blend-mode: multiply.
     // But the outline has a different mix-blend-mode, so we need to draw it in

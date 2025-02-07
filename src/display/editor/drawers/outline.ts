@@ -20,17 +20,13 @@ export abstract class Outline {
   /**
    * @returns {string} The SVG path of the outline.
    */
-  toSVGPath() {
-    unreachable("Abstract method `toSVGPath` must be implemented.");
-  }
+  abstract toSVGPath(): string;
 
   /**
    * @type {Object|null} The bounding box of the outline.
    */
   // eslint-disable-next-line getter-return
-  get box(): { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null {
-    throw new Error("抽象函数需要被继承者实现");
-  }
+  abstract get box(): { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null;
 
   serialize(_bbox: RectType, _rotation: number) {
     unreachable("Abstract method `serialize` must be implemented.");

@@ -93,7 +93,7 @@ export class AnnotationEditorLayer {
 
   #uiManager: AnnotationEditorUIManager;
 
-  protected div: HTMLDivElement | null;
+  public div: HTMLDivElement | null;
 
   public viewport: PageViewport;
 

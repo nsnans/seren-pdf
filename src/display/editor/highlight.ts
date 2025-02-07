@@ -31,11 +31,12 @@ import {
 } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { ColorPicker } from "./color_picker";
-import { noContextMenu, RectType } from "../display_utils";
+import { noContextMenu, PointType, RectType } from "../display_utils";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
+import { BoxType } from "../../types";
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
@@ -60,16 +61,12 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
 
   static get _keyboardManager() {
     const proto = HighlightEditor.prototype;
-    return shadow(
-      this,
-      "_keyboardManager",
-      new KeyboardManager([
-        [["ArrowLeft", "mac+ArrowLeft"], proto._moveCaret, { args: [0] }],
-        [["ArrowRight", "mac+ArrowRight"], proto._moveCaret, { args: [1] }],
-        [["ArrowUp", "mac+ArrowUp"], proto._moveCaret, { args: [2] }],
-        [["ArrowDown", "mac+ArrowDown"], proto._moveCaret, { args: [3] }],
-      ])
-    );
+    return shadow(this, "_keyboardManager", new KeyboardManager<HighlightEditor>([
+      [["ArrowLeft", "mac+ArrowLeft"], proto._moveCaret, { args: [0] }],
+      [["ArrowRight", "mac+ArrowRight"], proto._moveCaret, { args: [1] }],
+      [["ArrowUp", "mac+ArrowUp"], proto._moveCaret, { args: [2] }],
+      [["ArrowDown", "mac+ArrowDown"], proto._moveCaret, { args: [3] }],
+    ]));
   }
 
   #anchorNode = null;
@@ -96,9 +93,9 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
 
   #isFreeHighlight = false;
 
-  #lastPoint: [number, number] | null = null;
+  #lastPoint: PointType | null = null;
 
-  #opacity;
+  #opacity: number;
 
   #outlineId: number | null = null;
 
@@ -204,7 +201,7 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       // We need to redraw the highlight because we change the coordinates to be
       // in the box coordinate system.
       this.parent!.drawLayer.finalizeLine(highlightId, highlightOutlines);
-      this.#outlineId = this.parent!.drawLayer.drawOutline(this.#focusOutlines);
+      this.#outlineId = this.parent!.drawLayer.drawOutline(this.#focusOutlines!);
     } else if (this.parent) {
       const angle = this.parent.viewport.rotation;
       this.parent.drawLayer.updateLine(this.#id!, highlightOutlines);
@@ -511,11 +508,11 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       return;
     }
     ({ id: this.#id, clipPathId: this.#clipPathId } = parent!.drawLayer.draw(
-      this.#highlightOutlines,
+      this.#highlightOutlines!,
       this.color,
       this.#opacity
     ));
-    this.#outlineId = parent!.drawLayer.drawOutline(this.#focusOutlines);
+    this.#outlineId = parent!.drawLayer.drawOutline(this.#focusOutlines!);
     if (this.#highlightDiv) {
       this.#highlightDiv.style.clipPath = this.#clipPathId;
     }
@@ -860,7 +857,7 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
     const [pageX, pageY] = editor.pageTranslation;
 
     if (quadPoints) {
-      const boxes = (editor.#boxes = []);
+      const boxes: BoxType[] = (editor.#boxes = []);
       for (let i = 0; i < quadPoints.length; i += 8) {
         boxes.push({
           x: (quadPoints[i] - pageX) / pageWidth,
@@ -880,7 +877,7 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
         y: pageHeight - (points[1] - pageY),
       };
       const outliner = new FreeHighlightOutliner(
-        point,
+        point.x, point.y,
         [0, 0, pageWidth, pageHeight],
         1,
         editor.#thickness / 2,
@@ -890,7 +887,7 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       for (let i = 0, ii = points.length; i < ii; i += 2) {
         point.x = points[i] - pageX;
         point.y = pageHeight - (points[i + 1] - pageY);
-        outliner.add(point);
+        outliner.add(point.x, point.y);
       }
       const { id, clipPathId } = parent.drawLayer.draw(
         outliner,

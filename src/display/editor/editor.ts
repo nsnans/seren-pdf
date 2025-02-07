@@ -16,8 +16,10 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
+import { AnnotationData } from "../../core/annotation";
 import { FeatureTest, shadow, unreachable } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
+import { AnnotationElement } from "../annotation_layer";
 import { noContextMenu, RectType } from "../display_utils";
 import { AltText } from "./alt_text";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
@@ -92,7 +94,7 @@ export class AnnotationEditorHelper {
     return shadow(
       this,
       "_resizerKeyboardManager",
-      new KeyboardManager([
+      new KeyboardManager<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>([
         [["ArrowLeft", "mac+ArrowLeft"], resize, { args: [-small, 0] }],
         [
           ["ctrl+ArrowLeft", "mac+shift+ArrowLeft"],
@@ -239,7 +241,7 @@ export class AnnotationEditorHelper {
 
 export type DefaultAnnotationEditor = AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
 
-class AnnotationEditor<
+export class AnnotationEditor<
   /* 核心属性 */ T extends AnnotationEditorState,
   /* 序列化结果 */ S extends AnnotationEditorSerial
 > {
@@ -1863,11 +1865,11 @@ class AnnotationEditor<
     return content;
   }
 
-  resetAnnotationElement(annotation) {
-    const { firstChild } = annotation.container;
+  resetAnnotationElement(annotation: AnnotationElement<AnnotationData>) {
+    const { firstChild } = annotation.container!;
     if (
       firstChild?.nodeName === "DIV" &&
-      firstChild.classList.contains("annotationContent")
+      (<HTMLDivElement>firstChild).classList.contains("annotationContent")
     ) {
       firstChild.remove();
     }
@@ -1892,4 +1894,3 @@ class FakeEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEdito
   }
 }
 
-export { AnnotationEditor };

@@ -15,10 +15,10 @@
 
 import { Outline } from "./outline";
 import { Util } from "../../../shared/util";
-import { RectType } from "../../display_utils";
+import { PointType, PointXYType, RectType, TransformType } from "../../display_utils";
 
 export class FreeDrawOutliner {
-  #box;
+  #box: RectType;
 
   #bottom: number[] = [];
 
@@ -57,7 +57,7 @@ export class FreeDrawOutliner {
 
   static #MIN = FreeDrawOutliner.#MIN_DIST + FreeDrawOutliner.#MIN_DIFF;
 
-  constructor(x: number, y: number, box, scaleFactor: number, thickness: number, isLTR: boolean, innerMargin = 0) {
+  constructor(x: number, y: number, box: RectType, scaleFactor: number, thickness: number, isLTR: boolean, innerMargin = 0) {
     this.#box = box;
     this.#thickness = thickness * scaleFactor;
     this.#isLTR = isLTR;
@@ -280,7 +280,14 @@ export class FreeDrawOutliner {
     );
   }
 
-  newFreeDrawOutline(outline: Float64Array, points: Float64Array, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
+  newFreeDrawOutline(
+    outline: Float64Array<ArrayBuffer>,
+    points: Float64Array<ArrayBuffer>,
+    box: RectType,
+    scaleFactor: number,
+    innerMargin: number,
+    isLTR: boolean
+  ) {
     return new FreeDrawOutline(
       outline,
       points,
@@ -350,53 +357,29 @@ export class FreeDrawOutliner {
     );
   }
 
-  #getOutlineTwoPoints(points) {
+  #getOutlineTwoPoints(points: Float64Array<ArrayBuffer>) {
     const last = this.#last;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
-    const [lastTopX, lastTopY, lastBottomX, lastBottomY] =
-      this.#getLastCoords();
+    const [lastTopX, lastTopY, lastBottomX, lastBottomY] = this.#getLastCoords();
     const outline = new Float64Array(36);
-    outline.set(
-      [
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (last[2] - layerX) / layerWidth,
-        (last[3] - layerY) / layerHeight,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (last[4] - layerX) / layerWidth,
-        (last[5] - layerY) / layerHeight,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        lastTopX,
-        lastTopY,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        lastBottomX,
-        lastBottomY,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (last[16] - layerX) / layerWidth,
-        (last[17] - layerY) / layerHeight,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (last[14] - layerX) / layerWidth,
-        (last[15] - layerY) / layerHeight,
-      ],
-      0
-    );
+    outline.set([
+      NaN, NaN, NaN, NaN,
+      (last[2] - layerX) / layerWidth,
+      (last[3] - layerY) / layerHeight,
+      NaN, NaN, NaN, NaN,
+      (last[4] - layerX) / layerWidth,
+      (last[5] - layerY) / layerHeight,
+      NaN, NaN, NaN, NaN,
+      lastTopX, lastTopY,
+      NaN, NaN, NaN, NaN,
+      lastBottomX, lastBottomY,
+      NaN, NaN, NaN, NaN,
+      (last[16] - layerX) / layerWidth,
+      (last[17] - layerY) / layerHeight,
+      NaN, NaN, NaN, NaN,
+      (last[14] - layerX) / layerWidth,
+      (last[15] - layerY) / layerHeight,
+    ], 0);
     return this.newFreeDrawOutline(
       outline,
       points,
@@ -419,35 +402,18 @@ export class FreeDrawOutliner {
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] =
       this.#getLastCoords();
-    outline.set(
-      [
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (lastTop[0] - layerX) / layerWidth,
-        (lastTop[1] - layerY) / layerHeight,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        lastTopX,
-        lastTopY,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        lastBottomX,
-        lastBottomY,
-        NaN,
-        NaN,
-        NaN,
-        NaN,
-        (lastBottom[0] - layerX) / layerWidth,
-        (lastBottom[1] - layerY) / layerHeight,
-      ],
-      pos
-    );
+    outline.set([
+      NaN, NaN, NaN, NaN,
+      (lastTop[0] - layerX) / layerWidth,
+      (lastTop[1] - layerY) / layerHeight,
+      NaN, NaN, NaN, NaN,
+      lastTopX, lastTopY,
+      NaN, NaN, NaN, NaN,
+      lastBottomX, lastBottomY,
+      NaN, NaN, NaN, NaN,
+      (lastBottom[0] - layerX) / layerWidth,
+      (lastBottom[1] - layerY) / layerHeight,
+    ], pos);
     return (pos += 24);
   }
 }
@@ -457,12 +423,12 @@ interface BBox {
   y: number;
   width: number;
   height: number;
-  lastPoint: number[];
+  lastPoint: PointType;
 }
 
 export class FreeDrawOutline extends Outline {
 
-  #box;
+  #box: RectType;
 
   #bbox: BBox | null = null;
 
@@ -470,13 +436,20 @@ export class FreeDrawOutline extends Outline {
 
   #isLTR: boolean;
 
-  #points: Float64Array | null = null;;
+  #points: Float64Array<ArrayBuffer> | null = null;;
 
   #scaleFactor;
 
-  #outline: Float64Array | null = null;;
+  #outline: Float64Array<ArrayBuffer> | null = null;;
 
-  constructor(outline: Float64Array | null, points: Float64Array | null, box, scaleFactor: number, innerMargin: number, isLTR: boolean) {
+  constructor(
+    outline: Float64Array<ArrayBuffer> | null,
+    points: Float64Array<ArrayBuffer> | null,
+    box: RectType,
+    scaleFactor: number,
+    innerMargin: number,
+    isLTR: boolean
+  ) {
     super();
     this.#outline = outline;
     this.#points = points;
@@ -589,9 +562,7 @@ export class FreeDrawOutline extends Outline {
         }
       } else {
         const bbox = Util.bezierBoundingBox(
-          lastX,
-          lastY,
-          ...outline.slice(i, i + 6)
+          lastX, lastY, ...<TransformType>Array.from(outline.slice(i, i + 6))
         );
         minX = Math.min(minX, bbox[0]);
         minY = Math.min(minY, bbox[1]);
@@ -608,10 +579,10 @@ export class FreeDrawOutline extends Outline {
       lastY = outline[i + 5];
     }
 
-    const x = minX - this.#innerMargin,
-      y = minY - this.#innerMargin,
-      width = maxX - minX + 2 * this.#innerMargin,
-      height = maxY - minY + 2 * this.#innerMargin;
+    const x = minX - this.#innerMargin;
+    const y = minY - this.#innerMargin;
+    const width = maxX - minX + 2 * this.#innerMargin;
+    const height = maxY - minY + 2 * this.#innerMargin;
     this.#bbox = { x, y, width, height, lastPoint: [lastPointX, lastPointY] };
   }
 
@@ -619,7 +590,14 @@ export class FreeDrawOutline extends Outline {
     return this.#bbox;
   }
 
-  newOutliner(point, box, scaleFactor: number, thickness: number, isLTR: boolean, innerMargin = 0) {
+  newOutliner(
+    point: PointXYType,
+    box: RectType,
+    scaleFactor: number,
+    thickness: number,
+    isLTR: boolean,
+    innerMargin = 0
+  ) {
     return new FreeDrawOutliner(
       point.x,
       point.y,

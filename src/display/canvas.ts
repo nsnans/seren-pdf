@@ -326,12 +326,12 @@ function compileType3Glyph(imgData: {
   ]);
 
   const width1 = width + 1;
-  let points: Uint8Array | null = new Uint8Array(width1 * (height + 1));
+  let points: Uint8Array<ArrayBuffer> | null = new Uint8Array(width1 * (height + 1));
   let i, j, j0;
 
   // decodes bit-packed mask data
   const lineSize = (width + 7) & ~7;
-  let data: Uint8Array | null = new Uint8Array(lineSize * height);
+  let data: Uint8Array<ArrayBuffer> | null = new Uint8Array(lineSize * height);
   let pos = 0;
   for (const elem of imgData.data) {
     let mask = 128;
@@ -1040,8 +1040,6 @@ export class CanvasGraphics {
     this.stateStack = [];
     this.pendingClip = null;
     this.pendingEOFill = false;
-    this.res = null;
-    this.xobjs = null;
     this.commonObjs = commonObjs;
     this.objs = objs;
     this.canvasFactory = canvasFactory;
