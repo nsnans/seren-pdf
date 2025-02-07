@@ -1522,7 +1522,7 @@ export class PDFDocument {
       return true;
     }
     if (fieldObjects) {
-      return Object.values(fieldObjects.allFields).some(fieldObject =>
+      return fieldObjects.allFields.values().some(fieldObject =>
         fieldObject.some((object: FieldObject) => object.actions !== null)
       );
     }

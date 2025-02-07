@@ -74,7 +74,7 @@ export class ColorPicker {
 
   #uiManager: AnnotationEditorUIManager | null = null;
 
-  #type;
+  #type: AnnotationEditorParamsType;
 
   constructor(
     editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null = null,

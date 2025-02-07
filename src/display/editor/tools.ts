@@ -886,7 +886,10 @@ class AnnotationEditorUIManager {
     eventBus._on("setpreference", this.onSetPreference.bind(this), { signal });
     eventBus._on(
       "switchannotationeditorparams",
-      evt => this.updateParams(evt.type, evt.value),
+      (evt: {
+        type: AnnotationEditorParamsType,
+        value: string | number | boolean | null
+      }) => this.updateParams(evt.type, evt.value),
       { signal }
     );
     this.#addSelectionListener();
@@ -1726,7 +1729,7 @@ class AnnotationEditorUIManager {
    * @param {number} type
    * @param {*} value
    */
-  updateParams(type: number, value) {
+  updateParams(type: number, value: string | number | boolean | null) {
     if (!this.#editorTypes) {
       return;
     }
@@ -1736,7 +1739,7 @@ class AnnotationEditorUIManager {
         this.currentLayer.addNewEditor();
         return;
       case AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR:
-        this.#mainHighlightColorPicker?.updateColor(value);
+        this.#mainHighlightColorPicker?.updateColor(<string>value);
         break;
       case AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL:
         this._eventBus.dispatch("reporttelemetry", {
@@ -1750,7 +1753,7 @@ class AnnotationEditorUIManager {
           },
         });
         (this.#showAllStates ||= new Map()).set(type, value);
-        this.showAllEditors("highlight", value);
+        this.showAllEditors(AnnotationEditorType.HIGHLIGHT, <boolean>value);
         break;
     }
 
