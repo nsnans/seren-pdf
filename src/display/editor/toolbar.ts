@@ -15,20 +15,14 @@
 
 import { BoxType } from "../../types";
 import { noContextMenu } from "../display_utils";
+import { AltText } from "./alt_text";
 import { ColorPicker } from "./color_picker";
+import { AnnotationEditor } from "./editor";
+import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager } from "./tools";
 
-class EditorToolbar {
-
-  #toolbar: HTMLDivElement | null = null;
-
-  #colorPicker: ColorPicker | null = null;
-
-  #editor;
-
-  #buttons: HTMLDivElement | null = null;
-
-  #altText = null;
+export class EditorToolbar {
 
   static #l10nRemove: {
     freetext: "pdfjs-editor-remove-freetext-button",
@@ -37,7 +31,17 @@ class EditorToolbar {
     stamp: "pdfjs-editor-remove-stamp-button",
   } | null = null;
 
-  constructor(editor) {
+  #toolbar: HTMLDivElement | null = null;
+
+  #colorPicker: ColorPicker | null = null;
+
+  #editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
+
+  #buttons: HTMLDivElement | null = null;
+
+  #altText: AltText | null = null;
+
+  constructor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#editor = editor;
 
     EditorToolbar.#l10nRemove ||= Object.freeze({
@@ -52,7 +56,7 @@ class EditorToolbar {
     const editToolbar = (this.#toolbar = document.createElement("div"));
     editToolbar.classList.add("editToolbar", "hidden");
     editToolbar.setAttribute("role", "toolbar");
-    const signal = this.#editor._uiManager._signal;
+    const signal = this.#editor._uiManager._signal!;
     editToolbar.addEventListener("contextmenu", noContextMenu, { signal });
     editToolbar.addEventListener("pointerdown", EditorToolbar.#pointerDown, {
       signal,
@@ -99,11 +103,11 @@ class EditorToolbar {
     e.stopPropagation();
   }
 
-  #addListenersToElement(element) {
+  #addListenersToElement(element: HTMLButtonElement) {
     // If we're clicking on a button with the keyboard or with
     // the mouse, we don't want to trigger any focus events on
     // the editor.
-    const signal = this.#editor._uiManager._signal;
+    const signal = this.#editor._uiManager._signal!;
     element.addEventListener("focusin", this.#focusIn.bind(this), {
       capture: true,
       signal,
@@ -116,12 +120,12 @@ class EditorToolbar {
   }
 
   hide() {
-    this.#toolbar.classList.add("hidden");
+    this.#toolbar!.classList.add("hidden");
     this.#colorPicker?.hideDropdown();
   }
 
   show() {
-    this.#toolbar.classList.remove("hidden");
+    this.#toolbar!.classList.remove("hidden");
     this.#altText?.shown();
   }
 
@@ -133,14 +137,9 @@ class EditorToolbar {
     button.tabIndex = 0;
     button.setAttribute("data-l10n-id", EditorToolbar.#l10nRemove[editorType]);
     this.#addListenersToElement(button);
-    button.addEventListener(
-      "click",
-      e => {
-        _uiManager.delete();
-      },
-      { signal: _uiManager._signal }
-    );
-    this.#buttons.append(button);
+    const signal = _uiManager._signal!;
+    button.addEventListener("click", () => _uiManager.delete(), { signal });
+    this.#buttons!.append(button);
   }
 
   get #divider() {
@@ -149,7 +148,7 @@ class EditorToolbar {
     return divider;
   }
 
-  async addAltText(altText) {
+  async addAltText(altText: AltText) {
     const button = await altText.render();
     this.#addListenersToElement(button);
     this.#buttons!.prepend(button, this.#divider);
@@ -170,7 +169,7 @@ class EditorToolbar {
   }
 }
 
-class HighlightToolbar {
+export class HighlightToolbar {
 
   #buttons: HTMLDivElement | null = null;
 
@@ -245,7 +244,7 @@ class HighlightToolbar {
     button.append(span);
     span.className = "visuallyHidden";
     span.setAttribute("data-l10n-id", "pdfjs-highlight-floating-button-label");
-    const signal = this.#uiManager._signal;
+    const signal = this.#uiManager._signal!;
     button.addEventListener("contextmenu", noContextMenu, { signal });
     button.addEventListener(
       "click",
@@ -254,8 +253,6 @@ class HighlightToolbar {
       },
       { signal }
     );
-    this.#buttons.append(button);
+    this.#buttons!.append(button);
   }
 }
-
-export { EditorToolbar, HighlightToolbar };

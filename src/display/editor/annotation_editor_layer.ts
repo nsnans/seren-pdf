@@ -125,7 +125,7 @@ export class AnnotationEditorLayer {
         initializer(l10n, uiManager);
       }
     }
-    uiManager.registerEditorTypes(editorInitalizers);
+    uiManager.registerEditorTypes(EditorManager.getEditorBasicInfo());
 
     this.#uiManager = uiManager;
     this.pageIndex = pageIndex;
@@ -368,7 +368,7 @@ export class AnnotationEditorLayer {
    * Set the current editor.
    * @param {AnnotationEditor} editor
    */
-  setActiveEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  setActiveEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null) {
     const currentActive = this.#uiManager.getActive();
     if (currentActive === editor) {
       return;

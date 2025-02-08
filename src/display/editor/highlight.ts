@@ -185,7 +185,11 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
     ];
   }
 
-  #createFreeOutlines({ highlightOutlines, highlightId, clipPathId }) {
+  #createFreeOutlines(
+    highlightOutlines: HighlightOutline,
+    highlightId: number = 0,
+    clipPathId: string = "",
+  ) {
     this.#highlightOutlines = highlightOutlines;
     const extraThickness = 1.5;
     this.#focusOutlines = highlightOutlines.getNewOutline(
@@ -486,7 +490,7 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       return;
     }
     this.#createFreeOutlines({
-      highlightOutlines: this.#highlightOutlines.getNewOutline(thickness / 2),
+      highlightOutlines: this.#highlightOutlines!.getNewOutline(thickness / 2),
     });
     this.fixAndSetPosition();
     const [parentWidth, parentHeight] = this.parentDimensions;

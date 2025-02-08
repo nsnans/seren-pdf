@@ -15,6 +15,7 @@
 
 import { unreachable } from "../../../shared/util";
 import { RectType } from "../../display_utils";
+import { BBoxType } from "./freedraw";
 
 export abstract class Outline {
   /**
@@ -26,7 +27,7 @@ export abstract class Outline {
    * @type {Object|null} The bounding box of the outline.
    */
   // eslint-disable-next-line getter-return
-  abstract get box(): { x: number; y: number; width: number; height: number; lastPoint: number[]; } | null;
+  abstract get box(): BBoxType | null;
 
   serialize(_bbox: RectType, _rotation: number) {
     unreachable("Abstract method `serialize` must be implemented.");

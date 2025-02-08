@@ -13,23 +13,18 @@
  * limitations under the License.
  */
 
-import { RectType } from "../../display_utils";
-import { FreeDrawOutline, FreeDrawOutliner } from "./freedraw";
+import { BoxType } from "../../../types";
+import { PointType, PointXYType, RectType } from "../../display_utils";
+import { BBoxType, FreeDrawOutline, FreeDrawOutliner } from "./freedraw";
 import { Outline } from "./outline";
 
-interface HighlightBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+export class HighlightOutliner {
 
-class HighlightOutliner {
-  #box;
+  #box: BBoxType;
 
   #verticalEdges: [number, number, number, boolean][] = [];
 
-  #intervals: number[] = [];
+  #intervals: PointType[] = [];
 
   /**
    * Construct an outliner.
@@ -43,7 +38,7 @@ class HighlightOutliner {
    * @param {boolean} isLTR - true if we're in LTR mode. It's used to determine
    *   the last point of the boxes.
    */
-  constructor(boxes: HighlightBox[], borderWidth = 0, innerMargin = 0, isLTR = true) {
+  constructor(boxes: BoxType[], borderWidth = 0, innerMargin = 0, isLTR = true) {
     let minX = Infinity;
     let maxX = -Infinity;
     let minY = Infinity;
@@ -75,7 +70,7 @@ class HighlightOutliner {
     const shiftedMinX = minX - innerMargin;
     const shiftedMinY = minY - innerMargin;
     const lastEdge = this.#verticalEdges.at(isLTR ? -1 : -2)!;
-    const lastPoint = [lastEdge[0], lastEdge[2]];
+    const lastPoint: PointType = [lastEdge[0], lastEdge[2]];
 
     // Convert the coordinates of the edges into box coordinates.
     for (const edge of this.#verticalEdges) {
@@ -109,7 +104,7 @@ class HighlightOutliner {
     // This set of intervals is used to break the vertical edges into chunks:
     // we only take the part of the vertical edge that isn't in the union of
     // the intervals.
-    const outlineVerticalEdges = [];
+    const outlineVerticalEdges: [number, number, number][] = [];
     for (const edge of this.#verticalEdges) {
       if (edge[3]) {
         // Left edge.
@@ -124,8 +119,8 @@ class HighlightOutliner {
     return this.#getOutlines(outlineVerticalEdges);
   }
 
-  #getOutlines(outlineVerticalEdges) {
-    const edges = [];
+  #getOutlines(outlineVerticalEdges: [number, number, number][]) {
+    const edges: [number, number, [number, number, number]][] = [];
     const allEdges = new Set();
 
     for (const edge of outlineVerticalEdges) {
@@ -139,6 +134,9 @@ class HighlightOutliner {
     // So for every vertical edge, we're going to add the two vertical edges
     // which are connected to it through a horizontal edge.
     edges.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    // edge1和edge2的类型是递归嵌套的
+    // 这段代码直接重写掉吧。苔草淡了。
+
     for (let i = 0, ii = edges.length; i < ii; i += 2) {
       const edge1 = edges[i][2];
       const edge2 = edges[i + 1][2];
@@ -235,7 +233,7 @@ class HighlightOutliner {
 
   #breakEdge(edge: [number, number, number, boolean]) {
     const [x, y1, y2] = edge;
-    const results = [[x, y1, y2]];
+    const results: [number, number, number][] = [[x, y1, y2]];
     const index = this.#binarySearch(y2);
     for (let i = 0; i < index; i++) {
       const [start, end] = this.#intervals[i];
@@ -271,11 +269,12 @@ class HighlightOutliner {
 }
 
 export class HighlightOutline extends Outline {
-  #box;
+
+  #box: BBoxType;
 
   #outlines;
 
-  constructor(outlines, box) {
+  constructor(outlines: PointType[], box: BBoxType) {
     super();
     this.#outlines = outlines;
     this.#box = box;
@@ -336,8 +335,15 @@ export class HighlightOutline extends Outline {
   }
 }
 
-class FreeHighlightOutliner extends FreeDrawOutliner {
-  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
+export class FreeHighlightOutliner extends FreeDrawOutliner {
+  newFreeDrawOutline(
+    outline: Float64Array<ArrayBuffer>,
+    points: Float64Array<ArrayBuffer>,
+    box: RectType,
+    scaleFactor: number,
+    innerMargin: number,
+    isLTR: boolean
+  ) {
     return new FreeHighlightOutline(
       outline,
       points,
@@ -363,18 +369,15 @@ class FreeHighlightOutline extends FreeDrawOutline {
   }
 
   newOutliner(
-    point : { x: number, y: number}, 
-    box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+    point: PointXYType,
+    box: RectType,
+    scaleFactor: number,
+    thickness: number,
+    isLTR: boolean,
+    innerMargin = 0
+  ) {
     return new FreeHighlightOutliner(
-      point.x,
-      point.y,
-      box,
-      scaleFactor,
-      thickness,
-      isLTR,
-      innerMargin
+      point.x, point.y, box, scaleFactor, thickness, isLTR, innerMargin
     );
   }
 }
-
-export { FreeHighlightOutliner, HighlightOutliner };

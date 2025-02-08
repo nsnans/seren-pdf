@@ -308,7 +308,7 @@ export class AltText {
       tooltip.id = `alt-text-tooltip-${this.#editor!.id}`;
 
       const DELAY_TO_SHOW_TOOLTIP = 100;
-      const signal = this.#editor!._uiManager._signal;
+      const signal = this.#editor!._uiManager._signal!;
       signal.addEventListener("abort", () => {
         clearTimeout(this.#altTextTooltipTimeout!);
         this.#altTextTooltipTimeout = null;

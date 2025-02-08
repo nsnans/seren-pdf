@@ -166,7 +166,7 @@ export class AnnotationEditorHelper {
    * @param {DataTransferItem} item
    * @param {AnnotationEditorLayer} parent
    */
-  static paste(_item, _parent: AnnotationEditorLayer) {
+  static paste(_item: DataTransferItem, _parent: AnnotationEditorLayer) {
     unreachable("Not implemented");
   }
 
@@ -241,7 +241,7 @@ export class AnnotationEditorHelper {
 
 export type DefaultAnnotationEditor = AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
 
-export class AnnotationEditor<
+export abstract class AnnotationEditor<
   /* 核心属性 */ T extends AnnotationEditorState,
   /* 序列化结果 */ S extends AnnotationEditorSerial
 > {
@@ -817,7 +817,7 @@ export class AnnotationEditor<
         "bottomLeft",
         "middleLeft",
       ];
-    const signal = this._uiManager._signal;
+    const signal = this._uiManager._signal!;
     for (const name of classes) {
       const div = document.createElement("div");
       this.#resizersDiv.append(div);
@@ -860,9 +860,9 @@ export class AnnotationEditor<
     const savedY = this.y;
     const savedWidth = this.width;
     const savedHeight = this.height;
-    const savedParentCursor = this.parent!.div.style.cursor;
+    const savedParentCursor = this.parent!.div!.style.cursor;
     const savedCursor = this.div!.style.cursor;
-    this.div!.style.cursor = this.parent!.div.style.cursor =
+    this.div!.style.cursor = this.parent!.div!.style.cursor =
       window.getComputedStyle(<Element>event.target).cursor;
 
     const pointerUpCallback = () => {
@@ -870,7 +870,7 @@ export class AnnotationEditor<
       this.parent!.togglePointerEvents(true);
       this.#altText?.toggle(true);
       this._isDraggable = savedDraggable;
-      this.parent!.div.style.cursor = savedParentCursor;
+      this.parent!.div!.style.cursor = savedParentCursor;
       this.div!.style.cursor = savedCursor;
 
       this.#addResizeToUndoStack(savedX, savedY, savedWidth, savedHeight);
@@ -1065,7 +1065,7 @@ export class AnnotationEditor<
     this._editToolbar = new EditorToolbar(this);
     this.div!.append(this._editToolbar.render());
     if (this.#altText) {
-      await this._editToolbar.addAltText(this.#altText);
+      await this._editToolbar.addAltText(this.#altText!);
     }
 
     return this._editToolbar;
@@ -1549,7 +1549,7 @@ export class AnnotationEditor<
       this.#allResizerDivs = <HTMLDivElement[]>Array.from(children);
       const boundResizerKeydown = this.#resizerKeydown.bind(this);
       const boundResizerBlur = this.#resizerBlur.bind(this);
-      const signal = this._uiManager._signal;
+      const signal = this._uiManager._signal!;
       for (const div of this.#allResizerDivs) {
         const name = div.getAttribute("data-resizer-name")!;
         div.setAttribute("role", "spinbutton");
@@ -1558,7 +1558,7 @@ export class AnnotationEditor<
         div.addEventListener("focus", this.#resizerFocus.bind(this, name), {
           signal,
         });
-        div.setAttribute("data-l10n-id", AnnotationEditorHelper._l10nResizer![name]);
+        div.setAttribute("data-l10n-id", (<Record<string, string>>AnnotationEditorHelper._l10nResizer)![name]);
       }
     }
 
@@ -1593,7 +1593,7 @@ export class AnnotationEditor<
       for (const child of children) {
         const div = this.#allResizerDivs[i++];
         const name = div.getAttribute("data-resizer-name")!;
-        child.setAttribute("data-l10n-id", AnnotationEditorHelper._l10nResizer[name]);
+        child.setAttribute("data-l10n-id", (<Record<string, string>>AnnotationEditorHelper._l10nResizer)[name]);
       }
     }
 
@@ -1685,7 +1685,7 @@ export class AnnotationEditor<
     if (this.div?.contains(document.activeElement)) {
       // Don't use this.div.blur() because we don't know where the focus will
       // go.
-      this._uiManager.currentLayer.div.focus({
+      this._uiManager.currentLayer.div!.focus({
         preventScroll: true,
       });
     }
@@ -1849,12 +1849,12 @@ export class AnnotationEditor<
    * @param {Object} annotation
    * @returns {HTMLElement|null}
    */
-  renderAnnotationElement(annotation) {
-    let content = annotation.container.querySelector(".annotationContent");
+  renderAnnotationElement(annotation: AnnotationElement<AnnotationData>) {
+    let content = annotation.container!.querySelector(".annotationContent");
     if (!content) {
       content = document.createElement("div");
       content.classList.add("annotationContent", this.editorType);
-      annotation.container.prepend(content);
+      annotation.container!.prepend(content);
     } else if (content.nodeName === "CANVAS") {
       const canvas = content;
       content = document.createElement("div");

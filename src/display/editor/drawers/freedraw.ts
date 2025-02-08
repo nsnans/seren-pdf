@@ -418,7 +418,7 @@ export class FreeDrawOutliner {
   }
 }
 
-interface BBox {
+export interface BBoxType {
   x: number;
   y: number;
   width: number;
@@ -430,7 +430,7 @@ export class FreeDrawOutline extends Outline {
 
   #box: RectType;
 
-  #bbox: BBox | null = null;
+  #bbox: BBoxType | null = null;
 
   #innerMargin: number;
 

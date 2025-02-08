@@ -44,6 +44,7 @@ import { FilterFactory } from "../filter_factory";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { ColorPicker } from "./color_picker";
 import { AnnotationEditor } from "./editor";
+import { InkEditor } from "./ink";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import { HighlightToolbar } from "./toolbar";
@@ -90,7 +91,7 @@ class IdManager {
   }
 }
 
-interface CacheImage {
+export interface CacheImage {
   bitmap: ImageBitmap | HTMLImageElement | null;
   id: string;
   refCounter: number;
@@ -767,7 +768,7 @@ class AnnotationEditorUIManager {
 
   #allEditors = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
 
-  #allLayers = new Map();
+  #allLayers = new Map<number, AnnotationEditorLayer>();
 
   #altTextManager = null;
 
@@ -1071,7 +1072,9 @@ class AnnotationEditorUIManager {
     this.commitOrRemove();
     this.viewParameters.realScale = scale * PixelsPerInch.PDF_TO_CSS_UNITS;
     for (const editor of this.#editorsToRescale) {
-      editor!.onScaleChanging();
+      if (editor instanceof InkEditor) {
+        editor!.onScaleChanging();
+      }
     }
   }
 
@@ -1086,7 +1089,7 @@ class AnnotationEditorUIManager {
       : anchorNode!;
   }
 
-  #getLayerForTextLayer(textLayer) {
+  #getLayerForTextLayer(textLayer: HTMLDivElement) {
     const { currentLayer } = this;
     if (currentLayer.hasTextLayer(textLayer)) {
       return currentLayer;
@@ -1114,7 +1117,7 @@ class AnnotationEditorUIManager {
     }
     selection.empty();
 
-    const layer = this.#getLayerForTextLayer(textLayer);
+    const layer = this.#getLayerForTextLayer(<HTMLDivElement>textLayer!);
     const isNoneMode = this.#mode === AnnotationEditorType.NONE;
     const callback = () => {
       layer?.createAndAddNewEditor({ x: 0, y: 0 }, false, {
@@ -1618,7 +1621,7 @@ class AnnotationEditorUIManager {
   }
 
   get currentLayer() {
-    return this.#allLayers.get(this.#currentPageIndex);
+    return this.#allLayers.get(this.#currentPageIndex)!;
   }
 
   getLayer(pageIndex: number) {
@@ -1729,7 +1732,7 @@ class AnnotationEditorUIManager {
    * @param {number} type
    * @param {*} value
    */
-  updateParams(type: number, value: string | number | boolean | null) {
+  updateParams(type: AnnotationEditorParamsType, value: string | number | boolean | null) {
     if (!this.#editorTypes) {
       return;
     }

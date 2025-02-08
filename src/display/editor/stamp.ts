@@ -26,7 +26,7 @@ import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
-import { AnnotationEditorUIManager } from "./tools";
+import { AnnotationEditorUIManager, CacheImage } from "./tools";
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
@@ -101,7 +101,7 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
   }
 
   /** @inheritdoc */
-  static paste(item, parent: AnnotationEditorLayer) {
+  static paste(item: DataTransferItem, parent: AnnotationEditorLayer) {
     parent.pasteEditor(AnnotationEditorType.STAMP, {
       bitmapFile: item.getAsFile(),
     });
@@ -131,7 +131,7 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
     };
   }
 
-  #getBitmapFetched(data, fromId = false) {
+  #getBitmapFetched(data: CacheImage | null, fromId = false) {
     if (!data) {
       this.remove();
       return;
