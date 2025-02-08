@@ -805,6 +805,9 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
 }
 
 export interface AnnotationData {
+  richText: StringObj | null;
+  titleObj: StringObj | null;
+  alternativeText: string | null;
   annotationFlags: number;
   borderStyle: AnnotationBorderStyle;
   // TODO 要再推断一下
@@ -1666,7 +1669,7 @@ export class AnnotationBorderStyle {
 
   public style: number;
 
-  protected rawWidth: number;
+  public rawWidth: number;
 
   protected dashArray: number[];
 
@@ -1677,6 +1680,13 @@ export class AnnotationBorderStyle {
     this.dashArray = [3];
     this.horizontalCornerRadius = 0;
     this.verticalCornerRadius = 0;
+  }
+
+  noBorder() {
+    this.width = 0;
+    this.rawWidth = 0;
+    this.dashArray = [];
+    return this;
   }
 
   /**
@@ -4115,7 +4125,6 @@ class LinkAnnotation extends Annotation<LinkData> {
 }
 
 export interface PopupData extends AnnotationData {
-  titleObj: StringObj;
   open: boolean;
   annotationType: AnnotationType;
   parentRect: RectType;

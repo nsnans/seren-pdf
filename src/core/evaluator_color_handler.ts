@@ -121,7 +121,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
   }
 
   async handleTilingType(
-    fn: OPS, color: Uint8ClampedArray | null, resources: Dict, pattern: BaseStream,
+    fn: OPS, color: Uint8ClampedArray<ArrayBuffer> | null, resources: Dict, pattern: BaseStream,
     patternDict: Dict, operatorList: OperatorList, task: WorkerTask, localTilingPatternCache: LocalTilingPatternCache
   ) {
     // Create an IR of the pattern code.

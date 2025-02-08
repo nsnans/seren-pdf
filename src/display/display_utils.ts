@@ -493,7 +493,7 @@ export class PDFDateString {
    * @param {string} input
    * @returns {Date|null}
    */
-  static toDateObject(input: string): Date | null {
+  static toDateObject(input: string | null): Date | null {
     if (!input || typeof input !== "string") {
       return null;
     }

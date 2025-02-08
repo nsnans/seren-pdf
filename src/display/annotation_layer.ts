@@ -24,7 +24,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
-import { AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
+import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {
@@ -87,6 +87,8 @@ export interface AnnotationElementParameters<DATA> {
   enableScripting: boolean;
   hasJSActions: boolean;
   fieldObjects: object;
+  elements: AnnotationElement<AnnotationData>[];
+  parent: AnnotationLayer;
 }
 
 class AnnotationElementFactory {
@@ -207,7 +209,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   protected _fieldObjects: object;
 
-  protected parent;
+  protected parent: AnnotationLayer;
 
   public container: HTMLElement | null = null;
 
@@ -680,7 +682,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
         contentsObj: data.contentsObj,
         richText: data.richText,
         parentRect: data.rect!,
-        borderStyle: 0,
+        borderStyle: new AnnotationBorderStyle().noBorder(),
         id: `popup_${data.id}`,
         rotation: data.rotation,
       },
@@ -717,8 +719,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
           if (id === skipId) {
             continue;
           }
-          const exportValue =
-            typeof exportValues === "string" ? exportValues : null;
+          const exportValue = typeof exportValues === "string" ? exportValues : null;
 
           const domElement = document.querySelector(
             `[data-element-id="${id}"]`
@@ -960,7 +961,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
    */
   _bindJSAction(link: HTMLAnchorElement, data: LinkData) {
     link.href = this.linkService.getAnchorUrl("");
-    const map = new Map([
+    const map = new Map<string, keyof HTMLAnchorElement>([
       ["Action", "onclick"],
       ["Mouse Up", "onmouseup"],
       ["Mouse Down", "onmousedown"],
@@ -970,7 +971,8 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       if (!jsName) {
         continue;
       }
-      link[jsName] = () => {
+      // 这里由link.onclick的这种方式，改造成了addEventListener的形式
+      link.addEventListener(jsName, () => {
         this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
           source: this,
           detail: {
@@ -979,7 +981,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
           },
         });
         return false;
-      };
+      });
     }
 
     if (!link.onclick) {
@@ -996,7 +998,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       include: boolean;
     }
   ) {
-    const otherClickAction = link.onclick;
+    const otherClickAction: Function | null = link.onclick;
     if (!otherClickAction) {
       link.href = this.linkService.getAnchorUrl("");
     }
@@ -1014,6 +1016,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
     }
 
     link.onclick = () => {
+      // 这种写法也真的是一言难尽
       otherClickAction?.();
 
       const {
@@ -1210,7 +1213,7 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
     getter: (evt: CustomEvent) => string | boolean
   ) {
     for (const [baseName, eventName] of names) {
-      if (eventName === "Action" || this.data.actions?.[eventName]) {
+      if (eventName === "Action" || this.data.actions?.has(eventName)) {
         if (eventName === "Focus" || eventName === "Blur") {
           elementData ||= { focused: false };
         }
@@ -1316,14 +1319,14 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
 
   setPropertyOnSiblings(
     base: HTMLTextAreaElement | HTMLInputElement,
-    key: string,
+    key: "value" /*不是很好解决的蛋疼问题，先这么做着吧 */,
     value: string,
     keyInStorage: string
   ) {
     const storage = this.annotationStorage;
     for (const element of this._getElementsByName(base.name, base.id)) {
       if (element.domElement) {
-        element.domElement[key] = value;
+        (<HTMLTextAreaElement | HTMLInputElement>element.domElement)[key] = value;
       }
       storage.setValue(element.id, { [keyInStorage]: value });
     }
@@ -1569,7 +1572,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
         if (this.data.actions?.has("Keystroke")) {
           element.addEventListener("beforeinput", event => {
             elementData.lastCommittedValue = null;
-            const { data } = event;
+            const { data } = <InputEvent>event;
             const target = <HTMLInputElement>event.target;
             const { value, selectionStart, selectionEnd } = target;
 
@@ -2150,7 +2153,7 @@ class PopupAnnotationElement extends AnnotationElement<PopupData> {
   constructor(parameters: AnnotationElementParameters<PopupData>) {
     const { data, elements } = parameters;
     super(parameters, AnnotationElement._hasPopupData(
-      data.titleObj, data.contentObj, data.richText
+      data.titleObj, data.contentsObj, data.richText
     ));
     this.elements = elements;
     this.popup = null;
@@ -2161,7 +2164,7 @@ class PopupAnnotationElement extends AnnotationElement<PopupData> {
 
     const popup = (this.popup = new PopupElement(
       this.container!,
-      this.data.color,
+      <RGBType>Array.from(this.data.color!),
       this.elements,
       this.data.titleObj!,
       this.data.modificationDate,
@@ -2240,7 +2243,7 @@ class PopupElement {
 
   #elements: AnnotationElement<AnnotationData>[];
 
-  #parent = null;
+  #parent: AnnotationLayer | null = null;
 
   #parentRect: RectType | null;
 
@@ -2270,10 +2273,10 @@ class PopupElement {
     color: RGBType,
     elements: AnnotationElement<AnnotationData>[],
     titleObj: StringObj,
-    modificationDate: string,
+    modificationDate: string | null,
     contentsObj: StringObj,
     richText: PopupContent,
-    parent,
+    parent: AnnotationLayer,
     rect: RectType,
     parentRect: RectType | null,
     open: boolean,
@@ -2497,7 +2500,7 @@ class PopupElement {
       viewport: {
         rawDims: { pageWidth, pageHeight, pageX, pageY },
       },
-    } = this.#parent;
+    } = this.#parent!;
 
     let useParentRect = !!this.#parentRect;
     let rect = useParentRect ? this.#parentRect : this.#rect;
@@ -3183,14 +3186,14 @@ export class AnnotationLayer {
 
   #structTreeLayer = null;
 
-  protected page: PDFPageProxy;
-
-  protected viewport: PageViewport;
-
   protected _annotationEditorUIManager;
-  
-  protected zIndex: number;
-  
+
+  public page: PDFPageProxy;
+
+  public viewport: PageViewport;
+
+  public zIndex: number;
+
   public div: HTMLDivElement;
 
   constructor(
@@ -3246,7 +3249,7 @@ export class AnnotationLayer {
     const layer = this.div;
     setLayerDimensions(layer, this.viewport);
 
-    const popupToElements = new Map();
+    const popupToElements = new Map<string, PopupAnnotationElement[]>();
     const elementParams = {
       data: <AnnotationData | null>null,
       layer,
@@ -3260,7 +3263,7 @@ export class AnnotationLayer {
       hasJSActions: params.hasJSActions,
       fieldObjects: params.fieldObjects,
       parent: this,
-      elements: null,
+      elements: <AnnotationElement<AnnotationData>[]>[],
     };
 
     for (const data of annotations) {
@@ -3282,7 +3285,9 @@ export class AnnotationLayer {
         elementParams.elements = elements;
       }
       elementParams.data = data;
-      const element = AnnotationElementFactory.create(elementParams);
+      const element = AnnotationElementFactory.create(
+        <AnnotationElementParameters<AnnotationData>>elementParams
+      );
 
       if (!element.isRenderable) {
         continue;
@@ -3291,9 +3296,9 @@ export class AnnotationLayer {
       if (!isPopupAnnotation && data.popupRef) {
         const elements = popupToElements.get(data.popupRef);
         if (!elements) {
-          popupToElements.set(data.popupRef, [element]);
+          popupToElements.set(data.popupRef, [<PopupAnnotationElement>element]);
         } else {
-          elements.push(element);
+          elements.push(<PopupAnnotationElement>element);
         }
       }
 

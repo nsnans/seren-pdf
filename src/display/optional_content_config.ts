@@ -21,7 +21,7 @@ import {
   warn,
 } from "../shared/util";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
-import { CatalogOptionalContentConfig, OptionalContentDataGroup } from "../core/catalog";
+import { CatalogOptionalContentConfig, OptionalContentDataGroup, OptionalContentOrder } from "../core/catalog";
 import { OptionalContent } from "../core/image_utils";
 
 const INTERNAL = Symbol("INTERNAL");
@@ -101,7 +101,7 @@ class OptionalContentConfig {
 
   protected _initialHash: string | null = null;
 
-  protected _order = null;
+  protected _order: (string | OptionalContentOrder)[] | null = null;
 
   protected name: string | null = null;
 
@@ -146,7 +146,7 @@ class OptionalContentConfig {
     this._initialHash = this.getHash();
   }
 
-  #evaluateVisibilityExpression(array) {
+  #evaluateVisibilityExpression(array: (string | string[])[]): boolean {
     const length = array.length;
     if (length < 2) {
       return true;
@@ -316,7 +316,7 @@ class OptionalContentConfig {
     return this._initialHash === null || this.getHash() === this._initialHash;
   }
 
-  getOrder() {
+  getOrder(): (string | OptionalContentOrder)[] | null {
     if (!this._groups.size) {
       return null;
     }
