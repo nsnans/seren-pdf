@@ -350,7 +350,7 @@ class MeshShadingPattern extends BaseShadingPattern {
   protected _bbox: RectType | null;
 
   protected _background: Uint8ClampedArray | null;
-  
+
   constructor(IR: MeshShadingPatternIR) {
     super();
     this._coords = IR[2];
@@ -769,8 +769,9 @@ class TilingPattern {
         const ctx = this.ctx;
         context.fillStyle = ctx.fillStyle;
         context.strokeStyle = ctx.strokeStyle;
-        current.fillColor = ctx.fillStyle;
-        current.strokeColor = ctx.strokeStyle;
+        // TODO 这里的两个强转可能是存在问题的，需要进一步修改current的代码
+        current.fillColor = <string>ctx.fillStyle;
+        current.strokeColor = <string>ctx.strokeStyle;
         break;
       case PaintType.UNCOLORED:
         const cssColor = Util.makeHexColor(color[0], color[1], color[2]);

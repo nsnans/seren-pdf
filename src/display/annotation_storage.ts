@@ -38,7 +38,7 @@ class AnnotationStorage {
 
   #modified = false;
 
-  #modifiedIds = null;
+  #modifiedIds: { ids: Set<string>, hash: string } | null = null;
 
   #storage = new Map<string, Record<string, any>>();
 
@@ -320,6 +320,7 @@ class PrintAnnotationStorage extends AnnotationStorage {
   // eslint-disable-next-line getter-return
   get print() {
     unreachable("Should not call PrintAnnotationStorage.print");
+    return super.print;
   }
 
   /**

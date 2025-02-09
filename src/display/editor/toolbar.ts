@@ -39,8 +39,6 @@ export class EditorToolbar {
 
   #buttons: HTMLDivElement | null = null;
 
-  #altText: AltText | null = null;
-
   constructor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#editor = editor;
 
@@ -134,7 +132,7 @@ export class EditorToolbar {
     const button = document.createElement("button");
     button.className = "delete";
     button.tabIndex = 0;
-    button.setAttribute("data-l10n-id", EditorToolbar.#l10nRemove[editorType]);
+    button.setAttribute("data-l10n-id", (<Record<string, string>>EditorToolbar.#l10nRemove)[editorType]);
     this.#addListenersToElement(button);
     const signal = _uiManager._signal!;
     button.addEventListener("click", () => _uiManager.delete(), { signal });
@@ -151,7 +149,6 @@ export class EditorToolbar {
     const button = await altText.render();
     this.#addListenersToElement(button);
     this.#buttons!.prepend(button, this.#divider);
-    this.#altText = altText;
   }
 
   addColorPicker(colorPicker: ColorPicker) {

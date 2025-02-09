@@ -27,7 +27,7 @@ import {
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationElement } from "../annotation_layer";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import {
@@ -37,6 +37,12 @@ import {
 } from "./tools";
 
 const EOL_PATTERN = /\r\n?|\n/g;
+
+interface FreeTextParameter extends AnnotationEditorParameters {
+  color: string | null;
+  fontSize: number | null;
+  name: "freeTextEditor"
+}
 
 /**
  * Basic text editor in order to create a FreeTex annotation.
@@ -138,11 +144,9 @@ export class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, Anno
 
   protected overlayDiv: HTMLDivElement | null = null;
 
-  constructor(params) {
+  constructor(params: FreeTextParameter) {
     super({ ...params, name: "freeTextEditor" });
-    this.#color =
-      params.color ||
-      FreeTextEditor._defaultColor ||
+    this.#color = params.color || FreeTextEditor._defaultColor ||
       AnnotationEditorHelper._defaultLineColor;
     this.#fontSize = params.fontSize || FreeTextEditor._defaultFontSize;
   }
@@ -656,10 +660,10 @@ export class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, Anno
     return this.div;
   }
 
-  static #getNodeContent(node) {
+  static #getNodeContent(node: ChildNode) {
     return (
-      node.nodeType === Node.TEXT_NODE ? node.nodeValue : node.innerText
-    ).replaceAll(EOL_PATTERN, "");
+      node.nodeType === Node.TEXT_NODE ? node.nodeValue : (<HTMLElement>node).innerText
+    )!.replaceAll(EOL_PATTERN, "");
   }
 
   #setContent() {
