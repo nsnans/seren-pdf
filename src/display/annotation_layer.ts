@@ -209,7 +209,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   protected _fieldObjects: object;
 
-  protected parent: AnnotationLayer;
+  public parent: AnnotationLayer;
 
   public container: HTMLElement | null = null;
 

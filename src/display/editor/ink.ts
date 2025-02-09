@@ -13,26 +13,25 @@
  * limitations under the License.
  */
 
+import { PlatformHelper } from "../../platform/platform_helper";
 import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
   assert,
   Util,
 } from "../../shared/util";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
-import { InkAnnotationElement } from "../annotation_layer";
-import { noContextMenu, PointType, RectType } from "../display_utils";
-import { AnnotationEditorUIManager, opacityToHex } from "./tools";
 import { IL10n } from "../../viewer/common/component_types";
+import { noContextMenu, PointType, RectType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { PlatformHelper } from "../../platform/platform_helper";
-import { AnnotationEditorState } from "./state/editor_state";
+import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
+import { AnnotationEditorState } from "./state/editor_state";
+import { AnnotationEditorUIManager, opacityToHex } from "./tools";
 
 /**
  * Basic draw editor in order to generate an Ink annotation.
  */
-class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+export class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
 
   #baseHeight = 0;
 
@@ -927,155 +926,6 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
   }
 
   /**
-   * Convert into a Path2D.
-   * @param {Array<Array<number>>} bezier
-   * @returns {Path2D}
-   */
-  static #buildPath2D(bezier: PointType[][]) {
-    const path2D = new Path2D();
-    for (let i = 0, ii = bezier.length; i < ii; i++) {
-      const [first, control1, control2, second] = bezier[i];
-      if (i === 0) {
-        path2D.moveTo(...first);
-      }
-      path2D.bezierCurveTo(
-        control1[0],
-        control1[1],
-        control2[0],
-        control2[1],
-        second[0],
-        second[1]
-      );
-    }
-    return path2D;
-  }
-
-  static #toPDFCoordinates(points: number[], rect: RectType, rotation: number) {
-    const [blX, blY, trX, trY] = rect;
-
-    switch (rotation) {
-      case 0:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] += blX;
-          points[i + 1] = trY - points[i + 1];
-        }
-        break;
-      case 90:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = points[i + 1] + blX;
-          points[i + 1] = x + blY;
-        }
-        break;
-      case 180:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] = trX - points[i];
-          points[i + 1] += blY;
-        }
-        break;
-      case 270:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = trX - points[i + 1];
-          points[i + 1] = trY - x;
-        }
-        break;
-      default:
-        throw new Error("Invalid rotation");
-    }
-    return points;
-  }
-
-  static #fromPDFCoordinates(points: number[], rect: RectType, rotation: number) {
-    const [blX, blY, trX, trY] = rect;
-
-    switch (rotation) {
-      case 0:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] -= blX;
-          points[i + 1] = trY - points[i + 1];
-        }
-        break;
-      case 90:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = points[i + 1] - blY;
-          points[i + 1] = x - blX;
-        }
-        break;
-      case 180:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          points[i] = trX - points[i];
-          points[i + 1] -= blY;
-        }
-        break;
-      case 270:
-        for (let i = 0, ii = points.length; i < ii; i += 2) {
-          const x = points[i];
-          points[i] = trY - points[i + 1];
-          points[i + 1] = trX - x;
-        }
-        break;
-      default:
-        throw new Error("Invalid rotation");
-    }
-    return points;
-  }
-
-  /**
-   * Transform and serialize the paths.
-   * @param {number} s - scale factor
-   * @param {number} tx - abscissa of the translation
-   * @param {number} ty - ordinate of the translation
-   * @param {Array<number>} rect - the bounding box of the annotation
-   */
-  #serializePaths(s: number, tx: number, ty: number, rect: RectType) {
-    const paths = [];
-    const padding = this.thickness! / 2;
-    const shiftX = s * tx + padding;
-    const shiftY = s * ty + padding;
-    for (const bezier of this.paths) {
-      const buffer = [];
-      const points = [];
-      for (let j = 0, jj = bezier.length; j < jj; j++) {
-        const [first, control1, control2, second] = bezier[j];
-        if (first[0] === second[0] && first[1] === second[1] && jj === 1) {
-          // We have only one point.
-          const p0 = s * first[0] + shiftX;
-          const p1 = s * first[1] + shiftY;
-          buffer.push(p0, p1);
-          points.push(p0, p1);
-          break;
-        }
-        const p10 = s * first[0] + shiftX;
-        const p11 = s * first[1] + shiftY;
-        const p20 = s * control1[0] + shiftX;
-        const p21 = s * control1[1] + shiftY;
-        const p30 = s * control2[0] + shiftX;
-        const p31 = s * control2[1] + shiftY;
-        const p40 = s * second[0] + shiftX;
-        const p41 = s * second[1] + shiftY;
-
-        if (j === 0) {
-          buffer.push(p10, p11);
-          points.push(p10, p11);
-        }
-        buffer.push(p20, p21, p30, p31, p40, p41);
-        points.push(p20, p21);
-        if (j === jj - 1) {
-          points.push(p40, p41);
-        }
-      }
-      paths.push({
-        bezier: InkEditor.#toPDFCoordinates(buffer, rect, this.rotation),
-        points: InkEditor.#toPDFCoordinates(points, rect, this.rotation),
-      });
-    }
-
-    return paths;
-  }
-
-  /**
    * Get the bounding box containing all the paths.
    * @returns {Array<number>}
    */
@@ -1088,10 +938,10 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
     for (const path of this.paths) {
       for (const [first, control1, control2, second] of path) {
         const bbox = Util.bezierBoundingBox(
-          ...first,
-          ...control1,
-          ...control2,
-          ...second
+          ...<PointType>first,
+          ...<PointType>control1,
+          ...<PointType>control2,
+          ...<PointType>second
         );
         xMin = Math.min(xMin, bbox[0]);
         yMin = Math.min(yMin, bbox[1]);
@@ -1163,90 +1013,4 @@ class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditor
       prevTranslationY - this.translationY - unscaledPadding
     );
   }
-
-  /** @inheritdoc */
-  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
-    if (data instanceof InkAnnotationElement) {
-      return null;
-    }
-    const editor = await super.deserialize(data, parent, uiManager);
-
-    editor.thickness = data.thickness;
-    editor.color = Util.makeHexColor(...data.color);
-    editor.opacity = data.opacity;
-
-    const [pageWidth, pageHeight] = editor.pageDimensions;
-    const width = editor.width * pageWidth;
-    const height = editor.height * pageHeight;
-    const scaleFactor = editor.parentScale;
-    const padding = data.thickness / 2;
-
-    editor.#disableEditing = true;
-    editor.#realWidth = Math.round(width);
-    editor.#realHeight = Math.round(height);
-
-    const { paths, rect, rotation } = data;
-
-    for (let { bezier } of paths) {
-      bezier = InkEditor.#fromPDFCoordinates(bezier, rect, rotation);
-      const path: PointType[][] = [];
-      editor.paths.push(path);
-      let p0 = scaleFactor * (bezier[0] - padding);
-      let p1 = scaleFactor * (bezier[1] - padding);
-      for (let i = 2, ii = bezier.length; i < ii; i += 6) {
-        const p10 = scaleFactor * (bezier[i] - padding);
-        const p11 = scaleFactor * (bezier[i + 1] - padding);
-        const p20 = scaleFactor * (bezier[i + 2] - padding);
-        const p21 = scaleFactor * (bezier[i + 3] - padding);
-        const p30 = scaleFactor * (bezier[i + 4] - padding);
-        const p31 = scaleFactor * (bezier[i + 5] - padding);
-        path.push([
-          [p0, p1],
-          [p10, p11],
-          [p20, p21],
-          [p30, p31],
-        ]);
-        p0 = p30;
-        p1 = p31;
-      }
-      const path2D = this.#buildPath2D(path);
-      editor.bezierPath2D.push(path2D);
-    }
-
-    const bbox = editor.#getBbox();
-    editor.#baseWidth = Math.max(AnnotationEditorHelper.MIN_SIZE, bbox[2] - bbox[0]);
-    editor.#baseHeight = Math.max(AnnotationEditorHelper.MIN_SIZE, bbox[3] - bbox[1]);
-    editor.#setScaleFactor(width, height);
-
-    return editor;
-  }
-
-  /** @inheritdoc */
-  serialize() {
-    if (this.isEmpty()) {
-      return null;
-    }
-
-    const rect = this.getRect(0, 0);
-    const color = AnnotationEditorHelper._colorManager.convert(<string>this.ctx!.strokeStyle);
-
-    return {
-      annotationType: AnnotationEditorType.INK,
-      color,
-      thickness: this.thickness,
-      opacity: this.opacity,
-      paths: this.#serializePaths(
-        this.scaleFactor / this.parentScale,
-        this.translationX,
-        this.translationY,
-        rect
-      ),
-      pageIndex: this.pageIndex,
-      rect,
-      rotation: this.rotation,
-      structTreeParentId: this._structTreeParentId,
-    };
-  }
 }
-
-export { InkEditor };

@@ -41,7 +41,7 @@ import {
  * @property {number} x - x-coordinate
  * @property {number} y - y-coordinate
  */
-interface AnnotationEditorParameters {
+export interface AnnotationEditorParameters {
   uiManager: AnnotationEditorUIManager;
   parent: AnnotationEditorLayer;
   id: string;
@@ -205,37 +205,6 @@ export class AnnotationEditorHelper {
     return [];
   }
 
-  /**
-   * Deserialize the editor.
-   * The result of the deserialization is a new editor.
-   *
-   * @param {Object} data
-   * @param {AnnotationEditorLayer} parent
-   * @param {AnnotationEditorUIManager} uiManager
-   * @returns {Promise<AnnotationEditor | null>}
-   */
-  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
-    const editor = new this.prototype.constructor({
-      parent,
-      id: parent.getNextId(),
-      uiManager,
-    });
-    editor.rotation = data.rotation;
-    editor.#accessibilityData = data.accessibilityData;
-
-    const [pageWidth, pageHeight] = editor.pageDimensions;
-    const [x, y, width, height] = editor.getRectInCurrentCoords(
-      data.rect,
-      pageHeight
-    );
-
-    editor.x = x / pageWidth;
-    editor.y = y / pageHeight;
-    editor.width = width / pageWidth;
-    editor.height = height / pageHeight;
-
-    return editor;
-  }
 }
 
 
@@ -282,9 +251,6 @@ export abstract class AnnotationEditor<
 
   #prevDragY = 0;
 
-  // TODO 这里需要再分析分析
-  #telemetryTimeouts: Map<unknown, number> | null = null;
-
   #isDraggable = false;
 
   #zIndex = AnnotationEditorHelper._zIndex++;
@@ -315,9 +281,9 @@ export abstract class AnnotationEditor<
 
   public isAttachedToDOM: boolean;
 
-  protected width: number;
+  public width: number;
 
-  protected height: number;
+  public height: number;
 
   public pageIndex: number;
 
@@ -1493,12 +1459,6 @@ export abstract class AnnotationEditor<
     }
     this.#stopResizing();
     this.removeEditToolbar();
-    if (this.#telemetryTimeouts) {
-      for (const timeout of this.#telemetryTimeouts.values()) {
-        clearTimeout(timeout);
-      }
-      this.#telemetryTimeouts = null;
-    }
     this.parent = null;
   }
 
@@ -1775,51 +1735,11 @@ export abstract class AnnotationEditor<
   }
 
   /**
-   * Get the data to report to the telemetry when the editor is added.
-   * @returns {Object}
-   */
-  get telemetryInitialData() {
-    return { action: "added" };
-  }
-
-  /**
    * The telemetry data to use when saving/printing.
    * @returns {Object|null}
    */
   get telemetryFinalData(): { type: string; hasAltText: boolean; } | null {
     return null;
-  }
-
-  _reportTelemetry(data: {
-    action: string,
-    data: object | null,
-    type: string | null
-  }, mustWait = false) {
-    if (mustWait) {
-      this.#telemetryTimeouts ||= new Map();
-      const { action } = data;
-      let timeout = this.#telemetryTimeouts.get(action);
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-      timeout = setTimeout(() => {
-        this._reportTelemetry(data);
-        this.#telemetryTimeouts!.delete(action);
-        if (this.#telemetryTimeouts!.size === 0) {
-          this.#telemetryTimeouts = null;
-        }
-      }, AnnotationEditorHelper._telemetryTimeout);
-      this.#telemetryTimeouts.set(action, timeout);
-      return;
-    }
-    data.type ||= this.editorType;
-    this._uiManager._eventBus.dispatch("reporttelemetry", {
-      source: this,
-      details: {
-        type: "editing",
-        data,
-      },
-    });
   }
 
   /**
@@ -1846,10 +1766,8 @@ export abstract class AnnotationEditor<
 
   /**
    * Render an annotation in the annotation layer.
-   * @param {Object} annotation
-   * @returns {HTMLElement|null}
    */
-  renderAnnotationElement(annotation: AnnotationElement<AnnotationData>) {
+  renderAnnotationElement(annotation: AnnotationElement<AnnotationData>): HTMLElement | null {
     let content = annotation.container!.querySelector(".annotationContent");
     if (!content) {
       content = document.createElement("div");
@@ -1862,7 +1780,7 @@ export abstract class AnnotationEditor<
       canvas.before(content);
     }
 
-    return content;
+    return <HTMLElement>content;
   }
 
   resetAnnotationElement(annotation: AnnotationElement<AnnotationData>) {

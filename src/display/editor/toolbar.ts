@@ -126,7 +126,6 @@ export class EditorToolbar {
 
   show() {
     this.#toolbar!.classList.remove("hidden");
-    this.#altText?.shown();
   }
 
   #addDeleteButton() {

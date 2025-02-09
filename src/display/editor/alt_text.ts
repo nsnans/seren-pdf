@@ -105,16 +105,6 @@ export class AltText {
     const onClick = (event: UIEvent) => {
       event.preventDefault();
       this.#editor._uiManager.editAltText(this.#editor);
-      if (this.#useNewAltTextFlow) {
-        this.#editor._reportTelemetry({
-          action: "pdfjs.image.alt_text.image_status_label_clicked",
-          data: {
-            label: this.#label,
-            alt_text_modal: false
-          },
-          type: null
-        });
-      }
     };
     altText.addEventListener("click", onClick, { capture: true, signal });
     altText.addEventListener(
@@ -252,17 +242,6 @@ export class AltText {
     this.#altTextButton.disabled = !enabled;
   }
 
-  shown() {
-    this.#editor._reportTelemetry({
-      action: "pdfjs.image.alt_text.image_status_label_displayed",
-      data: {
-        label: this.#label,
-        alt_text_modal: false
-      },
-      type: null
-    });
-  }
-
   destroy() {
     this.#altTextButton?.remove();
     this.#altTextButton = null;
@@ -317,9 +296,6 @@ export class AltText {
         this.#altTextTooltipTimeout = setTimeout(() => {
           this.#altTextTooltipTimeout = null;
           this.#altTextTooltip!.classList.add("show");
-          this.#editor!._reportTelemetry({
-            action: "alt_text_tooltip", data: null, type: null
-          });
         }, DELAY_TO_SHOW_TOOLTIP);
       }, { signal });
       button.addEventListener("mouseleave", () => {

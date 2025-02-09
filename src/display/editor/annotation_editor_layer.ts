@@ -33,10 +33,7 @@ import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { EditorManager } from "./editor_manager";
-import { FreeTextEditor } from "./freetext";
 import { HighlightEditor } from "./highlight";
-import { InkEditor } from "./ink";
-import { StampEditor } from "./stamp";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager } from "./tools";
@@ -285,12 +282,6 @@ export class AnnotationEditorLayer {
       if (annotationElementIds.has(editable.data.id)) {
         continue;
       }
-      const editor = await this.deserialize(editable);
-      if (!editor) {
-        continue;
-      }
-      this.addOrRebuild(editor);
-      editor.enableEditing();
     }
   }
 
@@ -544,7 +535,6 @@ export class AnnotationEditorLayer {
     editor.fixAndSetPosition();
     editor.onceAdded();
     this.#uiManager.addToAnnotationStorage(editor);
-    editor._reportTelemetry(editor.telemetryInitialData);
   }
 
   moveEditorInDOM(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
@@ -656,17 +646,6 @@ export class AnnotationEditorLayer {
     if (editor) {
       this.add(editor);
     }
-  }
-
-  /**
-   * Create a new editor
-   * @param {Object} data
-   * @returns {AnnotationEditor | null}
-   */
-  async deserialize(data) {
-    return ((await EditorManager.getDescriptor(data.annotationType ?? data.annotationEditorType)
-      ?.deserialize(data, this, this.#uiManager)) || null
-    );
   }
 
   /**

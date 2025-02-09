@@ -13,21 +13,27 @@
  * limitations under the License.
  */
 
+import { AnnotationData } from "../../core/annotation";
 import { PlatformHelper } from "../../platform/platform_helper";
 import {
   AnnotationEditorType,
-  AnnotationPrefix,
-  shadow,
+  shadow
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
-import { StampAnnotationElement } from "../annotation_layer";
-import { OutputScale, PixelsPerInch } from "../display_utils";
+import { AnnotationElement } from "../annotation_layer";
+import { OutputScale } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager, CacheImage } from "./tools";
 
+
+interface StampEditorParameter extends AnnotationEditorParameters {
+  bitmapFile: File | null;
+  name: "stampEditor";
+  bitmapUrl: string | null;
+}
 /**
  * Basic text editor in order to create a FreeTex annotation.
  */
@@ -39,9 +45,9 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
 
   #bitmapPromise: Promise<void> | null = null;
 
-  #bitmapUrl = null;
+  #bitmapUrl: string | null = null;
 
-  #bitmapFile = null;
+  #bitmapFile: File | null = null;
 
   #bitmapFileName = "";
 
@@ -59,7 +65,7 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
 
   static _editorType = AnnotationEditorType.STAMP;
 
-  constructor(params) {
+  constructor(params: StampEditorParameter) {
     super({ ...params, name: "stampEditor" });
     this.#bitmapUrl = params.bitmapUrl;
     this.#bitmapFile = params.bitmapFile;
@@ -123,14 +129,6 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
     };
   }
 
-  static computeTelemetryFinalData(data) {
-    const hasAltTextStats = data.get("hasAltText");
-    return {
-      hasAltText: hasAltTextStats.get(true) ?? 0,
-      hasNoAltText: hasAltTextStats.get(false) ?? 0,
-    };
-  }
-
   #getBitmapFetched(data: CacheImage | null, fromId = false) {
     if (!data) {
       this.remove();
@@ -168,10 +166,6 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
       this._uiManager.useNewAltTextFlow &&
       this.#bitmap
     ) {
-      this._reportTelemetry({
-        action: "pdfjs.image.image_added",
-        data: { alt_text_modal: false, alt_text_type: "empty" },
-      });
       try {
         // The alt-text dialog isn't opened but we still want to guess the alt
         // text.
@@ -274,7 +268,7 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
     }
     input.type = "file";
     input.accept = StampEditor.supportedTypesStr;
-    const signal = this._uiManager._signal;
+    const signal = this._uiManager._signal!;
     this.#bitmapPromise = new Promise<void>(resolve => {
       input.addEventListener(
         "change",
@@ -286,14 +280,6 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
             const data = await this._uiManager.imageManager.getFromFile(
               input.files[0]
             );
-            this._reportTelemetry({
-              action: "pdfjs.image.image_selected",
-              data: {
-                alt_text_modal: this._uiManager.useNewAltTextFlow,
-                label: ""
-              },
-              type: null
-            });
             this.#getBitmapFetched(data);
           }
           if (PlatformHelper.isTesting()) {
@@ -466,12 +452,6 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
       this.#hasBeenAddedInUndoStack = true;
     }
 
-    // There are multiple ways to add an image to the page, so here we just
-    // count the number of times an image is added to the page whatever the way
-    // is.
-    this._reportTelemetry({
-      action: "inserted_image", data: null, type: null
-    });
     if (this.#bitmapFileName) {
       canvas.setAttribute("aria-label", this.#bitmapFileName);
     }
@@ -715,53 +695,6 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
     return this.#canvas;
   }
 
-  #serializeBitmap(toUrl: boolean) {
-    if (toUrl) {
-      if (this.#isSvg) {
-        const url = this._uiManager.imageManager.getSvgUrl(this.#bitmapId!);
-        if (url) {
-          return url;
-        }
-      }
-      // We convert to a data url because it's sync and the url can live in the
-      // clipboard.
-      const canvas = document.createElement("canvas");
-      ({ width: canvas.width, height: canvas.height } = this.#bitmap!);
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(this.#bitmap!, 0, 0);
-
-      return canvas.toDataURL();
-    }
-
-    if (this.#isSvg) {
-      const [pageWidth, pageHeight] = this.pageDimensions;
-      // Multiply by PixelsPerInch.PDF_TO_CSS_UNITS in order to increase the
-      // image resolution when rasterizing it.
-      const width = Math.round(
-        this.width * pageWidth * PixelsPerInch.PDF_TO_CSS_UNITS
-      );
-      const height = Math.round(
-        this.height * pageHeight * PixelsPerInch.PDF_TO_CSS_UNITS
-      );
-      const offscreen = new OffscreenCanvas(width, height);
-      const ctx = offscreen.getContext("2d")!;
-      ctx.drawImage(
-        this.#bitmap!,
-        0,
-        0,
-        this.#bitmap!.width,
-        this.#bitmap!.height,
-        0,
-        0,
-        width,
-        height
-      );
-      return offscreen.transferToImageBitmap();
-    }
-
-    return structuredClone(this.#bitmap);
-  }
-
   /**
    * Create the resize observer.
    */
@@ -788,175 +721,10 @@ export class StampEditor extends AnnotationEditor<AnnotationEditorState, Annotat
     );
   }
 
-  /** @inheritdoc */
-  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
-    let initialData = null;
-    if (data instanceof StampAnnotationElement) {
-      const {
-        data: { rect, rotation, id, structParent, popupRef },
-        container,
-        parent: {
-          page: { pageNumber },
-        },
-      } = data;
-      const canvas = container!.querySelector("canvas")!;
-      const imageData = uiManager.imageManager.getFromCanvas(
-        container!.id, canvas
-      );
-      canvas.remove();
-
-      // When switching to edit mode, we wait for the structure tree to be
-      // ready (see pdf_viewer.js), so it's fine to use getAriaAttributesSync.
-      const altText = (await parent._structTree.getAriaAttributes(`${AnnotationPrefix}${id}`))
-        ?.get("aria-label") || "";
-
-      initialData = data = {
-        annotationType: AnnotationEditorType.STAMP,
-        bitmapId: imageData.id,
-        bitmap: imageData.bitmap,
-        pageIndex: pageNumber - 1,
-        rect: rect!.slice(0),
-        rotation,
-        id,
-        deleted: false,
-        accessibilityData: {
-          decorative: false,
-          altText,
-        },
-        isSvg: false,
-        structParent,
-        popupRef,
-      };
-    }
-    const editor = await super.deserialize(data, parent, uiManager);
-    const { rect, bitmap, bitmapUrl, bitmapId, isSvg, accessibilityData } =
-      data;
-    if (bitmapId && uiManager.imageManager.isValidId(bitmapId)) {
-      editor.#bitmapId = bitmapId;
-      if (bitmap) {
-        editor.#bitmap = bitmap;
-      }
-    } else {
-      editor.#bitmapUrl = bitmapUrl;
-    }
-    editor.#isSvg = isSvg;
-
-    const [parentWidth, parentHeight] = editor.pageDimensions;
-    editor.width = (rect[2] - rect[0]) / parentWidth;
-    editor.height = (rect[3] - rect[1]) / parentHeight;
-
-    editor.annotationElementId = data.id || null;
-    if (accessibilityData) {
-      editor.altTextData = accessibilityData;
-    }
-    editor._initialData = initialData;
-    // No need to be add in the undo stack if the editor is created from an
-    // existing one.
-    editor.#hasBeenAddedInUndoStack = !!initialData;
-
-    return editor;
-  }
 
   /** @inheritdoc */
-  serialize(isForCopying = false, context = null) {
-    if (this.isEmpty()) {
-      return null;
-    }
-
-    if (this.deleted) {
-      return this.serializeDeleted();
-    }
-
-    const serialized = {
-      annotationType: AnnotationEditorType.STAMP,
-      bitmapId: this.#bitmapId,
-      pageIndex: this.pageIndex,
-      rect: this.getRect(0, 0),
-      rotation: this.rotation,
-      isSvg: this.#isSvg,
-      structTreeParentId: this._structTreeParentId,
-    };
-
-    if (isForCopying) {
-      // We don't know what's the final destination (this pdf or another one)
-      // of this annotation and the clipboard doesn't support ImageBitmaps,
-      // hence we serialize the bitmap to a data url.
-      serialized.bitmapUrl = this.#serializeBitmap(/* toUrl = */ true);
-      serialized.accessibilityData = this.serializeAltText(true);
-      return serialized;
-    }
-
-    const { decorative, altText } = this.serializeAltText(false);
-    if (!decorative && altText) {
-      serialized.accessibilityData = { type: "Figure", alt: altText };
-    }
-    if (this.annotationElementId) {
-      const changes = this.#hasElementChanged(serialized);
-      if (changes.isSame) {
-        // Nothing has been changed.
-        return null;
-      }
-      if (changes.isSameAltText) {
-        delete serialized.accessibilityData;
-      } else {
-        serialized.accessibilityData.structParent =
-          this._initialData.structParent ?? -1;
-      }
-    }
-    serialized.id = this.annotationElementId;
-
-    if (context === null) {
-      return serialized;
-    }
-
-    context.stamps ||= new Map();
-    const area = this.#isSvg
-      ? (serialized.rect[2] - serialized.rect[0]) *
-      (serialized.rect[3] - serialized.rect[1])
-      : null;
-    if (!context.stamps.has(this.#bitmapId)) {
-      // We don't want to have multiple copies of the same bitmap in the
-      // annotationMap, hence we only add the bitmap the first time we meet it.
-      context.stamps.set(this.#bitmapId, { area, serialized });
-      serialized.bitmap = this.#serializeBitmap(/* toUrl = */ false);
-    } else if (this.#isSvg) {
-      // If we have multiple copies of the same svg but with different sizes,
-      // then we want to keep the biggest one.
-      const prevData = context.stamps.get(this.#bitmapId);
-      if (area > prevData.area) {
-        prevData.area = area;
-        prevData.serialized.bitmap.close();
-        prevData.serialized.bitmap = this.#serializeBitmap(/* toUrl = */ false);
-      }
-    }
-    return serialized;
-  }
-
-  #hasElementChanged(serialized) {
-    const {
-      rect,
-      pageIndex,
-      accessibilityData: { altText },
-    } = this._initialData;
-
-    const isSameRect = serialized.rect.every(
-      (x, i) => Math.abs(x - rect[i]) < 1
-    );
-    const isSamePageIndex = serialized.pageIndex === pageIndex;
-    const isSameAltText = (serialized.accessibilityData?.alt || "") === altText;
-
-    return {
-      isSame: isSameRect && isSamePageIndex && isSameAltText,
-      isSameAltText,
-    };
-  }
-
-  /** @inheritdoc */
-  renderAnnotationElement(annotation) {
-    annotation.updateEdited({
-      rect: this.getRect(0, 0),
-    });
-
+  renderAnnotationElement(annotation: AnnotationElement<AnnotationData>) {
+    annotation.updateEdited(this.getRect(0, 0));
     return null;
   }
 }

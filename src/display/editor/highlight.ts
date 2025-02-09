@@ -13,30 +13,28 @@
  * limitations under the License.
  */
 
+import { AnnotationData } from "../../core/annotation";
 import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
-  shadow,
-  Util,
+  shadow
 } from "../../shared/util";
-import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
+import { IL10n } from "../../viewer/common/component_types";
+import {
+  AnnotationElement
+} from "../annotation_layer";
+import { noContextMenu, PointType, RectType } from "../display_utils";
+import { AnnotationEditorLayer } from "./annotation_editor_layer";
+import { ColorPicker } from "./color_picker";
 import {
   FreeHighlightOutliner,
   HighlightOutline,
   HighlightOutliner,
 } from "./drawers/highlight";
-import {
-  HighlightAnnotationElement,
-  InkAnnotationElement,
-} from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
-import { ColorPicker } from "./color_picker";
-import { noContextMenu, PointType, RectType } from "../display_utils";
-import { IL10n } from "../../viewer/common/component_types";
-import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
-import { BoxType } from "../../types";
+import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
@@ -103,8 +101,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
 
   #thickness;
 
-  #methodOfCreation = "";
-
   protected color: string;
 
   constructor(params) {
@@ -113,7 +109,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
     this.#thickness = params.thickness || HighlightEditor._defaultThickness;
     this.#opacity = params.opacity || HighlightEditor._defaultOpacity;
     this.#boxes = params.boxes || null;
-    this.#methodOfCreation = params.methodOfCreation || "";
     this.#text = params.text || "";
     this._isDraggable = false;
 
@@ -130,30 +125,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       this.#addToDrawLayer();
       this.rotate(this.rotation);
     }
-  }
-
-  /** @inheritdoc */
-  get telemetryInitialData() {
-    return {
-      action: "added",
-      type: this.#isFreeHighlight ? "free_highlight" : "highlight",
-      color: this._uiManager.highlightColorNames!.get(this.color),
-      thickness: this.#thickness,
-      methodOfCreation: this.#methodOfCreation,
-    };
-  }
-
-  /** @inheritdoc */
-  get telemetryFinalData() {
-    return {
-      type: "highlight",
-      color: this._uiManager.highlightColorNames!.get(this.color),
-    };
-  }
-
-  static computeTelemetryFinalData(data) {
-    // We want to know how many colors have been used.
-    return { numberOfColors: data.get("color").size };
   }
 
   #createOutlines() {
@@ -353,14 +324,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       true,
       true,
     );
-
-    this._reportTelemetry(
-      {
-        action: "color_changed",
-        color: this._uiManager.highlightColorNames!.get(color),
-      },
-      /* mustWait = */ true
-    );
   }
 
   /**
@@ -381,10 +344,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
       AnnotationEditorParamsType.INK_THICKNESS,
       true,
       true,
-    );
-    this._reportTelemetry(
-      { action: "thickness_changed", thickness },
-      /* mustWait = */ true
     );
   }
 
@@ -441,9 +400,6 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
   /** @inheritdoc */
   remove() {
     this.#cleanDrawLayer();
-    this._reportTelemetry({
-      action: "deleted",
-    });
     super.remove();
   }
 
@@ -794,167 +750,8 @@ export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, Ann
   }
 
   /** @inheritdoc */
-  static async deserialize(data, parent: AnnotationEditorLayer, uiManager: AnnotationEditorUIManager) {
-    let initialData = null;
-    if (data instanceof HighlightAnnotationElement) {
-      const {
-        data: { quadPoints, rect, rotation, id, color, opacity, popupRef },
-        parent: {
-          page: { pageNumber },
-        },
-      } = data;
-      initialData = data = {
-        annotationType: AnnotationEditorType.HIGHLIGHT,
-        color: Array.from(color),
-        opacity,
-        quadPoints,
-        boxes: null,
-        pageIndex: pageNumber - 1,
-        rect: rect!.slice(0),
-        rotation,
-        id,
-        deleted: false,
-        popupRef,
-      };
-    } else if (data instanceof InkAnnotationElement) {
-      const {
-        data: {
-          inkLists,
-          rect,
-          rotation,
-          id,
-          color,
-          borderStyle: { rawWidth: thickness },
-          popupRef,
-        },
-        parent: {
-          page: { pageNumber },
-        },
-      } = data;
-      initialData = data = {
-        annotationType: AnnotationEditorType.HIGHLIGHT,
-        color: Array.from(color),
-        thickness,
-        inkLists,
-        boxes: null,
-        pageIndex: pageNumber - 1,
-        rect: rect!.slice(0),
-        rotation,
-        id,
-        deleted: false,
-        popupRef,
-      };
-    }
-
-    const { color, quadPoints, inkLists, opacity } = data;
-    const editor = await super.deserialize(data, parent, uiManager);
-
-    editor.color = Util.makeHexColor(...color as [number, number, number]);
-    editor.#opacity = opacity || 1;
-    if (inkLists) {
-      editor.#thickness = data.thickness;
-    }
-    editor.annotationElementId = data.id || null;
-    editor._initialData = initialData;
-
-    const [pageWidth, pageHeight] = editor.pageDimensions;
-    const [pageX, pageY] = editor.pageTranslation;
-
-    if (quadPoints) {
-      const boxes: BoxType[] = (editor.#boxes = []);
-      for (let i = 0; i < quadPoints.length; i += 8) {
-        boxes.push({
-          x: (quadPoints[i] - pageX) / pageWidth,
-          y: 1 - (quadPoints[i + 1] - pageY) / pageHeight,
-          width: (quadPoints[i + 2] - quadPoints[i]) / pageWidth,
-          height: (quadPoints[i + 1] - quadPoints[i + 5]) / pageHeight,
-        });
-      }
-      editor.#createOutlines();
-      editor.#addToDrawLayer();
-      editor.rotate(editor.rotation);
-    } else if (inkLists) {
-      editor.#isFreeHighlight = true;
-      const points = inkLists[0];
-      const point = {
-        x: points[0] - pageX,
-        y: pageHeight - (points[1] - pageY),
-      };
-      const outliner = new FreeHighlightOutliner(
-        point.x, point.y,
-        [0, 0, pageWidth, pageHeight],
-        1,
-        editor.#thickness / 2,
-        true,
-        0.001
-      );
-      for (let i = 0, ii = points.length; i < ii; i += 2) {
-        point.x = points[i] - pageX;
-        point.y = pageHeight - (points[i + 1] - pageY);
-        outliner.add(point.x, point.y);
-      }
-      const { id, clipPathId } = parent.drawLayer.draw(
-        outliner,
-        editor.color,
-        editor._defaultOpacity,
-        /* isPathUpdatable = */ true
-      );
-      editor.#createFreeOutlines({
-        highlightOutlines: outliner.getOutlines(),
-        highlightId: id,
-        clipPathId,
-      });
-      editor.#addToDrawLayer();
-    }
-
-    return editor;
-  }
-
-  /** @inheritdoc */
-  serialize(isForCopying = false) {
-    // It doesn't make sense to copy/paste a highlight annotation.
-    if (this.isEmpty() || isForCopying) {
-      return null;
-    }
-
-    if (this.deleted) {
-      return this.serializeDeleted();
-    }
-
-    const rect = this.getRect(0, 0);
-    const color = AnnotationEditorHelper._colorManager.convert(this.color);
-
-    const serialized = {
-      annotationType: AnnotationEditorType.HIGHLIGHT,
-      color,
-      opacity: this.#opacity,
-      thickness: this.#thickness,
-      quadPoints: this.#serializeBoxes(),
-      outlines: this.#serializeOutlines(rect),
-      pageIndex: this.pageIndex,
-      rect,
-      rotation: this.#getRotation(),
-      structTreeParentId: this._structTreeParentId,
-    };
-
-    if (this.annotationElementId && !this.#hasElementChanged(serialized)) {
-      return null;
-    }
-
-    serialized.id = this.annotationElementId;
-    return serialized;
-  }
-
-  #hasElementChanged(serialized) {
-    const { color } = this._initialData;
-    return serialized.color.some((c, i) => c !== color[i]);
-  }
-
-  /** @inheritdoc */
-  renderAnnotationElement(annotation) {
-    annotation.updateEdited({
-      rect: this.getRect(0, 0),
-    });
+  renderAnnotationElement(annotation: AnnotationElement<AnnotationData>) {
+    annotation.updateEdited(this.getRect(0, 0));
 
     return null;
   }

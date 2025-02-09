@@ -27,8 +27,7 @@ import {
   FeatureTest,
   getUuid,
   shadow,
-  Util,
-  warn,
+  Util
 } from "../../shared/util";
 import { EventBus, MLManager } from "../../viewer/common/component_types";
 import { AnnotationElement } from "../annotation_layer";
@@ -49,13 +48,13 @@ import { AnnotationEditorSerial } from "./state/editor_serializable";
 import { AnnotationEditorState } from "./state/editor_state";
 import { HighlightToolbar } from "./toolbar";
 
-function bindEvents(
-  obj: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>,
+function bindEvents<T extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>(
+  obj: T,
   element: HTMLDivElement,
-  names: (keyof AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>)[]
+  names: (keyof T)[]
 ) {
   for (const name of names) {
-    element.addEventListener(name, obj[name].bind(obj));
+    element.addEventListener(<string>name, (<Function>obj[name]).bind(obj));
   }
 }
 
@@ -1043,7 +1042,7 @@ class AnnotationEditorUIManager {
         y: layerY,
         width,
         height,
-      } = layer.div.getBoundingClientRect();
+      } = layer.div!.getBoundingClientRect();
       if (
         x >= layerX &&
         x <= layerX + width &&
@@ -1120,7 +1119,7 @@ class AnnotationEditorUIManager {
     const layer = this.#getLayerForTextLayer(<HTMLDivElement>textLayer!);
     const isNoneMode = this.#mode === AnnotationEditorType.NONE;
     const callback = () => {
-      layer?.createAndAddNewEditor({ x: 0, y: 0 }, false, {
+      layer?.createAndAddNewEditor({ offsetX: 0, offsetY: 0 }, false, {
         methodOfCreation,
         boxes,
         anchorNode,
@@ -1187,7 +1186,7 @@ class AnnotationEditorUIManager {
     }
 
     const anchorElement = this.#getAnchorElementForSelection(selection);
-    const textLayer = (<HTMLElement>anchorElement).closest(".textLayer");
+    const textLayer = <HTMLDivElement | null>(<HTMLElement>anchorElement).closest(".textLayer");
     if (!textLayer) {
       if (this.#selectedTextNode) {
         this.#highlightToolbar?.hide();
@@ -1339,7 +1338,6 @@ class AnnotationEditorUIManager {
 
     document.addEventListener("copy", this.copy.bind(this), { signal });
     document.addEventListener("cut", this.cut.bind(this), { signal });
-    document.addEventListener("paste", this.paste.bind(this), { signal });
   }
 
   #removeCopyPasteListeners() {
@@ -1428,67 +1426,6 @@ class AnnotationEditorUIManager {
     this.delete();
   }
 
-  /**
-   * Paste callback.
-   * @param {ClipboardEvent} event
-   */
-  async paste(event: ClipboardEvent) {
-    event.preventDefault();
-    const { clipboardData } = event;
-    for (const item of clipboardData!.items) {
-      for (const editorType of this.#editorTypes) {
-        if (editorType.isHandlingMimeForPasting(item.type)) {
-          editorType.paste(item, this.currentLayer);
-          return;
-        }
-      }
-    }
-
-    let data = clipboardData!.getData("application/pdfjs");
-    if (!data) {
-      return;
-    }
-
-    try {
-      data = JSON.parse(data);
-    } catch (ex: unknown) {
-      warn(`paste: "${(<{ message: string }>ex).message}".`);
-      return;
-    }
-
-    if (!Array.isArray(data)) {
-      return;
-    }
-
-    this.unselectAll();
-    const layer = this.currentLayer;
-
-    try {
-      const newEditors: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>[] = [];
-      for (const editor of data) {
-        const deserializedEditor = await layer.deserialize(editor);
-        if (!deserializedEditor) {
-          return;
-        }
-        newEditors.push(deserializedEditor);
-      }
-
-      const cmd = () => {
-        for (const editor of newEditors) {
-          this.#addEditorToLayer(editor);
-        }
-        this.#selectEditors(newEditors);
-      };
-      const undo = () => {
-        for (const editor of newEditors) {
-          editor.remove();
-        }
-      };
-      this.addCommands(cmd, undo, () => { }, true);
-    } catch (ex: unknown) {
-      warn(`paste: "${(<{ message: string }>ex).message}".`);
-    }
-  }
 
   /**
    * Keydown callback.
@@ -1745,16 +1682,6 @@ class AnnotationEditorUIManager {
         this.#mainHighlightColorPicker?.updateColor(<string>value);
         break;
       case AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL:
-        this._eventBus.dispatch("reporttelemetry", {
-          source: this,
-          details: {
-            type: "editing",
-            data: {
-              type: "highlight",
-              action: "toggle_visibility",
-            },
-          },
-        });
         (this.#showAllStates ||= new Map()).set(type, value);
         this.showAllEditors(AnnotationEditorType.HIGHLIGHT, <boolean>value);
         break;
@@ -1794,7 +1721,7 @@ class AnnotationEditorUIManager {
       } else {
         layer.enableClick();
       }
-      layer.div.classList.toggle("waiting", mustWait);
+      layer.div!.classList.toggle("waiting", mustWait);
     }
   }
 
@@ -1892,7 +1819,7 @@ class AnnotationEditorUIManager {
    */
   addDeletedAnnotationElement(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
     this.#deletedAnnotationsElementIds.add(editor.annotationElementId);
-    this.addChangedExistingAnnotation(editor);
+    this.addChangedExistingAnnotation(editor.annotationElementId!, editor.id);
     editor.deleted = true;
   }
 
@@ -2469,8 +2396,7 @@ class AnnotationEditorUIManager {
 
   addChangedExistingAnnotation(annotationElementId: string, id: string) {
     (this.#changedExistingAnnotations ||= new Map()).set(
-      annotationElementId,
-      id
+      annotationElementId, id
     );
   }
 
@@ -2500,5 +2426,6 @@ export {
   ColorManager,
   CommandManager,
   KeyboardManager,
-  opacityToHex,
+  opacityToHex
 };
+
