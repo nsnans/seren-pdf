@@ -21,17 +21,24 @@ import {
   Util,
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
-import { noContextMenu, PointType, RectType } from "../display_utils";
+import { noContextMenu, PointType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
+import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, opacityToHex } from "./tools";
+
+type BezierType = [PointType, PointType, PointType, PointType][];
+
+interface InkParameter extends AnnotationEditorParameters {
+  opacity: number | null;
+  thickness: number | null;
+  color: string | null;
+  name: "inkEditor";
+}
 
 /**
  * Basic draw editor in order to generate an Ink annotation.
  */
-export class InkEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+export class InkEditor extends AnnotationEditor {
 
   #baseHeight = 0;
 
@@ -73,16 +80,16 @@ export class InkEditor extends AnnotationEditor<AnnotationEditorState, Annotatio
   protected thickness: number | null;
   protected opacity: number | null;
   protected canvas: HTMLCanvasElement | null = null;
-  protected paths;
+  protected paths: BezierType[];
   protected bezierPath2D: Path2D[];
-  protected allRawPaths: [number, number][][];
-  protected currentPath: [number, number][];
+  protected allRawPaths: PointType[][];
+  protected currentPath: PointType[];
   protected scaleFactor: number;
   protected translationX: number;
   protected translationY: number;
   protected ctx: CanvasRenderingContext2D | null = null;
 
-  constructor(params) {
+  constructor(params: InkParameter) {
     super({ ...params, name: "inkEditor" });
     this.color = params.color || null;
     this.thickness = params.thickness || null;
@@ -484,13 +491,13 @@ export class InkEditor extends AnnotationEditor<AnnotationEditorState, Annotatio
     // Interpolate the path entered by the user with some
     // Bezier's curves in order to have a smoother path and
     // to reduce the data size used to draw it in the PDF.
-    let bezier;
+    let bezier: BezierType;
     if (this.currentPath.length !== 1) {
       bezier = this.#generateBezierPoints();
     } else {
       // We have only one point finally.
-      const xy = [x, y];
-      bezier = [[xy, xy.slice(), xy.slice(), xy]];
+      const xy: PointType = [x, y];
+      bezier = [[xy, <PointType>xy.slice(), <PointType>xy.slice(), xy]];
     }
     const path2D = this.#currentPath2D;
     const currentPath = this.currentPath;
@@ -574,13 +581,13 @@ export class InkEditor extends AnnotationEditor<AnnotationEditorState, Annotatio
     );
   }
 
-  #generateBezierPoints() {
+  #generateBezierPoints(): BezierType {
     const path = this.currentPath;
     if (path.length <= 2) {
-      return [[path[0], path[0], path.at(-1), path.at(-1)]];
+      return [[path[0], path[0], path.at(-1)!, path.at(-1)!]];
     }
 
-    const bezierPoints = [];
+    const bezierPoints: BezierType = [];
     let i;
     let [x0, y0] = path[0];
     for (i = 1; i < path.length - 2; i++) {
@@ -592,8 +599,8 @@ export class InkEditor extends AnnotationEditor<AnnotationEditorState, Annotatio
       // The quadratic is: [[x0, y0], [x1, y1], [x3, y3]].
       // Convert the quadratic to a cubic
       // (see https://fontforge.org/docs/techref/bezier.html#converting-truetype-to-postscript)
-      const control1 = [x0 + (2 * (x1 - x0)) / 3, y0 + (2 * (y1 - y0)) / 3];
-      const control2 = [x3 + (2 * (x1 - x3)) / 3, y3 + (2 * (y1 - y3)) / 3];
+      const control1: [number, number] = [x0 + (2 * (x1 - x0)) / 3, y0 + (2 * (y1 - y0)) / 3];
+      const control2: [number, number] = [x3 + (2 * (x1 - x3)) / 3, y3 + (2 * (y1 - y3)) / 3];
 
       bezierPoints.push([[x0, y0], control1, control2, [x3, y3]]);
 
@@ -604,8 +611,8 @@ export class InkEditor extends AnnotationEditor<AnnotationEditorState, Annotatio
     const [x2, y2] = path[i + 1];
 
     // The quadratic is: [[x0, y0], [x1, y1], [x2, y2]].
-    const control1 = [x0 + (2 * (x1 - x0)) / 3, y0 + (2 * (y1 - y0)) / 3];
-    const control2 = [x2 + (2 * (x1 - x2)) / 3, y2 + (2 * (y1 - y2)) / 3];
+    const control1: [number, number] = [x0 + (2 * (x1 - x0)) / 3, y0 + (2 * (y1 - y0)) / 3];
+    const control2: [number, number] = [x2 + (2 * (x1 - x2)) / 3, y2 + (2 * (y1 - y2)) / 3];
 
     bezierPoints.push([[x0, y0], control1, control2, [x2, y2]]);
     return bezierPoints;

@@ -16,8 +16,6 @@
 import { AnnotationEditorParamsType, shadow } from "../../shared/util";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager, KeyboardManager } from "./tools";
 
 export class ColorPicker {
@@ -66,7 +64,7 @@ export class ColorPicker {
 
   #isMainColorPicker = false;
 
-  #editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null = null;
+  #editor: AnnotationEditor | null = null;
 
   #eventBus;
 
@@ -77,7 +75,7 @@ export class ColorPicker {
   #type: AnnotationEditorParamsType;
 
   constructor(
-    editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null = null,
+    editor: AnnotationEditor | null = null,
     uiManager: AnnotationEditorUIManager | null = null
   ) {
     if (editor) {

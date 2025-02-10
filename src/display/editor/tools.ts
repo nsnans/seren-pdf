@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./editor.js").AnnotationEditor} AnnotationEditor */
 // eslint-disable-next-line max-len
-/** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
 import { AnnotationData } from "../../core/annotation";
 import { PlatformHelper } from "../../platform/platform_helper";
@@ -44,11 +42,9 @@ import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { ColorPicker } from "./color_picker";
 import { AnnotationEditor } from "./editor";
 import { InkEditor } from "./ink";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { HighlightToolbar } from "./toolbar";
 
-function bindEvents<T extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>(
+function bindEvents<T extends AnnotationEditor>(
   obj: T,
   element: HTMLDivElement,
   names: (keyof T)[]
@@ -763,9 +759,9 @@ class AnnotationEditorUIManager {
 
   #abortController: AbortController | null = new AbortController();
 
-  #activeEditor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null = null;
+  #activeEditor: AnnotationEditor | null = null;
 
-  #allEditors = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
+  #allEditors = new Map<string, AnnotationEditor>();
 
   #allLayers = new Map<number, AnnotationEditorLayer>();
 
@@ -783,11 +779,11 @@ class AnnotationEditorUIManager {
 
   #deletedAnnotationsElementIds = new Set();
 
-  #draggingEditors: Map<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>, DragEditorInfo> | null = null;
+  #draggingEditors: Map<AnnotationEditor, DragEditorInfo> | null = null;
 
   #editorTypes = null;
 
-  #editorsToRescale = new Set<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
+  #editorsToRescale = new Set<AnnotationEditor>();
 
   #enableHighlightFloatingButton = false;
 
@@ -815,7 +811,7 @@ class AnnotationEditorUIManager {
 
   #keyboardManagerAC: AbortController | null = null;
 
-  #lastActiveElement: [AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>
+  #lastActiveElement: [AnnotationEditor
     , HTMLElement] | null = null;
 
   #mainHighlightColorPicker: ColorPicker | null = null;
@@ -824,7 +820,7 @@ class AnnotationEditorUIManager {
 
   #mode = AnnotationEditorType.NONE;
 
-  #selectedEditors = new Set<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
+  #selectedEditors = new Set<AnnotationEditor>();
 
   #selectedTextNode: Node | null = null;
 
@@ -995,7 +991,7 @@ class AnnotationEditorUIManager {
     this.#mainHighlightColorPicker = colorPicker;
   }
 
-  editAltText(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>, firstTime = false) {
+  editAltText(editor: AnnotationEditor, firstTime = false) {
     this.#altTextManager?.editAltText(this, editor, firstTime);
   }
 
@@ -1059,11 +1055,11 @@ class AnnotationEditorUIManager {
     this.#viewer!.classList.toggle("noUserSelect", value);
   }
 
-  addShouldRescale(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addShouldRescale(editor: AnnotationEditor) {
     this.#editorsToRescale.add(editor);
   }
 
-  removeShouldRescale(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  removeShouldRescale(editor: AnnotationEditor) {
     this.#editorsToRescale.delete(editor);
   }
 
@@ -1158,7 +1154,7 @@ class AnnotationEditorUIManager {
    * Add an editor in the annotation storage.
    * @param {AnnotationEditor} editor
    */
-  addToAnnotationStorage(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addToAnnotationStorage(editor: AnnotationEditor) {
     if (
       !editor.isEmpty() &&
       this.#annotationStorage &&
@@ -1334,10 +1330,6 @@ class AnnotationEditorUIManager {
       return;
     }
     this.#copyPasteAC = new AbortController();
-    const signal = this.combinedSignal(this.#copyPasteAC);
-
-    document.addEventListener("copy", this.copy.bind(this), { signal });
-    document.addEventListener("cut", this.cut.bind(this), { signal });
   }
 
   #removeCopyPasteListeners() {
@@ -1388,44 +1380,6 @@ class AnnotationEditorUIManager {
       }
     }
   }
-
-  /**
-   * Copy callback.
-   * @param {ClipboardEvent} event
-   */
-  copy(event: ClipboardEvent) {
-    event.preventDefault();
-
-    // An editor is being edited so just commit it.
-    this.#activeEditor?.commitOrRemove();
-
-    if (!this.hasSelection) {
-      return;
-    }
-
-    const editors = [];
-    for (const editor of this.#selectedEditors) {
-      const serialized = editor.serialize(/* isForCopying = */ true);
-      if (serialized) {
-        editors.push(serialized);
-      }
-    }
-    if (editors.length === 0) {
-      return;
-    }
-
-    event.clipboardData!.setData("application/pdfjs", JSON.stringify(editors));
-  }
-
-  /**
-   * Cut callback.
-   * @param {ClipboardEvent} event
-   */
-  cut(event: ClipboardEvent) {
-    this.copy(event);
-    this.delete();
-  }
-
 
   /**
    * Keydown callback.
@@ -1784,14 +1738,14 @@ class AnnotationEditorUIManager {
    * Add a new editor.
    * @param {AnnotationEditor} editor
    */
-  addEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addEditor(editor: AnnotationEditor) {
     this.#allEditors.set(editor.id, editor);
   }
 
   /**
    * Remove an editor.
    */
-  removeEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  removeEditor(editor: AnnotationEditor) {
     if (editor.div!.contains(document.activeElement)) {
       if (this.#focusMainContainerTimeoutId) {
         clearTimeout(this.#focusMainContainerTimeoutId);
@@ -1817,7 +1771,7 @@ class AnnotationEditorUIManager {
    * The annotation element with the given id has been deleted.
    * @param {AnnotationEditor} editor
    */
-  addDeletedAnnotationElement(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addDeletedAnnotationElement(editor: AnnotationEditor) {
     this.#deletedAnnotationsElementIds.add(editor.annotationElementId);
     this.addChangedExistingAnnotation(editor.annotationElementId!, editor.id);
     editor.deleted = true;
@@ -1834,7 +1788,7 @@ class AnnotationEditorUIManager {
    * The annotation element with the given id have been restored.
    * @param {AnnotationEditor} editor
    */
-  removeDeletedAnnotationElement(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  removeDeletedAnnotationElement(editor: AnnotationEditor) {
     this.#deletedAnnotationsElementIds.delete(editor.annotationElementId);
     this.removeChangedExistingAnnotation(editor.annotationElementId!);
     editor.deleted = false;
@@ -1844,7 +1798,7 @@ class AnnotationEditorUIManager {
    * Add an editor to the layer it belongs to or add it to the global map.
    * @param {AnnotationEditor} editor
    */
-  #addEditorToLayer(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  #addEditorToLayer(editor: AnnotationEditor) {
     const layer = this.#allLayers.get(editor.pageIndex);
     if (layer) {
       layer.addOrRebuild(editor);
@@ -1858,7 +1812,7 @@ class AnnotationEditorUIManager {
    * Set the given editor as the active one.
    * @param {AnnotationEditor} editor
    */
-  setActiveEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null) {
+  setActiveEditor(editor: AnnotationEditor | null) {
     if (this.#activeEditor === editor) {
       return;
     }
@@ -1881,7 +1835,7 @@ class AnnotationEditorUIManager {
    * Update the UI of the active editor.
    * @param {AnnotationEditor} editor
    */
-  updateUI(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  updateUI(editor: AnnotationEditor) {
     if (this.#lastSelectedEditor === editor) {
       this.#dispatchUpdateUI(editor.propertiesToUpdate);
     }
@@ -1891,7 +1845,7 @@ class AnnotationEditorUIManager {
    * Add or remove an editor the current selection.
    * @param {AnnotationEditor} editor
    */
-  toggleSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  toggleSelected(editor: AnnotationEditor) {
     if (this.#selectedEditors.has(editor)) {
       this.#selectedEditors.delete(editor);
       editor.unselect();
@@ -1912,7 +1866,7 @@ class AnnotationEditorUIManager {
    * Set the last selected editor.
    * @param {AnnotationEditor} editor
    */
-  setSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  setSelected(editor: AnnotationEditor) {
     for (const ed of this.#selectedEditors) {
       if (ed !== editor) {
         ed.unselect();
@@ -1932,7 +1886,7 @@ class AnnotationEditorUIManager {
    * Check if the editor is selected.
    * @param {AnnotationEditor} editor
    */
-  isSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  isSelected(editor: AnnotationEditor) {
     return this.#selectedEditors.has(editor);
   }
 
@@ -1944,7 +1898,7 @@ class AnnotationEditorUIManager {
    * Unselect an editor.
    * @param {AnnotationEditor} editor
    */
-  unselect(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  unselect(editor: AnnotationEditor) {
     editor.unselect();
     this.#selectedEditors.delete(editor);
     this.#dispatchUpdateStates({
@@ -2061,7 +2015,7 @@ class AnnotationEditorUIManager {
    * Select the editors.
    * @param {Array<AnnotationEditor>} editors
    */
-  #selectEditors(editors: IteratorObject<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>) {
+  #selectEditors(editors: IteratorObject<AnnotationEditor>) {
     for (const editor of this.#selectedEditors) {
       editor.unselect();
     }
@@ -2173,7 +2127,7 @@ class AnnotationEditorUIManager {
     }
     // Avoid to have spurious text selection in the text layer when dragging.
     this.disableUserSelect(true);
-    this.#draggingEditors = new Map<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>, DragEditorInfo>();
+    this.#draggingEditors = new Map<AnnotationEditor, DragEditorInfo>();
     for (const editor of this.#selectedEditors) {
       this.#draggingEditors!.set(editor, {
         savedX: editor.x,
@@ -2214,7 +2168,7 @@ class AnnotationEditorUIManager {
     }
 
     const move = (
-      editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>,
+      editor: AnnotationEditor,
       x: number, y: number, pageIndex: number) => {
       if (this.#allEditors.has(editor.id)) {
         // The editor can be undone/redone on a page which is not visible (and
@@ -2268,7 +2222,7 @@ class AnnotationEditorUIManager {
    * non-rendered page.
    * @param {AnnotationEditor} editor
    */
-  rebuild(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  rebuild(editor: AnnotationEditor) {
     if (editor.parent === null) {
       const parent = this.getLayer(editor.pageIndex);
       if (parent) {
@@ -2297,7 +2251,7 @@ class AnnotationEditorUIManager {
    * @param {AnnotationEditor} editor
    * @returns
    */
-  isActive(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  isActive(editor: AnnotationEditor) {
     return this.#activeEditor === editor;
   }
 

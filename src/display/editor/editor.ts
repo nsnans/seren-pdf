@@ -23,8 +23,6 @@ import { AnnotationElement } from "../annotation_layer";
 import { noContextMenu, RectType } from "../display_utils";
 import { AltText } from "./alt_text";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { EditorToolbar } from "./toolbar";
 import {
   AnnotationEditorUIManager,
@@ -94,7 +92,7 @@ export class AnnotationEditorHelper {
     return shadow(
       this,
       "_resizerKeyboardManager",
-      new KeyboardManager<AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>([
+      new KeyboardManager<AnnotationEditor>([
         [["ArrowLeft", "mac+ArrowLeft"], resize, { args: [-small, 0] }],
         [
           ["ctrl+ArrowLeft", "mac+shift+ArrowLeft"],
@@ -119,7 +117,7 @@ export class AnnotationEditorHelper {
     );
   }
 
-  static deleteAnnotationElement(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  static deleteAnnotationElement(editor: AnnotationEditor) {
     const fakeEditor = new FakeEditor({
       id: editor.parent!.getNextId(),
       parent: editor.parent,
@@ -208,14 +206,7 @@ export class AnnotationEditorHelper {
 }
 
 
-export type DefaultAnnotationEditor = AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
-
-export abstract class AnnotationEditor<
-  /* 核心属性 */ T extends AnnotationEditorState,
-  /* 序列化结果 */ S extends AnnotationEditorSerial
-> {
-
-  protected state: T;
+export abstract class AnnotationEditor {
 
   #accessibilityData = null;
 
@@ -258,8 +249,6 @@ export abstract class AnnotationEditor<
   _editToolbar: EditorToolbar | null = null;
 
   _initialOptions = Object.create(null);
-
-  _initialData = null;
 
   protected _isVisible = true;
 
@@ -325,8 +314,7 @@ export abstract class AnnotationEditor<
     } = this.parent.viewport;
 
     this.rotation = rotation;
-    this.pageRotation =
-      (360 + rotation - this._uiManager.viewParameters.rotation) % 360;
+    this.pageRotation = (360 + rotation - this._uiManager.viewParameters.rotation) % 360;
     this.pageDimensions = [pageWidth, pageHeight];
     this.pageTranslation = [pageX, pageY];
 
@@ -1396,42 +1384,12 @@ export abstract class AnnotationEditor<
   rotate(_angle: number) { }
 
   /**
-   * Serialize the editor when it has been deleted.
-   */
-  serializeDeleted() {
-    return {
-      id: this.annotationElementId,
-      deleted: true,
-      pageIndex: this.pageIndex,
-      popupRef: this._initialData?.popupRef || "",
-    };
-  }
-
-  /**
-   * Serialize the editor.
-   * The result of the serialization will be used to construct a
-   * new annotation to add to the pdf document.
-   *
-   * To implement in subclasses.
-   * @param {boolean} [isForCopying]
-   * @param {Object | null} [context]
-   * @returns {Object | null}
-   */
-  serialize(_isForCopying = false, _context = null): S {
-    unreachable("An editor must be serializable");
-  }
-
-
-
-  /**
    * Check if an existing annotation associated with this editor has been
    * modified.
    * @returns {boolean}
    */
   get hasBeenModified(): boolean {
-    return (
-      !!this.annotationElementId && (this.deleted || this.serialize() !== null)
-    );
+    return (!!this.annotationElementId && (this.deleted));
   }
 
   /**
@@ -1795,7 +1753,7 @@ export abstract class AnnotationEditor<
 }
 
 // This class is used to fake an editor which has been deleted.
-class FakeEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+class FakeEditor extends AnnotationEditor {
 
   public annotationElementId: string | null;
 
@@ -1805,10 +1763,6 @@ class FakeEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEdito
     super(params);
     this.annotationElementId = params.annotationElementId;
     this.deleted = true;
-  }
-
-  serialize() {
-    return this.serializeDeleted();
   }
 }
 

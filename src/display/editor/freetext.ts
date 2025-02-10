@@ -28,8 +28,6 @@ import {
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import {
   AnnotationEditorUIManager,
   bindEvents,
@@ -47,7 +45,7 @@ interface FreeTextParameter extends AnnotationEditorParameters {
 /**
  * Basic text editor in order to create a FreeTex annotation.
  */
-export class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+export class FreeTextEditor extends AnnotationEditor {
 
   static _freeTextDefaultContent = "";
 
@@ -591,67 +589,8 @@ export class FreeTextEditor extends AnnotationEditor<AnnotationEditorState, Anno
 
     bindEvents(this, this.div!, ["dblclick", "keydown"]);
 
-    if (this.width) {
-      // This editor was created in using copy (ctrl+c).
-      const [parentWidth, parentHeight] = this.parentDimensions;
-      if (this.annotationElementId) {
-        // This stuff is hard to test: if something is changed here, please
-        // test with the following PDF file:
-        //  - freetexts.pdf
-        //  - rotated_freetexts.pdf
-        // Only small variations between the original annotation and its editor
-        // are allowed.
-
-        // position is the position of the first glyph in the annotation
-        // and it's relative to its container.
-        const { position } = this._initialData!;
-        let [tx, ty] = this.getInitialTranslation();
-        [tx, ty] = this.pageTranslationToScreen(tx, ty);
-        const [pageWidth, pageHeight] = this.pageDimensions;
-        const [pageX, pageY] = this.pageTranslation;
-        let posX, posY;
-        switch (this.rotation) {
-          case 0:
-            posX = baseX! + (position[0] - pageX) / pageWidth;
-            posY = baseY! + this.height - (position[1] - pageY) / pageHeight;
-            break;
-          case 90:
-            posX = baseX! + (position[0] - pageX) / pageWidth;
-            posY = baseY! - (position[1] - pageY) / pageHeight;
-            [tx, ty] = [ty, -tx];
-            break;
-          case 180:
-            posX = baseX! - this.width + (position[0] - pageX) / pageWidth;
-            posY = baseY! - (position[1] - pageY) / pageHeight;
-            [tx, ty] = [-tx, -ty];
-            break;
-          case 270:
-            posX =
-              baseX! +
-              (position[0] - pageX - this.height * pageHeight) / pageWidth;
-            posY =
-              baseY! +
-              (position[1] - pageY - this.width * pageWidth) / pageHeight;
-            [tx, ty] = [-ty, tx];
-            break;
-        }
-        this.setAt(posX! * parentWidth, posY! * parentHeight, tx, ty);
-      } else {
-        this.setAt(
-          baseX! * parentWidth,
-          baseY! * parentHeight,
-          this.width * parentWidth,
-          this.height * parentHeight
-        );
-      }
-
-      this.#setContent();
-      this._isDraggable = true;
-      this.editorDiv.contentEditable = "false";
-    } else {
-      this._isDraggable = false;
-      this.editorDiv.contentEditable = "true";
-    }
+    this._isDraggable = false;
+    this.editorDiv.contentEditable = "true";
 
     if (PlatformHelper.isTesting()) {
       this.div!.setAttribute("annotation-id", this.annotationElementId!);

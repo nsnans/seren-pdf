@@ -16,8 +16,6 @@
 import { IL10n } from "../../viewer/common/component_types";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 
 interface AltTextData {
   alt: string | null,
@@ -46,7 +44,7 @@ export class AltText {
 
   #badge: HTMLDivElement | null = null;
 
-  #editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
+  #editor: AnnotationEditor;
 
   #guessedText: string | null = null;
 
@@ -58,7 +56,7 @@ export class AltText {
 
   static _l10n: IL10n | null = null;
 
-  constructor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  constructor(editor: AnnotationEditor) {
     this.#editor = editor;
     this.#useNewAltTextFlow = editor._uiManager.useNewAltTextFlow;
 

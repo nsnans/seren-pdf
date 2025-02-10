@@ -34,8 +34,6 @@ import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
 import { EditorManager } from "./editor_manager";
 import { HighlightEditor } from "./highlight";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager } from "./tools";
 
 /**
@@ -76,7 +74,7 @@ export class AnnotationEditorLayer {
 
   #editorFocusTimeoutId: number | null = null;
 
-  #editors = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
+  #editors = new Map<string, AnnotationEditor>();
 
   #hadPointerDown = false;
 
@@ -292,19 +290,15 @@ export class AnnotationEditorLayer {
     this.#isDisabling = true;
     this.div!.tabIndex = -1;
     this.togglePointerEvents(false);
-    const changedAnnotations = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
-    const resetAnnotations = new Map<string, AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>>();
+    const changedAnnotations = new Map<string, AnnotationEditor>();
+    const resetAnnotations = new Map<string, AnnotationEditor>();
     for (const editor of this.#editors.values()) {
       editor.disableEditing();
       if (!editor.annotationElementId) {
         continue;
       }
-      if (editor.serialize() !== null) {
-        changedAnnotations.set(editor.annotationElementId, editor);
-        continue;
-      } else {
-        resetAnnotations.set(editor.annotationElementId, editor);
-      }
+
+      resetAnnotations.set(editor.annotationElementId, editor);
       this.getEditableAnnotation(editor.annotationElementId)?.show();
       editor.remove();
     }
@@ -359,7 +353,7 @@ export class AnnotationEditorLayer {
    * Set the current editor.
    * @param {AnnotationEditor} editor
    */
-  setActiveEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> | null) {
+  setActiveEditor(editor: AnnotationEditor | null) {
     const currentActive = this.#uiManager.getActive();
     if (currentActive === editor) {
       return;
@@ -453,7 +447,7 @@ export class AnnotationEditorLayer {
     this.#clickAC = null;
   }
 
-  attach(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  attach(editor: AnnotationEditor) {
     this.#editors.set(editor.id, editor);
     const { annotationElementId } = editor;
     if (
@@ -464,7 +458,7 @@ export class AnnotationEditorLayer {
     }
   }
 
-  detach(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  detach(editor: AnnotationEditor) {
     this.#editors.delete(editor.id);
     this.#accessibilityManager?.removePointerInTextLayer(editor.contentDiv!);
 
@@ -477,7 +471,7 @@ export class AnnotationEditorLayer {
    * Remove an editor.
    * @param {AnnotationEditor} editor
    */
-  remove(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  remove(editor: AnnotationEditor) {
     this.detach(editor);
     this.#uiManager.removeEditor(editor);
     editor.div!.remove();
@@ -493,7 +487,7 @@ export class AnnotationEditorLayer {
    * being dragged and droped from a page to another.
    * @param {AnnotationEditor} editor
    */
-  changeParent(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  changeParent(editor: AnnotationEditor) {
     if (editor.parent === this) {
       return;
     }
@@ -517,7 +511,7 @@ export class AnnotationEditorLayer {
    * Add a new editor in the current view.
    * @param {AnnotationEditor} editor
    */
-  add(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  add(editor: AnnotationEditor) {
     if (editor.parent === this && editor.isAttachedToDOM) {
       return;
     }
@@ -537,7 +531,7 @@ export class AnnotationEditorLayer {
     this.#uiManager.addToAnnotationStorage(editor);
   }
 
-  moveEditorInDOM(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  moveEditorInDOM(editor: AnnotationEditor) {
     if (!editor.isAttachedToDOM) {
       return;
     }
@@ -572,7 +566,7 @@ export class AnnotationEditorLayer {
    * Add or rebuild depending if it has been removed or not.
    * @param {AnnotationEditor} editor
    */
-  addOrRebuild(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addOrRebuild(editor: AnnotationEditor) {
     if (editor.needsToBeRebuilt()) {
       editor.parent ||= this;
       editor.rebuild();
@@ -586,7 +580,7 @@ export class AnnotationEditorLayer {
    * Add a new editor and make this addition undoable.
    * @param {AnnotationEditor} editor
    */
-  addUndoableEditor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  addUndoableEditor(editor: AnnotationEditor) {
     const cmd = () => editor._uiManager.rebuild(editor);
     const undo = () => {
       editor.remove();
@@ -698,7 +692,7 @@ export class AnnotationEditorLayer {
    * Set the last selected editor.
    * @param {AnnotationEditor} editor
    */
-  setSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  setSelected(editor: AnnotationEditor) {
     this.#uiManager.setSelected(editor);
   }
 
@@ -706,7 +700,7 @@ export class AnnotationEditorLayer {
    * Add or remove an editor the current selection.
    * @param {AnnotationEditor} editor
    */
-  toggleSelected(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  toggleSelected(editor: AnnotationEditor) {
     this.#uiManager.toggleSelected(editor);
   }
 
@@ -714,7 +708,7 @@ export class AnnotationEditorLayer {
    * Unselect an editor.
    * @param {AnnotationEditor} editor
    */
-  unselect(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  unselect(editor: AnnotationEditor) {
     this.#uiManager.unselect(editor);
   }
 
@@ -795,7 +789,7 @@ export class AnnotationEditorLayer {
    * @param {number} y
    * @returns
    */
-  findNewParent(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>, x: number, y: number) {
+  findNewParent(editor: AnnotationEditor, x: number, y: number) {
     const layer = this.#uiManager.findParent(x, y);
     if (layer === null || layer === this) {
       return false;

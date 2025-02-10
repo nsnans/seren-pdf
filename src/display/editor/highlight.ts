@@ -32,14 +32,12 @@ import {
   HighlightOutliner,
 } from "./drawers/highlight";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
  */
-export class HighlightEditor extends AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial> {
+export class HighlightEditor extends AnnotationEditor {
 
   static _defaultColor: string | null = null;
 

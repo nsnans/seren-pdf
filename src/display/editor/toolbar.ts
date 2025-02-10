@@ -18,8 +18,6 @@ import { noContextMenu } from "../display_utils";
 import { AltText } from "./alt_text";
 import { ColorPicker } from "./color_picker";
 import { AnnotationEditor } from "./editor";
-import { AnnotationEditorSerial } from "./state/editor_serializable";
-import { AnnotationEditorState } from "./state/editor_state";
 import { AnnotationEditorUIManager } from "./tools";
 
 export class EditorToolbar {
@@ -35,11 +33,12 @@ export class EditorToolbar {
 
   #colorPicker: ColorPicker | null = null;
 
-  #editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>;
+  #editor: AnnotationEditor;
 
   #buttons: HTMLDivElement | null = null;
 
-  constructor(editor: AnnotationEditor<AnnotationEditorState, AnnotationEditorSerial>) {
+  constructor(editor: AnnotationEditor) {
+    
     this.#editor = editor;
 
     EditorToolbar.#l10nRemove ||= Object.freeze({
