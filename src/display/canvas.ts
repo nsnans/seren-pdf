@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { ImageMask } from "../core/core_types";
 import { Glyph } from "../core/fonts";
 import { GroupOptions, OptionalContent } from "../core/image_utils";
 import { TilingPatternIR } from "../core/pattern";
@@ -21,6 +23,7 @@ import { PlatformHelper } from "../platform/platform_helper";
 import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
 import { RGBType } from "../shared/scripting_utils";
 import {
+  assert,
   FeatureTest,
   FONT_IDENTITY_MATRIX,
   IDENTITY_MATRIX,
@@ -309,7 +312,7 @@ function drawImageAtIntegerCoords(
 }
 
 function compileType3Glyph(imgData: {
-  data: string;
+  data: Uint8Array<ArrayBuffer>;
   width: number;
   height: number;
   interpolate: number[];
@@ -680,11 +683,15 @@ class CanvasExtraState {
   }
 }
 
-function putBinaryImageData(ctx: CanvasRenderingContext2D, imgData) {
+function putBinaryImageData(ctx: CanvasRenderingContext2D, imgData: ImageData | {
+  width: number, height: number, data: Uint8TypedArray | null, kind?: ImageKind,
+}) {
   if (typeof ImageData !== "undefined" && imgData instanceof ImageData) {
     ctx.putImageData(imgData, 0, 0);
     return;
   }
+
+  assert(!(imgData instanceof ImageData), "");
 
   // Put the image data to the canvas in chunks, rather than putting the
   // whole image at once.  This saves JS memory, because the ImageData object
@@ -704,7 +711,7 @@ function putBinaryImageData(ctx: CanvasRenderingContext2D, imgData) {
 
   const chunkImgData = ctx.createImageData(width, FULL_CHUNK_HEIGHT);
   let srcPos = 0, destPos;
-  const src = imgData.data;
+  const src = imgData.data!;
   const dest = chunkImgData.data;
   let i, j, thisChunkHeight, elemsInThisChunk;
 
@@ -799,7 +806,15 @@ function putBinaryImageData(ctx: CanvasRenderingContext2D, imgData) {
   }
 }
 
-function putBinaryImageMask(ctx: CanvasRenderingContext2D, imgData) {
+function putBinaryImageMask(
+  ctx: CanvasRenderingContext2D,
+  imgData: {
+    bitmap: CanvasImageSource | null,
+    height: number,
+    width: number,
+    data: Uint8Array<ArrayBuffer>
+  }
+) {
   if (imgData.bitmap) {
     // The bitmap has been created in the worker.
     ctx.drawImage(imgData.bitmap, 0, 0);
@@ -880,7 +895,7 @@ function resetCtxToDefault(ctx: CanvasRenderingContext2D) {
   }
 }
 
-function getImageSmoothingEnabled(transform: TransformType, interpolate) {
+function getImageSmoothingEnabled(transform: TransformType, interpolate: number[]) {
   // In section 8.9.5.3 of the PDF spec, it's mentioned that the interpolate
   // flag should be used when the image is upscaled.
   // In Firefox, smoothing is always used when downscaling images (bug 1360415).
@@ -985,7 +1000,7 @@ export class CanvasGraphics {
 
   public baseTransform: TransformType | null;
 
-  protected cachedPatterns: Map<string, BaseShadingPattern>;
+  protected cachedPatterns: Map<string | Uint8ClampedArray<ArrayBuffer>, BaseShadingPattern>;
 
   protected _cachedBitmapsMap: Map<any, any>;
 
@@ -1261,14 +1276,14 @@ export class CanvasGraphics {
     }
   }
 
-  _scaleImage(img, inverseTransform: TransformType) {
+  _scaleImage(img: HTMLCanvasElement | VideoFrame, inverseTransform: TransformType) {
     // Vertical or horizontal scaling shall not be more than 2 to not lose the
     // pixels during drawImage operation, painting on the temporary canvas(es)
     // that are twice smaller in size.
 
     // displayWidth and displayHeight are used for VideoFrame.
-    const width = img.width ?? img.displayWidth;
-    const height = img.height ?? img.displayHeight;
+    const width = img instanceof HTMLCanvasElement ? img.width : img.displayWidth;
+    const height = img instanceof HTMLCanvasElement ? img.height : img.displayHeight;
     let widthScale = Math.max(
       Math.hypot(inverseTransform[0], inverseTransform[1]),
       1
@@ -1314,7 +1329,7 @@ export class CanvasGraphics {
       tmpCtx = tmpCanvas.context!;
       tmpCtx.clearRect(0, 0, newWidth, newHeight);
       tmpCtx.drawImage(img, 0, 0, paintWidth, paintHeight, 0, 0, newWidth, newHeight);
-      img = tmpCanvas.canvas;
+      img = tmpCanvas.canvas!;
       paintWidth = newWidth;
       paintHeight = newHeight;
       tmpCanvasId = tmpCanvasId === "prescale1" ? "prescale2" : "prescale1";
@@ -1323,7 +1338,14 @@ export class CanvasGraphics {
     return { img, paintWidth, paintHeight };
   }
 
-  _createMaskCanvas(img) {
+  _createMaskCanvas(img: {
+    data: Uint8Array<ArrayBuffer>;
+    width: number;
+    height: number;
+    interpolate: number[];
+    count: number;
+    bitmap: CanvasImageSource | null;
+  }) {
     const ctx = this.ctx;
     const { width, height } = img;
     const fillColor = this.current.fillColor;
@@ -1405,7 +1427,7 @@ export class CanvasGraphics {
     if (!scaled) {
       // Pre-scale if needed to improve image smoothing.
       scaled = this._scaleImage(
-        maskCanvas!.canvas,
+        maskCanvas!.canvas!,
         getCurrentTransformInverse(fillCtx)
       );
       scaled = scaled.img;
@@ -2533,19 +2555,24 @@ export class CanvasGraphics {
         baseTransform
       );
     } else {
-      pattern = this._getPattern(IR[1]!, IR[2]);
+      if(1 === 1){
+        // 因为有些参数不准确，我也分不清到底是写错了还是我理解错了
+        // 实际测试的时候跑跑看就知道了
+        throw new Error("IR的参数到底是2还是3")
+      }
+      pattern = this._getPattern(IR[1]!, IR[3]);
     }
     return pattern;
   }
 
   @handle(OPS.setStrokeColorN)
-  setStrokeColorN() {
-    this.current.strokeColor = this.getColorN_Pattern(arguments);
+  setStrokeColorN(IR: TilingPatternIR) {
+    this.current.strokeColor = this.getColorN_Pattern(IR);
   }
 
   @handle(OPS.setFillColorN)
-  setFillColorN() {
-    this.current.fillColor = this.getColorN_Pattern(arguments);
+  setFillColorN(IR: TilingPatternIR) {
+    this.current.fillColor = this.getColorN_Pattern(IR);
     this.current.patternFill = true;
   }
 
@@ -2571,7 +2598,7 @@ export class CanvasGraphics {
     this.current.patternFill = false;
   }
 
-  _getPattern(objId: string, matrix = null): BaseShadingPattern {
+  _getPattern(objId: string | Uint8ClampedArray<ArrayBuffer>, matrix: TransformType | null = null): BaseShadingPattern {
     let pattern: BaseShadingPattern;
     if (this.cachedPatterns.has(objId)) {
       pattern = this.cachedPatterns.get(objId)!;
@@ -2893,19 +2920,20 @@ export class CanvasGraphics {
       this.ctx.restore();
       this.#drawFilter();
 
-      this.ctx = this.annotationCanvas.savedCtx;
-      delete this.annotationCanvas.savedCtx;
-      delete this.annotationCanvas;
+      this.ctx = this.annotationCanvas.savedCtx!;
+      this.annotationCanvas.savedCtx = undefined;
+      this.annotationCanvas = null;
     }
   }
 
   @handle(OPS.paintImageMaskXObject)
   paintImageMaskXObject(img: {
-    data: string;
+    data: Uint8Array<ArrayBuffer>;
     width: number;
     height: number;
     interpolate: number[];
     count: number;
+    bitmap: CanvasImageSource | null;
   }) {
     if (!this.contentVisible) {
       return;
@@ -2941,7 +2969,14 @@ export class CanvasGraphics {
 
   @handle(OPS.paintImageMaskXObjectRepeat)
   paintImageMaskXObjectRepeat(
-    img,
+    img: {
+      data: Uint8Array<ArrayBuffer>;
+      width: number;
+      height: number;
+      interpolate: number[];
+      count: number;
+      bitmap: CanvasImageSource | null;
+    },
     scaleX: number,
     skewX = 0,
     skewY = 0,
@@ -3080,7 +3115,7 @@ export class CanvasGraphics {
     return ctx.canvas;
   }
 
-  applyTransferMapsToBitmap(imgData) {
+  applyTransferMapsToBitmap(imgData: ImageMask) {
     if (this.current.transferMaps === "none") {
       return imgData.bitmap;
     }
@@ -3092,14 +3127,14 @@ export class CanvasGraphics {
     );
     const tmpCtx = tmpCanvas.context!;
     tmpCtx.filter = this.current.transferMaps;
-    tmpCtx.drawImage(bitmap, 0, 0);
+    tmpCtx.drawImage(bitmap!, 0, 0);
     tmpCtx.filter = "none";
 
     return tmpCanvas.canvas;
   }
 
   @handle(OPS.paintInlineImageXObject)
-  paintInlineImageXObject(imgData) {
+  paintInlineImageXObject(imgData: ImageMask) {
     if (!this.contentVisible) {
       return;
     }
@@ -3144,7 +3179,7 @@ export class CanvasGraphics {
     }
 
     const scaled = this._scaleImage(
-      imgToPaint,
+      <HTMLCanvasElement | VideoFrame>imgToPaint,
       getCurrentTransformInverse(ctx)
     );
     ctx.imageSmoothingEnabled = getImageSmoothingEnabled(
@@ -3161,7 +3196,13 @@ export class CanvasGraphics {
   }
 
   @handle(OPS.paintInlineImageXObjectGroup)
-  paintInlineImageXObjectGroup(imgData, map: PositionTransformType[]) {
+  paintInlineImageXObjectGroup(imgData: {
+    width: number,
+    height: number,
+    kind?: ImageKind,
+    data: Uint8TypedArray | null,
+    bitmap?: CanvasImageSource,
+  }, map: PositionTransformType[]) {
     if (!this.contentVisible) {
       return;
     }

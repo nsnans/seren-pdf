@@ -32,7 +32,7 @@ import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
-import { EditorManager } from "./editor_manager";
+import { AnnotationEditorRegistry } from "./editor_manager";
 import { HighlightEditor } from "./highlight";
 import { AnnotationEditorUIManager } from "./tools";
 
@@ -113,14 +113,14 @@ export class AnnotationEditorLayer {
     viewport: PageViewport,
     l10n: IL10n,
   ) {
-    const editorInitalizers = EditorManager.getL10nInitializer();
+    const editorInitalizers = AnnotationEditorRegistry.getL10nInitializer();
     if (!AnnotationEditorLayer._initialized) {
       AnnotationEditorLayer._initialized = true;
       for (const initializer of editorInitalizers) {
         initializer(l10n, uiManager);
       }
     }
-    uiManager.registerEditorTypes(EditorManager.getEditorBasicInfo());
+    uiManager.registerEditorTypes(AnnotationEditorRegistry.getEditorBasicInfo());
 
     this.#uiManager = uiManager;
     this.pageIndex = pageIndex;
@@ -187,7 +187,7 @@ export class AnnotationEditorLayer {
 
     this.toggleAnnotationLayerPointerEvents(false);
     const { classList } = this.div!;
-    for (const editorType of EditorManager.getEditorBasicInfo()) {
+    for (const editorType of AnnotationEditorRegistry.getEditorBasicInfo()) {
       classList.toggle(
         `${editorType.name}Editing`,
         mode === editorType.type
@@ -336,7 +336,7 @@ export class AnnotationEditorLayer {
       this.div!.hidden = true;
     }
     const { classList } = this.div!;
-    for (const editorType of EditorManager.getEditorBasicInfo()) {
+    for (const editorType of AnnotationEditorRegistry.getEditorBasicInfo()) {
       classList.remove(`${editorType.type}Editing`);
     }
     this.disableTextSelection();
@@ -598,7 +598,7 @@ export class AnnotationEditorLayer {
   }
 
   get #currentEditorDescriptor() {
-    return EditorManager.getDescriptor(this.#uiManager.getMode())!;
+    return AnnotationEditorRegistry.getDescriptor(this.#uiManager.getMode())!;
   }
 
   combinedSignal(ac: AbortController) {

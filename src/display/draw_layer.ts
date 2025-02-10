@@ -15,7 +15,6 @@
 
 import { shadow } from "../shared/util";
 import { BoxType } from "../types";
-import { HighlightOutline } from "./editor/drawers/highlight";
 import { Outline } from "./editor/drawers/outline";
 import { DOMSVGFactory } from "./svg_factory";
 
@@ -123,13 +122,13 @@ export class DrawLayer {
     return { id, clipPathId: `url(#${clipPathId})` };
   }
 
-  drawOutline(outlines: HighlightOutline) {
+  drawOutline(outlines: Outline) {
     // We cannot draw the outline directly in the SVG for highlights because
     // it composes with its parent with mix-blend-mode: multiply.
     // But the outline has a different mix-blend-mode, so we need to draw it in
     // its own SVG.
     const id = this.#id++;
-    const root = this.#createSVG(outlines.box);
+    const root = this.#createSVG(outlines.box!);
     root.classList.add(...outlines.classNamesForOutlining);
     const defs = DrawLayer._svgFactory.createElement("defs");
     root.append(defs);
@@ -177,21 +176,21 @@ export class DrawLayer {
     return id;
   }
 
-  finalizeLine(id: number, line) {
+  finalizeLine(id: number, line: Outline) {
     const path = this.#toUpdate.get(id)!;
     this.#toUpdate.delete(id);
-    this.updateBox(id, line.box);
+    this.updateBox(id, line.box!);
     path.setAttribute("d", line.toSVGPath());
   }
 
-  updateLine(id: number, line) {
+  updateLine(id: number, line: Outline) {
     const root = this.#mapping.get(id)!;
     const defs = root.firstChild;
     const path = (<Element>defs).firstChild!;
     (<Element>path).setAttribute("d", line.toSVGPath());
   }
 
-  updatePath(id: number, line) {
+  updatePath(id: number, line: Outline) {
     this.#toUpdate.get(id)!.setAttribute("d", line.toSVGPath());
   }
 

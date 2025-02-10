@@ -120,7 +120,7 @@ export class AnnotationEditorHelper {
   static deleteAnnotationElement(editor: AnnotationEditor) {
     const fakeEditor = new FakeEditor({
       id: editor.parent!.getNextId(),
-      parent: editor.parent,
+      parent: editor.parent!,
       uiManager: editor._uiManager,
     });
     fakeEditor.annotationElementId = editor.annotationElementId;
@@ -129,9 +129,9 @@ export class AnnotationEditorHelper {
   }
 
   /**
- * Initialize the l10n stuff for this type of editor.
- * @param {Object} l10n
- */
+   * Initialize the l10n stuff for this type of editor.
+   * @param {Object} l10n
+   */
   static initialize(l10n: IL10n, _uiManager: AnnotationEditorUIManager) {
     AnnotationEditorHelper._l10n ??= l10n;
 
@@ -202,7 +202,6 @@ export class AnnotationEditorHelper {
   static get defaultPropertiesToUpdate() {
     return [];
   }
-
 }
 
 
@@ -1752,16 +1751,24 @@ export abstract class AnnotationEditor {
   }
 }
 
+interface FakeEditorParameter {
+  id: string;
+  parent: AnnotationEditorLayer;
+  uiManager: AnnotationEditorUIManager;
+}
 // This class is used to fake an editor which has been deleted.
 class FakeEditor extends AnnotationEditor {
 
-  public annotationElementId: string | null;
-
   public deleted: boolean;
 
-  constructor(params) {
-    super(params);
-    this.annotationElementId = params.annotationElementId;
+  constructor(params: FakeEditorParameter) {
+    super({
+      ...params,
+      x: 0,
+      y: 0,
+      name: "",
+      isCentered: false
+    });
     this.deleted = true;
   }
 }

@@ -628,7 +628,7 @@ export interface OperatorListIR {
   length: number;
 
   lastChunk: boolean;
-  
+
   separateAnnots: {
     form: boolean;
     canvas: boolean;
@@ -768,6 +768,8 @@ export class OperatorList {
       fnArray: this.fnArray,
       argsArray: this.argsArray,
       length: this.length,
+      lastChunk: false,
+      separateAnnots: null,
     };
   }
 

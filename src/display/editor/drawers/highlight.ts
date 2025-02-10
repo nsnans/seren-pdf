@@ -138,19 +138,21 @@ export class HighlightOutliner {
     // 这段代码直接重写掉吧。苔草淡了。
 
     for (let i = 0, ii = edges.length; i < ii; i += 2) {
-      const edge1 = edges[i][2];
-      const edge2 = edges[i + 1][2];
+      // 这里edge1和edge2的类型都可以确认的，但是这种方式非常不好用具体的类型写出来
+      // 因此先用unknown把，强转一下，后面可以考虑重写这边的的代码，这太面向过程了
+      const edge1 : unknown[]= edges[i][2];
+      const edge2 : unknown[] = edges[i + 1][2];
       edge1.push(edge2);
       edge2.push(edge1);
       allEdges.add(edge1);
       allEdges.add(edge2);
     }
     const outlines = [];
-    let outline;
+    let outline : PointType;
 
     while (allEdges.size > 0) {
       const edge = allEdges.values().next().value;
-      let [x, y1, y2, edge1, edge2] = edge;
+      let [x, y1, y2, edge1, edge2] = <[number,number,number, unknown,unknown]>edge;
       allEdges.delete(edge);
       let lastPointX = x;
       let lastPointY = y1;
@@ -169,7 +171,7 @@ export class HighlightOutliner {
         }
 
         allEdges.delete(e);
-        [x, y1, y2, edge1, edge2] = e;
+        [x, y1, y2, edge1, edge2] = <[number,number,number, unknown,unknown]>e;
 
         if (lastPointX !== x) {
           outline.push(lastPointX, lastPointY, x, lastPointY === y1 ? y1 : y2);

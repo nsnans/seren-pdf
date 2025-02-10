@@ -16,7 +16,11 @@
 import { PlatformHelper } from "../platform/platform_helper";
 import { unreachable } from "../shared/util";
 
-export type CanvasAndContext = { canvas: HTMLCanvasElement | null, context: CanvasRenderingContext2D | null };
+export type CanvasAndContext = {
+  savedCtx?: CanvasRenderingContext2D;
+  canvas: HTMLCanvasElement | null;
+  context: CanvasRenderingContext2D | null;
+};
 
 export interface CanvasFactory {
 

@@ -13,11 +13,9 @@
  * limitations under the License.
  */
 
-import { MurmurHash3_64 } from "../shared/murmurhash3";
 import { objectFromMap, shadow, unreachable } from "../shared/util";
 import { AnnotationEditor } from "./editor/editor";
 import { AnnotationEditorSerial } from "./editor/state/editor_serializable";
-import { hasOwnBitmap } from "./editor/utils";
 
 const SerializableEmpty: AnnotationStorageSerializable = Object.freeze({
   map: null,
@@ -195,41 +193,7 @@ class AnnotationStorage {
    * @ignore
    */
   get serializable(): AnnotationStorageSerializable {
-    if (this.#storage.size === 0) {
-      return SerializableEmpty;
-    }
-
-    const map = new Map<string, AnnotationEditorSerial>();
-    const hash = new MurmurHash3_64();
-    const transfer = [];
-
-    const context = Object.create(null);
-    let hasBitmap = false;
-
-    for (const [key, val] of this.#storage) {
-
-      const serialized = val instanceof AnnotationEditor ? val.serialize(false, context) : val;
-      if (serialized) {
-        map.set(key, serialized);
-
-        hash.update(`${key}:${JSON.stringify(serialized)}`);
-        hasBitmap ||= !!serialized.bitmap;
-      }
-    }
-
-    if (hasBitmap) {
-      // We must transfer the bitmap data separately, since it can be changed
-      // during serialization with SVG images.
-      for (const value of map.values()) {
-        if (hasOwnBitmap(value)) {
-          transfer.push(value.bitmap);
-        }
-      }
-    }
-
-    return map.size > 0
-      ? { map, hash: hash.hexdigest(), transfer }
-      : SerializableEmpty;
+    return SerializableEmpty;
   }
 
   get editorStats() {
@@ -283,8 +247,7 @@ class AnnotationStorage {
     for (const value of this.#storage.values()) {
       if (
         !(value instanceof AnnotationEditor) ||
-        !value.annotationElementId ||
-        !value.serialize()
+        !value.annotationElementId
       ) {
         continue;
       }

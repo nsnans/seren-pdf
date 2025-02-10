@@ -23,8 +23,7 @@ import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, CacheImage } from "./tools";
 
-
-interface StampEditorParameter extends AnnotationEditorParameters {
+export interface StampEditorParameter extends AnnotationEditorParameters {
   bitmapFile: File | null;
   name: "stampEditor";
   bitmapUrl: string | null;

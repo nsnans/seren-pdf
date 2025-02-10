@@ -609,7 +609,7 @@ export class FreeDrawOutline extends Outline {
     );
   }
 
-  getNewOutline(thickness: number, innerMargin: number) {
+  getNewOutline(thickness: number, innerMargin: number | null) {
     // Build the outline of the highlight to use as the focus outline.
     const { x, y, width, height } = this.#bbox!;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;

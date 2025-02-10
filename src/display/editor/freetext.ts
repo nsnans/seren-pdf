@@ -36,7 +36,7 @@ import {
 
 const EOL_PATTERN = /\r\n?|\n/g;
 
-interface FreeTextParameter extends AnnotationEditorParameters {
+export interface FreeTextEditorParameter extends AnnotationEditorParameters {
   color: string | null;
   fontSize: number | null;
   name: "freeTextEditor"
@@ -142,7 +142,7 @@ export class FreeTextEditor extends AnnotationEditor {
 
   protected overlayDiv: HTMLDivElement | null = null;
 
-  constructor(params: FreeTextParameter) {
+  constructor(params: FreeTextEditorParameter) {
     super({ ...params, name: "freeTextEditor" });
     this.#color = params.color || FreeTextEditor._defaultColor ||
       AnnotationEditorHelper._defaultLineColor;
@@ -558,12 +558,6 @@ export class FreeTextEditor extends AnnotationEditor {
   render() {
     if (this.div) {
       return this.div;
-    }
-
-    let baseX, baseY;
-    if (this.width) {
-      baseX = this.x;
-      baseY = this.y;
     }
 
     super.render();

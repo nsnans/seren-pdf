@@ -1,22 +1,22 @@
 import { AnnotationEditorType } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
-import { FreeTextEditor } from "./freetext";
-import { HighlightEditor } from "./highlight";
-import { InkEditor } from "./ink";
-import { StampEditor } from "./stamp";
+import { FreeTextEditor, FreeTextEditorParameter } from "./freetext";
+import { HighlightEditor, HighlightEditorParameter } from "./highlight";
+import { InkEditor, InkEditorParameter } from "./ink";
+import { StampEditor, StampEditorParameter } from "./stamp";
 import { AnnotationEditorUIManager } from "./tools";
 
-interface AnnotationEditorDescriptor<T> {
+interface AnnotationEditorDescriptor<P, T> {
   initialize: (l10n: IL10n, uiManager: AnnotationEditorUIManager) => void;
-  create: () => T;
+  create: (params: P) => T;
   type: AnnotationEditorType;
   name: string;
   canCreateNewEmptyEditor: boolean;
 }
 
-export class EditorManager {
+export class AnnotationEditorRegistry {
 
-  protected static annotationEditorDescriptorMap = new Map<AnnotationEditorType, AnnotationEditorDescriptor<unknown>>();
+  protected static annotationEditorDescriptorMap = new Map<AnnotationEditorType, AnnotationEditorDescriptor<unknown, unknown>>();
 
   static {
     this.registerEditor({
@@ -24,36 +24,36 @@ export class EditorManager {
       name: FreeTextEditor._type,
       type: AnnotationEditorType.FREETEXT,
       canCreateNewEmptyEditor: FreeTextEditor.canCreateNewEmptyEditor(),
-      create: () => new FreeTextEditor(),
+      create: (params: FreeTextEditorParameter) => new FreeTextEditor(params),
     });
     this.registerEditor({
       initialize: InkEditor.initialize,
       name: InkEditor._type,
       type: AnnotationEditorType.INK,
       canCreateNewEmptyEditor: InkEditor.canCreateNewEmptyEditor(),
-      create: () => new InkEditor(),
+      create: (param: InkEditorParameter) => new InkEditor(param),
     });
     this.registerEditor({
       initialize: StampEditor.initialize,
       name: StampEditor._type,
       type: AnnotationEditorType.STAMP,
       canCreateNewEmptyEditor: StampEditor.canCreateNewEmptyEditor(),
-      create: () => new StampEditor(),
+      create: (param: StampEditorParameter) => new StampEditor(param),
     });
     this.registerEditor({
       initialize: HighlightEditor.initialize,
       name: HighlightEditor._type,
       type: AnnotationEditorType.HIGHLIGHT,
       canCreateNewEmptyEditor: StampEditor.canCreateNewEmptyEditor(),
-      create: () => new HighlightEditor(),
+      create: (param: HighlightEditorParameter) => new HighlightEditor(param),
     });
   }
 
-  static registerEditor(desc: AnnotationEditorDescriptor<unknown>) {
+  static registerEditor<P, T>(desc: AnnotationEditorDescriptor<P, T>) {
     if (this.annotationEditorDescriptorMap.has(desc.type)) {
       throw new Error("重复注册批注类型" + desc.type);
     }
-    this.annotationEditorDescriptorMap.set(desc.type, desc);
+    this.annotationEditorDescriptorMap.set(desc.type, <AnnotationEditorDescriptor<unknown, unknown>>desc);
   }
 
   static getL10nInitializer() {

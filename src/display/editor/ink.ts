@@ -28,7 +28,7 @@ import { AnnotationEditorUIManager, opacityToHex } from "./tools";
 
 type BezierType = [PointType, PointType, PointType, PointType][];
 
-interface InkParameter extends AnnotationEditorParameters {
+export interface InkEditorParameter extends AnnotationEditorParameters {
   opacity: number | null;
   thickness: number | null;
   color: string | null;
@@ -77,19 +77,30 @@ export class InkEditor extends AnnotationEditor {
   static _editorType = AnnotationEditorType.INK;
 
   protected color: string | null;
+  
   protected thickness: number | null;
+  
   protected opacity: number | null;
+  
   protected canvas: HTMLCanvasElement | null = null;
+  
   protected paths: BezierType[];
+  
   protected bezierPath2D: Path2D[];
+  
   protected allRawPaths: PointType[][];
+  
   protected currentPath: PointType[];
+  
   protected scaleFactor: number;
+  
   protected translationX: number;
+  
   protected translationY: number;
+  
   protected ctx: CanvasRenderingContext2D | null = null;
 
-  constructor(params: InkParameter) {
+  constructor(params: InkEditorParameter) {
     super({ ...params, name: "inkEditor" });
     this.color = params.color || null;
     this.thickness = params.thickness || null;

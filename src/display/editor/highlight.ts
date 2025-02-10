@@ -14,25 +14,32 @@
  */
 
 import { AnnotationData } from "../../core/annotation";
-import {
-  AnnotationEditorParamsType,
-  AnnotationEditorType,
-  shadow
-} from "../../shared/util";
+import { AnnotationEditorParamsType, AnnotationEditorType, shadow } from "../../shared/util";
+import { BoxType } from "../../types";
 import { IL10n } from "../../viewer/common/component_types";
-import {
-  AnnotationElement
-} from "../annotation_layer";
-import { noContextMenu, PointType, RectType } from "../display_utils";
+import { AnnotationElement } from "../annotation_layer";
+import { PointType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { ColorPicker } from "./color_picker";
-import {
-  FreeHighlightOutliner,
-  HighlightOutline,
-  HighlightOutliner,
-} from "./drawers/highlight";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { FreeDrawOutline } from "./drawers/freedraw";
+import { FreeHighlightOutliner, HighlightOutline, HighlightOutliner } from "./drawers/highlight";
+import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
+
+export interface HighlightEditorParameter extends AnnotationEditorParameters {
+  color: string | null;
+  thickness: number | null;
+  opacity: number | null;
+  text: string | null;
+  highlightId: number;
+  boxes: null;
+  anchorNode: null;
+  anchorOffset: number;
+  focusNode: null;
+  focusOffset: number;
+  clipPathId: string | null;
+  highlightOutlines: FreeDrawOutline | null;
+}
 
 /**
  * Basic draw editor in order to generate an Highlight annotation.
@@ -69,13 +76,13 @@ export class HighlightEditor extends AnnotationEditor {
 
   #anchorOffset = 0;
 
-  #boxes;
+  #boxes: BoxType[] | null;
 
   #clipPathId: string | null = null;
 
   #colorPicker: ColorPicker | null = null;
 
-  #focusOutlines: HighlightOutline | null = null;
+  #focusOutlines: FreeDrawOutline | HighlightOutline | null = null;
 
   #focusNode = null;
 
@@ -83,7 +90,7 @@ export class HighlightEditor extends AnnotationEditor {
 
   #highlightDiv: HTMLDivElement | null = null;
 
-  #highlightOutlines: HighlightOutline | null = null;
+  #highlightOutlines: FreeDrawOutline | HighlightOutline | null = null;
 
   #id: number | null = null;
 
@@ -101,9 +108,9 @@ export class HighlightEditor extends AnnotationEditor {
 
   protected color: string;
 
-  constructor(params) {
+  constructor(params: HighlightEditorParameter) {
     super({ ...params, name: "highlightEditor" });
-    this.color = params.color || HighlightEditor._defaultColor;
+    this.color = params.color || HighlightEditor._defaultColor!;
     this.#thickness = params.thickness || HighlightEditor._defaultThickness;
     this.#opacity = params.opacity || HighlightEditor._defaultOpacity;
     this.#boxes = params.boxes || null;
@@ -112,7 +119,7 @@ export class HighlightEditor extends AnnotationEditor {
 
     if (params.highlightId > -1) {
       this.#isFreeHighlight = true;
-      this.#createFreeOutlines(params);
+      this.#createFreeOutlines(params.highlightOutlines!, params.highlightId, params.clipPathId ?? "");
       this.#addToDrawLayer();
     } else if (this.#boxes) {
       this.#anchorNode = params.anchorNode;
@@ -126,28 +133,22 @@ export class HighlightEditor extends AnnotationEditor {
   }
 
   #createOutlines() {
-    const outliner = new HighlightOutliner(
-      this.#boxes,
-      /* borderWidth = */ 0.001
-    );
+    const outliner = new HighlightOutliner(this.#boxes!, 0.001);
     this.#highlightOutlines = outliner.getOutlines();
     ({
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height,
-    } = this.#highlightOutlines!.box);
+    } = this.#highlightOutlines!.box!);
 
     const outlinerForOutline = new HighlightOutliner(
-      this.#boxes,
-      /* borderWidth = */ 0.0025,
-      /* innerMargin = */ 0.001,
-      this._uiManager.direction === "ltr"
+      this.#boxes!, 0.0025, 0.001, this._uiManager.direction === "ltr"
     );
     this.#focusOutlines = outlinerForOutline.getOutlines();
 
     // The last point is in the pages coordinate system.
-    const { lastPoint } = this.#focusOutlines.box;
+    const { lastPoint } = this.#focusOutlines!.box!;
     this.#lastPoint = [
       (lastPoint[0] - this.x) / this.width,
       (lastPoint[1] - this.y) / this.height,
@@ -155,7 +156,7 @@ export class HighlightEditor extends AnnotationEditor {
   }
 
   #createFreeOutlines(
-    highlightOutlines: HighlightOutline,
+    highlightOutlines: FreeDrawOutline,
     highlightId: number = 0,
     clipPathId: string = "",
   ) {
@@ -164,8 +165,7 @@ export class HighlightEditor extends AnnotationEditor {
     this.#focusOutlines = highlightOutlines.getNewOutline(
       /* Slightly bigger than the highlight in order to have a little
          space between the highlight and the outline. */
-      this.#thickness / 2 + extraThickness,
-      /* innerMargin = */ 0.0025
+      this.#thickness / 2 + extraThickness, 0.0025
     );
 
     if (highlightId >= 0) {
@@ -181,7 +181,7 @@ export class HighlightEditor extends AnnotationEditor {
       this.parent.drawLayer.updateBox(
         this.#id!,
         HighlightEditor.#rotateBbox(
-          this.#highlightOutlines!.box,
+          this.#highlightOutlines!.box!,
           (angle - this.rotation + 360) % 360
         )
       );
@@ -189,10 +189,10 @@ export class HighlightEditor extends AnnotationEditor {
       this.parent.drawLayer.updateLine(this.#outlineId!, this.#focusOutlines);
       this.parent.drawLayer.updateBox(
         this.#outlineId!,
-        HighlightEditor.#rotateBbox(this.#focusOutlines!.box, angle)
+        HighlightEditor.#rotateBbox(this.#focusOutlines!.box!, angle)
       );
     }
-    const { x, y, width, height } = highlightOutlines.box;
+    const { x, y, width, height } = highlightOutlines.box!;
     switch (this.rotation) {
       case 0:
         this.x = x;
@@ -224,7 +224,7 @@ export class HighlightEditor extends AnnotationEditor {
       }
     }
 
-    const { lastPoint } = this.#focusOutlines!.box;
+    const { lastPoint } = this.#focusOutlines!.box!;
     this.#lastPoint = [(lastPoint[0] - x) / width, (lastPoint[1] - y) / height];
   }
 
@@ -310,11 +310,7 @@ export class HighlightEditor extends AnnotationEditor {
     const savedColor = this.color;
     const savedOpacity = this.#opacity;
     this.addCommands(
-      setColorAndOpacity.bind(
-        this,
-        color,
-        HighlightEditor._defaultOpacity
-      ),
+      setColorAndOpacity.bind(this, color, HighlightEditor._defaultOpacity),
       setColorAndOpacity.bind(this, savedColor, savedOpacity),
       this._uiManager.updateUI.bind(this._uiManager, this),
       true,
@@ -443,9 +439,7 @@ export class HighlightEditor extends AnnotationEditor {
     if (!this.#isFreeHighlight) {
       return;
     }
-    this.#createFreeOutlines({
-      highlightOutlines: this.#highlightOutlines!.getNewOutline(thickness / 2),
-    });
+    this.#createFreeOutlines((<FreeDrawOutline>this.#highlightOutlines).getNewOutline(thickness / 2, null));
     this.fixAndSetPosition();
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.setDims(this.width * parentWidth, this.height * parentHeight);
@@ -470,7 +464,7 @@ export class HighlightEditor extends AnnotationEditor {
       this.color,
       this.#opacity
     ));
-    this.#outlineId = parent!.drawLayer.drawOutline(this.#focusOutlines!);
+    this.#outlineId = parent!.drawLayer.drawOutline(<HighlightOutline>this.#focusOutlines!);
     if (this.#highlightDiv) {
       this.#highlightDiv.style.clipPath = this.#clipPathId;
     }
@@ -515,7 +509,7 @@ export class HighlightEditor extends AnnotationEditor {
     let box;
     if (this.#isFreeHighlight) {
       angle = (angle - this.rotation + 360) % 360;
-      box = HighlightEditor.#rotateBbox(this.#highlightOutlines!.box, angle);
+      box = HighlightEditor.#rotateBbox(this.#highlightOutlines!.box!, angle);
     } else {
       // An highlight annotation is always drawn horizontally.
       box = HighlightEditor.#rotateBbox(this, angle);
@@ -524,7 +518,7 @@ export class HighlightEditor extends AnnotationEditor {
     drawLayer.rotate(this.#outlineId!, angle);
     drawLayer.updateBox(this.#id!, box);
     drawLayer.updateBox(
-      this.#outlineId!, HighlightEditor.#rotateBbox(this.#focusOutlines!.box, angle)
+      this.#outlineId!, HighlightEditor.#rotateBbox(this.#focusOutlines!.box!, angle)
     );
   }
 
@@ -642,109 +636,6 @@ export class HighlightEditor extends AnnotationEditor {
     // Highlight annotations are always drawn horizontally but if
     // a free highlight annotation can be rotated.
     return this.#isFreeHighlight ? this.rotation : 0;
-  }
-
-  #serializeBoxes() {
-    if (this.#isFreeHighlight) {
-      return null;
-    }
-    const [pageWidth, pageHeight] = this.pageDimensions;
-    const [pageX, pageY] = this.pageTranslation;
-    const boxes = this.#boxes;
-    const quadPoints = new Float32Array(boxes.length * 8);
-    let i = 0;
-    for (const { x, y, width, height } of boxes) {
-      const sx = x * pageWidth + pageX;
-      const sy = (1 - y - height) * pageHeight + pageY;
-      // The specifications say that the rectangle should start from the bottom
-      // left corner and go counter-clockwise.
-      // But when opening the file in Adobe Acrobat it appears that this isn't
-      // correct hence the 4th and 6th numbers are just swapped.
-      quadPoints[i] = quadPoints[i + 4] = sx;
-      quadPoints[i + 1] = quadPoints[i + 3] = sy;
-      quadPoints[i + 2] = quadPoints[i + 6] = sx + width * pageWidth;
-      quadPoints[i + 5] = quadPoints[i + 7] = sy + height * pageHeight;
-      i += 8;
-    }
-    return quadPoints;
-  }
-
-  #serializeOutlines(rect: RectType) {
-    return this.#highlightOutlines!.serialize(rect, this.#getRotation());
-  }
-
-  static startHighlighting(parent, isLTR: boolean, { target: textLayer, x, y }) {
-    const {
-      x: layerX,
-      y: layerY,
-      width: parentWidth,
-      height: parentHeight,
-    } = textLayer.getBoundingClientRect();
-
-    const ac = new AbortController();
-    const signal = parent.combinedSignal(ac);
-
-    const pointerDown = (e: MouseEvent) => {
-      // Avoid to have undesired clicks during the drawing.
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    const pointerUpCallback = (e: UIEvent) => {
-      ac.abort();
-      this.#endHighlight(parent, e);
-    };
-    window.addEventListener("blur", pointerUpCallback, { signal });
-    window.addEventListener("pointerup", pointerUpCallback, { signal });
-    window.addEventListener("pointerdown", pointerDown, {
-      capture: true,
-      passive: false,
-      signal,
-    });
-    window.addEventListener("contextmenu", noContextMenu, { signal });
-
-    textLayer.addEventListener(
-      "pointermove",
-      this.#highlightMove.bind(this, parent),
-      { signal }
-    );
-    this._freeHighlight = new FreeHighlightOutliner(
-      { x, y },
-      [layerX, layerY, parentWidth, parentHeight],
-      parent.scale,
-      this._defaultThickness / 2,
-      isLTR,
-      /* innerMargin = */ 0.001
-    );
-    ({ id: this._freeHighlightId, clipPathId: this._freeHighlightClipId } =
-      parent.drawLayer.draw(
-        this._freeHighlight,
-        this._defaultColor,
-        this._defaultOpacity,
-        /* isPathUpdatable = */ true
-      ));
-  }
-
-  static #highlightMove(parent: AnnotationEditorLayer, event) {
-    if (this._freeHighlight!.add(event)) {
-      // Redraw only if the point has been added.
-      parent.drawLayer.updatePath(this._freeHighlightId, this._freeHighlight);
-    }
-  }
-
-  static #endHighlight(parent: AnnotationEditorLayer, event) {
-    if (!this._freeHighlight!.isEmpty()) {
-      parent.createAndAddNewEditor(event, false, {
-        highlightId: this._freeHighlightId,
-        highlightOutlines: this._freeHighlight!.getOutlines(),
-        clipPathId: this._freeHighlightClipId,
-        methodOfCreation: "main_toolbar",
-      });
-    } else {
-      parent.drawLayer.remove(this._freeHighlightId);
-    }
-    this._freeHighlightId = -1;
-    this._freeHighlight = null;
-    this._freeHighlightClipId = "";
   }
 
   /** @inheritdoc */

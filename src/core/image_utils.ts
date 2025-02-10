@@ -205,6 +205,12 @@ export interface LocalTilingPatternData {
     // 每一个不同的fn有不同对应的参数，具体请查看OPSArgsType
     argsArray: (any[] | null)[],
     length: number,
+    lastChunk: boolean;
+
+    separateAnnots: {
+      form: boolean;
+      canvas: boolean;
+    } | null;
   },
   dict: Dict
 }
