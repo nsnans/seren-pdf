@@ -17,7 +17,7 @@
 /** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
 
 import { AnnotationData } from "../../core/annotation";
-import { FeatureTest, shadow, unreachable } from "../../shared/util";
+import { AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, shadow, unreachable } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationElement } from "../annotation_layer";
 import { noContextMenu, RectType } from "../display_utils";
@@ -325,7 +325,7 @@ export abstract class AnnotationEditor {
     this.deleted = false;
   }
 
-  get editorType(): string {
+  get editorType(): AnnotationEditorType {
     return Object.getPrototypeOf(this).constructor._type;
   }
 
@@ -333,7 +333,7 @@ export abstract class AnnotationEditor {
    * Get the properties to update in the UI for this editor.
    * @returns {Array}
    */
-  get propertiesToUpdate(): any[][] {
+  get propertiesToUpdate(): [AnnotationEditorParamsType, string | boolean | number | null][] {
     return [];
   }
 
@@ -1728,12 +1728,12 @@ export abstract class AnnotationEditor {
     let content = annotation.container!.querySelector(".annotationContent");
     if (!content) {
       content = document.createElement("div");
-      content.classList.add("annotationContent", this.editorType);
+      content.classList.add("annotationContent", this.editorType.toString());
       annotation.container!.prepend(content);
     } else if (content.nodeName === "CANVAS") {
       const canvas = content;
       content = document.createElement("div");
-      content.classList.add("annotationContent", this.editorType);
+      content.classList.add("annotationContent", this.editorType.toString());
       canvas.before(content);
     }
 

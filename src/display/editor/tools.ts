@@ -826,7 +826,7 @@ class AnnotationEditorUIManager {
 
   #pageColors: { background: string, foreground: string } | null = null;
 
-  #showAllStates = null;
+  #showAllStates: Map<AnnotationEditorParamsType, boolean> | null = null;
 
   #previousStates = {
     isEditing: false,
@@ -1353,32 +1353,14 @@ class AnnotationEditorUIManager {
     this.#removeCopyPasteListeners();
   }
 
-  dragOver(event: DragEvent) {
-    for (const { type } of event.dataTransfer!.items) {
-      for (const editorType of this.#editorTypes) {
-        if (editorType.isHandlingMimeForPasting(type)) {
-          event.dataTransfer!.dropEffect = "copy";
-          event.preventDefault();
-          return;
-        }
-      }
-    }
+  dragOver(_event: DragEvent) {
   }
 
   /**
    * Drop callback.
    * @param {DragEvent} event
    */
-  drop(event: DragEvent) {
-    for (const item of event.dataTransfer!.items) {
-      for (const editorType of this.#editorTypes) {
-        if (editorType.isHandlingMimeForPasting(item.type)) {
-          editorType.paste(item, this.currentLayer);
-          event.preventDefault();
-          return;
-        }
-      }
-    }
+  drop(_event: DragEvent) {
   }
 
   /**
@@ -1435,9 +1417,16 @@ class AnnotationEditorUIManager {
    * something to undo, redo, ...
    * @param {Object} details
    */
-  #dispatchUpdateStates(details) {
+  #dispatchUpdateStates(details: Partial<{
+    isEditing: boolean;
+    isEmpty: boolean;
+    hasSomethingToUndo: boolean;
+    hasSomethingToRedo: boolean;
+    hasSelectedEditor: boolean;
+    hasSelectedText: boolean;
+  }>) {
     const hasChanged = Object.entries(details).some(
-      ([key, value]) => this.#previousStates[key] !== value
+      ([key, value]) => (<Record<string, boolean>>this.#previousStates)[key] !== value
     );
 
     if (hasChanged) {
@@ -1459,7 +1448,7 @@ class AnnotationEditorUIManager {
     }
   }
 
-  #dispatchUpdateUI(details) {
+  #dispatchUpdateUI(details: [AnnotationEditorParamsType, unknown][]) {
     this._eventBus.dispatch("annotationeditorparamschanged", {
       source: this,
       details,
@@ -1493,19 +1482,8 @@ class AnnotationEditorUIManager {
     }
   }
 
-  registerEditorTypes(types) {
-    if (this.#editorTypes) {
-      return;
-    }
-    this.#editorTypes = types;
-    for (const editorType of this.#editorTypes) {
-      this.#dispatchUpdateUI(editorType.defaultPropertiesToUpdate);
-    }
-  }
-
   /**
    * Get an id.
-   * @returns {string}
    */
   getId() {
     return this.#idManager.id;
@@ -1643,10 +1621,6 @@ class AnnotationEditorUIManager {
 
     for (const editor of this.#selectedEditors) {
       editor.updateParams(type, value);
-    }
-
-    for (const editorType of this.#editorTypes) {
-      editorType.updateDefaultParams(type, value);
     }
   }
 

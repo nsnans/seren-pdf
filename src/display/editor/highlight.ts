@@ -282,7 +282,7 @@ export class HighlightEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   get propertiesToUpdate() {
-    return [
+    return <[AnnotationEditorParamsType, string | boolean | number | null][]>[
       [
         AnnotationEditorParamsType.HIGHLIGHT_COLOR,
         this.color || HighlightEditor._defaultColor,

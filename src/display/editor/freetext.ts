@@ -208,8 +208,8 @@ export class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  get propertiesToUpdate(): [[number, number], [number, string]] {
-    return [
+  get propertiesToUpdate(): [AnnotationEditorParamsType, string | boolean | number | null][] {
+    return <[AnnotationEditorParamsType, string | boolean | number | null][]>[
       [AnnotationEditorParamsType.FREETEXT_SIZE, this.#fontSize],
       [AnnotationEditorParamsType.FREETEXT_COLOR, this.#color],
     ];

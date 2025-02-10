@@ -120,7 +120,7 @@ export class AnnotationEditorLayer {
         initializer(l10n, uiManager);
       }
     }
-    uiManager.registerEditorTypes(AnnotationEditorRegistry.getEditorBasicInfo());
+    // uiManager.registerEditorTypes(AnnotationEditorRegistry.getEditorBasicInfo());
 
     this.#uiManager = uiManager;
     this.pageIndex = pageIndex;

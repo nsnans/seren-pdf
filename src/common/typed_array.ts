@@ -119,8 +119,3 @@ export interface GenericTypedArray<TArrayBuffer extends ArrayBufferLike, THIS> {
 // 主要是为了抽象出Uint8Array和Uint8ClampArray，这两个到处拼接，太操蛋了
 export interface Uint8TypedArray extends GenericTypedArray<ArrayBuffer, Uint8TypedArray> { }
 
-// 很多地方一会儿传 number[]，一会儿传Uint8ClampedArray，一会儿传Uin8Array
-// 最好统一成 Iterable<number>，不做特殊抽象的话，就要做大量的兼容了。
-export interface Iterable {
-
-}

@@ -62,7 +62,7 @@ class AnnotationStorage {
    * @param {Object} defaultValue
    * @returns {Object}
    */
-  getValue(key: string, defaultValue) {
+  getValue(key: string, defaultValue: Record<string, any>) {
     const value = this.#storage.get(key);
     if (value === undefined) {
       return defaultValue;

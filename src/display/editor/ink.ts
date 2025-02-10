@@ -77,27 +77,27 @@ export class InkEditor extends AnnotationEditor {
   static _editorType = AnnotationEditorType.INK;
 
   protected color: string | null;
-  
+
   protected thickness: number | null;
-  
+
   protected opacity: number | null;
-  
+
   protected canvas: HTMLCanvasElement | null = null;
-  
+
   protected paths: BezierType[];
-  
+
   protected bezierPath2D: Path2D[];
-  
+
   protected allRawPaths: PointType[][];
-  
+
   protected currentPath: PointType[];
-  
+
   protected scaleFactor: number;
-  
+
   protected translationX: number;
-  
+
   protected translationY: number;
-  
+
   protected ctx: CanvasRenderingContext2D | null = null;
 
   constructor(params: InkEditorParameter) {
@@ -168,7 +168,7 @@ export class InkEditor extends AnnotationEditor {
 
   /** @inheritdoc */
   get propertiesToUpdate() {
-    return [
+    return <[AnnotationEditorParamsType, string | boolean | number | null][]>[
       [
         AnnotationEditorParamsType.INK_THICKNESS,
         this.thickness || InkEditor._defaultThickness,
