@@ -44,7 +44,7 @@ function stripPath(str: string) {
 
 export interface FileSpecSerializable {
 
-  rawFilename: string;
+  rawFilename?: string;
 
   filename: string;
 

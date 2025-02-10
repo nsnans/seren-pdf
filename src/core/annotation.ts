@@ -86,7 +86,7 @@ import { XRef } from "./xref";
 
 export interface AnnotationParameters {
   xref: XRef;
-  ref: Ref;
+  ref: Ref | null;
   dict: Dict;
   subtype: string | null;
   id: string;
@@ -150,7 +150,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewHighlightAnnotation(
     xref: XRef,
-    annotation: AnnotationEditorSerial,
+    annotation: HighlightEditorSerial,
     dependencies: AnnotationDependency[]
   ) {
     if (!annotation.ref) {
@@ -182,7 +182,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewInkAnnotation(
     xref: XRef,
-    annotation: AnnotationEditorSerial,
+    annotation: InkEditorSerial,
     dependencies: AnnotationDependency[]
   ) {
     if (!annotation.ref) {
@@ -215,7 +215,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewStampAnnotation(
     xref: XRef,
-    annotation: AnnotationEditorSerial,
+    annotation: StampEditorSerial,
     dependencies: AnnotationDependency[],
     image: CreateStampImageResult
   ) {
@@ -258,7 +258,14 @@ export class MarkupAnnotationFactory {
     );
 
     const newAnnotation = new InkAnnotation({
-      dict: annotationDict, xref, annotationGlobals, evaluatorOptions: evaluatorOptions,
+      xref,
+      annotationGlobals,
+      ref: null,
+      subtype: null,
+      id: null,
+
+      evaluatorOptions: evaluatorOptions,
+      dict: annotationDict,
     });
 
     if (annotation.ref) {
@@ -319,7 +326,7 @@ export class MarkupAnnotationFactory {
   static async createNewStampPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
     xref: XRef,
-    annotation: AnnotationEditorSerial,
+    annotation: StampEditorSerial,
     image: CreateStampImageResult | null,
     evaluatorOptions: DocumentEvaluatorOptions
   ) {
@@ -606,23 +613,23 @@ export class AnnotationFactory {
             dependencies.push({ ref: baseFontRef, data: buffer.join("") });
           }
           promises.push(MarkupAnnotationFactory.createNewFreeTextAnnotation(
-            xref, annotation, dependencies, evaluator, task, baseFontRef
+            xref, <FreeTextEditorSerial>annotation, dependencies, evaluator, task, baseFontRef
           ));
           break;
         case AnnotationEditorType.HIGHLIGHT:
-          if (annotation.quadPoints) {
+          if ((<{ quadPoints?: number[] }>annotation).quadPoints) {
             promises.push(MarkupAnnotationFactory.createNewHighlightAnnotation(
-              xref, annotation, dependencies
+              xref, <HighlightEditorSerial>annotation, dependencies
             ));
           } else {
             promises.push(MarkupAnnotationFactory.createNewInkAnnotation(
-              xref, annotation, dependencies
+              xref, <InkEditorSerial>annotation, dependencies
             ));
           }
           break;
         case AnnotationEditorType.INK:
           promises.push(MarkupAnnotationFactory.createNewInkAnnotation(
-            xref, annotation, dependencies
+            xref, <InkEditorSerial>annotation, dependencies
           ));
           break;
         case AnnotationEditorType.STAMP:
@@ -643,7 +650,7 @@ export class AnnotationFactory {
             image.imageStream = image.smaskStream = null;
           }
           promises.push(MarkupAnnotationFactory.createNewStampAnnotation(
-            xref, annotation, dependencies, image!
+            xref, <StampEditorSerial>annotation, dependencies, image!
           ));
           break;
       }
@@ -672,23 +679,23 @@ export class AnnotationFactory {
       switch (annotation.annotationType) {
         case AnnotationEditorType.FREETEXT:
           promises.push(MarkupAnnotationFactory.createNewFreeTextPrintAnnotation(
-            annotationGlobals, xref, annotation, evaluator, task, options
+            annotationGlobals, xref, <FreeTextEditorSerial>annotation, evaluator, task, options
           ));
           break;
         case AnnotationEditorType.HIGHLIGHT:
-          if (annotation.quadPoints) {
+          if ((<{ quadPoints?: number[] }>annotation).quadPoints) {
             promises.push(MarkupAnnotationFactory.createNewHightlightPrintAnnotation(
-              annotationGlobals, xref, annotation, options
+              annotationGlobals, xref, <HighlightEditorSerial>annotation, options
             ));
           } else {
             promises.push(MarkupAnnotationFactory.createNewInkPrintAnnotation(
-              annotationGlobals, xref, annotation, options
+              annotationGlobals, xref, <InkEditorSerial>annotation, options
             ));
           }
           break;
         case AnnotationEditorType.INK:
           promises.push(MarkupAnnotationFactory.createNewInkPrintAnnotation(
-            annotationGlobals, xref, annotation, options
+            annotationGlobals, xref, <InkEditorSerial>annotation, options
           ));
           break;
         case AnnotationEditorType.STAMP:
@@ -702,7 +709,7 @@ export class AnnotationFactory {
             image.imageStream = image.smaskStream = null;
           }
           promises.push(MarkupAnnotationFactory.createNewStampPrintAnnotation(
-            annotationGlobals, xref, annotation, image || null, options
+            annotationGlobals, xref, <StampEditorSerial>annotation, image || null, options
           ));
           break;
       }
@@ -899,7 +906,7 @@ export class Annotation<DATA extends AnnotationData> {
 
   constructor(params: AnnotationParameters) {
     const { dict, xref, annotationGlobals, ref, orphanFields } = params;
-    const parentRef = orphanFields?.get(ref);
+    const parentRef = orphanFields?.get(ref!);
     if (parentRef) {
       dict.set(DictKey.Parent, parentRef);
     }
@@ -4739,6 +4746,7 @@ export interface InkAnnotationData extends MarkupData {
 }
 
 class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
+
   constructor(params: AnnotationParameters) {
     super(params);
 
@@ -4931,12 +4939,8 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
   }
 
   static async createNewAppearanceStreamForHighlight(annotation: InkEditorSerial, xref: XRef) {
-    const {
-      color,
-      rect,
-      outlines: { outline },
-      opacity,
-    } = annotation;
+    const { color, rect, opacity } = annotation;
+    const outline = annotation.outlines!.outline!;
     const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs",];
 
     appearanceBuffer.push(
@@ -4945,9 +4949,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     for (let i = 6, ii = outline.length; i < ii; i += 6) {
       if (isNaN(outline[i]) || outline[i] === null) {
         appearanceBuffer.push(
-          `${numberToString(outline[i + 4])} ${numberToString(
-            outline[i + 5]
-          )} l`
+          `${numberToString(outline[i + 4])} ${numberToString(outline[i + 5])} l`
         );
       } else {
         const curve = outline

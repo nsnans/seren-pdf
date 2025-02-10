@@ -31,9 +31,8 @@ import { TextAccessibilityManager } from "../../viewer/common/text_accessibility
 import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
-import { AnnotationEditor, AnnotationEditorHelper } from "./editor";
+import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorRegistry } from "./editor_manager";
-import { HighlightEditor } from "./highlight";
 import { AnnotationEditorUIManager } from "./tools";
 
 /**
@@ -220,7 +219,7 @@ export class AnnotationEditorLayer {
     const editor = this.createAndAddNewEditor(
       { offsetX: 0, offsetY: 0 }, false
     );
-    editor.setInBackground();
+    editor!.setInBackground();
   }
 
   /**
@@ -366,13 +365,6 @@ export class AnnotationEditorLayer {
     this.div!.tabIndex = -1;
     if (this.#textLayer?.div && !this.#textSelectionAC) {
       this.#textSelectionAC = new AbortController();
-      const signal = this.#uiManager.combinedSignal(this.#textSelectionAC);
-
-      this.#textLayer.div.addEventListener(
-        "pointerdown",
-        this.#textLayerPointerDown.bind(this),
-        { signal }
-      );
       this.#textLayer.div.classList.add("highlighting");
     }
   }
@@ -387,45 +379,6 @@ export class AnnotationEditorLayer {
     }
   }
 
-  #textLayerPointerDown(event: PointerEvent) {
-    // Unselect all the editors in order to let the user select some text
-    // without being annoyed by an editor toolbar.
-    this.#uiManager.unselectAll();
-    const target = <HTMLElement>event.target;
-    if (
-      target === this.#textLayer.div ||
-      ((target.getAttribute("role") === "img" ||
-        target.classList.contains("endOfContent")) &&
-        this.#textLayer.div.contains(target))
-    ) {
-      const { isMac } = FeatureTest.platform;
-      if (event.button !== 0 || (event.ctrlKey && isMac)) {
-        // Do nothing on right click.
-        return;
-      }
-      this.#uiManager.showAllEditors(
-        AnnotationEditorType.HIGHLIGHT,
-        true,
-        /* updateButton = */ true
-      );
-      this.#textLayer.div.classList.add("free");
-      this.toggleDrawing();
-      HighlightEditor.startHighlighting(
-        this,
-        this.#uiManager.direction === "ltr",
-        { target: this.#textLayer.div, x: event.x, y: event.y }
-      );
-      this.#textLayer.div.addEventListener(
-        "pointerup",
-        () => {
-          this.#textLayer.div.classList.remove("free");
-          this.toggleDrawing(true);
-        },
-        { once: true, signal: this.#uiManager._signal }
-      );
-      event.preventDefault();
-    }
-  }
 
   enableClick() {
     if (this.#clickAC) {
@@ -610,37 +563,15 @@ export class AnnotationEditorLayer {
    * @param {Object} params
    * @returns {AnnotationEditor}
    */
-  #createNewEditor(params) {
+  #createNewEditor(params:AnnotationEditorParameters) : AnnotationEditor | null{
     const editorDescriptor = this.#currentEditorDescriptor;
-    return editorDescriptor ? editorDescriptor.create(params) : null;
+    return editorDescriptor ? <AnnotationEditor>editorDescriptor.create(params) : null;
   }
 
   canCreateNewEmptyEditor() {
     return this.#currentEditorDescriptor?.canCreateNewEmptyEditor;
   }
 
-  /**
-   * Paste some content into a new editor.
-   */
-  pasteEditor(mode: AnnotationEditorType, params) {
-    this.#uiManager.updateToolbar(mode);
-    this.#uiManager.updateMode(mode);
-
-    const { offsetX, offsetY } = this.#getCenterPoint();
-    const id = this.getNextId();
-    const editor = this.#createNewEditor({
-      parent: this,
-      id,
-      x: offsetX,
-      y: offsetY,
-      uiManager: this.#uiManager,
-      isCentered: true,
-      ...params,
-    });
-    if (editor) {
-      this.add(editor);
-    }
-  }
 
   /**
    * Create and add a new editor.
@@ -658,6 +589,7 @@ export class AnnotationEditorLayer {
       y: event.offsetY,
       uiManager: this.#uiManager,
       isCentered,
+      name: "",
       ...data,
     });
     if (editor) {

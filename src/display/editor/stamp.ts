@@ -19,7 +19,6 @@ import { AnnotationEditorType, shadow } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { AnnotationElement } from "../annotation_layer";
 import { OutputScale } from "../display_utils";
-import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, CacheImage } from "./tools";
 
@@ -100,12 +99,6 @@ export class StampEditor extends AnnotationEditor {
     return this.supportedTypes.includes(mime);
   }
 
-  /** @inheritdoc */
-  static paste(item: DataTransferItem, parent: AnnotationEditorLayer) {
-    parent.pasteEditor(AnnotationEditorType.STAMP, {
-      bitmapFile: item.getAsFile(),
-    });
-  }
 
   /** @inheritdoc */
   altTextFinish() {
