@@ -13,12 +13,17 @@
  * limitations under the License.
  */
 
-import { DOMSVGFactory } from "pdfjs-lib";
+import { AnnotationEditor } from "../../../display/editor/editor";
+import { DOMSVGFactory } from "../../../display/svg_factory";
+import { AnnotationEditorUIManager } from "../../../pdf";
+import { EventBus } from "../../common/component_types";
+import { OverlayManager } from "./overlay_manager";
 
-class AltTextManager {
-  #clickAC = null;
+export class AltTextManager {
 
-  #currentEditor = null;
+  #clickAC: AbortController | null = null;
+
+  #currentEditor: AnnotationEditor | null = null;
 
   #cancelButton;
 
@@ -26,13 +31,11 @@ class AltTextManager {
 
   #eventBus;
 
-  #hasUsedPointer = false;
-
   #optionDescription;
 
   #optionDecorative;
 
-  #overlayManager;
+  #overlayManager: OverlayManager;
 
   #saveButton;
 
@@ -40,17 +43,13 @@ class AltTextManager {
 
   #uiManager;
 
-  #previousAltText = null;
+  #resizeAC: AbortController | null = null;
 
-  #resizeAC = null;
+  #svgElement: SVGElement | null = null;
 
-  #svgElement = null;
-
-  #rectElement = null;
+  #rectElement: SVGElement | null = null;
 
   #container;
-
-  #telemetryData = null;
 
   constructor(
     {
@@ -62,8 +61,8 @@ class AltTextManager {
       saveButton,
     },
     container,
-    overlayManager,
-    eventBus
+    overlayManager: OverlayManager,
+    eventBus: EventBus
   ) {
     this.#dialog = dialog;
     this.#optionDescription = optionDescription;
@@ -78,7 +77,7 @@ class AltTextManager {
     const onUpdateUIState = this.#updateUIState.bind(this);
 
     dialog.addEventListener("close", this.#close.bind(this));
-    dialog.addEventListener("contextmenu", event => {
+    dialog.addEventListener("contextmenu", (event: Event) => {
       if (event.target !== this.#textarea) {
         event.preventDefault();
       }
@@ -124,28 +123,27 @@ class AltTextManager {
     this.#dialog.append(svg);
   }
 
-  async editAltText(uiManager, editor) {
+  async editAltText(uiManager: AnnotationEditorUIManager, editor: AnnotationEditor) {
     if (this.#currentEditor || !editor) {
       return;
     }
     this.#createSVGElement();
 
-    this.#hasUsedPointer = false;
-
     this.#clickAC = new AbortController();
-    const clickOpts = { signal: this.#clickAC.signal },
-      onClick = this.#onClick.bind(this);
-    for (const element of [
+    const clickOpts = { signal: this.#clickAC.signal };
+    const onClick = this.#onClick.bind(this);
+    const elements = [
       this.#optionDescription,
       this.#optionDecorative,
       this.#textarea,
       this.#saveButton,
       this.#cancelButton,
-    ]) {
+    ]
+    for (const element of elements) {
       element.addEventListener("click", onClick, clickOpts);
     }
 
-    const { altText, decorative } = editor.altTextData;
+    const { decorative } = editor.altTextData!;
     if (decorative === true) {
       this.#optionDecorative.checked = true;
       this.#optionDescription.checked = false;
@@ -153,7 +151,6 @@ class AltTextManager {
       this.#optionDecorative.checked = false;
       this.#optionDescription.checked = true;
     }
-    this.#previousAltText = this.#textarea.value = altText?.trim() || "";
     this.#updateUIState();
 
     this.#currentEditor = editor;
@@ -196,13 +193,13 @@ class AltTextManager {
     const xe = Math.min(x + width, containerX + containerW);
     const ys = Math.max(y, containerY);
     const ye = Math.min(y + height, containerY + containerH);
-    this.#rectElement.setAttribute("width", `${(xe - xs) / windowW}`);
-    this.#rectElement.setAttribute("height", `${(ye - ys) / windowH}`);
-    this.#rectElement.setAttribute("x", `${xs / windowW}`);
-    this.#rectElement.setAttribute("y", `${ys / windowH}`);
+    this.#rectElement!.setAttribute("width", `${(xe - xs) / windowW}`);
+    this.#rectElement!.setAttribute("height", `${(ye - ys) / windowH}`);
+    this.#rectElement!.setAttribute("x", `${xs / windowW}`);
+    this.#rectElement!.setAttribute("y", `${ys / windowH}`);
 
     let left = null;
-    let top = Math.max(y, 0);
+    let top: number | null = Math.max(y, 0);
     top += Math.min(windowH - (top + dialogH), 0);
 
     if (isLTR) {
@@ -251,19 +248,11 @@ class AltTextManager {
   }
 
   #close() {
-    this.#currentEditor._reportTelemetry(
-      this.#telemetryData || {
-        action: "alt_text_cancel",
-        alt_text_keyboard: !this.#hasUsedPointer,
-      }
-    );
-    this.#telemetryData = null;
-
     this.#removeOnClickListeners();
     this.#uiManager?.addEditListeners();
     this.#resizeAC?.abort();
     this.#resizeAC = null;
-    this.#currentEditor.altTextFinish();
+    this.#currentEditor!.altTextFinish();
     this.#currentEditor = null;
     this.#uiManager = null;
   }
@@ -279,22 +268,13 @@ class AltTextManager {
       altText,
       decorative,
     };
-    this.#telemetryData = {
-      action: "alt_text_save",
-      alt_text_description: !!altText,
-      alt_text_edit:
-        !!this.#previousAltText && this.#previousAltText !== altText,
-      alt_text_decorative: decorative,
-      alt_text_keyboard: !this.#hasUsedPointer,
-    };
     this.#finish();
   }
 
-  #onClick(evt) {
+  #onClick(evt: PointerEvent) {
     if (evt.detail === 0) {
       return; // The keyboard was used.
     }
-    this.#hasUsedPointer = true;
     this.#removeOnClickListeners();
   }
 
@@ -310,5 +290,3 @@ class AltTextManager {
     this.#svgElement = this.#rectElement = null;
   }
 }
-
-export { AltTextManager };

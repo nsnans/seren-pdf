@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./event_utils.js").EventBus} EventBus */
+import { AnnotationEditorParamsType } from "../../pdf";
 
-import { AnnotationEditorParamsType } from "pdfjs-lib";
+/** @typedef {import("../../../web/event_utils.js").EventBus} EventBus */
+
 
 /**
  * @typedef {Object} AnnotationEditorParamsOptions

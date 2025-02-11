@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-class OverlayManager {
+export class OverlayManager {
+
   #overlays = new WeakMap();
 
-  #active = null;
+  #active: HTMLDialogElement | null = null;
 
   get active() {
     return this.#active;
@@ -29,7 +30,7 @@ class OverlayManager {
    * @returns {Promise} A promise that is resolved when the overlay has been
    *                    registered.
    */
-  async register(dialog, canForceClose = false) {
+  async register(dialog: HTMLDialogElement, canForceClose = false) {
     if (typeof dialog !== "object") {
       throw new Error("Not enough parameters.");
     } else if (this.#overlays.has(dialog)) {
@@ -37,7 +38,7 @@ class OverlayManager {
     }
     this.#overlays.set(dialog, { canForceClose });
 
-    dialog.addEventListener("cancel", evt => {
+    dialog.addEventListener("cancel", _evt => {
       this.#active = null;
     });
   }
@@ -47,7 +48,7 @@ class OverlayManager {
    * @returns {Promise} A promise that is resolved when the overlay has been
    *                    opened.
    */
-  async open(dialog) {
+  async open(dialog: HTMLDialogElement) {
     if (!this.#overlays.has(dialog)) {
       throw new Error("The overlay does not exist.");
     } else if (this.#active) {
@@ -69,7 +70,7 @@ class OverlayManager {
    *                    closed.
    */
   async close(dialog = this.#active) {
-    if (!this.#overlays.has(dialog)) {
+    if (!this.#overlays.has(dialog!)) {
       throw new Error("The overlay does not exist.");
     } else if (!this.#active) {
       throw new Error("The overlay is currently not active.");
@@ -80,5 +81,3 @@ class OverlayManager {
     this.#active = null;
   }
 }
-
-export { OverlayManager };

@@ -15,7 +15,7 @@
 
 /** @typedef {import("./interfaces.js").IL10n} IL10n */
 
-class BaseExternalServices {
+export class BaseExternalServices {
   constructor() {
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
@@ -50,5 +50,3 @@ class BaseExternalServices {
 
   dispatchGlobalEvent(_event) {}
 }
-
-export { BaseExternalServices };

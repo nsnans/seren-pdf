@@ -17,8 +17,8 @@
 
 import { FluentBundle, FluentResource } from "fluent-bundle";
 import { DOMLocalization } from "fluent-dom";
-import { fetchData } from "pdfjs-lib";
-import { L10n } from "./l10n.js";
+import { L10n } from "./l10n";
+import { fetchData } from "../../../pdf";
 
 function createBundle(lang, text) {
   const resource = new FluentResource(text);
@@ -33,20 +33,20 @@ function createBundle(lang, text) {
 /**
  * @implements {IL10n}
  */
-class GenericL10n extends L10n {
+export class GenericL10n extends L10n {
   constructor(lang) {
     super({ lang });
 
     const generateBundles = !lang
       ? GenericL10n.#generateBundlesFallback.bind(
-          GenericL10n,
-          this.getLanguage()
-        )
+        GenericL10n,
+        this.getLanguage()
+      )
       : GenericL10n.#generateBundles.bind(
-          GenericL10n,
-          "en-us",
-          this.getLanguage()
-        );
+        GenericL10n,
+        "en-us",
+        this.getLanguage()
+      );
     this._setL10n(new DOMLocalization([], generateBundles));
   }
 
@@ -93,11 +93,11 @@ class GenericL10n extends L10n {
 
   static async #getPaths() {
     try {
-      const { href } = document.querySelector(`link[type="application/l10n"]`);
+      const { href } = <HTMLAnchorElement>document.querySelector(`link[type="application/l10n"]`);
       const paths = await fetchData(href, /* type = */ "json");
 
       return { baseURL: href.replace(/[^/]*$/, "") || "./", paths };
-    } catch {}
+    } catch { }
     return { baseURL: "./", paths: Object.create(null) };
   }
 
@@ -112,13 +112,11 @@ class GenericL10n extends L10n {
     const text =
       typeof PDFJSDev === "undefined"
         ? await fetchData(
-            new URL("../l10n/en-US/viewer.ftl", window.location.href),
+          new URL("../l10n/en-US/viewer.ftl", window.location.href),
             /* type = */ "text"
-          )
+        )
         : PDFJSDev.eval("DEFAULT_FTL");
 
     return createBundle(lang, text);
   }
 }
-
-export { GenericL10n };

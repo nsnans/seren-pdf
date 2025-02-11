@@ -46,7 +46,7 @@ export class PixelsPerInch {
   static PDF_TO_CSS_UNITS = this.CSS / this.PDF;
 }
 
-export async function fetchData(url: string, type: XMLHttpRequestResponseType = "text") {
+export async function fetchData(url: string | URL, type: XMLHttpRequestResponseType = "text") {
   if (PlatformHelper.isMozCental() || isValidFetchUrl(url, document.baseURI)) {
     const response = await fetch(url);
     if (!response.ok) {
@@ -447,7 +447,7 @@ export class StatTimer {
   }
 }
 
-export function isValidFetchUrl(url: string, baseUrl?: string) {
+export function isValidFetchUrl(url: string | URL, baseUrl?: string) {
   if (PlatformHelper.isMozCental()) {
     throw new Error("Not implemented: isValidFetchUrl");
   }

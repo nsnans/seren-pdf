@@ -566,7 +566,7 @@ class AppOptions {
         if (this._hasInvokedSet) {
           console.warn(
             "The Preferences may override manually set AppOptions; " +
-              'please use the "disablePreferences"-option to prevent that.'
+            'please use the "disablePreferences"-option to prevent that.'
           );
         }
         return false;

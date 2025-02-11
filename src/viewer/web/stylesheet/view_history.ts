@@ -24,7 +24,8 @@ const DEFAULT_VIEW_HISTORY_CACHE_SIZE = 20;
  *  - MOZCENTRAL        - uses sessionStorage.
  *  - GENERIC or CHROME - uses localStorage, if it is available.
  */
-class ViewHistory {
+export class ViewHistory {
+  protected cacheSize: number;
   constructor(fingerprint, cacheSize = DEFAULT_VIEW_HISTORY_CACHE_SIZE) {
     this.fingerprint = fingerprint;
     this.cacheSize = cacheSize;
@@ -66,9 +67,6 @@ class ViewHistory {
   }
 
   async _readFromStorage() {
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
-      return sessionStorage.getItem("pdfjs.history");
-    }
     return localStorage.getItem("pdfjs.history");
   }
 
@@ -103,5 +101,3 @@ class ViewHistory {
     return values;
   }
 }
-
-export { ViewHistory };

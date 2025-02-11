@@ -37,8 +37,7 @@ import {
   ScrollMode,
   SidebarView,
   SpreadMode,
-  TextLayerMode,
-} from "./ui_utils.js";
+} from "../../common/ui_utils";
 import {
   AnnotationEditorType,
   build,
@@ -379,10 +378,10 @@ const PDFViewerApplication = {
     const eventBus =
       typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")
         ? new FirefoxEventBus(
-            AppOptions.get("allowedGlobalEvents"),
-            externalServices,
-            AppOptions.get("isInAutomation")
-          )
+          AppOptions.get("allowedGlobalEvents"),
+          externalServices,
+          AppOptions.get("isInAutomation")
+        )
         : new EventBus();
     this.eventBus = AppOptions.eventBus = eventBus;
     this.mlManager?.setEventBus(eventBus, this._globalAbortController.signal);
@@ -425,29 +424,29 @@ const PDFViewerApplication = {
     const annotationEditorMode = AppOptions.get("annotationEditorMode");
     const pageColors =
       AppOptions.get("forcePageColors") ||
-      window.matchMedia("(forced-colors: active)").matches
+        window.matchMedia("(forced-colors: active)").matches
         ? {
-            background: AppOptions.get("pageColorsBackground"),
-            foreground: AppOptions.get("pageColorsForeground"),
-          }
+          background: AppOptions.get("pageColorsBackground"),
+          foreground: AppOptions.get("pageColorsForeground"),
+        }
         : null;
     let altTextManager;
     if (AppOptions.get("enableUpdatedAddImage")) {
       altTextManager = appConfig.newAltTextDialog
         ? new NewAltTextManager(
-            appConfig.newAltTextDialog,
-            this.overlayManager,
-            eventBus
-          )
+          appConfig.newAltTextDialog,
+          this.overlayManager,
+          eventBus
+        )
         : null;
     } else {
       altTextManager = appConfig.altTextDialog
         ? new AltTextManager(
-            appConfig.altTextDialog,
-            container,
-            this.overlayManager,
-            eventBus
-          )
+          appConfig.altTextDialog,
+          container,
+          this.overlayManager,
+          eventBus
+        )
         : null;
     }
 
@@ -556,7 +555,7 @@ const PDFViewerApplication = {
         this.overlayManager,
         eventBus,
         l10n,
-        /* fileNameLookup = */ () => this._docFilename
+        /* fileNameLookup = */() => this._docFilename
       );
     }
 
@@ -1543,8 +1542,8 @@ const PDFViewerApplication = {
     // Provides some basic debug information
     console.log(
       `PDF ${pdfDocument.fingerprints[0]} [${info.PDFFormatVersion} ` +
-        `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
-        `(PDF.js: ${version || "?"} [${build || "?"}])`
+      `${(info.Producer || "-").trim()} / ${(info.Creator || "-").trim()}] ` +
+      `(PDF.js: ${version || "?"} [${build || "?"}])`
     );
     let pdfTitle = info.Title;
 
@@ -2196,7 +2195,7 @@ const PDFViewerApplication = {
     document.blockUnblockOnload?.(false);
 
     // Ensure that this method is only ever run once.
-    this._unblockDocumentLoadEvent = () => {};
+    this._unblockDocumentLoadEvent = () => { };
   },
 
   /**

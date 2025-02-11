@@ -28,6 +28,7 @@ import {
   Util
 } from "../../shared/util";
 import { EventBus, MLManager } from "../../viewer/common/component_types";
+import { AltTextManager } from "../../viewer/web/stylesheet/alt_text_manager";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationStorage } from "../annotation_storage";
 import { PDFDocumentProxy } from "../api";
@@ -765,7 +766,7 @@ class AnnotationEditorUIManager {
 
   #allLayers = new Map<number, AnnotationEditorLayer>();
 
-  #altTextManager = null;
+  #altTextManager: AltTextManager;
 
   #annotationStorage: AnnotationStorage | null = null;
 
@@ -858,7 +859,7 @@ class AnnotationEditorUIManager {
   constructor(
     container: HTMLDivElement,
     viewer: HTMLDivElement,
-    altTextManager,
+    altTextManager: AltTextManager,
     eventBus: EventBus,
     pdfDocument: PDFDocumentProxy,
     pageColors: { background: string, foreground: string } | null,
@@ -991,8 +992,8 @@ class AnnotationEditorUIManager {
     this.#mainHighlightColorPicker = colorPicker;
   }
 
-  editAltText(editor: AnnotationEditor, firstTime = false) {
-    this.#altTextManager?.editAltText(this, editor, firstTime);
+  editAltText(editor: AnnotationEditor) {
+    this.#altTextManager?.editAltText(this, editor);
   }
 
   switchToMode(mode: AnnotationEditorType, callback: () => void) {

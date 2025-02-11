@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-import { noContextMenu } from "pdfjs-lib";
+import { AnnotationEditor } from "../../../display/editor/editor";
 
 class NewAltTextManager {
+
   #boundCancel = this.#cancel.bind(this);
 
   #createAutomaticallyButton;
 
-  #currentEditor = null;
+  #currentEditor: AnnotationEditor | null = null;
 
   #cancelButton;
 
@@ -102,7 +103,7 @@ class NewAltTextManager {
     this.#eventBus = eventBus;
 
     dialog.addEventListener("close", this.#close.bind(this));
-    dialog.addEventListener("contextmenu", event => {
+    dialog.addEventListener("contextmenu", (event: Event) => {
       if (event.target !== this.#textarea) {
         event.preventDefault();
       }
@@ -114,12 +115,7 @@ class NewAltTextManager {
       this.#toggleError(false);
     });
     createAutomaticallyButton.addEventListener("click", async () => {
-      const checked =
-        createAutomaticallyButton.getAttribute("aria-pressed") !== "true";
-      this.#currentEditor._reportTelemetry({
-        action: "pdfjs.image.alt_text.ai_generation_check",
-        data: { status: checked },
-      });
+      const checked = createAutomaticallyButton.getAttribute("aria-pressed") !== "true";
 
       if (this.#uiManager) {
         this.#uiManager.setPreference("enableGuessAltText", checked);
@@ -147,13 +143,6 @@ class NewAltTextManager {
     });
 
     this.#overlayManager.register(dialog);
-
-    this.#learnMore.addEventListener("click", () => {
-      this.#currentEditor._reportTelemetry({
-        action: "pdfjs.image.alt_text.info",
-        data: { topic: "alt_text" },
-      });
-    });
   }
 
   #toggleLoading(value) {

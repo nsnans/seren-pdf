@@ -34,7 +34,7 @@ export interface PDFLinkService {
 
 }
 
-export interface DownloadManager {
+export class DownloadManager {
 
   // content 有可能是 BlobPart
   openOrDownloadData(content: string | Uint8Array<ArrayBuffer>, filename: string, dest: string | null): void;

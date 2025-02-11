@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+import { PasswordResponses } from "../../../pdf";
+
 /** @typedef {import("./overlay_manager.js").OverlayManager} OverlayManager */
 
-import { PasswordResponses } from "pdfjs-lib";
 
 /**
  * @typedef {Object} PasswordPromptOptions

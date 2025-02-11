@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-import { DrawLayer } from "pdfjs-lib";
+import { DrawLayer } from "./draw_layer";
+
 
 /**
  * @typedef {Object} DrawLayerBuilderOptions
  * @property {number} pageIndex
  */
 
-class DrawLayerBuilder {
-  #drawLayer = null;
+export class DrawLayerBuilder {
+
+  #drawLayer: DrawLayer | null = null;
 
   /**
    * @param {DrawLayerBuilderOptions} options
@@ -60,5 +62,3 @@ class DrawLayerBuilder {
     return this.#drawLayer;
   }
 }
-
-export { DrawLayerBuilder };

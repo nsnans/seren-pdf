@@ -48,7 +48,7 @@ import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { Catalog, DestinationType } from "./catalog";
 import { ColorSpace } from "./colorspace";
-import { EvaluatorTextContent, FieldObject, isFullTextContentItem, StreamSink } from "./core_types";
+import { DefaultFieldObject, EvaluatorTextContent, FieldObject, GeneralFieldObject, isFullTextContentItem, StreamSink } from "./core_types";
 import {
   collectActions,
   escapeString,
@@ -1566,7 +1566,7 @@ export class Annotation<DATA extends AnnotationData> {
    */
   getFieldObject(): FieldObject | null {
     if (this.data.kidIds) {
-      return {
+      return <DefaultFieldObject>{
         id: this.data.id,
         actions: this.data.actions!,
         name: this.data.fieldName!,
@@ -2920,7 +2920,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     return localResources || Dict.empty;
   }
 
-  getFieldObject() {
+  getFieldObject(): FieldObject | null {
     return null;
   }
 
@@ -2966,6 +2966,24 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
   ): string[] {
     return []
   }
+}
+
+interface TextWidgetFieldObject extends GeneralFieldObject {
+  value: string | string[] | null;
+  defaultValue: string | string[];
+  multiline: boolean;
+  password: boolean;
+  charLimit: number;
+  comb: boolean;
+  editable: boolean;
+  hidden: boolean;
+  rect: RectType | null;
+  actions: Map<string, string[]> | null;
+  page: number | null;
+  strokeColor: Uint8ClampedArray<ArrayBuffer> | null;
+  fillColor: Uint8ClampedArray<ArrayBuffer> | null;
+  rotation: number;
+  type: string;
 }
 
 class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
@@ -3196,7 +3214,7 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
     }
   }
 
-  getFieldObject() {
+  getFieldObject(): TextWidgetFieldObject | null {
     return {
       id: this.data.id,
       value: this.data.fieldValue,
@@ -3207,10 +3225,10 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
       comb: this.data.comb,
       editable: !this.data.readOnly,
       hidden: this.data.hidden,
-      name: this.data.fieldName,
+      name: this.data.fieldName ?? null,
       rect: this.data.rect,
-      actions: this.data.actions,
-      page: this.data.pageIndex,
+      actions: this.data.actions ?? null,
+      page: this.data.pageIndex ?? null,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
       rotation: this.rotation,
@@ -3248,6 +3266,23 @@ export interface ButtonWidgetData extends WidgetData {
   };
   attachmentDest: string | null;
   newWindow: boolean;
+}
+
+export interface ButtonWidgetFieldObject extends GeneralFieldObject {
+  id: string;
+  value: string | string[];
+  defaultValue: string | string[] | null;
+  exportValues: string | null;
+  editable: boolean;
+  name: string | null;
+  rect: RectType | null;
+  hidden: boolean
+  actions: Map<string, string[]>;
+  page: number | null;
+  strokeColor: Uint8ClampedArray<ArrayBuffer> | null;
+  fillColor: Uint8ClampedArray<ArrayBuffer> | null;
+  rotation: number;
+  type: string;
 }
 
 class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
@@ -3709,7 +3744,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     );
   }
 
-  getFieldObject() {
+  getFieldObject(): ButtonWidgetFieldObject {
     let type = "button";
     let exportValues;
     if (this.data.checkBox) {
@@ -3723,13 +3758,13 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
       id: this.data.id,
       value: this.data.fieldValue || "Off",
       defaultValue: this.data.defaultFieldValue,
-      exportValues,
+      exportValues: exportValues ?? null,
       editable: !this.data.readOnly,
-      name: this.data.fieldName,
+      name: this.data.fieldName ?? null,
       rect: this.data.rect,
       hidden: this.data.hidden,
       actions: this.data.actions,
-      page: this.data.pageIndex,
+      page: this.data.pageIndex ?? null,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
       rotation: this.rotation,
@@ -3750,6 +3785,28 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
 export interface ChoiceWidgetData extends WidgetData {
   multiSelect: boolean;
+}
+
+export interface ChoiceWidgetFieldObject extends GeneralFieldObject {
+  id: string;
+  value: string | null;
+  defaultValue: string | string[] | null;
+  editable: boolean;
+  name: string | null;
+  rect: RectType | null;
+  numItems: number;
+  multipleSelection: boolean;
+  hidden: boolean;
+  actions: Map<string, string[]> | null;
+  items: {
+    exportValue: string | null;
+    displayValue: string | null;
+  }[] | null
+  page: number | null;
+  strokeColor: Uint8ClampedArray<ArrayBuffer> | null;
+  fillColor: Uint8ClampedArray<ArrayBuffer> | null;
+  rotation: number;
+  type: string;
 }
 
 class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
@@ -3824,23 +3881,22 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
     this._hasText = true;
   }
 
-  getFieldObject() {
+  getFieldObject(): ChoiceWidgetFieldObject {
     const type = this.data.combo ? "combobox" : "listbox";
-    const value =
-      this.data.fieldValue!.length > 0 ? this.data.fieldValue![0] : null;
+    const value = this.data.fieldValue!.length > 0 ? this.data.fieldValue![0] : null;
     return {
       id: this.data.id,
       value,
       defaultValue: this.data.defaultFieldValue,
       editable: !this.data.readOnly,
-      name: this.data.fieldName,
+      name: this.data.fieldName ?? null,
       rect: this.data.rect,
       numItems: this.data.fieldValue!.length,
       multipleSelection: this.data.multiSelect,
       hidden: this.data.hidden,
-      actions: this.data.actions,
+      actions: this.data.actions ?? null,
       items: this.data.options,
-      page: this.data.pageIndex,
+      page: this.data.pageIndex ?? null,
       strokeColor: this.data.borderColor,
       fillColor: this.data.backgroundColor,
       rotation: this.rotation,
@@ -4017,6 +4073,13 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
   }
 }
 
+export interface SignatureFieldObject extends FieldObject {
+  id: string;
+  value: null;
+  page: number | null;
+  type: string;
+}
+
 class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -4029,11 +4092,11 @@ class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
     this.data.noHTML = !this.data.hasOwnCanvas;
   }
 
-  getFieldObject() {
+  getFieldObject(): SignatureFieldObject {
     return {
       id: this.data.id,
       value: null,
-      page: this.data.pageIndex,
+      page: this.data.pageIndex ?? null,
       type: "signature",
     };
   }

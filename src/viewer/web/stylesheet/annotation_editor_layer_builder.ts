@@ -27,7 +27,7 @@
 /** @typedef {import("../src/display/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationEditorLayer } from "pdfjs-lib";
-import { GenericL10n } from "web-null_l10n";
+import { GenericL10n } from "./genericl10n";
 
 /**
  * @typedef {Object} AnnotationEditorLayerBuilderOptions

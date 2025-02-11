@@ -199,19 +199,21 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
 }
 
 export interface FieldObject {
-  actions: Map<string, string[]> | null;
+  id: string;
+  page: number | null;
+  type: string;
 }
 
-export interface AnnotationFieldObject extends FieldObject {
-  id: string;
+export interface GeneralFieldObject extends FieldObject {
   actions: Map<string, string[]> | null;
-  name: string;
+  name: string | null;
   strokeColor: Uint8ClampedArray<ArrayBuffer> | null;
   fillColor: Uint8ClampedArray<ArrayBuffer> | null;
-  type: string;
-  kidIds: string[] | null;
-  page: number;
   rotation: number;
+}
+
+export interface DefaultFieldObject extends GeneralFieldObject {
+  kidIds: string[] | null;
 }
 
 export interface PreEvaluatedFont {
