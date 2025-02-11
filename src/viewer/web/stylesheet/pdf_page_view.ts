@@ -23,19 +23,19 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
 
-import { OutputScale, PixelsPerInch, RenderingCancelledException, setLayerDimensions } from "../../../display/display_utils.js";
-import { DrawLayerBuilder } from "../../../display/draw_layer_builder.js";
-import { AbortException, AnnotationMode, shadow } from "../../../shared/util.js";
-import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../../common/ui_utils.js";
-import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder.js";
-import { AnnotationLayerBuilder } from "./annotation_layer_builder.js";
-import { AppOptions } from "./app_options.js";
-import { GenericL10n } from "./genericl10n.js";
-import { SimpleLinkService } from "./pdf_link_service.js";
-import { StructTreeLayerBuilder } from "./struct_tree_layer_builder.js";
-import { TextAccessibilityManager } from "./text_accessibility.js";
-import { TextHighlighter } from "./text_highlighter.js";
-import { TextLayerBuilder } from "./text_layer_builder.js";
+import { OutputScale, PixelsPerInch, RenderingCancelledException, setLayerDimensions } from "../../../display/display_utils";
+import { DrawLayerBuilder } from "../../../display/draw_layer_builder";
+import { AbortException, AnnotationMode, shadow } from "../../../shared/util";
+import { TextAccessibilityManager } from "../../common/text_accessibility";
+import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../../common/ui_utils";
+import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder";
+import { AnnotationLayerBuilder } from "./annotation_layer_builder";
+import { AppOptions } from "./app_options";
+import { GenericL10n } from "./genericl10n";
+import { SimpleLinkService } from "./pdf_link_service";
+import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
+import { TextHighlighter } from "./text_highlighter";
+import { TextLayerBuilder } from "./text_layer_builder";
 
 /**
  * @typedef {Object} PDFPageViewOptions

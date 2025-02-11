@@ -13,12 +13,8 @@
  * limitations under the License.
  */
 
-import {
-  AnnotationMode,
-  shadow,
-} from "../../../shared/util";
-import { getXfaHtmlForPrinting } from "./print_utils";
 import { PixelsPerInch, RenderingCancelledException } from "../../../display/display_utils";
+import { AnnotationMode, shadow } from "../../../shared/util";
 
 // Creates a placeholder with div and canvas with right size for the page.
 function composePage(
@@ -160,11 +156,6 @@ class FirefoxPrintService {
     this.pageStyleSheet = document.createElement("style");
     this.pageStyleSheet.textContent = `@page { size: ${width}pt ${height}pt;}`;
     body.append(this.pageStyleSheet);
-
-    if (pdfDocument.isPureXfa) {
-      getXfaHtmlForPrinting(printContainer, pdfDocument);
-      return;
-    }
 
     for (let i = 0, ii = pagesOverview.length; i < ii; ++i) {
       composePage(

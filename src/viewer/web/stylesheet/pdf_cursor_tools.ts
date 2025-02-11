@@ -15,9 +15,9 @@
 
 /** @typedef {import("./event_utils.js").EventBus} EventBus */
 
-import { CursorTool, PresentationModeState } from "./ui_utils.js";
-import { GrabToPan } from "./grab_to_pan.js";
-import { AnnotationEditorType, shadow } from "../../../shared/util.js";
+import { GrabToPan } from "./grab_to_pan";
+import { AnnotationEditorType, shadow } from "../../../shared/util";
+import { CursorTool, PresentationModeState } from "../../common/ui_utils";
 
 /**
  * @typedef {Object} PDFCursorToolsOptions

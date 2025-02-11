@@ -25,8 +25,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../src/display/editor/tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
 
-import { AnnotationLayer } from "../../../display/annotation_layer.js";
-import { PresentationModeState } from "../../common/ui_utils.js";
+import { AnnotationLayer } from "../../../display/annotation_layer";
+import { PresentationModeState } from "../../common/ui_utils";
 
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions

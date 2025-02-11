@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { AppOptions } from "./app_options.js";
-import { BaseExternalServices } from "./external_services.js";
-import { BasePreferences } from "./preferences.js";
-import { GenericL10n } from "./genericl10n.js";
-import { GenericScripting } from "./generic_scripting.js";
+import { AppOptions } from "./app_options";
+import { BaseExternalServices } from "./external_services";
+import { BasePreferences } from "./preferences";
+import { GenericL10n } from "./genericl10n";
+import { GenericScripting } from "./generic_scripting";
 
 if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("GENERIC")) {
   throw new Error(

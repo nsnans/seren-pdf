@@ -22,7 +22,7 @@ import {
   toggleCheckedBtn,
   toggleExpandedBtn,
 } from "../../common/ui_utils";
-import { PagesCountLimit } from "./pdf_viewer.js";
+import { PagesCountLimit } from "./pdf_viewer";
 
 /**
  * @typedef {Object} SecondaryToolbarOptions

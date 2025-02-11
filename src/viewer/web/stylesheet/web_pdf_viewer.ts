@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 
-import { RenderingStates, ScrollMode, SpreadMode } from "../../common/ui_utils.js";
-import { AppOptions } from "./app_options.js";
-import { LinkTarget } from "./pdf_link_service.js";
-import { PDFViewerApplication } from "./web_pdf_app.js";
+import { RenderingStates, ScrollMode, SpreadMode } from "../../common/ui_utils";
+import { AppOptions } from "./app_options";
+import { LinkTarget } from "./pdf_link_service";
+import { PDFViewerApplication } from "./web_pdf_app";
 
-const AppConstants =
-  typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
+const AppConstants = typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
     ? { LinkTarget, RenderingStates, ScrollMode, SpreadMode }
     : null;
 

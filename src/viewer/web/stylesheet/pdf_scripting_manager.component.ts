@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { docProperties, GenericScripting } from "./generic_scripting.js";
-import { PDFScriptingManager } from "./pdf_scripting_manager.js";
+import { docProperties, GenericScripting } from "./generic_scripting";
+import { PDFScriptingManager } from "./pdf_scripting_manager";
 
 class PDFScriptingManagerComponents extends PDFScriptingManager {
   constructor(options) {

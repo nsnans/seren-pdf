@@ -20,8 +20,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("../src/display/api.js").PDFDocumentProxy} PDFDocumentProxy */
 
-import { SidebarView } from "../../common/ui_utils.js";
-import { BaseTreeViewer } from "./base_tree_viewer.js";
+import { SidebarView } from "../../common/ui_utils";
+import { BaseTreeViewer } from "./base_tree_viewer";
 
 /**
  * @typedef {Object} PDFOutlineViewerOptions

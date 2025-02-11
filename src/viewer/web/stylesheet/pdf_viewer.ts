@@ -53,13 +53,13 @@ import {
   VERTICAL_PADDING,
   watchScroll,
 } from "../../common/ui_utils";
-import { PDFPageView } from "./pdf_page_view.js";
-import { PDFRenderingQueue } from "./pdf_rendering_queue.js";
-import { SimpleLinkService } from "./pdf_link_service.js";
-import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../../shared/util.js";
-import { AnnotationEditorUIManager } from "../../../display/editor/tools.js";
-import { PixelsPerInch } from "../../../display/display_utils.js";
-import { GenericL10n } from "./genericl10n.js";
+import { PDFPageView } from "./pdf_page_view";
+import { PDFRenderingQueue } from "./pdf_rendering_queue";
+import { SimpleLinkService } from "./pdf_link_service";
+import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../../shared/util";
+import { AnnotationEditorUIManager } from "../../../display/editor/tools";
+import { PixelsPerInch } from "../../../display/display_utils";
+import { GenericL10n } from "./genericl10n";
 
 const DEFAULT_CACHE_SIZE = 10;
 

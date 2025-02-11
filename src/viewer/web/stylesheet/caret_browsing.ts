@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+
 // Used to compare floats: there is no exact equality due to rounding errors.
 const PRECISION = 1e-1;
 

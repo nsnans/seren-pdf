@@ -23,8 +23,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
 
-import { RenderingStates } from "../../common/ui_utils.js";
-import { OutputScale, RenderingCancelledException } from "../../../display/display_utils.js";
+import { RenderingStates } from "../../common/ui_utils";
+import { OutputScale, RenderingCancelledException } from "../../../display/display_utils";
 
 const DRAW_UPSCALE_FACTOR = 2; // See comment in `PDFThumbnailView.draw` below.
 const MAX_NUM_SCALING_STEPS = 3;

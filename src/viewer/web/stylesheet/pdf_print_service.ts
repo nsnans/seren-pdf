@@ -16,9 +16,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./interfaces.js").IPDFPrintServiceFactory} IPDFPrintServiceFactory */
 
-import { PixelsPerInch, RenderingCancelledException } from "../../../display/display_utils.js";
-import { AnnotationMode, shadow } from "../../../shared/util.js";
-import { getXfaHtmlForPrinting } from "./print_utils.js";
+import { PixelsPerInch, RenderingCancelledException } from "../../../display/display_utils";
+import { AnnotationMode, shadow } from "../../../shared/util";
 
 let activeService = null;
 let dialog = null;
@@ -151,10 +150,6 @@ class PDFPrintService {
   }
 
   renderPages() {
-    if (this.pdfDocument.isPureXfa) {
-      getXfaHtmlForPrinting(this.printContainer, this.pdfDocument);
-      return Promise.resolve();
-    }
 
     const pageCount = this.pagesOverview.length;
     const renderNextPage = (resolve, reject) => {

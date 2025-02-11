@@ -21,7 +21,7 @@ import {
   createResponseStatusError,
   extractFilenameFromHeader,
   validateRangeRequestCapabilities,
-} from "./network_utils.js";
+} from "./network_utils";
 
 if (PlatformHelper.isMozCental()) {
   throw new Error(

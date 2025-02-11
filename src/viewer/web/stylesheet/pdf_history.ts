@@ -16,8 +16,8 @@
 /** @typedef {import("./event_utils").EventBus} EventBus */
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
 
-import { waitOnEventOrTimeout } from "./event_utils.js";
-import { isValidRotation, parseQueryString } from "../../common/ui_utils.js";
+import { waitOnEventOrTimeout } from "./event_utils";
+import { isValidRotation, parseQueryString } from "../../common/ui_utils";
 
 // Heuristic value used when force-resetting `this._blockHashChange`.
 const HASH_CHANGE_TIMEOUT = 1000; // milliseconds

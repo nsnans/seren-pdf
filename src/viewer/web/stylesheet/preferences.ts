@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { AppOptions, OptionKind } from "./app_options.js";
+import { AppOptions, OptionKind } from "./app_options";
 
 /**
  * BasePreferences - Abstract base class for storing persistent settings.
