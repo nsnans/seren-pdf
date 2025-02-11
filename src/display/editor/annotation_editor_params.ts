@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorParamsType } from "../../pdf";
+import { AnnotationEditorParamsType } from "../../shared/util";
+
 
 /** @typedef {import("../../../web/event_utils.js").EventBus} EventBus */
 

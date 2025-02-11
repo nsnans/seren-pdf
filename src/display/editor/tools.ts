@@ -992,8 +992,8 @@ class AnnotationEditorUIManager {
     this.#mainHighlightColorPicker = colorPicker;
   }
 
-  editAltText(editor: AnnotationEditor) {
-    this.#altTextManager?.editAltText(this, editor);
+  editAltText(editor: AnnotationEditor, firstTime = false) {
+    this.#altTextManager?.editAltText(this, editor, firstTime);
   }
 
   switchToMode(mode: AnnotationEditorType, callback: () => void) {

@@ -1,6 +1,5 @@
 import { TransformType, RectType } from "../display/display_utils";
-import { AbortException, OPS } from "../pdf";
-import { FormatError, warn } from "../shared/util";
+import { AbortException, FormatError, OPS, warn } from "../shared/util";
 import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";

@@ -1,7 +1,6 @@
 import { DocumentEvaluatorOptions } from "../display/api";
 import { TransformType } from "../display/display_utils";
-import { OPS } from "../pdf";
-import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, Util, warn } from "../shared/util";
+import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, OPS, Util, warn } from "../shared/util";
 import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";

@@ -1,6 +1,5 @@
 import { DocumentEvaluatorOptions } from "../display/api";
-import { OPS } from "../pdf";
-import { AbortException, FormatError, info, warn } from "../shared/util";
+import { AbortException, FormatError, info, OPS, warn } from "../shared/util";
 import { shiftable } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";

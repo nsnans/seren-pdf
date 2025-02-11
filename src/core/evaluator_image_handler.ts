@@ -1,6 +1,5 @@
-import { OPS } from "../pdf";
 import { CommonObjType, ObjType } from "../shared/message_handler";
-import { warn, assert } from "../shared/util";
+import { warn, assert, OPS } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types";
 import { DecodeStream } from "./decode_stream";

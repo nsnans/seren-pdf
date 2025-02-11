@@ -14,8 +14,8 @@
  */
 
 import { AnnotationEditor } from "../../../display/editor/editor";
+import { AnnotationEditorUIManager } from "../../../display/editor/tools";
 import { DOMSVGFactory } from "../../../display/svg_factory";
-import { AnnotationEditorUIManager } from "../../../pdf";
 import { EventBus } from "../../common/component_types";
 import { OverlayManager } from "./overlay_manager";
 
@@ -123,7 +123,7 @@ export class AltTextManager {
     this.#dialog.append(svg);
   }
 
-  async editAltText(uiManager: AnnotationEditorUIManager, editor: AnnotationEditor) {
+  async editAltText(uiManager: AnnotationEditorUIManager, editor: AnnotationEditor, _firstTime = false) {
     if (this.#currentEditor || !editor) {
       return;
     }

@@ -1,8 +1,7 @@
 import { Uint8TypedArray } from "../common/typed_array";
 import { TransformType } from "../display/display_utils";
-import { AbortException } from "../pdf";
 import { MurmurHash3_64 } from "../shared/murmurhash3";
-import { assert, FONT_IDENTITY_MATRIX, FormatError, info, stringToPDFString, warn } from "../shared/util";
+import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, info, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { CMapFactory, IdentityCMap } from "./cmap";
 import { PreEvaluatedFont } from "./core_types";

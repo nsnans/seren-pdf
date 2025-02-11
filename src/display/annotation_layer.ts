@@ -41,6 +41,7 @@ import {
 } from "../shared/util";
 import { DownloadManager, PDFLinkService } from "../viewer/common/component_types";
 import { TextAccessibilityManager } from "../viewer/common/text_accessibility";
+import { StructTreeLayerBuilder } from "../viewer/web/stylesheet/struct_tree_layer_builder";
 import { AnnotationStorage } from "./annotation_storage";
 import { PDFPageProxy } from "./api";
 import { PageViewport, PDFDateString, PointType, RectType, setLayerDimensions } from "./display_utils";
@@ -3184,7 +3185,7 @@ export class AnnotationLayer {
 
   #editableAnnotations = new Map<string, AnnotationElement<AnnotationData>>();
 
-  #structTreeLayer = null;
+  #structTreeLayer: StructTreeLayerBuilder | null = null;
 
   protected _annotationEditorUIManager;
 
@@ -3203,7 +3204,7 @@ export class AnnotationLayer {
     annotationEditorUIManager: AnnotationEditorUIManager,
     page: PDFPageProxy,
     viewport: PageViewport,
-    structTreeLayer,
+    structTreeLayer: StructTreeLayerBuilder | null,
   ) {
     this.div = div;
     this.#accessibilityManager = accessibilityManager;
