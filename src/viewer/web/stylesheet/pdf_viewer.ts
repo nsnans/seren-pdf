@@ -189,6 +189,11 @@ class PDFPageViewBuffer {
   }
 }
 
+
+class WebPDFPageViewer {
+
+}
+
 /**
  * Simple viewer control to display PDF content/pages.
  */
