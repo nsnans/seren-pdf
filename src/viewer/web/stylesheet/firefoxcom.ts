@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-import { isPdfFile, PDFDataRangeTransport } from "pdfjs-lib";
 import { AppOptions } from "./app_options.js";
 import { BaseExternalServices } from "./external_services.js";
 import { BasePreferences } from "./preferences.js";
-import { DEFAULT_SCALE_VALUE } from "./ui_utils.js";
 import { L10n } from "./l10n.js";
+import { isPdfFile } from "../../../display/display_utils.js";
+import { DEFAULT_SCALE_VALUE } from "../../common/ui_utils.js";
+import { PDFDataRangeTransport } from "../../../display/api.js";
 
 if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
   throw new Error(

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { ScrollMode, SpreadMode } from "./ui_utils.js";
-import { PDFViewer } from "./pdf_viewer.js";
+import { ScrollMode, SpreadMode } from  "../../common/ui_utils";
+import { PDFViewer } from "./pdf_viewer";
 
 class PDFSinglePageViewer extends PDFViewer {
   _resetView() {

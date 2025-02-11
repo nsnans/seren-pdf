@@ -29,15 +29,6 @@
 /** @typedef {import("./pdf_scripting_manager").PDFScriptingManager} PDFScriptingManager */
 
 import {
-  AnnotationEditorType,
-  AnnotationEditorUIManager,
-  AnnotationMode,
-  PermissionFlag,
-  PixelsPerInch,
-  shadow,
-  version,
-} from "pdfjs-lib";
-import {
   DEFAULT_SCALE,
   DEFAULT_SCALE_DELTA,
   DEFAULT_SCALE_VALUE,
@@ -61,11 +52,14 @@ import {
   UNKNOWN_SCALE,
   VERTICAL_PADDING,
   watchScroll,
-} from "./ui_utils.js";
-import { GenericL10n } from "web-null_l10n";
+} from "../../common/ui_utils";
 import { PDFPageView } from "./pdf_page_view.js";
 import { PDFRenderingQueue } from "./pdf_rendering_queue.js";
 import { SimpleLinkService } from "./pdf_link_service.js";
+import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../../shared/util.js";
+import { AnnotationEditorUIManager } from "../../../display/editor/tools.js";
+import { PixelsPerInch } from "../../../display/display_utils.js";
+import { GenericL10n } from "./genericl10n.js";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -685,7 +679,7 @@ class PDFViewer {
       {
         signal:
           (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) ||
-          typeof AbortSignal.any === "function"
+            typeof AbortSignal.any === "function"
             ? AbortSignal.any([signal, ac.signal])
             : signal,
       }
@@ -1744,9 +1738,9 @@ class PDFViewer {
 
   _getVisiblePages() {
     const views =
-        this._scrollMode === ScrollMode.PAGE
-          ? this.#scrollModePageState.pages
-          : this._pages,
+      this._scrollMode === ScrollMode.PAGE
+        ? this.#scrollModePageState.pages
+        : this._pages,
       horizontal = this._scrollMode === ScrollMode.HORIZONTAL,
       rtl = horizontal && this._isContainerRtl;
 

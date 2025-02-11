@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { FindState } from "./pdf_find_controller.js";
-import { toggleExpandedBtn } from "./ui_utils.js";
+import { toggleExpandedBtn } from "../../common/ui_utils";
+import { FindState } from "./pdf_find_controller";
 
 const MATCHES_COUNT_LIMIT = 1000;
 

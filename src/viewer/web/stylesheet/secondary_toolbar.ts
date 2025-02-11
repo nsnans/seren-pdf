@@ -21,7 +21,7 @@ import {
   SpreadMode,
   toggleCheckedBtn,
   toggleExpandedBtn,
-} from "./ui_utils.js";
+} from "../../common/ui_utils";
 import { PagesCountLimit } from "./pdf_viewer.js";
 
 /**

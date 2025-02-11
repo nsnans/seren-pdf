@@ -16,12 +16,8 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./interfaces.js").IPDFPrintServiceFactory} IPDFPrintServiceFactory */
 
-import {
-  AnnotationMode,
-  PixelsPerInch,
-  RenderingCancelledException,
-  shadow,
-} from "pdfjs-lib";
+import { PixelsPerInch, RenderingCancelledException } from "../../../display/display_utils.js";
+import { AnnotationMode, shadow } from "../../../shared/util.js";
 import { getXfaHtmlForPrinting } from "./print_utils.js";
 
 let activeService = null;

@@ -16,13 +16,13 @@
 /** @typedef {import("./event_utils.js").EventBus} EventBus */
 /** @typedef {import("./pdf_viewer.js").PDFViewer} PDFViewer */
 
+import { AnnotationEditorType } from "../../../shared/util.js";
 import {
   normalizeWheelEventDelta,
   PresentationModeState,
   ScrollMode,
   SpreadMode,
-} from "./ui_utils.js";
-import { AnnotationEditorType } from "pdfjs-lib";
+} from "../../common/ui_utils.js";
 
 const DELAY_BEFORE_HIDING_CONTROLS = 3000; // in ms
 const ACTIVE_SELECTOR = "pdfPresentationMode";

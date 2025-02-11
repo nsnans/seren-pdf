@@ -20,7 +20,7 @@
  *       internally.
  * @implements {IL10n}
  */
-class L10n {
+export class L10n {
   #dir;
 
   #elements;
@@ -140,7 +140,3 @@ class L10n {
     return ["ar", "he", "fa", "ps", "ur"].includes(shortCode);
   }
 }
-
-const GenericL10n = null;
-
-export { GenericL10n, L10n };

@@ -22,7 +22,7 @@ import {
   SidebarView,
   toggleCheckedBtn,
   toggleExpandedBtn,
-} from "./ui_utils.js";
+} from  "../../common/ui_utils";
 
 const SIDEBAR_WIDTH_VAR = "--sidebar-width";
 const SIDEBAR_MIN_WIDTH = 200; // pixels

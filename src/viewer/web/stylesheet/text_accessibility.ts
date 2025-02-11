@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { binarySearchFirstItem } from "./ui_utils.js";
+import { binarySearchFirstItem } from "../../common/ui_utils";;
 
 /**
  * This class aims to provide some methods:

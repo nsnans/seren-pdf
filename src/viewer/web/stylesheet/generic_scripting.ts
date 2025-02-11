@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-import { getPdfFilenameFromUrl } from "pdfjs-lib";
+import { getPdfFilenameFromUrl } from "../../../display/display_utils";
+
+
 
 async function docProperties(pdfDocument) {
   const url = "",

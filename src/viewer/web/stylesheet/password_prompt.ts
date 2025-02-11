@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { PasswordResponses } from "../../../pdf";
+import { PasswordResponses } from "../../../shared/util";
+
 
 /** @typedef {import("./overlay_manager.js").OverlayManager} OverlayManager */
 
@@ -77,8 +78,7 @@ class PasswordPrompt {
       throw ex;
     }
 
-    const passwordIncorrect =
-      this.#reason === PasswordResponses.INCORRECT_PASSWORD;
+    const passwordIncorrect = this.#reason === PasswordResponses.INCORRECT_PASSWORD;
 
     if (!this._isViewerEmbedded || passwordIncorrect) {
       this.input.focus();

@@ -16,8 +16,8 @@
 /** @typedef {import("./event_utils").EventBus} EventBus */
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
 
-import { isValidRotation, parseQueryString } from "./ui_utils.js";
 import { waitOnEventOrTimeout } from "./event_utils.js";
+import { isValidRotation, parseQueryString } from "../../common/ui_utils.js";
 
 // Heuristic value used when force-resetting `this._blockHashChange`.
 const HASH_CHANGE_TIMEOUT = 1000; // milliseconds
@@ -191,13 +191,13 @@ class PDFHistory {
     if (namedDest && typeof namedDest !== "string") {
       console.error(
         "PDFHistory.push: " +
-          `"${namedDest}" is not a valid namedDest parameter.`
+        `"${namedDest}" is not a valid namedDest parameter.`
       );
       return;
     } else if (!Array.isArray(explicitDest)) {
       console.error(
         "PDFHistory.push: " +
-          `"${explicitDest}" is not a valid explicitDest parameter.`
+        `"${explicitDest}" is not a valid explicitDest parameter.`
       );
       return;
     } else if (!this.#isValidPage(pageNumber)) {
@@ -206,7 +206,7 @@ class PDFHistory {
       if (pageNumber !== null || this._destination) {
         console.error(
           "PDFHistory.push: " +
-            `"${pageNumber}" is not a valid pageNumber parameter.`
+          `"${pageNumber}" is not a valid pageNumber parameter.`
         );
         return;
       }

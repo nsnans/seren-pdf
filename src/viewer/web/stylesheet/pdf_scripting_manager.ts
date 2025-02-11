@@ -15,8 +15,8 @@
 
 /** @typedef {import("./event_utils").EventBus} EventBus */
 
-import { apiPageLayoutToViewerModes, RenderingStates } from "./ui_utils.js";
-import { shadow } from "pdfjs-lib";
+import { shadow } from "../../../shared/util";
+import { apiPageLayoutToViewerModes, RenderingStates } from "../../common/ui_utils";
 
 /**
  * @typedef {Object} PDFScriptingManagerOptions
@@ -476,7 +476,7 @@ class PDFScriptingManager {
 
     try {
       await this.#scripting.destroySandbox();
-    } catch {}
+    } catch { }
 
     this.#willPrintCapability?.reject(new Error("Scripting destroyed."));
     this.#willPrintCapability = null;

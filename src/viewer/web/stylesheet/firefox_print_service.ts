@@ -15,11 +15,10 @@
 
 import {
   AnnotationMode,
-  PixelsPerInch,
-  RenderingCancelledException,
   shadow,
-} from "pdfjs-lib";
-import { getXfaHtmlForPrinting } from "./print_utils.js";
+} from "../../../shared/util";
+import { getXfaHtmlForPrinting } from "./print_utils";
+import { PixelsPerInch, RenderingCancelledException } from "../../../display/display_utils";
 
 // Creates a placeholder with div and canvas with right size for the page.
 function composePage(

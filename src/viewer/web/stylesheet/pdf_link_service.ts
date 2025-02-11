@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
+import { parseQueryString } from "../../common/ui_utils";
+
 /** @typedef {import("./event_utils").EventBus} EventBus */
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
 
-import { parseQueryString } from "./ui_utils.js";
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 

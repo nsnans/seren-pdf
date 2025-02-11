@@ -23,34 +23,19 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
 
-import {
-  AbortException,
-  AnnotationMode,
-  OutputScale,
-  PixelsPerInch,
-  RenderingCancelledException,
-  setLayerDimensions,
-  shadow,
-} from "pdfjs-lib";
-import {
-  approximateFraction,
-  calcRound,
-  DEFAULT_SCALE,
-  floorToDivide,
-  RenderingStates,
-  TextLayerMode,
-} from "./ui_utils.js";
+import { OutputScale, PixelsPerInch, RenderingCancelledException, setLayerDimensions } from "../../../display/display_utils.js";
+import { DrawLayerBuilder } from "../../../display/draw_layer_builder.js";
+import { AbortException, AnnotationMode, shadow } from "../../../shared/util.js";
+import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../../common/ui_utils.js";
 import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder.js";
 import { AnnotationLayerBuilder } from "./annotation_layer_builder.js";
 import { AppOptions } from "./app_options.js";
-import { DrawLayerBuilder } from "./draw_layer_builder.js";
-import { GenericL10n } from "web-null_l10n";
+import { GenericL10n } from "./genericl10n.js";
 import { SimpleLinkService } from "./pdf_link_service.js";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder.js";
 import { TextAccessibilityManager } from "./text_accessibility.js";
 import { TextHighlighter } from "./text_highlighter.js";
 import { TextLayerBuilder } from "./text_layer_builder.js";
-import { XfaLayerBuilder } from "./xfa_layer_builder.js";
 
 /**
  * @typedef {Object} PDFPageViewOptions
@@ -90,17 +75,17 @@ const DEFAULT_LAYER_PROPERTIES =
   typeof PDFJSDev === "undefined" || !PDFJSDev.test("COMPONENTS")
     ? null
     : {
-        annotationEditorUIManager: null,
-        annotationStorage: null,
-        downloadManager: null,
-        enableScripting: false,
-        fieldObjectsPromise: null,
-        findController: null,
-        hasJSActionsPromise: null,
-        get linkService() {
-          return new SimpleLinkService();
-        },
-      };
+      annotationEditorUIManager: null,
+      annotationStorage: null,
+      downloadManager: null,
+      enableScripting: false,
+      fieldObjectsPromise: null,
+      findController: null,
+      hasJSActionsPromise: null,
+      get linkService() {
+        return new SimpleLinkService();
+      },
+    };
 
 const LAYERS_ORDER = new Map([
   ["canvasWrapper", 0],
@@ -114,6 +99,7 @@ const LAYERS_ORDER = new Map([
  * @implements {IRenderableView}
  */
 class PDFPageView {
+
   #annotationMode = AnnotationMode.ENABLE_FORMS;
 
   #enableHWA = false;
@@ -1146,18 +1132,7 @@ class PDFPageView {
       }
     );
 
-    if (pdfPage.isPureXfa) {
-      if (!this.xfaLayer) {
-        const { annotationStorage, linkService } = this.#layerProperties;
 
-        this.xfaLayer = new XfaLayerBuilder({
-          pdfPage,
-          annotationStorage,
-          linkService,
-        });
-      }
-      this.#renderXfaLayer();
-    }
 
     div.setAttribute("data-loaded", true);
 

@@ -361,10 +361,10 @@ export function getFilenameFromUrl(url: string): string {
 
 /**
  * Returns the filename or guessed filename from the url (see issue 3455).
- * @param {string} url - The original PDF location.
- * @param {string} defaultFilename - The value returned if the filename is
+ * @param url - The original PDF location.
+ * @param defaultFilename - The value returned if the filename is
  *   unknown, or the protocol is unsupported.
- * @returns {string} Guessed PDF filename.
+ * @returns Guessed PDF filename.
  */
 export function getPdfFilenameFromUrl(url: string, defaultFilename = "document.pdf"): string {
   if (typeof url !== "string") {

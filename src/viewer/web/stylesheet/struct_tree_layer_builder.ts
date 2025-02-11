@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { removeNullCharacters } from "./ui_utils.js";
+import { removeNullCharacters } from "../../common/ui_utils";
 
 const PDF_ROLE_TO_HTML_ROLE = {
   // Document level structure types

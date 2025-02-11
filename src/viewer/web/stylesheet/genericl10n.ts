@@ -18,7 +18,7 @@
 import { FluentBundle, FluentResource } from "fluent-bundle";
 import { DOMLocalization } from "fluent-dom";
 import { L10n } from "./l10n";
-import { fetchData } from "../../../pdf";
+import { fetchData } from "../../../display/display_utils";
 
 function createBundle(lang, text) {
   const resource = new FluentResource(text);
