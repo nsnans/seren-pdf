@@ -34,7 +34,7 @@ function createBundle(lang, text) {
  * @implements {IL10n}
  */
 export class GenericL10n extends L10n {
-  constructor(lang) {
+  constructor(lang: string | null = null) {
     super({ lang });
 
     const generateBundles = !lang

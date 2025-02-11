@@ -540,6 +540,7 @@ if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING || LIB")) {
 }
 
 class AppOptions {
+  
   static eventBus;
 
   static #opts = new Map();

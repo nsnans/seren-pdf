@@ -1,5 +1,6 @@
 import { Event } from "./scripting_api/event";
 import { TypedArray } from "./types";
+import { IntentStateOperatorList } from './display/api';
 
 // 扩展 window 对象，添加 一些全局 属性
 export declare global {
@@ -87,6 +88,10 @@ export declare global {
 
   declare var FontInspector = {
     enabled: boolean
+  }
+
+  declare interface Document {
+    blockUnblockOnload?: (_flag: boolean) => void;
   }
 }
 

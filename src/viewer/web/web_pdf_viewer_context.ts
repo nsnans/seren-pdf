@@ -1,4 +1,8 @@
+import { AppOptions } from "./app_options";
 
-export class WebPDFViewContext {
+export class WebPDFViewerContext {
 
+  protected appOptions: AppOptions;
+  
+  
 }

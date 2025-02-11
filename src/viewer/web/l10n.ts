@@ -111,7 +111,7 @@ export class L10n {
     this.#l10n.resumeObserving();
   }
 
-  static #fixupLangCode(langCode) {
+  static #fixupLangCode(langCode: string | null) {
     // Use only lowercase language-codes internally, and fallback to English.
     langCode = langCode?.toLowerCase() || "en-us";
 

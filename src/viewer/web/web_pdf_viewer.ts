@@ -25,12 +25,12 @@ import {
 } from "pdfjs-lib";
 import { ExternalServices, initCom, MLManager } from "web-external_services";
 import { Preferences } from "web-preferences";
-import { getDocument, PDFWorker } from "../../display/api";
+import { getDocument, PDFDocumentLoadingTask, PDFDocumentProxy } from "../../display/api";
 import { getFilenameFromUrl, getPdfFilenameFromUrl, isDataScheme, isPdfFile } from "../../display/display_utils";
 import { AnnotationEditorParams } from "../../display/editor/annotation_editor_params";
 import { GlobalWorkerOptions } from "../../display/worker_options";
 import { AnnotationEditorType, BaseException, FeatureTest, InvalidPDFException, MissingPDFException, shadow, UnexpectedResponseException } from "../../shared/util";
-import { DownloadManager } from "../common/component_types";
+import { DownloadManager, IL10n } from '../common/component_types';
 import {
   animationStarted,
   apiPageLayoutToViewerModes,
@@ -76,6 +76,8 @@ import { PDFViewer } from "./pdf_viewer";
 import { SecondaryToolbar } from "./secondary_toolbar";
 import { Toolbar } from "./toolbar-geckoview";
 import { ViewHistory } from "./view_history";
+import { WebPDFViewerCallbackManager } from './web_pdf_view_callback_manager';
+import { WebPDFViewerContext } from "./web_pdf_viewer_context";
 
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
 
@@ -85,8 +87,103 @@ const ViewOnLoad = {
   INITIAL: 1,
 };
 
-export interface WebPDFViewer {
-  initialBookmark: string;
+export class WebPDFViewerBuilder {
+
+}
+
+export class WebPDFViewer {
+
+  protected viewContext = new WebPDFViewerContext();
+
+  protected callbackManager = new WebPDFViewerCallbackManager();
+
+  protected pdfDocument: PDFDocumentProxy;
+
+  protected pdfLoadingTask: PDFDocumentLoadingTask;
+
+  protected pdfViewer: PDFViewer;
+
+  protected pdfThumbnailViewer: PDFThumbnailViewer;
+
+  protected pdfRenderingQueue: PDFRenderingQueue;
+
+  protected pdfPresentationMode: PDFPresentationMode;
+
+  protected pdfDocumentProperties: PDFDocumentProperties;
+
+  protected pdfLinkService: PDFLinkService;
+
+  protected pdfHistory: PDFHistory;
+
+  protected pdfSidebar: PDFSidebar;
+
+  protected pdfOutlineViewer: PDFOutlineViewer;
+
+  protected pdfLayerViewer: PDFLayerViewer;
+
+  protected pdfCursorTools: PDFCursorTools;
+
+  protected pdfScriptingManager: PDFScriptingManager;
+
+  protected store: ViewHistory;
+
+  protected downloadManager: DownloadManager;
+
+  protected overlayManager: OverlayManager;
+
+  protected preferences = new Preferences();
+
+  protected eventBus: EventBus;
+
+  protected l10n: IL10n;
+
+  protected annotationEditorParams: AnnotationEditorParams;
+
+  protected imageAltTextSettings: ImageAltTextSettings;
+
+  protected isInitialViewSet: false;
+
+  protected url: "";
+
+  protected baseUrl: "";
+
+  protected _downloadUrl: "";
+
+  protected _eventBusAbortController: null;
+
+  protected _windowAbortController: null;
+
+  protected _globalAbortController = new AbortController();
+
+  protected documentInfo: null;
+
+  protected metadata: null;
+
+  protected _contentDispositionFilename: null;
+
+  protected _contentLength: null;
+
+  protected _saveInProgress = false;
+
+  protected _wheelUnusedTicks = 0;
+
+  protected _wheelUnusedFactor = 1;
+
+  protected _touchUnusedTicks = 0;
+
+  protected _touchUnusedFactor = 1;
+
+  protected _hasAnnotationEditors = false;
+
+  protected _printAnnotationStoragePromise: null;
+
+  protected _touchInfo: null;
+
+  protected _isCtrlKeyDown = false;
+
+  protected _caretBrowsing: null;
+
+  protected _isScrolling = false;
 }
 
 const PDFViewerApplication = {
@@ -147,53 +244,53 @@ const PDFViewerApplication = {
   annotationEditorParams: null,
   /** @type {ImageAltTextSettings} */
   imageAltTextSettings: null,
-  
+
   isInitialViewSet: false,
-  
+
   isViewerEmbedded: window.parent !== window,
-  
+
   url: "",
-  
+
   baseUrl: "",
-  
+
   mlManager: null,
-  
+
   _downloadUrl: "",
-  
+
   _eventBusAbortController: null,
-  
+
   _windowAbortController: null,
-  
+
   _globalAbortController: new AbortController(),
-  
+
   documentInfo: null,
-  
+
   metadata: null,
-  
+
   _contentDispositionFilename: null,
-  
+
   _contentLength: null,
-  
+
   _saveInProgress: false,
-  
+
   _wheelUnusedTicks: 0,
-  
+
   _wheelUnusedFactor: 1,
-  
+
   _touchUnusedTicks: 0,
-  
+
   _touchUnusedFactor: 1,
-  
+
   _PDFBug: null,
-  
+
   _hasAnnotationEditors: false,
-  
+
   _title: document.title,
-  
+
   _printAnnotationStoragePromise: null,
-  
+
   _touchInfo: null,
-  
+
   _isCtrlKeyDown: false,
 
   _caretBrowsing: null,
@@ -210,9 +307,6 @@ const PDFViewerApplication = {
       await this.preferences.initializedPromise;
     } catch (ex) {
       console.error(`initialize: "${(<BaseException>ex).message}".`);
-    }
-    if (AppOptions.get("pdfBugEnabled")) {
-      await this._parseHashParams();
     }
 
     if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
@@ -276,115 +370,6 @@ const PDFViewerApplication = {
 
     this._initializedCapability.settled = true;
     this._initializedCapability.resolve();
-  },
-
-  /**
-   * Potentially parse special debugging flags in the hash section of the URL.
-   * @private
-   */
-  async _parseHashParams() {
-    const hash = document.location.hash.substring(1);
-    if (!hash) {
-      return;
-    }
-    const { mainContainer, viewerContainer } = this.appConfig,
-      params = parseQueryString(hash);
-
-    const loadPDFBug = async () => {
-      if (this._PDFBug) {
-        return;
-      }
-      const { PDFBug } =
-        typeof PDFJSDev === "undefined"
-          ? await import(AppOptions.get("debuggerSrc")) // eslint-disable-line no-unsanitized/method
-          : await __non_webpack_import__(AppOptions.get("debuggerSrc"));
-
-      this._PDFBug = PDFBug;
-    };
-
-    // Parameters that need to be handled manually.
-    if (params.get("disableworker") === "true") {
-      try {
-        GlobalWorkerOptions.workerSrc ||= AppOptions.get("workerSrc");
-
-        if (typeof PDFJSDev === "undefined") {
-          globalThis.pdfjsWorker = await import("pdfjs/pdf.worker.js");
-        } else {
-          await __non_webpack_import__(PDFWorker.workerSrc);
-        }
-      } catch (ex) {
-        console.error(`_parseHashParams: "${ex.message}".`);
-      }
-    }
-    if (params.has("textlayer")) {
-      switch (params.get("textlayer")) {
-        case "off":
-          AppOptions.set("textLayerMode", TextLayerMode.DISABLE);
-          break;
-        case "visible":
-        case "shadow":
-        case "hover":
-          viewerContainer.classList.add(`textLayer-${params.get("textlayer")}`);
-          try {
-            await loadPDFBug();
-            this._PDFBug.loadCSS();
-          } catch (ex) {
-            console.error(`_parseHashParams: "${ex.message}".`);
-          }
-          break;
-      }
-    }
-    if (params.has("pdfbug")) {
-      AppOptions.setAll({ pdfBug: true, fontExtraProperties: true });
-
-      const enabled = params.get("pdfbug").split(",");
-      try {
-        await loadPDFBug();
-        this._PDFBug.init(mainContainer, enabled);
-      } catch (ex) {
-        console.error(`_parseHashParams: "${ex.message}".`);
-      }
-    }
-    // It is not possible to change locale for the (various) extension builds.
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      params.has("locale")
-    ) {
-      AppOptions.set("localeProperties", { lang: params.get("locale") });
-    }
-
-    // Parameters that can be handled automatically.
-    const opts = {
-      disableAutoFetch: x => x === "true",
-      disableFontFace: x => x === "true",
-      disableHistory: x => x === "true",
-      disableRange: x => x === "true",
-      disableStream: x => x === "true",
-      verbosity: x => x | 0,
-    };
-
-    // Set some specific preferences for tests.
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
-      Object.assign(opts, {
-        enableAltText: x => x === "true",
-        enableFakeMLManager: x => x === "true",
-        enableGuessAltText: x => x === "true",
-        enableUpdatedAddImage: x => x === "true",
-        highlightEditorColors: x => x,
-        maxCanvasPixels: x => parseInt(x),
-        spreadModeOnLoad: x => parseInt(x),
-        supportsCaretBrowsingMode: x => x === "true",
-      });
-    }
-
-    for (const name in opts) {
-      const check = opts[name],
-        key = name.toLowerCase();
-
-      if (params.has(key)) {
-        AppOptions.set(name, check(params.get(key)));
-      }
-    }
   },
 
   /**
@@ -3053,10 +3038,7 @@ function onKeyDown(evt) {
         break;
     }
 
-    if (
-      turnPage !== 0 &&
-      (!turnOnlyIfPageFit || pdfViewer.currentScaleValue === "page-fit")
-    ) {
+    if (turnPage !== 0 && (!turnOnlyIfPageFit || pdfViewer.currentScaleValue === "page-fit")) {
       if (turnPage > 0) {
         pdfViewer.nextPage();
       } else {
