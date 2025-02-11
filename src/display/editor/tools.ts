@@ -28,7 +28,7 @@ import {
   Util
 } from "../../shared/util";
 import { EventBus, MLManager } from "../../viewer/common/component_types";
-import { AltTextManager } from "../../viewer/web/stylesheet/alt_text_manager";
+import { AltTextManager } from "../../viewer/web/alt_text_manager";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationStorage } from "../annotation_storage";
 import { PDFDocumentProxy } from "../api";

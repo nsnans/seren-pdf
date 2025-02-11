@@ -41,7 +41,7 @@ import {
 } from "../shared/util";
 import { DownloadManager, PDFLinkService } from "../viewer/common/component_types";
 import { TextAccessibilityManager } from "../viewer/common/text_accessibility";
-import { StructTreeLayerBuilder } from "../viewer/web/stylesheet/struct_tree_layer_builder";
+import { StructTreeLayerBuilder } from "../viewer/web/struct_tree_layer_builder";
 import { AnnotationStorage } from "./annotation_storage";
 import { PDFPageProxy } from "./api";
 import { PageViewport, PDFDateString, PointType, RectType, setLayerDimensions } from "./display_utils";
