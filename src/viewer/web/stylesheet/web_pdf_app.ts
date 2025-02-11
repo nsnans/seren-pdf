@@ -39,55 +39,43 @@ import {
   SpreadMode,
 } from "../../common/ui_utils";
 import {
-  AnnotationEditorType,
   build,
-  FeatureTest,
-  getDocument,
-  getFilenameFromUrl,
-  getPdfFilenameFromUrl,
-  GlobalWorkerOptions,
-  InvalidPDFException,
-  isDataScheme,
-  isPdfFile,
-  MissingPDFException,
-  PDFWorker,
-  shadow,
-  UnexpectedResponseException,
   version,
 } from "pdfjs-lib";
 import { AppOptions, OptionKind } from "./app_options.js";
 import { EventBus, FirefoxEventBus } from "./event_utils.js";
 import { ExternalServices, initCom, MLManager } from "web-external_services";
-import {
-  ImageAltTextSettings,
-  NewAltTextManager,
-} from "web-new_alt_text_manager";
 import { LinkTarget, PDFLinkService } from "./pdf_link_service.js";
-import { AltTextManager } from "web-alt_text_manager";
-import { AnnotationEditorParams } from "web-annotation_editor_params";
 import { CaretBrowsingMode } from "./caret_browsing.js";
-import { DownloadManager } from "web-download_manager";
 import { OverlayManager } from "./overlay_manager.js";
 import { PasswordPrompt } from "./password_prompt.js";
-import { PDFAttachmentViewer } from "web-pdf_attachment_viewer";
-import { PDFCursorTools } from "web-pdf_cursor_tools";
-import { PDFDocumentProperties } from "web-pdf_document_properties";
-import { PDFFindBar } from "web-pdf_find_bar";
 import { PDFFindController } from "./pdf_find_controller.js";
 import { PDFHistory } from "./pdf_history.js";
-import { PDFLayerViewer } from "web-pdf_layer_viewer";
-import { PDFOutlineViewer } from "web-pdf_outline_viewer";
-import { PDFPresentationMode } from "web-pdf_presentation_mode";
-import { PDFPrintServiceFactory } from "web-print_service";
 import { PDFRenderingQueue } from "./pdf_rendering_queue.js";
 import { PDFScriptingManager } from "./pdf_scripting_manager.js";
-import { PDFSidebar } from "web-pdf_sidebar";
-import { PDFThumbnailViewer } from "web-pdf_thumbnail_viewer";
 import { PDFViewer } from "./pdf_viewer.js";
 import { Preferences } from "web-preferences";
-import { SecondaryToolbar } from "web-secondary_toolbar";
-import { Toolbar } from "web-toolbar";
 import { ViewHistory } from "./view_history.js";
+import { AnnotationEditorType, FeatureTest, InvalidPDFException, MissingPDFException, shadow, UnexpectedResponseException } from "../../../shared/util.js";
+import { getDocument, PDFWorker } from "../../../display/api.js";
+import { getFilenameFromUrl, getPdfFilenameFromUrl, isDataScheme, isPdfFile } from "../../../display/display_utils.js";
+import { GlobalWorkerOptions } from "../../../display/worker_options.js";
+import { ImageAltTextSettings, NewAltTextManager } from "./new_alt_text_manager.js";
+import { AltTextManager } from "./alt_text_manager.js";
+import { AnnotationEditorParams } from "../../../display/editor/annotation_editor_params.js";
+import { DownloadManager } from "../../common/component_types.js";
+import { PDFAttachmentViewer } from "./pdf_attachment_viewer.js";
+import { PDFCursorTools } from "./pdf_cursor_tools.js";
+import { PDFDocumentProperties } from "./pdf_document_properties.js";
+import { PDFFindBar } from "./pdf_find_bar.js";
+import { PDFLayerViewer } from "./pdf_layer_viewer.js";
+import { PDFOutlineViewer } from "./pdf_outline_viewer.js";
+import { PDFPresentationMode } from "./pdf_presentation_mode.js";
+import { PDFPrintServiceFactory } from "./firefox_print_service.js";
+import { PDFSidebar } from "./pdf_sidebar.js";
+import { PDFThumbnailViewer } from "./pdf_thumbnail_viewer.js";
+import { SecondaryToolbar } from "./secondary_toolbar.js";
+import { Toolbar } from "./toolbar-geckoview.js";
 
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
 
@@ -2747,6 +2735,7 @@ function onTouchEnd(evt) {
 }
 
 function onClick(evt) {
+  
   if (!this.secondaryToolbar?.isOpen) {
     return;
   }
