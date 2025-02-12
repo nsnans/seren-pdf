@@ -16,7 +16,7 @@
 import { RenderingStates, ScrollMode, SpreadMode } from "../common/ui_utils";
 import { AppOptions } from "./viewer_options";
 import { LinkTarget } from "./pdf_link_service";
-import { PDFViewerApplication } from "./viewer";
+import { PDFViewerApplication } from "./viewer_raw";
 
 const AppConstants = { LinkTarget, RenderingStates, ScrollMode, SpreadMode }
 

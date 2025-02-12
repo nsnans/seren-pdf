@@ -1,4 +1,3 @@
-import { value } from '../../core/annotation';
 /* Copyright 2018 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,8 @@ import { value } from '../../core/annotation';
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { ThemeMode } from "../../shared/theme";
 
 enum OptionKind {
   BROWSER = 0x01,
@@ -99,11 +100,10 @@ export interface WebPDFViewerOptions {
   verbosity: number;
   workPorter: null;
   workerSrc: string | null;
-  viewerCssTheme: number;
+  viewerCssTheme: ThemeMode;
   enableFakeMLManager: boolean;
   disablePreferences: boolean;
 }
-
 export function defaultWebViewerOptions(): WebPDFViewerOptions {
   return {
     allowedGlobalEvents: [],
@@ -170,7 +170,7 @@ export function defaultWebViewerOptions(): WebPDFViewerOptions {
     verbosity: 1,
     workPorter: null,
     workerSrc: "",
-    viewerCssTheme: 2,
+    viewerCssTheme: ThemeMode.DARK_MODE,
     enableFakeMLManager: true,
     disablePreferences: false
   };
@@ -302,7 +302,7 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
 
   protected readonly _workerSrc = { value: <string | null>null, kind: OptionKind.WORKER }
 
-  protected readonly _viewerCssTheme = { value: <number | null>null, kind: OptionKind.VIEWER + OptionKind.PREFERENCE }
+  protected readonly _viewerCssTheme = { value: <ThemeMode | null>null, kind: OptionKind.VIEWER + OptionKind.PREFERENCE }
 
   protected readonly _enableFakeMLManager = { value: <boolean | null>null, kind: OptionKind.VIEWER }
 
@@ -813,11 +813,11 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
     this._workerSrc.value = value;
   }
 
-  get viewerCssTheme(): number {
+  get viewerCssTheme(): ThemeMode {
     return this._viewerCssTheme.value!;
   }
 
-  set viewerCssTheme(value: number) {
+  set viewerCssTheme(value: ThemeMode) {
     this._viewerCssTheme.value = value;
   }
 

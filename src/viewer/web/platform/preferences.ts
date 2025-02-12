@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-import { AppOptions, OptionKind } from "./viewer_options";
+import { AppOptions, OptionKind } from "../viewer_options";
 
 /**
  * BasePreferences - Abstract base class for storing persistent settings.
  *   Used for settings that should be applied to all opened documents,
  *   or every time the viewer is loaded.
  */
-class BasePreferences {
+export class Preferences {
   #defaults = Object.freeze(
     typeof PDFJSDev === "undefined"
       ? AppOptions.getAll(OptionKind.PREFERENCE, /* defaultOnly = */ true)
@@ -30,21 +30,6 @@ class BasePreferences {
   #initializedPromise = null;
 
   constructor() {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BasePreferences
-    ) {
-      throw new Error("Cannot initialize BasePreferences.");
-    }
-
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("CHROME")) {
-      Object.defineProperty(this, "defaults", {
-        get() {
-          return this.#defaults;
-        },
-      });
-    }
-
     this.#initializedPromise = this._readFromStorage(this.#defaults).then(
       ({ browserPrefs, prefs }) => {
         if (
@@ -56,16 +41,6 @@ class BasePreferences {
         AppOptions.setAll({ ...browserPrefs, ...prefs }, /* prefs = */ true);
       }
     );
-
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
-      window.addEventListener(
-        "updatedPreference",
-        async ({ detail: { name, value } }) => {
-          await this.#initializedPromise;
-          AppOptions.setAll({ [name]: value }, /* prefs = */ true);
-        }
-      );
-    }
   }
 
   /**
@@ -139,5 +114,3 @@ class BasePreferences {
     return this.#initializedPromise;
   }
 }
-
-export { BasePreferences };

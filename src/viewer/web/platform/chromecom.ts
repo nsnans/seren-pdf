@@ -14,11 +14,11 @@
  */
 /* globals chrome */
 
-import { AppOptions } from "./viewer_options";
-import { BaseExternalServices } from "./external_services";
-import { BasePreferences } from "./preferences";
-import { GenericL10n } from "./genericl10n";
-import { GenericScripting } from "./generic_scripting";
+import { AppOptions } from "../viewer_options";
+import { BaseExternalServices } from "../external_services";
+import { Preferences } from "./preferences";
+import { GenericL10n } from "../genericl10n";
+import { GenericScripting } from "../generic_scripting";
 
 if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("CHROME")) {
   throw new Error(
@@ -155,7 +155,7 @@ function isRuntimeAvailable() {
     if (chrome.runtime?.getManifest()) {
       return true;
     }
-  } catch {}
+  } catch { }
   return false;
 }
 
@@ -313,7 +313,7 @@ function setReferer(url, callback) {
 // chrome.storage.local to chrome.storage.sync when needed.
 const storageArea = chrome.storage.sync || chrome.storage.local;
 
-class Preferences extends BasePreferences {
+class ChromePreferences extends Preferences {
   async _writeToStorage(prefObj) {
     return new Promise(resolve => {
       if (prefObj === this.defaults) {
@@ -431,4 +431,4 @@ class MLManager {
   }
 }
 
-export { ExternalServices, initCom, MLManager, Preferences };
+export { ExternalServices, initCom, MLManager, ChromePreferences };

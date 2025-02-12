@@ -13,21 +13,16 @@
  * limitations under the License.
  */
 
-import { AppOptions } from "./viewer_options";
-import { BaseExternalServices } from "./external_services";
-import { BasePreferences } from "./preferences";
-import { GenericL10n } from "./genericl10n";
-import { GenericScripting } from "./generic_scripting";
+import { BaseExternalServices } from "../external_services";
+import { GenericScripting } from "../generic_scripting";
+import { GenericL10n } from "../genericl10n";
+import { Preferences } from "./preferences";
 
-if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("GENERIC")) {
-  throw new Error(
-    'Module "pdfjs-web/genericcom" shall not be used outside GENERIC build.'
-  );
-}
 
-function initCom(app) {}
 
-class Preferences extends BasePreferences {
+function initCom(app) { }
+
+class GenericPreferences extends Preferences {
   async _writeToStorage(prefObj) {
     localStorage.setItem("pdfjs.preferences", JSON.stringify(prefObj));
   }
@@ -60,9 +55,9 @@ class MLManager {
     return false;
   }
 
-  guess(_data) {}
+  guess(_data) { }
 
-  toggleService(_name, _enabled) {}
+  toggleService(_name, _enabled) { }
 
   static getFakeMLManager(options) {
     return new FakeMLManager(options);
@@ -92,7 +87,7 @@ class FakeMLManager {
     return null;
   }
 
-  async loadModel(_name) {}
+  async loadModel(_name) { }
 
   async downloadModel(_name) {
     // Simulate downloading the model but with progress.
@@ -142,4 +137,5 @@ class FakeMLManager {
   }
 }
 
-export { ExternalServices, initCom, MLManager, Preferences };
+export { ExternalServices, GenericPreferences, initCom, MLManager };
+

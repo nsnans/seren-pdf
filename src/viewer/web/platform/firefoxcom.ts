@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-import { AppOptions } from "./viewer_options";
-import { BaseExternalServices } from "./external_services";
+import { AppOptions } from "../viewer_options";
+import { BaseExternalServices } from "../external_services";
 import { BasePreferences } from "./preferences";
-import { L10n } from "./l10n";
-import { isPdfFile } from "../../display/display_utils";
-import { DEFAULT_SCALE_VALUE } from "../common/ui_utils";
-import { PDFDataRangeTransport } from "../../display/api";
+import { L10n } from "../l10n";
+import { isPdfFile } from "../../../display/display_utils";
+import { DEFAULT_SCALE_VALUE } from "../../common/ui_utils";
+import { PDFDataRangeTransport } from "../../../display/api";
+import { Preferences } from "./genericcom";
 
 if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
   throw new Error(
@@ -147,7 +148,7 @@ class DownloadManager {
   }
 }
 
-class Preferences extends BasePreferences {
+export class FirefoxPreferences extends Preferences {
   async _readFromStorage(prefObj) {
     return FirefoxCom.requestAsync("getPreferences", prefObj);
   }
@@ -587,4 +588,4 @@ class ExternalServices extends BaseExternalServices {
   }
 }
 
-export { DownloadManager, ExternalServices, initCom, MLManager, Preferences };
+export { DownloadManager, ExternalServices, initCom, MLManager };
