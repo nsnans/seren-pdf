@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { AppOptions, OptionKind } from "./app_options";
+import { AppOptions, OptionKind } from "./viewer_options";
 
 /**
  * BasePreferences - Abstract base class for storing persistent settings.

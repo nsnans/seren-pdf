@@ -14,7 +14,7 @@
  */
 /* globals chrome */
 
-import { AppOptions } from "./app_options";
+import { AppOptions } from "./viewer_options";
 import { BaseExternalServices } from "./external_services";
 import { BasePreferences } from "./preferences";
 import { GenericL10n } from "./genericl10n";

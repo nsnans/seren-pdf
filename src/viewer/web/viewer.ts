@@ -51,7 +51,7 @@ import {
   SpreadMode,
 } from "../common/ui_utils";
 import { AltTextManager } from "./alt_text_manager";
-import { AppOptions, OptionKind } from "./app_options";
+import { AppOptions, OptionKind } from "./viewer_options";
 import { CaretBrowsingMode } from "./caret_browsing";
 import { EventBus, FirefoxEventBus } from "./event_utils";
 import { PDFPrintServiceFactory } from "./firefox_print_service";
@@ -76,8 +76,8 @@ import { PDFViewer } from "./pdf_viewer";
 import { SecondaryToolbar } from "./secondary_toolbar";
 import { Toolbar } from "./toolbar-geckoview";
 import { ViewHistory } from "./view_history";
-import { WebPDFViewerCallbackManager } from './web_pdf_view_callback_manager';
-import { WebPDFViewerContext } from "./web_pdf_viewer_context";
+import { WebPDFViewerCallbackManager } from './viewer_callback_manager';
+import { WebPDFViewerContext } from "./viewer_context";
 
 const FORCE_PAGES_LOADED_TIMEOUT = 10000; // ms
 

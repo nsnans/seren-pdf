@@ -30,7 +30,7 @@ import { TextAccessibilityManager } from "../common/text_accessibility";
 import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../common/ui_utils";
 import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder";
 import { AnnotationLayerBuilder } from "./annotation_layer_builder";
-import { AppOptions } from "./app_options";
+import { AppOptions } from "./viewer_options";
 import { EventBus } from "./event_utils";
 import { GenericL10n } from "./genericl10n";
 import { SimpleLinkService } from "./pdf_link_service";
