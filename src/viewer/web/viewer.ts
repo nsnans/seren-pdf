@@ -25,6 +25,15 @@ export class WebPDFViewerBuilder {
 
 }
 
+enum PDFSource {
+  /** PDF尚未加载 */
+  UNLOAD = 0,
+  /** 加载了本地的PDF */
+  LOCAL = 1,
+  /**  通过网络加载的PDF */
+  NETWORK = 2,
+}
+
 export class WebPDFViewer {
 
   protected viewerContext: WebPDFViewerContext;
@@ -40,6 +49,8 @@ export class WebPDFViewer {
   protected pdfLoadingTask: PDFDocumentLoadingTask;
 
   protected pdfViewer: PDFViewer;
+
+  protected pdfSource = PDFSource.UNLOAD;
 
   protected pdfThumbnailViewer: PDFThumbnailViewer;
 
@@ -126,10 +137,18 @@ export class WebPDFViewer {
     viewerContainer: HTMLDivElement,
   ) {
     this.viewerContext = viewerContext;
-    this.callbackManager = viewerContext.getCallbackManager();
+    const callbackManager = this.callbackManager = viewerContext.getCallbackManager();
     const viewerOptions = this.viewerOptions = viewerContext.getViewerOptions();
     // 等待从localStorage中读取属性，这个原来有，但是现在暂时不用了，这个活儿不应该由我来干。
     this.viewerContainer = viewerContainer;
-    addCallback
+    this.pdfViewer = this.initPDFViewer();
   }
+
+  initPDFViewer() {
+    return new PDFViewer(
+      this.viewerContainer
+    );
+  }
+
+  open()
 }

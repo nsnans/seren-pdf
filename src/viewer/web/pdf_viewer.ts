@@ -28,6 +28,10 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./pdf_scripting_manager").PDFScriptingManager} PDFScriptingManager */
 
+import { PixelsPerInch } from "../../display/display_utils";
+import { AnnotationEditorUIManager } from "../../display/editor/tools";
+import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../shared/util";
+import { DownloadManager, PDFLinkService } from "../common/component_types";
 import {
   DEFAULT_SCALE,
   DEFAULT_SCALE_DELTA,
@@ -53,13 +57,11 @@ import {
   VERTICAL_PADDING,
   watchScroll,
 } from "../common/ui_utils";
+import { GenericL10n } from "./genericl10n";
+import { PDFFindService } from "./pdf_finder_service";
 import { PDFPageView } from "./pdf_page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
-import { SimpleLinkService } from "./pdf_link_service";
-import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../shared/util";
-import { AnnotationEditorUIManager } from "../../display/editor/tools";
-import { PixelsPerInch } from "../../display/display_utils";
-import { GenericL10n } from "./genericl10n";
+import { WebPDFViewerOptions } from './viewer_options';
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -190,14 +192,10 @@ class PDFPageViewBuffer {
 }
 
 
-class WebPDFPageViewer {
-
-}
-
 /**
  * Simple viewer control to display PDF content/pages.
  */
-class PDFViewer {
+class WebPDFPageViewer {
   #buffer = null;
 
   #altTextManager = null;
@@ -246,38 +244,41 @@ class PDFViewer {
 
   #textLayerMode = TextLayerMode.ENABLE;
 
+  protected container: HTMLDivElement;
+
+  protected viewer: HTMLDivElement;
+
+  protected linkService: PDFLinkService;
+
+  protected downloadManager: DownloadManager;
+
+  protected findService: PDFFindService;
+
   /**
    * @param {PDFViewerOptions} options
    */
-  constructor(options) {
-    const viewerVersion =
-      typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : null;
-    if (version !== viewerVersion) {
-      throw new Error(
-        `The API version "${version}" does not match the Viewer version "${viewerVersion}".`
-      );
+  constructor(
+    container: HTMLDivElement,
+    linkService: PDFLinkService,
+    downloadManager: DownloadManager,
+    findService: PDFFindService,
+    viewerOptions: WebPDFViewerOptions,
+  ) {
+    const viewer = container.firstElementChild;
+    if (container?.tagName !== "DIV" || viewer?.tagName !== "DIV") {
+      throw new Error("container必须是div类型的dom元素。");
     }
-    this.container = options.container;
-    this.viewer = options.viewer || options.container.firstElementChild;
-
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      if (this.container?.tagName !== "DIV" || this.viewer?.tagName !== "DIV") {
-        throw new Error("Invalid `container` and/or `viewer` option.");
-      }
-
-      if (
-        this.container.offsetParent &&
-        getComputedStyle(this.container).position !== "absolute"
-      ) {
-        throw new Error("The `container` must be absolutely positioned.");
-      }
+    this.container = container;
+    this.viewer = <HTMLDivElement>viewer;
+    if (container.offsetParent && getComputedStyle(container).position !== "absolute") {
+      throw new Error("container必须是绝对定位元素。");
     }
     this.#resizeObserver.observe(this.container);
 
     this.eventBus = options.eventBus;
-    this.linkService = options.linkService || new SimpleLinkService();
-    this.downloadManager = options.downloadManager || null;
-    this.findController = options.findController || null;
+    this.linkService = linkService;
+    this.downloadManager = downloadManager;
+    this.findService = findService;
     this.#altTextManager = options.altTextManager || null;
 
     if (this.findController) {
@@ -286,22 +287,16 @@ class PDFViewer {
     }
     this._scriptingManager = options.scriptingManager || null;
     this.#textLayerMode = options.textLayerMode ?? TextLayerMode.ENABLE;
-    this.#annotationMode =
-      options.annotationMode ?? AnnotationMode.ENABLE_FORMS;
-    this.#annotationEditorMode =
-      options.annotationEditorMode ?? AnnotationEditorType.NONE;
-    this.#annotationEditorHighlightColors =
-      options.annotationEditorHighlightColors || null;
-    this.#enableHighlightFloatingButton =
-      options.enableHighlightFloatingButton === true;
-    this.#enableUpdatedAddImage = options.enableUpdatedAddImage === true;
-    this.#enableNewAltTextWhenAddingImage =
-      options.enableNewAltTextWhenAddingImage === true;
+    this.#annotationMode = viewerOptions.annotationMode ?? AnnotationMode.ENABLE_FORMS;
+    this.#annotationEditorMode = options.annotationEditorMode ?? AnnotationEditorType.NONE;
+    this.#annotationEditorHighlightColors = options.annotationEditorHighlightColors || null;
+    this.#enableHighlightFloatingButton = viewerOptions.enableHighlightFloatingButton === true;
+    this.#enableUpdatedAddImage = viewerOptions.enableUpdatedAddImage === true;
+    this.#enableNewAltTextWhenAddingImage = viewerOptions.enableNewAltTextWhenAddingImage === true;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.enablePrintAutoRotate = options.enablePrintAutoRotate || false;
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      this.removePageBorders = options.removePageBorders || false;
-    }
+    this.removePageBorders = options.removePageBorders || false;
+
     this.maxCanvasPixels = options.maxCanvasPixels;
     this.l10n = options.l10n;
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
@@ -341,7 +336,7 @@ class PDFViewer {
     );
     this.presentationModeState = PresentationModeState.UNKNOWN;
     this._resetView();
- 
+
     if (
       (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
       this.removePageBorders
@@ -2400,4 +2395,4 @@ class PDFViewer {
   }
 }
 
-export { PagesCountLimit, PDFPageViewBuffer, PDFViewer };
+export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewer as PDFViewer };

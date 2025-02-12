@@ -14,6 +14,7 @@
  */
 
 import { ThemeMode } from "../../shared/theme";
+import { AnnotationMode } from "../../shared/util";
 
 enum OptionKind {
   BROWSER = 0x01,
@@ -52,7 +53,7 @@ export interface WebPDFViewerOptions {
   toolbarDensity: number;
   altTextLearnMoreUrl: string;
   annotationEditorMode: number;
-  annotationMode: number;
+  annotationMode: AnnotationMode;
   cursorToolOnLoad: number;
   defaultZoomDelay: number;
   defaultZoomValue: string;
@@ -120,7 +121,7 @@ export function defaultWebViewerOptions(): WebPDFViewerOptions {
     toolbarDensity: 0, // 0 = "normal", 1 = "compact", 2 = "touch" 后面改成枚举
     altTextLearnMoreUrl: "",
     annotationEditorMode: 0,
-    annotationMode: 2,
+    annotationMode: AnnotationMode.ENABLE_FORMS,
     cursorToolOnLoad: 2,
     defaultZoomDelay: 400,
     defaultZoomValue: "",
@@ -429,11 +430,11 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
     this._annotationEditorMode.value = value;
   }
 
-  get annotationMode(): number {
+  get annotationMode(): AnnotationMode {
     return this._annotationMode.value!;
   }
 
-  set annotationMode(value: number) {
+  set annotationMode(value: AnnotationMode) {
     this._annotationMode.value = value;
   }
 
