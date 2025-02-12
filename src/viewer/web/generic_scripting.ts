@@ -15,8 +15,6 @@
 
 import { getPdfFilenameFromUrl } from "../../display/display_utils";
 
-
-
 async function docProperties(pdfDocument) {
   const url = "",
     baseUrl = url.split("#", 1)[0];

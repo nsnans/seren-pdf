@@ -95,7 +95,7 @@ type RefProxy = {
   gen: number;
 }
 
-interface DocumentInitParameters {
+export interface DocumentInitParameters {
 
   /* The URL of the PDF */
   url?: string | URL | null;

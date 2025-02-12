@@ -67,6 +67,7 @@ export interface WebPDFViewerOptions {
   enablePermissions: boolean;
   enablePrintAutoRotate: boolean;
   enableScripting: boolean;
+  enableThumbnailView: boolean,
   enableUpdatedAddImage: boolean;
   externalLinkRel: string;
   externalLinkTarget: number;
@@ -135,6 +136,7 @@ export function defaultWebViewerOptions(): WebPDFViewerOptions {
     enablePermissions: false,
     enablePrintAutoRotate: true,
     enableScripting: false,
+    enableThumbnailView: true,
     enableUpdatedAddImage: false,
     externalLinkRel: "noopener noreferrer nofollow",
     externalLinkTarget: 0,
@@ -234,6 +236,8 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
   protected readonly _enablePrintAutoRotate = { value: <boolean | null>null, kind: OptionKind.VIEWER + OptionKind.PREFERENCE }
 
   protected readonly _enableScripting = { value: <boolean | null>null, kind: OptionKind.VIEWER + OptionKind.PREFERENCE }
+
+  protected readonly _enableThumbnailView = { value: <boolean | null>null, kind: OptionKind.VIEWER }
 
   protected readonly _enableUpdatedAddImage = { value: <boolean | null>null, kind: OptionKind.VIEWER + OptionKind.PREFERENCE }
 
@@ -540,6 +544,14 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
 
   set enableScripting(value: boolean) {
     this._enableScripting.value = value;
+  }
+
+  get enableThumbnailView(): boolean {
+    return this._enableThumbnailView.value!;
+  }
+
+  set enableThumbnailView(value: boolean) {
+    this._enableThumbnailView.value = value;
   }
 
   get enableUpdatedAddImage(): boolean {

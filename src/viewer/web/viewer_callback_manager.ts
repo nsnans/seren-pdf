@@ -1,3 +1,4 @@
+import { PDFDocumentProxy } from "../../display/api";
 
 
 export interface WebPDFViewerCallbackManager {
@@ -12,6 +13,10 @@ export class GenericWebPDFViewerCallbackManager implements WebPDFViewerCallbackM
 
   constructor(interalCallbackManager: InteralWebPDFViewerCallbackManager) {
     this.interalCallbackManager = interalCallbackManager;
+  }
+
+  onPDFDocumentLoaded(callback: (document: PDFDocumentProxy) => void) {
+
   }
 }
 

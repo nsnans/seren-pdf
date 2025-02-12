@@ -71,7 +71,7 @@ import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { PDFSidebar } from "./pdf_sidebar";
 import { PDFThumbnailViewer } from "./pdf_thumbnail_viewer";
-import { PDFViewer } from "./pdf_viewer";
+import { PDFViewer } from "./page_view_manager";
 import { SecondaryToolbar } from "./secondary_toolbar";
 import { Toolbar } from "./toolbar-geckoview";
 import { ViewHistory } from "./view_history";

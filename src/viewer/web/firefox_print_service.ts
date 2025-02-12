@@ -60,24 +60,23 @@ function composePage(
     Promise.all([
       pdfDocument.getPage(pageNumber),
       printAnnotationStoragePromise,
-    ])
-      .then(function ([pdfPage, printAnnotationStorage]) {
-        if (currentRenderTask) {
-          currentRenderTask.cancel();
-          currentRenderTask = null;
-        }
-        const renderContext = {
-          canvasContext: ctx,
-          transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
-          viewport: pdfPage.getViewport({ scale: 1, rotation: size.rotation }),
-          intent: "print",
-          annotationMode: AnnotationMode.ENABLE_STORAGE,
-          optionalContentConfigPromise,
-          printAnnotationStorage,
-        };
-        currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
-        return thisRenderTask.promise;
-      })
+    ]).then(function ([pdfPage, printAnnotationStorage]) {
+      if (currentRenderTask) {
+        currentRenderTask.cancel();
+        currentRenderTask = null;
+      }
+      const renderContext = {
+        canvasContext: ctx,
+        transform: [PRINT_UNITS, 0, 0, PRINT_UNITS, 0, 0],
+        viewport: pdfPage.getViewport({ scale: 1, rotation: size.rotation }),
+        intent: "print",
+        annotationMode: AnnotationMode.ENABLE_STORAGE,
+        optionalContentConfigPromise,
+        printAnnotationStorage,
+      };
+      currentRenderTask = thisRenderTask = pdfPage.render(renderContext);
+      return thisRenderTask.promise;
+    })
       .then(
         function () {
           // Tell the printEngine that rendering this canvas/page has finished.

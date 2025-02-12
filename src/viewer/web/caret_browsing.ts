@@ -54,7 +54,7 @@ class CaretBrowsingMode {
    * @param {DOMRect} rect2
    * @returns {boolean}
    */
-  #isOnSameLine(rect1, rect2) {
+  #isOnSameLine(rect1: DOMRect, rect2: DOMRect) {
     const top1 = rect1.y;
     const bot1 = rect1.bottom;
     const mid1 = rect1.y + rect1.height / 2;
@@ -95,7 +95,7 @@ class CaretBrowsingMode {
       rect.top >= this.#toolBarHeight &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
+      (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }

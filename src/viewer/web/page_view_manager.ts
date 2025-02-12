@@ -28,6 +28,7 @@
 // eslint-disable-next-line max-len
 /** @typedef {import("./pdf_scripting_manager").PDFScriptingManager} PDFScriptingManager */
 
+import { PDFDocumentProxy } from "../../display/api";
 import { PixelsPerInch } from "../../display/display_utils";
 import { AnnotationEditorUIManager } from "../../display/editor/tools";
 import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../shared/util";
@@ -59,7 +60,7 @@ import {
 } from "../common/ui_utils";
 import { GenericL10n } from "./genericl10n";
 import { PDFFindService } from "./pdf_finder_service";
-import { PDFPageView } from "./pdf_page_view";
+import { PDFPageView } from "./page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
 
@@ -195,7 +196,8 @@ class PDFPageViewBuffer {
 /**
  * Simple viewer control to display PDF content/pages.
  */
-class WebPDFPageViewer {
+class WebPDFPageViewManager {
+
   #buffer = null;
 
   #altTextManager = null;
@@ -204,7 +206,7 @@ class WebPDFPageViewer {
 
   #annotationEditorMode = AnnotationEditorType.NONE;
 
-  #annotationEditorUIManager = null;
+  #annotationEditorUIManager: AnnotationEditorUIManager | null = null;
 
   #annotationMode = AnnotationMode.ENABLE_FORMS;
 
@@ -788,7 +790,7 @@ class WebPDFPageViewer {
   /**
    * @param {PDFDocumentProxy} pdfDocument
    */
-  setDocument(pdfDocument) {
+  setDocument(pdfDocument: PDFDocumentProxy) {
     if (this.pdfDocument) {
       this.eventBus.dispatch("pagesdestroy", { source: this });
 
@@ -2395,4 +2397,4 @@ class WebPDFPageViewer {
   }
 }
 
-export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewer as PDFViewer };
+export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewManager as PDFViewer };
