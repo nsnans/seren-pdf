@@ -158,9 +158,9 @@ export class PageViewport {
 
   public transform: TransformType;
 
-  protected width: number;
+  public width: number;
 
-  protected height: number;
+  public height: number;
 
   constructor(
     viewBox: RectType,

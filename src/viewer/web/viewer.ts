@@ -15,7 +15,7 @@ import { PDFPresentationMode } from "./pdf_presentation_mode";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { PDFSidebar } from "./pdf_sidebar";
-import { PDFViewer } from "./page_view_manager";
+import { WebPDFPageViewManager } from "./page_view_manager";
 import { WebPDFThumbnailService } from "./thumbnail_service";
 import { ViewHistory } from "./view_history";
 import { WebPDFViewerCallbackManager } from "./viewer_callback_manager";
@@ -49,7 +49,7 @@ export class WebPDFViewer {
 
   protected pdfLoadingTask: PDFDocumentLoadingTask | null = null;
 
-  protected pdfViewer: PDFViewer;
+  protected pageViewManager: PDFViewer;
 
   protected pdfSource = PDFSource.UNLOAD;
 
@@ -132,7 +132,7 @@ export class WebPDFViewer {
   protected _caretBrowsing: null;
 
   protected _isScrolling = false;
-  
+
   protected pdfAttachmentViewer: any;
 
   constructor(
@@ -144,14 +144,14 @@ export class WebPDFViewer {
     const viewerOptions = this.viewerOptions = viewerContext.getViewerOptions();
     // 等待从localStorage中读取属性，这个原来有，但是现在暂时不用了，这个活儿不应该由我来干。
     this.viewerContainer = viewerContainer;
-    this.pdfViewer = this.initPDFViewer();
+    this.pageViewManager = this.initPageViewManager();
 
     this.thumbnailService = viewerOptions.enableThumbnailView ? new WebPDFThumbnailService() : null;
     this.pdfDocumentProperties = new PDFDocumentProperties();
   }
 
-  initPDFViewer() {
-    return new PDFViewer(
+  initPageViewManager() {
+    return new WebPDFPageViewManager(
       this.viewerContainer
     );
   }
@@ -217,7 +217,7 @@ export class WebPDFViewer {
     }
     this.pdfDocumentProperties?.setDocument(pdfDocument);
 
-    const pdfViewer = this.pdfViewer;
+    const pdfViewer = this.pageViewManager;
     pdfViewer.setDocument(pdfDocument);
     const { firstPagePromise, onePageRendered, pagesPromise } = pdfViewer;
 

@@ -26,6 +26,7 @@
 /** @typedef {import("../src/display/editor/tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
 
 import { AnnotationLayer } from "../../display/annotation_layer";
+import { PageViewport } from "../../display/display_utils";
 import { PresentationModeState } from "../common/ui_utils";
 
 /**
@@ -97,7 +98,7 @@ class AnnotationLayerBuilder {
    * @returns {Promise<void>} A promise that is resolved when rendering of the
    *   annotations is complete.
    */
-  async render(viewport, options, intent = "display") {
+  async render(viewport: PageViewport, options, intent = "display") {
     if (this.div) {
       if (this._cancelled || !this.annotationLayer) {
         return;

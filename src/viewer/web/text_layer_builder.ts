@@ -23,6 +23,10 @@
 import { removeNullCharacters } from "../common/ui_utils";
 import { normalizeUnicode } from "../../shared/util";
 import { TextLayer } from "../../display/text_layer";
+import { PDFPageProxy } from "../../display/api";
+import { TextAccessibilityManager } from "../common/text_accessibility";
+import { PageViewport } from "../../display/display_utils";
+import { TextHighlighter } from "./text_highlighter";
 
 /**
  * @typedef {Object} TextLayerBuilderOptions
@@ -38,27 +42,35 @@ import { TextLayer } from "../../display/text_layer";
  * It does this by creating overlay divs over the PDF's text. These divs
  * contain text that matches the PDF text they are overlaying.
  */
-class TextLayerBuilder {
-  
+export class TextLayerBuilder {
+
   #enablePermissions = false;
 
-  #onAppend = null;
+  #onAppend: ((div: HTMLDivElement) => void) | null = null;
 
   #renderingDone = false;
 
-  #textLayer = null;
+  #textLayer: TextLayer | null = null;
 
   static #textLayers = new Map();
 
   static #selectionChangeAbortController = null;
 
-  constructor({
-    pdfPage,
-    highlighter = null,
-    accessibilityManager = null,
+  public div: HTMLDivElement;
+
+  protected pdfPage: PDFPageProxy;
+
+  protected accessibilityManager: TextAccessibilityManager | null;
+
+  protected highlighter: TextHighlighter | null;
+
+  constructor(
+    pdfPage: PDFPageProxy,
+    highlighter: TextHighlighter | null = null,
+    accessibilityManager: TextAccessibilityManager | null = null,
     enablePermissions = false,
-    onAppend = null,
-  }) {
+    onAppend: ((div: HTMLDivElement) => void) | null = null,
+  ) {
     this.pdfPage = pdfPage;
     this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
@@ -75,27 +87,15 @@ class TextLayerBuilder {
    * @param {PageViewport} viewport
    * @param {Object} [textContentParams]
    */
-  async render(viewport, textContentParams = null) {
+  async render(viewport: PageViewport) {
     if (this.#renderingDone && this.#textLayer) {
-      this.#textLayer.update({
-        viewport,
-        onBefore: this.hide.bind(this),
-      });
+      this.#textLayer.update(viewport, this.hide.bind(this));
       this.show();
       return;
     }
 
     this.cancel();
-    this.#textLayer = new TextLayer({
-      textContentSource: this.pdfPage.streamTextContent(
-        textContentParams || {
-          includeMarkedContent: true,
-          disableNormalization: true,
-        }
-      ),
-      container: this.div,
-      viewport,
-    });
+    this.#textLayer = new TextLayer(this.pdfPage.streamTextContent(true, true), this.div, viewport);
 
     const { textDivs, textContentItemsStr } = this.#textLayer;
     this.highlighter?.setTextMapping(textDivs, textContentItemsStr);
@@ -149,7 +149,7 @@ class TextLayerBuilder {
    * clicked. This reduces flickering of the content if the mouse is slowly
    * dragged up or down.
    */
-  #bindMouse(end) {
+  #bindMouse(end: HTMLDivElement) {
     const { div } = this;
 
     div.addEventListener("mousedown", () => {
@@ -158,8 +158,8 @@ class TextLayerBuilder {
 
     div.addEventListener("copy", event => {
       if (!this.#enablePermissions) {
-        const selection = document.getSelection();
-        event.clipboardData.setData(
+        const selection = document.getSelection()!;
+        event.clipboardData!.setData(
           "text/plain",
           removeNullCharacters(normalizeUnicode(selection.toString()))
         );
@@ -172,7 +172,7 @@ class TextLayerBuilder {
     TextLayerBuilder.#enableGlobalSelectionListener();
   }
 
-  static #removeGlobalSelectionListener(textLayerDiv) {
+  static #removeGlobalSelectionListener(textLayerDiv: HTMLDivElement) {
     this.#textLayers.delete(textLayerDiv);
 
     if (this.#textLayers.size === 0) {
@@ -307,8 +307,7 @@ class TextLayerBuilder {
           endDiv.style.width = parentTextLayer.style.width;
           endDiv.style.height = parentTextLayer.style.height;
           anchor.parentElement.insertBefore(
-            endDiv,
-            modifyStart ? anchor : anchor.nextSibling
+            endDiv, modifyStart ? anchor : anchor.nextSibling
           );
         }
 
@@ -318,5 +317,3 @@ class TextLayerBuilder {
     );
   }
 }
-
-export { TextLayerBuilder };

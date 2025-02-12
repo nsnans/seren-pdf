@@ -16,6 +16,7 @@
 /** @typedef {import("./display_utils").PageViewport} PageViewport */
 /** @typedef {import("./api").TextContent} TextContent */
 
+import { EvaluatorTextContent } from "../core/core_types";
 import { PlatformHelper } from "../platform/platform_helper";
 import {
   AbortException,
@@ -122,7 +123,11 @@ export class TextLayer {
   /**
    * @param {TextLayerParameters} options
    */
-  constructor({ textContentSource, container, viewport }: TextLayerParameters) {
+  constructor(
+    textContentSource: ReadableStream<EvaluatorTextContent>,
+    container: HTMLDivElement,
+    viewport: PageViewport
+  ) {
     if (textContentSource instanceof ReadableStream) {
       this.#textContentSource = textContentSource;
     } else if (typeof textContentSource === "object") {
@@ -228,7 +233,7 @@ export class TextLayer {
    * @param {TextLayerUpdateParameters} options
    * @returns {undefined}
    */
-  update({ viewport, onBefore = null }: TextLayerUpdateParameters) {
+  update(viewport: PageViewport, onBefore: (() => void) | null) {
     const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
     const rotation = viewport.rotation;
 

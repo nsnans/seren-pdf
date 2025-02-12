@@ -60,7 +60,7 @@ import {
 } from "../common/ui_utils";
 import { GenericL10n } from "./genericl10n";
 import { PDFFindService } from "./pdf_finder_service";
-import { PDFPageView } from "./page_view";
+import { WebPDFPageView } from "./page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
 
@@ -130,7 +130,7 @@ class PDFPageViewBuffer {
 
   #size = 0;
 
-  constructor(size) {
+  constructor(size: number) {
     this.#size = size;
   }
 
@@ -256,6 +256,8 @@ class WebPDFPageViewManager {
 
   protected findService: PDFFindService;
 
+  protected _pages: WebPDFPageView[] = [];
+
   /**
    * @param {PDFViewerOptions} options
    */
@@ -370,7 +372,7 @@ class WebPDFPageViewManager {
     return this._pages.length;
   }
 
-  getPageView(index) {
+  getPageView(index: number) {
     return this._pages[index];
   }
 
@@ -961,7 +963,7 @@ class WebPDFPageViewManager {
         }
 
         for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
-          const pageView = new PDFPageView({
+          const pageView = new WebPDFPageView({
             container: viewerElement,
             eventBus,
             id: pageNum,
@@ -1773,7 +1775,7 @@ class WebPDFPageViewManager {
   }
 
   /**
-   * @param {PDFPageView} pageView
+   * @param {WebPDFPageView} pageView
    * @returns {Promise<PDFPageProxy | null>}
    */
   async #ensurePdfPageLoaded(pageView) {
@@ -2397,4 +2399,4 @@ class WebPDFPageViewManager {
   }
 }
 
-export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewManager as PDFViewer };
+export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewManager };

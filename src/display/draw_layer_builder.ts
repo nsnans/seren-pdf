@@ -15,33 +15,24 @@
 
 import { DrawLayer } from "./draw_layer";
 
-
-/**
- * @typedef {Object} DrawLayerBuilderOptions
- * @property {number} pageIndex
- */
-
 export class DrawLayerBuilder {
 
   #drawLayer: DrawLayer | null = null;
 
-  /**
-   * @param {DrawLayerBuilderOptions} options
-   */
-  constructor(options) {
-    this.pageIndex = options.pageIndex;
+  protected pageIndex: number;
+
+  constructor(pageIndex: number) {
+    this.pageIndex = pageIndex;
   }
 
   /**
-   * @param {string} intent (default value is 'display')
+   * @param intent (default value is 'display')
    */
   async render(intent = "display") {
     if (intent !== "display" || this.#drawLayer || this._cancelled) {
       return;
     }
-    this.#drawLayer = new DrawLayer({
-      pageIndex: this.pageIndex,
-    });
+    this.#drawLayer = new DrawLayer(this.pageIndex);
   }
 
   cancel() {
