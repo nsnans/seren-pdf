@@ -63,10 +63,13 @@ import { PDFFindService } from "./pdf_finder_service";
 import { WebPDFPageView } from "./page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
+import { WebPDFViewer } from './viewer';
+import { AnnotationStorage } from "../../display/annotation_storage";
+import { FieldObject } from "../../core/core_types";
 
 const DEFAULT_CACHE_SIZE = 10;
 
-const PagesCountLimit = {
+export const PagesCountLimit = {
   FORCE_SCROLL_MODE_PAGE: 10000,
   FORCE_LAZY_PAGE_INIT: 5000,
   PAUSE_EAGER_PAGE_INIT: 250,
@@ -124,7 +127,7 @@ function isValidAnnotationEditorMode(mode) {
  *   rendering. The default value is `false`.
  */
 
-class PDFPageViewBuffer {
+export class PDFPageViewBuffer {
   // Here we rely on the fact that `Set`s preserve the insertion order.
   #buf = new Set();
 
@@ -192,11 +195,19 @@ class PDFPageViewBuffer {
   }
 }
 
+export interface WebPDFViewLayerProperties {
+  readonly annotationEditorUIManager: AnnotationEditorUIManager | null
+  readonly annotationStorage: AnnotationStorage | null
+  readonly downloadManager: DownloadManager;
+  readonly enableScripting: boolean;
+  readonly fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null;
+  readonly linkService: PDFLinkService;
+}
 
 /**
  * Simple viewer control to display PDF content/pages.
  */
-class WebPDFPageViewManager {
+export class WebPDFPageViewManager {
 
   #buffer = null;
 
@@ -228,7 +239,7 @@ class WebPDFPageViewManager {
 
   #switchAnnotationEditorModeAC = null;
 
-  #switchAnnotationEditorModeTimeoutId = null;
+  #switchAnnotationEditorModeTimeoutId: number | null = null;
 
   #getAllTextInProgress = false;
 
@@ -257,6 +268,15 @@ class WebPDFPageViewManager {
   protected findService: PDFFindService;
 
   protected _pages: WebPDFPageView[] = [];
+
+  protected pdfDocument: PDFDocumentProxy | null = null;
+
+  protected _currentPageNumber: number | null = null;
+
+  protected _currentScale: number = DEFAULT_SCALE;
+
+  protected imageResourcesPath: string;
+  maxCanvasPixels: number;
 
   /**
    * @param {PDFViewerOptions} options
@@ -396,24 +416,15 @@ class WebPDFPageViewManager {
     return this.#annotationMode === AnnotationMode.ENABLE_FORMS;
   }
 
-  /**
-   * @type {boolean}
-   */
-  get enableScripting() {
+  get enableScripting(): boolean {
     return !!this._scriptingManager;
   }
 
-  /**
-   * @type {number}
-   */
   get currentPageNumber() {
-    return this._currentPageNumber;
+    return this._currentPageNumber!;
   }
 
-  /**
-   * @param {number} val - The page number.
-   */
-  set currentPageNumber(val) {
+  set currentPageNumber(val: number) {
     if (!Number.isInteger(val)) {
       throw new Error("Invalid page number.");
     }
@@ -427,10 +438,10 @@ class WebPDFPageViewManager {
   }
 
   /**
-   * @returns {boolean} Whether the pageNumber is valid (within bounds).
+   * @returns Whether the pageNumber is valid (within bounds).
    * @private
    */
-  _setCurrentPageNumber(val, resetCurrentPageView = false) {
+  _setCurrentPageNumber(val: number, resetCurrentPageView = false) {
     if (this._currentPageNumber === val) {
       if (resetCurrentPageView) {
         this.#resetCurrentPageView();
@@ -488,16 +499,14 @@ class WebPDFPageViewManager {
   /**
    * @type {number}
    */
-  get currentScale() {
-    return this._currentScale !== UNKNOWN_SCALE
-      ? this._currentScale
-      : DEFAULT_SCALE;
+  get currentScale(): number {
+    return this._currentScale !== UNKNOWN_SCALE ? this._currentScale : DEFAULT_SCALE;
   }
 
   /**
-   * @param {number} val - Scale of the pages in percents.
+   * @param val - Scale of the pages in percents.
    */
-  set currentScale(val) {
+  set currentScale(val: number) {
     if (isNaN(val)) {
       throw new Error("Invalid numeric scale.");
     }
@@ -584,14 +593,14 @@ class WebPDFPageViewManager {
     return this.pdfDocument ? this._pagesCapability.promise : null;
   }
 
-  get _layerProperties() {
+  get _layerProperties(): WebPDFViewLayerProperties {
     const self = this;
     return shadow(this, "_layerProperties", {
       get annotationEditorUIManager() {
         return self.#annotationEditorUIManager;
       },
       get annotationStorage() {
-        return self.pdfDocument?.annotationStorage;
+        return self.pdfDocument?.annotationStorage ?? null;
       },
       get downloadManager() {
         return self.downloadManager;
@@ -600,13 +609,13 @@ class WebPDFPageViewManager {
         return !!self._scriptingManager;
       },
       get fieldObjectsPromise() {
-        return self.pdfDocument?.getFieldObjects();
+        return self.pdfDocument?.getFieldObjects() ?? null;
       },
       get findController() {
         return self.findController;
       },
       get hasJSActionsPromise() {
-        return self.pdfDocument?.hasJSActions();
+        return self.pdfDocument?.hasJSActions() ?? null;
       },
       get linkService() {
         return self.linkService;
@@ -963,22 +972,20 @@ class WebPDFPageViewManager {
         }
 
         for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
-          const pageView = new WebPDFPageView({
-            eventBus,
-            id: pageNum,
+          const pageView = new WebPDFPageView(
+            pageNum,
             scale,
-            defaultViewport: viewport.clone(),
+            viewport.clone(),
             optionalContentConfigPromise,
-            renderingQueue: this.renderingQueue,
             textLayerMode,
             annotationMode,
-            imageResourcesPath: this.imageResourcesPath,
-            maxCanvasPixels: this.maxCanvasPixels,
+            this.imageResourcesPath,
+            this.maxCanvasPixels,
             pageColors,
             l10n: this.l10n,
             layerProperties: this._layerProperties,
             enableHWA: this.#enableHWA,
-          });
+          );
           this._pages.push(pageView);
         }
         // Set the first `pdfPage` immediately, since it's already loaded,
@@ -2171,35 +2178,30 @@ class WebPDFPageViewManager {
 
   /**
    * Go to the next page, taking scroll/spread-modes into account.
-   * @returns {boolean} Whether navigation occurred.
+   * @returns Whether navigation occurred.
    */
   nextPage() {
-    const currentPageNumber = this._currentPageNumber,
-      pagesCount = this.pagesCount;
+    const currentPageNumber = this._currentPageNumber!, pagesCount = this.pagesCount;
 
     if (currentPageNumber >= pagesCount) {
       return false;
     }
-    const advance =
-      this._getPageAdvance(currentPageNumber, /* previous = */ false) || 1;
 
+    const advance = this._getPageAdvance(currentPageNumber, false) || 1;
     this.currentPageNumber = Math.min(currentPageNumber + advance, pagesCount);
     return true;
   }
 
   /**
    * Go to the previous page, taking scroll/spread-modes into account.
-   * @returns {boolean} Whether navigation occurred.
+   * @returns  Whether navigation occurred.
    */
   previousPage() {
-    const currentPageNumber = this._currentPageNumber;
-
+    const currentPageNumber = this._currentPageNumber!;
     if (currentPageNumber <= 1) {
       return false;
     }
-    const advance =
-      this._getPageAdvance(currentPageNumber, /* previous = */ true) || 1;
-
+    const advance = this._getPageAdvance(currentPageNumber, true) || 1;
     this.currentPageNumber = Math.max(currentPageNumber - advance, 1);
     return true;
   }
@@ -2397,5 +2399,3 @@ class WebPDFPageViewManager {
     }
   }
 }
-
-export { PagesCountLimit, PDFPageViewBuffer, WebPDFPageViewManager };

@@ -1,6 +1,5 @@
 import { PDFDocumentProxy } from "../../display/api";
 
-
 export interface WebPDFViewerCallbackManager {
 }
 

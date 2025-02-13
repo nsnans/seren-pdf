@@ -34,6 +34,7 @@ import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder"
 import { AnnotationLayerBuilder } from "./annotation_layer_builder";
 import { GenericL10n } from "./genericl10n";
 import { L10n } from "./l10n";
+import { WebPDFViewLayerProperties } from "./page_view_manager";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 import { TextHighlighter } from "./text_highlighter";
 import { TextLayerBuilder } from "./text_layer_builder";
@@ -91,7 +92,7 @@ export class WebPDFPageView {
 
   #isEditing = false;
 
-  #layerProperties = null;
+  #layerProperties: WebPDFViewLayerProperties;
 
   #loadingId: number | null = null;
 
@@ -158,7 +159,7 @@ export class WebPDFPageView {
 
   protected canvas: HTMLCanvasElement | null = null;
 
-  protected pdfPage: PDFPageProxy | null;
+  public pdfPage: PDFPageProxy | null;
 
   protected _accessibilityManager: TextAccessibilityManager | null = null;
 
@@ -166,7 +167,9 @@ export class WebPDFPageView {
 
   protected outputScale: OutputScale | null = null;
 
-  protected _optionalContentConfigPromise: Promise<OptionalContentConfig> | null;
+  protected _optionalContentConfigPromise: Promise<OptionalContentConfig>;
+
+  protected _annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
 
   /**
    * Page要和HTMLDivElement解开耦合，单个Page不需要挂到HTML的元素上去
@@ -176,9 +179,9 @@ export class WebPDFPageView {
     pageNum: number,
     scale: number,
     defaultViewport: PageViewport,
-    optionalContentConfigPromise: Promise<OptionalContentConfig> | null,
-    textLayerMode: TextLayerMode | null,
-    annotationMode: AnnotationMode | null,
+    optionalContentConfigPromise: Promise<OptionalContentConfig>,
+    textLayerMode: TextLayerMode,
+    annotationMode: AnnotationMode,
     imageResourcesPath: string | null,
     maxCanvasPixels: number,
     pageColors: {
@@ -186,13 +189,11 @@ export class WebPDFPageView {
       background: string;
     } | null,
     l10n: L10n | null,
-    layerProperties: this._layerProperties,
+    layerProperties: WebPDFViewLayerProperties,
     enableHWA: boolean,
   ) {
-
     this.pageNum = pageNum;
     this.#layerProperties = layerProperties;
-
     this.pdfPage = null;
     this.pageLabel = null;
     this.rotation = 0;
@@ -200,8 +201,8 @@ export class WebPDFPageView {
     this.viewport = defaultViewport;
     this.pdfPageRotate = defaultViewport.rotation;
     this._optionalContentConfigPromise = optionalContentConfigPromise;
-    this.#textLayerMode = textLayerMode ?? TextLayerMode.ENABLE;
-    this.#annotationMode = annotationMode ?? AnnotationMode.ENABLE_FORMS;
+    this.#textLayerMode = textLayerMode;
+    this.#annotationMode = annotationMode;
     this.imageResourcesPath = imageResourcesPath || "";
     this.maxCanvasPixels = maxCanvasPixels ?? AppOptions.get("maxCanvasPixels");
     this.pageColors = pageColors;
@@ -380,9 +381,7 @@ export class WebPDFPageView {
     let error = null;
     try {
       await this.annotationLayer!.render(
-        this.viewport,
-        { structTreeLayer: this.structTreeLayer },
-        "display"
+        this.viewport, this.structTreeLayer, "display"
       );
     } catch (ex) {
       console.error(`#renderAnnotationLayer: "${ex}".`);
@@ -869,23 +868,23 @@ export class WebPDFPageView {
       } = this.#layerProperties;
 
       this._annotationCanvasMap ||= new Map();
-      this.annotationLayer = new AnnotationLayerBuilder({
+      this.annotationLayer = new AnnotationLayerBuilder(
         pdfPage,
-        annotationStorage,
-        imageResourcesPath: this.imageResourcesPath,
-        renderForms: this.#annotationMode === AnnotationMode.ENABLE_FORMS,
         linkService,
+        annotationStorage,
         downloadManager,
+        this.imageResourcesPath,
+        this.#annotationMode === AnnotationMode.ENABLE_FORMS,
         enableScripting,
         hasJSActionsPromise,
         fieldObjectsPromise,
-        annotationCanvasMap: this._annotationCanvasMap,
-        accessibilityManager: this._accessibilityManager,
+        this._annotationCanvasMap,
+        this._accessibilityManager!,
         annotationEditorUIManager,
-        onAppend: (annotationLayerDiv: HTMLDivElement) => {
+        (annotationLayerDiv: HTMLDivElement) => {
           this.#addLayer(annotationLayerDiv, "annotationLayer");
         },
-      });
+      );
     }
 
     const renderContinueCallback = cont => {

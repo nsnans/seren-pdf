@@ -370,7 +370,7 @@ export class MessageHandler extends AbstractMessageHandler {
     this.on(action, fn);
   }
 
-  GetAnnotations(pageIndex: number, intent: number) {
+  GetAnnotations(pageIndex: number, intent: number): Promise<AnnotationData[]> {
     const action = MessageHandlerAction.GetAnnotations;
     const data: GetAnnotationsMessage = { pageIndex, intent };
     return this.sendWithPromise(action, data);

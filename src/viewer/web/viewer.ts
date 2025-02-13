@@ -152,7 +152,8 @@ export class WebPDFViewer {
 
   initPageViewManager() {
     return new WebPDFPageViewManager(
-      this.viewerContainer
+      this.viewerContainer,
+      maxCanvasPixels: AppOptions.get("maxCanvasPixels"),
     );
   }
 

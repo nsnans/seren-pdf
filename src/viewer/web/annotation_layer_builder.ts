@@ -12,19 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/** @typedef {import("../src/display/api").PDFPageProxy} PDFPageProxy */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/display_utils").PageViewport} PageViewport */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/annotation_storage").AnnotationStorage} AnnotationStorage */
-/** @typedef {import("./interfaces").IDownloadManager} IDownloadManager */
-/** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
-// eslint-disable-next-line max-len
-/** @typedef {import("./text_accessibility.js").TextAccessibilityManager} TextAccessibilityManager */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/editor/tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
-
 import { AnnotationLayer } from "../../display/annotation_layer";
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { PDFPageProxy } from "../../display/api";
@@ -34,35 +21,44 @@ import { DownloadManager } from "../common/component_types";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PresentationModeState } from "../common/ui_utils";
 import { PDFLinkService } from "./pdf_link_service";
-
-/**
- * @typedef {Object} AnnotationLayerBuilderOptions
- * @property {PDFPageProxy} pdfPage
- * @property {AnnotationStorage} [annotationStorage]
- * @property {string} [imageResourcesPath] - Path for image resources, mainly
- *   for annotation icons. Include trailing slash.
- * @property {boolean} renderForms
- * @property {IPDFLinkService} linkService
- * @property {IDownloadManager} [downloadManager]
- * @property {boolean} [enableScripting]
- * @property {Promise<boolean>} [hasJSActionsPromise]
- * @property {Promise<Object<string, Array<Object>> | null>}
- *   [fieldObjectsPromise]
- * @property {Map<string, HTMLCanvasElement>} [annotationCanvasMap]
- * @property {TextAccessibilityManager} [accessibilityManager]
- * @property {AnnotationEditorUIManager} [annotationEditorUIManager]
- * @property {function} [onAppend]
- */
+import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 
 export class AnnotationLayerBuilder {
 
-  #onAppend = null;
+  #onAppend: ((div: HTMLDivElement) => void) | null = null;
 
-  #eventAbortController = null;
+  #eventAbortController: AbortController | null = null;
 
-  /**
-   * @param {AnnotationLayerBuilderOptions} options
-   */
+  protected pdfPage: PDFPageProxy;
+
+  protected linkService: PDFLinkService;
+
+  protected downloadManager: DownloadManager;
+
+  protected imageResourcesPath: string;
+
+  protected renderForms: boolean;
+
+  protected annotationStorage: AnnotationStorage;
+
+  protected enableScripting: boolean;
+
+  protected _annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
+
+  protected _accessibilityManager: TextAccessibilityManager;
+
+  protected _cancelled: boolean;
+
+  protected div: HTMLDivElement | null;
+
+  protected _annotationEditorUIManager: AnnotationEditorUIManager;
+
+  protected _hasJSActionsPromise: Promise<boolean>;
+
+  protected _fieldObjectsPromise: Promise<void>;
+
+  protected annotationLayer: AnnotationLayer | null;
+
   constructor(
     pdfPage: PDFPageProxy,
     linkService: PDFLinkService,
@@ -71,12 +67,12 @@ export class AnnotationLayerBuilder {
     imageResourcesPath = "",
     renderForms = true,
     enableScripting = false,
-    hasJSActionsPromise = null,
-    fieldObjectsPromise = null,
-    annotationCanvasMap = null,
+    hasJSActionsPromise: Promise<boolean> | null = null,
+    fieldObjectsPromise: Promise<void> | null = null,
+    annotationCanvasMap: Map<string, HTMLCanvasElement> | null = null,
     accessibilityManager: TextAccessibilityManager,
     annotationEditorUIManager: AnnotationEditorUIManager,
-    onAppend = null,
+    onAppend: ((div: HTMLDivElement) => void) | null = null,
   ) {
     this.pdfPage = pdfPage;
     this.linkService = linkService;
@@ -86,7 +82,7 @@ export class AnnotationLayerBuilder {
     this.annotationStorage = annotationStorage;
     this.enableScripting = enableScripting;
     this._hasJSActionsPromise = hasJSActionsPromise || Promise.resolve(false);
-    this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve(null);
+    this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve();
     this._annotationCanvasMap = annotationCanvasMap;
     this._accessibilityManager = accessibilityManager;
     this._annotationEditorUIManager = annotationEditorUIManager;
@@ -95,26 +91,19 @@ export class AnnotationLayerBuilder {
     this.annotationLayer = null;
     this.div = null;
     this._cancelled = false;
-    this._eventBus = linkService.eventBus;
   }
 
   /**
-   * @param {PageViewport} viewport
-   * @param {Object} options
-   * @param {string} intent (default value is 'display')
-   * @returns {Promise<void>} A promise that is resolved when rendering of the
-   *   annotations is complete.
+   * @returns A promise that is resolved when rendering of the annotations is complete.
    */
-  async render(viewport: PageViewport, options, intent = "display") {
+  async render(viewport: PageViewport, structTreeLayer: StructTreeLayerBuilder | null, intent = "display") {
     if (this.div) {
       if (this._cancelled || !this.annotationLayer) {
         return;
       }
       // If an annotationLayer already exists, refresh its children's
       // transformation matrices.
-      this.annotationLayer!.update({
-        viewport: viewport.clone({ dontFlip: true }),
-      });
+      this.annotationLayer!.update(viewport.clone(null, null, null, null, true));
       return;
     }
 
@@ -138,17 +127,17 @@ export class AnnotationLayerBuilder {
       return;
     }
 
-    this.annotationLayer = new AnnotationLayer({
+    this.annotationLayer = new AnnotationLayer(
       div,
-      accessibilityManager: this._accessibilityManager,
-      annotationCanvasMap: this._annotationCanvasMap,
-      annotationEditorUIManager: this._annotationEditorUIManager,
-      page: this.pdfPage,
-      viewport: viewport.clone({ dontFlip: true }),
-      structTreeLayer: options?.structTreeLayer || null,
-    });
+      this._accessibilityManager,
+      this._annotationCanvasMap!,
+      this._annotationEditorUIManager,
+      this.pdfPage,
+      viewport.clone(null, null, null, null, true),
+      structTreeLayer,
+    );
 
-    await this.annotationLayer.render({
+    const x = {
       annotations,
       imageResourcesPath: this.imageResourcesPath,
       renderForms: this.renderForms,
@@ -158,7 +147,19 @@ export class AnnotationLayerBuilder {
       enableScripting: this.enableScripting,
       hasJSActions,
       fieldObjects,
-    });
+    }
+
+    await this.annotationLayer.render(
+      annotations,
+      this.imageResourcesPath,
+      this.renderForms,
+      this.linkService,
+      this.downloadManager,
+      this.annotationStorage,
+      this.enableScripting,
+      hasJSActions,
+      fieldObjects,
+    );
 
     // Ensure that interactive form elements in the annotationLayer are
     // disabled while PresentationMode is active (see issue 12232).
@@ -167,14 +168,6 @@ export class AnnotationLayerBuilder {
     }
     if (!this.#eventAbortController) {
       this.#eventAbortController = new AbortController();
-
-      this._eventBus?._on(
-        "presentationmodechanged",
-        evt => {
-          this.#updatePresentationModeState(evt.state);
-        },
-        { signal: this.#eventAbortController.signal }
-      );
     }
   }
 
@@ -212,10 +205,10 @@ export class AnnotationLayerBuilder {
         return;
     }
     for (const section of this.div.childNodes) {
-      if (section.hasAttribute("data-internal-link")) {
+      if ((<HTMLElement>section).hasAttribute("data-internal-link")) {
         continue;
       }
-      section.inert = disableFormElements;
+      (<HTMLElement>section).inert = disableFormElements;
     }
   }
 }

@@ -270,20 +270,19 @@ export class PageViewport {
    * @param {PageViewportCloneParameters} [params]
    * @returns {PageViewport} Cloned viewport.
    */
-  clone({
-    scale = this.scale,
-    rotation = this.rotation,
-    offsetX = this.offsetX,
-    offsetY = this.offsetY,
+  clone(
+    scale: number | null = null,
+    rotation: number | null = null,
+    offsetX: number | null = null,
+    offsetY: number | null = null,
     dontFlip = false,
-  }: PageViewportCloneParameters): PageViewport {
+  ): PageViewport {
+    scale ||= this.scale;
+    rotation ||= this.rotation;
+    offsetX ||= this.offsetX;
+    offsetY ||= this.offsetY;
     return new PageViewport(
-      <RectType>this.viewBox.slice(),
-      scale,
-      rotation,
-      offsetX,
-      offsetY,
-      dontFlip,
+      <RectType>this.viewBox.slice(), scale, rotation, offsetX, offsetY, dontFlip,
     );
   }
 

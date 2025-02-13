@@ -3232,10 +3232,7 @@ export class AnnotationLayer {
 
     this.div.append(element);
     this.#accessibilityManager?.moveElementInDOM(
-      this.div,
-      element,
-      contentElement,
-      /* isRemovable = */ false
+      this.div, element, contentElement, false
     );
   }
 
@@ -3245,8 +3242,17 @@ export class AnnotationLayer {
    * @param {AnnotationLayerParameters} params
    * @memberof AnnotationLayer
    */
-  async render(params) {
-    const annotations: AnnotationData[] = params.annotations;
+  async render(
+    annotations: AnnotationData[],
+    imageResourcesPath: string,
+    renderForms: boolean,
+    linkService: PDFLinkService,
+    downloadManager: DownloadManager,
+    annotationStorage: AnnotationStorage,
+    enableScripting: boolean,
+    hasJSActions: boolean,
+    fieldObjects,
+  ) {
     const layer = this.div;
     setLayerDimensions(layer, this.viewport);
 
@@ -3254,15 +3260,15 @@ export class AnnotationLayer {
     const elementParams = {
       data: <AnnotationData | null>null,
       layer,
-      linkService: params.linkService,
-      downloadManager: params.downloadManager,
-      imageResourcesPath: params.imageResourcesPath || "",
-      renderForms: params.renderForms !== false,
+      linkService: linkService,
+      downloadManager: downloadManager,
+      imageResourcesPath: imageResourcesPath || "",
+      renderForms: renderForms !== false,
       svgFactory: new DOMSVGFactory(),
-      annotationStorage: params.annotationStorage || new AnnotationStorage(),
-      enableScripting: params.enableScripting === true,
-      hasJSActions: params.hasJSActions,
-      fieldObjects: params.fieldObjects,
+      annotationStorage: annotationStorage || new AnnotationStorage(),
+      enableScripting: enableScripting === true,
+      hasJSActions: hasJSActions,
+      fieldObjects: fieldObjects,
       parent: this,
       elements: <AnnotationElement<AnnotationData>[]>[],
     };
