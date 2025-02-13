@@ -25,3 +25,9 @@ callbackManger可以在一些事件发生变化的时候，同步回调代码。
 
 然后第一件事是options，开关的处理，应当是一个partial对象
 
+page_view ==> 一个关键的类，负责管理单个页面的各种操作。
+
+渲染 => 生成四大Layer，TextLayer是一个隐藏的Layer，可以用来做文字的高亮、搜索、选中。
+
+page_view 应该提供接口供page_view_manager调用。并且有一些响应回调事件。
+

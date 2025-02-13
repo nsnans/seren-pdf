@@ -26,6 +26,7 @@
 import { PDFPageProxy, RenderTask } from "../../display/api";
 import { OutputScale, PageViewport, PixelsPerInch, RenderingCancelledException, setLayerDimensions } from "../../display/display_utils";
 import { DrawLayerBuilder } from "../../display/draw_layer_builder";
+import { OptionalContentConfig } from "../../display/optional_content_config";
 import { AbortException, AnnotationMode, shadow } from "../../shared/util";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../common/ui_utils";
@@ -33,11 +34,9 @@ import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder"
 import { AnnotationLayerBuilder } from "./annotation_layer_builder";
 import { GenericL10n } from "./genericl10n";
 import { L10n } from "./l10n";
-import { SimpleLinkService } from "./pdf_link_service";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 import { TextHighlighter } from "./text_highlighter";
 import { TextLayerBuilder } from "./text_layer_builder";
-
 /**
  * @typedef {Object} PDFPageViewOptions
  * @property {HTMLDivElement} [container] - The viewer element.
@@ -71,22 +70,6 @@ import { TextLayerBuilder } from "./text_layer_builder";
  * @property {boolean} [enableHWA] - Enables hardware acceleration for
  *   rendering. The default value is `false`.
  */
-
-const DEFAULT_LAYER_PROPERTIES =
-  typeof PDFJSDev === "undefined" || !PDFJSDev.test("COMPONENTS")
-    ? null
-    : {
-      annotationEditorUIManager: null,
-      annotationStorage: null,
-      downloadManager: null,
-      enableScripting: false,
-      fieldObjectsPromise: null,
-      findController: null,
-      hasJSActionsPromise: null,
-      get linkService() {
-        return new SimpleLinkService();
-      },
-    };
 
 const LAYERS_ORDER = new Map([
   ["canvasWrapper", 0],
@@ -139,15 +122,13 @@ export class WebPDFPageView {
     HTMLDivElement | null
   ] = [null, null, null, null];
 
-  protected id: number;
+  protected pageNum: number;
 
   protected div: HTMLDivElement;
 
   protected rotation: number;
 
   protected scale: number;
-
-  protected renderingId: string;
 
   protected maxCanvasPixels: number;
 
@@ -185,45 +166,51 @@ export class WebPDFPageView {
 
   protected outputScale: OutputScale | null = null;
 
-  /**
-   * @param {PDFPageViewOptions} options
-   */
-  constructor(options) {
-    const container = options.container;
-    const defaultViewport = options.defaultViewport;
+  protected _optionalContentConfigPromise: Promise<OptionalContentConfig> | null;
 
-    this.id = options.id;
-    this.renderingId = "page" + this.id;
-    this.#layerProperties = options.layerProperties || DEFAULT_LAYER_PROPERTIES;
+  /**
+   * Page要和HTMLDivElement解开耦合，单个Page不需要挂到HTML的元素上去
+   * PageView只需要提供页面的渲染就可以了，至于怎么渲染，由初始化的人来觉定
+   */
+  constructor(
+    pageNum: number,
+    scale: number,
+    defaultViewport: PageViewport,
+    optionalContentConfigPromise: Promise<OptionalContentConfig> | null,
+    textLayerMode: TextLayerMode | null,
+    annotationMode: AnnotationMode | null,
+    imageResourcesPath: string | null,
+    maxCanvasPixels: number,
+    pageColors: {
+      foreground: string;
+      background: string;
+    } | null,
+    l10n: L10n | null,
+    layerProperties: this._layerProperties,
+    enableHWA: boolean,
+  ) {
+
+    this.pageNum = pageNum;
+    this.#layerProperties = layerProperties;
 
     this.pdfPage = null;
     this.pageLabel = null;
     this.rotation = 0;
-    this.scale = options.scale || DEFAULT_SCALE;
+    this.scale = scale || DEFAULT_SCALE;
     this.viewport = defaultViewport;
     this.pdfPageRotate = defaultViewport.rotation;
-    this._optionalContentConfigPromise =
-      options.optionalContentConfigPromise || null;
-    this.#textLayerMode = options.textLayerMode ?? TextLayerMode.ENABLE;
-    this.#annotationMode =
-      options.annotationMode ?? AnnotationMode.ENABLE_FORMS;
-    this.imageResourcesPath = options.imageResourcesPath || "";
-    this.maxCanvasPixels =
-      options.maxCanvasPixels ?? AppOptions.get("maxCanvasPixels");
-    this.pageColors = options.pageColors || null;
-    this.#enableHWA = options.enableHWA || false;
+    this._optionalContentConfigPromise = optionalContentConfigPromise;
+    this.#textLayerMode = textLayerMode ?? TextLayerMode.ENABLE;
+    this.#annotationMode = annotationMode ?? AnnotationMode.ENABLE_FORMS;
+    this.imageResourcesPath = imageResourcesPath || "";
+    this.maxCanvasPixels = maxCanvasPixels ?? AppOptions.get("maxCanvasPixels");
+    this.pageColors = pageColors;
+    this.#enableHWA = enableHWA || false;
 
-    this.renderingQueue = options.renderingQueue;
-    this.l10n = options.l10n;
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      this.l10n ||= new GenericL10n();
-    }
+    this.l10n = l10n ||= new GenericL10n();
 
     this.renderTask = null;
     this.resume = null;
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      this._isStandalone = !this.renderingQueue?.hasViewer();
-    }
 
     this._annotationCanvasMap = null;
 
@@ -236,40 +223,27 @@ export class WebPDFPageView {
 
     const div = document.createElement("div");
     div.className = "page";
-    div.setAttribute("data-page-number", `${this.id}`);
+    div.setAttribute("data-page-number", `${this.pageNum}`);
     div.setAttribute("role", "region");
     div.setAttribute("data-l10n-id", "pdfjs-page-landmark");
-    div.setAttribute("data-l10n-args", JSON.stringify({ page: this.id }));
+    div.setAttribute("data-l10n-args", JSON.stringify({ page: this.pageNum }));
     this.div = div;
 
     this.#setDimensions();
-    container?.append(div);
 
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      this._isStandalone
-    ) {
-
-      const { optionalContentConfigPromise } = options;
-      if (optionalContentConfigPromise) {
-        // Ensure that the thumbnails always display the *initial* document
-        // state, for documents with optional content.
-        optionalContentConfigPromise.then(optionalContentConfig => {
-          if (
-            optionalContentConfigPromise !== this._optionalContentConfigPromise
-          ) {
-            return;
-          }
-          this.#useThumbnailCanvas.initialOptionalContent =
-            optionalContentConfig.hasInitialVisibility;
-        });
-      }
-
-      // Ensure that Fluent is connected in e.g. the COMPONENTS build.
-      if (!options.l10n) {
-        this.l10n.translate(this.div);
-      }
+    if (optionalContentConfigPromise) {
+      // Ensure that the thumbnails always display the *initial* document
+      // state, for documents with optional content.
+      optionalContentConfigPromise.then(optionalContentConfig => {
+        if (optionalContentConfigPromise !== this._optionalContentConfigPromise) {
+          return;
+        }
+        this.#useThumbnailCanvas.initialOptionalContent = optionalContentConfig.hasInitialVisibility;
+      });
     }
+
+    // Ensure that Fluent is connected in e.g. the COMPONENTS build.
+    this.l10n?.translate(this.div);
   }
 
   #addLayer(div: HTMLDivElement, name: string) {
@@ -336,12 +310,7 @@ export class WebPDFPageView {
       this.#previousRotation = viewport.rotation;
     }
 
-    setLayerDimensions(
-      this.div,
-      viewport,
-      /* mustFlip = */ true,
-      /* mustRotate = */ false
-    );
+    setLayerDimensions(this.div, viewport, true, false);
   }
 
   setPdfPage(pdfPage: PDFPageProxy) {
@@ -392,17 +361,17 @@ export class WebPDFPageView {
       this,
       "_textHighlighter",
       new TextHighlighter({
-        pageIndex: this.id - 1,
+        pageIndex: this.pageNum - 1,
         eventBus: this.eventBus,
         findController: this.#layerProperties.findController,
       })
     );
   }
 
-  #dispatchLayerRendered(name, error) {
+  #dispatchLayerRendered(name: string, error) {
     this.eventBus.dispatch(name, {
       source: this,
-      pageNumber: this.id,
+      pageNumber: this.pageNum,
       error,
     });
   }
@@ -495,12 +464,12 @@ export class WebPDFPageView {
     if (!this.zoomLayer) {
       return;
     }
-    const zoomLayerCanvas = this.zoomLayer.firstChild!;
+    const zoomLayerCanvas = <HTMLCanvasElement>this.zoomLayer.firstChild!;
     this.#viewportMap.delete(zoomLayerCanvas);
     // Zeroing the width and height causes Firefox to release graphics
     // resources immediately, which can greatly reduce memory consumption.
-    (<HTMLCanvasElement>zoomLayerCanvas).width = 0;
-    (<HTMLCanvasElement>zoomLayerCanvas).height = 0;
+    zoomLayerCanvas.width = 0;
+    zoomLayerCanvas.height = 0;
 
     if (removeFromDOM) {
       // Note: `ChildNode.remove` doesn't throw if the parent node is undefined.
@@ -513,13 +482,11 @@ export class WebPDFPageView {
     keepZoomLayer = false,
     keepAnnotationLayer = false,
     keepAnnotationEditorLayer = false,
-    keepXfaLayer = false,
     keepTextLayer = false,
   } = {}) {
     this.cancelRendering({
       keepAnnotationLayer,
       keepAnnotationEditorLayer,
-      keepXfaLayer,
       keepTextLayer,
     });
     this.renderingState = RenderingStates.INITIAL;
@@ -585,7 +552,6 @@ export class WebPDFPageView {
       keepZoomLayer: true,
       keepAnnotationLayer: true,
       keepAnnotationEditorLayer: true,
-      keepXfaLayer: true,
       keepTextLayer: true,
     });
   }
@@ -689,7 +655,7 @@ export class WebPDFPageView {
         }
         this.eventBus.dispatch("pagerendered", {
           source: this,
-          pageNumber: this.id,
+          pageNumber: this.pageNum,
           cssTransform: true,
           timestamp: performance.now(),
           error: this.#renderError,
@@ -708,7 +674,6 @@ export class WebPDFPageView {
       keepZoomLayer: true,
       keepAnnotationLayer: true,
       keepAnnotationEditorLayer: true,
-      keepXfaLayer: true,
       keepTextLayer: true,
     });
   }
@@ -774,11 +739,9 @@ export class WebPDFPageView {
     const originalViewport = this.#viewportMap.get(target);
     if (this.viewport !== originalViewport) {
       // The canvas may have been originally rotated; rotate relative to that.
-      const relativeRotation =
-        this.viewport.rotation - originalViewport.rotation;
+      const relativeRotation = this.viewport.rotation - originalViewport.rotation;
       const absRotation = Math.abs(relativeRotation);
-      let scaleX = 1,
-        scaleY = 1;
+      let scaleX = 1, scaleY = 1;
       if (absRotation === 90 || absRotation === 270) {
         const { width, height } = this.viewport;
         // Scale x and y because of the rotation.
@@ -843,7 +806,7 @@ export class WebPDFPageView {
 
     this.eventBus.dispatch("pagerendered", {
       source: this,
-      pageNumber: this.id,
+      pageNumber: this.pageNum,
       cssTransform: false,
       timestamp: performance.now(),
       error: this.#renderError,
@@ -1052,7 +1015,7 @@ export class WebPDFPageView {
         if (!annotationEditorUIManager) {
           return;
         }
-        this.drawLayer ||= new DrawLayerBuilder(this.id);
+        this.drawLayer ||= new DrawLayerBuilder(this.pageNum);
         await this.#renderDrawLayer();
         this.drawLayer.setParent(canvasWrapper);
 
@@ -1088,7 +1051,7 @@ export class WebPDFPageView {
 
     this.eventBus.dispatch("pagerender", {
       source: this,
-      pageNumber: this.id,
+      pageNumber: this.pageNum,
     });
     return resultPromise;
   }
@@ -1101,7 +1064,7 @@ export class WebPDFPageView {
 
     this.div.setAttribute(
       "data-l10n-args",
-      JSON.stringify({ page: this.pageLabel ?? this.id })
+      JSON.stringify({ page: this.pageLabel ?? this.pageNum })
     );
 
     if (this.pageLabel !== null) {

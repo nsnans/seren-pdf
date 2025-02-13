@@ -102,7 +102,7 @@ export class TextLayerBuilder {
     this.accessibilityManager?.setTextMapping(textDivs);
 
     await this.#textLayer.render();
-    this.#renderingDone = true;
+    this.#renderingDone =  true;
 
     const endOfContent = document.createElement("div");
     endOfContent.className = "endOfContent";

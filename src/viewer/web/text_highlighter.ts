@@ -28,7 +28,8 @@
  * TextHighlighter handles highlighting matches from the FindController in
  * either the text layer or XFA layer depending on the type of document.
  */
-class TextHighlighter {
+export class TextHighlighter {
+
   #eventAbortController = null;
 
   /**
@@ -308,5 +309,3 @@ class TextHighlighter {
     this._renderMatches(this.matches);
   }
 }
-
-export { TextHighlighter };

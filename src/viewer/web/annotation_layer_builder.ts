@@ -26,8 +26,14 @@
 /** @typedef {import("../src/display/editor/tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
 
 import { AnnotationLayer } from "../../display/annotation_layer";
+import { AnnotationStorage } from "../../display/annotation_storage";
+import { PDFPageProxy } from "../../display/api";
 import { PageViewport } from "../../display/display_utils";
+import { AnnotationEditorUIManager } from "../../display/editor/tools";
+import { DownloadManager } from "../common/component_types";
+import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PresentationModeState } from "../common/ui_utils";
+import { PDFLinkService } from "./pdf_link_service";
 
 /**
  * @typedef {Object} AnnotationLayerBuilderOptions
@@ -48,7 +54,8 @@ import { PresentationModeState } from "../common/ui_utils";
  * @property {function} [onAppend]
  */
 
-class AnnotationLayerBuilder {
+export class AnnotationLayerBuilder {
+
   #onAppend = null;
 
   #eventAbortController = null;
@@ -56,21 +63,21 @@ class AnnotationLayerBuilder {
   /**
    * @param {AnnotationLayerBuilderOptions} options
    */
-  constructor({
-    pdfPage,
-    linkService,
-    downloadManager,
-    annotationStorage = null,
+  constructor(
+    pdfPage: PDFPageProxy,
+    linkService: PDFLinkService,
+    downloadManager: DownloadManager,
+    annotationStorage: AnnotationStorage,
     imageResourcesPath = "",
     renderForms = true,
     enableScripting = false,
     hasJSActionsPromise = null,
     fieldObjectsPromise = null,
     annotationCanvasMap = null,
-    accessibilityManager = null,
-    annotationEditorUIManager = null,
+    accessibilityManager: TextAccessibilityManager,
+    annotationEditorUIManager: AnnotationEditorUIManager,
     onAppend = null,
-  }) {
+  ) {
     this.pdfPage = pdfPage;
     this.linkService = linkService;
     this.downloadManager = downloadManager;
@@ -105,7 +112,7 @@ class AnnotationLayerBuilder {
       }
       // If an annotationLayer already exists, refresh its children's
       // transformation matrices.
-      this.annotationLayer.update({
+      this.annotationLayer!.update({
         viewport: viewport.clone({ dontFlip: true }),
       });
       return;
@@ -189,7 +196,7 @@ class AnnotationLayerBuilder {
     return !!this.annotationLayer?.hasEditableAnnotations();
   }
 
-  #updatePresentationModeState(state) {
+  #updatePresentationModeState(state: PresentationModeState) {
     if (!this.div) {
       return;
     }
@@ -212,5 +219,3 @@ class AnnotationLayerBuilder {
     }
   }
 }
-
-export { AnnotationLayerBuilder };

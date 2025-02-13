@@ -70,7 +70,7 @@ export class L10n {
   }
 
   /** @inheritdoc */
-  async translate(element) {
+  async translate(element: HTMLDivElement) {
     (this.#elements ||= new Set()).add(element);
     try {
       this.#l10n.connectRoot(element);

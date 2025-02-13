@@ -964,7 +964,6 @@ class WebPDFPageViewManager {
 
         for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
           const pageView = new WebPDFPageView({
-            container: viewerElement,
             eventBus,
             id: pageNum,
             scale,
