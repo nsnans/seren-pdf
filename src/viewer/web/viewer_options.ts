@@ -16,6 +16,7 @@
 import { ThemeMode } from "../../shared/theme";
 import { AnnotationMode } from "../../shared/util";
 
+
 enum OptionKind {
   BROWSER = 0x01,
   VIEWER = 0x02,

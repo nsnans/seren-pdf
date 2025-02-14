@@ -63,10 +63,8 @@ import { PDFFindService } from "./pdf_finder_service";
 import { WebPDFPageView } from "./page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
-import { WebPDFViewer } from './viewer';
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { FieldObject } from "../../core/core_types";
-import { XRef } from "../../core/xref";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -983,9 +981,9 @@ export class WebPDFPageViewManager {
             this.imageResourcesPath,
             this.maxCanvasPixels,
             pageColors,
-            l10n: this.l10n,
-            layerProperties: this._layerProperties,
-            enableHWA: this.#enableHWA,
+            this.l10n,
+            this._layerProperties,
+            this.#enableHWA,
           );
           this._pages.push(pageView);
         }
