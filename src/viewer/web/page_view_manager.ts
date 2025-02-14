@@ -66,6 +66,7 @@ import { WebPDFViewerOptions } from './viewer_options';
 import { WebPDFViewer } from './viewer';
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { FieldObject } from "../../core/core_types";
+import { XRef } from "../../core/xref";
 
 const DEFAULT_CACHE_SIZE = 10;
 
