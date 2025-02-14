@@ -93,6 +93,10 @@ export declare global {
   declare interface Document {
     blockUnblockOnload?: (_flag: boolean) => void;
   }
+
+  declare interface MouseEvent {
+    originalTarget: Element | null;
+  }
 }
 
 export declare var ImageDecoder: {

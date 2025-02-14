@@ -12,19 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/** @typedef {import("../src/display/api").PDFDocumentProxy} PDFDocumentProxy */
-/** @typedef {import("./event_utils").EventBus} EventBus */
-/** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
-
-import { getCharacterType, getNormalizeWithNFKC } from "./pdf_find_utils";
+import { PDFDocumentProxy, TextItem } from "../../display/api";
+import { PDFLinkService } from "../common/component_types";
 import { binarySearchFirstItem, scrollIntoView } from "../common/ui_utils";
+import { getCharacterType, getNormalizeWithNFKC } from "./pdf_find_utils";
 
-const FindState = {
-  FOUND: 0,
-  NOT_FOUND: 1,
-  WRAPPED: 2,
-  PENDING: 3,
+export enum FindState {
+  FOUND = 0,
+  NOT_FOUND = 1,
+  WRAPPED = 2,
+  PENDING = 3,
 };
 
 const FIND_TIMEOUT = 250; // ms
@@ -44,7 +41,7 @@ const CHARACTERS_TO_NORMALIZE = {
   "\u00BC": "1/4", // Vulgar fraction one quarter
   "\u00BD": "1/2", // Vulgar fraction one half
   "\u00BE": "3/4", // Vulgar fraction three quarters
-};
+} as const;
 
 // These diacritics aren't considered as combining diacritics
 // when searching in a document:
@@ -94,16 +91,16 @@ const FIRST_CHAR_SYLLABLES_REG_EXP =
 
 const NFKC_CHARS_TO_NORMALIZE = new Map();
 
-let noSyllablesRegExp = null;
-let withSyllablesRegExp = null;
+let noSyllablesRegExp: RegExp | null = null;
+let withSyllablesRegExp: RegExp | null = null;
 
-function normalize(text) {
+function normalize(text: string): [string, [number, number][], boolean] {
   // The diacritics in the text or in the query can be composed or not.
   // So we use a decomposed text using NFD (and the same for the query)
   // in order to be sure that diacritics are in the same order.
 
   // Collect syllables length and positions.
-  const syllablePositions = [];
+  const syllablePositions: [number, number][] = [];
   let m;
   while ((m = SYLLABLES_REG_EXP.exec(text)) !== null) {
     let { index } = m;
@@ -178,13 +175,13 @@ function normalize(text) {
   // Thirdly, if o > n, then we push the element: [y - (s - n), o + s - n]
 
   // Collect diacritics length and positions.
-  const rawDiacriticsPositions = [];
+  const rawDiacriticsPositions: [number, number][] = [];
   while ((m = DIACRITICS_REG_EXP.exec(text)) !== null) {
     rawDiacriticsPositions.push([m[0].length, m.index]);
   }
 
   let normalized = text.normalize("NFD");
-  const positions = [[0, 0]];
+  const positions: [number, number][] = [[0, 0]];
   let rawDiacriticsIndex = 0;
   let syllableIndex = 0;
   let shift = 0;
@@ -194,11 +191,11 @@ function normalize(text) {
 
   normalized = normalized.replace(
     normalizationRegex,
-    (match, p1, p2, p3, p4, p5, p6, p7, p8, p9, i) => {
+    (_match, p1, p2, p3, p4, p5, p6, p7, p8, p9, i) => {
       i -= shiftOrigin;
       if (p1) {
         // Maybe fractions or quotations mark...
-        const replacement = CHARACTERS_TO_NORMALIZE[p1];
+        const replacement = CHARACTERS_TO_NORMALIZE[<keyof typeof CHARACTERS_TO_NORMALIZE>p1];
         const jj = replacement.length;
         for (let j = 1; j < jj; j++) {
           positions.push([i - shift + j, shift - j]);
@@ -349,7 +346,7 @@ function normalize(text) {
 // Determine the original, non-normalized, match index such that highlighting of
 // search results is correct in the `textLayer` for strings containing e.g. "½"
 // characters; essentially "inverting" the result of the `normalize` function.
-function getOriginalIndex(diffs, pos, len) {
+function getOriginalIndex(diffs: [number, number][], pos: number, len: number) {
   if (!diffs) {
     return [pos, len];
   }
@@ -378,42 +375,53 @@ function getOriginalIndex(diffs, pos, len) {
   return [oldStart, oldLen];
 }
 
-/**
- * @typedef {Object} PDFFindControllerOptions
- * @property {IPDFLinkService} linkService - The navigation/linking service.
- * @property {EventBus} eventBus - The application event bus.
- * @property {boolean} [updateMatchesCountOnProgress] - True if the matches
- *   count must be updated on progress or only when the last page is reached.
- *   The default value is `true`.
- */
+interface FindMatch {
+
+  /** The start of the matched text in the page's string contents.*/
+  index: number;
+
+  /** The length of the matched text.*/
+  length: number;
+
+}
 
 /**
- * Provides search functionality to find a given string in a PDF document.
+ * 一个用于查找PDF内容的服务
  */
-class PDFFindController {
+export class PDFContentFindService {
+
   #state = null;
 
   #updateMatchesCountOnProgress = true;
 
   #visitedPagesCount = 0;
 
+  protected _resumePageIdx: number | null = null;
+
+  protected _linkService: PDFLinkService;
+
+  protected _pdfDocument: PDFDocumentProxy | null = null;
+
+  protected _firstPageCapability: PromiseWithResolvers<void> | null = null;
+
+  protected _pageDiffs: [number, number][][] = [];
+
+  protected _pageContents: string[] = [];
+
+  protected _hasDiacritics: boolean[] = [];
+
+  protected _normalizedQuery: string | null = null;
+
   /**
-   * @param {PDFFindControllerOptions} options
+   * @param linkService - The navigation/linking service.
+   * @param updateMatchesCountOnProgress - True if the matches
+   *   count must be updated on progress or only when the last page is reached.
+   *   The default value is `true`.
    */
-  constructor({ linkService, eventBus, updateMatchesCountOnProgress = true }) {
+  constructor(linkService: PDFLinkService, updateMatchesCountOnProgress = true) {
     this._linkService = linkService;
-    this._eventBus = eventBus;
     this.#updateMatchesCountOnProgress = updateMatchesCountOnProgress;
-
-    /**
-     * Callback used to check if a `pageNumber` is currently visible.
-     * @type {function}
-     */
-    this.onIsPageVisible = null;
-
     this.#reset();
-    eventBus._on("find", this.#onFind.bind(this));
-    eventBus._on("findbarclose", this.#onFindBarClose.bind(this));
   }
 
   get highlightMatches() {
@@ -440,9 +448,9 @@ class PDFFindController {
    * Set a reference to the PDF document in order to search it.
    * Note that searching is not possible if this method is not called.
    *
-   * @param {PDFDocumentProxy} pdfDocument - The PDF document to search.
+   * @param pdfDocument - The PDF document to search.
    */
-  setDocument(pdfDocument) {
+  setDocument(pdfDocument: PDFDocumentProxy) {
     if (this._pdfDocument) {
       this.#reset();
     }
@@ -450,7 +458,7 @@ class PDFFindController {
       return;
     }
     this._pdfDocument = pdfDocument;
-    this._firstPageCapability.resolve();
+    this._firstPageCapability?.resolve();
   }
 
   #onFind(state) {
@@ -654,9 +662,8 @@ class PDFFindController {
    * Determine if the search query constitutes a "whole word", by comparing the
    * first/last character type with the preceding/following character type.
    */
-  #isEntireWord(content, startIdx, length) {
-    let match = content
-      .slice(0, startIdx)
+  #isEntireWord(content: string, startIdx: number, length: number) {
+    let match = content.slice(0, startIdx)
       .match(NOT_DIACRITIC_FROM_END_REG_EXP);
     if (match) {
       const first = content.charCodeAt(startIdx);
@@ -666,8 +673,7 @@ class PDFFindController {
       }
     }
 
-    match = content
-      .slice(startIdx + length)
+    match = content.slice(startIdx + length)
       .match(NOT_DIACRITIC_FROM_START_REG_EXP);
     if (match) {
       const last = content.charCodeAt(startIdx + length - 1);
@@ -680,52 +686,45 @@ class PDFFindController {
     return true;
   }
 
-  #convertToRegExpString(query, hasDiacritics) {
+  #convertToRegExpString(query: string, hasDiacritics: boolean): [boolean, string] {
     const { matchDiacritics } = this.#state;
     let isUnicode = false;
-    query = query.replaceAll(
-      SPECIAL_CHARS_REG_EXP,
-      (
-        match,
-        p1 /* to escape */,
-        p2 /* punctuation */,
-        p3 /* whitespaces */,
-        p4 /* diacritics */,
-        p5 /* letters */
-      ) => {
-        // We don't need to use a \s for whitespaces since all the different
-        // kind of whitespaces are replaced by a single " ".
+    query = query.replaceAll(SPECIAL_CHARS_REG_EXP, (
+      _match, p1 /* to escape */, p2 /* punctuation */, p3 /* whitespaces */,
+      p4 /* diacritics */, p5 /* letters */
+    ) => {
+      // We don't need to use a \s for whitespaces since all the different
+      // kind of whitespaces are replaced by a single " ".
 
-        if (p1) {
-          // Escape characters like *+?... to not interfer with regexp syntax.
-          return `[ ]*\\${p1}[ ]*`;
-        }
-        if (p2) {
-          // Allow whitespaces around punctuation signs.
-          return `[ ]*${p2}[ ]*`;
-        }
-        if (p3) {
-          // Replace spaces by \s+ to be sure to match any spaces.
-          return "[ ]+";
-        }
-        if (matchDiacritics) {
-          return p4 || p5;
-        }
-
-        if (p4) {
-          // Diacritics are removed with few exceptions.
-          return DIACRITICS_EXCEPTION.has(p4.charCodeAt(0)) ? p4 : "";
-        }
-
-        // A letter has been matched and it can be followed by any diacritics
-        // in normalized text.
-        if (hasDiacritics) {
-          isUnicode = true;
-          return `${p5}\\p{M}*`;
-        }
-        return p5;
+      if (p1) {
+        // Escape characters like *+?... to not interfer with regexp syntax.
+        return `[ ]*\\${p1}[ ]*`;
       }
-    );
+      if (p2) {
+        // Allow whitespaces around punctuation signs.
+        return `[ ]*${p2}[ ]*`;
+      }
+      if (p3) {
+        // Replace spaces by \s+ to be sure to match any spaces.
+        return "[ ]+";
+      }
+      if (matchDiacritics) {
+        return p4 || p5;
+      }
+
+      if (p4) {
+        // Diacritics are removed with few exceptions.
+        return DIACRITICS_EXCEPTION.has(p4.charCodeAt(0)) ? p4 : "";
+      }
+
+      // A letter has been matched and it can be followed by any diacritics
+      // in normalized text.
+      if (hasDiacritics) {
+        isUnicode = true;
+        return `${p5}\\p{M}*`;
+      }
+      return p5;
+    });
 
     const trailingSpaces = "[ ]*";
     if (query.endsWith(trailingSpaces)) {
@@ -750,7 +749,8 @@ class PDFFindController {
     return [isUnicode, query];
   }
 
-  #calculateMatch(pageIndex) {
+  // 这个方法用来计算到底谁是被匹配中的
+  #calculateMatch(pageIndex: number) {
     const query = this.#query;
     if (query.length === 0) {
       return; // Do nothing: the matches should be wiped out already.
@@ -794,12 +794,7 @@ class PDFFindController {
     }
   }
 
-  /**
-   * @typedef {Object} FindMatch
-   * @property {number} index - The start of the matched text in the page's
-   *   string contents.
-   * @property {number} length - The length of the matched text.
-   */
+
 
   /**
    * @param {string | string[]} query - The search query.
@@ -808,7 +803,7 @@ class PDFFindController {
    * @returns {FindMatch[] | undefined} An array of matches in the provided
    *   page.
    */
-  match(query, pageContent, pageIndex) {
+  match(query: string | string[], pageContent: string, pageIndex: number): FindMatch[] | null {
     const hasDiacritics = this._hasDiacritics[pageIndex];
 
     let isUnicode = false;
@@ -833,16 +828,16 @@ class PDFFindController {
     if (!query) {
       // The query can be empty because some chars like diacritics could have
       // been stripped out.
-      return undefined;
+      return null;
     }
 
     const { caseSensitive, entireWord } = this.#state;
     const flags = `g${isUnicode ? "u" : ""}${caseSensitive ? "" : "i"}`;
-    query = new RegExp(query, flags);
+    const queryExp = new RegExp(<string>query, flags);
 
     const matches = [];
     let match;
-    while ((match = query.exec(pageContent)) !== null) {
+    while ((match = queryExp.exec(pageContent)) !== null) {
       if (
         entireWord &&
         !this.#isEntireWord(pageContent, match.index, match[0].length)
@@ -861,35 +856,32 @@ class PDFFindController {
     }
 
     let deferred = Promise.resolve();
-    const textOptions = { disableNormalization: true };
     for (let i = 0, ii = this._linkService.pagesCount; i < ii; i++) {
-      const { promise, resolve } = Promise.withResolvers();
+      const { promise, resolve } = Promise.withResolvers<void>();
       this._extractTextPromises[i] = promise;
 
       // eslint-disable-next-line arrow-body-style
       deferred = deferred.then(() => {
-        return this._pdfDocument
-          .getPage(i + 1)
-          .then(pdfPage => pdfPage.getTextContent(textOptions))
-          .then(
-            textContent => {
-              const strBuf = [];
+        return this._pdfDocument!.getPage(i + 1)
+          .then(pdfPage => pdfPage.getTextContent(false, true))
+          .then(textContent => {
+            const strBuf = [];
 
-              for (const textItem of textContent.items) {
-                strBuf.push(textItem.str);
-                if (textItem.hasEOL) {
-                  strBuf.push("\n");
-                }
+            for (const textItem of textContent.items) {
+              strBuf.push((<TextItem>textItem).str);
+              if ((<TextItem>textItem).hasEOL) {
+                strBuf.push("\n");
               }
+            }
 
-              // Store the normalized page content (text items) as one string.
-              [
-                this._pageContents[i],
-                this._pageDiffs[i],
-                this._hasDiacritics[i],
-              ] = normalize(strBuf.join(""));
-              resolve();
-            },
+            // Store the normalized page content (text items) as one string.
+            [
+              this._pageContents[i],
+              this._pageDiffs[i],
+              this._hasDiacritics[i],
+            ] = normalize(strBuf.join(""));
+            resolve();
+          },
             reason => {
               console.error(
                 `Unable to get text content for page ${i + 1}`,
@@ -897,7 +889,7 @@ class PDFFindController {
               );
               // Page error -- assuming no text content.
               this._pageContents[i] = "";
-              this._pageDiffs[i] = null;
+              this._pageDiffs[i] = [];
               this._hasDiacritics[i] = false;
               resolve();
             }
@@ -1165,4 +1157,3 @@ class PDFFindController {
   }
 }
 
-export { FindState, PDFFindController };

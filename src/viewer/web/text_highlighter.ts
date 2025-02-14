@@ -31,6 +31,8 @@
 export class TextHighlighter {
 
   #eventAbortController = null;
+  
+  protected enabled: boolean;
 
   /**
    * @param {TextHighlighterOptions} options
@@ -100,15 +102,14 @@ export class TextHighlighter {
     this._updateMatches(/* reset = */ true);
   }
 
-  _convertMatches(matches, matchesLength) {
+  _convertMatches(matches: number[], matchesLength: number[]) {
     // Early exit if there is nothing to convert.
     if (!matches) {
       return [];
     }
     const { textContentItemsStr } = this;
 
-    let i = 0,
-      iIndex = 0;
+    let i = 0, iIndex = 0;
     const end = textContentItemsStr.length - 1;
     const result = [];
 

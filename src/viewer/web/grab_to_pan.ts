@@ -17,23 +17,32 @@
 // Class name of element which can be grabbed.
 const CSS_CLASS_GRAB = "grab-to-pan-grab";
 
-/**
- * @typedef {Object} GrabToPanOptions
- * @property {HTMLElement} element
- */
+export class GrabToPan {
 
-class GrabToPan {
-  #activateAC = null;
+  #activateAC: AbortController | null = null;
 
-  #mouseDownAC = null;
+  #mouseDownAC: AbortController | null = null;
 
-  #scrollAC = null;
+  #scrollAC: AbortController | null = null;
+
+  protected element: HTMLDivElement;
+
+  protected document: Document;
+
+  protected overlay: HTMLDivElement;
+
+  protected scrollLeftStart = 0;
+
+  protected scrollTopStart = 0;
+
+  protected clientXStart = 0;
+
+  protected clientYStart = 0;
 
   /**
    * Construct a GrabToPan instance for a given HTML element.
-   * @param {GrabToPanOptions} options
    */
-  constructor({ element }) {
+  constructor(element: HTMLDivElement) {
     this.element = element;
     this.document = element.ownerDocument;
 
@@ -83,18 +92,18 @@ class GrabToPan {
    * Whether to not pan if the target element is clicked.
    * Override this method to change the default behaviour.
    *
-   * @param {Element} node - The target of the event.
-   * @returns {boolean} Whether to not react to the click event.
+   * @param node - The target of the event.
+   * @returns Whether to not react to the click event.
    */
-  ignoreTarget(node) {
+  ignoreTarget(node: Element) {
     // Check whether the clicked element is, a child of, an input element/link.
     return node.matches(
       "a[href], a[href] *, input, textarea, button, button *, select, option"
     );
   }
 
-  #onMouseDown(event) {
-    if (event.button !== 0 || this.ignoreTarget(event.target)) {
+  #onMouseDown(event: MouseEvent) {
+    if (event.button !== 0 || this.ignoreTarget(<Element>event.target)) {
       return;
     }
     if (event.originalTarget) {
@@ -135,12 +144,12 @@ class GrabToPan {
     event.stopPropagation();
 
     const focusedElement = document.activeElement;
-    if (focusedElement && !focusedElement.contains(event.target)) {
-      focusedElement.blur();
+    if (focusedElement && !focusedElement.contains(<Element>event.target)) {
+      (<HTMLElement>focusedElement).blur();
     }
   }
 
-  #onMouseMove(event) {
+  #onMouseMove(event: MouseEvent) {
     this.#scrollAC?.abort();
     this.#scrollAC = null;
 
@@ -171,5 +180,3 @@ class GrabToPan {
     this.overlay.remove();
   }
 }
-
-export { GrabToPan };

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PDFDocumentProxy } from "../../display/api";
 import { parseQueryString } from "../common/ui_utils";
 
 /** @typedef {import("./event_utils").EventBus} EventBus */
@@ -21,12 +22,12 @@ import { parseQueryString } from "../common/ui_utils";
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 
-const LinkTarget = {
-  NONE: 0, // Default value.
-  SELF: 1,
-  BLANK: 2,
-  PARENT: 3,
-  TOP: 4,
+export enum LinkTarget {
+  NONE = 0, // Default value.
+  SELF = 1,
+  BLANK = 2,
+  PARENT = 3,
+  TOP = 4,
 };
 
 /**
@@ -48,7 +49,12 @@ const LinkTarget = {
  * @implements {IPDFLinkService}
  */
 class PDFLinkService {
-  externalLinkEnabled = true;
+
+  protected externalLinkEnabled = true;
+
+  protected pdfDocument: PDFDocumentProxy | null;
+
+  protected baseUrl: string | null;
 
   /**
    * @param {PDFLinkServiceOptions} options
@@ -67,20 +73,15 @@ class PDFLinkService {
     this.baseUrl = null;
     this.pdfDocument = null;
     this.pdfViewer = null;
-    this.pdfHistory = null;
   }
 
-  setDocument(pdfDocument, baseUrl = null) {
+  setDocument(pdfDocument: PDFDocumentProxy, baseUrl = null) {
     this.baseUrl = baseUrl;
     this.pdfDocument = pdfDocument;
   }
 
   setViewer(pdfViewer) {
     this.pdfViewer = pdfViewer;
-  }
-
-  setHistory(pdfHistory) {
-    this.pdfHistory = pdfHistory;
   }
 
   /**
@@ -180,13 +181,6 @@ class PDFLinkService {
       return;
     }
 
-    if (this.pdfHistory) {
-      // Update the browser history before scrolling the new destination into
-      // view, to be able to accurately capture the current document position.
-      this.pdfHistory.pushCurrentPosition();
-      this.pdfHistory.push({ namedDest, explicitDest, pageNumber });
-    }
-
     this.pdfViewer.scrollPageIntoView({
       pageNumber,
       destArray: explicitDest,
@@ -216,24 +210,13 @@ class PDFLinkService {
       console.error(`PDFLinkService.goToPage: "${val}" is not a valid page.`);
       return;
     }
-
-    if (this.pdfHistory) {
-      // Update the browser history before scrolling the new page into view,
-      // to be able to accurately capture the current document position.
-      this.pdfHistory.pushCurrentPosition();
-      this.pdfHistory.pushPage(pageNumber);
-    }
-
     this.pdfViewer.scrollPageIntoView({ pageNumber });
   }
 
   /**
    * Adds various attributes (href, title, target, rel) to hyperlinks.
-   * @param {HTMLAnchorElement} link
-   * @param {string} url
-   * @param {boolean} [newWindow]
    */
-  addLinkAttributes(link, url, newWindow = false) {
+  addLinkAttributes(link: HTMLAnchorElement, url: string, newWindow = false) {
     if (!url || typeof url !== "string") {
       throw new Error('A valid "url" parameter must provided.');
     }
@@ -291,181 +274,11 @@ class PDFLinkService {
   /**
    * Prefix the full url on anchor links to make sure that links are resolved
    * relative to the current URL instead of the one defined in <base href>.
-   * @param {string} anchor - The anchor hash, including the #.
-   * @returns {string} The hyperlink to the PDF object.
+   * @param anchor - The anchor hash, including the #.
+   * @returns The hyperlink to the PDF object.
    */
-  getAnchorUrl(anchor) {
+  getAnchorUrl(anchor: string) {
     return this.baseUrl ? this.baseUrl + anchor : anchor;
-  }
-
-  /**
-   * @param {string} hash
-   */
-  setHash(hash) {
-    if (!this.pdfDocument) {
-      return;
-    }
-    let pageNumber, dest;
-    if (hash.includes("=")) {
-      const params = parseQueryString(hash);
-      if (params.has("search")) {
-        const query = params.get("search").replaceAll('"', ""),
-          phrase = params.get("phrase") === "true";
-
-        this.eventBus.dispatch("findfromurlhash", {
-          source: this,
-          query: phrase ? query : query.match(/\S+/g),
-        });
-      }
-      // borrowing syntax from "Parameters for Opening PDF Files"
-      if (params.has("page")) {
-        pageNumber = params.get("page") | 0 || 1;
-      }
-      if (params.has("zoom")) {
-        // Build the destination array.
-        const zoomArgs = params.get("zoom").split(","); // scale,left,top
-        const zoomArg = zoomArgs[0];
-        const zoomArgNumber = parseFloat(zoomArg);
-
-        if (!zoomArg.includes("Fit")) {
-          // If the zoomArg is a number, it has to get divided by 100. If it's
-          // a string, it should stay as it is.
-          dest = [
-            null,
-            { name: "XYZ" },
-            zoomArgs.length > 1 ? zoomArgs[1] | 0 : null,
-            zoomArgs.length > 2 ? zoomArgs[2] | 0 : null,
-            zoomArgNumber ? zoomArgNumber / 100 : zoomArg,
-          ];
-        } else if (zoomArg === "Fit" || zoomArg === "FitB") {
-          dest = [null, { name: zoomArg }];
-        } else if (
-          zoomArg === "FitH" ||
-          zoomArg === "FitBH" ||
-          zoomArg === "FitV" ||
-          zoomArg === "FitBV"
-        ) {
-          dest = [
-            null,
-            { name: zoomArg },
-            zoomArgs.length > 1 ? zoomArgs[1] | 0 : null,
-          ];
-        } else if (zoomArg === "FitR") {
-          if (zoomArgs.length !== 5) {
-            console.error(
-              'PDFLinkService.setHash: Not enough parameters for "FitR".'
-            );
-          } else {
-            dest = [
-              null,
-              { name: zoomArg },
-              zoomArgs[1] | 0,
-              zoomArgs[2] | 0,
-              zoomArgs[3] | 0,
-              zoomArgs[4] | 0,
-            ];
-          }
-        } else {
-          console.error(
-            `PDFLinkService.setHash: "${zoomArg}" is not a valid zoom value.`
-          );
-        }
-      }
-      if (dest) {
-        this.pdfViewer.scrollPageIntoView({
-          pageNumber: pageNumber || this.page,
-          destArray: dest,
-          allowNegativeOffset: true,
-        });
-      } else if (pageNumber) {
-        this.page = pageNumber; // simple page
-      }
-      if (params.has("pagemode")) {
-        this.eventBus.dispatch("pagemode", {
-          source: this,
-          mode: params.get("pagemode"),
-        });
-      }
-      // Ensure that this parameter is *always* handled last, in order to
-      // guarantee that it won't be overridden (e.g. by the "page" parameter).
-      if (params.has("nameddest")) {
-        this.goToDestination(params.get("nameddest"));
-      }
-
-      if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
-        return;
-      }
-      // Support opening of PDF attachments in the Firefox PDF Viewer,
-      // which uses a couple of non-standard hash parameters; refer to
-      // `DownloadManager.openOrDownloadData` in the firefoxcom.js file.
-      if (!params.has("filename") || !params.has("filedest")) {
-        return;
-      }
-      hash = params.get("filedest");
-    }
-
-    // Named (or explicit) destination.
-    dest = unescape(hash);
-    try {
-      dest = JSON.parse(dest);
-
-      if (!Array.isArray(dest)) {
-        // Avoid incorrectly rejecting a valid named destination, such as
-        // e.g. "4.3" or "true", because `JSON.parse` converted its type.
-        dest = dest.toString();
-      }
-    } catch {}
-
-    if (typeof dest === "string" || PDFLinkService.#isValidExplicitDest(dest)) {
-      this.goToDestination(dest);
-      return;
-    }
-    console.error(
-      `PDFLinkService.setHash: "${unescape(hash)}" is not a valid destination.`
-    );
-  }
-
-  /**
-   * @param {string} action
-   */
-  executeNamedAction(action) {
-    if (!this.pdfDocument) {
-      return;
-    }
-    // See PDF reference, table 8.45 - Named action
-    switch (action) {
-      case "GoBack":
-        this.pdfHistory?.back();
-        break;
-
-      case "GoForward":
-        this.pdfHistory?.forward();
-        break;
-
-      case "NextPage":
-        this.pdfViewer.nextPage();
-        break;
-
-      case "PrevPage":
-        this.pdfViewer.previousPage();
-        break;
-
-      case "LastPage":
-        this.page = this.pagesCount;
-        break;
-
-      case "FirstPage":
-        this.page = 1;
-        break;
-
-      default:
-        break; // No action according to spec
-    }
-
-    this.eventBus.dispatch("namedaction", {
-      source: this,
-      action,
-    });
   }
 
   /**
@@ -487,67 +300,13 @@ class PDFLinkService {
       optionalContentConfig
     );
   }
-
-  static #isValidExplicitDest(dest) {
-    if (!Array.isArray(dest) || dest.length < 2) {
-      return false;
-    }
-    const [page, zoom, ...args] = dest;
-    if (
-      !(
-        typeof page === "object" &&
-        Number.isInteger(page?.num) &&
-        Number.isInteger(page?.gen)
-      ) &&
-      !Number.isInteger(page)
-    ) {
-      return false;
-    }
-    if (!(typeof zoom === "object" && typeof zoom?.name === "string")) {
-      return false;
-    }
-    const argsLen = args.length;
-    let allowNull = true;
-    switch (zoom.name) {
-      case "XYZ":
-        if (argsLen < 2 || argsLen > 3) {
-          return false;
-        }
-        break;
-      case "Fit":
-      case "FitB":
-        return argsLen === 0;
-      case "FitH":
-      case "FitBH":
-      case "FitV":
-      case "FitBV":
-        if (argsLen > 1) {
-          return false;
-        }
-        break;
-      case "FitR":
-        if (argsLen !== 4) {
-          return false;
-        }
-        allowNull = false;
-        break;
-      default:
-        return false;
-    }
-    for (const arg of args) {
-      if (!(typeof arg === "number" || (allowNull && arg === null))) {
-        return false;
-      }
-    }
-    return true;
-  }
 }
 
 /**
  * @implements {IPDFLinkService}
  */
 class SimpleLinkService extends PDFLinkService {
-  setDocument(pdfDocument, baseUrl = null) {}
+  setDocument(_pdfDocument: PDFDocumentProxy, _baseUrl = null) { }
 }
 
 export { LinkTarget, PDFLinkService, SimpleLinkService };

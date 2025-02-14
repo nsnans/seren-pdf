@@ -250,7 +250,7 @@ export class WebPDFPageViewManager {
 
   #previousContainerHeight = 0;
 
-  #resizeObserver = new ResizeObserver(this.#resizeObserverCallback.bind(this));
+  #resizeObserver: ResizeObserver | null = new ResizeObserver(this.#resizeObserverCallback.bind(this));
 
   #scrollModePageState = null;
 
@@ -280,7 +280,7 @@ export class WebPDFPageViewManager {
 
   protected maxCanvasPixels: number;
 
-  protected l10n: L10n | null;
+  protected l10n: L10n;
 
   /**
    * @param {PDFViewerOptions} options
@@ -291,6 +291,7 @@ export class WebPDFPageViewManager {
     downloadManager: DownloadManager,
     findService: PDFFindService,
     viewerOptions: WebPDFViewerOptions,
+    l10n: L10n,
   ) {
     const viewer = container.firstElementChild;
     if (container?.tagName !== "DIV" || viewer?.tagName !== "DIV") {
@@ -301,7 +302,7 @@ export class WebPDFPageViewManager {
     if (container.offsetParent && getComputedStyle(container).position !== "absolute") {
       throw new Error("container必须是绝对定位元素。");
     }
-    this.#resizeObserver.observe(this.container);
+    this.#resizeObserver!.observe(this.container);
 
     this.eventBus = options.eventBus;
     this.linkService = linkService;
@@ -326,10 +327,8 @@ export class WebPDFPageViewManager {
     this.removePageBorders = options.removePageBorders || false;
 
     this.maxCanvasPixels = options.maxCanvasPixels;
-    this.l10n = options.l10n;
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      this.l10n ||= new GenericL10n();
-    }
+    this.l10n = l10n || new GenericL10n();
+
     this.#enablePermissions = options.enablePermissions || false;
     this.pageColors = options.pageColors || null;
     this.#mlManager = options.mlManager || null;
@@ -348,12 +347,10 @@ export class WebPDFPageViewManager {
     }
 
     const { abortSignal } = options;
-    abortSignal?.addEventListener(
-      "abort",
-      () => {
-        this.#resizeObserver.disconnect();
-        this.#resizeObserver = null;
-      },
+    abortSignal?.addEventListener("abort", () => {
+      this.#resizeObserver!.disconnect();
+      this.#resizeObserver = null;
+    },
       { once: true }
     );
 
@@ -383,13 +380,8 @@ export class WebPDFPageViewManager {
       }
     });
 
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      !options.l10n
-    ) {
-      // Ensure that Fluent is connected in e.g. the COMPONENTS build.
-      this.l10n.translate(this.container);
-    }
+    // Ensure that Fluent is connected in e.g. the COMPONENTS build.
+    this.l10n.translate(this.container);
   }
 
   get pagesCount() {

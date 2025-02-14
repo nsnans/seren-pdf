@@ -15,6 +15,7 @@
 
 /** @typedef {import("./event_utils").EventBus} EventBus */
 
+import { PDFDocumentProxy } from "../../display/api";
 import { shadow } from "../../shared/util";
 import { apiPageLayoutToViewerModes, RenderingStates } from "../common/ui_utils";
 
@@ -30,20 +31,21 @@ import { apiPageLayoutToViewerModes, RenderingStates } from "../common/ui_utils"
  *   the necessary document properties.
  */
 
-class PDFScriptingManager {
+export class PDFScriptingManager {
+
   #closeCapability = null;
 
-  #destroyCapability = null;
+  #destroyCapability: PromiseWithResolvers<void> | null = null;
 
   #docProperties = null;
 
-  #eventAbortController = null;
+  #eventAbortController: AbortController | null = null;
 
   #eventBus = null;
 
   #externalServices = null;
 
-  #pdfDocument = null;
+  #pdfDocument: PDFDocumentProxy | null = null;
 
   #pdfViewer = null;
 
@@ -60,26 +62,13 @@ class PDFScriptingManager {
     this.#eventBus = eventBus;
     this.#externalServices = externalServices;
     this.#docProperties = docProperties;
-
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
-      Object.defineProperty(this, "sandboxTrip", {
-        value: () =>
-          setTimeout(
-            () =>
-              this.#scripting?.dispatchEventInSandbox({
-                name: "sandboxtripbegin",
-              }),
-            0
-          ),
-      });
-    }
   }
 
   setViewer(pdfViewer) {
     this.#pdfViewer = pdfViewer;
   }
 
-  async setDocument(pdfDocument) {
+  async setDocument(pdfDocument: PDFDocumentProxy) {
     if (this.#pdfDocument) {
       await this.#destroyScripting();
     }
@@ -105,7 +94,7 @@ class PDFScriptingManager {
     try {
       this.#scripting = this.#initScripting();
     } catch (error) {
-      console.error(`setDocument: "${error.message}".`);
+      console.error(`setDocument: "${(<{ message?: string }>error).message}".`);
 
       await this.#destroyScripting();
       return;
@@ -493,5 +482,3 @@ class PDFScriptingManager {
     this.#destroyCapability?.resolve();
   }
 }
-
-export { PDFScriptingManager };

@@ -18,6 +18,7 @@ import { WebPDFThumbnailService } from "./thumbnail_service";
 import { WebPDFViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebPDFViewerOptions } from "./viewer_options";
+import { WebViewerCursorManager } from "./viewer_cursor_manager";
 
 export class WebPDFViewerBuilder {
 
@@ -46,7 +47,7 @@ export class WebPDFViewer {
 
   protected pdfLoadingTask: PDFDocumentLoadingTask | null = null;
 
-  protected pageViewManager: PDFViewer;
+  protected pageViewManager: WebPDFPageViewManager;
 
   protected pdfSource = PDFSource.UNLOAD;
 
@@ -60,19 +61,15 @@ export class WebPDFViewer {
 
   protected pdfLinkService: PDFLinkService;
 
-  protected pdfHistory: PDFHistory;
-
   protected pdfSidebar: PDFSidebar;
 
   protected pdfOutlineViewer: PDFOutlineViewer;
 
   protected pdfLayerViewer: PDFLayerViewer;
 
-  protected pdfCursorTools: PDFCursorTools;
+  protected cursorManager: WebViewerCursorManager;
 
   protected pdfScriptingManager: PDFScriptingManager;
-
-  protected store: ViewHistory;
 
   protected downloadManager: DownloadManager;
 
