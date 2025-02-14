@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./event_utils").EventBus} EventBus */
-// eslint-disable-next-line max-len
-/** @typedef {import("./pdf_find_controller").PDFFindController} PDFFindController */
+import { PDFContentFindService } from "./find_service";
 
-/**
- * @typedef {Object} TextHighlighterOptions
- * @property {PDFFindController} findController
- * @property {EventBus} eventBus - The application event bus.
- * @property {number} pageIndex - The page index.
- */
+interface PageMatch {
+  begin: {
+    divIdx: number;
+    offset: number;
+  };
+  end: {
+    divIdx: number,
+    offset: number
+  }
+}
 
 /**
  * TextHighlighter handles highlighting matches from the FindController in
@@ -30,17 +32,23 @@
  */
 export class TextHighlighter {
 
-  #eventAbortController = null;
-  
+  #eventAbortController: AbortController | null = null;
+
   protected enabled: boolean;
 
-  /**
-   * @param {TextHighlighterOptions} options
-   */
-  constructor({ findController, eventBus, pageIndex }) {
-    this.findController = findController;
+  protected findService: PDFContentFindService;
+
+  protected matches: PageMatch[];
+
+  protected pageIdx: number;
+
+  protected textContentItemsStr: string[] | null;
+
+  protected textDivs: HTMLSpanElement[] | null;
+
+  constructor(findService: PDFContentFindService, pageIndex: number) {
+    this.findService = findService;
     this.matches = [];
-    this.eventBus = eventBus;
     this.pageIdx = pageIndex;
     this.textDivs = null;
     this.textContentItemsStr = null;
@@ -56,7 +64,7 @@ export class TextHighlighter {
    * @param {Array<Node>} divs
    * @param {Array<string>} texts
    */
-  setTextMapping(divs, texts) {
+  setTextMapping(divs: HTMLSpanElement[], texts: string[]) {
     this.textDivs = divs;
     this.textContentItemsStr = texts;
   }
@@ -76,16 +84,6 @@ export class TextHighlighter {
 
     if (!this.#eventAbortController) {
       this.#eventAbortController = new AbortController();
-
-      this.eventBus._on(
-        "updatetextlayermatches",
-        evt => {
-          if (evt.pageIndex === this.pageIdx || evt.pageIndex === -1) {
-            this._updateMatches();
-          }
-        },
-        { signal: this.#eventAbortController.signal }
-      );
     }
     this._updateMatches();
   }
@@ -107,7 +105,7 @@ export class TextHighlighter {
     if (!matches) {
       return [];
     }
-    const { textContentItemsStr } = this;
+    const textContentItemsStr = this.textContentItemsStr!;
 
     let i = 0, iIndex = 0;
     const end = textContentItemsStr.length - 1;
@@ -127,11 +125,11 @@ export class TextHighlighter {
         console.error("Could not find a matching mapping");
       }
 
-      const match = {
+      const match: Partial<PageMatch> = {
         begin: {
           divIdx: i,
           offset: matchIdx - iIndex,
-        },
+        }
       };
 
       // Calculate the end position.
@@ -148,35 +146,36 @@ export class TextHighlighter {
         divIdx: i,
         offset: matchIdx - iIndex,
       };
-      result.push(match);
+      result.push(<PageMatch>match);
     }
     return result;
   }
 
-  _renderMatches(matches) {
+  _renderMatches(matches: PageMatch[]) {
     // Early exit if there is nothing to render.
     if (matches.length === 0) {
       return;
     }
-    const { findController, pageIdx } = this;
-    const { textContentItemsStr, textDivs } = this;
+    const { findService, pageIdx } = this;
+    const textDivs = this.textDivs!;
+    const textContentItemsStr = this.textContentItemsStr!;
 
-    const isSelectedPage = pageIdx === findController.selected.pageIdx;
-    const selectedMatchIdx = findController.selected.matchIdx;
-    const highlightAll = findController.state.highlightAll;
+    const isSelectedPage = pageIdx === findService.selected.pageIdx;
+    const selectedMatchIdx = findService.selected.matchIdx;
+    const highlightAll = findService.state.highlightAll;
     let prevEnd = null;
     const infinity = {
       divIdx: -1,
-      offset: undefined,
+      offset: null,
     };
 
-    function beginText(begin, className) {
+    function beginText(begin: { divIdx: number, offset: number }, className: string | null = null) {
       const divIdx = begin.divIdx;
       textDivs[divIdx].textContent = "";
       return appendTextToDiv(divIdx, 0, begin.offset, className);
     }
 
-    function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
+    function appendTextToDiv(divIdx: number, fromOffset: number, toOffset: number | null, className: string | null) {
       let div = textDivs[divIdx];
       if (div.nodeType === Node.TEXT_NODE) {
         const span = document.createElement("span");
@@ -185,10 +184,7 @@ export class TextHighlighter {
         textDivs[divIdx] = span;
         div = span;
       }
-      const content = textContentItemsStr[divIdx].substring(
-        fromOffset,
-        toOffset
-      );
+      const content = textContentItemsStr[divIdx].substring(fromOffset, toOffset ?? undefined);
       const node = document.createTextNode(content);
       if (className) {
         const span = document.createElement("span");
@@ -234,12 +230,12 @@ export class TextHighlighter {
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
         // If there was a previous div, then add the text at the end.
         if (prevEnd !== null) {
-          appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+          appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset, null);
         }
         // Clear the divs and set the content until the starting point.
         beginText(begin);
       } else {
-        appendTextToDiv(prevEnd.divIdx, prevEnd.offset, begin.offset);
+        appendTextToDiv(prevEnd.divIdx, prevEnd.offset, begin.offset, null);
       }
 
       if (begin.divIdx === end.divIdx) {
@@ -265,17 +261,12 @@ export class TextHighlighter {
 
       if (isSelected) {
         // Attempt to scroll the selected match into view.
-        findController.scrollMatchIntoView({
-          element: textDivs[begin.divIdx],
-          selectedLeft,
-          pageIndex: pageIdx,
-          matchIndex: selectedMatchIdx,
-        });
+        findService.scrollMatchIntoView();
       }
     }
 
     if (prevEnd) {
-      appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset);
+      appendTextToDiv(prevEnd.divIdx, prevEnd.offset, infinity.offset, null);
     }
   }
 
@@ -283,8 +274,9 @@ export class TextHighlighter {
     if (!this.enabled && !reset) {
       return;
     }
-    const { findController, matches, pageIdx } = this;
-    const { textContentItemsStr, textDivs } = this;
+    const { findService, matches, pageIdx } = this;
+    const textDivs = this.textDivs!;
+    const textContentItemsStr = this.textContentItemsStr!;
     let clearedUntilDivIdx = -1;
 
     // Clear all current matches.
@@ -298,13 +290,13 @@ export class TextHighlighter {
       clearedUntilDivIdx = match.end.divIdx + 1;
     }
 
-    if (!findController?.highlightMatches || reset) {
+    if (!findService?.highlightMatches || reset) {
       return;
     }
     // Convert the matches on the `findController` into the match format
     // used for the textLayer.
-    const pageMatches = findController.pageMatches[pageIdx] || null;
-    const pageMatchesLength = findController.pageMatchesLength[pageIdx] || null;
+    const pageMatches = findService.pageMatches[pageIdx] || null;
+    const pageMatchesLength = findService.pageMatchesLength[pageIdx] || null;
 
     this.matches = this._convertMatches(pageMatches, pageMatchesLength);
     this._renderMatches(this.matches);

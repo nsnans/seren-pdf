@@ -334,11 +334,7 @@ export class WebPDFPageView {
     return shadow(
       this,
       "_textHighlighter",
-      new TextHighlighter({
-        pageIndex: this.pageNum - 1,
-        eventBus: this.eventBus,
-        findController: this.#layerProperties.findController,
-      })
+      new TextHighlighter(this.pageNum - 1, this.#layerProperties.findController)
     );
   }
 

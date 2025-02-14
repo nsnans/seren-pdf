@@ -4,7 +4,7 @@ import { DownloadManager, IL10n } from "../common/component_types";
 import { ScrollMode, SidebarView, SpreadMode } from "../common/ui_utils";
 import { ImageAltTextSettings } from "./new_alt_text_manager";
 import { OverlayManager } from "./overlay_manager";
-import { PDFCursorTools } from "./pdf_cursor_tools";
+import { WebPageViewManager } from "./page_view_manager";
 import { PDFDocumentProperties } from "./pdf_document_properties";
 import { PDFLayerViewer } from "./pdf_layer_viewer";
 import { PDFLinkService } from "./pdf_link_service";
@@ -13,12 +13,11 @@ import { PDFPresentationMode } from "./pdf_presentation_mode";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { PDFSidebar } from "./pdf_sidebar";
-import { WebPDFPageViewManager } from "./page_view_manager";
 import { WebPDFThumbnailService } from "./thumbnail_service";
 import { WebPDFViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
-import { WebPDFViewerOptions } from "./viewer_options";
 import { WebViewerCursorManager } from "./viewer_cursor_manager";
+import { WebPDFViewerOptions } from "./viewer_options";
 
 export class WebPDFViewerBuilder {
 
@@ -47,7 +46,7 @@ export class WebPDFViewer {
 
   protected pdfLoadingTask: PDFDocumentLoadingTask | null = null;
 
-  protected pageViewManager: WebPDFPageViewManager;
+  protected pageViewManager: WebPageViewManager;
 
   protected pdfSource = PDFSource.UNLOAD;
 
@@ -146,9 +145,9 @@ export class WebPDFViewer {
 
   initPageViewManager() {
     const viewerOptions = this.viewerOptions;
-    return new WebPDFPageViewManager(
+    return new WebPageViewManager(
       this.viewerContainer,
-      maxCanvasPixels: viewerOptions.maxCanvasPixels,
+      viewerOptions.maxCanvasPixels,
     );
   }
 

@@ -59,13 +59,13 @@ import {
   watchScroll,
 } from "../common/ui_utils";
 import { GenericL10n } from "./genericl10n";
-import { PDFFindService } from "./pdf_finder_service";
 import { WebPDFPageView } from "./page_view";
 import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { FieldObject } from "../../core/core_types";
 import { L10n } from "./l10n";
+import { PDFContentFindService } from "./find_service";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -196,19 +196,37 @@ export class PDFPageViewBuffer {
 }
 
 export interface WebPDFViewLayerProperties {
+
   readonly annotationEditorUIManager: AnnotationEditorUIManager | null
+
   readonly annotationStorage: AnnotationStorage | null
+
   readonly downloadManager: DownloadManager;
+
   readonly enableScripting: boolean;
+
   readonly fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null;
+
   readonly linkService: PDFLinkService;
+
   readonly hasJSActionsPromise: Promise<boolean> | null;
+
+}
+
+export interface WebPageViewCallbacks{
+
+}
+
+export interface WebPageViewHandlers {
+
+  onPageChanging(prev: number, now: number, pageLabel: string | null): void;
+
 }
 
 /**
  * Simple viewer control to display PDF content/pages.
  */
-export class WebPDFPageViewManager {
+export class WebPageViewManager {
 
   #buffer = null;
 
@@ -266,7 +284,7 @@ export class WebPDFPageViewManager {
 
   protected downloadManager: DownloadManager;
 
-  protected findService: PDFFindService;
+  protected findService: PDFContentFindService;
 
   protected _pages: WebPDFPageView[] = [];
 
@@ -282,6 +300,12 @@ export class WebPDFPageViewManager {
 
   protected l10n: L10n;
 
+  protected _pageLabels: string[] | null = null;
+
+  protected _pagesRotation: number | null = null;
+
+  protected callbacks: WebPageViewCallbacks | null
+
   /**
    * @param {PDFViewerOptions} options
    */
@@ -289,9 +313,10 @@ export class WebPDFPageViewManager {
     container: HTMLDivElement,
     linkService: PDFLinkService,
     downloadManager: DownloadManager,
-    findService: PDFFindService,
+    findService: PDFContentFindService,
     viewerOptions: WebPDFViewerOptions,
     l10n: L10n,
+    callbacks: WebPageViewCallbacks | null = null
   ) {
     const viewer = container.firstElementChild;
     if (container?.tagName !== "DIV" || viewer?.tagName !== "DIV") {
@@ -382,6 +407,7 @@ export class WebPDFPageViewManager {
 
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n.translate(this.container);
+    this.callbacks = callbacks;
   }
 
   get pagesCount() {
@@ -448,15 +474,10 @@ export class WebPDFPageViewManager {
     if (!(0 < val && val <= this.pagesCount)) {
       return false;
     }
-    const previous = this._currentPageNumber;
+    const previous = this._currentPageNumber!;
     this._currentPageNumber = val;
 
-    this.eventBus.dispatch("pagechanging", {
-      source: this,
-      pageNumber: val,
-      pageLabel: this._pageLabels?.[val - 1] ?? null,
-      previous,
-    });
+    this.callbacks?.onPageChanging(previous, val, this._pageLabels?.[val - 1] ?? null);
 
     if (resetCurrentPageView) {
       this.#resetCurrentPageView();
@@ -469,7 +490,7 @@ export class WebPDFPageViewManager {
    *   labels exist.
    */
   get currentPageLabel() {
-    return this._pageLabels?.[this._currentPageNumber - 1] ?? null;
+    return this._pageLabels?.[this._currentPageNumber! - 1] ?? null;
   }
 
   /**
@@ -533,7 +554,7 @@ export class WebPDFPageViewManager {
    * @type {number}
    */
   get pagesRotation() {
-    return this._pagesRotation;
+    return this._pagesRotation!;
   }
 
   /**

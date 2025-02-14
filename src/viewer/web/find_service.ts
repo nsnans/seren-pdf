@@ -412,6 +412,10 @@ export class PDFContentFindService {
 
   protected _normalizedQuery: string | null = null;
 
+  protected _pageMatches: number[][] = [];
+
+  protected _pageMatchesLength: number[][] = [];
+
   /**
    * @param linkService - The navigation/linking service.
    * @param updateMatchesCountOnProgress - True if the matches
@@ -536,30 +540,12 @@ export class PDFContentFindService {
    * @property {number} matchIndex
    */
 
-  /**
-   * Scroll the current match into view.
-   * @param {PDFFindControllerScrollMatchIntoViewParams}
-   */
-  scrollMatchIntoView({
-    element = null,
-    selectedLeft = 0,
-    pageIndex = -1,
-    matchIndex = -1,
-  }) {
-    if (!this._scrollMatches || !element) {
-      return;
-    } else if (matchIndex === -1 || matchIndex !== this._selected.matchIdx) {
-      return;
-    } else if (pageIndex === -1 || pageIndex !== this._selected.pageIdx) {
-      return;
-    }
-    this._scrollMatches = false; // Ensure that scrolling only happens once.
+  // 滚动视图，不应该由findService来完成
+  // findService只应该提供，文本的所在位置
+  // 具体的滚动行为应该由 ViewManager来管理
+  // 况且视图可能是 翻页的，滚动的，横向的，很难说就一定是scroll
+  scrollMatchIntoView() {
 
-    const spot = {
-      top: MATCH_SCROLL_OFFSET_TOP,
-      left: selectedLeft + MATCH_SCROLL_OFFSET_LEFT,
-    };
-    scrollIntoView(element, spot, /* scrollMatches = */ true);
   }
 
   #reset() {
@@ -758,7 +744,7 @@ export class PDFContentFindService {
     const pageContent = this._pageContents[pageIndex];
     const matcherResult = this.match(query, pageContent, pageIndex);
 
-    const matches = (this._pageMatches[pageIndex] = []);
+    const matches: number[] = (this._pageMatches[pageIndex] = []);
     const matchesLength = (this._pageMatchesLength[pageIndex] = []);
     const diffs = this._pageDiffs[pageIndex];
 

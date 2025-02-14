@@ -20,7 +20,7 @@
 
 import { RenderingCancelledException } from "../../display/display_utils";
 import { RenderingStates } from "../common/ui_utils";
-import { WebPDFPageViewManager } from './page_view_manager';
+import { WebPageViewManager } from './page_view_manager';
 
 const CLEANUP_TIMEOUT = 30000;
 
@@ -48,7 +48,7 @@ export class PDFRenderingManager {
   /**
    * @param {PDFViewer} pdfViewer
    */
-  setViewer(pdfViewer: WebPDFPageViewManager) {
+  setViewer(pdfViewer: WebPageViewManager) {
     this.pdfViewer = pdfViewer;
   }
 
