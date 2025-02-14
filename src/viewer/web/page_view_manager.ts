@@ -65,6 +65,7 @@ import { PDFRenderingQueue } from "./pdf_rendering_queue";
 import { WebPDFViewerOptions } from './viewer_options';
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { FieldObject } from "../../core/core_types";
+import { L10n } from "./l10n";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -201,6 +202,7 @@ export interface WebPDFViewLayerProperties {
   readonly enableScripting: boolean;
   readonly fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null;
   readonly linkService: PDFLinkService;
+  readonly hasJSActionsPromise: Promise<boolean> | null;
 }
 
 /**
@@ -275,7 +277,10 @@ export class WebPDFPageViewManager {
   protected _currentScale: number = DEFAULT_SCALE;
 
   protected imageResourcesPath: string;
-  maxCanvasPixels: number;
+
+  protected maxCanvasPixels: number;
+
+  protected l10n: L10n | null;
 
   /**
    * @param {PDFViewerOptions} options
@@ -900,9 +905,7 @@ export class WebPDFPageViewManager {
         ) {
           const mode = annotationEditorMode;
 
-          if (pdfDocument.isPureXfa) {
-            console.warn("Warning: XFA-editing is not implemented.");
-          } else if (isValidAnnotationEditorMode(mode)) {
+          if (isValidAnnotationEditorMode(mode)) {
             this.#annotationEditorUIManager = new AnnotationEditorUIManager(
               this.container,
               viewer,
@@ -931,15 +934,12 @@ export class WebPDFPageViewManager {
           }
         }
 
-        const viewerElement =
-          this._scrollMode === ScrollMode.PAGE ? null : viewer;
+        const viewerElement = this._scrollMode === ScrollMode.PAGE ? null : viewer;
         const scale = this.currentScale;
-        const viewport = firstPdfPage.getViewport({
-          scale: scale * PixelsPerInch.PDF_TO_CSS_UNITS,
-        });
+        const viewport = firstPdfPage.getViewport(scale * PixelsPerInch.PDF_TO_CSS_UNITS);
         // Ensure that the various layers always get the correct initial size,
         // see issue 15795.
-        viewer.style.setProperty("--scale-factor", viewport.scale);
+        viewer.style.setProperty("--scale-factor", `${viewport.scale}`);
 
         if (pageColors?.background) {
           viewer.style.setProperty("--page-bg-color", pageColors.background);

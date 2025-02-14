@@ -2,12 +2,10 @@ import { getDocument, PDFDocumentLoadingTask, PDFDocumentProxy } from "../../dis
 import { AnnotationEditorParams } from "../../display/editor/annotation_editor_params";
 import { DownloadManager, IL10n } from "../common/component_types";
 import { ScrollMode, SidebarView, SpreadMode } from "../common/ui_utils";
-import { EventBus } from "./event_utils";
 import { ImageAltTextSettings } from "./new_alt_text_manager";
 import { OverlayManager } from "./overlay_manager";
 import { PDFCursorTools } from "./pdf_cursor_tools";
 import { PDFDocumentProperties } from "./pdf_document_properties";
-import { PDFHistory } from "./pdf_history";
 import { PDFLayerViewer } from "./pdf_layer_viewer";
 import { PDFLinkService } from "./pdf_link_service";
 import { PDFOutlineViewer } from "./pdf_outline_viewer";
@@ -17,7 +15,6 @@ import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { PDFSidebar } from "./pdf_sidebar";
 import { WebPDFPageViewManager } from "./page_view_manager";
 import { WebPDFThumbnailService } from "./thumbnail_service";
-import { ViewHistory } from "./view_history";
 import { WebPDFViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebPDFViewerOptions } from "./viewer_options";
@@ -151,9 +148,10 @@ export class WebPDFViewer {
   }
 
   initPageViewManager() {
+    const viewerOptions = this.viewerOptions;
     return new WebPDFPageViewManager(
       this.viewerContainer,
-      maxCanvasPixels: AppOptions.get("maxCanvasPixels"),
+      maxCanvasPixels: viewerOptions.maxCanvasPixels,
     );
   }
 

@@ -20,13 +20,14 @@
 
 import { RenderingCancelledException } from "../../display/display_utils";
 import { RenderingStates } from "../common/ui_utils";
+import { WebPDFPageViewManager } from './page_view_manager';
 
 const CLEANUP_TIMEOUT = 30000;
 
 /**
  * Controls rendering of the views for pages and thumbnails.
  */
-class PDFRenderingQueue {
+export class PDFRenderingManager {
   constructor() {
     this.pdfViewer = null;
     this.pdfThumbnailViewer = null;
@@ -47,7 +48,7 @@ class PDFRenderingQueue {
   /**
    * @param {PDFViewer} pdfViewer
    */
-  setViewer(pdfViewer) {
+  setViewer(pdfViewer: WebPDFPageViewManager) {
     this.pdfViewer = pdfViewer;
   }
 
@@ -208,5 +209,3 @@ class PDFRenderingQueue {
     return true;
   }
 }
-
-export { PDFRenderingQueue };

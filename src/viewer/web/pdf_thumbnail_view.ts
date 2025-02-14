@@ -58,7 +58,7 @@ class TempImageFactory {
 
     // Since this is a temporary canvas, we need to fill it with a white
     // background ourselves. `#getPageDrawContext` uses CSS rules for this.
-    const ctx = tempCanvas.getContext("2d", { alpha: false });
+    const ctx = tempCanvas.getContext("2d", { alpha: false })!;
     ctx.save();
     ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.fillRect(0, 0, width, height);

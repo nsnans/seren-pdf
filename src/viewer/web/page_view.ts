@@ -38,39 +38,6 @@ import { WebPDFViewLayerProperties } from "./page_view_manager";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 import { TextHighlighter } from "./text_highlighter";
 import { TextLayerBuilder } from "./text_layer_builder";
-/**
- * @typedef {Object} PDFPageViewOptions
- * @property {HTMLDivElement} [container] - The viewer element.
- * @property {EventBus} eventBus - The application event bus.
- * @property {number} id - The page unique ID (normally its number).
- * @property {number} [scale] - The page scale display.
- * @property {PageViewport} defaultViewport - The page viewport.
- * @property {Promise<OptionalContentConfig>} [optionalContentConfigPromise] -
- *   A promise that is resolved with an {@link OptionalContentConfig} instance.
- *   The default value is `null`.
- * @property {PDFRenderingQueue} [renderingQueue] - The rendering queue object.
- * @property {number} [textLayerMode] - Controls if the text layer used for
- *   selection and searching is created. The constants from {TextLayerMode}
- *   should be used. The default value is `TextLayerMode.ENABLE`.
- * @property {number} [annotationMode] - Controls if the annotation layer is
- *   created, and if interactive form elements or `AnnotationStorage`-data are
- *   being rendered. The constants from {@link AnnotationMode} should be used;
- *   see also {@link RenderParameters} and {@link GetOperatorListParameters}.
- *   The default value is `AnnotationMode.ENABLE_FORMS`.
- * @property {string} [imageResourcesPath] - Path for image resources, mainly
- *   for annotation icons. Include trailing slash.
- * @property {number} [maxCanvasPixels] - The maximum supported canvas size in
- *   total pixels, i.e. width * height. Use `-1` for no limit, or `0` for
- *   CSS-only zooming. The default value is 4096 * 8192 (32 mega-pixels).
- * @property {Object} [pageColors] - Overwrites background and foreground colors
- *   with user defined ones in order to improve readability in high contrast
- *   mode.
- * @property {IL10n} [l10n] - Localization service.
- * @property {Object} [layerProperties] - The object that is used to lookup
- *   the necessary layer-properties.
- * @property {boolean} [enableHWA] - Enables hardware acceleration for
- *   rendering. The default value is `false`.
- */
 
 const LAYERS_ORDER = new Map([
   ["canvasWrapper", 0],
@@ -79,9 +46,6 @@ const LAYERS_ORDER = new Map([
   ["annotationEditorLayer", 3],
 ]);
 
-/**
- * @implements {IRenderableView}
- */
 export class WebPDFPageView {
 
   #annotationMode = AnnotationMode.ENABLE_FORMS;
@@ -102,7 +66,7 @@ export class WebPDFPageView {
 
   #scaleRoundY = 1;
 
-  #renderError = null;
+  #renderError: unknown = null;
 
   #renderingState = RenderingStates.INITIAL;
 
@@ -171,9 +135,38 @@ export class WebPDFPageView {
 
   protected _annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
 
+  protected resume: (() => void) | null;
+
   /**
-   * Page要和HTMLDivElement解开耦合，单个Page不需要挂到HTML的元素上去
-   * PageView只需要提供页面的渲染就可以了，至于怎么渲染，由初始化的人来觉定
+   * Page要和HTMLDivElement解开耦合，单个Page不需要挂到某个特定的HTML的元素上去。
+   * PageView只需要提供页面的渲染就可以了，至于怎么渲染，由初始化的人来决定。
+   * 
+   * @param pageNum - The page unique ID (normally its number).
+   * @param scale - The page scale display.
+   * @param defaultViewport - The page viewport.
+   * @param optionalContentConfigPromise - A promise that is resolved with 
+   *   an {@link OptionalContentConfig} instance.The default value is `null`.
+   * @param textLayerMode - Controls if the text layer used for
+   *   selection and searching is created. The constants from {TextLayerMode}
+   *   should be used. The default value is `TextLayerMode.ENABLE`.
+   * @param annotationMode - Controls if the annotation layer is
+   *   created, and if interactive form elements or `AnnotationStorage`-data are
+   *   being rendered. The constants from {@link AnnotationMode} should be used;
+   *   see also {@link RenderParameters} and {@link GetOperatorListParameters}.
+   *   The default value is `AnnotationMode.ENABLE_FORMS`.
+   * @param imageResourcesPath - Path for image resources, mainly
+   *   for annotation icons. Include trailing slash.
+   * @param maxCanvasPixels - The maximum supported canvas size in
+   *   total pixels, i.e. width * height. Use `-1` for no limit, or `0` for
+   *   CSS-only zooming. The default value is 4096 * 8192 (32 mega-pixels).
+   * @param pageColors - Overwrites background and foreground colors
+   *   with user defined ones in order to improve readability in high contrast
+   *   mode.
+   * @param l10n - Localization service.
+   * @param layerProperties - The object that is used to lookup
+   *   the necessary layer-properties.
+   * @param enableHWA - Enables hardware acceleration for
+   *   rendering. The default value is `false`.
    */
   constructor(
     pageNum: number,
@@ -204,7 +197,7 @@ export class WebPDFPageView {
     this.#textLayerMode = textLayerMode;
     this.#annotationMode = annotationMode;
     this.imageResourcesPath = imageResourcesPath || "";
-    this.maxCanvasPixels = maxCanvasPixels ?? AppOptions.get("maxCanvasPixels");
+    this.maxCanvasPixels = maxCanvasPixels;
     this.pageColors = pageColors;
     this.#enableHWA = enableHWA || false;
 
@@ -315,28 +308,7 @@ export class WebPDFPageView {
   }
 
   setPdfPage(pdfPage: PDFPageProxy) {
-    if (this.pageColors?.foreground === "CanvasText" || this.pageColors?.background === "Canvas") {
-      this._container?.style.setProperty(
-        "--hcm-highlight-filter",
-        pdfPage.filterFactory.addHighlightHCMFilter(
-          "highlight",
-          "CanvasText",
-          "Canvas",
-          "HighlightText",
-          "Highlight"
-        )
-      );
-      this._container?.style.setProperty(
-        "--hcm-highlight-selected-filter",
-        pdfPage.filterFactory.addHighlightHCMFilter(
-          "highlight_selected",
-          "CanvasText",
-          "Canvas",
-          "HighlightText",
-          "Highlight"
-        )
-      );
-    }
+
     this.pdfPage = pdfPage;
     this.pdfPageRotate = pdfPage.rotate;
 
@@ -344,6 +316,7 @@ export class WebPDFPageView {
     this.viewport = pdfPage.getViewport(
       this.scale * PixelsPerInch.PDF_TO_CSS_UNITS, totalRotation
     );
+
     this.#setDimensions();
     this.reset();
   }
@@ -369,12 +342,8 @@ export class WebPDFPageView {
     );
   }
 
-  #dispatchLayerRendered(name: string, error) {
-    this.eventBus.dispatch(name, {
-      source: this,
-      pageNumber: this.pageNum,
-      error,
-    });
+  #dispatchLayerRendered(_name: string, _error: unknown) {
+    // 这个回头用回调来代替
   }
 
   async #renderAnnotationLayer() {
@@ -477,12 +446,12 @@ export class WebPDFPageView {
     this.zoomLayer = null;
   }
 
-  reset({
+  reset(
     keepZoomLayer = false,
     keepAnnotationLayer = false,
     keepAnnotationEditorLayer = false,
-    keepTextLayer = false,
-  } = {}) {
+    keepTextLayer = false
+  ) {
     this.cancelRendering({
       keepAnnotationLayer,
       keepAnnotationEditorLayer,
@@ -492,13 +461,12 @@ export class WebPDFPageView {
 
     const div = this.div;
 
-    const childNodes = div.childNodes,
-      zoomLayerNode = (keepZoomLayer && this.zoomLayer) || null,
-      annotationLayerNode =
-        (keepAnnotationLayer && this.annotationLayer?.div) || null,
-      annotationEditorLayerNode =
-        (keepAnnotationEditorLayer && this.annotationEditorLayer?.div) || null,
-      textLayerNode = (keepTextLayer && this.textLayer?.div) || null;
+    const childNodes = div.childNodes;
+    const zoomLayerNode = (keepZoomLayer && this.zoomLayer) || null;
+    const annotationLayerNode = (keepAnnotationLayer && this.annotationLayer?.div) || null;
+    const annotationEditorLayerNode = (keepAnnotationEditorLayer && this.annotationEditorLayer?.div) || null
+    const textLayerNode = (keepTextLayer && this.textLayer?.div) || null
+
     for (let i = childNodes.length - 1; i >= 0; i--) {
       const node = childNodes[i];
       switch (node) {
@@ -509,7 +477,7 @@ export class WebPDFPageView {
           continue;
       }
       node.remove();
-      const layerIndex = this.#layers.indexOf(node);
+      const layerIndex = this.#layers.indexOf(<HTMLDivElement>node);
       if (layerIndex >= 0) {
         this.#layers[layerIndex] = null;
       }
@@ -547,12 +515,7 @@ export class WebPDFPageView {
       return;
     }
     this.#isEditing = isEditing;
-    this.reset({
-      keepZoomLayer: true,
-      keepAnnotationLayer: true,
-      keepAnnotationEditorLayer: true,
-      keepTextLayer: true,
-    });
+    this.reset(true, true, true, true);
   }
 
   /**
@@ -669,12 +632,7 @@ export class WebPDFPageView {
     if (this.zoomLayer) {
       this.cssTransform({ target: this.zoomLayer.firstChild });
     }
-    this.reset({
-      keepZoomLayer: true,
-      keepAnnotationLayer: true,
-      keepAnnotationEditorLayer: true,
-      keepTextLayer: true,
-    });
+    this.reset(true, true, true, true);
   }
 
   /**
@@ -782,7 +740,7 @@ export class WebPDFPageView {
     return this.viewport.convertToPdfPoint(x, y);
   }
 
-  async #finishRenderTask(renderTask: RenderTask, error = null) {
+  async #finishRenderTask(renderTask: RenderTask, error: unknown = null) {
     // The renderTask may have been replaced by a new one, so only remove
     // the reference to the renderTask if it matches the one that is
     // triggering this callback.

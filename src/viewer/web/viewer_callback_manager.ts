@@ -22,3 +22,4 @@ export class GenericWebPDFViewerCallbackManager implements WebPDFViewerCallbackM
 export class InteralWebPDFViewerCallbackManager implements WebPDFViewerCallbackManager {
 
 }
+

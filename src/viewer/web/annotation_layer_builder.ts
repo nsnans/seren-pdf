@@ -49,15 +49,15 @@ export class AnnotationLayerBuilder {
 
   protected _cancelled: boolean;
 
-  protected div: HTMLDivElement | null;
-
   protected _annotationEditorUIManager: AnnotationEditorUIManager;
-
+  
   protected _hasJSActionsPromise: Promise<boolean>;
-
+  
   protected _fieldObjectsPromise: Promise<void>;
+  
+  public annotationLayer: AnnotationLayer | null;
 
-  protected annotationLayer: AnnotationLayer | null;
+  public div: HTMLDivElement | null;
 
   constructor(
     pdfPage: PDFPageProxy,
