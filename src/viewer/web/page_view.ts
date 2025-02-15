@@ -102,11 +102,11 @@ export class WebPDFPageView {
 
   protected pageNum: number;
 
-  protected div: HTMLDivElement;
+  public div: HTMLDivElement;
 
-  protected rotation: number;
+  public rotation: number;
 
-  protected scale: number;
+  public scale: number;
 
   protected maxCanvasPixels: number;
 
@@ -255,6 +255,10 @@ export class WebPDFPageView {
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n?.translate(this.div);
     this.callback = callback;
+  }
+
+  get id(){
+    return this.pageNum;
   }
 
   #addLayer(div: HTMLDivElement, name: string) {

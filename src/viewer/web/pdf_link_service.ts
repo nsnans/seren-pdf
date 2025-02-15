@@ -14,7 +14,7 @@
  */
 
 import { PDFDocumentProxy } from "../../display/api";
-import { parseQueryString } from "../common/ui_utils";
+import { PDFViewerContext } from "../common/viewer_context";
 
 /** @typedef {import("./event_utils").EventBus} EventBus */
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
@@ -46,9 +46,8 @@ export enum LinkTarget {
 /**
  * Performs navigation functions inside PDF, such as opening specified page,
  * or destination.
- * @implements {IPDFLinkService}
  */
-class PDFLinkService {
+export class PDFLinkService {
 
   protected externalLinkEnabled = true;
 
@@ -56,23 +55,25 @@ class PDFLinkService {
 
   protected baseUrl: string | null;
 
+  protected externalLinkTarget: number;
+
+  protected externalLinkRel: string;
+
+  protected _ignoreDestinationZoom: boolean;
+
   /**
    * @param {PDFLinkServiceOptions} options
    */
-  constructor({
-    eventBus,
-    externalLinkTarget = null,
-    externalLinkRel = null,
+  constructor(
+    externalLinkTarget: number,
+    externalLinkRel: string,
     ignoreDestinationZoom = false,
-  } = {}) {
-    this.eventBus = eventBus;
+  ) {
     this.externalLinkTarget = externalLinkTarget;
     this.externalLinkRel = externalLinkRel;
     this._ignoreDestinationZoom = ignoreDestinationZoom;
-
     this.baseUrl = null;
     this.pdfDocument = null;
-    this.pdfViewer = null;
   }
 
   setDocument(pdfDocument: PDFDocumentProxy, baseUrl = null) {
@@ -80,137 +81,22 @@ class PDFLinkService {
     this.pdfDocument = pdfDocument;
   }
 
-  setViewer(pdfViewer) {
-    this.pdfViewer = pdfViewer;
-  }
-
   /**
-   * @type {number}
+   * This method will, when available, also update the browser history.
+   *
+   * @param _dest - The named, or explicit, PDF destination.
    */
-  get pagesCount() {
-    return this.pdfDocument ? this.pdfDocument.numPages : 0;
-  }
-
-  /**
-   * @type {number}
-   */
-  get page() {
-    return this.pdfDocument ? this.pdfViewer.currentPageNumber : 1;
-  }
-
-  /**
-   * @param {number} value
-   */
-  set page(value) {
-    if (this.pdfDocument) {
-      this.pdfViewer.currentPageNumber = value;
-    }
-  }
-
-  /**
-   * @type {number}
-   */
-  get rotation() {
-    return this.pdfDocument ? this.pdfViewer.pagesRotation : 0;
-  }
-
-  /**
-   * @param {number} value
-   */
-  set rotation(value) {
-    if (this.pdfDocument) {
-      this.pdfViewer.pagesRotation = value;
-    }
-  }
-
-  /**
-   * @type {boolean}
-   */
-  get isInPresentationMode() {
-    return this.pdfDocument ? this.pdfViewer.isInPresentationMode : false;
+  async goToDestination(_dest: string | Array<string>) {
+    // 不明确的代码先移除，后面调试的时候重新设计或者开发
   }
 
   /**
    * This method will, when available, also update the browser history.
    *
-   * @param {string|Array} dest - The named, or explicit, PDF destination.
+   * @param _val - The page number, or page label.
    */
-  async goToDestination(dest) {
-    if (!this.pdfDocument) {
-      return;
-    }
-    let namedDest, explicitDest, pageNumber;
-    if (typeof dest === "string") {
-      namedDest = dest;
-      explicitDest = await this.pdfDocument.getDestination(dest);
-    } else {
-      namedDest = null;
-      explicitDest = await dest;
-    }
-    if (!Array.isArray(explicitDest)) {
-      console.error(
-        `goToDestination: "${explicitDest}" is not a valid destination array, for dest="${dest}".`
-      );
-      return;
-    }
-    // Dest array looks like that: <page-ref> </XYZ|/FitXXX> <args..>
-    const [destRef] = explicitDest;
-
-    if (destRef && typeof destRef === "object") {
-      pageNumber = this.pdfDocument.cachedPageNumber(destRef);
-
-      if (!pageNumber) {
-        // Fetch the page reference if it's not yet available. This could
-        // only occur during loading, before all pages have been resolved.
-        try {
-          pageNumber = (await this.pdfDocument.getPageIndex(destRef)) + 1;
-        } catch {
-          console.error(
-            `goToDestination: "${destRef}" is not a valid page reference, for dest="${dest}".`
-          );
-          return;
-        }
-      }
-    } else if (Number.isInteger(destRef)) {
-      pageNumber = destRef + 1;
-    }
-    if (!pageNumber || pageNumber < 1 || pageNumber > this.pagesCount) {
-      console.error(
-        `goToDestination: "${pageNumber}" is not a valid page number, for dest="${dest}".`
-      );
-      return;
-    }
-
-    this.pdfViewer.scrollPageIntoView({
-      pageNumber,
-      destArray: explicitDest,
-      ignoreDestinationZoom: this._ignoreDestinationZoom,
-    });
-  }
-
-  /**
-   * This method will, when available, also update the browser history.
-   *
-   * @param {number|string} val - The page number, or page label.
-   */
-  goToPage(val) {
-    if (!this.pdfDocument) {
-      return;
-    }
-    const pageNumber =
-      (typeof val === "string" && this.pdfViewer.pageLabelToPageNumber(val)) ||
-      val | 0;
-    if (
-      !(
-        Number.isInteger(pageNumber) &&
-        pageNumber > 0 &&
-        pageNumber <= this.pagesCount
-      )
-    ) {
-      console.error(`PDFLinkService.goToPage: "${val}" is not a valid page.`);
-      return;
-    }
-    this.pdfViewer.scrollPageIntoView({ pageNumber });
+  goToPage(_val: number | string) {
+    // 不明确的代码先移除，后面调试的时候重新设计或者开发
   }
 
   /**
@@ -257,7 +143,7 @@ class PDFLinkService {
    * @param {string|Array} dest - The PDF destination object.
    * @returns {string} The hyperlink to the PDF object.
    */
-  getDestinationHash(dest) {
+  getDestinationHash(dest: string) {
     if (typeof dest === "string") {
       if (dest.length > 0) {
         return this.getAnchorUrl("#" + escape(dest));
@@ -284,29 +170,7 @@ class PDFLinkService {
   /**
    * @param {Object} action
    */
-  async executeSetOCGState(action) {
-    if (!this.pdfDocument) {
-      return;
-    }
-    const pdfDocument = this.pdfDocument,
-      optionalContentConfig = await this.pdfViewer.optionalContentConfigPromise;
+  async executeSetOCGState(_action: { state: string[], preserveRB: boolean; }) {
 
-    if (pdfDocument !== this.pdfDocument) {
-      return; // The document was closed while the optional content resolved.
-    }
-    optionalContentConfig.setOCGState(action);
-
-    this.pdfViewer.optionalContentConfigPromise = Promise.resolve(
-      optionalContentConfig
-    );
   }
 }
-
-/**
- * @implements {IPDFLinkService}
- */
-class SimpleLinkService extends PDFLinkService {
-  setDocument(_pdfDocument: PDFDocumentProxy, _baseUrl = null) { }
-}
-
-export { LinkTarget, PDFLinkService, SimpleLinkService };

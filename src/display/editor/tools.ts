@@ -766,7 +766,7 @@ class AnnotationEditorUIManager {
 
   #allLayers = new Map<number, AnnotationEditorLayer>();
 
-  #altTextManager: AltTextManager;
+  #altTextManager: AltTextManager | null;
 
   #annotationStorage: AnnotationStorage | null = null;
 
@@ -859,15 +859,14 @@ class AnnotationEditorUIManager {
   constructor(
     container: HTMLDivElement,
     viewer: HTMLDivElement,
-    altTextManager: AltTextManager,
+    altTextManager: AltTextManager | null,
     eventBus: EventBus,
     pdfDocument: PDFDocumentProxy,
     pageColors: { background: string, foreground: string } | null,
     highlightColors: string | null,
     enableHighlightFloatingButton: boolean,
     enableUpdatedAddImage: boolean,
-    enableNewAltTextWhenAddingImage: boolean,
-    mlManager: MLManager
+    enableNewAltTextWhenAddingImage: boolean
   ) {
     const signal = (this._signal = this.#abortController!.signal);
     this.#container = container;

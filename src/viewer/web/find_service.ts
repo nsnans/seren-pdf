@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 import { PDFDocumentProxy, TextItem } from "../../display/api";
-import { PDFLinkService } from "../common/component_types";
-import { binarySearchFirstItem, scrollIntoView } from "../common/ui_utils";
+import { binarySearchFirstItem } from "../common/ui_utils";
 import { getCharacterType, getNormalizeWithNFKC } from "./pdf_find_utils";
+import { PDFLinkService } from "./pdf_link_service";
 
 export enum FindState {
   FOUND = 0,
@@ -454,7 +454,7 @@ export class PDFContentFindService {
    *
    * @param pdfDocument - The PDF document to search.
    */
-  setDocument(pdfDocument: PDFDocumentProxy) {
+  setDocument(pdfDocument: PDFDocumentProxy | null) {
     if (this._pdfDocument) {
       this.#reset();
     }

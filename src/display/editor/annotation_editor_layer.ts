@@ -26,7 +26,6 @@
 /** @typedef {import("../src/display/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationEditorType, FeatureTest } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_types";
 import { TextAccessibilityManager } from "../../viewer/common/text_accessibility";
 import { L10n } from "../../viewer/web/l10n";
 import { StructTreeLayerBuilder } from "../../viewer/web/struct_tree_layer_builder";

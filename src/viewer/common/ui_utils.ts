@@ -89,7 +89,7 @@ const AutoPrintRegExp = /\bprint\s*\(/;
  *   ignore elements that either: Contains marked content identifiers,
  *   or have the CSS-rule `overflow: hidden;` set. The default value is `false`.
  */
-function scrollIntoView(element: HTMLElement, spot: { top: number, left: number }, scrollMatches = false) {
+function scrollIntoView(element: HTMLElement, spot: { top: number, left: number } | null, scrollMatches = false) {
   // Assuming offsetParent is available (it's not available when viewer is in
   // hidden iframe or object). We have to scroll: if the offsetParent is not set
   // producing the error. See also animationStarted.

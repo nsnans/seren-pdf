@@ -58,7 +58,7 @@ export class WebPDFViewer {
 
   protected pdfDocumentProperties: PDFDocumentProperties;
 
-  protected pdfLinkService: PDFLinkService;
+  protected linkService: PDFLinkService;
 
   protected pdfSidebar: PDFSidebar;
 
@@ -73,8 +73,6 @@ export class WebPDFViewer {
   protected downloadManager: DownloadManager;
 
   protected overlayManager: OverlayManager;
-
-  protected eventBus: EventBus;
 
   protected l10n: IL10n;
 
@@ -139,8 +137,17 @@ export class WebPDFViewer {
     this.viewerContainer = viewerContainer;
     this.pageViewManager = this.initPageViewManager();
 
+    const pdfLinkService = new PDFLinkService(
+      viewerOptions.externalLinkTarget,
+      viewerOptions.externalLinkRel,
+      viewerOptions.ignoreDestinationZoom,
+    );
+
+    this.linkService = pdfLinkService;
+
     this.thumbnailService = viewerOptions.enableThumbnailView ? new WebPDFThumbnailService() : null;
     this.pdfDocumentProperties = new PDFDocumentProperties();
+
   }
 
   initPageViewManager() {
@@ -203,12 +210,12 @@ export class WebPDFViewer {
       const baseUrl = location.href.split("#", 1)[0];
       // Ignore "data:"-URLs for performance reasons, even though it may cause
       // internal links to not work perfectly in all cases (see bug 1803050).
-      this.pdfLinkService.setDocument(
+      this.linkService.setDocument(
         pdfDocument,
         isDataScheme(baseUrl) ? null : baseUrl
       );
     } else {
-      this.pdfLinkService.setDocument(pdfDocument);
+      this.linkService.setDocument(pdfDocument);
     }
     this.pdfDocumentProperties?.setDocument(pdfDocument);
 

@@ -14,25 +14,6 @@ export class EventBus {
   }
 }
 
-export interface PDFLinkService {
-
-  eventBus: EventBus;
-
-  addLinkAttributes(link: HTMLAnchorElement, url: string, newWindow: boolean): void;
-
-  getAnchorUrl(param: string): string;
-
-  executeNamedAction(action: string): void;
-
-  // 可能不是string
-  executeSetOCGState(action: { state: string[], preserveRB: boolean; }): void;
-
-  getDestinationHash(destination: string): string;
-
-  goToDestination(destination: string): void;
-
-}
-
 export class DownloadManager {
 
   // content 有可能是 BlobPart
