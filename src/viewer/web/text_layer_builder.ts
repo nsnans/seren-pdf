@@ -27,15 +27,7 @@ import { PDFPageProxy } from "../../display/api";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PageViewport } from "../../display/display_utils";
 import { TextHighlighter } from "./text_highlighter";
-
-/**
- * @typedef {Object} TextLayerBuilderOptions
- * @property {PDFPageProxy} pdfPage
- * @property {TextHighlighter} [highlighter] - Optional object that will handle
- *   highlighting text from the find controller.
- * @property {TextAccessibilityManager} [accessibilityManager]
- * @property {function} [onAppend]
- */
+import { BrowserUtil } from "./browser_util";
 
 /**
  * The text layer builder provides text selection functionality for the PDF.
@@ -52,9 +44,9 @@ export class TextLayerBuilder {
 
   #textLayer: TextLayer | null = null;
 
-  static #textLayers = new Map();
+  static #textLayers = new Map<HTMLDivElement, HTMLDivElement>();
 
-  static #selectionChangeAbortController = null;
+  static #selectionChangeAbortController: AbortController | null = null;
 
   public div: HTMLDivElement;
 
@@ -102,7 +94,7 @@ export class TextLayerBuilder {
     this.accessibilityManager?.setTextMapping(textDivs);
 
     await this.#textLayer.render();
-    this.#renderingDone =  true;
+    this.#renderingDone = true;
 
     const endOfContent = document.createElement("div");
     endOfContent.className = "endOfContent";
@@ -189,131 +181,107 @@ export class TextLayerBuilder {
     this.#selectionChangeAbortController = new AbortController();
     const { signal } = this.#selectionChangeAbortController;
 
-    const reset = (end, textLayer) => {
-      if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
-        textLayer.append(end);
-        end.style.width = "";
-        end.style.height = "";
-      }
+    const reset = (end: HTMLDivElement, textLayer: HTMLDivElement) => {
+      textLayer.append(end);
+      end.style.width = "";
+      end.style.height = "";
       textLayer.classList.remove("selecting");
     };
 
     let isPointerDown = false;
-    document.addEventListener(
-      "pointerdown",
-      () => {
-        isPointerDown = true;
-      },
-      { signal }
-    );
-    document.addEventListener(
-      "pointerup",
-      () => {
-        isPointerDown = false;
+    const eventOptions = { signal };
+    document.addEventListener("pointerdown", () => isPointerDown = true, eventOptions);
+    document.addEventListener("pointerup", () => {
+      isPointerDown = false;
+      this.#textLayers.forEach(reset);
+    }, eventOptions);
+    window.addEventListener("blur", () => {
+      isPointerDown = false;
+      this.#textLayers.forEach(reset);
+    }, eventOptions);
+    document.addEventListener("keyup", () => {
+      if (!isPointerDown) {
         this.#textLayers.forEach(reset);
-      },
-      { signal }
-    );
-    window.addEventListener(
-      "blur",
-      () => {
-        isPointerDown = false;
+      }
+    }, eventOptions);
+
+    let isFirefox: boolean, prevRange: Range | null = null;
+
+    document.addEventListener("selectionchange", () => {
+      const selection = document.getSelection()!;
+      if (selection.rangeCount === 0) {
         this.#textLayers.forEach(reset);
-      },
-      { signal }
-    );
-    document.addEventListener(
-      "keyup",
-      () => {
-        if (!isPointerDown) {
-          this.#textLayers.forEach(reset);
+        return;
+      }
+
+      // Even though the spec says that .rangeCount should be 0 or 1, Firefox
+      // creates multiple ranges when selecting across multiple pages.
+      // Make sure to collect all the .textLayer elements where the selection
+      // is happening.
+      const activeTextLayers = new Set();
+      for (let i = 0; i < selection.rangeCount; i++) {
+        const range = selection.getRangeAt(i);
+        for (const textLayerDiv of this.#textLayers.keys()) {
+          if (
+            !activeTextLayers.has(textLayerDiv) &&
+            range.intersectsNode(textLayerDiv)
+          ) {
+            activeTextLayers.add(textLayerDiv);
+          }
         }
-      },
-      { signal }
-    );
+      }
 
-    if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
-      // eslint-disable-next-line no-var
-      var isFirefox, prevRange;
-    }
+      for (const [textLayerDiv, endDiv] of this.#textLayers) {
+        if (activeTextLayers.has(textLayerDiv)) {
+          textLayerDiv.classList.add("selecting");
+        } else {
+          reset(endDiv, textLayerDiv);
+        }
+      }
 
-    document.addEventListener(
-      "selectionchange",
-      () => {
-        const selection = document.getSelection();
-        if (selection.rangeCount === 0) {
-          this.#textLayers.forEach(reset);
+      if (BrowserUtil.isFirefox()) {
+        return;
+      }
+      if (!BrowserUtil.isChrome()) {
+        isFirefox ??=
+          getComputedStyle(
+            <Element>this.#textLayers.values().next().value
+          ).getPropertyValue("-moz-user-select") === "none";
+
+        if (isFirefox) {
           return;
         }
+      }
+      // In non-Firefox browsers, when hovering over an empty space (thus,
+      // on .endOfContent), the selection will expand to cover all the
+      // text between the current selection and .endOfContent. By moving
+      // .endOfContent to right after (or before, depending on which side
+      // of the selection the user is moving), we limit the selection jump
+      // to at most cover the enteirety of the <span> where the selection
+      // is being modified.
+      const range = selection.getRangeAt(0);
+      const modifyStart =
+        prevRange &&
+        (range.compareBoundaryPoints(Range.END_TO_END, prevRange) === 0 ||
+          range.compareBoundaryPoints(Range.START_TO_END, prevRange) === 0);
+      let anchor: Node | null = modifyStart ? range.startContainer : range.endContainer;
+      if (anchor.nodeType === Node.TEXT_NODE) {
+        anchor = anchor.parentNode;
+      }
 
-        // Even though the spec says that .rangeCount should be 0 or 1, Firefox
-        // creates multiple ranges when selecting across multiple pages.
-        // Make sure to collect all the .textLayer elements where the selection
-        // is happening.
-        const activeTextLayers = new Set();
-        for (let i = 0; i < selection.rangeCount; i++) {
-          const range = selection.getRangeAt(i);
-          for (const textLayerDiv of this.#textLayers.keys()) {
-            if (
-              !activeTextLayers.has(textLayerDiv) &&
-              range.intersectsNode(textLayerDiv)
-            ) {
-              activeTextLayers.add(textLayerDiv);
-            }
-          }
-        }
+      const parentTextLayer = <HTMLDivElement>anchor!.parentElement?.closest(".textLayer")!;
+      const endDiv = this.#textLayers.get(parentTextLayer);
+      if (endDiv) {
+        endDiv.style.width = parentTextLayer.style.width;
+        endDiv.style.height = parentTextLayer.style.height;
+        anchor!.parentElement!.insertBefore(
+          endDiv, modifyStart ? anchor : anchor!.nextSibling
+        );
+      }
 
-        for (const [textLayerDiv, endDiv] of this.#textLayers) {
-          if (activeTextLayers.has(textLayerDiv)) {
-            textLayerDiv.classList.add("selecting");
-          } else {
-            reset(endDiv, textLayerDiv);
-          }
-        }
-
-        if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("MOZCENTRAL")) {
-          return;
-        }
-        if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("CHROME")) {
-          isFirefox ??=
-            getComputedStyle(
-              this.#textLayers.values().next().value
-            ).getPropertyValue("-moz-user-select") === "none";
-
-          if (isFirefox) {
-            return;
-          }
-        }
-        // In non-Firefox browsers, when hovering over an empty space (thus,
-        // on .endOfContent), the selection will expand to cover all the
-        // text between the current selection and .endOfContent. By moving
-        // .endOfContent to right after (or before, depending on which side
-        // of the selection the user is moving), we limit the selection jump
-        // to at most cover the enteirety of the <span> where the selection
-        // is being modified.
-        const range = selection.getRangeAt(0);
-        const modifyStart =
-          prevRange &&
-          (range.compareBoundaryPoints(Range.END_TO_END, prevRange) === 0 ||
-            range.compareBoundaryPoints(Range.START_TO_END, prevRange) === 0);
-        let anchor = modifyStart ? range.startContainer : range.endContainer;
-        if (anchor.nodeType === Node.TEXT_NODE) {
-          anchor = anchor.parentNode;
-        }
-
-        const parentTextLayer = anchor.parentElement?.closest(".textLayer");
-        const endDiv = this.#textLayers.get(parentTextLayer);
-        if (endDiv) {
-          endDiv.style.width = parentTextLayer.style.width;
-          endDiv.style.height = parentTextLayer.style.height;
-          anchor.parentElement.insertBefore(
-            endDiv, modifyStart ? anchor : anchor.nextSibling
-          );
-        }
-
-        prevRange = range.cloneRange();
-      },
-      { signal }
+      prevRange = range.cloneRange();
+    },
+      eventOptions
     );
   }
 }

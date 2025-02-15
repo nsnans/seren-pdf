@@ -17,6 +17,7 @@ import { AnnotationData } from "../../core/annotation";
 import { AnnotationEditorParamsType, AnnotationEditorType, shadow } from "../../shared/util";
 import { BoxType } from "../../types";
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { PointType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
@@ -229,7 +230,7 @@ export class HighlightEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
+  static initialize(l10n: L10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditorHelper.initialize(l10n, uiManager);
     HighlightEditor._defaultColor ||=
       uiManager.highlightColors?.values().next().value || "#fff066";

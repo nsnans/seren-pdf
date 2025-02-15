@@ -14,6 +14,7 @@
  */
 
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
 
@@ -54,7 +55,7 @@ export class AltText {
 
   static #l10nNewButton: Record<string, string> | null = null;
 
-  static _l10n: IL10n | null = null;
+  static _l10n: L10n | null = null;
 
   constructor(editor: AnnotationEditor) {
     this.#editor = editor;
@@ -70,7 +71,7 @@ export class AltText {
     });
   }
 
-  static initialize(l10n: IL10n | null = null) {
+  static initialize(l10n: L10n | null = null) {
     AltText._l10n ??= l10n;
   }
 

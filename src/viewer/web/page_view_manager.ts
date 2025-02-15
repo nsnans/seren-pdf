@@ -65,7 +65,8 @@ import { WebPDFViewerOptions } from './viewer_options';
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { FieldObject } from "../../core/core_types";
 import { L10n } from "./l10n";
-import { PDFContentFindService } from "./find_service";
+import { PDFContentFindService } from './find_service';
+import { OptionalContentConfig } from "../../display/optional_content_config";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -205,22 +206,30 @@ export interface WebPDFViewLayerProperties {
 
   readonly enableScripting: boolean;
 
-  readonly fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null;
-
   readonly linkService: PDFLinkService;
+
+  readonly findService: PDFContentFindService;
+
+  readonly fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null;
 
   readonly hasJSActionsPromise: Promise<boolean> | null;
 
 }
 
-export interface WebPageViewCallbacks{
+/**
+ * WebPageViewManager只依赖于WebPageViewCallback
+ */
+export interface WebPageViewCallback {
+
+  afterPageChanging(prev: number, now: number, pageLabel: string | null): void;
 
 }
 
-export interface WebPageViewHandlers {
-
-  onPageChanging(prev: number, now: number, pageLabel: string | null): void;
-
+interface ViewRefreshParameter {
+  scale: number,
+  rotation: number | null,
+  optionalContentConfigPromise: Promise<OptionalContentConfig> | null,
+  drawingDelay: number,
 }
 
 /**
@@ -304,7 +313,9 @@ export class WebPageViewManager {
 
   protected _pagesRotation: number | null = null;
 
-  protected callbacks: WebPageViewCallbacks | null
+  protected callbacks: WebPageViewCallback | null
+
+  protected _currentScaleValue: string;
 
   /**
    * @param {PDFViewerOptions} options
@@ -316,7 +327,7 @@ export class WebPageViewManager {
     findService: PDFContentFindService,
     viewerOptions: WebPDFViewerOptions,
     l10n: L10n,
-    callbacks: WebPageViewCallbacks | null = null
+    callbacks: WebPageViewCallback | null = null
   ) {
     const viewer = container.firstElementChild;
     if (container?.tagName !== "DIV" || viewer?.tagName !== "DIV") {
@@ -477,7 +488,7 @@ export class WebPageViewManager {
     const previous = this._currentPageNumber!;
     this._currentPageNumber = val;
 
-    this.callbacks?.onPageChanging(previous, val, this._pageLabels?.[val - 1] ?? null);
+    this.callbacks?.afterPageChanging(previous, val, this._pageLabels?.[val - 1] ?? null);
 
     if (resetCurrentPageView) {
       this.#resetCurrentPageView();
@@ -496,7 +507,7 @@ export class WebPageViewManager {
   /**
    * @param {string} val - The page label.
    */
-  set currentPageLabel(val) {
+  set currentPageLabel(val: string) {
     if (!this.pdfDocument) {
       return;
     }
@@ -628,8 +639,8 @@ export class WebPageViewManager {
       get fieldObjectsPromise() {
         return self.pdfDocument?.getFieldObjects() ?? null;
       },
-      get findController() {
-        return self.findController;
+      get findService() {
+        return self.findService;
       },
       get hasJSActionsPromise() {
         return self.pdfDocument?.hasJSActions() ?? null;
@@ -2395,12 +2406,17 @@ export class WebPageViewManager {
     updater();
   }
 
-  refresh(noUpdate = false, updateArgs = Object.create(null)) {
+  refresh(noUpdate = false, args: Partial<ViewRefreshParameter> = Object.create(null)) {
     if (!this.pdfDocument) {
       return;
     }
     for (const pageView of this._pages) {
-      pageView.update(updateArgs);
+      pageView.update(
+        args.scale ?? 0,
+        args.rotation ?? null,
+        args.optionalContentConfigPromise ?? null,
+        args.drawingDelay ?? -1
+      );
     }
     if (this.#scaleTimeoutId !== null) {
       clearTimeout(this.#scaleTimeoutId);

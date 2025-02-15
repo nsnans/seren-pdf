@@ -21,8 +21,11 @@ export class DrawLayerBuilder {
 
   protected pageIndex: number;
 
+  protected _cancelled: boolean;
+
   constructor(pageIndex: number) {
     this.pageIndex = pageIndex;
+    this._cancelled = false;
   }
 
   /**
@@ -45,7 +48,7 @@ export class DrawLayerBuilder {
     this.#drawLayer = null;
   }
 
-  setParent(parent) {
+  setParent(parent: HTMLDivElement) {
     this.#drawLayer?.setParent(parent);
   }
 

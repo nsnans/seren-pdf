@@ -1685,19 +1685,19 @@ export class PDFPageProxy {
    * @param params - Page render parameters.
    * @returns An object that contains a promise that is resolved when the page finishes rendering.
    */
-  render({
-    canvasContext,
-    viewport,
+  render(
+    canvasContext: CanvasRenderingContext2D,
+    viewport: PageViewport,
+    annotationMode: AnnotationMode,
+    transform: TransformType | null = null,
+    background: CanvasGradient | CanvasPattern | string | null = null,
+    pageColors: { background: string, foreground: string } | null = null,
+    optionalContentConfigPromise: Promise<OptionalContentConfig> | null = null,
+    annotationCanvasMap: Map<string, HTMLCanvasElement> | null = null,
+    printAnnotationStorage: PrintAnnotationStorage | null = null,
     intent = "display",
-    annotationMode = AnnotationMode.ENABLE,
-    transform = null,
-    background = null,
-    optionalContentConfigPromise = null,
-    annotationCanvasMap = null,
-    pageColors = null,
-    printAnnotationStorage = null,
-    isEditing = false,
-  }: RenderParameters) {
+    isEditing = false
+  ) {
     this._stats?.time("Overall");
 
     const intentArgs = this._transport.getRenderingIntent(
@@ -1713,8 +1713,7 @@ export class PDFPageProxy {
     // ... and ensure that a delayed cleanup is always aborted.
     this._abortDelayedCleanup();
 
-    optionalContentConfigPromise ||=
-      this._transport.getOptionalContentConfig(renderingIntent);
+    optionalContentConfigPromise ||= this._transport.getOptionalContentConfig(renderingIntent);
 
     let intentState = this._intentStates.get(cacheKey) ?? null;
     if (!intentState) {

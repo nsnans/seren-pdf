@@ -1,5 +1,6 @@
 import { AnnotationEditorType } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { FreeTextEditor, FreeTextEditorParameter } from "./freetext";
 import { HighlightEditor, HighlightEditorParameter } from "./highlight";
 import { InkEditor, InkEditorParameter } from "./ink";
@@ -7,7 +8,7 @@ import { StampEditor, StampEditorParameter } from "./stamp";
 import { AnnotationEditorUIManager } from "./tools";
 
 interface AnnotationEditorDescriptor<P, T> {
-  initialize: (l10n: IL10n, uiManager: AnnotationEditorUIManager) => void;
+  initialize: (l10n: L10n, uiManager: AnnotationEditorUIManager) => void;
   create: (params: P) => T;
   type: AnnotationEditorType;
   name: string;
@@ -57,7 +58,7 @@ export class AnnotationEditorRegistry {
   }
 
   static getL10nInitializer() {
-    const initializers: ((l10n: IL10n, uiManager: AnnotationEditorUIManager) => void)[] = [];
+    const initializers: ((l10n: L10n, uiManager: AnnotationEditorUIManager) => void)[] = [];
     for (const descriptor of this.annotationEditorDescriptorMap.values()) {
       initializers.push(descriptor.initialize);
     }

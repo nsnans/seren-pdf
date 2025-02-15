@@ -24,7 +24,7 @@
 /** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
 
 import { PDFPageProxy, RenderTask } from "../../display/api";
-import { OutputScale, PageViewport, PixelsPerInch, RenderingCancelledException, setLayerDimensions } from "../../display/display_utils";
+import { OutputScale, PageViewport, PixelsPerInch, RenderingCancelledException, setLayerDimensions, TransformType } from "../../display/display_utils";
 import { DrawLayerBuilder } from "../../display/draw_layer_builder";
 import { OptionalContentConfig } from "../../display/optional_content_config";
 import { AbortException, AnnotationMode, shadow } from "../../shared/util";
@@ -45,6 +45,19 @@ const LAYERS_ORDER = new Map([
   ["annotationLayer", 2],
   ["annotationEditorLayer", 3],
 ]);
+
+export interface WebPDFPageViewCallback {
+
+  afterAnnotationLayerRendered(pageNum: number, error: unknown): void;
+
+  afterAnnotationEditorLayerRendered(pageNum: number, error: unknown): void;
+
+  afterTextLayerRendered(pageNum: number, error: unknown): void;
+
+  afterPageRendered(pageNum: number, cssTransform: boolean, timestamp: number, error: unknown): void;
+
+  afterPageRender(pageNum: number): void;
+}
 
 export class WebPDFPageView {
 
@@ -135,6 +148,8 @@ export class WebPDFPageView {
 
   protected _annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
 
+  protected callback: WebPDFPageViewCallback | null = null;
+
   protected resume: (() => void) | null;
 
   /**
@@ -184,6 +199,7 @@ export class WebPDFPageView {
     l10n: L10n | null,
     layerProperties: WebPDFViewLayerProperties,
     enableHWA: boolean,
+    callback: WebPDFPageViewCallback | null,
   ) {
     this.pageNum = pageNum;
     this.#layerProperties = layerProperties;
@@ -238,6 +254,7 @@ export class WebPDFPageView {
 
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n?.translate(this.div);
+    this.callback = callback;
   }
 
   #addLayer(div: HTMLDivElement, name: string) {
@@ -331,15 +348,8 @@ export class WebPDFPageView {
   }
 
   get _textHighlighter() {
-    return shadow(
-      this,
-      "_textHighlighter",
-      new TextHighlighter(this.pageNum - 1, this.#layerProperties.findController)
-    );
-  }
-
-  #dispatchLayerRendered(_name: string, _error: unknown) {
-    // 这个回头用回调来代替
+    const highlighter = new TextHighlighter(this.#layerProperties.findService, this.pageNum - 1);
+    return shadow(this, "_textHighlighter", highlighter);
   }
 
   async #renderAnnotationLayer() {
@@ -352,7 +362,7 @@ export class WebPDFPageView {
       console.error(`#renderAnnotationLayer: "${ex}".`);
       error = ex;
     } finally {
-      this.#dispatchLayerRendered("annotationlayerrendered", error);
+      this.callback?.afterAnnotationLayerRendered(this.pageNum, error);
     }
   }
 
@@ -364,7 +374,7 @@ export class WebPDFPageView {
       console.error(`#renderAnnotationEditorLayer: "${ex}".`);
       error = ex;
     } finally {
-      this.#dispatchLayerRendered("annotationeditorlayerrendered", error);
+      this.callback?.afterAnnotationEditorLayerRendered(this.pageNum, error);
     }
   }
 
@@ -391,7 +401,7 @@ export class WebPDFPageView {
       console.error(`#renderTextLayer: "${ex}".`);
       error = ex;
     }
-    this.#dispatchLayerRendered("textlayerrendered", error);
+    this.callback?.afterTextLayerRendered(this.pageNum, error);
 
     this.#renderStructTreeLayer();
   }
@@ -448,11 +458,11 @@ export class WebPDFPageView {
     keepAnnotationEditorLayer = false,
     keepTextLayer = false
   ) {
-    this.cancelRendering({
+    this.cancelRendering(
       keepAnnotationLayer,
       keepAnnotationEditorLayer,
       keepTextLayer,
-    });
+    );
     this.renderingState = RenderingStates.INITIAL;
 
     const div = this.div;
@@ -515,25 +525,21 @@ export class WebPDFPageView {
   }
 
   /**
-   * @typedef {Object} PDFPageViewUpdateParameters
-   * @property {number} [scale] The new scale, if specified.
-   * @property {number} [rotation] The new rotation, if specified.
-   * @property {Promise<OptionalContentConfig>} [optionalContentConfigPromise]
-   *   A promise that is resolved with an {@link OptionalContentConfig}
-   *   instance. The default value is `null`.
-   * @property {number} [drawingDelay]
-   */
-
-  /**
    * Update e.g. the scale and/or rotation of the page.
-   * @param {PDFPageViewUpdateParameters} params
+   * 
+   * @param scale The new scale, if specified.
+   * @param rotation The new rotation, if specified.
+   * @param optionalContentConfigPromise A promise that is
+   *  resolved with an {@link OptionalContentConfig} instance. 
+   *  The default value is `null`.
+   * @param drawingDelay
    */
-  update({
+  update(
     scale = 0,
-    rotation = null,
-    optionalContentConfigPromise = null,
+    rotation: number | null = null,
+    optionalContentConfigPromise: Promise<OptionalContentConfig> | null = null,
     drawingDelay = -1,
-  }) {
+  ) {
     this.scale = scale || this.scale;
     if (typeof rotation === "number") {
       this.rotation = rotation; // The rotation may be zero.
@@ -582,12 +588,7 @@ export class WebPDFPageView {
           !onlyCssZoom &&
           this.renderingState !== RenderingStates.FINISHED
         ) {
-          this.cancelRendering({
-            keepAnnotationLayer: true,
-            keepAnnotationEditorLayer: true,
-            keepTextLayer: true,
-            cancelExtraDelay: drawingDelay,
-          });
+          this.cancelRendering(true, true, true, drawingDelay);
           // It isn't really finished, but once we have finished
           // to postpone, we'll call this.reset(...) which will set
           // the rendering state to INITIAL, hence the next call to
@@ -598,26 +599,18 @@ export class WebPDFPageView {
           this.#useThumbnailCanvas.directDrawing = false;
         }
 
-        this.cssTransform({
-          target: this.canvas,
-          redrawAnnotationLayer: true,
-          redrawAnnotationEditorLayer: true,
-          redrawTextLayer: !postponeDrawing,
-          hideTextLayer: postponeDrawing,
-        });
+        this.cssTransform(
+          this.canvas, true, true, !postponeDrawing, postponeDrawing
+        );
 
         if (postponeDrawing) {
           // The "pagerendered"-event will be dispatched once the actual
           // rendering is done, hence don't dispatch it here as well.
           return;
         }
-        this.eventBus.dispatch("pagerendered", {
-          source: this,
-          pageNumber: this.pageNum,
-          cssTransform: true,
-          timestamp: performance.now(),
-          error: this.#renderError,
-        });
+        this.callback!.afterPageRendered(
+          this.pageNum, true, performance.now(), this.#renderError,
+        );
         return;
       }
       if (!this.zoomLayer && !this.canvas.hidden) {
@@ -626,7 +619,7 @@ export class WebPDFPageView {
       }
     }
     if (this.zoomLayer) {
-      this.cssTransform({ target: this.zoomLayer.firstChild });
+      this.cssTransform(<HTMLElement>this.zoomLayer.firstChild);
     }
     this.reset(true, true, true, true);
   }
@@ -635,12 +628,12 @@ export class WebPDFPageView {
    * PLEASE NOTE: Most likely you want to use the `this.reset()` method,
    *              rather than calling this one directly.
    */
-  cancelRendering({
+  cancelRendering(
     keepAnnotationLayer = false,
     keepAnnotationEditorLayer = false,
     keepTextLayer = false,
     cancelExtraDelay = 0,
-  } = {}) {
+  ) {
     if (this.renderTask) {
       this.renderTask.cancel(cancelExtraDelay);
       this.renderTask = null;
@@ -675,16 +668,16 @@ export class WebPDFPageView {
     }
   }
 
-  cssTransform({
-    target,
+  cssTransform(
+    target: HTMLElement,
     redrawAnnotationLayer = false,
     redrawAnnotationEditorLayer = false,
     redrawTextLayer = false,
     hideTextLayer = false,
-  }) {
+  ) {
     // Scale target (canvas), its wrapper and page container.
     if (!target.hasAttribute("zooming")) {
-      target.setAttribute("zooming", true);
+      target.setAttribute("zooming", "true");
       const { style } = target;
       style.width = style.height = "";
     }
@@ -757,13 +750,9 @@ export class WebPDFPageView {
     // for documents that contain interactive form elements.
     this.#useThumbnailCanvas.regularAnnotations = !renderTask.separateAnnots;
 
-    this.eventBus.dispatch("pagerendered", {
-      source: this,
-      pageNumber: this.pageNum,
-      cssTransform: false,
-      timestamp: performance.now(),
-      error: this.#renderError,
-    });
+    this.callback?.afterPageRendered(
+      this.pageNum, false, performance.now(), this.#renderError,
+    );
 
     if (error) {
       throw error;
@@ -841,16 +830,9 @@ export class WebPDFPageView {
       );
     }
 
-    const renderContinueCallback = cont => {
+    const renderContinueCallback = (cont: () => void) => {
       showCanvas?.(false);
-      if (this.renderingQueue && !this.renderingQueue.isHighestPriority(this)) {
-        this.renderingState = RenderingStates.PAUSED;
-        this.resume = () => {
-          this.renderingState = RenderingStates.RUNNING;
-          cont();
-        };
-        return;
-      }
+      // 消除旧的渲染队列的写法
       cont();
     };
 
@@ -863,7 +845,7 @@ export class WebPDFPageView {
     canvas.hidden = true;
     const hasHCM = !!(pageColors?.background && pageColors?.foreground);
 
-    let showCanvas = (isLastShow: boolean) => {
+    let showCanvas: ((isLastShow: boolean) => void) | null = isLastShow => {
       // In HCM, a final filter is applied on the canvas which means that
       // before it's applied we've normal colors. Consequently, to avoid to have
       // a final flash we just display it once all the drawing is done.
@@ -878,13 +860,10 @@ export class WebPDFPageView {
     const ctx = canvas.getContext("2d", {
       alpha: false,
       willReadFrequently: !this.#enableHWA,
-    });
+    })!;
     const outputScale = (this.outputScale = new OutputScale());
 
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-      this.maxCanvasPixels === 0
-    ) {
+    if (this.maxCanvasPixels === 0) {
       const invScale = 1 / this.scale;
       // Use a scale that makes the canvas have the originally intended size
       // of the page.
@@ -932,19 +911,15 @@ export class WebPDFPageView {
 
     // Rendering area
     const transform = outputScale.scaled
-      ? [outputScale.sx, 0, 0, outputScale.sy, 0, 0]
+      ? <TransformType>[outputScale.sx, 0, 0, outputScale.sy, 0, 0]
       : null;
-    const renderContext = {
-      canvasContext: ctx,
-      transform,
-      viewport,
-      annotationMode: this.#annotationMode,
-      optionalContentConfigPromise: this._optionalContentConfigPromise,
-      annotationCanvasMap: this._annotationCanvasMap,
-      pageColors,
-      isEditing: this.#isEditing,
-    };
-    const renderTask = (this.renderTask = pdfPage.render(renderContext));
+
+    const renderTask = (this.renderTask = pdfPage.render(
+      ctx, viewport, this.#annotationMode, transform, null,
+      pageColors, this._optionalContentConfigPromise,
+      this._annotationCanvasMap, null, "display", this.#isEditing
+
+    ));
     renderTask.onContinue = renderContinueCallback;
 
     const resultPromise = renderTask.promise.then(
@@ -972,19 +947,19 @@ export class WebPDFPageView {
         await this.#renderDrawLayer();
         this.drawLayer.setParent(canvasWrapper);
 
-        this.annotationEditorLayer ||= new AnnotationEditorLayerBuilder({
-          uiManager: annotationEditorUIManager,
+        this.annotationEditorLayer ||= new AnnotationEditorLayerBuilder(
+          annotationEditorUIManager,
           pdfPage,
           l10n,
-          structTreeLayer: this.structTreeLayer,
-          accessibilityManager: this._accessibilityManager,
-          annotationLayer: this.annotationLayer?.annotationLayer,
-          textLayer: this.textLayer,
-          drawLayer: this.drawLayer.getDrawLayer(),
-          onAppend: (annotationEditorLayerDiv: HTMLDivElement) => {
+          this.structTreeLayer,
+          this._accessibilityManager,
+          this.annotationLayer?.annotationLayer ?? null,
+          this.textLayer,
+          this.drawLayer.getDrawLayer(),
+          (annotationEditorLayerDiv: HTMLDivElement) => {
             this.#addLayer(annotationEditorLayerDiv, "annotationEditorLayer");
           },
-        });
+        );
         this.#renderAnnotationEditorLayer();
       },
       error => {
@@ -1002,10 +977,7 @@ export class WebPDFPageView {
 
     div.setAttribute("data-loaded", "true");
 
-    this.eventBus.dispatch("pagerender", {
-      source: this,
-      pageNumber: this.pageNum,
-    });
+    this.callback?.afterPageRender(this.pageNum);
     return resultPromise;
   }
 

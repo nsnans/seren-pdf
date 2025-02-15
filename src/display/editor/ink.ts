@@ -21,6 +21,7 @@ import {
   Util,
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { noContextMenu, PointType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
@@ -117,7 +118,7 @@ export class InkEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
+  static initialize(l10n: L10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditorHelper.initialize(l10n, uiManager);
   }
 

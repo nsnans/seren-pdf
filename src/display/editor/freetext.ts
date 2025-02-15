@@ -26,6 +26,7 @@ import {
   shadow
 } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import {
@@ -150,7 +151,7 @@ export class FreeTextEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
+  static initialize(l10n: L10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditorHelper.initialize(l10n, uiManager);
     const style = getComputedStyle(document.documentElement);
 

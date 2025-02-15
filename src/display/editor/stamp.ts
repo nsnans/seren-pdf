@@ -17,6 +17,7 @@ import { AnnotationData } from "../../core/annotation";
 import { PlatformHelper } from "../../platform/platform_helper";
 import { AnnotationEditorType, shadow } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
+import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { OutputScale } from "../display_utils";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
@@ -65,7 +66,7 @@ export class StampEditor extends AnnotationEditor {
   }
 
   /** @inheritdoc */
-  static initialize(l10n: IL10n, uiManager: AnnotationEditorUIManager) {
+  static initialize(l10n: L10n, uiManager: AnnotationEditorUIManager) {
     AnnotationEditorHelper.initialize(l10n, uiManager);
   }
 

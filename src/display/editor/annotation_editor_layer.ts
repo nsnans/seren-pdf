@@ -28,33 +28,15 @@
 import { AnnotationEditorType, FeatureTest } from "../../shared/util";
 import { IL10n } from "../../viewer/common/component_types";
 import { TextAccessibilityManager } from "../../viewer/common/text_accessibility";
+import { L10n } from "../../viewer/web/l10n";
+import { StructTreeLayerBuilder } from "../../viewer/web/struct_tree_layer_builder";
+import { TextLayerBuilder } from "../../viewer/web/text_layer_builder";
 import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorRegistry } from "./editor_manager";
 import { AnnotationEditorUIManager } from "./tools";
-
-/**
- * @typedef {Object} AnnotationEditorLayerOptions
- * @property {Object} mode
- * @property {HTMLDivElement} div
- * @property {StructTreeLayerBuilder} structTreeLayer
- * @property {AnnotationEditorUIManager} uiManager
- * @property {boolean} enabled
- * @property {TextAccessibilityManager} [accessibilityManager]
- * @property {number} pageIndex
- * @property {IL10n} l10n
- * @property {AnnotationLayer} [annotationLayer]
- * @property {HTMLDivElement} [textLayer]
- * @property {DrawLayer} drawLayer
- * @property {PageViewport} viewport
- */
-
-/**
- * @typedef {Object} RenderEditorLayerOptions
- * @property {PageViewport} viewport
- */
 
 /**
  * Manage all the different editors on a page.
@@ -81,7 +63,7 @@ export class AnnotationEditorLayer {
 
   #isDisabling = false;
 
-  #textLayer: null = null;
+  #textLayer: TextLayerBuilder | null = null;
 
   #textSelectionAC: AbortController | null = null;
 
@@ -97,20 +79,19 @@ export class AnnotationEditorLayer {
 
   public drawLayer: DrawLayer;
 
-  /**
-   * @param {AnnotationEditorLayerOptions} options
-   */
+  public _structTree: StructTreeLayerBuilder | null;
+
   constructor(
     uiManager: AnnotationEditorUIManager,
     pageIndex: number,
     div: HTMLDivElement,
-    structTreeLayer,
+    structTreeLayer: StructTreeLayerBuilder | null,
     accessibilityManager: TextAccessibilityManager,
     annotationLayer: AnnotationLayer,
     drawLayer: DrawLayer,
-    textLayer,
+    textLayer: TextLayerBuilder,
     viewport: PageViewport,
-    l10n: IL10n,
+    l10n: L10n,
   ) {
     const editorInitalizers = AnnotationEditorRegistry.getL10nInitializer();
     if (!AnnotationEditorLayer._initialized) {
@@ -563,7 +544,7 @@ export class AnnotationEditorLayer {
    * @param {Object} params
    * @returns {AnnotationEditor}
    */
-  #createNewEditor(params:AnnotationEditorParameters) : AnnotationEditor | null{
+  #createNewEditor(params: AnnotationEditorParameters): AnnotationEditor | null {
     const editorDescriptor = this.#currentEditorDescriptor;
     return editorDescriptor ? <AnnotationEditor>editorDescriptor.create(params) : null;
   }
@@ -789,7 +770,7 @@ export class AnnotationEditorLayer {
    * Update the main editor.
    * @param {RenderEditorLayerOptions} parameters
    */
-  update({ viewport }: { viewport: PageViewport }) {
+  update(viewport: PageViewport) {
     // Editors have their dimensions/positions in percent so to avoid any
     // issues (see #15582), we must commit the current one before changing
     // the viewport.
