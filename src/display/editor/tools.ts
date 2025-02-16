@@ -898,7 +898,6 @@ class AnnotationEditorUIManager {
     this.#enableHighlightFloatingButton = enableHighlightFloatingButton;
     this.#enableUpdatedAddImage = enableUpdatedAddImage;
     this.#enableNewAltTextWhenAddingImage = enableNewAltTextWhenAddingImage;
-    this.#mlManager = mlManager || null;
     this.viewParameters = {
       realScale: PixelsPerInch.PDF_TO_CSS_UNITS,
       rotation: 0,

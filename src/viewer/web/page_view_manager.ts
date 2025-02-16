@@ -353,6 +353,15 @@ export class WebPageViewManager {
 
   protected _spreadMode = SpreadMode.NONE;
 
+  protected _location: {
+    pageNumber: number;
+    scale: string | number | null;
+    top: number;
+    left: number;
+    rotation: number | null;
+    pdfOpenParams: string;
+  } | null = null;
+
   /**
    * @param {PDFViewerOptions} options
    */
@@ -1337,9 +1346,7 @@ export class WebPageViewManager {
       presetValue: preset ? newValue : undefined,
     });
 
-    if (this.defaultRenderingQueue) {
-      this.update();
-    }
+    this.update();
   }
 
   get #pageWidthScaleFactor() {
@@ -1546,10 +1553,7 @@ export class WebPageViewManager {
         let hPadding = SCROLLBAR_PADDING,
           vPadding = VERTICAL_PADDING;
 
-        if (
-          (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) &&
-          this.removePageBorders
-        ) {
+        if (this.removePageBorders) {
           hPadding = vPadding = 0;
         }
         widthScale =
@@ -1601,7 +1605,7 @@ export class WebPageViewManager {
 
   _updateLocation(firstPage) {
     const currentScale = this._currentScale;
-    const currentScaleValue = this._currentScaleValue;
+    const currentScaleValue = this._currentScaleValue!;
     const normalizedScaleValue =
       parseFloat(currentScaleValue) === currentScale
         ? Math.round(currentScale * 10000) / 100
@@ -1798,8 +1802,7 @@ export class WebPageViewManager {
   forceRendering(currentlyVisiblePages) {
     const visiblePages = currentlyVisiblePages || this._getVisiblePages();
     const scrollAhead = this.#getScrollAhead(visiblePages);
-    const preRenderExtra =
-      this._spreadMode !== SpreadMode.NONE &&
+    const preRenderExtra = this._spreadMode !== SpreadMode.NONE &&
       this._scrollMode !== ScrollMode.HORIZONTAL;
 
     const pageView = this.renderingQueue.getHighestPriority(
@@ -1811,7 +1814,7 @@ export class WebPageViewManager {
 
     if (pageView) {
       this.#ensurePdfPageLoaded(pageView).then(() => {
-        this.renderingQueue.renderView(pageView);
+        this.rend.renderView(pageView);
       });
       return true;
     }
@@ -1841,11 +1844,11 @@ export class WebPageViewManager {
    * @returns {Array} Array of objects with width/height/rotation fields.
    */
   getPagesOverview() {
-    let initialOrientation;
+    let initialOrientation: boolean | null = null;
     return this._pages.map(pageView => {
-      const viewport = pageView.pdfPage.getViewport({ scale: 1 });
+      const viewport = pageView.pdfPage!.getViewport(1);
       const orientation = isPortraitOrientation(viewport);
-      if (initialOrientation === undefined) {
+      if (initialOrientation === null) {
         initialOrientation = orientation;
       } else if (
         this.enablePrintAutoRotate &&
@@ -1869,7 +1872,7 @@ export class WebPageViewManager {
   /**
    * @type {Promise<OptionalContentConfig | null>}
    */
-  get optionalContentConfigPromise() {
+  get optionalContentConfigPromise(): Promise<OptionalContentConfig | null> {
     if (!this.pdfDocument) {
       return Promise.resolve(null);
     }
@@ -1915,20 +1918,11 @@ export class WebPageViewManager {
   }
 
   /**
-   * @param {number} mode - The direction in which the document pages should be
+   * @param mode - The direction in which the document pages should be
    *   laid out within the scrolling container.
    *   The constants from {ScrollMode} should be used.
    */
-  set scrollMode(mode) {
-    if (
-      typeof PDFJSDev === "undefined"
-        ? window.isGECKOVIEW
-        : PDFJSDev.test("GECKOVIEW")
-    ) {
-      // NOTE: Always ignore the pageLayout in GeckoView since there's
-      // no UI available to change Scroll/Spread modes for the user.
-      return;
-    }
+  set scrollMode(mode: ScrollMode) {
     if (this._scrollMode === mode) {
       return; // The Scroll mode didn't change.
     }
@@ -1989,7 +1983,7 @@ export class WebPageViewManager {
    *   even-number pages (unless `SpreadMode.NONE` is used).
    *   The constants from {SpreadMode} should be used.
    */
-  set spreadMode(mode) {
+  set spreadMode(mode: SpreadMode) {
     if (
       typeof PDFJSDev === "undefined"
         ? window.isGECKOVIEW
@@ -2040,7 +2034,7 @@ export class WebPageViewManager {
             spread = spread.cloneNode(false);
             viewer.append(spread);
           }
-          spread.append(pages[i].div);
+          (<HTMLElement>spread).append(pages[i].div);
         }
       }
     }
@@ -2199,10 +2193,10 @@ export class WebPageViewManager {
    * @param {ChangeScaleOptions} [options]
    */
   updateScale(
-    drawingDelay: number,
+    drawingDelay: number | null,
     scaleFactor: number | null = null,
     steps: number | null = null,
-    origin: PointType
+    origin: PointType | null = null
   ) {
     if (steps === null && scaleFactor === null) {
       throw new Error(
@@ -2229,18 +2223,16 @@ export class WebPageViewManager {
 
   /**
    * Increase the current zoom level one, or more, times.
-   * @param {ChangeScaleOptions} [options]
    */
-  increaseScale(options = {}) {
-    this.updateScale({ ...options, steps: options.steps ?? 1 });
+  increaseScale(steps: number | null = null) {
+    this.updateScale(null, null, steps ?? 1);
   }
 
   /**
    * Decrease the current zoom level one, or more, times.
-   * @param {ChangeScaleOptions} [options]
    */
-  decreaseScale(options = {}) {
-    this.updateScale({ ...options, steps: -(options.steps ?? 1) });
+  decreaseScale(steps: number | null = null) {
+    this.updateScale(null, null, -(steps ?? 1));
   }
 
   #updateContainerHeightCss(height = this.container.clientHeight) {
@@ -2250,7 +2242,7 @@ export class WebPageViewManager {
     }
   }
 
-  #resizeObserverCallback(entries) {
+  #resizeObserverCallback(entries: ResizeObserverEntry[]) {
     for (const entry of entries) {
       if (entry.target === this.container) {
         this.#updateContainerHeightCss(
