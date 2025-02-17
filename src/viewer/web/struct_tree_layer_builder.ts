@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+import { StructTreeSerialLeaf, StructTreeSerialNode } from "../../core/struct_tree";
+import { PDFPageProxy } from "../../display/api";
 import { removeNullCharacters } from "../common/ui_utils";
 
 const PDF_ROLE_TO_HTML_ROLE = {
@@ -73,20 +75,27 @@ const PDF_ROLE_TO_HTML_ROLE = {
 
 const HEADING_PATTERN = /^H(\d+)$/;
 
-class StructTreeLayerBuilder {
-  #promise;
+interface RawDims {
+  pageWidth: number;
+  pageHeight: number;
+  pageX: number;
+  pageY: number;
+}
+export class StructTreeLayerBuilder {
 
-  #treeDom = null;
+  #promise: Promise<StructTreeSerialNode | null> | null;
 
-  #treePromise;
+  #treeDom: HTMLSpanElement | null = null;
+
+  #treePromise: Promise<HTMLSpanElement | null> | null = null;
 
   #elementAttributes = new Map();
 
-  #rawDims;
+  #rawDims: RawDims;
 
-  #elementsToAddToTextLayer = null;
+  #elementsToAddToTextLayer: Map<string, HTMLSpanElement> | null = null;
 
-  constructor(pdfPage, rawDims) {
+  constructor(pdfPage: PDFPageProxy, rawDims: RawDims) {
     this.#promise = pdfPage.getStructTree();
     this.#rawDims = rawDims;
   }
@@ -95,11 +104,11 @@ class StructTreeLayerBuilder {
     if (this.#treePromise) {
       return this.#treePromise;
     }
-    const { promise, resolve, reject } = Promise.withResolvers();
+    const { promise, resolve, reject } = Promise.withResolvers<HTMLSpanElement | null>();
     this.#treePromise = promise;
 
     try {
-      this.#treeDom = this.#walk(await this.#promise);
+      this.#treeDom = this.#walk((await this.#promise)!);
     } catch (ex) {
       reject(ex);
     }
@@ -111,7 +120,7 @@ class StructTreeLayerBuilder {
     return promise;
   }
 
-  async getAriaAttributes(annotationId) {
+  async getAriaAttributes(annotationId: string) {
     try {
       await this.render();
       return this.#elementAttributes.get(annotationId);
@@ -134,19 +143,19 @@ class StructTreeLayerBuilder {
     }
   }
 
-  #setAttributes(structElement, htmlElement) {
-    const { alt, id, lang } = structElement;
+  #setAttributes(structElement: StructTreeSerialNode | StructTreeSerialLeaf, htmlElement: HTMLSpanElement) {
+    const { alt, id, lang } = <{ alt?: string, id?: string, lang?: string }>structElement;
     if (alt !== undefined) {
       // Don't add the label in the struct tree layer but on the annotation
       // in the annotation layer.
       let added = false;
       const label = removeNullCharacters(alt);
-      for (const child of structElement.children) {
-        if (child.type === "annotation") {
-          let attrs = this.#elementAttributes.get(child.id);
+      for (const child of (<StructTreeSerialNode>structElement).children) {
+        if ((<StructTreeSerialLeaf>child).type === "annotation") {
+          let attrs = this.#elementAttributes.get((<StructTreeSerialLeaf>child).id);
           if (!attrs) {
             attrs = new Map();
-            this.#elementAttributes.set(child.id, attrs);
+            this.#elementAttributes.set((<StructTreeSerialLeaf>child).id, attrs);
           }
           attrs.set("aria-label", label);
           added = true;
@@ -167,14 +176,14 @@ class StructTreeLayerBuilder {
     }
   }
 
-  #addImageInTextLayer(node, element) {
+  #addImageInTextLayer(node: StructTreeSerialNode, element: HTMLSpanElement) {
     const { alt, bbox, children } = node;
     const child = children?.[0];
-    if (!this.#rawDims || !alt || !bbox || child?.type !== "content") {
+    if (!this.#rawDims || !alt || !bbox || (<{ type?: string }>child)?.type !== "content") {
       return false;
     }
 
-    const { id } = child;
+    const id = (<{ id?: string }>child).id;
     if (!id) {
       return false;
     }
@@ -211,7 +220,7 @@ class StructTreeLayerBuilder {
     this.#elementsToAddToTextLayer = null;
   }
 
-  #walk(node) {
+  #walk(node: StructTreeSerialNode | StructTreeSerialLeaf) {
     if (!node) {
       return null;
     }
@@ -223,8 +232,8 @@ class StructTreeLayerBuilder {
       if (match) {
         element.setAttribute("role", "heading");
         element.setAttribute("aria-level", match[1]);
-      } else if (PDF_ROLE_TO_HTML_ROLE[role]) {
-        element.setAttribute("role", PDF_ROLE_TO_HTML_ROLE[role]);
+      } else if (PDF_ROLE_TO_HTML_ROLE[<keyof typeof PDF_ROLE_TO_HTML_ROLE>role]) {
+        element.setAttribute("role", PDF_ROLE_TO_HTML_ROLE[<keyof typeof PDF_ROLE_TO_HTML_ROLE>role]!);
       }
       if (role === "Figure" && this.#addImageInTextLayer(node, element)) {
         return element;
@@ -233,19 +242,18 @@ class StructTreeLayerBuilder {
 
     this.#setAttributes(node, element);
 
-    if (node.children) {
-      if (node.children.length === 1 && "id" in node.children[0]) {
+    if ((<{ children?: [] }>node).children) {
+      const sNode = <StructTreeSerialNode>node;
+      if (sNode.children.length === 1 && "id" in sNode.children[0]) {
         // Often there is only one content node so just set the values on the
         // parent node to avoid creating an extra span.
-        this.#setAttributes(node.children[0], element);
+        this.#setAttributes(sNode.children[0], element);
       } else {
-        for (const kid of node.children) {
-          element.append(this.#walk(kid));
+        for (const kid of sNode.children) {
+          element.append(this.#walk(kid)!);
         }
       }
     }
     return element;
   }
 }
-
-export { StructTreeLayerBuilder };

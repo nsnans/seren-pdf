@@ -15,10 +15,6 @@
 
 import { PDFDocumentProxy } from "../../display/api";
 
-/** @typedef {import("./event_utils").EventBus} EventBus */
-/** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
-
-
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 
 export enum LinkTarget {
@@ -28,19 +24,6 @@ export enum LinkTarget {
   PARENT = 3,
   TOP = 4,
 };
-
-/**
- * @typedef {Object} PDFLinkServiceOptions
- * @property {EventBus} eventBus - The application event bus.
- * @property {number} [externalLinkTarget] - Specifies the `target` attribute
- *   for external links. Must use one of the values from {LinkTarget}.
- *   Defaults to using no target.
- * @property {string} [externalLinkRel] - Specifies the `rel` attribute for
- *   external links. Defaults to stripping the referrer.
- * @property {boolean} [ignoreDestinationZoom] - Ignores the zoom argument,
- *   thus preserving the current zoom level in the viewer, when navigating
- *   to internal destinations. The default value is `false`.
- */
 
 /**
  * Performs navigation functions inside PDF, such as opening specified page,
@@ -60,8 +43,17 @@ export class PDFLinkService {
 
   protected _ignoreDestinationZoom: boolean;
 
+  public isInPresentationMode = false;
+
   /**
-   * @param {PDFLinkServiceOptions} options
+   * @param externalLinkTarget - Specifies the `target` attribute
+   *   for external links. Must use one of the values from {LinkTarget}.
+   *   Defaults to using no target.
+   * @param externalLinkRel - Specifies the `rel` attribute for
+   *   external links. Defaults to stripping the referrer.
+   * @param ignoreDestinationZoom - Ignores the zoom argument,
+   *   thus preserving the current zoom level in the viewer, when navigating
+   *   to internal destinations. The default value is `false`.
    */
   constructor(
     externalLinkTarget: number,

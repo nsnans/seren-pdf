@@ -37,21 +37,10 @@ import { BaseTreeViewer } from "./base_tree_viewer";
 class PDFLayerViewer extends BaseTreeViewer {
   constructor(options) {
     super(options);
-
-    this.eventBus._on("optionalcontentconfigchanged", evt => {
-      this.#updateLayers(evt.promise);
-    });
-    this.eventBus._on("resetlayers", () => {
-      this.#updateLayers();
-    });
-    this.eventBus._on("togglelayerstree", this._toggleAllTreeItems.bind(this));
   }
 
   reset() {
     super.reset();
-    this._optionalContentConfig = null;
-
-     this._optionalContentVisibility = null;
   }
 
   /**

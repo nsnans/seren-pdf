@@ -694,7 +694,7 @@ class StructElement {
   }
 }
 
-interface StructTreeSerialLeaf {
+export interface StructTreeSerialLeaf {
   type: string;
   id: string;
 }

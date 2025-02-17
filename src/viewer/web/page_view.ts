@@ -818,8 +818,8 @@ export class WebPDFPageView {
       this.annotationLayer = new AnnotationLayerBuilder(
         pdfPage,
         linkService,
-        annotationStorage,
         downloadManager,
+        annotationStorage!,
         this.imageResourcesPath,
         this.#annotationMode === AnnotationMode.ENABLE_FORMS,
         enableScripting,
@@ -827,7 +827,7 @@ export class WebPDFPageView {
         fieldObjectsPromise,
         this._annotationCanvasMap,
         this._accessibilityManager!,
-        annotationEditorUIManager,
+        annotationEditorUIManager!,
         (annotationLayerDiv: HTMLDivElement) => {
           this.#addLayer(annotationLayerDiv, "annotationLayer");
         },

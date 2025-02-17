@@ -162,7 +162,7 @@ export class TextHighlighter {
 
     const isSelectedPage = pageIdx === findService.selected.pageIdx;
     const selectedMatchIdx = findService.selected.matchIdx;
-    const highlightAll = findService.state.highlightAll;
+    const highlightAll = false;
     let prevEnd = null;
     const infinity = {
       divIdx: -1,
@@ -224,7 +224,6 @@ export class TextHighlighter {
       const end = match.end;
       const isSelected = isSelectedPage && i === selectedMatchIdx;
       const highlightSuffix = isSelected ? " selected" : "";
-      let selectedLeft = 0;
 
       // Match inside new div.
       if (!prevEnd || begin.divIdx !== prevEnd.divIdx) {
@@ -239,19 +238,7 @@ export class TextHighlighter {
       }
 
       if (begin.divIdx === end.divIdx) {
-        selectedLeft = appendTextToDiv(
-          begin.divIdx,
-          begin.offset,
-          end.offset,
-          "highlight" + highlightSuffix
-        );
       } else {
-        selectedLeft = appendTextToDiv(
-          begin.divIdx,
-          begin.offset,
-          infinity.offset,
-          "highlight begin" + highlightSuffix
-        );
         for (let n0 = begin.divIdx + 1, n1 = end.divIdx; n0 < n1; n0++) {
           textDivs[n0].className = "highlight middle" + highlightSuffix;
         }

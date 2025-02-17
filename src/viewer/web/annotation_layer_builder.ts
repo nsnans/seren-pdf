@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { FieldObject } from "../../core/core_types";
 import { AnnotationLayer } from "../../display/annotation_layer";
 import { AnnotationStorage } from "../../display/annotation_storage";
 import { PDFPageProxy } from "../../display/api";
@@ -50,11 +51,11 @@ export class AnnotationLayerBuilder {
   protected _cancelled: boolean;
 
   protected _annotationEditorUIManager: AnnotationEditorUIManager;
-  
+
   protected _hasJSActionsPromise: Promise<boolean>;
-  
-  protected _fieldObjectsPromise: Promise<void>;
-  
+
+  protected _fieldObjectsPromise:  Promise<Map<string, FieldObject[]> | null>;
+
   public annotationLayer: AnnotationLayer | null;
 
   public div: HTMLDivElement | null;
@@ -68,7 +69,7 @@ export class AnnotationLayerBuilder {
     renderForms = true,
     enableScripting = false,
     hasJSActionsPromise: Promise<boolean> | null = null,
-    fieldObjectsPromise: Promise<void> | null = null,
+    fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null> | null = null,
     annotationCanvasMap: Map<string, HTMLCanvasElement> | null = null,
     accessibilityManager: TextAccessibilityManager,
     annotationEditorUIManager: AnnotationEditorUIManager,
@@ -82,7 +83,7 @@ export class AnnotationLayerBuilder {
     this.annotationStorage = annotationStorage;
     this.enableScripting = enableScripting;
     this._hasJSActionsPromise = hasJSActionsPromise || Promise.resolve(false);
-    this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve();
+    this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve(null);
     this._annotationCanvasMap = annotationCanvasMap;
     this._accessibilityManager = accessibilityManager;
     this._annotationEditorUIManager = annotationEditorUIManager;

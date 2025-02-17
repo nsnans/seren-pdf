@@ -1,25 +1,21 @@
-import { PDFDocumentProxy } from "../../display/api";
 
-export interface WebPDFViewerCallbackManager {
+export interface WebViewerCallbackManager {
 }
 
 /**
  * 只能暴露部分的接口给用户
  */
-export class GenericWebPDFViewerCallbackManager implements WebPDFViewerCallbackManager {
+export class GenericWebViewerCallbackManager implements WebViewerCallbackManager {
 
-  protected interalCallbackManager: InteralWebPDFViewerCallbackManager;
-
-  constructor(interalCallbackManager: InteralWebPDFViewerCallbackManager) {
-    this.interalCallbackManager = interalCallbackManager;
+  constructor() {
   }
 
-  onPDFDocumentLoaded(callback: (document: PDFDocumentProxy) => void) {
+  onPDFDocumentLoaded() {
 
   }
 }
 
-export class InteralWebPDFViewerCallbackManager implements WebPDFViewerCallbackManager {
+export class InteralWebViewerCallbackManager implements WebViewerCallbackManager {
 
 }
 

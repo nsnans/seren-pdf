@@ -13,23 +13,25 @@
  * limitations under the License.
  */
 
+import { PDFDocumentProxy } from "../../display/api";
 import { removeNullCharacters } from "../common/ui_utils";
+import { L10n } from "./l10n";
 
 
 const TREEITEM_OFFSET_TOP = -100; // px
 const TREEITEM_SELECTED_CLASS = "selected";
 
 class BaseTreeViewer {
-  constructor(options) {
-    if (
-      (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) &&
-      this.constructor === BaseTreeViewer
-    ) {
-      throw new Error("Cannot initialize BaseTreeViewer.");
-    }
-    this.container = options.container;
-    this.eventBus = options.eventBus;
-    this._l10n = options.l10n;
+
+  protected _l10n: L10n;
+
+  protected container: HTMLDivElement;
+
+  protected _pdfDocument: PDFDocumentProxy | null = null;
+
+  constructor(container: HTMLDivElement, l10n: L10n) {
+    this.container = container;
+    this._l10n = l10n;
 
     this.reset();
   }
@@ -49,7 +51,7 @@ class BaseTreeViewer {
   /**
    * @protected
    */
-  _dispatchEvent(count) {
+  _dispatchEvent(_count: number) {
     throw new Error("Not implemented: _dispatchEvent");
   }
 
@@ -75,11 +77,8 @@ class BaseTreeViewer {
   /**
    * Prepend a button before a tree item which allows the user to collapse or
    * expand all tree items at that level; see `_toggleTreeItem`.
-   * @param {HTMLDivElement} div
-   * @param {boolean|object} [hidden]
-   * @protected
    */
-  _addToggleButton(div, hidden = false) {
+  protected _addToggleButton(div: HTMLDivElement, hidden = false) {
     const toggler = document.createElement("div");
     toggler.className = "treeItemToggler";
     if (hidden) {
@@ -100,12 +99,11 @@ class BaseTreeViewer {
   /**
    * Collapse or expand the subtree of a tree item.
    *
-   * @param {Element} root - the root of the item (sub)tree.
-   * @param {boolean} show - whether to show the item (sub)tree. If false,
+   * @param root - the root of the item (sub)tree.
+   * @param show - whether to show the item (sub)tree. If false,
    *   the item subtree rooted at `root` will be collapsed.
-   * @private
    */
-  _toggleTreeItem(root, show = false) {
+  private _toggleTreeItem(root: Element, show = false) {
     // Pause translation when collapsing/expanding the subtree.
     this._l10n.pause();
 

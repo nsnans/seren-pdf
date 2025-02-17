@@ -54,7 +54,7 @@ import { DocumentOwner } from "./interface";
 import { L10n } from "./l10n";
 import { WebPDFPageView } from './page_view';
 import { PDFLinkService } from "./pdf_link_service";
-import { PDFRenderingManager } from "./view_rendering_manager";
+import { PDFRenderingManager } from "./rendering_manager";
 import { WebPDFViewerOptions } from './viewer_options';
 
 const DEFAULT_CACHE_SIZE = 10;

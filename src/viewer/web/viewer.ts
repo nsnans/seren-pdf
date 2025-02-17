@@ -13,8 +13,8 @@ import { GenericWebViewPDFLayerManager as DefaultWebViewPDFLayerManager } from "
 import { PDFLinkService } from "./pdf_link_service";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { GenericWebThumbnailViewService, WebThumbnailViewService } from './thumbnail_view_service';
-import { PDFRenderingManager } from "./view_rendering_manager";
-import { WebPDFViewerCallbackManager } from "./viewer_callback_manager";
+import { PDFRenderingManager } from "./rendering_manager";
+import { WebViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebViewerCursorManager } from "./viewer_cursor_manager";
 import { WebPDFViewerOptions } from "./viewer_options";
@@ -38,7 +38,7 @@ export class WebPDFViewer {
 
   protected viewerOptions: WebPDFViewerOptions;
 
-  protected callbackManager: WebPDFViewerCallbackManager;
+  protected callbackManager: WebViewerCallbackManager;
 
   protected viewerContainer: HTMLDivElement;
 

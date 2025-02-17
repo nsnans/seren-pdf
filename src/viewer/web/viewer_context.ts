@@ -1,18 +1,20 @@
-import { WebPDFViewerCallbackManager } from './viewer_callback_manager';
+import { GenericWebViewerCallbackManager, WebViewerCallbackManager } from './viewer_callback_manager';
 import { WebPDFViewerOptions } from './viewer_options';
 import { L10n } from './l10n';
+import { GenericL10n } from './genericl10n';
 
 export class WebPDFViewerContext {
 
   protected viewerOptions: WebPDFViewerOptions;
 
-  protected callbackManager: WebPDFViewerCallbackManager;
+  protected callbackManager: WebViewerCallbackManager;
 
   protected l10n: L10n;
 
   constructor(viewerOptions: WebPDFViewerOptions) {
     this.viewerOptions = viewerOptions;
-    this.callbackManager = new WebPDFViewerCallbackManager();
+    this.callbackManager = new GenericWebViewerCallbackManager();
+    this.l10n = new GenericL10n();
   }
 
   getCallbackManager() {

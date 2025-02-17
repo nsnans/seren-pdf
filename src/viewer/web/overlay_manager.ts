@@ -15,7 +15,7 @@
 
 export class OverlayManager {
 
-  #overlays = new WeakMap();
+  #overlays = new WeakMap<HTMLDialogElement, { canForceClose: boolean }>();
 
   #active: HTMLDialogElement | null = null;
 
@@ -54,7 +54,7 @@ export class OverlayManager {
     } else if (this.#active) {
       if (this.#active === dialog) {
         throw new Error("The overlay is already active.");
-      } else if (this.#overlays.get(dialog).canForceClose) {
+      } else if (this.#overlays.get(dialog)!.canForceClose) {
         await this.close();
       } else {
         throw new Error("Another overlay is currently active.");
