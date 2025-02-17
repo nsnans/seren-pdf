@@ -137,18 +137,6 @@ export class AnnotationLayerBuilder {
       structTreeLayer,
     );
 
-    const x = {
-      annotations,
-      imageResourcesPath: this.imageResourcesPath,
-      renderForms: this.renderForms,
-      linkService: this.linkService,
-      downloadManager: this.downloadManager,
-      annotationStorage: this.annotationStorage,
-      enableScripting: this.enableScripting,
-      hasJSActions,
-      fieldObjects,
-    }
-
     await this.annotationLayer.render(
       annotations,
       this.imageResourcesPath,

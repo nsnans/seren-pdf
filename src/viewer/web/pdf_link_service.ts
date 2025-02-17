@@ -14,7 +14,6 @@
  */
 
 import { PDFDocumentProxy } from "../../display/api";
-import { PDFViewerContext } from "../common/viewer_context";
 
 /** @typedef {import("./event_utils").EventBus} EventBus */
 /** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */

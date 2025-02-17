@@ -466,73 +466,6 @@ export class PDFContentFindService implements DocumentOwner {
     this._firstPageCapability?.resolve();
   }
 
-  #onFind(state) {
-    if (!state) {
-      return;
-    }
-    const pdfDocument = this._pdfDocument;
-    const { type } = state;
-
-    if (this.#state === null || this.#shouldDirtyMatch(state)) {
-      this._dirtyMatch = true;
-    }
-    this.#state = state;
-    if (type !== "highlightallchange") {
-      this.#updateUIState(FindState.PENDING);
-    }
-
-    this._firstPageCapability.promise.then(() => {
-      // If the document was closed before searching began, or if the search
-      // operation was relevant for a previously opened document, do nothing.
-      if (
-        !this._pdfDocument ||
-        (pdfDocument && this._pdfDocument !== pdfDocument)
-      ) {
-        return;
-      }
-      this.#extractText();
-
-      const findbarClosed = !this._highlightMatches;
-      const pendingTimeout = !!this._findTimeout;
-
-      if (this._findTimeout) {
-        clearTimeout(this._findTimeout);
-        this._findTimeout = null;
-      }
-      if (!type) {
-        // Trigger the find action with a small delay to avoid starting the
-        // search when the user is still typing (saving resources).
-        this._findTimeout = setTimeout(() => {
-          this.#nextMatch();
-          this._findTimeout = null;
-        }, FIND_TIMEOUT);
-      } else if (this._dirtyMatch) {
-        // Immediately trigger searching for non-'find' operations, when the
-        // current state needs to be reset and matches re-calculated.
-        this.#nextMatch();
-      } else if (type === "again") {
-        this.#nextMatch();
-
-        // When the findbar was previously closed, and `highlightAll` is set,
-        // ensure that the matches on all active pages are highlighted again.
-        if (findbarClosed && this.#state.highlightAll) {
-          this.#updateAllPages();
-        }
-      } else if (type === "highlightallchange") {
-        // If there was a pending search operation, synchronously trigger a new
-        // search *first* to ensure that the correct matches are highlighted.
-        if (pendingTimeout) {
-          this.#nextMatch();
-        } else {
-          this._highlightMatches = true;
-        }
-        this.#updateAllPages(); // Update the highlighting on all active pages.
-      } else {
-        this.#nextMatch();
-      }
-    });
-  }
-
   /**
    * @typedef {Object} PDFFindControllerScrollMatchIntoViewParams
    * @property {HTMLElement} element
@@ -598,51 +531,6 @@ export class PDFContentFindService implements DocumentOwner {
     // We don't bother caching the normalized search query in the Array-case,
     // since this code-path is *essentially* unused in the default viewer.
     return (query || []).filter(q => !!q).map(q => normalize(q)[0]);
-  }
-
-  #shouldDirtyMatch(state) {
-    // When the search query changes, regardless of the actual search command
-    // used, always re-calculate matches to avoid errors (fixes bug 1030622).
-    const newQuery = state.query,
-      prevQuery = this.#state.query;
-    const newType = typeof newQuery,
-      prevType = typeof prevQuery;
-
-    if (newType !== prevType) {
-      return true;
-    }
-    if (newType === "string") {
-      if (newQuery !== prevQuery) {
-        return true;
-      }
-    } else if (
-      /* isArray && */ JSON.stringify(newQuery) !== JSON.stringify(prevQuery)
-    ) {
-      return true;
-    }
-
-    switch (state.type) {
-      case "again":
-        const pageNumber = this._selected.pageIdx + 1;
-        const linkService = this._linkService;
-        // Only treat a 'findagain' event as a new search operation when it's
-        // *absolutely* certain that the currently selected match is no longer
-        // visible, e.g. as a result of the user scrolling in the document.
-        //
-        // NOTE: If only a simple `this._linkService.page` check was used here,
-        // there's a risk that consecutive 'findagain' operations could "skip"
-        // over matches at the top/bottom of pages thus making them completely
-        // inaccessible when there's multiple pages visible in the viewer.
-        return (
-          pageNumber >= 1 &&
-          pageNumber <= linkService.pagesCount &&
-          pageNumber !== linkService.page &&
-          !(this.onIsPageVisible?.(pageNumber) ?? true)
-        );
-      case "highlightallchange":
-        return false;
-    }
-    return true;
   }
 
   /**
@@ -836,55 +724,6 @@ export class PDFContentFindService implements DocumentOwner {
     return matches;
   }
 
-  #extractText() {
-    // Perform text extraction once if this method is called multiple times.
-    if (this._extractTextPromises.length > 0) {
-      return;
-    }
-
-    let deferred = Promise.resolve();
-    for (let i = 0, ii = this._linkService.pagesCount; i < ii; i++) {
-      const { promise, resolve } = Promise.withResolvers<void>();
-      this._extractTextPromises[i] = promise;
-
-      // eslint-disable-next-line arrow-body-style
-      deferred = deferred.then(() => {
-        return this._pdfDocument!.getPage(i + 1)
-          .then(pdfPage => pdfPage.getTextContent(false, true))
-          .then(textContent => {
-            const strBuf = [];
-
-            for (const textItem of textContent.items) {
-              strBuf.push((<TextItem>textItem).str);
-              if ((<TextItem>textItem).hasEOL) {
-                strBuf.push("\n");
-              }
-            }
-
-            // Store the normalized page content (text items) as one string.
-            [
-              this._pageContents[i],
-              this._pageDiffs[i],
-              this._hasDiacritics[i],
-            ] = normalize(strBuf.join(""));
-            resolve();
-          },
-            reason => {
-              console.error(
-                `Unable to get text content for page ${i + 1}`,
-                reason
-              );
-              // Page error -- assuming no text content.
-              this._pageContents[i] = "";
-              this._pageDiffs[i] = [];
-              this._hasDiacritics[i] = false;
-              resolve();
-            }
-          );
-      });
-    }
-  }
-
   #updatePage(index) {
     if (this._scrollMatches && this._selected.pageIdx === index) {
       // If the page is selected, scroll the page into view, which triggers
@@ -904,77 +743,6 @@ export class PDFContentFindService implements DocumentOwner {
       source: this,
       pageIndex: -1,
     });
-  }
-
-  #nextMatch() {
-    const previous = this.#state.findPrevious;
-    const currentPageIndex = this._linkService.page - 1;
-    const numPages = this._linkService.pagesCount;
-
-    this._highlightMatches = true;
-
-    if (this._dirtyMatch) {
-      // Need to recalculate the matches, reset everything.
-      this._dirtyMatch = false;
-      this._selected.pageIdx = this._selected.matchIdx = -1;
-      this._offset.pageIdx = currentPageIndex;
-      this._offset.matchIdx = null;
-      this._offset.wrapped = false;
-      this._resumePageIdx = null;
-      this._pageMatches.length = 0;
-      this._pageMatchesLength.length = 0;
-      this.#visitedPagesCount = 0;
-      this._matchesCountTotal = 0;
-
-      this.#updateAllPages(); // Wipe out any previously highlighted matches.
-
-      for (let i = 0; i < numPages; i++) {
-        // Start finding the matches as soon as the text is extracted.
-        if (this._pendingFindMatches.has(i)) {
-          continue;
-        }
-        this._pendingFindMatches.add(i);
-        this._extractTextPromises[i].then(() => {
-          this._pendingFindMatches.delete(i);
-          this.#calculateMatch(i);
-        });
-      }
-    }
-
-    // If there's no query there's no point in searching.
-    const query = this.#query;
-    if (query.length === 0) {
-      this.#updateUIState(FindState.FOUND);
-      return;
-    }
-    // If we're waiting on a page, we return since we can't do anything else.
-    if (this._resumePageIdx) {
-      return;
-    }
-
-    const offset = this._offset;
-    // Keep track of how many pages we should maximally iterate through.
-    this._pagesToSearch = numPages;
-    // If there's already a `matchIdx` that means we are iterating through a
-    // page's matches.
-    if (offset.matchIdx !== null) {
-      const numPageMatches = this._pageMatches[offset.pageIdx].length;
-      if (
-        (!previous && offset.matchIdx + 1 < numPageMatches) ||
-        (previous && offset.matchIdx > 0)
-      ) {
-        // The simple case; we just have advance the matchIdx to select
-        // the next match on the page.
-        offset.matchIdx = previous ? offset.matchIdx - 1 : offset.matchIdx + 1;
-        this.#updateMatch(/* found = */ true);
-        return;
-      }
-      // We went beyond the current page's matches, so we advance to
-      // the next page.
-      this.#advanceOffsetPage(previous);
-    }
-    // Start searching through the page.
-    this.#nextPageMatch();
   }
 
   #matchesReady(matches) {
@@ -1060,40 +828,6 @@ export class PDFContentFindService implements DocumentOwner {
 
       this.#updatePage(this._selected.pageIdx);
     }
-  }
-
-  #onFindBarClose(evt) {
-    const pdfDocument = this._pdfDocument;
-    // Since searching is asynchronous, ensure that the removal of highlighted
-    // matches (from the UI) is async too such that the 'updatetextlayermatches'
-    // events will always be dispatched in the expected order.
-    this._firstPageCapability.promise.then(() => {
-      // Only update the UI if the document is open, and is the current one.
-      if (
-        !this._pdfDocument ||
-        (pdfDocument && this._pdfDocument !== pdfDocument)
-      ) {
-        return;
-      }
-      // Ensure that a pending, not yet started, search operation is aborted.
-      if (this._findTimeout) {
-        clearTimeout(this._findTimeout);
-        this._findTimeout = null;
-      }
-      // Abort any long running searches, to avoid a match being scrolled into
-      // view *after* the findbar has been closed. In this case `this._offset`
-      // will most likely differ from `this._selected`, hence we also ensure
-      // that any new search operation will always start with a clean slate.
-      if (this._resumePageIdx) {
-        this._resumePageIdx = null;
-        this._dirtyMatch = true;
-      }
-      // Avoid the UI being in a pending state when the findbar is re-opened.
-      this.#updateUIState(FindState.FOUND);
-
-      this._highlightMatches = false;
-      this.#updateAllPages(); // Wipe out any previously highlighted matches.
-    });
   }
 
   #requestMatchesCount() {

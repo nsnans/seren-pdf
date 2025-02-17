@@ -17,7 +17,6 @@
 
 import { PDFDocumentProxy } from "../../display/api";
 import { shadow } from "../../shared/util";
-import { apiPageLayoutToViewerModes, RenderingStates } from "../common/ui_utils";
 
 /**
  * @typedef {Object} PDFScriptingManagerOptions

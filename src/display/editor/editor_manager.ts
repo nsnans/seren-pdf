@@ -1,5 +1,4 @@
 import { AnnotationEditorType } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_types";
 import { L10n } from "../../viewer/web/l10n";
 import { FreeTextEditor, FreeTextEditorParameter } from "./freetext";
 import { HighlightEditor, HighlightEditorParameter } from "./highlight";

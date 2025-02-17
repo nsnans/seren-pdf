@@ -25,7 +25,6 @@ import {
   LINE_FACTOR,
   shadow
 } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_types";
 import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";

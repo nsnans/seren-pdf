@@ -18,7 +18,6 @@
 
 import { AnnotationData } from "../../core/annotation";
 import { AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, shadow, unreachable } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_types";
 import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { noContextMenu, RectType } from "../display_utils";

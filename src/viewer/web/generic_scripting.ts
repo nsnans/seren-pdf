@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
+import { PDFDocumentProxy } from "../../display/api";
 import { getPdfFilenameFromUrl } from "../../display/display_utils";
 
-async function docProperties(pdfDocument) {
-  const url = "",
-    baseUrl = url.split("#", 1)[0];
+async function docProperties(pdfDocument: PDFDocumentProxy) {
+  const url = "", baseUrl = url.split("#", 1)[0];
   // eslint-disable-next-line prefer-const
   let { info, metadata, contentDispositionFilename, contentLength } =
     await pdfDocument.getMetadata();

@@ -1523,7 +1523,7 @@ export class PDFDocument {
     }
     if (fieldObjects) {
       return fieldObjects.allFields.values().some(fieldObject =>
-        fieldObject.some((object: FieldObject) => object.actions !== null)
+        fieldObject.some((object: FieldObject) => (<{ actions?: unknown }>object).actions !== null)
       );
     }
     return false;

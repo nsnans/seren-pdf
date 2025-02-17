@@ -20,7 +20,6 @@ import {
   assert,
   Util,
 } from "../../shared/util";
-import { IL10n } from "../../viewer/common/component_types";
 import { L10n } from "../../viewer/web/l10n";
 import { noContextMenu, PointType } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
