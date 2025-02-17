@@ -26,8 +26,8 @@ export enum FindState {
 };
 
 const FIND_TIMEOUT = 250; // ms
-const MATCH_SCROLL_OFFSET_TOP = -50; // px
-const MATCH_SCROLL_OFFSET_LEFT = -400; // px
+// const MATCH_SCROLL_OFFSET_TOP = -50; // px
+// const MATCH_SCROLL_OFFSET_LEFT = -400; // px
 
 const CHARACTERS_TO_NORMALIZE = {
   "\u2010": "-", // Hyphen

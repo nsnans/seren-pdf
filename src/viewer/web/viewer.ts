@@ -64,7 +64,7 @@ export class WebPDFViewer {
 
   protected cursorManager: WebViewerCursorManager;
 
-  protected pdfScriptingManager: PDFScriptingManager;
+  protected pdfScriptingManager = new PDFScriptingManager();
 
   protected downloadManager = new DownloadManager();
 
