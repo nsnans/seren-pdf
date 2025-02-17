@@ -81,72 +81,6 @@ class FirefoxCom {
   }
 }
 
-class DownloadManager {
-  #openBlobUrls = new WeakMap();
-
-  downloadData(data, filename, contentType) {
-    const blobUrl = URL.createObjectURL(
-      new Blob([data], { type: contentType })
-    );
-
-    FirefoxCom.request("download", {
-      blobUrl,
-      originalUrl: blobUrl,
-      filename,
-      isAttachment: true,
-    });
-  }
-
-  /**
-   * @returns {boolean} Indicating if the data was opened.
-   */
-  openOrDownloadData(data, filename, dest = null) {
-    const isPdfData = isPdfFile(filename);
-    const contentType = isPdfData ? "application/pdf" : "";
-
-    if (isPdfData) {
-      let blobUrl = this.#openBlobUrls.get(data);
-      if (!blobUrl) {
-        blobUrl = URL.createObjectURL(new Blob([data], { type: contentType }));
-        this.#openBlobUrls.set(data, blobUrl);
-      }
-      // Let Firefox's content handler catch the URL and display the PDF.
-      // NOTE: This cannot use a query string for the filename, see
-      //       https://bugzilla.mozilla.org/show_bug.cgi?id=1632644#c5
-      let viewerUrl = blobUrl + "#filename=" + encodeURIComponent(filename);
-      if (dest) {
-        viewerUrl += `&filedest=${escape(dest)}`;
-      }
-
-      try {
-        window.open(viewerUrl);
-        return true;
-      } catch (ex) {
-        console.error(`openOrDownloadData: ${ex}`);
-        // Release the `blobUrl`, since opening it failed, and fallback to
-        // downloading the PDF file.
-        URL.revokeObjectURL(blobUrl);
-        this.#openBlobUrls.delete(data);
-      }
-    }
-
-    this.downloadData(data, filename, contentType);
-    return false;
-  }
-
-  download(data, url, filename) {
-    const blobUrl = data
-      ? URL.createObjectURL(new Blob([data], { type: "application/pdf" }))
-      : null;
-
-    FirefoxCom.request("download", {
-      blobUrl,
-      originalUrl: url,
-      filename,
-    });
-  }
-}
-
 export class FirefoxPreferences extends Preferences {
   async _readFromStorage(prefObj) {
     return FirefoxCom.requestAsync("getPreferences", prefObj);
@@ -587,4 +521,4 @@ class ExternalServices extends BaseExternalServices {
   }
 }
 
-export { DownloadManager, ExternalServices, initCom, MLManager };
+export { ExternalServices, initCom, MLManager };

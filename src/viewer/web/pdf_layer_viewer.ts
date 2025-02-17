@@ -51,8 +51,7 @@ class PDFLayerViewer extends BaseTreeViewer {
     super.reset();
     this._optionalContentConfig = null;
 
-    this._optionalContentVisibility?.clear();
-    this._optionalContentVisibility = null;
+     this._optionalContentVisibility = null;
   }
 
   /**

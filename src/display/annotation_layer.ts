@@ -39,8 +39,8 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { DownloadManager } from "../viewer/common/component_types";
 import { TextAccessibilityManager } from "../viewer/common/text_accessibility";
+import { DownloadManager } from "../viewer/web/download_manager";
 import { PDFLinkService } from "../viewer/web/pdf_link_service";
 import { StructTreeLayerBuilder } from "../viewer/web/struct_tree_layer_builder";
 import { AnnotationStorage } from "./annotation_storage";

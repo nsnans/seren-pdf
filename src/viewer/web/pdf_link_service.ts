@@ -76,7 +76,7 @@ export class PDFLinkService {
     this.pdfDocument = null;
   }
 
-  setDocument(pdfDocument: PDFDocumentProxy, baseUrl = null) {
+  setDocument(pdfDocument: PDFDocumentProxy, baseUrl: string | null = null) {
     this.baseUrl = baseUrl;
     this.pdfDocument = pdfDocument;
   }

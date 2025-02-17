@@ -14,6 +14,7 @@
  */
 import { PDFDocumentProxy, TextItem } from "../../display/api";
 import { binarySearchFirstItem } from "../common/ui_utils";
+import { DocumentOwner } from "./interface";
 import { getCharacterType, getNormalizeWithNFKC } from "./pdf_find_utils";
 import { PDFLinkService } from "./pdf_link_service";
 
@@ -388,7 +389,7 @@ interface FindMatch {
 /**
  * 一个用于查找PDF内容的服务
  */
-export class PDFContentFindService {
+export class PDFContentFindService implements DocumentOwner {
 
   #state = null;
 

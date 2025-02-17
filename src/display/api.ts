@@ -592,7 +592,7 @@ class DocumentParameterBuilder {
 }
 
 // 只支持两种情况，一种是data数据，另一种是URL，如果
-function getDocument(src: DocumentInitParameters) {
+function getDocument(src: Partial<DocumentInitParameters>) {
 
   const task = new PDFDocumentLoadingTask();
 
@@ -626,7 +626,7 @@ function getDocument(src: DocumentInitParameters) {
   const StandardFontDataFactory = src.StandardFontDataFactory || DefaultStandardFontDataFactory;
   const ignoreErrors = src.stopAtErrors !== true;
 
-  const validMaxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize > -1;
+  const validMaxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize! > -1;
   const maxImageSize = validMaxImageSize ? src.maxImageSize : -1;
 
   const isEvalSupported = src.isEvalSupported !== false;
@@ -689,7 +689,7 @@ function getDocument(src: DocumentInitParameters) {
   }
 
   const optionBuilder = new DocParameterEvaluatorOptionsBuilder();
-  optionBuilder.maxImageSize = maxImageSize;
+  optionBuilder.maxImageSize = maxImageSize!;
   optionBuilder.disableFontFace = disableFontFace;
   optionBuilder.ignoreErrors = ignoreErrors;
   optionBuilder.isEvalSupported = isEvalSupported;

@@ -17,9 +17,9 @@ import { AnnotationStorage } from "../../display/annotation_storage";
 import { PDFPageProxy } from "../../display/api";
 import { PageViewport } from "../../display/display_utils";
 import { AnnotationEditorUIManager } from "../../display/editor/tools";
-import { DownloadManager } from "../common/component_types";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PresentationModeState } from "../common/ui_utils";
+import { DownloadManager } from "./download_manager";
 import { PDFLinkService } from "./pdf_link_service";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 

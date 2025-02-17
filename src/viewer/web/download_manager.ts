@@ -13,18 +13,11 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./interfaces").IDownloadManager} IDownloadManager */
+import { isPdfFile } from "../../display/display_utils";
+import { createValidAbsoluteUrl } from "../../shared/util";
 
-import { createValidAbsoluteUrl, isPdfFile } from "pdfjs-lib";
 
-if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("CHROME || GENERIC")) {
-  throw new Error(
-    'Module "pdfjs-web/download_manager" shall not be used ' +
-      "outside CHROME and GENERIC builds."
-  );
-}
-
-function download(blobUrl, filename) {
+function download(blobUrl: string, filename: string) {
   const a = document.createElement("a");
   if (!a.click) {
     throw new Error('DownloadManager: "a.click()" is not supported.');
@@ -46,10 +39,11 @@ function download(blobUrl, filename) {
 /**
  * @implements {IDownloadManager}
  */
-class DownloadManager {
+export class DownloadManager {
+
   #openBlobUrls = new WeakMap();
 
-  downloadData(data, filename, contentType) {
+  downloadData(data: Uint8Array<ArrayBuffer>, filename: string, contentType: string) {
     const blobUrl = URL.createObjectURL(
       new Blob([data], { type: contentType })
     );
@@ -57,34 +51,20 @@ class DownloadManager {
   }
 
   /**
-   * @returns {boolean} Indicating if the data was opened.
+   * @returns Indicating if the data was opened.
    */
-  openOrDownloadData(data, filename, dest = null) {
+  openOrDownloadData(data: Uint8Array<ArrayBuffer>, filename: string, dest = null) {
     const isPdfData = isPdfFile(filename);
     const contentType = isPdfData ? "application/pdf" : "";
 
-    if (
-      (typeof PDFJSDev === "undefined" || !PDFJSDev.test("COMPONENTS")) &&
-      isPdfData
-    ) {
+    if (isPdfData) {
       let blobUrl = this.#openBlobUrls.get(data);
       if (!blobUrl) {
         blobUrl = URL.createObjectURL(new Blob([data], { type: contentType }));
         this.#openBlobUrls.set(data, blobUrl);
       }
-      let viewerUrl;
-      if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-        // The current URL is the viewer, let's use it and append the file.
-        viewerUrl = "?file=" + encodeURIComponent(blobUrl + "#" + filename);
-      } else if (PDFJSDev.test("CHROME")) {
-        // In the Chrome extension, the URL is rewritten using the history API
-        // in viewer.js, so an absolute URL must be generated.
-        viewerUrl =
-          // eslint-disable-next-line no-undef
-          chrome.runtime.getURL("/content/web/viewer.html") +
-          "?file=" +
-          encodeURIComponent(blobUrl + "#" + filename);
-      }
+      // The current URL is the viewer, let's use it and append the file.
+      let viewerUrl = "?file=" + encodeURIComponent(blobUrl + "#" + filename);
       if (dest) {
         viewerUrl += `#${escape(dest)}`;
       }
@@ -105,7 +85,7 @@ class DownloadManager {
     return false;
   }
 
-  download(data, url, filename) {
+  download(data: Uint8Array<ArrayBuffer>, url: string, filename: string) {
     let blobUrl;
     if (data) {
       blobUrl = URL.createObjectURL(
@@ -121,5 +101,3 @@ class DownloadManager {
     download(blobUrl, filename);
   }
 }
-
-export { DownloadManager };
