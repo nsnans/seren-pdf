@@ -35,7 +35,7 @@ function createBundle(lang, text) {
  */
 export class GenericL10n extends L10n {
   constructor(lang: string | null = null) {
-    super({ lang });
+    super(lang);
 
     const generateBundles = !lang
       ? GenericL10n.#generateBundlesFallback.bind(

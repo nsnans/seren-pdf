@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-const CharacterType = {
+export const CharacterType = {
   SPACE: 0,
   ALPHA_LETTER: 1,
   PUNCT: 2,
@@ -24,26 +24,26 @@ const CharacterType = {
   THAI_LETTER: 7,
 };
 
-function isAlphabeticalScript(charCode) {
+function isAlphabeticalScript(charCode: number) {
   return charCode < 0x2e80;
 }
 
-function isAscii(charCode) {
+function isAscii(charCode: number) {
   return (charCode & 0xff80) === 0;
 }
 
-function isAsciiAlpha(charCode) {
+function isAsciiAlpha(charCode: number) {
   return (
     (charCode >= /* a = */ 0x61 && charCode <= /* z = */ 0x7a) ||
     (charCode >= /* A = */ 0x41 && charCode <= /* Z = */ 0x5a)
   );
 }
 
-function isAsciiDigit(charCode) {
+function isAsciiDigit(charCode: number) {
   return charCode >= /* 0 = */ 0x30 && charCode <= /* 9 = */ 0x39;
 }
 
-function isAsciiSpace(charCode) {
+function isAsciiSpace(charCode: number) {
   return (
     charCode === /* SPACE = */ 0x20 ||
     charCode === /* TAB = */ 0x09 ||
@@ -52,26 +52,26 @@ function isAsciiSpace(charCode) {
   );
 }
 
-function isHan(charCode) {
+function isHan(charCode: number) {
   return (
     (charCode >= 0x3400 && charCode <= 0x9fff) ||
     (charCode >= 0xf900 && charCode <= 0xfaff)
   );
 }
 
-function isKatakana(charCode) {
+function isKatakana(charCode: number) {
   return charCode >= 0x30a0 && charCode <= 0x30ff;
 }
 
-function isHiragana(charCode) {
+function isHiragana(charCode: number) {
   return charCode >= 0x3040 && charCode <= 0x309f;
 }
 
-function isHalfwidthKatakana(charCode) {
+function isHalfwidthKatakana(charCode: number) {
   return charCode >= 0xff60 && charCode <= 0xff9f;
 }
 
-function isThai(charCode) {
+function isThai(charCode: number) {
   return (charCode & 0xff80) === 0x0e00;
 }
 
@@ -79,7 +79,7 @@ function isThai(charCode) {
  * This function is based on the word-break detection implemented in:
  * https://hg.mozilla.org/mozilla-central/file/tip/intl/lwbrk/WordBreaker.cpp
  */
-function getCharacterType(charCode) {
+export function getCharacterType(charCode: number) {
   if (isAlphabeticalScript(charCode)) {
     if (isAscii(charCode)) {
       if (isAsciiSpace(charCode)) {
@@ -113,45 +113,8 @@ function getCharacterType(charCode) {
 }
 
 let NormalizeWithNFKC;
-function getNormalizeWithNFKC() {
+export function getNormalizeWithNFKC() {
   /* eslint-disable no-irregular-whitespace */
   NormalizeWithNFKC ||= ` ¨ª¯²-µ¸-º¼-¾Ĳ-ĳĿ-ŀŉſǄ-ǌǱ-ǳʰ-ʸ˘-˝ˠ-ˤʹͺ;΄-΅·ϐ-ϖϰ-ϲϴ-ϵϹևٵ-ٸक़-य़ড়-ঢ়য়ਲ਼ਸ਼ਖ਼-ਜ਼ਫ਼ଡ଼-ଢ଼ำຳໜ-ໝ༌གྷཌྷདྷབྷཛྷཀྵჼᴬ-ᴮᴰ-ᴺᴼ-ᵍᵏ-ᵪᵸᶛ-ᶿẚ-ẛάέήίόύώΆ᾽-῁ΈΉ῍-῏ΐΊ῝-῟ΰΎ῭-`ΌΏ´-῾ - ‑‗․-… ″-‴‶-‷‼‾⁇-⁉⁗ ⁰-ⁱ⁴-₎ₐ-ₜ₨℀-℃℅-ℇ℉-ℓℕ-№ℙ-ℝ℠-™ℤΩℨK-ℭℯ-ℱℳ-ℹ℻-⅀ⅅ-ⅉ⅐-ⅿ↉∬-∭∯-∰〈-〉①-⓪⨌⩴-⩶⫝̸ⱼ-ⱽⵯ⺟⻳⼀-⿕　〶〸-〺゛-゜ゟヿㄱ-ㆎ㆒-㆟㈀-㈞㈠-㉇㉐-㉾㊀-㏿ꚜ-ꚝꝰꟲ-ꟴꟸ-ꟹꭜ-ꭟꭩ豈-嗀塚晴凞-羽蘒諸逸-都飯-舘並-龎ﬀ-ﬆﬓ-ﬗיִײַ-זּטּ-לּמּנּ-סּףּ-פּצּ-ﮱﯓ-ﴽﵐ-ﶏﶒ-ﷇﷰ-﷼︐-︙︰-﹄﹇-﹒﹔-﹦﹨-﹫ﹰ-ﹲﹴﹶ-ﻼ！-ﾾￂ-ￇￊ-ￏￒ-ￗￚ-ￜ￠-￦`;
-
-  if (typeof PDFJSDev === "undefined" || PDFJSDev.test("TESTING")) {
-    const ranges = [];
-    const range = [];
-    const diacriticsRegex = /^\p{M}$/u;
-    // Some chars must be replaced by their NFKC counterpart during a search.
-    for (let i = 0; i < 65536; i++) {
-      const c = String.fromCharCode(i);
-      if (c.normalize("NFKC") !== c && !diacriticsRegex.test(c)) {
-        if (range.length !== 2) {
-          range[0] = range[1] = i;
-          continue;
-        }
-        if (range[1] + 1 !== i) {
-          if (range[0] === range[1]) {
-            ranges.push(String.fromCharCode(range[0]));
-          } else {
-            ranges.push(
-              `${String.fromCharCode(range[0])}-${String.fromCharCode(
-                range[1]
-              )}`
-            );
-          }
-          range[0] = range[1] = i;
-        } else {
-          range[1] = i;
-        }
-      }
-    }
-    if (ranges.join("") !== NormalizeWithNFKC) {
-      throw new Error(
-        "getNormalizeWithNFKC - update the `NormalizeWithNFKC` string."
-      );
-    }
-  }
   return NormalizeWithNFKC;
 }
-
-export { CharacterType, getCharacterType, getNormalizeWithNFKC };

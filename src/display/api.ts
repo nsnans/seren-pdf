@@ -1433,69 +1433,6 @@ export interface TextContent {
 }
 
 /**
- * Page render parameters.
- * */
-interface RenderParameters {
-
-  /* A 2D context of a DOM Canvas object.*/
-  canvasContext: CanvasRenderingContext2D;
-
-  /* Rendering viewport obtained by calling the `PDFPageProxy.getViewport` method.*/
-  viewport: PageViewport;
-
-  /* Rendering intent, can be 'display', 'print', or 'any'. The default value is 'display'.*/
-  intent: string;
-
-  /**
-   * Controls which annotations are rendered onto the canvas, for annotations with appearance-data;
-   * the values from {@link AnnotationMode} should be used. The following values are supported:
-   * - `AnnotationMode.DISABLE`, which disables all annotations.
-   * - `AnnotationMode.ENABLE`, which includes all possible annotations (thus
-   *    it also depends on the `intent`-option, see above).
-   * - `AnnotationMode.ENABLE_FORMS`, which excludes annotations that contain
-   *    interactive form elements (those will be rendered in the display layer).
-   * - `AnnotationMode.ENABLE_STORAGE`, which includes all possible annotations
-   *    (as above) but where interactive form elements are updated with data
-   *    from the {@link AnnotationStorage}-instance; useful e.g. for printing.
-   * The default value is `AnnotationMode.ENABLE`.
-   */
-  annotationMode: number;
-
-  /* Additional transform, applied just before viewport transform. */
-  transform: TransformType | null;
-
-  /**
-   * Background to use for the canvas.
-   * Any valid `canvas.fillStyle` can be used: a `DOMString` parsed as CSS <color> value,
-   * a `CanvasGradient` object (a linear or radial gradient) or a `CanvasPattern` object (a repetitive image).
-   * The default value is 'rgb(255,255,255)'.
-   *
-   * NOTE: This option may be partially, or completely, ignored when the `pageColors`-option is used.
-   */
-  background: CanvasGradient | CanvasPattern | string | null;
-
-  /** 
-   * Overwrites background and foreground colors with user defined ones in order to 
-   * improve readability in high contrast mode. */
-  pageColors: { background: string, foreground: string } | null;
-
-  /**
-   * A promise that should resolve with an {@link OptionalContentConfig} 
-   * created from `PDFDocumentProxy.getOptionalContentConfig`. If `null`,
-   * the configuration will be fetched automatically with the default visibility states set. 
-   * */
-  optionalContentConfigPromise: Promise<OptionalContentConfig> | null;
-
-  /* Map some annotation ids with canvases used to render them. */
-  annotationCanvasMap: Map<string, HTMLCanvasElement> | null;
-
-  printAnnotationStorage: PrintAnnotationStorage | null;
-
-  /* Render the page in editing mode.*/
-  isEditing: boolean;
-}
-
-/**
  * Structure tree content.
  */
 interface StructTreeContent {
