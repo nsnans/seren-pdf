@@ -15,12 +15,12 @@
 
 /** @typedef {import("./interfaces").IL10n} IL10n */
 
-import { FluentBundle, FluentResource } from "fluent-bundle";
-import { DOMLocalization } from "fluent-dom";
+import { FluentBundle, FluentResource } from "@fluent/bundle";
+import { DOMLocalization } from "@fluent/dom";
 import { L10n } from "./l10n";
 import { fetchData } from "../../display/display_utils";
 
-function createBundle(lang, text) {
+function createBundle(lang: string, text: string) {
   const resource = new FluentResource(text);
   const bundle = new FluentBundle(lang);
   const errors = bundle.addResource(resource);
@@ -80,7 +80,7 @@ export class GenericL10n extends L10n {
     }
   }
 
-  static async #createBundle(lang, baseURL, paths) {
+  static async #createBundle(lang: string, baseURL: string, paths: Record<string, string>) {
     const path = paths[lang];
     if (!path) {
       return null;
@@ -101,22 +101,12 @@ export class GenericL10n extends L10n {
     return { baseURL: "./", paths: Object.create(null) };
   }
 
-  static async *#generateBundlesFallback(lang) {
+  static async *#generateBundlesFallback(lang: string) {
     yield this.#createBundleFallback(lang);
   }
 
-  static async #createBundleFallback(lang) {
-    if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("TESTING")) {
-      throw new Error("Not implemented: #createBundleFallback");
-    }
-    const text =
-      typeof PDFJSDev === "undefined"
-        ? await fetchData(
-          new URL("../l10n/en-US/viewer.ftl", window.location.href),
-            /* type = */ "text"
-        )
-        : PDFJSDev.eval("DEFAULT_FTL");
-
+  static async #createBundleFallback(lang: string) {
+    const text = await fetchData(new URL("../l10n/en-US/viewer.ftl", window.location.href), "text")
     return createBundle(lang, text);
   }
 }

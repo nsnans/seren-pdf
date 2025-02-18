@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-import { DOMLocalization } from 'fluent-dom';
+import { DOMLocalization } from '@fluent/dom';
 
 /**
  * NOTE: The L10n-implementations should use lowercase language-codes
@@ -23,7 +23,7 @@ import { DOMLocalization } from 'fluent-dom';
 export class L10n {
   #dir;
 
-  #elements;
+  #elements: Set<Element> | null = null;
 
   #lang;
 
@@ -53,11 +53,11 @@ export class L10n {
   async get(ids: string, args = null, fallback = null) {
     if (Array.isArray(ids)) {
       ids = ids.map(id => ({ id }));
-      const messages = await this.#l10n.formatMessages(ids);
+      const messages = await this.#l10n!.formatMessages(ids);
       return messages.map(message => message.value);
     }
 
-    const messages = await this.#l10n.formatMessages([
+    const messages = await this.#l10n!.formatMessages([
       {
         id: ids,
         args,
@@ -70,15 +70,15 @@ export class L10n {
   async translate(element: HTMLDivElement) {
     (this.#elements ||= new Set()).add(element);
     try {
-      this.#l10n.connectRoot(element);
-      await this.#l10n.translateRoots();
+      this.#l10n!.connectRoot(element);
+      await this.#l10n!.translateRoots();
     } catch {
       // Element is under an existing root, so there is no need to add it again.
     }
   }
 
   /** @inheritdoc */
-  async translateOnce(element) {
+  async translateOnce(element: Element) {
     try {
       await this.#l10n!.translateElements([element]);
     } catch (ex) {
@@ -90,22 +90,22 @@ export class L10n {
   async destroy() {
     if (this.#elements) {
       for (const element of this.#elements) {
-        this.#l10n.disconnectRoot(element);
+        this.#l10n!.disconnectRoot(element);
       }
       this.#elements.clear();
       this.#elements = null;
     }
-    this.#l10n.pauseObserving();
+    this.#l10n!.pauseObserving();
   }
 
   /** @inheritdoc */
   pause() {
-    this.#l10n.pauseObserving();
+    this.#l10n!.pauseObserving();
   }
 
   /** @inheritdoc */
   resume() {
-    this.#l10n.resumeObserving();
+    this.#l10n!.resumeObserving();
   }
 
   static #fixupLangCode(langCode: string | null) {
