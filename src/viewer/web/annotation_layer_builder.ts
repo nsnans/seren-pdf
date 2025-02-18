@@ -147,7 +147,7 @@ export class AnnotationLayerBuilder {
       this.annotationStorage,
       this.enableScripting,
       hasJSActions,
-      fieldObjects,
+      fieldObjects!,
     );
 
     // Ensure that interactive form elements in the annotationLayer are

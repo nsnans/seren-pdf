@@ -48,7 +48,7 @@ export class AltText {
 
   #guessedText: string | null = null;
 
-  #textWithDisclaimer: string | null = null;
+  #textWithDisclaimer: string | string[] | null = null;
 
   #useNewAltTextFlow = false;
 
@@ -182,7 +182,7 @@ export class AltText {
   }
 
   serialize(isForCopying: boolean) {
-    let altText = this.#altText;
+    let altText: string | string[] | null = this.#altText;
     if (!isForCopying && this.#guessedText === altText) {
       altText = this.#textWithDisclaimer;
     }

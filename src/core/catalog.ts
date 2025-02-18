@@ -187,7 +187,7 @@ interface ParsedDestDictionary {
   };
   newWindow?: boolean;
   attachment?: FileSpecSerializable;
-  attachmentDest?: string;
+  attachmentDest?: string | null;
   action: string | null;
   setOCGState?: {
     state: string[];

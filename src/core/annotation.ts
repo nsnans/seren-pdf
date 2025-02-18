@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { PopupContent } from "../display/annotation_layer";
 import { DocumentEvaluatorOptions } from "../display/api";
 import { PointType, RectType, TransformType } from "../display/display_utils";
 import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "../display/editor/state/editor_serializable";
@@ -812,7 +813,7 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
 }
 
 export interface AnnotationData {
-  richText: StringObj | null;
+  richText: PopupContent | null;
   titleObj: StringObj | null;
   alternativeText: string | null;
   annotationFlags: number;
@@ -2046,7 +2047,6 @@ export interface WidgetData extends AnnotationData {
   fieldValue: string | string[] | null;
   annotationType: AnnotationType;
   defaultFieldValue: string | string[] | null;
-  alternativeText: string;
   fieldType: string | null;
   fieldFlags: number;
   hidden: boolean;
@@ -3260,7 +3260,7 @@ export interface ButtonWidgetData extends WidgetData {
   };
   actions: Map<string, string[]>;
   attachment: {
-    content: string;
+    content: Uint8Array<ArrayBuffer>;
     filename: string;
     description: string;
   };
@@ -4107,6 +4107,8 @@ export interface TextData extends MarkupData, WidgetData {
   state: Name[] | null;
   annotationType: AnnotationType;
   name: string;
+  hidden: boolean;
+  titleObj: StringObj;
 }
 
 class TextAnnotation extends MarkupAnnotation<TextData> {
@@ -4155,7 +4157,7 @@ export interface LinkData extends AnnotationData {
   actions: Map<string, string[]>;
   dest: string | DestinationType | null;
   attachment: {
-    content: string;
+    content: Uint8Array<ArrayBuffer>;
     filename: string;
     description: string;
   };

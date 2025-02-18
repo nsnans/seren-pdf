@@ -15,6 +15,14 @@
 
 import { DOMLocalization } from '@fluent/dom';
 
+interface MessgaeFormatter {
+  formatMessages: (
+    ids: {
+      id: string,
+      args?: { generatedAltText?: string | null } | null
+    }[],
+  ) => Promise<{ value: string }[]>
+}
 /**
  * NOTE: The L10n-implementations should use lowercase language-codes
  *       internally.
@@ -50,14 +58,19 @@ export class L10n {
   }
 
   /** @inheritdoc */
-  async get(ids: string, args = null, fallback = null) {
+  async get(
+    ids: string | string[],
+    args: { generatedAltText?: string | null } | null = null,
+    fallback: string | null = null
+  ) {
+    const l10n = <MessgaeFormatter><unknown>this.#l10n;
     if (Array.isArray(ids)) {
-      ids = ids.map(id => ({ id }));
-      const messages = await this.#l10n!.formatMessages(ids);
+      const idObjs = ids.map(id => ({ id }));
+      const messages = await l10n.formatMessages(idObjs);
       return messages.map(message => message.value);
     }
 
-    const messages = await this.#l10n!.formatMessages([
+    const messages = await l10n!.formatMessages([
       {
         id: ids,
         args,

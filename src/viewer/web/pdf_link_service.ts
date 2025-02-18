@@ -30,6 +30,9 @@ export enum LinkTarget {
  * or destination.
  */
 export class PDFLinkService {
+  executeNamedAction(_action: string) {
+    console.warn('暂未实现，需要参考原版PDFjs')
+  }
 
   protected externalLinkEnabled = true;
 

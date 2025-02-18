@@ -25,6 +25,7 @@
 /** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
 
 import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
+import { FieldObject } from "../core/core_types";
 import { PlatformHelper } from "../platform/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {
@@ -88,7 +89,7 @@ export interface AnnotationElementParameters<DATA> {
   svgFactory: BaseSVGFactory;
   enableScripting: boolean;
   hasJSActions: boolean;
-  fieldObjects: object;
+  fieldObjects: Map<string, FieldObject[]>;
   elements: AnnotationElement<AnnotationData>[];
   parent: AnnotationLayer;
 }
@@ -209,7 +210,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   protected hasJSActions: boolean;
 
-  protected _fieldObjects: object;
+  protected _fieldObjects: Map<string, FieldObject[]>;
 
   public parent: AnnotationLayer;
 
@@ -248,7 +249,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
   static _hasPopupData(
     titleObj: StringObj | null,
     contentsObj: StringObj | null,
-    richText: StringObj | null
+    richText: PopupContent | null
   ) {
     return !!(titleObj?.str || contentsObj?.str || richText?.str);
   }
@@ -706,13 +707,12 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   /**
    * @private
-   * @returns {Array}
    */
   _getElementsByName(name: string, skipId: string | null = null) {
     const fields = [];
 
     if (this._fieldObjects) {
-      const fieldObj = this._fieldObjects[name];
+      const fieldObj = this._fieldObjects.get(name);
       if (fieldObj) {
         for (const { page, id, exportValues } of fieldObj) {
           if (page === -1) {
@@ -789,16 +789,7 @@ export class AnnotationElement<DATA extends AnnotationData> {
     if (!this._isEditable) {
       return;
     }
-    const {
-      annotationEditorType: mode,
-      data: { id: editId },
-    } = this;
     this.container!.addEventListener("dblclick", () => {
-      this.linkService.eventBus?.dispatch("switchannotationeditormode", {
-        source: this,
-        mode,
-        editId,
-      });
     });
   }
 
@@ -912,7 +903,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
   #bindAttachment(
     link: HTMLAnchorElement,
     attachment: {
-      content: string;
+      content: Uint8Array<ArrayBuffer>;
       filename: string;
       description: string;
     },
@@ -975,13 +966,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       }
       // 这里由link.onclick的这种方式，改造成了addEventListener的形式
       link.addEventListener(jsName, () => {
-        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-          source: this,
-          detail: {
-            id: data.id,
-            name,
-          },
-        });
+
         return false;
       });
     }
@@ -1031,7 +1016,7 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       if (resetFormFields.length !== 0 || resetFormRefs.length !== 0) {
         const fieldIds = new Set(resetFormRefs);
         for (const fieldName of resetFormFields) {
-          const fields = this._fieldObjects[fieldName] || [];
+          const fields = this._fieldObjects.get(fieldName) || [];
           for (const { id } of fields) {
             fieldIds.add(id);
           }
@@ -1087,15 +1072,6 @@ class LinkAnnotationElement<T extends LinkData> extends AnnotationElement<T> {
       }
 
       if (this.enableScripting) {
-        // Update the values in the sandbox.
-        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-          source: this,
-          detail: {
-            id: "app",
-            ids: allIds,
-            name: "ResetForm",
-          },
-        });
       }
 
       return false;
@@ -1160,22 +1136,12 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
     element: HTMLElement,
     elementData: { focused: boolean },
     baseName: string,
-    eventName: string,
+    _eventName: string,
     valueGetter: ((evt: CustomEvent) => string | boolean) | null
   ) {
     if (baseName.includes("mouse")) {
       // Mouse events
-      element.addEventListener(baseName, event => {
-        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-          source: this,
-          detail: {
-            id: this.data.id,
-            name: eventName,
-            value: valueGetter!(<CustomEvent>event),
-            shift: (<KeyboardEvent>event).shiftKey,
-            modifier: this._getKeyModifier(<KeyboardEvent>event),
-          },
-        });
+      element.addEventListener(baseName, _event => {
       });
     } else {
       // Non-mouse events
@@ -1195,15 +1161,6 @@ class WidgetAnnotationElement<T extends WidgetData> extends AnnotationElement<T>
         if (!valueGetter) {
           return;
         }
-
-        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-          source: this,
-          detail: {
-            id: this.data.id,
-            name: eventName,
-            value: valueGetter(<CustomEvent>event),
-          },
-        });
       });
     }
   }
@@ -1330,7 +1287,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
       if (element.domElement) {
         (<HTMLTextAreaElement | HTMLInputElement>element.domElement)[key] = value;
       }
-      storage.setValue(element.id, { [keyInStorage]: value });
+      storage.setValue(element.id!, { [keyInStorage]: value });
     }
   }
 
@@ -1484,19 +1441,6 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
               value = value.slice(0, charLimit);
               target.value = elementData.userValue = value;
               storage.setValue(id, { value });
-
-              this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-                source: this,
-                detail: {
-                  id,
-                  name: "Keystroke",
-                  value,
-                  willCommit: true,
-                  commitKey: 1,
-                  selStart: target.selectionStart,
-                  selEnd: target.selectionEnd,
-                },
-              });
             },
           };
           this._dispatchEventFromSandbox(actions, <CustomEvent>jsEvent);
@@ -1530,18 +1474,6 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
           elementData.lastCommittedValue = value;
           // Save the entered value
           elementData.userValue = value;
-          this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-            source: this,
-            detail: {
-              id,
-              name: "Keystroke",
-              value,
-              willCommit: true,
-              commitKey,
-              selStart: (<HTMLInputElement>event.target).selectionStart,
-              selEnd: (<HTMLInputElement>event.target).selectionEnd,
-            },
-          });
         });
         const _blurListener = blurListener;
         blurListener = null;
@@ -1555,18 +1487,6 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
           const { value } = <HTMLInputElement>event.target;
           elementData.userValue = value;
           if (elementData.lastCommittedValue !== value) {
-            this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-              source: this,
-              detail: {
-                id,
-                name: "Keystroke",
-                value,
-                willCommit: true,
-                commitKey: elementData.commitKey,
-                selStart: (<HTMLInputElement>event.target).selectionStart,
-                selEnd: (<HTMLInputElement>event.target).selectionEnd,
-              },
-            });
           }
           _blurListener(event);
         });
@@ -1574,7 +1494,6 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
         if (this.data.actions?.has("Keystroke")) {
           element.addEventListener("beforeinput", event => {
             elementData.lastCommittedValue = null;
-            const { data } = <InputEvent>event;
             const target = <HTMLInputElement>event.target;
             const { value, selectionStart, selectionEnd } = target;
 
@@ -1611,18 +1530,6 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement<TextData> {
 
             // We handle the event ourselves.
             event.preventDefault();
-            this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-              source: this,
-              detail: {
-                id,
-                name: "Keystroke",
-                value,
-                change: data || "",
-                willCommit: false,
-                selStart,
-                selEnd,
-              },
-            });
           });
         }
 
@@ -1719,7 +1626,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidg
         if (checkbox.domElement) {
           (<HTMLInputElement>checkbox.domElement).checked = curChecked;
         }
-        storage.setValue(checkbox.id, { value: curChecked });
+        storage.setValue(checkbox.id!, { value: curChecked });
       }
       storage.setValue(id, { value: checked });
     });
@@ -1793,7 +1700,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<ButtonW
       // Consequently, the first checked radio button will be the only checked
       // one.
       for (const radio of this._getElementsByName(data.fieldName!, id)) {
-        storage.setValue(radio.id, { value: false });
+        storage.setValue(radio.id!, { value: false });
       }
     }
 
@@ -1813,7 +1720,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<ButtonW
     element.addEventListener("change", event => {
       const { name, checked } = <HTMLInputElement>event.target;
       for (const radio of this._getElementsByName(name, /* skipId = */ id)) {
-        storage.setValue(radio.id, { value: false });
+        storage.setValue(radio.id!, { value: false });
       }
       storage.setValue(id, { value: checked });
     });
@@ -1836,7 +1743,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement<ButtonW
               if (radio.domElement) {
                 (<HTMLInputElement>radio.domElement).checked = curChecked;
               }
-              storage.setValue(radio.id, { value: curChecked });
+              storage.setValue(radio.id!, { value: curChecked });
             }
           },
         };
@@ -1973,8 +1880,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
         .map(option => option[name]);
     };
 
-    let selectedValues = getValue(/* isExport */ false);
-
     const getItems = (event: CustomEvent<unknown>) => {
       const options = (<HTMLSelectElement>event.target).options;
       return Array.prototype.map.call(options, option => ({
@@ -1997,7 +1902,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
             storage.setValue(id, {
               value: getValue(/* isExport */ true),
             });
-            selectedValues = getValue(/* isExport */ false);
           },
 
           multipleSelection(_event: CustomEvent<unknown>) {
@@ -2022,14 +1926,12 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
               value: getValue(true),
               items: getItems(event),
             });
-            selectedValues = getValue(false);
           },
           clear(_event: CustomEvent<unknown>) {
             while (selectElement.length !== 0) {
               selectElement.remove(0);
             }
             storage.setValue(id, { value: null, items: [] });
-            selectedValues = getValue(/* isExport */ false);
           },
           insert(event: CustomEvent<{
             insert: { index: number, displayValue: string, exportValue: string }
@@ -2049,7 +1951,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
               value: getValue(true),
               items: getItems(event),
             });
-            selectedValues = getValue(false);
           },
           items(event: CustomEvent<{ items: { displayValue: string | null, exportValue: string }[] }>) {
             const { items } = event.detail;
@@ -2070,7 +1971,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
               value: getValue(/* isExport */ true),
               items: getItems(event),
             });
-            selectedValues = getValue(/* isExport */ false);
           },
           indices(event: CustomEvent<{ indices: number[] }>) {
             const indices = new Set(event.detail.indices);
@@ -2080,7 +1980,6 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
             storage.setValue(id, {
               value: getValue(/* isExport */ true),
             });
-            selectedValues = getValue(/* isExport */ false);
           },
           editable(event: CustomEvent<{ editable: boolean }>) {
             (<HTMLInputElement>event.target).disabled = !event.detail.editable;
@@ -2091,24 +1990,9 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement<ButtonWidget
 
       selectElement.addEventListener("input", event => {
         const exportValue = getValue(/* isExport */ true);
-        const change = getValue(/* isExport */ false);
         storage.setValue(id, { value: exportValue });
 
         event.preventDefault();
-
-        this.linkService.eventBus?.dispatch("dispatcheventinsandbox", {
-          source: this,
-          detail: {
-            id,
-            name: "Keystroke",
-            value: selectedValues,
-            change,
-            changeEx: exportValue,
-            willCommit: false,
-            commitKey: 1,
-            keyDown: false,
-          },
-        });
       });
 
       this._setEventListeners(
@@ -2171,9 +2055,9 @@ class PopupAnnotationElement extends AnnotationElement<PopupData> {
       this.data.titleObj!,
       this.data.modificationDate,
       this.data.contentsObj,
-      this.data.richText,
+      this.data.richText!,
       this.parent,
-      this.data.rect,
+      this.data.rect!,
       this.data.parentRect || null,
       this.data.open,
     ));
@@ -2206,7 +2090,7 @@ interface PopupLine {
   };
 }
 
-interface PopupContent {
+export interface PopupContent {
   str: string;
   html: {
     name: string;
@@ -3083,11 +2967,6 @@ class FileAttachmentAnnotationElement extends AnnotationElement<FileAttachmentDa
     const { file } = this.data;
     this.filename = file.filename;
     this.content = file.content!;
-
-    this.linkService.eventBus?.dispatch("fileattachmentannotation", {
-      source: this,
-      ...file,
-    });
   }
 
   render() {
@@ -3252,7 +3131,7 @@ export class AnnotationLayer {
     annotationStorage: AnnotationStorage,
     enableScripting: boolean,
     hasJSActions: boolean,
-    fieldObjects,
+    fieldObjects: Map<string, FieldObject[]> | null,
   ) {
     const layer = this.div;
     setLayerDimensions(layer, this.viewport);

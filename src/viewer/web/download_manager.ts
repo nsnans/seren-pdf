@@ -53,7 +53,7 @@ export class DownloadManager {
   /**
    * @returns Indicating if the data was opened.
    */
-  openOrDownloadData(data: Uint8Array<ArrayBuffer>, filename: string, dest = null) {
+  openOrDownloadData(data: Uint8Array<ArrayBuffer>, filename: string, dest: string | null = null) {
     const isPdfData = isPdfFile(filename);
     const contentType = isPdfData ? "application/pdf" : "";
 
