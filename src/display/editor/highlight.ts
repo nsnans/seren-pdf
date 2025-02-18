@@ -16,7 +16,6 @@
 import { AnnotationData } from "../../core/annotation";
 import { AnnotationEditorParamsType, AnnotationEditorType, shadow } from "../../shared/util";
 import { BoxType } from "../../types";
-import { IL10n } from "../../viewer/common/component_types";
 import { L10n } from "../../viewer/web/l10n";
 import { AnnotationElement } from "../annotation_layer";
 import { PointType } from "../display_utils";
