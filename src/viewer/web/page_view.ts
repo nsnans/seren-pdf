@@ -27,7 +27,7 @@ import { PDFPageProxy, RenderTask } from "../../display/api";
 import { OutputScale, PageViewport, PixelsPerInch, RenderingCancelledException, setLayerDimensions, TransformType } from "../../display/display_utils";
 import { DrawLayerBuilder } from "../../display/draw_layer_builder";
 import { OptionalContentConfig } from "../../display/optional_content_config";
-import { AbortException, AnnotationMode, shadow } from "../../shared/util";
+import { AbortException, AnnotationMode } from "../../shared/util";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../common/ui_utils";
 import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder";
@@ -36,7 +36,6 @@ import { GenericL10n } from "./genericl10n";
 import { L10n } from "./l10n";
 import { WebPDFViewLayerProperties } from "./page_view_manager";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
-import { TextHighlighter } from "./text_highlighter";
 import { TextLayerBuilder } from "./text_layer_builder";
 
 const LAYERS_ORDER = new Map([
@@ -351,10 +350,10 @@ export class WebPDFPageView {
     return !!this.annotationLayer?.hasEditableAnnotations();
   }
 
-  get _textHighlighter() {
-    const highlighter = new TextHighlighter(this.#layerProperties.findService, this.pageNum - 1);
-    return shadow(this, "_textHighlighter", highlighter);
-  }
+  // get _textHighlighter() {
+  //   const highlighter = new TextHighlighter(this.#layerProperties.findService, this.pageNum - 1);
+  //   return shadow(this, "_textHighlighter", highlighter);
+  // }
 
   async #renderAnnotationLayer() {
     let error = null;
@@ -788,7 +787,7 @@ export class WebPDFPageView {
 
       this.textLayer = new TextLayerBuilder(
         pdfPage,
-        this._textHighlighter,
+        // this._textHighlighter,
         this._accessibilityManager,
         this.#textLayerMode === TextLayerMode.ENABLE_PERMISSIONS,
         (textLayerDiv: HTMLDivElement) => {

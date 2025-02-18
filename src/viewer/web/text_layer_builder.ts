@@ -26,7 +26,6 @@ import { TextLayer } from "../../display/text_layer";
 import { PDFPageProxy } from "../../display/api";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PageViewport } from "../../display/display_utils";
-import { TextHighlighter } from "./text_highlighter";
 import { BrowserUtil } from "./browser_util";
 
 /**
@@ -54,17 +53,17 @@ export class TextLayerBuilder {
 
   protected accessibilityManager: TextAccessibilityManager | null;
 
-  protected highlighter: TextHighlighter | null;
+  // protected highlighter: TextHighlighter | null;
 
   constructor(
     pdfPage: PDFPageProxy,
-    highlighter: TextHighlighter | null = null,
+    // highlighter: TextHighlighter | null = null,
     accessibilityManager: TextAccessibilityManager | null = null,
     enablePermissions = false,
     onAppend: ((div: HTMLDivElement) => void) | null = null,
   ) {
     this.pdfPage = pdfPage;
-    this.highlighter = highlighter;
+    // this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
     this.#enablePermissions = enablePermissions === true;
     this.#onAppend = onAppend;
@@ -89,8 +88,9 @@ export class TextLayerBuilder {
     this.cancel();
     this.#textLayer = new TextLayer(this.pdfPage.streamTextContent(true, true), this.div, viewport);
 
-    const { textDivs, textContentItemsStr } = this.#textLayer;
-    this.highlighter?.setTextMapping(textDivs, textContentItemsStr);
+    // const { textDivs, textContentItemsStr } = this.#textLayer;
+    const { textDivs } = this.#textLayer;
+    // this.highlighter?.setTextMapping(textDivs, textContentItemsStr);
     this.accessibilityManager?.setTextMapping(textDivs);
 
     await this.#textLayer.render();
@@ -104,7 +104,7 @@ export class TextLayerBuilder {
     // Ensure that the textLayer is appended to the DOM *before* handling
     // e.g. a pending search operation.
     this.#onAppend?.(this.div);
-    this.highlighter?.enable();
+    // this.highlighter?.enable();
     this.accessibilityManager?.enable();
   }
 
@@ -112,7 +112,7 @@ export class TextLayerBuilder {
     if (!this.div.hidden && this.#renderingDone) {
       // We turn off the highlighter in order to avoid to scroll into view an
       // element of the text layer which could be hidden.
-      this.highlighter?.disable();
+      // this.highlighter?.disable();
       this.div.hidden = true;
     }
   }
@@ -120,7 +120,7 @@ export class TextLayerBuilder {
   show() {
     if (this.div.hidden && this.#renderingDone) {
       this.div.hidden = false;
-      this.highlighter?.enable();
+      // this.highlighter?.enable();
     }
   }
 
@@ -131,7 +131,7 @@ export class TextLayerBuilder {
     this.#textLayer?.cancel();
     this.#textLayer = null;
 
-    this.highlighter?.disable();
+    // this.highlighter?.disable();
     this.accessibilityManager?.disable();
     TextLayerBuilder.#removeGlobalSelectionListener(this.div);
   }
