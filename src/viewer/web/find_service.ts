@@ -12,10 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PDFDocumentProxy, TextItem } from "../../display/api";
-import { binarySearchFirstItem } from "../common/ui_utils";
+import { PDFDocumentProxy } from "../../display/api";
 import { DocumentOwner } from "./interface";
-import { getCharacterType, getNormalizeWithNFKC } from "./pdf_find_utils";
+import { getNormalizeWithNFKC } from "./pdf_find_utils";
 import { PDFLinkService } from "./pdf_link_service";
 
 export enum FindState {
@@ -25,7 +24,7 @@ export enum FindState {
   PENDING = 3,
 };
 
-const FIND_TIMEOUT = 250; // ms
+// const FIND_TIMEOUT = 250; // ms
 // const MATCH_SCROLL_OFFSET_TOP = -50; // px
 // const MATCH_SCROLL_OFFSET_LEFT = -400; // px
 
@@ -50,7 +49,7 @@ const CHARACTERS_TO_NORMALIZE = {
 // The combining class definitions can be found:
 //   https://www.unicode.org/reports/tr44/#Canonical_Combining_Class_Values
 // Category 0 corresponds to [^\p{Mn}].
-const DIACRITICS_EXCEPTION = new Set([
+export const DIACRITICS_EXCEPTION = new Set([
   // UNICODE_COMBINING_CLASS_KANA_VOICING
   // https://www.compart.com/fr/unicode/combining/8
   0x3099, 0x309a,
@@ -73,13 +72,13 @@ const DIACRITICS_EXCEPTION = new Set([
   // https://www.compart.com/fr/unicode/combining/132
   0x0f74,
 ]);
-let DIACRITICS_EXCEPTION_STR; // Lazily initialized, see below.
+// let DIACRITICS_EXCEPTION_STR; // Lazily initialized, see below.
 
 const DIACRITICS_REG_EXP = /\p{M}+/gu;
-const SPECIAL_CHARS_REG_EXP =
+export const SPECIAL_CHARS_REG_EXP =
   /([.*+?^${}()|[\]\\])|(\p{P})|(\s+)|(\p{M})|(\p{L})/gu;
-const NOT_DIACRITIC_FROM_END_REG_EXP = /([^\p{M}])\p{M}*$/u;
-const NOT_DIACRITIC_FROM_START_REG_EXP = /^\p{M}*([^\p{M}])/u;
+export const NOT_DIACRITIC_FROM_END_REG_EXP = /([^\p{M}])\p{M}*$/u;
+export const NOT_DIACRITIC_FROM_START_REG_EXP = /^\p{M}*([^\p{M}])/u;
 
 // The range [AC00-D7AF] corresponds to the Hangul syllables.
 // The few other chars are some CJK Compatibility Ideographs.
@@ -95,7 +94,7 @@ const NFKC_CHARS_TO_NORMALIZE = new Map();
 let noSyllablesRegExp: RegExp | null = null;
 let withSyllablesRegExp: RegExp | null = null;
 
-function normalize(text: string): [string, [number, number][], boolean] {
+export function normalize(text: string): [string, [number, number][], boolean] {
   // The diacritics in the text or in the query can be composed or not.
   // So we use a decomposed text using NFD (and the same for the query)
   // in order to be sure that diacritics are in the same order.
@@ -344,58 +343,12 @@ function normalize(text: string): [string, [number, number][], boolean] {
   return [normalized, positions, hasDiacritics];
 }
 
-// Determine the original, non-normalized, match index such that highlighting of
-// search results is correct in the `textLayer` for strings containing e.g. "½"
-// characters; essentially "inverting" the result of the `normalize` function.
-function getOriginalIndex(diffs: [number, number][], pos: number, len: number) {
-  if (!diffs) {
-    return [pos, len];
-  }
-
-  // First char in the new string.
-  const start = pos;
-  // Last char in the new string.
-  const end = pos + len - 1;
-  let i = binarySearchFirstItem(diffs, x => x[0] >= start);
-  if (diffs[i][0] > start) {
-    --i;
-  }
-
-  let j = binarySearchFirstItem(diffs, x => x[0] >= end, i);
-  if (diffs[j][0] > end) {
-    --j;
-  }
-
-  // First char in the old string.
-  const oldStart = start + diffs[i][1];
-
-  // Last char in the old string.
-  const oldEnd = end + diffs[j][1];
-  const oldLen = oldEnd + 1 - oldStart;
-
-  return [oldStart, oldLen];
-}
-
-interface FindMatch {
-
-  /** The start of the matched text in the page's string contents.*/
-  index: number;
-
-  /** The length of the matched text.*/
-  length: number;
-
-}
-
 /**
  * 一个用于查找PDF内容的服务
  */
 export class PDFContentFindService implements DocumentOwner {
 
   #state = null;
-
-  #updateMatchesCountOnProgress = true;
-
-  #visitedPagesCount = 0;
 
   protected _resumePageIdx: number | null = null;
 
@@ -423,14 +376,9 @@ export class PDFContentFindService implements DocumentOwner {
    *   count must be updated on progress or only when the last page is reached.
    *   The default value is `true`.
    */
-  constructor(linkService: PDFLinkService, updateMatchesCountOnProgress = true) {
+  constructor(linkService: PDFLinkService, _updateMatchesCountOnProgress = true) {
     this._linkService = linkService;
-    this.#updateMatchesCountOnProgress = updateMatchesCountOnProgress;
     this.#reset();
-  }
-
-  get highlightMatches() {
-    return this._highlightMatches;
   }
 
   get pageMatches() {
@@ -441,9 +389,6 @@ export class PDFContentFindService implements DocumentOwner {
     return this._pageMatchesLength;
   }
 
-  get selected() {
-    return this._selected;
-  }
 
   get state() {
     return this.#state;
@@ -483,398 +428,7 @@ export class PDFContentFindService implements DocumentOwner {
   }
 
   #reset() {
-    this._highlightMatches = false;
-    this._scrollMatches = false;
-    this._pdfDocument = null;
-    this._pageMatches = [];
-    this._pageMatchesLength = [];
-    this.#visitedPagesCount = 0;
-    this.#state = null;
-    // Currently selected match.
-    this._selected = {
-      pageIdx: -1,
-      matchIdx: -1,
-    };
-    // Where the find algorithm currently is in the document.
-    this._offset = {
-      pageIdx: null,
-      matchIdx: null,
-      wrapped: false,
-    };
-    this._extractTextPromises = [];
-    this._pageContents = []; // Stores the normalized text for each page.
-    this._pageDiffs = [];
-    this._hasDiacritics = [];
-    this._matchesCountTotal = 0;
-    this._pagesToSearch = null;
-    this._pendingFindMatches = new Set();
-    this._resumePageIdx = null;
-    this._dirtyMatch = false;
-    clearTimeout(this._findTimeout);
-    this._findTimeout = null;
 
-    this._firstPageCapability = Promise.withResolvers();
-  }
-
-  /**
-   * @type {string|Array} The (current) normalized search query.
-   */
-  get #query() {
-    const { query } = this.#state;
-    if (typeof query === "string") {
-      if (query !== this._rawQuery) {
-        this._rawQuery = query;
-        [this._normalizedQuery] = normalize(query);
-      }
-      return this._normalizedQuery;
-    }
-    // We don't bother caching the normalized search query in the Array-case,
-    // since this code-path is *essentially* unused in the default viewer.
-    return (query || []).filter(q => !!q).map(q => normalize(q)[0]);
-  }
-
-  /**
-   * Determine if the search query constitutes a "whole word", by comparing the
-   * first/last character type with the preceding/following character type.
-   */
-  #isEntireWord(content: string, startIdx: number, length: number) {
-    let match = content.slice(0, startIdx)
-      .match(NOT_DIACRITIC_FROM_END_REG_EXP);
-    if (match) {
-      const first = content.charCodeAt(startIdx);
-      const limit = match[1].charCodeAt(0);
-      if (getCharacterType(first) === getCharacterType(limit)) {
-        return false;
-      }
-    }
-
-    match = content.slice(startIdx + length)
-      .match(NOT_DIACRITIC_FROM_START_REG_EXP);
-    if (match) {
-      const last = content.charCodeAt(startIdx + length - 1);
-      const limit = match[1].charCodeAt(0);
-      if (getCharacterType(last) === getCharacterType(limit)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  #convertToRegExpString(query: string, hasDiacritics: boolean): [boolean, string] {
-    const { matchDiacritics } = this.#state;
-    let isUnicode = false;
-    query = query.replaceAll(SPECIAL_CHARS_REG_EXP, (
-      _match, p1 /* to escape */, p2 /* punctuation */, p3 /* whitespaces */,
-      p4 /* diacritics */, p5 /* letters */
-    ) => {
-      // We don't need to use a \s for whitespaces since all the different
-      // kind of whitespaces are replaced by a single " ".
-
-      if (p1) {
-        // Escape characters like *+?... to not interfer with regexp syntax.
-        return `[ ]*\\${p1}[ ]*`;
-      }
-      if (p2) {
-        // Allow whitespaces around punctuation signs.
-        return `[ ]*${p2}[ ]*`;
-      }
-      if (p3) {
-        // Replace spaces by \s+ to be sure to match any spaces.
-        return "[ ]+";
-      }
-      if (matchDiacritics) {
-        return p4 || p5;
-      }
-
-      if (p4) {
-        // Diacritics are removed with few exceptions.
-        return DIACRITICS_EXCEPTION.has(p4.charCodeAt(0)) ? p4 : "";
-      }
-
-      // A letter has been matched and it can be followed by any diacritics
-      // in normalized text.
-      if (hasDiacritics) {
-        isUnicode = true;
-        return `${p5}\\p{M}*`;
-      }
-      return p5;
-    });
-
-    const trailingSpaces = "[ ]*";
-    if (query.endsWith(trailingSpaces)) {
-      // The [ ]* has been added in order to help to match "foo . bar" but
-      // it doesn't make sense to match some whitespaces after the dot
-      // when it's the last character.
-      query = query.slice(0, query.length - trailingSpaces.length);
-    }
-
-    if (matchDiacritics) {
-      // aX must not match aXY.
-      if (hasDiacritics) {
-        DIACRITICS_EXCEPTION_STR ||= String.fromCharCode(
-          ...DIACRITICS_EXCEPTION
-        );
-
-        isUnicode = true;
-        query = `${query}(?=[${DIACRITICS_EXCEPTION_STR}]|[^\\p{M}]|$)`;
-      }
-    }
-
-    return [isUnicode, query];
-  }
-
-  // 这个方法用来计算到底谁是被匹配中的
-  #calculateMatch(pageIndex: number) {
-    const query = this.#query;
-    if (query.length === 0) {
-      return; // Do nothing: the matches should be wiped out already.
-    }
-    const pageContent = this._pageContents[pageIndex];
-    const matcherResult = this.match(query, pageContent, pageIndex);
-
-    const matches: number[] = (this._pageMatches[pageIndex] = []);
-    const matchesLength = (this._pageMatchesLength[pageIndex] = []);
-    const diffs = this._pageDiffs[pageIndex];
-
-    matcherResult?.forEach(({ index, length }) => {
-      const [matchPos, matchLen] = getOriginalIndex(diffs, index, length);
-      if (matchLen) {
-        matches.push(matchPos);
-        matchesLength.push(matchLen);
-      }
-    });
-
-    // When `highlightAll` is set, ensure that the matches on previously
-    // rendered (and still active) pages are correctly highlighted.
-    if (this.#state.highlightAll) {
-      this.#updatePage(pageIndex);
-    }
-    if (this._resumePageIdx === pageIndex) {
-      this._resumePageIdx = null;
-      this.#nextPageMatch();
-    }
-
-    // Update the match count.
-    const pageMatchesCount = matches.length;
-    this._matchesCountTotal += pageMatchesCount;
-    if (this.#updateMatchesCountOnProgress) {
-      if (pageMatchesCount > 0) {
-        this.#updateUIResultsCount();
-      }
-    } else if (++this.#visitedPagesCount === this._linkService.pagesCount) {
-      // For example, in GeckoView we want to have only the final update because
-      // the Java side provides only one object to update the counts.
-      this.#updateUIResultsCount();
-    }
-  }
-
-
-
-  /**
-   * @param {string | string[]} query - The search query.
-   * @param {string} pageContent - The text content of the page to search in.
-   * @param {number} pageIndex - The index of the page that is being processed.
-   * @returns {FindMatch[] | undefined} An array of matches in the provided
-   *   page.
-   */
-  match(query: string | string[], pageContent: string, pageIndex: number): FindMatch[] | null {
-    const hasDiacritics = this._hasDiacritics[pageIndex];
-
-    let isUnicode = false;
-    if (typeof query === "string") {
-      [isUnicode, query] = this.#convertToRegExpString(query, hasDiacritics);
-    } else {
-      // Words are sorted in reverse order to be sure that "foobar" is matched
-      // before "foo" in case the query is "foobar foo".
-      query = query
-        .sort()
-        .reverse()
-        .map(q => {
-          const [isUnicodePart, queryPart] = this.#convertToRegExpString(
-            q,
-            hasDiacritics
-          );
-          isUnicode ||= isUnicodePart;
-          return `(${queryPart})`;
-        })
-        .join("|");
-    }
-    if (!query) {
-      // The query can be empty because some chars like diacritics could have
-      // been stripped out.
-      return null;
-    }
-
-    const { caseSensitive, entireWord } = this.#state;
-    const flags = `g${isUnicode ? "u" : ""}${caseSensitive ? "" : "i"}`;
-    const queryExp = new RegExp(<string>query, flags);
-
-    const matches = [];
-    let match;
-    while ((match = queryExp.exec(pageContent)) !== null) {
-      if (
-        entireWord &&
-        !this.#isEntireWord(pageContent, match.index, match[0].length)
-      ) {
-        continue;
-      }
-      matches.push({ index: match.index, length: match[0].length });
-    }
-    return matches;
-  }
-
-  #updatePage(index) {
-    if (this._scrollMatches && this._selected.pageIdx === index) {
-      // If the page is selected, scroll the page into view, which triggers
-      // rendering the page, which adds the text layer. Once the text layer
-      // is built, it will attempt to scroll the selected match into view.
-      this._linkService.page = index + 1;
-    }
-
-    this._eventBus.dispatch("updatetextlayermatches", {
-      source: this,
-      pageIndex: index,
-    });
-  }
-
-  #updateAllPages() {
-    this._eventBus.dispatch("updatetextlayermatches", {
-      source: this,
-      pageIndex: -1,
-    });
-  }
-
-  #matchesReady(matches) {
-    const offset = this._offset;
-    const numMatches = matches.length;
-    const previous = this.#state.findPrevious;
-
-    if (numMatches) {
-      // There were matches for the page, so initialize `matchIdx`.
-      offset.matchIdx = previous ? numMatches - 1 : 0;
-      this.#updateMatch(/* found = */ true);
-      return true;
-    }
-    // No matches, so attempt to search the next page.
-    this.#advanceOffsetPage(previous);
-    if (offset.wrapped) {
-      offset.matchIdx = null;
-      if (this._pagesToSearch < 0) {
-        // No point in wrapping again, there were no matches.
-        this.#updateMatch(/* found = */ false);
-        // While matches were not found, searching for a page
-        // with matches should nevertheless halt.
-        return true;
-      }
-    }
-    // Matches were not found (and searching is not done).
-    return false;
-  }
-
-  #nextPageMatch() {
-    if (this._resumePageIdx !== null) {
-      console.error("There can only be one pending page.");
-    }
-
-    let matches = null;
-    do {
-      const pageIdx = this._offset.pageIdx;
-      matches = this._pageMatches[pageIdx];
-      if (!matches) {
-        // The matches don't exist yet for processing by `_matchesReady`,
-        // so set a resume point for when they do exist.
-        this._resumePageIdx = pageIdx;
-        break;
-      }
-    } while (!this.#matchesReady(matches));
-  }
-
-  #advanceOffsetPage(previous) {
-    const offset = this._offset;
-    const numPages = this._linkService.pagesCount;
-    offset.pageIdx = previous ? offset.pageIdx - 1 : offset.pageIdx + 1;
-    offset.matchIdx = null;
-
-    this._pagesToSearch--;
-
-    if (offset.pageIdx >= numPages || offset.pageIdx < 0) {
-      offset.pageIdx = previous ? numPages - 1 : 0;
-      offset.wrapped = true;
-    }
-  }
-
-  #updateMatch(found = false) {
-    let state = FindState.NOT_FOUND;
-    const wrapped = this._offset.wrapped;
-    this._offset.wrapped = false;
-
-    if (found) {
-      const previousPage = this._selected.pageIdx;
-      this._selected.pageIdx = this._offset.pageIdx;
-      this._selected.matchIdx = this._offset.matchIdx;
-      state = wrapped ? FindState.WRAPPED : FindState.FOUND;
-
-      // Update the currently selected page to wipe out any selected matches.
-      if (previousPage !== -1 && previousPage !== this._selected.pageIdx) {
-        this.#updatePage(previousPage);
-      }
-    }
-
-    this.#updateUIState(state, this.#state.findPrevious);
-    if (this._selected.pageIdx !== -1) {
-      // Ensure that the match will be scrolled into view.
-      this._scrollMatches = true;
-
-      this.#updatePage(this._selected.pageIdx);
-    }
-  }
-
-  #requestMatchesCount() {
-    const { pageIdx, matchIdx } = this._selected;
-    let current = 0,
-      total = this._matchesCountTotal;
-    if (matchIdx !== -1) {
-      for (let i = 0; i < pageIdx; i++) {
-        current += this._pageMatches[i]?.length || 0;
-      }
-      current += matchIdx + 1;
-    }
-    // When searching starts, this method may be called before the `pageMatches`
-    // have been counted (in `#calculateMatch`). Ensure that the UI won't show
-    // temporarily broken state when the active find result doesn't make sense.
-    if (current < 1 || current > total) {
-      current = total = 0;
-    }
-    return { current, total };
-  }
-
-  #updateUIResultsCount() {
-    this._eventBus.dispatch("updatefindmatchescount", {
-      source: this,
-      matchesCount: this.#requestMatchesCount(),
-    });
-  }
-
-  #updateUIState(state, previous = false) {
-    if (
-      !this.#updateMatchesCountOnProgress &&
-      (this.#visitedPagesCount !== this._linkService.pagesCount ||
-        state === FindState.PENDING)
-    ) {
-      // When this.#updateMatchesCountOnProgress is false we only send an update
-      // when everything is ready.
-      return;
-    }
-
-    this._eventBus.dispatch("updatefindcontrolstate", {
-      source: this,
-      state,
-      previous,
-      entireWord: this.#state?.entireWord ?? null,
-      matchesCount: this.#requestMatchesCount(),
-      rawQuery: this.#state?.query ?? null,
-    });
   }
 }
 

@@ -11,5 +11,9 @@
   "devDependencies": {
     "typescript": "^5.7.2",
     "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "@fluent/bundle": "^0.18.0",
+    "@fluent/dom": "^0.10.0"
   }
 }

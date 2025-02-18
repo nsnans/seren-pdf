@@ -56,7 +56,7 @@ export class GenericL10n extends L10n {
    *   translations.
    * @param {String} baseLang - The base language to use for translations.
    */
-  static async *#generateBundles(defaultLang, baseLang) {
+  static async *#generateBundles(defaultLang: string, baseLang: string) {
     const { baseURL, paths } = await this.#getPaths();
 
     const langs = [baseLang];
