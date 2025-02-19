@@ -14,7 +14,6 @@
  */
 
 import { Uint8TypedArray } from "../common/typed_array";
-import { ImageDecoder } from "../global";
 import { shadow, warn } from "../shared/util";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";

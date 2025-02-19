@@ -1,5 +1,3 @@
-import { ImageDecoder } from "../global";
-
 
 /**
  * 在原来的pdfjs中，pdfjs根据打包效果会生成多种不同的包
@@ -7,7 +5,7 @@ import { ImageDecoder } from "../global";
  * 有的适合添加一些火狐浏览器的特殊逻辑，有的适合在测试环境下跑，因此有着大量的判断
  * 这些判断在未来可能不需要了，因此直接将其移除或者替换掉了
  */
-class PlatformHelper {
+export class PlatformHelper {
   
   static isChrome() {
     return true;
@@ -47,5 +45,3 @@ class PlatformHelper {
     return "unknown";
   }
 }
-
-export { PlatformHelper };

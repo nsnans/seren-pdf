@@ -97,12 +97,13 @@ export declare global {
   declare interface MouseEvent {
     originalTarget: Element | null;
   }
+
+  export declare var ImageDecoder: {
+    prototype: ImageDecoder;
+    new(options: ImageDecoderOption): ImageDecoder;
+    static isTypeSupported(type: string): Promise<boolean>;
+  };
 }
 
-export declare var ImageDecoder: {
-  prototype: ImageDecoder;
-  new(options: ImageDecoderOption): ImageDecoder;
-  static isTypeSupported(type: string): Promise<boolean>;
-};
 
 

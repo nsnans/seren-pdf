@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { ImageDecoder } from "../global";
 import { FeatureTest, ImageKind, shadow, warn } from "../shared/util";
 import { PDFImageData } from "./image";
 
