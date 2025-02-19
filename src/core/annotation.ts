@@ -263,7 +263,7 @@ export class MarkupAnnotationFactory {
       annotationGlobals,
       ref: null,
       subtype: null,
-      id: null,
+      id: "",
 
       evaluatorOptions: evaluatorOptions,
       dict: annotationDict,
@@ -4282,8 +4282,8 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
 
   protected _hasAppearance: boolean;
 
-  constructor(params: AnnotationParameters) {
-    super(params);
+  constructor(params: Partial<AnnotationParameters>) {
+    super(<AnnotationParameters>params);
 
     // It uses its own canvas in order to be hidden if edited.
     // But if it has the noHTML flag, it means that we don't want to be able
@@ -4293,9 +4293,11 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     // We want to be able to add mouse listeners to the annotation.
     this.data.noHTML = false;
 
-    const { evaluatorOptions, xref } = params;
+    const evaluatorOptions = params.evaluatorOptions!;
+    const xref = params.xref!;
+    const dict = params.dict!;
     this.data.annotationType = AnnotationType.FREETEXT;
-    this.setDefaultAppearance(params);
+    this.setDefaultAppearance(<AnnotationParameters>params);
     this._hasAppearance = !!this.appearance;
 
     if (this._hasAppearance) {
@@ -4317,7 +4319,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
         this.data.textPosition = this._transformPoint(coords, bbox, matrix!);
       }
       if (this._isOffscreenCanvasSupported) {
-        const strokeAlpha = params.dict.getValue(DictKey.CA);
+        const strokeAlpha = dict.getValue(DictKey.CA);
         const fakeUnicodeFont = new FakeUnicodeFont(xref, "sans-serif");
         this.appearance = fakeUnicodeFont.createAppearance(
           this._contents.str,
@@ -4812,13 +4814,14 @@ export interface InkAnnotationData extends MarkupData {
 
 class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
 
-  constructor(params: AnnotationParameters) {
-    super(params);
+  constructor(params: Partial<AnnotationParameters>) {
+    super(<AnnotationParameters>params);
 
     this.data.hasOwnCanvas = this.data.noRotate;
     this.data.noHTML = false;
 
-    const { dict, xref } = params;
+    const dict = params.dict!;
+    const xref = params.xref!;
     this.data.annotationType = AnnotationType.INK;
     this.data.inkLists = [];
     this.data.isEditable = !this.data.noHTML && this.data.it === "InkHighlight";
@@ -5061,10 +5064,11 @@ export interface HighlightData extends MarkupData {
 
 class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
 
-  constructor(params: AnnotationParameters) {
-    super(params);
+  constructor(params: Partial<AnnotationParameters>) {
+    super(<AnnotationParameters>params);
 
-    const { dict, xref } = params;
+    const dict = params.dict!
+    const xref = params.xref!;
     this.data.annotationType = AnnotationType.HIGHLIGHT;
     this.data.isEditable = !this.data.noHTML;
     // We want to be able to add mouse listeners to the annotation.
@@ -5333,7 +5337,8 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
 
   #savedHasOwnCanvas;
 
-  constructor(params: AnnotationParameters) {
+  constructor(partialParams: Partial<AnnotationParameters>) {
+    const params = <AnnotationParameters>partialParams;
     super(params);
 
     this.data.annotationType = AnnotationType.STAMP;

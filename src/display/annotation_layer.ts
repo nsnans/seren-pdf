@@ -714,7 +714,8 @@ export class AnnotationElement<DATA extends AnnotationData> {
     if (this._fieldObjects) {
       const fieldObj = this._fieldObjects.get(name);
       if (fieldObj) {
-        for (const { page, id, exportValues } of fieldObj) {
+        for (const { page, id } of fieldObj) {
+          const exportValues = <{ exportValues?: string }>fieldObj;
           if (page === -1) {
             continue;
           }
@@ -2036,7 +2037,8 @@ class PopupAnnotationElement extends AnnotationElement<PopupData> {
 
   public elements: AnnotationElement<AnnotationData>[];
 
-  constructor(parameters: AnnotationElementParameters<PopupData>) {
+  constructor(partialParameters: Partial<AnnotationElementParameters<Partial<PopupData>>>) {
+    const parameters = <AnnotationElementParameters<PopupData>>partialParameters;
     const { data, elements } = parameters;
     super(parameters, AnnotationElement._hasPopupData(
       data.titleObj, data.contentsObj, data.richText
