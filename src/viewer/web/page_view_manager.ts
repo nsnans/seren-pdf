@@ -21,7 +21,7 @@ import { PixelsPerInch, PointType } from '../../display/display_utils';
 import { AnnotationEditorUIManager } from "../../display/editor/tools";
 import { OptionalContentConfig } from "../../display/optional_content_config";
 import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../shared/util";
-import {  EventBus } from "../common/component_types";
+import { EventBus } from "../common/component_types";
 import {
   DEFAULT_SCALE,
   DEFAULT_SCALE_DELTA,
@@ -360,11 +360,9 @@ export class WebPageViewManager {
     rotation: number | null;
     pdfOpenParams: string;
   } | null = null;
-  disableAutoFetch: boolean;
 
-  /**
-   * @param {PDFViewerOptions} options
-   */
+  protected disableAutoFetch: boolean;
+
   constructor(
     container: HTMLDivElement,
     linkService: PDFLinkService,
@@ -376,7 +374,7 @@ export class WebPageViewManager {
     l10n: L10n,
     callbacks: WebPageViewManagerCallback | null = null
   ) {
-    const viewer = container.firstElementChild;
+    const viewer = container;
     if (container?.tagName !== "DIV" || viewer?.tagName !== "DIV") {
       throw new Error("container必须是div类型的dom元素。");
     }

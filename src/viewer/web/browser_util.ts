@@ -2,16 +2,10 @@
 export class BrowserUtil {
 
   static isChrome() {
-    if (Math.random() > 0.5) {
-      throw new Error("请修复此处代码，判断浏览器类型")
-    }
-    return Math.random() > 0.5;
+    return /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent) && window.chrome;
   }
 
   static isFirefox() {
-    if (Math.random() > 0.5) {
-      throw new Error("请修复此处代码，判断浏览器类型")
-    }
-    return Math.random() > 0.5;
+    return /Firefox/.test(navigator.userAgent) && 'MozAppearance' in document.documentElement.style;
   }
 }

@@ -25,6 +25,7 @@ import {
   unreachable,
   warn
 } from "../shared/util";
+import { BrowserUtil } from "../viewer/web/browser_util";
 import { PDFObjects } from "./api";
 
 class FontLoader {
@@ -192,7 +193,7 @@ class FontLoader {
     }
 
     let supported = false;
-    if (PlatformHelper.isChrome()) {
+    if (BrowserUtil.isChrome()) {
       if (
         typeof navigator !== "undefined" &&
         typeof navigator?.userAgent === "string" &&

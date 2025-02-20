@@ -6,10 +6,6 @@
  * 这些判断在未来可能不需要了，因此直接将其移除或者替换掉了
  */
 export class PlatformHelper {
-  
-  static isChrome() {
-    return true;
-  }
 
   static hasDefined() {
     return true;

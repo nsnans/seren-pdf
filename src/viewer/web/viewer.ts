@@ -185,7 +185,7 @@ export class WebPDFViewer {
       this._contentLength = length; // Ensure that the correct length is used.
     });
 
-    if (PlatformHelper.isChrome()) {
+    if (BrowserUtil.isChrome()) {
       const baseUrl = location.href.split("#", 1)[0];
       // Ignore "data:"-URLs for performance reasons, even though it may cause
       // internal links to not work perfectly in all cases (see bug 1803050).
