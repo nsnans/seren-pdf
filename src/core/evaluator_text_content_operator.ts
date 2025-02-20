@@ -1,5 +1,5 @@
-import { DocumentEvaluatorOptions } from "../display/api";
 import { TransformType } from "../display/display_utils";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, OPS, Util, warn } from "../shared/util";
 import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";

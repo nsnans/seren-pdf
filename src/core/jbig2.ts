@@ -1726,7 +1726,7 @@ const Methods = new Map<SegmentType, keyof SimpleSegmentVisitor>;
 function callback(segmentType: SegmentType) {
   return function (_target: SimpleSegmentVisitor, propertyKey: keyof SimpleSegmentVisitor) {
     if (Methods.has(segmentType)) {
-      throw new Error("不能够为一个操作配置多个方法");
+      throw new Error("不能够为一个操作配置多个方法" + segmentType);
     }
     Methods.set(segmentType, propertyKey);
   }
@@ -2033,7 +2033,7 @@ class SimpleSegmentVisitor {
     this.drawBitmap(regionInfo, bitmap);
   }
 
-  @callback(SegmentType.ImmediateHalftoneRegion)
+  @callback(SegmentType.ImmediateLosslessHalftoneRegion)
   onImmediateLosslessHalftoneRegion(
     region: SegmentHalftoneRegion,
     referredSegments: number[],

@@ -14,8 +14,8 @@
  */
 /* eslint-disable no-var */
 
-import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType, TransformType } from "../display/display_utils";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { PlatformHelper } from "../platform/platform_helper";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {

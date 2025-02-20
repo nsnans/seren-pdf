@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocumentEvaluatorOptions } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AbortException,

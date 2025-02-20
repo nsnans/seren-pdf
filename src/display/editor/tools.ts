@@ -615,6 +615,9 @@ interface DragEditorInfo {
 }
 
 
+interface ScaleChangableEditor {
+  onScaleChanging?: () => void;
+}
 /**
  * A pdf has several pages and each of them when it will rendered
  * will have an AnnotationEditorLayer which will contain the some
@@ -1066,8 +1069,8 @@ class AnnotationEditorUIManager {
     this.commitOrRemove();
     this.viewParameters.realScale = scale * PixelsPerInch.PDF_TO_CSS_UNITS;
     for (const editor of this.#editorsToRescale) {
-      if (editor instanceof InkEditor) {
-        editor!.onScaleChanging();
+      if ((<ScaleChangableEditor>editor).onScaleChanging) {
+        (<ScaleChangableEditor>editor)!.onScaleChanging?.();
       }
     }
   }

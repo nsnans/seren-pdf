@@ -1,4 +1,4 @@
-import { DocumentEvaluatorOptions } from "../display/api";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { AbortException, FormatError, info, OPS, warn } from "../shared/util";
 import { shiftable } from "../types";
 import { BaseStream } from "./base_stream";

@@ -35,8 +35,8 @@ import { PDFFunctionFactory } from "./function";
 import { Stream, StringStream } from "./stream";
 import { XRef } from "./xref";
 import { PointType, RectType } from "../display/display_utils";
-import { DocumentEvaluatorOptions } from "../display/api";
 import { MutableArray } from "../types";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str: string) {

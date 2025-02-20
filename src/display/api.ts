@@ -74,6 +74,7 @@ import {
   StatTimer,
   TransformType
 } from "./display_utils";
+import { DocumentEvaluatorOptions } from "./document_evaluator_options";
 import { FilterFactory } from "./filter_factory";
 import { FontFaceObject, FontLoader } from "./font_loader";
 import { Metadata } from "./metadata";
@@ -282,69 +283,6 @@ export interface DocumentInitParameters {
   enableHWA: boolean;
 }
 
-/**
- * This is the main entry point for loading a PDF and interacting with it.
- *
- * NOTE: If a URL is used to fetch the PDF data a standard Fetch API call (or
- * XHR as fallback) is used, which means it must follow same origin rules,
- * e.g. no cross-domain requests without CORS.
- *
- * @param {string | URL | TypedArray | ArrayBuffer | DocumentInitParameters}
- *   src - Can be a URL where a PDF file is located, a typed array (Uint8Array)
- *         already populated with data, or a parameter object.
- * @returns {PDFDocumentLoadingTask}
- */
-
-export class DocumentEvaluatorOptions {
-
-  readonly maxImageSize: number;
-
-  readonly disableFontFace: boolean;
-
-  readonly ignoreErrors: boolean;
-
-  readonly isEvalSupported: boolean;
-
-  public isOffscreenCanvasSupported: boolean;
-
-  readonly isChrome: boolean;
-
-  readonly canvasMaxAreaInBytes: number;
-
-  readonly fontExtraProperties: boolean;
-
-  readonly useSystemFonts: boolean;
-
-  readonly cMapUrl: string | null;
-
-  readonly standardFontDataUrl: string | null;
-
-  constructor(
-    maxImageSize: number,
-    disableFontFace: boolean,
-    ignoreErrors: boolean,
-    isEvalSupported: boolean,
-    isOffscreenCanvasSupported: boolean,
-    isChrome: boolean,
-    canvasMaxAreaInBytes: number,
-    fontExtraProperties: boolean,
-    useSystemFonts: boolean,
-    cMapUrl: string | null,
-    standardFontDataUrl: string | null,
-  ) {
-    this.maxImageSize = maxImageSize;
-    this.disableFontFace = disableFontFace;
-    this.ignoreErrors = ignoreErrors;
-    this.isEvalSupported = isEvalSupported;
-    this.isOffscreenCanvasSupported = isOffscreenCanvasSupported;
-    this.isChrome = isChrome;
-    this.canvasMaxAreaInBytes = canvasMaxAreaInBytes;
-    this.fontExtraProperties = fontExtraProperties;
-    this.useSystemFonts = useSystemFonts;
-    this.cMapUrl = cMapUrl;
-    this.standardFontDataUrl = standardFontDataUrl;
-  }
-}
 
 export class DocumentParameter {
 
@@ -588,7 +526,7 @@ class DocumentParameterBuilder {
 }
 
 // 只支持两种情况，一种是data数据，另一种是URL，如果
-function getDocument(src: DocumentInitParameters) {
+export function getDocument(src: DocumentInitParameters) {
 
   const task = new PDFDocumentLoadingTask();
 
@@ -927,7 +865,7 @@ export class PDFDocumentLoadingTask {
  * will generally be transferred to the worker-thread. This will help reduce
  * main-thread memory usage, however it will take ownership of the TypedArrays.
  */
-abstract class PDFDataRangeTransport {
+export abstract class PDFDataRangeTransport {
 
   public length: number;
 
@@ -1036,7 +974,7 @@ interface PdfInfo {
 /**
  * Proxy to a `PDFDocument` in the worker thread.
  */
-class PDFDocumentProxy {
+export class PDFDocumentProxy {
 
   protected _transport: WorkerTransport;
 
@@ -2167,7 +2105,7 @@ export class PDFPageProxy {
 }
 
 // 一个本地实现的MessagePoster
-class LoopbackPort implements MessagePoster {
+export class LoopbackPort implements MessagePoster {
 
   protected _listeners = new Map();
 
@@ -2234,7 +2172,7 @@ class LoopbackPort implements MessagePoster {
  * thread to the worker thread and vice versa. If the creation of a web
  * worker is not possible, a "fake" worker will be used instead.
  */
-class PDFWorker {
+export class PDFWorker {
 
   private static FAKE_WORKER_ID = 0;
 
@@ -3417,7 +3355,7 @@ export class PDFObjects {
 /**
  * Allows controlling of the rendering tasks.
  */
-class RenderTask {
+export class RenderTask {
 
   protected _internalRenderTask: InternalRenderTask;
 
@@ -3698,13 +3636,3 @@ class InternalRenderTask {
     }
   }
 }
-
-export {
-  getDocument,
-  LoopbackPort,
-  PDFDataRangeTransport,
-  PDFDocumentProxy,
-  PDFWorker,
-  RenderTask
-};
-

@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-/** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
-
 import { AnnotationData } from "../../core/annotation";
 import { PlatformHelper } from "../../platform/platform_helper";
 import {

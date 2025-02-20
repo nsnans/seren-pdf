@@ -4,7 +4,7 @@ import { WebPDFViewerGeneralOptions, WebPDFViewerOptions } from "./viewer_option
 
 export class WebSerenViewer {
 
-  static init(containerId: string, options: Partial<WebPDFViewerOptions>): WebPDFViewer {
+  static init(containerId: string, options: Partial<WebPDFViewerOptions> = {}): WebPDFViewer {
     if (containerId === null || containerId === undefined) {
       throw new Error('请指定一个div元素作为container！')
     }

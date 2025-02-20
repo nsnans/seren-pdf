@@ -12,10 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// eslint-disable-next-line max-len
-/** @typedef {import("./annotation_editor_layer.js").AnnotationEditorLayer} AnnotationEditorLayer */
-
 import { AnnotationData } from "../../core/annotation";
 import { AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, shadow, unreachable } from "../../shared/util";
 import { L10n } from "../../viewer/web/l10n";
@@ -48,7 +44,6 @@ export interface AnnotationEditorParameters {
   name: string;
   isCentered: boolean;
 }
-
 
 export class AnnotationEditorHelper {
 

@@ -1,5 +1,5 @@
-import { DocumentEvaluatorOptions } from "../display/api";
 import { RectType } from "../display/display_utils";
+import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import { info, OPS, TextRenderingMode, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
