@@ -39,10 +39,6 @@ export class TextAccessibilityManager {
   /**
    * Compare the positions of two elements, it must correspond to
    * the visual ordering.
-   *
-   * @param {HTMLElement} e1
-   * @param {HTMLElement} e2
-   * @returns {number}
    */
   static #compareElementPositions(e1: HTMLElement, e2: HTMLElement) {
     const rect1 = e1.getBoundingClientRect();

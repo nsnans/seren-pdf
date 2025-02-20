@@ -26,7 +26,5 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/global.d.ts",
-    "src/openjpeg.d.ts",
-  ]
+    "src/global.d.ts",  ]
 }
