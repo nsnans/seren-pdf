@@ -230,10 +230,10 @@ const PageActionEventType = {
   C: "PageClose",
 } as const;
 
-const VerbosityLevel = {
-  ERRORS: 0,
-  WARNINGS: 1,
-  INFOS: 5,
+enum VerbosityLevel {
+  ERRORS = 0,
+  WARNINGS = 1,
+  INFOS = 5,
 };
 
 // All the possible operations for an operator list.

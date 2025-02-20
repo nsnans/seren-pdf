@@ -314,8 +314,9 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
 
   protected readonly _disablePreferences = { value: <boolean | null>null, kind: OptionKind.VIEWER }
 
-  constructor(viewerOptions: WebPDFViewerOptions) {
-    for (const [key, value] of Object.entries(viewerOptions)) {
+  constructor(options: Partial<WebPDFViewerOptions>) {
+    const overrideOptions: WebPDFViewerOptions = { ...options, ...defaultWebViewerOptions() };
+    for (const [key, value] of Object.entries(overrideOptions)) {
       if (key.startsWith("_")) {
         throw new Error("无法将属性值赋给受保护的变量");
       }

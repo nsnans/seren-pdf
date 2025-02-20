@@ -100,16 +100,16 @@ export class DOMFilterFactory extends BaseFilterFactory {
 
   #docId: string;
 
-  #document;
+  #document: Document;
 
   #_hcmCache: Map<string, HCMInfo> | null = null;
 
   #id = 0;
 
-  constructor(docId: string, ownerDocument = globalThis.document) {
+  constructor(document: Document, docId: string) {
     super();
     this.#docId = docId;
-    this.#document = ownerDocument;
+    this.#document = document;
   }
 
   get #cache(): Map<string | Uint8Array<ArrayBuffer>, string> {

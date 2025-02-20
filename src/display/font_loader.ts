@@ -44,11 +44,10 @@ class FontLoader {
   }[] | null = null;
 
   protected loadTestFontId: number | null = null;
-  disableFontFace: any;
 
-  constructor(
-    ownerDocument: HTMLDocument = globalThis.document
-  ) {
+  protected disableFontFace: boolean = false;
+
+  constructor(ownerDocument: Document) {
     this._document = ownerDocument;
 
     this.nativeFontFaces = new Set();

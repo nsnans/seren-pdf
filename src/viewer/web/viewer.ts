@@ -1,7 +1,13 @@
-import { getDocument, PDFDocumentLoadingTask, PDFDocumentProxy } from "../../display/api";
+import { DEFAULT_RANGE_CHUNK_SIZE, DocumentInitParameters, getDocument, PDFDocumentLoadingTask, PDFDocumentProxy } from "../../display/api";
+import { DOMCanvasFactory } from "../../display/canvas_factory";
+import { DOMCMapReaderFactory } from "../../display/cmap_reader_factory";
 import { isDataScheme } from "../../display/display_utils";
+import { DOMFilterFactory } from "../../display/filter_factory";
+import { DOMStandardFontDataFactory } from "../../display/standard_fontdata_factory";
 import { PlatformHelper } from "../../platform/platform_helper";
+import { VerbosityLevel } from "../../shared/util";
 import { AltTextManager } from "./alt_text_manager";
+import { BrowserUtil } from "./browser_util";
 import { DownloadManager } from "./download_manager";
 import { PDFContentFindService } from "./find_service";
 import { GenericL10n } from "./genericl10n";
@@ -12,15 +18,19 @@ import { DefaultWebViewerPDFAttachmentManager } from "./pdf_attachment_manager";
 import { GenericWebViewPDFLayerManager as DefaultWebViewPDFLayerManager } from "./pdf_layer_manager";
 import { PDFLinkService } from "./pdf_link_service";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
-import { GenericWebThumbnailViewService, WebThumbnailViewService } from './thumbnail_view_service';
 import { PDFRenderingManager } from "./rendering_manager";
+import { GenericWebThumbnailViewService, WebThumbnailViewService } from './thumbnail_view_service';
 import { WebViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebViewerCursorManager } from "./viewer_cursor_manager";
 import { WebPDFViewerOptions } from "./viewer_options";
 
-export class WebPDFViewerBuilder {
-
+export interface OpenDocumentArgs {
+  url: string;
+  originalUrl: string;
+  data: string | Uint8Array<ArrayBuffer>;
+  filename: string;
+  httpHeaders: Record<string, string>;
 }
 
 enum PDFSource {
@@ -29,7 +39,7 @@ enum PDFSource {
   /** 加载了本地的PDF */
   LOCAL = 1,
   /**  通过网络加载的PDF */
-  NETWORK = 2,
+  NETWORK = 2
 }
 
 export class WebPDFViewer {
@@ -142,12 +152,15 @@ export class WebPDFViewer {
     return pageViewManager;
   }
 
-  async open() {
+  async open(args: Partial<OpenDocumentArgs>) {
+    // 如果已经打开了一个pdf文件，那么需要先关闭这个PDF文件
     if (this.pdfLoadingTask) {
       await this.close();
     }
 
-    const loadingTask = getDocument({});
+    const params = this.initDocumentParameters(args);
+
+    const loadingTask = getDocument(params);
 
     // 这里不太好，我觉得还是直接放入参数中，更好一些。
     loadingTask.onPassword = (_updateCallback, _reason) => {
@@ -192,5 +205,44 @@ export class WebPDFViewer {
   // 关闭当前的pdf页面
   async close() {
 
+  }
+
+  protected initDocumentParameters(args: Partial<OpenDocumentArgs>): DocumentInitParameters {
+    const params: DocumentInitParameters = {
+      url: args.url ?? null,
+      data: args.data ?? null,
+      httpHeaders: args.httpHeaders ?? null,
+      withCredentials: false,
+      password: null,
+      length: null,
+      range: null,
+      rangeChunkSize: DEFAULT_RANGE_CHUNK_SIZE,
+      worker: null,
+      verbosity: VerbosityLevel.ERRORS,
+      docBaseUrl: null,
+      cMapUrl: null,
+      cMapPacked: true,
+      CMapReaderFactory: DOMCMapReaderFactory,
+      useSystemFonts: true,
+      standardFontDataUrl: null,
+      StandardFontDataFactory: DOMStandardFontDataFactory,
+      useWorkerFetch: true,
+      stopAtErrors: false,
+      maxImageSize: -1,
+      isEvalSupported: true,
+      isOffscreenCanvasSupported: true,
+      isChrome: BrowserUtil.isChrome(),
+      canvasMaxAreaInBytes: -1,
+      disableFontFace: false,
+      fontExtraProperties: false,
+      document: globalThis.document,
+      disableRange: false,
+      disableStream: false,
+      disableAutoFetch: false,
+      CanvasFactory: DOMCanvasFactory,
+      FilterFactory: DOMFilterFactory,
+      enableHWA: false
+    }
+    return params;
   }
 }

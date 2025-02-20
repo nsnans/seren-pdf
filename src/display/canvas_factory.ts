@@ -16,7 +16,7 @@
 import { PlatformHelper } from "../platform/platform_helper";
 import { unreachable } from "../shared/util";
 
-export type CanvasAndContext = {
+export interface CanvasAndContext {
   savedCtx?: CanvasRenderingContext2D;
   canvas: HTMLCanvasElement | null;
   context: CanvasRenderingContext2D | null;
@@ -92,9 +92,9 @@ export class DOMCanvasFactory extends BaseCanvasFactory {
 
   protected _document: Document;
 
-  constructor(ownerDocument = globalThis.document, enableHWA = false) {
+  constructor(document: Document, enableHWA = false) {
     super(enableHWA);
-    this._document = ownerDocument;
+    this._document = document;
   }
 
   /**

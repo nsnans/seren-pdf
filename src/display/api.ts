@@ -53,6 +53,7 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
+  VerbosityLevel,
   warn
 } from "../shared/util";
 import { TypedArray } from "../types";
@@ -63,7 +64,7 @@ import {
   SerializableEmpty,
 } from "./annotation_storage";
 import { CanvasGraphics } from "./canvas";
-import { CanvasFactory, DOMCanvasFactory } from "./canvas_factory";
+import { CanvasFactory } from "./canvas_factory";
 import {
   isDataScheme,
   isValidFetchUrl,
@@ -73,7 +74,7 @@ import {
   StatTimer,
   TransformType
 } from "./display_utils";
-import { DOMFilterFactory, FilterFactory } from "./filter_factory";
+import { FilterFactory } from "./filter_factory";
 import { FontFaceObject, FontLoader } from "./font_loader";
 import { Metadata } from "./metadata";
 import { OptionalContentConfig } from "./optional_content_config";
@@ -81,16 +82,11 @@ import { TextLayer } from "./text_layer";
 import { PDFDataTransportStream } from "./transport_stream";
 import { GlobalWorkerOptions } from "./worker_options";
 
-const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
+export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
 const DELAYED_CLEANUP_TIMEOUT = 5000; // ms
 
-const DefaultCanvasFactory = DOMCanvasFactory;
-const DefaultCMapReaderFactory = DOMCMapReaderFactory;
-const DefaultFilterFactory = DOMFilterFactory;
-const DefaultStandardFontDataFactory = DOMStandardFontDataFactory;
-
-type RefProxy = {
+interface RefProxy {
   num: number;
   gen: number;
 }
@@ -98,56 +94,63 @@ type RefProxy = {
 export interface DocumentInitParameters {
 
   /* The URL of the PDF */
-  url?: string | URL | null;
+  url: string | URL | null;
 
   /**
    * Binary PDF data.
    * Use TypedArrays (Uint8Array) to improve the memory usage. If PDF data is
    * BASE64-encoded, use `atob()` to convert it to a binary string first.
    */
-  data?: TypedArray | ArrayBuffer | Array<number> | string | ArrayBufferView;
+  data: Uint8Array<ArrayBuffer> | string | null;
 
   /* Basic authentication headers */
-  httpHeaders?: Record<string, string>;
+  httpHeaders: Record<string, string> | null;
 
-  /** Indicates whether or not
+  /** 
+   * Indicates whether or not
    * cross-site Access-Control requests should be made using credentials such
    * as cookies or authorization headers. The default is `false`.
    * */
-  withCredentials?: boolean;
+  withCredentials: boolean;
 
   /* For decrypting password-protected PDFs. */
-  password?: string;
+  password: string | null;
 
   /* The PDF file length. It's used for progress reports and range requests operations. */
-  length?: number;
+  length: number | null;
 
   /* Allows for using a custom range transport implementation. */
-  range?: PDFDataRangeTransport;
+  range: PDFDataRangeTransport | null;
 
   /** 
    * Specify maximum number of bytes fetched per range request.
    * The default value is {@link DEFAULT_RANGE_CHUNK_SIZE}.
    * */
-  rangeChunkSize?: number;
+  rangeChunkSize: number;
 
   /* The worker that will be used for loading and parsing the PDF data. */
-  worker?: PDFWorker;
+  worker: PDFWorker | null;
 
-  /* Controls the logging level; the constants from {@link VerbosityLevel} should be used. */
-  verbosity?: number;
+  /**
+   * Controls the logging level; the constants from {@link VerbosityLevel} should be used.
+   * */
+  verbosity: VerbosityLevel;
 
   /**
    * The base URL of the document, used when attempting to recover valid absolute URLs for annotations,
    * and outline items, that (incorrectly) only specify relative URLs.
    * */
-  docBaseUrl?: string;
+  docBaseUrl: string | null;
 
-  /* The URL where the predefined Adobe CMaps are located. Include the trailing slash.*/
-  cMapUrl?: string;
+  /** 
+   * The URL where the predefined Adobe CMaps are located. Include the trailing slash.
+   * */
+  cMapUrl: string | null;
 
-  /* Specifies if the Adobe CMaps are binary packed or not. The default value is `true`. */
-  cMapPacked?: boolean;
+  /**
+   * Specifies if the Adobe CMaps are binary packed or not. The default value is `true`. 
+   * */
+  cMapPacked: boolean;
 
   /**
    * The factory that will be used when reading built-in CMap files. 
@@ -162,10 +165,12 @@ export interface DocumentInitParameters {
    * unless `disableFontFace === true` in which case this defaults to `false` 
    * regardless of the environment (to prevent completely broken fonts).
    * */
-  useSystemFonts?: boolean;
+  useSystemFonts: boolean;
 
-  /* The URL where the standard font files are located. Include the trailing slash.*/
-  standardFontDataUrl?: string;
+  /**
+   * The URL where the standard font files are located. Include the trailing slash.
+   * */
+  standardFontDataUrl: string | null;
 
   /**
    * The factory that will be used   when reading the standard font files. 
@@ -179,14 +184,14 @@ export interface DocumentInitParameters {
    * When `true`,the `CMapReaderFactory` and `StandardFontDataFactory` options are ignored.
    * The default value is `true` in web environments and `false` in Node.js.
    * */
-  useWorkerFetch?: boolean;
+  useWorkerFetch: boolean;
 
   /**
    * Reject certain promises, e.g. `getOperatorList`, `getTextContent`, and `RenderTask`, 
    * when the associated PDF data cannot be successfully parsed, instead of attempting to recover whatever possible of the data. 
    * The default value is `false`.
    * */
-  stopAtErrors?: boolean;
+  stopAtErrors: boolean;
 
   /** 
    * The maximum allowed image size in total pixels, i.e. width * height. 
@@ -198,35 +203,36 @@ export interface DocumentInitParameters {
   /**
    * Determines if we can evaluate strings
    * as JavaScript. Primarily used to improve performance of PDF functions.
-   * The default value is `true`.
+   * @default true.
    * */
-  isEvalSupported?: boolean;
+  isEvalSupported: boolean;
 
   /**
    * Determines if we can use `OffscreenCanvas` in the worker. Primarily used to 
    * improve performance of image conversion/rendering.
    * The default value is `true` in web environments and `false` in Node.js.
+   * @default true
    * */
-  isOffscreenCanvasSupported?: boolean;
+  isOffscreenCanvasSupported: boolean;
 
   /**
    * Determines if we can use bmp ImageDecoder.
    * NOTE: Temporary option until [https://issues.chromium.org/issues/374807001] is fixed.
    * */
-  isChrome?: boolean;
+  isChrome: boolean;
 
   /**
    * The integer value is used to know when an image must be resized (uses `OffscreenCanvas` in the worker).
    * If it's -1 then a possibly slow algorithm is used to guess the max value.
    * */
-  canvasMaxAreaInBytes?: number;
+  canvasMaxAreaInBytes: number;
 
   /** 
    * By default fonts are converted to OpenType fonts and loaded via the Font Loading API or `@font-face` rules.
    * If disabled, fonts will be rendered using a built-in font renderer that constructs the glyphs with primitive path commands. 
    * The default value is `false` in web environments and `true` in Node.js.
    * */
-  disableFontFace?: boolean;
+  disableFontFace: boolean;
 
   /**
    * Include additional properties,which are unused during rendering of PDF documents,
@@ -235,55 +241,45 @@ export interface DocumentInitParameters {
    * but note that it will lead to increased memory usage. 
    * The default value is `false`.
    * */
-  fontExtraProperties?: boolean;
+  fontExtraProperties: boolean;
 
   /**
    * Specify an explicit document context to create elements with and to load resources, such as fonts, into.
    * Defaults to the current document.
    * */
-  ownerDocument?: HTMLDocument;
+  document: Document;
 
   /**
    * Disable range request loading of PDF files. 
    * When enabled, and if the server supports partial content requests, then the PDF will be fetched in chunks. 
    * The default value is `false`. 
    * */
-  disableRange?: boolean;
+  disableRange: boolean;
 
   /**
    * Disable streaming of PDF file data.
    * By default PDF.js attempts to load PDF files in chunks.
    * The default value is `false`*/
-  disableStream?: boolean;
+  disableStream: boolean;
 
   /** Disable pre-fetching of PDF file data.
    * When range requests are enabled PDF.js will automatically keep fetching more data even if it isn't needed to display the current page.
    * The default value is `false`.
    * NOTE: It is also necessary to disable streaming, see above, in order for disabling of pre-fetching to work correctly.
    * */
-  disableAutoFetch?: boolean;
-
-  /* Enables special hooks for debugging PDF.js (see `web/debugger.js`). The default value is `false`. */
-  pdfBug?: boolean;
+  disableAutoFetch: boolean;
 
   /* The factory that will be used when creating canvases. The default value is {DOMCanvasFactory}.*/
   CanvasFactory: new (document: Document, enableHWA: boolean) => CanvasFactory;
-
-  canvasFactory?: Object;
 
   /** 
    * The factory that will be used to create SVG filters when rendering some images on the main canvas.
    * The default value is {DOMFilterFactory}.
    * */
-  FilterFactory: new (docId: string, document: Document) => FilterFactory;
-
-  filterFactory?: Object;
+  FilterFactory: new (document: Document, docId: string) => FilterFactory;
 
   /* Enables hardware acceleration for rendering. The default value is `false`.*/
-  enableHWA?: boolean;
-
-  /* Parameters only intended for development/testing purposes.*/
-  styleElement?: HTMLStyleElement;
+  enableHWA: boolean;
 }
 
 /**
@@ -592,7 +588,7 @@ class DocumentParameterBuilder {
 }
 
 // 只支持两种情况，一种是data数据，另一种是URL，如果
-function getDocument(src: Partial<DocumentInitParameters>) {
+function getDocument(src: DocumentInitParameters) {
 
   const task = new PDFDocumentLoadingTask();
 
@@ -619,11 +615,11 @@ function getDocument(src: Partial<DocumentInitParameters>) {
   const docBaseUrl = validDocBaseUrl ? src.docBaseUrl : null;
   const cMapUrl = typeof src.cMapUrl === "string" ? src.cMapUrl : null;
   const cMapPacked = src.cMapPacked !== false;
-  const CMapReaderFactory = src.CMapReaderFactory || DefaultCMapReaderFactory;
+  const CMapReaderFactory = src.CMapReaderFactory;
   const validFontDataUrl = typeof src.standardFontDataUrl === "string"
   const standardFontDataUrl = validFontDataUrl ? src.standardFontDataUrl || null : null;
 
-  const StandardFontDataFactory = src.StandardFontDataFactory || DefaultStandardFontDataFactory;
+  const StandardFontDataFactory = src.StandardFontDataFactory;
   const ignoreErrors = src.stopAtErrors !== true;
 
   const validMaxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize! > -1;
@@ -640,13 +636,12 @@ function getDocument(src: Partial<DocumentInitParameters>) {
   const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
   const disableFontFace = !!src.disableFontFace;
   const fontExtraProperties = src.fontExtraProperties === true;
-  const ownerDocument = src.ownerDocument || globalThis.document;
+  const document = src.document;
   const disableRange = src.disableRange === true;
   const disableStream = src.disableStream === true;
   const disableAutoFetch = src.disableAutoFetch === true;
-  const pdfBug = src.pdfBug === true;
-  const CanvasFactory = src.CanvasFactory || DefaultCanvasFactory;
-  const FilterFactory = src.FilterFactory || DefaultFilterFactory;
+  const CanvasFactory = src.CanvasFactory;
+  const FilterFactory = src.FilterFactory;
   const enableHWA = src.enableHWA === true;
 
   // Parameters whose default values depend on other parameters.
@@ -672,8 +667,8 @@ function getDocument(src: Partial<DocumentInitParameters>) {
   // Ensure that the various factories can be initialized, when necessary,
   // since the user may provide *custom* ones.
   const transportFactory = new TransportFactory(
-    new CanvasFactory(ownerDocument, enableHWA),
-    new FilterFactory(docId, ownerDocument),
+    new CanvasFactory(document, enableHWA),
+    new FilterFactory(document, docId),
     useWorkerFetch ?
       null : new CMapReaderFactory(cMapUrl, cMapPacked),
     PlatformHelper.isMozCental() || useWorkerFetch ?
@@ -717,8 +712,7 @@ function getDocument(src: Partial<DocumentInitParameters>) {
   const transportParams = new WorkerTransportParameters(
     disableFontFace,
     fontExtraProperties,
-    ownerDocument,
-    pdfBug,
+    document,
     disableAutoFetch
   );
 
@@ -769,11 +763,7 @@ function getDocument(src: Partial<DocumentInitParameters>) {
 
       const messageHandler = new MessageHandler(docId, workerId, worker.port!);
       const transport = new WorkerTransport(
-        messageHandler,
-        task,
-        networkStream,
-        transportParams,
-        transportFactory
+        messageHandler, task, networkStream, transportParams, transportFactory
       );
 
       task._transport = transport;
@@ -1506,8 +1496,6 @@ export class PDFPageProxy {
 
   protected _pageIndex: number;
 
-  protected _pdfBug: boolean;
-
   protected _stats: StatTimer | null;
 
   public _maybeCleanupAfterRender: boolean = false;
@@ -1524,12 +1512,11 @@ export class PDFPageProxy {
 
   public objs: PDFObjects = new PDFObjects();
 
-  constructor(pageIndex: number, pageInfo: PageInfo, transport: WorkerTransport, pdfBug = false) {
+  constructor(pageIndex: number, pageInfo: PageInfo, transport: WorkerTransport, stats = false) {
     this._pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
-    this._stats = pdfBug ? new StatTimer() : null;
-    this._pdfBug = pdfBug;
+    this._stats = stats ? new StatTimer() : null;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
   }
@@ -1732,7 +1719,6 @@ export class PDFPageProxy {
       this._transport.canvasFactory,
       this._transport.filterFactory,
       !intentPrint,
-      this._pdfBug,
       pageColors,
     );
 
@@ -2596,23 +2582,19 @@ class WorkerTransportParameters {
 
   readonly fontExtraProperties: boolean;
 
-  readonly ownerDocument: HTMLDocument;
-
-  readonly pdfBug: boolean;
+  readonly document: Document;
 
   readonly disableAutoFetch: boolean;
 
   constructor(
     disableFontFace: boolean,
     fontExtraProperties: boolean,
-    ownerDocument: HTMLDocument,
-    pdfBug: boolean,
+    document: Document,
     disableAutoFetch: boolean
   ) {
     this.disableFontFace = disableFontFace;
     this.fontExtraProperties = fontExtraProperties;
-    this.ownerDocument = ownerDocument;
-    this.pdfBug = pdfBug;
+    this.document = document;
     this.disableAutoFetch = disableAutoFetch;
   }
 }
@@ -2683,7 +2665,7 @@ class WorkerTransport {
   ) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
-    this.fontLoader = new FontLoader(params.ownerDocument);
+    this.fontLoader = new FontLoader(params.document);
     this.disableAutoFetch = params.disableAutoFetch;
     this._params = params;
 
@@ -3177,8 +3159,7 @@ class WorkerTransport {
       if (pageInfo.refStr) {
         this._pageRefCache.set(pageInfo.refStr, pageNumber);
       }
-      const pdfBug = this._params.pdfBug;
-      const page = new PDFPageProxy(pageIndex, pageInfo, this, pdfBug);
+      const page = new PDFPageProxy(pageIndex, pageInfo, this);
       this._pageCache.set(pageIndex, page);
       return page;
     });
@@ -3532,7 +3513,6 @@ class InternalRenderTask {
 
   protected filterFactory: FilterFactory;
 
-  protected _pdfBug: boolean;
 
   protected pageColors: { background: string; foreground: string; } | null;
 
@@ -3573,7 +3553,6 @@ class InternalRenderTask {
     canvasFactory: CanvasFactory,
     filterFactory: FilterFactory,
     useRequestAnimationFrame = false,
-    pdfBug = false,
     pageColors: { background: string; foreground: string; } | null = null,
   ) {
     this.callback = callback;
@@ -3586,7 +3565,6 @@ class InternalRenderTask {
     this._pageIndex = pageIndex;
     this.canvasFactory = canvasFactory;
     this.filterFactory = filterFactory;
-    this._pdfBug = pdfBug;
     this.pageColors = pageColors;
 
     this.graphicsReadyCallback = null;
@@ -3722,10 +3700,6 @@ class InternalRenderTask {
 }
 
 export {
-  DefaultCanvasFactory,
-  DefaultCMapReaderFactory,
-  DefaultFilterFactory,
-  DefaultStandardFontDataFactory,
   getDocument,
   LoopbackPort,
   PDFDataRangeTransport,

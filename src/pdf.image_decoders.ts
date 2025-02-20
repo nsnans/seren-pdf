@@ -13,15 +13,11 @@
  * limitations under the License.
  */
 
-import {
-  getVerbosityLevel,
-  setVerbosityLevel,
-  VerbosityLevel,
-} from "./shared/util";
 import { Jbig2Error, Jbig2Image } from "./core/jbig2";
 import { JpegError, JpegImage } from "./core/jpg";
 import { JpxError, JpxImage } from "./core/jpx";
 import { PlatformHelper } from "./platform/platform_helper";
+import { getVerbosityLevel, setVerbosityLevel } from "./shared/util";
 
 //@ts-ignore
 const pdfjsVersion =
@@ -39,6 +35,5 @@ export {
   JpegImage,
   JpxError,
   JpxImage,
-  setVerbosityLevel,
-  VerbosityLevel,
+  setVerbosityLevel
 };

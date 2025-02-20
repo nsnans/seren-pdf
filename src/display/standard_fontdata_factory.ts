@@ -17,13 +17,13 @@ import { fetchData } from "./display_utils";
 import { unreachable } from "../shared/util";
 import { PlatformHelper } from "../platform/platform_helper";
 
-interface StandardFontDataFactory {
+export interface StandardFontDataFactory {
 
   fetch(filename: string): Promise<Uint8Array<ArrayBuffer>>;
 
 }
 
-abstract class BaseStandardFontDataFactory implements StandardFontDataFactory {
+export abstract class BaseStandardFontDataFactory implements StandardFontDataFactory {
 
   protected baseUrl: string | null;
 
@@ -50,24 +50,18 @@ abstract class BaseStandardFontDataFactory implements StandardFontDataFactory {
     });
   }
 
-  abstract _fetch(_url: string): Promise<Uint8Array<ArrayBuffer>>;
+  protected abstract _fetch(_url: string): Promise<Uint8Array<ArrayBuffer>>;
 
 }
 
-class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
+export class DOMStandardFontDataFactory extends BaseStandardFontDataFactory {
 
   constructor(baseUrl: string | null) {
     super(baseUrl);
   }
 
-  /**
-   * @ignore
-   */
-  async _fetch(url: string) {
+  protected async _fetch(url: string) {
     const data = await fetchData(url, /* type = */ "arraybuffer");
     return new Uint8Array(data);
   }
 }
-
-export { BaseStandardFontDataFactory, DOMStandardFontDataFactory };
-export type { StandardFontDataFactory }
