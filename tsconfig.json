@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -23,6 +24,14 @@
     "noFallthroughCasesInSwitch": false,
     "noUncheckedSideEffectImports": true,
     "experimentalDecorators": true,
+    "paths": {
+      "seren-common": [
+        "packages/seren-common/src"
+      ],
+      "seren-core": [
+        "packages/seren-core/src"
+      ]
+    }
   },
   "include": [
     "packages/global.d.ts",

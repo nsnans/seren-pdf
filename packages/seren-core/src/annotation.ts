@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-import { PopupContent } from "../display/annotation_layer";
-import { PointType, RectType, TransformType } from "../display/display_utils";
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
-import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "../display/editor/state/editor_serializable";
-import { PlatformHelper } from "@seren-common/platform_helper";
-import { CreateStampImageResult } from "../shared/collected_types";
+import { PopupContent } from "./display/annotation_layer";
+import { PointType, RectType, TransformType } from "./display/display_utils";
+import { DocumentEvaluatorOptions } from "./display/document_evaluator_options";
+import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "./display/editor/state/editor_serializable";
 import {
   AnnotationActionEventType,
   AnnotationBorderStyleType,
@@ -27,6 +25,7 @@ import {
   AnnotationFlag,
   AnnotationReplyType,
   AnnotationType,
+  PlatformHelper,
   assert,
   BASELINE_FACTOR,
   FeatureTest,
@@ -43,8 +42,8 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util";
-import { MutableArray } from "../types";
+  MutableArray
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { Catalog, DestinationType } from "./catalog";
@@ -84,6 +83,7 @@ import { StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XRef } from "./xref";
+import { CreateStampImageResult } from "./types";
 
 export interface AnnotationParameters {
   xref: XRef;

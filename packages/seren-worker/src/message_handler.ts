@@ -4,7 +4,7 @@
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { Uint8TypedArray } from "seren-common";
 import { AnnotationData } from "../core/annotation";
 import {
   CatalogMarkInfo,
@@ -38,9 +38,9 @@ import {
   ReaderHeadersReadyResult,
   SaveDocumentMessage,
   StartRenderPageMessage
-} from "./message_handler_types";
-import { MessageHandlerAction } from "./message_handler_utils";
-import { BaseException, PasswordException } from "./util";
+} from "../../seren-common/src/shared/message_handler_types";
+import { MessageHandlerAction } from "../../seren-common/src/shared/message_handler_utils";
+import { BaseException, PasswordException } from "../../seren-common/src/shared/util";
 
 export enum ObjType {
   Image = "Image",

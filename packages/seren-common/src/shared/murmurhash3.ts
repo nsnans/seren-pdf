@@ -17,8 +17,7 @@
  * Hashes roughly 100 KB per millisecond on i7 3.4 GHz.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { TypedArray } from "../../packages/seren-common/src/types";
+import { Uint8TypedArray } from "../typed_array";
 
 const SEED = 0xc3d2e1f0;
 // Workaround for missing math precision in JS.
@@ -51,8 +50,7 @@ class MurmurHash3_64 {
         }
       }
     } else if (ArrayBuffer.isView(input)) {
-      // 转换为any只是权宜之计
-      data = (input as TypedArray).slice();
+      data = input.slice();
       length = data.byteLength;
     } else {
       throw new Error("Invalid data format, must be a string or TypedArray.");

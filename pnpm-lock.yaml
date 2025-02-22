@@ -12,9 +12,6 @@ importers:
 
   packages/seren-core:
     dependencies:
-      '@fluent/dom':
-        specifier: ^0.10.0
-        version: 0.10.0
       seren-common:
         specifier: workspace:^
         version: link:../seren-common
@@ -32,7 +29,11 @@ importers:
         specifier: ^0.10.0
         version: 0.10.0
 
-  packages/seren-worker: {}
+  packages/seren-worker:
+    dependencies:
+      seren-core:
+        specifier: workspace:^
+        version: link:../seren-core
 
 packages:
 

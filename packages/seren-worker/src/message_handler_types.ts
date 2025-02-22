@@ -1,5 +1,5 @@
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { WorkerMessageHandler } from "../pdf.worker";
+import { AnnotationEditorSerial } from "seren-core";
+import { MessageHandler } from "./message_handler";
 
 export interface ReaderHeadersReadyResult {
 
@@ -18,7 +18,7 @@ export interface WorkerBaseMessage {
 
 }
 
-export interface ActionWorkerMessage<T> extends WorkerMessageHandler {
+export interface ActionWorkerMessage<T> extends MessageHandler {
   action: string;
   data: T;
 }

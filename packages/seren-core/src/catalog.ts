@@ -24,7 +24,7 @@ import {
   stringToPDFString,
   stringToUTF8String,
   warn
-} from "../shared/util";
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { clearGlobalCaches } from "./cleanup_helper";
 import { ColorSpace } from "./colorspace";

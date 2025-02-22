@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult } from "../../../seren-common/src/interfaces";
-import { assert } from "../shared/util";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult } from "seren-common";
+import { assert } from "seren-common";
 import { PDFDataRangeTransport } from "./api";
 import { isPdfFile } from "./display_utils";
 
