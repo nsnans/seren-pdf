@@ -31,7 +31,7 @@ import { EventBus, MLManager } from "../../viewer/common/component_types";
 import { AltTextManager } from "../../viewer/web/alt_text_manager";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationStorage } from "../annotation_storage";
-import { PDFDocumentProxy } from "../../../packages/seren-viewer/src/api";
+import { PDFDocumentProxy } from "../api";
 import {
   fetchData,
   getColorValues,
