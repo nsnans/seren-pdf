@@ -1,6 +1,6 @@
 import { Event } from "./scripting_api/event";
-import { TypedArray } from "../packages/seren-common/src/types";
-import { IntentStateOperatorList } from '../packages/seren-viewer/src/display/api';
+import { TypedArray } from "./seren-common/src/types";
+import { IntentStateOperatorList } from './seren-viewer/src/display/api';
 
 // 扩展 window 对象，添加 一些全局 属性
 export declare global {

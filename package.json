@@ -9,9 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.4.1",
-  "dependencies": {
-    "@fluent/bundle": "^0.18.0",
-    "@fluent/dom": "^0.10.0"
-  }
+  "packageManager": "pnpm@10.4.1"
 }

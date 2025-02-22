@@ -6,14 +6,7 @@ settings:
 
 importers:
 
-  .:
-    dependencies:
-      '@fluent/bundle':
-        specifier: ^0.18.0
-        version: 0.18.0
-      '@fluent/dom':
-        specifier: ^0.10.0
-        version: 0.10.0
+  .: {}
 
   packages/seren-common: {}
 
@@ -26,9 +19,18 @@ importers:
         specifier: workspace:^
         version: link:../seren-common
 
+  packages/seren-openjpeg: {}
+
   packages/seren-viewer: {}
 
-  packages/seren-web: {}
+  packages/seren-web:
+    dependencies:
+      '@fluent/bundle':
+        specifier: ^0.18.0
+        version: 0.18.0
+      '@fluent/dom':
+        specifier: ^0.10.0
+        version: 0.10.0
 
   packages/seren-worker: {}
 

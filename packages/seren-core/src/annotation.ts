@@ -17,7 +17,7 @@ import { PopupContent } from "../display/annotation_layer";
 import { PointType, RectType, TransformType } from "../display/display_utils";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "../display/editor/state/editor_serializable";
-import { PlatformHelper } from "../platform/platform_helper";
+import { PlatformHelper } from "@seren-common/platform_helper";
 import { CreateStampImageResult } from "../shared/collected_types";
 import {
   AnnotationActionEventType,
