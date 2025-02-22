@@ -55,7 +55,7 @@ import {
 } from "./image_utils";
 import { OperatorList, OperatorListIR } from "./operator_list";
 import { Lexer, Parser } from "./parser";
-import { Cmd, Dict, DictKey, EOF, Name, Ref, RefSet, RefSetCache } from "./primitives";
+import { Cmd, Dict, DictKey, EOF, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { FontProgramPrivateData } from "./type1_parser";
 import { WorkerTask } from "./worker";

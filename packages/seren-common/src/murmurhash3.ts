@@ -17,7 +17,7 @@
  * Hashes roughly 100 KB per millisecond on i7 3.4 GHz.
  */
 
-import { Uint8TypedArray } from "../typed_array";
+import { Uint8TypedArray } from "./typed_array";
 
 const SEED = 0xc3d2e1f0;
 // Workaround for missing math precision in JS.

@@ -22,7 +22,7 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { MutableArray, TypedArray } from "../types";

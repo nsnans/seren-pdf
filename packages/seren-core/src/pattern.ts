@@ -37,7 +37,7 @@ import {
 import { ParserConstructFunction, PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { OperatorListIR } from "./operator_list";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey } from "../../seren-common/src/primitives";
 import { XRef } from "./xref";
 
 const ShadingType = {

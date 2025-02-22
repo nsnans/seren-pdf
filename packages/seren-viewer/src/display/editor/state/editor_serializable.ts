@@ -1,6 +1,5 @@
-import { Dict, Ref } from "../../../core/primitives";
-import { AnnotationEditorType } from "../../../shared/util";
-import { RectType } from "../../display_utils";
+import { Dict, Ref } from "seren-common";
+import { RectType, AnnotationEditorType } from "seren-common";
 
 export interface AnnotationEditorSerial {
   annotationType: AnnotationEditorType;
@@ -36,9 +35,9 @@ export interface InkEditorSerial extends AnnotationEditorSerial {
   rotation: number;
   thickness: number;
   paths: { bezier: number[], points: number[] }[]
-  outlines: { 
+  outlines: {
     outline: number[];
-    points: number[][]; 
+    points: number[][];
   } | null;
 }
 

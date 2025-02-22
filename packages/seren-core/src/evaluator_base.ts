@@ -8,7 +8,7 @@ import { lookupMatrix, lookupNormalRect } from "./core_utils";
 import { EvaluatorContext, State } from "./evaluator";
 import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Name, Dict, DictKey, Ref, isName } from "./primitives";
+import { Name, Dict, DictKey, Ref, isName } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 
 export const SKIP = 1;

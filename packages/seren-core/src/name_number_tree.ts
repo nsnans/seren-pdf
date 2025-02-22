@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Dict, DictKey, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
 import { FormatError, unreachable, warn } from "../shared/util";
 import { XRef } from "./xref";
 import { PlatformHelper } from "../platform/platform_helper";

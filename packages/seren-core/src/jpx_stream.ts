@@ -19,7 +19,7 @@ import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpxDecoderOptions } from "./image";
 import { JpxImage } from "./jpx";
-import { Dict } from "./primitives";
+import { Dict } from "../../seren-common/src/primitives";
 
 /**
  * For JPEG 2000's we use a library to decode these images and

@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { unreachable } from "../../../shared/util";
-import { RectType } from "../../display_utils";
+import { unreachable, RectType } from "seren-common";
 import { BBoxType } from "./freedraw";
 
 export abstract class Outline {

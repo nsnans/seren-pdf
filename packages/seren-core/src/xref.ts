@@ -33,7 +33,7 @@ import {
 import { CipherTransformFactory } from "./crypto";
 import { Lexer, ParsedType, Parser } from "./parser";
 import { PDFManager } from "./pdf_manager";
-import { CIRCULAR_REF, Cmd, Dict, DictKey, isCmd, Ref, RefSet } from "./primitives";
+import { CIRCULAR_REF, Cmd, Dict, DictKey, isCmd, Ref, RefSet } from "../../seren-common/src/primitives";
 import { Stream } from "./stream";
 
 

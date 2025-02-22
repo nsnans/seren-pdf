@@ -12,7 +12,7 @@ import { Font, Glyph } from "./fonts";
 import { isPDFFunction } from "./function";
 import { LocalColorSpaceCache, LocalGStateCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Dict, DictKey, isName, Name, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, isName, Name, Ref, RefSet } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 
 /**

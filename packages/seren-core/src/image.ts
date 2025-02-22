@@ -30,7 +30,7 @@ import { DecodeStream } from "./decode_stream";
 import { ImageResizer } from "./image_resizer";
 import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
-import { Dict, DictKey, Name } from "./primitives";
+import { Dict, DictKey, Name } from "../../seren-common/src/primitives";
 import { MutableArray, TypedArray } from "../types";
 import { XRef } from "./xref";
 import { PDFFunctionFactory } from "./function";

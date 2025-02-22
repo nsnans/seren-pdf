@@ -19,7 +19,7 @@ import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "./pdf_manager";
-import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "./primitives";
+import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "../../seren-common/src/primitives";
 import { writeObject } from "./writer";
 import { XRef } from "./xref";
 

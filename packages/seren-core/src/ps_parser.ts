@@ -14,7 +14,7 @@
  */
 
 import { FormatError, shadow } from "../shared/util";
-import { EOF } from "./primitives";
+import { EOF } from "../../seren-common/src/primitives";
 import { isWhiteSpace } from "./core_utils";
 import { BaseStream } from "./base_stream";
 

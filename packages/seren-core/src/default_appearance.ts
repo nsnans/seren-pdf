@@ -20,7 +20,7 @@ import {
   numberToString,
   stringToUTF16HexString,
 } from "./core_utils";
-import { Dict, DictKey, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,

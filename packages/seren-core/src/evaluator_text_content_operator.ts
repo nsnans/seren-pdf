@@ -14,7 +14,7 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "./fonts";
 import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
-import { Dict, DictKey, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 import { XRef } from "./xref";
 

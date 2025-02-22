@@ -33,7 +33,7 @@ import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, Rendering
 import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder";
 import { AnnotationLayerBuilder } from "./annotation_layer_builder";
 import { GenericL10n } from "./genericl10n";
-import { L10n } from "./l10n";
+import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { WebPDFViewLayerProperties } from "./page_view_manager";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 import { TextLayerBuilder } from "./text_layer_builder";

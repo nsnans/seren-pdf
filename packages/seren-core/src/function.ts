@@ -24,7 +24,7 @@ import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
-import { Dict, DictKey, Ref } from "./primitives";
+import { Dict, DictKey, Ref } from "../../seren-common/src/primitives";
 import { PostScriptLexer, PostScriptParser } from "./ps_parser";
 import { XRef } from "./xref";
 

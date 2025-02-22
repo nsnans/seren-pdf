@@ -1,3 +1,4 @@
+import { Name, Ref } from "./primitives";
 
 export type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array |
   Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
@@ -29,3 +30,13 @@ export interface BoxType {
   width: number;
   height: number;
 }
+
+export type TransformType = [number, number, number, number, number, number];
+
+export type RectType = [number, number, number, number];
+
+export type PointType = [number, number]
+
+export interface PointXYType { x: number, y: number }
+
+export type DestinationType = [Ref, Name, ...number[]];

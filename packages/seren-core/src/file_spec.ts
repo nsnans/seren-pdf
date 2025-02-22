@@ -15,7 +15,7 @@
 
 import { shadow, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
-import { Dict, DictKey, Ref } from "./primitives";
+import { Dict, DictKey, Ref } from "../../seren-common/src/primitives";
 import { XRef } from "./xref";
 
 function pickPlatformItem(dict?: Dict) {

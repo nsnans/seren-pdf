@@ -12,7 +12,7 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Dict, DictKey, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 import { XRef } from "./xref";
 

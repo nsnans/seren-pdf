@@ -15,7 +15,7 @@
 
 import { BaseStream } from "./base_stream";
 import { stringToBytes } from "../shared/util";
-import { Dict } from "./primitives";
+import { Dict } from "../../seren-common/src/primitives";
 import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 
 export class Stream extends BaseStream {

@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-import { PointType, RectType } from "../display/display_utils";
-import { PlatformHelper } from "../platform/platform_helper";
-import { assert, shadow, unreachable } from "../shared/util";
-import { TypedArray } from "../types";
-import { BaseStream } from "./base_stream";
-import { DestinationType } from "./catalog";
-import { StringStream } from "./stream";
-import { XRef } from "./xref";
+import { PointType, RectType, TypedArray, DestinationType } from "./types";
+import { PlatformHelper } from "./platform_helper";
+import { assert, shadow, unreachable } from "./util";
+import { BaseStream } from "../../seren-core/src/base_stream";
+import { StringStream } from "../../seren-core/src/stream";
+import { XRef } from "../../seren-core/src/xref";
 
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
 

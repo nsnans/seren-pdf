@@ -5,7 +5,7 @@ import { AnnotationEditorSerial } from "../display/editor/state/editor_serializa
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
 import { assert } from "../shared/util";
 import { CssFontInfo } from "./evaluator";
-import { Dict, Name, Ref } from "./primitives";
+import { Dict, Name, Ref } from "../../seren-common/src/primitives";
 
 export interface ImageMask {
   data: Uint8TypedArray | null;

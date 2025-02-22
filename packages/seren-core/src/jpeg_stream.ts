@@ -18,7 +18,7 @@ import { shadow, warn } from "../shared/util";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpegImage } from "./jpg";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey } from "../../seren-common/src/primitives";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves

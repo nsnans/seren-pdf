@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { bytesToString, unreachable } from "../shared/util";
+import { Uint8TypedArray, bytesToString, unreachable } from "seren-common";
 import { JpxDecoderOptions } from "./image";
-import { Dict } from "./primitives";
+import { Dict } from "../../seren-common/src/primitives";
 
 // Lots of DecodeStreams are created whose buffers are never used.  For these
 // we share a single empty buffer. This is (a) space-efficient and (b) avoids

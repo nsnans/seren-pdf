@@ -1,5 +1,5 @@
 import { GenericL10n } from './genericl10n';
-import { L10n } from './l10n';
+import { L10n } from '../../seren-viewer/src/l10n/l10n';
 import { GenericWebViewerCallbackManager, WebViewerCallbackManager } from './viewer_callback_manager';
 import { WebPDFViewerGeneralOptions } from './viewer_options';
 

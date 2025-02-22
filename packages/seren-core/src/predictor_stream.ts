@@ -17,7 +17,7 @@ import { FormatError } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpxDecoderOptions } from "./image";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey } from "../../seren-common/src/primitives";
 
 export class PredictorStream extends DecodeStream {
 

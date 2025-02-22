@@ -14,7 +14,7 @@
  */
 
 import { clearPatternCaches } from "./pattern";
-import { clearPrimitiveCaches } from "./primitives";
+import { clearPrimitiveCaches } from "../../seren-common/src/primitives";
 import { clearUnicodeCaches } from "./unicode";
 import { JpxImage } from "./jpx";
 

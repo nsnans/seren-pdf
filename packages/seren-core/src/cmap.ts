@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Cmd, EOF, isCmd, Name } from "./primitives";
+import { Cmd, EOF, isCmd, Name } from "../../seren-common/src/primitives";
 import { FormatError, unreachable, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { BinaryCMapReader } from "./binary_cmap";

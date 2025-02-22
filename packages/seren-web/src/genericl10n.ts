@@ -17,7 +17,7 @@
 
 import { FluentBundle, FluentResource } from "@fluent/bundle";
 import { DOMLocalization } from "@fluent/dom";
-import { L10n } from "./l10n";
+import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { fetchData } from "../../display/display_utils";
 
 function createBundle(lang: string, text: string) {

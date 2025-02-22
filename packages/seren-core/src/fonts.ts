@@ -67,7 +67,7 @@ import { Stream } from "./stream";
 import { Type1Font } from "./type1_font";
 import { RectType, TransformType } from "../display/display_utils";
 import { OperatorListIR } from "./operator_list";
-import { DictKey } from "./primitives";
+import { DictKey } from "../../seren-common/src/primitives";
 import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "./evaluator";
 import { PlatformHelper } from "../platform/platform_helper";
 import { FontSubstitutionInfo } from "./font_substitutions";

@@ -39,7 +39,7 @@ import { JpegStream } from "./jpeg_stream";
 import { JpxStream } from "./jpx_stream";
 import { LZWStream } from "./lzw_stream";
 import { PredictorStream } from "./predictor_stream";
-import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "./primitives";
+import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "../../seren-common/src/primitives";
 import { RunLengthStream } from "./run_length_stream";
 import { NullStream, Stream } from "./stream";
 import { XRef } from "./xref";

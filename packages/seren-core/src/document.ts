@@ -77,7 +77,7 @@ import {
   Ref,
   RefSet,
   RefSetCache,
-} from "./primitives";
+} from "../../seren-common/src/primitives";
 import { NullStream, Stream } from "./stream";
 import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_tree";
 import { WorkerTask } from "./worker";

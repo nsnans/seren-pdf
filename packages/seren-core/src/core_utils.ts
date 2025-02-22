@@ -23,7 +23,7 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "./primitives";
+import { Dict, DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "../../seren-common/src/primitives";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
 import { XRef } from "./xref";

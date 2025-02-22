@@ -17,7 +17,7 @@ import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 import { unreachable } from "../shared/util";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { JpxDecoderOptions } from "./image";
-import { Dict } from "./primitives";
+import { Dict } from "../../seren-common/src/primitives";
 import { Stream } from "./stream";
 
 // Super class for the decoding streams.

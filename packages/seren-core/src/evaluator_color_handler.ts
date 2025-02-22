@@ -10,7 +10,7 @@ import { EvaluatorBaseHandler } from "./evaluator_base";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
 import { getTilingPatternIR, Pattern } from "./pattern";
-import { Dict, DictKey, Name, Ref } from "./primitives";
+import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 
 export class EvaluatorColorHandler extends EvaluatorBaseHandler {

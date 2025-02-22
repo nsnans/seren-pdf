@@ -51,7 +51,7 @@ import { DownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
 import { DocumentOwner } from "./interface";
-import { L10n } from "./l10n";
+import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { WebPDFPageView } from './page_view';
 import { PDFLinkService } from "./pdf_link_service";
 import { PDFRenderingManager } from "./rendering_manager";

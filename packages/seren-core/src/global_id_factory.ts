@@ -1,6 +1,6 @@
 import { unreachable } from "../shared/util";
 import { PDFManager } from "./pdf_manager";
-import { Ref } from "./primitives";
+import { Ref } from "../../seren-common/src/primitives";
 
 export class GlobalIdFactory {
 

@@ -18,7 +18,11 @@ importers:
 
   packages/seren-openjpeg: {}
 
-  packages/seren-viewer: {}
+  packages/seren-viewer:
+    dependencies:
+      seren-common:
+        specifier: workspace:^
+        version: link:../seren-common
 
   packages/seren-web:
     dependencies:

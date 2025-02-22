@@ -23,7 +23,7 @@ import {
 } from "../shared/util";
 import { ColorSpace } from "./colorspace";
 import { ImageMask, SMaskOptions } from "./core_types";
-import { Dict, DictKey, Ref, RefSet, RefSetCache } from "./primitives";
+import { Dict, DictKey, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
 
 abstract class BaseLocalCache<T> {
 

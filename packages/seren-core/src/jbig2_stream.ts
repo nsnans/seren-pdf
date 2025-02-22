@@ -18,7 +18,7 @@ import { shadow } from "../shared/util";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Jbig2Image } from "./jbig2";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey } from "../../seren-common/src/primitives";
 
 /**
  * For JBIG2's we use a library to decode these images and

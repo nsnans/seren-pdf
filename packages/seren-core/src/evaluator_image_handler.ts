@@ -9,7 +9,7 @@ import { isPDFFunction } from "./function";
 import { PDFImage } from "./image";
 import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Dict, DictKey } from "./primitives";
+import { Dict, DictKey } from "../../seren-common/src/primitives";
 import { WorkerTask } from "./worker";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {

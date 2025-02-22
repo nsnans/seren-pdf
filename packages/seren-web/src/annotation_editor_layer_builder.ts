@@ -21,7 +21,7 @@ import { AnnotationEditorLayer } from '../../display/editor/annotation_editor_la
 import { AnnotationEditorUIManager } from "../../display/editor/tools";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { GenericL10n } from "./genericl10n";
-import { L10n } from "./l10n";
+import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 import { TextLayerBuilder } from "./text_layer_builder";
 

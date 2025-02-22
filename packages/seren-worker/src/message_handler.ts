@@ -40,7 +40,7 @@ import {
   StartRenderPageMessage
 } from "../../seren-common/src/shared/message_handler_types";
 import { MessageHandlerAction } from "../../seren-common/src/shared/message_handler_utils";
-import { BaseException, PasswordException } from "../../seren-common/src/shared/util";
+import { BaseException, PasswordException } from "../../seren-common/src/util";
 
 export enum ObjType {
   Image = "Image",

@@ -54,11 +54,10 @@ import {
   Ref,
   RefSet,
   RefSetCache,
-} from "./primitives";
+} from "../../seren-common/src/primitives";
 import { StructTreeRoot } from "./struct_tree";
 import { XRef } from "./xref";
 
-export type DestinationType = [Ref, Name, ...number[]];
 
 export enum ViewerPreferenceKeys {
   HideToolbar = "HideToolbar",

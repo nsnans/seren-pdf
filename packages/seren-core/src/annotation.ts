@@ -77,7 +77,7 @@ import { JpegStream } from "./jpeg_stream";
 import { ObjectLoader } from "./object_loader";
 import { OperatorList } from "./operator_list";
 import { PDFManager } from "./pdf_manager";
-import { Dict, DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "./primitives";
+import { Dict, DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
 import { Stream, StringStream } from "./stream";
 import { StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";

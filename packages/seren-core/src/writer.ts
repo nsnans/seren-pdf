@@ -23,7 +23,7 @@ import {
   numberToString
 } from "./core_utils";
 import { calculateMD5, CipherTransform, CipherTransformFactory } from "./crypto";
-import { Dict, DictKey, isName, Name, Ref } from "./primitives";
+import { Dict, DictKey, isName, Name, Ref } from "../../seren-common/src/primitives";
 import { Stream } from "./stream";
 import { XRef } from "./xref";
 

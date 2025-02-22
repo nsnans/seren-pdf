@@ -14,8 +14,7 @@
  */
 
 import { Outline } from "./outline";
-import { Util } from "../../../shared/util";
-import { PointType, PointXYType, RectType, TransformType } from "../../display_utils";
+import { Util, PointType, PointXYType, RectType, TransformType } from "seren-common";
 
 export class FreeDrawOutliner {
   #box: RectType;

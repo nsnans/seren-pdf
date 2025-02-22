@@ -17,20 +17,15 @@ import { PlatformHelper } from "../../../seren-common/src/platform_helper";
 import {
   BaseException,
   FeatureTest,
+  RectType,
   shadow,
+  TransformType,
   Util,
   warn,
-} from "../shared/util";
+} from "seren-common";
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
 
-export type TransformType = [number, number, number, number, number, number];
-
-export type RectType = [number, number, number, number];
-
-export type PointType = [number, number]
-
-export interface PointXYType { x: number, y: number }
 
 export interface AvailableSpace {
   width: number,

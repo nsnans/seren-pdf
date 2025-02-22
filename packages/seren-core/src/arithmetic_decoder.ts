@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { Uint8TypedArray } from "seren-common";
 
 // Table C-2
 const QeTable = [
