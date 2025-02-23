@@ -19,7 +19,9 @@ export enum ViewerPreferenceKeys {
   Duplex = "Duplex",
   PrintPageRange = "PrintPageRange",
   NumCopies = "NumCopies"
-}export type ViewerPreferenceValueTypes = {
+}
+
+export type ViewerPreferenceValueTypes = {
   [ViewerPreferenceKeys.HideToolbar]: boolean;
   [ViewerPreferenceKeys.HideMenubar]: boolean;
   [ViewerPreferenceKeys.HideWindowUI]: boolean;

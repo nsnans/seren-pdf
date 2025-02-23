@@ -1,74 +1,13 @@
+import { AnnotationData, AnnotationEditorSerial, BaseException, CatalogMarkInfo, CatalogOpenAction, CatalogOptionalContentConfig, CatalogOutlineItem, CommonObjDataType, CommonObjType, DestinationType, DocumentParameter, EvaluatorTextContent, FetchBuiltInCMapMessage, FieldObject, FileSpecSerializable, GetAnnotationsMessage, GetDocMessage, GetTextContentMessage, ObjDataType, ObjType, OnProgressParameters, OpertaorListChunk, PageInfo, PasswordException, PDFDocumentInfo, PDFMetadataInfo, ReaderHeadersReadyResult, SaveDocumentMessage, StartRenderPageMessage, StreamGetOperatorListParameters, StreamSink, StructTreeSerialNode, Uint8TypedArray, ViewerPreferenceKeys } from "seren-common";
+import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
+import { MessageHandlerAction } from "./message_handler_utils";
+
 /**
  * 因为MessageHandler处理了约五六十种异步请求，但是对于这些异步请求，却全都缺乏了具体的类型。
  * 这在开发过程中给我带来了太多的困扰，不知道参数，也不知道返回类型，对于后续的处理那更是无从谈起。
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
-
-import { Uint8TypedArray } from "seren-common";
-import { AnnotationData } from "../core/annotation";
-import {
-  CatalogMarkInfo,
-  CatalogOpenAction,
-  CatalogOptionalContentConfig,
-  CatalogOutlineItem,
-  DestinationType,
-  ViewerPreferenceKeys
-} from "../core/catalog";
-import { EvaluatorTextContent, FieldObject, ImageMask, StreamGetOperatorListParameters, StreamSink } from "../core/core_types";
-import { PDFDocumentInfo } from "../core/document";
-import { FileSpecSerializable } from "../core/file_spec";
-import { FontExportData, FontExportExtraData } from "../core/fonts";
-import { PDFMetadataInfo } from "../core/metadata_parser";
-import { OpertaorListChunk } from "../core/operator_list";
-import { RadialAxialShadingIR } from "../core/pattern";
-import { StructTreeSerialNode } from "../core/struct_tree";
-import {
-  DocumentParameter,
-  OnProgressParameters,
-  PageInfo
-} from "../display/api";
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { MeshShadingPatternIR } from "../display/pattern_helper";
-import { AbstractMessageHandler, MessagePoster } from "./message_handler_base";
-import {
-  FetchBuiltInCMapMessage,
-  GetAnnotationsMessage,
-  GetDocMessage,
-  GetTextContentMessage,
-  ReaderHeadersReadyResult,
-  SaveDocumentMessage,
-  StartRenderPageMessage
-} from "../../seren-common/src/shared/message_handler_types";
-import { MessageHandlerAction } from "../../seren-common/src/shared/message_handler_utils";
-import { BaseException, PasswordException } from "../../seren-common/src/utils/util";
-
-export enum ObjType {
-  Image = "Image",
-  Pattern = "Pattern",
-}
-
-export enum CommonObjType {
-  Font = "Font",
-  Image = "Image",
-  Pattern = "Pattern",
-  FontPath = "FontPath",
-  CopyLocalImage = "CopyLocalImage",
-}
-
-type ObjDataType = {
-  [ObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR,
-  [ObjType.Image]: ImageMask | null,
-}
-
-type CommonObjDataType = {
-  [CommonObjType.Font]: FontExportData | FontExportExtraData | { error: string }
-  [CommonObjType.Image]: ImageMask | null
-  [CommonObjType.Pattern]: string[] | MeshShadingPatternIR | RadialAxialShadingIR
-  [CommonObjType.FontPath]: number[]
-  [CommonObjType.CopyLocalImage]: { imageRef: string }
-}
-
-export class MessageHandler extends AbstractMessageHandler {
+export class MessageHandler extends AbstractMessageHandler implements MessageHandler {
 
   constructor(sourceName: string, targetName: string, comObj: MessagePoster) {
     super(sourceName, targetName, comObj);
