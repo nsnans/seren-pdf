@@ -16,7 +16,7 @@
 import { Uint8TypedArray, shadow, warn, Dict, DictKey } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { JpegImage } from "../jpg";
+import { JpegImage } from "../image/jpg";
 import { DictImpl } from "../document/dict_impl";
 
 /**

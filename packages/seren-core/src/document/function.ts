@@ -20,12 +20,11 @@ import {
   shadow,
   unreachable,
   MutableArray,
-  Dict,
+  Dict, DictKey, Ref
 } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { isNumberArray } from "../utils/core_utils";
-import { LocalFunctionCache } from "../image_utils";
-import { DictKey, Ref } from "../../../seren-common/src/primitives";
+import { LocalFunctionCache } from "../image/image_utils";
 import { PostScriptLexer, PostScriptParser } from "../parser/ps_parser";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";

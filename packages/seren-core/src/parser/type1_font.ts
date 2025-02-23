@@ -24,12 +24,12 @@ import {
   CFFStandardStrings,
   CFFStrings,
   CFFTopDict,
-} from "./font/cff_parser";
-import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./font/fonts_utils";
+} from "../document/font/cff_parser";
+import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "../document/font/fonts_utils";
 import { isWhiteSpace } from "../utils/core_utils";
 import { Stream } from "../stream/stream";
 import { CharStringObjectType, Type1Parser } from "./type1_parser";
-import { EvaluatorProperties } from "./evaluator";
+import { EvaluatorProperties } from "./evaluator/evaluator";
 import { Uint8TypedArray, FormatError, warn } from "seren-common";
 
 function findBlock(streamBytes: Uint8TypedArray, signature: number[], startIndex: number) {

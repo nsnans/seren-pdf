@@ -24,15 +24,14 @@ import {
   MutableArray,
   TypedArray,
   PlatformHelper,
-  RectType
+  RectType, DictKey, Name, Ref,
+  Dict
 } from "seren-common";
-import { DictKey, Name, Ref } from "../../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { MissingDataException } from "../utils/core_utils";
 import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
-import { LocalColorSpaceCache } from "../image_utils";
+import { LocalColorSpaceCache } from "../image/image_utils";
 import { Stream } from "../stream/stream";
 import { DictImpl } from "../document/dict_impl";
 

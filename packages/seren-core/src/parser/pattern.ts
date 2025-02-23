@@ -29,7 +29,7 @@ import {
   Dict,
   DictKey
 } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
 import {
   isBooleanArray,
@@ -39,7 +39,7 @@ import {
   MissingDataException,
 } from "../utils/core_utils";
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
-import { LocalColorSpaceCache } from "./image_utils";
+import { LocalColorSpaceCache } from "../image/image_utils";
 import { OperatorListIR } from "./operator_list";
 import { XRefImpl } from "../document/xref";
 

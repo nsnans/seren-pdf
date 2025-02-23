@@ -14,7 +14,7 @@
  */
 
 import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { BinaryCMapReader } from "./binary_cmap";
 import { Lexer } from "../parser/parser";
 import { MissingDataException } from "../utils/core_utils";

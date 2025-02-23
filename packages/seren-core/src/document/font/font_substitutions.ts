@@ -14,9 +14,9 @@
  */
 
 import { warn } from "seren-common";
-import { validateFontName } from "./utils/core_utils";
-import { normalizeFontName } from "./font/fonts_utils";
-import { GlobalIdFactory } from "./global_id_factory";
+import { validateFontName } from "../../utils/core_utils";
+import { normalizeFontName } from "./fonts_utils";
+import { GlobalIdFactory } from "../../common/global_id_factory";
 
 export interface FontSubstitutionInfo {
   css: string;

@@ -1,29 +1,8 @@
-import { Uint8TypedArray, TransformType, assert, Name, Ref, Dict } from "seren-common";
+import { TransformType, assert, Name, Ref, Dict } from "seren-common";
 import { TextItem, TextMarkedContent, TextStyle } from "../display/api";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
-import { CssFontInfo } from "./evaluator";
-
-export interface ImageMask {
-  data: Uint8TypedArray | null;
-  width: number;
-  height: number;
-  interpolate: number[];
-  cached?: boolean;
-  dataLen?: number;
-  bitmap?: ImageBitmap | VideoFrame;
-  ref?: string | null;
-}
-
-export interface SingleOpaquePixelImageMask {
-  isSingleOpaquePixel: boolean;
-}
-
-export interface SMaskOptions {
-  transferMap?: Uint8Array<ArrayBuffer>;
-  subtype: string;
-  backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;
-}
+import { CssFontInfo } from "../parser/evaluator/evaluator";
 
 export interface StreamGetOperatorListParameters {
   pageIndex: number;

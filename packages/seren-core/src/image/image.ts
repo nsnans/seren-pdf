@@ -21,20 +21,19 @@ import {
   convertBlackAndWhiteToRGBA,
   convertToRGBA,
   MutableArray, TypedArray,
-  PlatformHelper, Uint8TypedArray
+  PlatformHelper, Uint8TypedArray, DictKey, Name,
+  Dict
 } from "seren-common";
-import { BaseStream } from "./base_stream";
-import { ColorSpace } from "./color/colorspace";
-import { DecodeStream } from "./stream/decode_stream";
+import { BaseStream } from "../stream/base_stream";
+import { ColorSpace } from "../color/colorspace";
+import { DecodeStream } from "../stream/decode_stream";
 import { ImageResizer } from "./image_resizer";
-import { JpegStream } from "./stream/jpeg_stream";
+import { JpegStream } from "../stream/jpeg_stream";
 import { JpxImage } from "./jpx";
-import { DictKey, Name } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
-import { XRefImpl } from "./document/xref";
-import { PDFFunctionFactory } from "./document/function";
+import { XRefImpl } from "../document/xref";
+import { PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "./image_utils";
-import { ImageMask, SingleOpaquePixelImageMask } from "./core_types";
+import { ImageMask, SingleOpaquePixelImageMask } from "./image_types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we

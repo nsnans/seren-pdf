@@ -1,7 +1,6 @@
 import { Uint8TypedArray, Ref } from "seren-common";
 import { JpxDecoderOptions } from "./image";
 import { JpegStream } from "../stream/jpeg_stream";
-import { } from "../../../seren-common/src/primitives";
 import { Stream } from "../stream/stream";
 
 export interface OpenJPEGModule {
@@ -16,3 +15,21 @@ export interface CreateStampImageResult {
   smaskStream: Stream | null;
   imageRef?: JpegStream | Ref;
 }
+export interface ImageMask {
+  data: Uint8TypedArray | null;
+  width: number;
+  height: number;
+  interpolate: number[];
+  cached?: boolean;
+  dataLen?: number;
+  bitmap?: ImageBitmap | VideoFrame;
+  ref?: string | null;
+}export interface SMaskOptions {
+  transferMap?: Uint8Array<ArrayBuffer>;
+  subtype: string;
+  backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;
+}
+export interface SingleOpaquePixelImageMask {
+  isSingleOpaquePixel: boolean;
+}
+

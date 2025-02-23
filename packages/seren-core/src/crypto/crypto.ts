@@ -27,7 +27,7 @@ import {
   PlatformHelper,
   DictKey, isName, Name, Dict
 } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { DecryptStream } from "../stream/decrypt_stream";
 import { DictImpl } from "../document/dict_impl";
 

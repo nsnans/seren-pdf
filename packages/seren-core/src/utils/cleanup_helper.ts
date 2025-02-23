@@ -16,7 +16,7 @@
 import { clearPatternCaches } from "../parser/pattern";
 import { clearPrimitiveCaches } from "seren-common";
 import { clearUnicodeCaches } from "../tables/unicode";
-import { JpxImage } from "../jpx";
+import { JpxImage } from "../image/jpx";
 
 export function clearGlobalCaches() {
   clearPatternCaches();

@@ -15,7 +15,7 @@
 
 import { ImageKind, OPS, RenderingIntentFlag, warn, MutableArray } from "seren-common";
 import { StreamSink } from "../common/core_types";
-import { OptionalContent } from "./image_utils";
+import { OptionalContent } from "../image/image_utils";
 
 function addState(parentState: InitialStateFuncTree, pattern: OPS[],
   checkFn: ((context: QueueOptimizerContext) => boolean) | null,

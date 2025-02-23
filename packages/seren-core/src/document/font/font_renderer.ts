@@ -24,12 +24,12 @@ import {
   TransformType
 } from "seren-common";
 import { CFFDict, CFFDictKey, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
-import { getGlyphsUnicode } from "../glyphlist";
-import { isNumberArray } from "../utils/core_utils";
-import { StandardEncoding } from "../tables/encodings";
-import { Stream } from "../stream/stream";
+import { getGlyphsUnicode } from "./glyphlist";
+import { isNumberArray } from "../../utils/core_utils";
+import { StandardEncoding } from "../../tables/encodings";
+import { Stream } from "../../stream/stream";
 import { Font } from "./fonts";
-import { EvaluatorProperties } from "./evaluator";
+import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
 
 // TODO: use DataView and its methods.
 

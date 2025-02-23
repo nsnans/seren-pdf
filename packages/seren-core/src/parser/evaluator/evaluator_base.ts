@@ -5,19 +5,22 @@ import {
   warn,
   MutableArray,
   TransformType,
-  RectType
+  RectType,
+  Name,
+  DictKey,
+  Ref,
+  isName,
+  Dict
 } from "seren-common";
-import { BaseStream } from "./base_stream";
-import { ColorSpace } from "./colorspace";
-import { SMaskOptions } from "./core_types";
-import { lookupMatrix, lookupNormalRect } from "./utils/core_utils";
-import { EvaluatorContext, State } from "../evaluator";
-import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "./image_utils";
+import { BaseStream } from "../../stream/base_stream";
+import { ColorSpace } from "../../color/colorspace";
+import { SMaskOptions } from "../../image/image_types";
+import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
+import { EvaluatorContext, State } from "./evaluator";
+import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { Name, DictKey, Ref, isName } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
-import { WorkerTask } from "./worker";
-import { DictImpl } from "./dict_impl";
+import { WorkerTask } from "../../worker/worker";
+import { DictImpl } from "../../document/dict_impl";
 
 export const SKIP = 1;
 

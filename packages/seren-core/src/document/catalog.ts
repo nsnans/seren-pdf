@@ -26,7 +26,7 @@ import {
   stringToUTF8String,
   warn
 } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
 import { ColorSpace } from "../color/colorspace";
 import {
@@ -38,10 +38,10 @@ import {
   toRomanNumerals,
   XRefEntryException,
 } from "../utils/core_utils";
-import { TranslatedFont } from "../evaluator";
+import { TranslatedFont } from "../parser/evaluator/evaluator";
 import { FileSpec, FileSpecSerializable } from "./file_spec";
-import { FontSubstitutionInfo } from "../font_substitutions";
-import { GlobalImageCache } from "../image_utils";
+import { FontSubstitutionInfo } from "./font/font_substitutions";
+import { GlobalImageCache } from "../image/image_utils";
 import { MetadataParser, PDFMetadataInfo } from "./metadata_parser";
 import { NameTree, NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";

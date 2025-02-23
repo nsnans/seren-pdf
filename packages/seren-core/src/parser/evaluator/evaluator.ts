@@ -40,34 +40,34 @@ import {
   RefSetCache,
   Dict
 } from "seren-common";
-import { BaseStream } from "./base_stream";
-import { CMap, IdentityCMap } from "./cmap";
-import { ColorSpace } from "./colorspace";
-import { EvaluatorTextContent, StreamSink } from "./core_types";
+import { BaseStream } from "../../stream/base_stream";
+import { CMap, IdentityCMap } from "../../cmap/cmap";
+import { ColorSpace } from "../../color/colorspace";
+import { EvaluatorTextContent, StreamSink } from "../../common/core_types";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GetTextContentHandler } from "./evaluator_text_content_operator";
-import { FontSubstitutionInfo } from "./font_substitutions";
-import { ErrorFont, Font } from "./fonts";
-import { PDFFunctionFactory } from "./function";
-import { GlobalIdFactory } from "./global_id_factory";
-import { ImageResizer } from "./image_resizer";
+import { FontSubstitutionInfo } from "../../document/font/font_substitutions";
+import { ErrorFont, Font } from "../../document/font/fonts";
+import { PDFFunctionFactory } from "../../document/function";
+import { GlobalIdFactory } from "../../common/global_id_factory";
+import { ImageResizer } from "../../image/image_resizer";
 import {
   GlobalImageCache,
   ImageCacheData,
   ImageMaskXObject,
   OptionalContent,
   RegionalImageCache
-} from "./image_utils";
+} from "../../image/image_utils";
 import { OperatorList, OperatorListIR } from "../operator_list";
 import { Lexer, Parser } from "../parser";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
+import { IdentityToUnicodeMap, ToUnicodeMap } from "../../document/font/to_unicode_map";
 import { FontProgramPrivateData } from "../type1_parser";
-import { WorkerTask } from "./worker";
-import { XRefImpl } from "./xref";
+import { WorkerTask } from "../../worker/worker";
+import { XRefImpl } from "../../document/xref";
 
 export interface SeacMapValue {
   baseFontCharCode: number;

@@ -14,7 +14,7 @@
  */
 
 import { shadow, stringToPDFString, warn, Dict, DictKey, Ref } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 

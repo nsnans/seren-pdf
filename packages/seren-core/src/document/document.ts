@@ -32,7 +32,15 @@ import {
   Util,
   warn,
   RectType,
-  PlatformHelper
+  PlatformHelper,
+  DictKey,
+  isName,
+  isRefsEqual,
+  Name,
+  Ref,
+  RefSet,
+  RefSetCache,
+  Dict
 } from "seren-common";
 import {
   Annotation,
@@ -42,7 +50,7 @@ import {
   PopupAnnotation,
   WidgetAnnotation,
 } from "./annotation";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
 import { EvaluatorTextContent, FieldObject, StreamSink } from "../common/core_types";
@@ -59,24 +67,14 @@ import {
 } from "../utils/core_utils";
 import { calculateMD5 } from "../crypto/crypto";
 import { StreamsSequenceStream } from "../stream/decode_stream";
-import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "../evaluator";
-import { FontSubstitutionInfo } from "../font_substitutions";
+import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "../parser/evaluator/evaluator";
+import { FontSubstitutionInfo } from "./font/font_substitutions";
 import { GlobalIdFactory, LocalIdFactory } from "../common/global_id_factory";
-import { GlobalImageCache } from "../image_utils";
+import { GlobalImageCache } from "../image/image_utils";
 import { ObjectLoader } from "../common/object_loader";
 import { OperatorList, OpertaorListChunk } from "../parser/operator_list";
 import { Linearization, LinearizationInterface } from "../parser/parser";
 import { PDFManager } from "../worker/pdf_manager";
-import {
-  DictKey,
-  isName,
-  isRefsEqual,
-  Name,
-  Ref,
-  RefSet,
-  RefSetCache,
-} from "../../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { NullStream, Stream } from "../stream/stream";
 import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_tree";
 import { WorkerTask } from "../worker/worker";

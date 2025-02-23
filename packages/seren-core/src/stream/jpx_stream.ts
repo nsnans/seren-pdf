@@ -16,8 +16,8 @@
 import { Uint8TypedArray, shadow, Dict } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { JpxDecoderOptions } from "../image";
-import { JpxImage } from "../jpx";
+import { JpxDecoderOptions } from "../image/image";
+import { JpxImage } from "../image/jpx";
 
 /**
  * For JPEG 2000's we use a library to decode these images and

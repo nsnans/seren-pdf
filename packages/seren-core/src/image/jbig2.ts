@@ -14,9 +14,9 @@
  */
 
 import { BaseException, shadow, PlatformHelper, Uint8TypedArray } from "seren-common";
-import { log2, readInt8, readUint16, readUint32 } from "./utils/core_utils";
-import { ArithmeticDecoder } from "./codec/arithmetic_decoder";
-import { CCITTFaxDecoder } from "./codec/ccitt";
+import { log2, readInt8, readUint16, readUint32 } from "../utils/core_utils";
+import { ArithmeticDecoder } from "../codec/arithmetic_decoder";
+import { CCITTFaxDecoder } from "../codec/ccitt";
 
 export class Jbig2Error extends BaseException {
   constructor(msg: string) {

@@ -15,7 +15,7 @@
 
 import { Uint8TypedArray, unreachable } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
-import { JpxDecoderOptions } from "../image";
+import { JpxDecoderOptions } from "../image/image";
 import { Dict } from "packages/seren-common/src/dict";
 import { Stream } from "./stream";
 

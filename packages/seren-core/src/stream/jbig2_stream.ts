@@ -16,7 +16,7 @@
 import { Uint8TypedArray, shadow, DictKey, Dict } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Jbig2Image } from "../jbig2";
+import { Jbig2Image } from "../image/jbig2";
 import { DictImpl } from "../document/dict_impl";
 
 /**

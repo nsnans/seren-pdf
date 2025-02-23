@@ -17,8 +17,8 @@ import { BaseException, warn, PlatformHelper, Uint8TypedArray } from "seren-comm
 // 这里仔细研究一下，如何引入外部的部件
 // openjpeg这个组件，最后还是会被打到worker文件里的，而非单独一个文件
 import OpenJPEG from "../external/openjpeg";
-import { Stream } from "./stream/stream";
-import { BaseStream } from "./base_stream";
+import { Stream } from "../stream/stream";
+import { BaseStream } from "../stream/base_stream";
 import { JpxDecoderOptions } from "./image";
 import { OpenJPEGModule } from "./image_types";
 

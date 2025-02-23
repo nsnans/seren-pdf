@@ -27,8 +27,8 @@ import {
   RectType,
   TransformType
 } from "seren-common";
-import { ColorSpace } from "./color/colorspace";
-import { ImageMask, SMaskOptions } from "./core_types";
+import { ColorSpace } from "../color/colorspace";
+import { SMaskOptions, ImageMask } from "./image_types";
 
 abstract class BaseLocalCache<T> {
 

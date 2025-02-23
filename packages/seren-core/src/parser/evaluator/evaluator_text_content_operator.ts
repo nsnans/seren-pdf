@@ -1,21 +1,37 @@
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
-import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, OPS, Util, warn } from "../shared/util";
-import { BaseStream } from "./base_stream";
-import { bidi } from "./bidi";
-import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "./core_types";
-import { lookupMatrix } from "./utils/core_utils";
-import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState, TimeSlotManager } from "../evaluator";
+import {
+  AbortException,
+  assert,
+  FONT_IDENTITY_MATRIX,
+  FormatError,
+  IDENTITY_MATRIX,
+  isArrayEqual,
+  normalizeUnicode,
+  OPS,
+  Util,
+  warn,
+  DictKey,
+  Name,
+  Ref,
+  TransformType,
+  Dict,
+  MutableArray
+} from "seren-common";
+import { BaseStream } from "../../stream/base_stream";
+import { bidi } from "../../tables/bidi";
+import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "../../common/core_types";
+import { lookupMatrix } from "../../utils/core_utils";
+import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { Font } from "./fonts";
-import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
-import { DictKey, Name, Ref, TransformType, Dict, MutableArray } from "seren-common";
-import { WorkerTask } from "./worker";
-import { XRefImpl } from "./xref";
-import { DictImpl } from "./dict_impl";
+import { Font } from "../../document/font/fonts";
+import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "../../image/image_utils";
+import { WorkerTask } from "../../worker/worker";
+import { XRefImpl } from "../../document/xref";
+import { DictImpl } from "../../document/dict_impl";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 

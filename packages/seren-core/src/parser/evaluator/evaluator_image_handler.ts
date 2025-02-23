@@ -1,15 +1,15 @@
 import { CommonObjType, ObjType } from "../shared/message_handler";
 import { warn, assert, OPS, DictKey, Dict } from "seren-common";
-import { BaseStream } from "./base_stream";
-import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types";
-import { DecodeStream } from "./stream/decode_stream";
-import { EvaluatorContext, StateManager } from "../evaluator";
+import { BaseStream } from "../../stream/base_stream";
+import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "../../image/image_types";
+import { DecodeStream } from "../../stream/decode_stream";
+import { EvaluatorContext, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
-import { isPDFFunction } from "./function";
-import { PDFImage } from "./image";
-import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "./image_utils";
+import { isPDFFunction } from "../../document/function";
+import { PDFImage } from "../../image/image";
+import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "./worker";
+import { WorkerTask } from "../../worker/worker";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {
 

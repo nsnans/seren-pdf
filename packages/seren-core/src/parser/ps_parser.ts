@@ -15,7 +15,7 @@
 
 import { FormatError, shadow, EOF } from "seren-common";
 import { isWhiteSpace } from "../utils/core_utils";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 
 class PostScriptParser {
 

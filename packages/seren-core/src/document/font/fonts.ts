@@ -42,8 +42,8 @@ import {
   getUnicodeForGlyph,
   getUnicodeRangeFor,
   mapSpecialUnicodeValues,
-} from "../unicode";
-import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "../glyphlist";
+} from "../../tables/unicode";
+import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "./glyphlist";
 import {
   getEncoding,
   MacRomanEncoding,
@@ -51,7 +51,7 @@ import {
   SymbolSetEncoding,
   WinAnsiEncoding,
   ZapfDingbatsEncoding,
-} from "../tables/encodings";
+} from "../../tables/encodings";
 import {
   getGlyphMapForStandardFonts,
   getNonStdFontMap,
@@ -60,18 +60,18 @@ import {
   getSupplementalGlyphMapForArialBlack,
   getSupplementalGlyphMapForCalibri,
 } from "./standard_fonts";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "../to_unicode_map";
+import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { CFFFont } from "./cff_font";
 import { FontRendererFactory } from "./font_renderer";
-import { getFontBasicMetrics } from "../metrics";
-import { GlyfTable } from "../glyf";
-import { CMap, IdentityCMap } from "../cmap/cmap";
-import { OpenTypeFileBuilder } from "../opentype_file_builder";
-import { readUint32 } from "../utils/core_utils";
-import { Stream } from "../stream/stream";
-import { Type1Font } from "../type1_font";
-import { OperatorListIR } from "../operator_list";
-import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "./evaluator";
+import { getFontBasicMetrics } from "./metrics";
+import { GlyfTable } from "./glyf";
+import { CMap, IdentityCMap } from "../../cmap/cmap";
+import { OpenTypeFileBuilder } from "../../writer/opentype_file_builder";
+import { readUint32 } from "../../utils/core_utils";
+import { Stream } from "../../stream/stream";
+import { Type1Font } from "../../parser/type1_font";
+import { OperatorListIR } from "../../parser/operator_list";
+import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "../../parser/evaluator/evaluator";
 import { FontSubstitutionInfo } from "./font_substitutions";
 
 // Unicode Private Use Areas:

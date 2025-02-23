@@ -29,10 +29,10 @@ import {
   ExpertCharset,
   ExpertSubsetCharset,
   ISOAdobeCharset,
-} from "../tables/charsets";
-import { ExpertEncoding, StandardEncoding } from "../tables/encodings";
-import { EvaluatorProperties } from "../evaluator/evaluator";
-import { Stream } from "../stream/stream";
+} from "../../tables/charsets";
+import { ExpertEncoding, StandardEncoding } from "../../tables/encodings";
+import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
+import { Stream } from "../../stream/stream";
 
 // Maximum subroutine call depth of type 2 charstrings. Matches OTS.
 const MAX_SUBR_NESTING = 10;

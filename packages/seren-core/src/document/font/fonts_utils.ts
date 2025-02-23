@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import { getEncoding, StandardEncoding } from "../tables/encodings";
-import { getGlyphsUnicode } from "../glyphlist";
-import { getLookupTableFactory } from "../utils/core_utils";
-import { getUnicodeForGlyph } from "../unicode";
+import { getEncoding, StandardEncoding } from "../../tables/encodings";
+import { getGlyphsUnicode } from "./glyphlist";
+import { getLookupTableFactory } from "../../utils/core_utils";
+import { getUnicodeForGlyph } from "../../tables/unicode";
 import { info } from "seren-common";
-import { EvaluatorProperties } from "./evaluator";
+import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
 
 // Accented characters have issues on Windows and Linux. When this flag is
 // enabled glyphs that use seac and seac style endchar operators are truncated

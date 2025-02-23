@@ -1,20 +1,22 @@
-import { unreachable } from "seren-common";
-import { PDFManager } from "../worker/pdf_manager";
-import { Ref } from "../../../seren-common/src/primitives";
+import { Ref, unreachable } from "seren-common";
+
+interface DocIdOwner {
+  docId: string;
+}
 
 export class GlobalIdFactory {
 
-  readonly pdfManager: PDFManager;
+  readonly docIdOwner: DocIdOwner;
 
   readonly fontIdCounters: { font: number; };
 
-  constructor(pdfManager: PDFManager, idCounters: { font: number }) {
-    this.pdfManager = pdfManager;
+  constructor(docIdOwner: DocIdOwner, idCounters: { font: number }) {
+    this.docIdOwner = docIdOwner;
     this.fontIdCounters = idCounters;
   }
 
   getDocId() {
-    return `g_${this.pdfManager.docId}`;
+    return `g_${this.docIdOwner.docId}`;
   }
 
   createFontId() {
@@ -39,7 +41,7 @@ export class LocalIdFactory extends GlobalIdFactory {
 
   constructor(parent: GlobalIdFactory, pageIndex: number
     , objIdCounters: { obj: number }, ref: Ref) {
-    super(parent.pdfManager, parent.fontIdCounters);
+    super(parent.docIdOwner, parent.fontIdCounters);
     this.pageIndex = pageIndex;
     this.objIdCounters = objIdCounters;
     this.ref = ref;

@@ -13,18 +13,18 @@ import {
 } from "seren-common";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
-import { BaseStream } from "./base_stream";
-import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "../evaluator";
+import { BaseStream } from "../../stream/base_stream";
+import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
-import { EvaluatorImageHandler } from "../evaluator_image_handler";
-import { Font, Glyph } from "./fonts";
-import { isPDFFunction } from "./function";
-import { LocalColorSpaceCache, LocalGStateCache } from "./image_utils";
+import { EvaluatorImageHandler } from "./evaluator_image_handler";
+import { Font, Glyph } from "../../document/font/fonts";
+import { isPDFFunction } from "../../document/function";
+import { LocalColorSpaceCache, LocalGStateCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "./worker";
-import { DictImpl } from "./dict_impl";
+import { WorkerTask } from "../../worker/worker";
+import { DictImpl } from "../../document/dict_impl";
 
 /**
  * {@link EvaluatorFontHandler} 管理了处理字体逻辑相关的方法。

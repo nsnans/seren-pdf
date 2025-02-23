@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import {
   MissingDataException,
   ParserEOFException,

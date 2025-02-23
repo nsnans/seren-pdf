@@ -1,20 +1,19 @@
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
-import { AbortException, FormatError, info, OPS, warn, shiftable, Dict } from "seren-common";
-import { BaseStream } from "./base_stream";
-import { ColorSpace } from "./colorspace";
-import { isNumberArray } from "./utils/core_utils";
-import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "../evaluator";
+import { AbortException, FormatError, info, OPS, warn, shiftable, Dict, DictKey, Name, Ref } from "seren-common";
+import { BaseStream } from "../../stream/base_stream";
+import { ColorSpace } from "../../color/colorspace";
+import { isNumberArray } from "../../utils/core_utils";
+import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
-import { EvaluatorImageHandler } from "../evaluator_image_handler";
-import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "./image_utils";
+import { EvaluatorImageHandler } from "./evaluator_image_handler";
+import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
-import { WorkerTask } from "./worker";
-import { XRefImpl } from "./xref";
-import { DictImpl } from "./dict_impl";
+import { WorkerTask } from "../../worker/worker";
+import { XRefImpl } from "../../document/xref";
+import { DictImpl } from "../../document/dict_impl";
 
 const MethodMap = new Map<OPS, keyof GeneralOperator>();
 

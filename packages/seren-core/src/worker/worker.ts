@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { DictKey, Ref, ReadResult } from "seren-common";
+import { DictKey, Ref, ReadResult, PlatformHelper } from "seren-common";
 import { DocumentParameter } from "../display/api";
-import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
 import { GetDocMessage } from "../shared/message_handler_types";

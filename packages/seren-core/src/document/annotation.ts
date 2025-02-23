@@ -43,9 +43,17 @@ import {
   Util,
   warn,
   MutableArray,
-  DestinationType
+  DestinationType,
+  DictKey,
+  isName,
+  isRefsEqual,
+  Name,
+  Ref,
+  RefSet,
+  RefSetCache,
+  Dict
 } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { BaseStream } from "../stream/base_stream";
 import { bidi } from "../tables/bidi";
 import { Catalog } from "./catalog";
 import { ColorSpace } from "../color/colorspace";
@@ -70,16 +78,14 @@ import {
   parseAppearanceStream,
   parseDefaultAppearance,
 } from "../worker/default_appearance";
-import { PartialEvaluator } from "./evaluator";
+import { PartialEvaluator } from "../parser/evaluator/evaluator";
 import { FileSpec, FileSpecSerializable } from "./file_spec";
-import { ErrorFont, Font, Glyph } from "../font/fonts";
+import { ErrorFont, Font, Glyph } from "./font/fonts";
 import { LocalIdFactory } from "../common/global_id_factory";
 import { JpegStream } from "../stream/jpeg_stream";
 import { ObjectLoader } from "../common/object_loader";
 import { OperatorList } from "../parser/operator_list";
 import { PDFManager } from "../worker/pdf_manager";
-import { DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "../../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { Stream, StringStream } from "../stream/stream";
 import { StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "../worker/worker";

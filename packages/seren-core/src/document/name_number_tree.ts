@@ -14,17 +14,16 @@
  */
 
 import {
+  Dict,
   DictKey,
+  FormatError,
+  PlatformHelper,
   Ref,
   RefSet,
-  Dict,
-  FormatError,
   unreachable,
   warn,
-  PlatformHelper,
   XRef
 } from "seren-common";
-import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 /**
  * A NameTree/NumberTree is like a Dict but has some advantageous properties,

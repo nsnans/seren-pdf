@@ -3,21 +3,20 @@ import {
   MutableArray,
   AbortException,
   FormatError,
-  OPS, warn
+  OPS, warn, DictKey, Name, Ref
 } from "seren-common";
 import { CommonObjType, ObjType } from "../shared/message_handler";
-import { BaseStream } from "./base_stream";
-import { ColorSpace } from "./colorspace";
-import { lookupMatrix } from "./utils/core_utils";
-import { EvaluatorContext, PatternType } from "../evaluator";
+import { BaseStream } from "../../stream/base_stream";
+import { ColorSpace } from "../../color/colorspace";
+import { lookupMatrix } from "../../utils/core_utils";
+import { EvaluatorContext, PatternType } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
-import { LocalColorSpaceCache, LocalTilingPatternCache } from "./image_utils";
+import { LocalColorSpaceCache, LocalTilingPatternCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
 import { getTilingPatternIR, Pattern } from "../pattern";
-import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
-import { WorkerTask } from "./worker";
-import { DictImpl } from "./dict_impl";
+import { WorkerTask } from "../../worker/worker";
+import { DictImpl } from "../../document/dict_impl";
 
 export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 

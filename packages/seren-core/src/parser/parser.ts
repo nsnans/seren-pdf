@@ -20,11 +20,18 @@ import {
   numberArrayToString,
   warn,
   PlatformHelper,
-  Uint8TypedArray
+  Uint8TypedArray,
+  Dict,
+  Cmd,
+  DictKey,
+  EOF,
+  isCmd,
+  Name,
+  Ref
 } from "seren-common";
-import { Ascii85Stream } from "./ascii_85_stream";
-import { AsciiHexStream } from "./ascii_hex_stream";
-import { BaseStream } from "./base_stream";
+import { Ascii85Stream } from "../stream/ascii_85_stream";
+import { AsciiHexStream } from "../stream/ascii_hex_stream";
+import { BaseStream } from "../stream/base_stream";
 import { CCITTFaxStream } from "../stream/ccitt_stream";
 import {
   isWhiteSpace,
@@ -39,8 +46,6 @@ import { JpegStream } from "../stream/jpeg_stream";
 import { JpxStream } from "../stream/jpx_stream";
 import { LZWStream } from "../stream/lzw_stream";
 import { PredictorStream } from "../stream/predictor_stream";
-import { Cmd, DictKey, EOF, isCmd, Name, Ref } from "../../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { RunLengthStream } from "../stream/run_length_stream";
 import { NullStream, Stream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";

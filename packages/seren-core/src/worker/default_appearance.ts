@@ -20,8 +20,6 @@ import {
   numberToString,
   stringToUTF16HexString,
 } from "../utils/core_utils";
-import { DictKey, Name, Ref } from "../../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
@@ -29,11 +27,11 @@ import {
   shadow,
   warn,
   PointType, RectType,
-  MutableArray,
+  MutableArray, DictKey, Name, Ref, Dict
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
-import { EvaluatorPreprocessor } from "./evaluator";
-import { LocalColorSpaceCache } from "./image_utils";
+import { EvaluatorPreprocessor } from "../parser/evaluator/evaluator";
+import { LocalColorSpaceCache } from "../image/image_utils";
 import { PDFFunctionFactory } from "../document/function";
 import { Stream, StringStream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";

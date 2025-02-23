@@ -21,7 +21,7 @@ import {
   PlatformHelper,
   Uint8TypedArray
 } from "seren-common";
-import { readUint16 } from "./utils/core_utils";
+import { readUint16 } from "../utils/core_utils";
 
 export class JpegError extends BaseException {
   constructor(msg: string) {

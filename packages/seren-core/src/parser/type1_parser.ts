@@ -18,7 +18,7 @@ import { isWhiteSpace } from "../utils/core_utils";
 import { Stream } from "../stream/stream";
 import { EvaluatorProperties } from "./evaluator/evaluator";
 import { TransformType, warn, Uint8TypedArray } from "seren-common";
-import { CFFDictKey } from "./font/cff_parser";
+import { CFFDictKey } from "../document/font/cff_parser";
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.

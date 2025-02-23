@@ -15,7 +15,7 @@
 
 import { unreachable } from "seren-common";
 
-class ToUnicodeMap {
+export class ToUnicodeMap {
 
   protected _map: (number | string)[];
 
@@ -69,7 +69,7 @@ class ToUnicodeMap {
   }
 }
 
-class IdentityToUnicodeMap {
+export class IdentityToUnicodeMap {
 
   protected firstChar: number;
 
@@ -111,5 +111,3 @@ class IdentityToUnicodeMap {
     unreachable("Should not call amend()");
   }
 }
-
-export { IdentityToUnicodeMap, ToUnicodeMap };
