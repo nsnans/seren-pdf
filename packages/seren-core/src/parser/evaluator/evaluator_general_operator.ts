@@ -1,4 +1,4 @@
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "./document_evaluator_options";
 import { AbortException, FormatError, info, OPS, warn, shiftable, Dict, DictKey, Name, Ref } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";

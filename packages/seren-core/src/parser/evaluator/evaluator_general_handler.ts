@@ -11,7 +11,7 @@ import {
   Ref,
   RefSet
 } from "seren-common";
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "./document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import { BaseStream } from "../../stream/base_stream";
 import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "./evaluator";

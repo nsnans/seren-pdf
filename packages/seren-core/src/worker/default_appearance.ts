@@ -35,7 +35,7 @@ import { LocalColorSpaceCache } from "../image/image_utils";
 import { PDFFunctionFactory } from "../document/function";
 import { Stream, StringStream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../parser/evaluator/document_evaluator_options";
 import { DictImpl } from "../document/dict_impl";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {

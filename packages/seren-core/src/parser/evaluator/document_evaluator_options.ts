@@ -1,15 +1,4 @@
-/**
- * This is the main entry point for loading a PDF and interacting with it.
- *
- * NOTE: If a URL is used to fetch the PDF data a standard Fetch API call (or
- * XHR as fallback) is used, which means it must follow same origin rules,
- * e.g. no cross-domain requests without CORS.
- *
- * @param {string | URL | TypedArray | ArrayBuffer | DocumentInitParameters}
- *   src - Can be a URL where a PDF file is located, a typed array (Uint8Array)
- *         already populated with data, or a parameter object.
- * @returns {PDFDocumentLoadingTask}
- */
+
 export class DocumentEvaluatorOptions {
 
   readonly maxImageSize: number;

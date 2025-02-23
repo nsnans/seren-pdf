@@ -14,7 +14,7 @@
  */
 /* eslint-disable no-var */
 
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "./document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {
   assert,

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../parser/evaluator/document_evaluator_options";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AbortException,
@@ -99,7 +99,6 @@ export class PDFDocumentEnsurer {
   constructor(pdfManager: PDFManager) {
     this.pdfManager = pdfManager;
   }
-
 
 }
 

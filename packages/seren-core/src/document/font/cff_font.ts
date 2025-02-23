@@ -19,7 +19,7 @@ import { warn } from "seren-common";
 import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
 import { Stream } from "../../stream/stream";
 
-class CFFFont {
+export class CFFFont {
 
   public cff: CFF;
 
@@ -147,5 +147,3 @@ class CFFFont {
     }
   }
 }
-
-export { CFFFont };

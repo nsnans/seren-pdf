@@ -74,7 +74,7 @@ import {
   StatTimer,
   TransformType
 } from "../../../../src/display/display_utils";
-import { DocumentEvaluatorOptions } from "./document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../seren-core/src/parser/evaluator/document_evaluator_options";
 import { FilterFactory } from "../../../../src/display/filter_factory";
 import { FontFaceObject, FontLoader } from "../../../../src/display/font_loader";
 import { Metadata } from "../../../../src/display/metadata";
