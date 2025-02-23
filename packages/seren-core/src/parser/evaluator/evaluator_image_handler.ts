@@ -1,7 +1,8 @@
 import { CommonObjType, ObjType } from "../shared/message_handler";
 import { warn, assert, OPS, DictKey, Dict } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
-import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "../../image/image_types";
+import { SingleOpaquePixelImageMask, SMaskOptions } from "../../image/image_types";
+import { ImageMask } from "packages/seren-common/src/image/image_types";
 import { DecodeStream } from "../../stream/decode_stream";
 import { EvaluatorContext, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";

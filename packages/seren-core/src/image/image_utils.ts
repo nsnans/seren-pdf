@@ -28,7 +28,8 @@ import {
   TransformType
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
-import { SMaskOptions, ImageMask } from "./image_types";
+import { SMaskOptions } from "./image_types";
+import { ImageMask } from "packages/seren-common/src/image/image_types";
 
 abstract class BaseLocalCache<T> {
 

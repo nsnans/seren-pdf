@@ -26,7 +26,7 @@
 
 import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
 import { FieldObject } from "../core/core_types";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {
   AnnotationBorderStyleType,

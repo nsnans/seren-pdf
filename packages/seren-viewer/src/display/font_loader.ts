@@ -15,7 +15,7 @@
 
 import { FontSubstitutionInfo } from "../core/font_substitutions";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import {
   assert,
   FontRenderOps,

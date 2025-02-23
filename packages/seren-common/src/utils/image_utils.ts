@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { FeatureTest, ImageKind } from "./util";
+import { FeatureTest, ImageKind } from "../utils/util";
 
 function convertToRGBA(
   kind: number,

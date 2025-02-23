@@ -1,3 +1,4 @@
+
 /* Copyright 2018 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +19,11 @@ export interface PDFStreamSource {
   length: number;
   // 是一个JSON
   httpHeaders: Record<string, string>;
-  withCredentials: boolean,
-  rangeChunkSize: number,
-  disableRange: boolean,
-  disableStream: boolean,
-}
-
-/**
+  withCredentials: boolean;
+  rangeChunkSize: number;
+  disableRange: boolean;
+  disableStream: boolean;
+}/**
  * Interface that represents PDF data transport. If possible, it allows
  * progressively load entire or fragment of the PDF binary data.
  *
@@ -53,8 +52,8 @@ export interface PDFStream {
 }
 
 export interface ReadResult {
-  value: ArrayBuffer | null,
-  done: boolean,
+  value: ArrayBuffer | null;
+  done: boolean;
 }
 
 export interface WorkerStreamReader extends PDFStreamReader {
@@ -72,12 +71,12 @@ export interface WorkerStreamReader extends PDFStreamReader {
   cancel(reason: any): void;
 
 }
-
 /**
  * Interface for a PDF binary data reader.
  *
  * @interface
  */
+
 export interface PDFStreamReader {
 
   /**
@@ -141,12 +140,12 @@ export interface PDFStreamReader {
    */
   cancel(reason?: Error): void;
 }
-
 /**
  * Interface for a PDF binary data fragment reader.
  *
  * @interface
  */
+
 export interface PDFStreamRangeReader {
   /**
    * Sets or gets the progress callback. The callback can be useful when the

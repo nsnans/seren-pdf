@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource } from "../../../seren-common/src/interfaces";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PDFStreamRangeReader } from "packages/seren-common/src/stream/stream_types";
+import { PDFStreamReader } from "packages/seren-common/src/stream/stream_types";
+import { PDFStream } from "packages/seren-common/src/stream/stream_types";
+import { PDFStreamSource } from "packages/seren-common/src/stream/stream_types";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { AbortException, assert, warn } from "../shared/util";
 import {
   createHeaders,

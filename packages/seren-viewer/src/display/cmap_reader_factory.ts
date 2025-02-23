@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { stringToBytes, unreachable } from "../shared/util";
 import { fetchData } from "../../../../src/display/display_utils";
 

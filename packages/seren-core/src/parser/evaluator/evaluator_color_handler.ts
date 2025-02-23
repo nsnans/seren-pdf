@@ -14,7 +14,7 @@ import { EvaluatorBaseHandler } from "./evaluator_base";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
 import { getTilingPatternIR, Pattern } from "../pattern";
-import { Dict } from "packages/seren-common/src/dict";
+import { Dict } from "packages/seren-common/src/document/dict";
 import { WorkerTask } from "../../worker/worker";
 import { DictImpl } from "../../document/dict_impl";
 

@@ -15,7 +15,7 @@
 /* globals process */
 
 import { PlatformHelper } from "./platform_helper";
-import { Uint8TypedArray } from "./typed_array";
+import { Uint8TypedArray } from "../common/typed_array";
 import { PointType, RectType, TransformType, TypedArray } from "./types";
 
 const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];

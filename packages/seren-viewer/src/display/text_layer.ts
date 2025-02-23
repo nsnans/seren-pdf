@@ -17,7 +17,7 @@
 /** @typedef {import("./api").TextContent} TextContent */
 
 import { EvaluatorTextContent } from "../core/core_types";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import {
   AbortException,
   FeatureTest,

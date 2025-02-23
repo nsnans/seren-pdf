@@ -15,10 +15,11 @@
 
 import { OperatorListIR } from "../core/operator_list";
 import { FigureType, RadialAxialShadingIR, TilingPatternIR } from "../core/pattern";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { FormatError, info, unreachable, Util } from "../shared/util";
 import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
 import { getCurrentTransform, PointType, RectType, TransformType } from "./display_utils";
+import { MeshShadingPatternIR } from "packages/seren-common/src/types/shading_types";
 
 const PathType = {
   FILL: "Fill",
@@ -332,10 +333,6 @@ function drawFigure(data: ImageData, figure: FigureType, context: DrawFigureCont
       throw new Error("illegal figure");
   }
 }
-
-export type MeshShadingPatternIR = [string, number, PointType[] | Float32Array,
-  [number, number, number][] | Uint8Array | (Uint8ClampedArray | Uint8Array)[],
-  FigureType[], RectType, RectType | null, Uint8ClampedArray | null, null]
 
 class MeshShadingPattern extends BaseShadingPattern {
 

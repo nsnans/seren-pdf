@@ -15,7 +15,7 @@
 
 import { SVG_NS } from "./display_utils";
 import { unreachable } from "../shared/util";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 
 abstract class BaseSVGFactory {
 

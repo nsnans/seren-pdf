@@ -15,7 +15,7 @@
 
 import { getRGB, isDataScheme, SVG_NS } from "./display_utils";
 import { unreachable, Util, warn } from "../shared/util";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { RGBType } from "../shared/scripting_utils";
 
 export interface FilterFactory {

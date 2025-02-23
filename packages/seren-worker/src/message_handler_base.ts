@@ -22,7 +22,7 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
-} from "../../seren-common/src/util";
+} from "../../seren-common/src/utils/util";
 
 enum CallbackKind {
   UNKNOWN = 0,

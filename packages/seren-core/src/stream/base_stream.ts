@@ -15,7 +15,7 @@
 
 import { Uint8TypedArray, bytesToString, unreachable } from "seren-common";
 import { JpxDecoderOptions } from "../image/image";
-import { Dict } from "packages/seren-common/src/dict";
+import { Dict } from "packages/seren-common/src/document/dict";
 
 // Lots of DecodeStreams are created whose buffers are never used.  For these
 // we share a single empty buffer. This is (a) space-efficient and (b) avoids

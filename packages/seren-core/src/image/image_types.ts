@@ -15,16 +15,7 @@ export interface CreateStampImageResult {
   smaskStream: Stream | null;
   imageRef?: JpegStream | Ref;
 }
-export interface ImageMask {
-  data: Uint8TypedArray | null;
-  width: number;
-  height: number;
-  interpolate: number[];
-  cached?: boolean;
-  dataLen?: number;
-  bitmap?: ImageBitmap | VideoFrame;
-  ref?: string | null;
-}export interface SMaskOptions {
+export interface SMaskOptions {
   transferMap?: Uint8Array<ArrayBuffer>;
   subtype: string;
   backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;

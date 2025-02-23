@@ -29,8 +29,10 @@ import { CMapReaderFactory, DOMCMapReaderFactory } from "../../../../src/display
 import { PDFFetchStream } from "../../../../src/display/fetch_stream";
 import { PDFNetworkStream } from "../../../../src/display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../../../../src/display/standard_fontdata_factory";
-import { PDFStream, PDFStreamReader, PDFStreamSource } from "../../../seren-common/src/interfaces";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PDFStreamReader } from "packages/seren-common/src/stream/stream_types";
+import { PDFStream } from "packages/seren-common/src/stream/stream_types";
+import { PDFStreamSource } from "packages/seren-common/src/stream/stream_types";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
 import { MessageHandlerAction } from "../shared/message_handler_utils";

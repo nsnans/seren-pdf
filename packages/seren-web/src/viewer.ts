@@ -4,7 +4,7 @@ import { DOMCMapReaderFactory } from "../../display/cmap_reader_factory";
 import { isDataScheme } from "../../display/display_utils";
 import { DOMFilterFactory } from "../../display/filter_factory";
 import { DOMStandardFontDataFactory } from "../../display/standard_fontdata_factory";
-import { PlatformHelper } from "../../../packages/seren-common/src/platform_helper";
+import { PlatformHelper } from "../../seren-common/src/utils/platform_helper";
 import { VerbosityLevel } from "../../shared/util";
 import { AltTextManager } from "./alt_text_manager";
 import { BrowserUtil } from "./browser_util";

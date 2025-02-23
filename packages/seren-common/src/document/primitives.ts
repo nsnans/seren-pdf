@@ -14,10 +14,10 @@
  */
 
 import { BaseStream } from "../../seren-core/src/base_stream";
-import { StringStream } from "../../seren-core/src/stream/stream";
-import { PlatformHelper } from "./platform_helper";
-import { DestinationType, PointType, RectType, TypedArray } from "./types";
-import { assert, unreachable } from "./util";
+import { StringStream } from "../../../seren-core/src/stream/stream";
+import { PlatformHelper } from "../utils/platform_helper";
+import { DestinationType, PointType, RectType, TypedArray } from "../common/types";
+import { assert, unreachable } from "../utils/util";
 import { Dict } from "./dict";
 
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");

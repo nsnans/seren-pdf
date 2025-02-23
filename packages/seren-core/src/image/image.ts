@@ -33,7 +33,8 @@ import { JpxImage } from "./jpx";
 import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "./image_utils";
-import { ImageMask, SingleOpaquePixelImageMask } from "./image_types";
+import { SingleOpaquePixelImageMask } from "./image_types";
+import { ImageMask } from "packages/seren-common/src/image/image_types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we

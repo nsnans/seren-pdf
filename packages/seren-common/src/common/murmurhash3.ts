@@ -24,7 +24,7 @@ const SEED = 0xc3d2e1f0;
 const MASK_HIGH = 0xffff0000;
 const MASK_LOW = 0xffff;
 
-class MurmurHash3_64 {
+export class MurmurHash3_64 {
 
   protected h1: number;
 
@@ -138,5 +138,3 @@ class MurmurHash3_64 {
     );
   }
 }
-
-export { MurmurHash3_64 };

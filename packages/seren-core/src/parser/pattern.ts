@@ -42,6 +42,7 @@ import { ParserConstructFunction, PDFFunctionFactory } from "../document/functio
 import { LocalColorSpaceCache } from "../image/image_utils";
 import { OperatorListIR } from "./operator_list";
 import { XRefImpl } from "../document/xref";
+import { FigureType, RadialAxialShadingIR } from "packages/seren-common/src/types/shading_types";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -120,11 +121,6 @@ class BaseShading {
     unreachable("Abstract method `getIR` called.");
   }
 }
-
-export type RadialAxialShadingIR = [
-  "RadialAxial", string, RectType | null, [number, string][],
-  number[], number[], number | null, number | null
-]
 
 // shading 着色
 // Radial and axial shading have very similar implementations
@@ -501,13 +497,6 @@ function getB(count: number) {
 
 function clearPatternCaches() {
   bCache = new Map();
-}
-
-export type FigureType = {
-  type: string;
-  coords: Int32Array;
-  colors: Int32Array;
-  verticesPerRow?: number;
 }
 
 class MeshShading extends BaseShading {

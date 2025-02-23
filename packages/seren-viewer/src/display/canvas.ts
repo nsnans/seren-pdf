@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../../seren-common/src/typed_array";
+import { Uint8TypedArray } from "../../../seren-common/src/common/typed_array";
 import { ImageMask } from "../core/core_types";
 import { Glyph } from "../core/fonts";
 import { GroupOptions, OptionalContent } from "../core/image_utils";
 import { TilingPatternIR } from "../core/pattern";
 import { DictKey } from "../core/primitives";
-import { PlatformHelper } from "../../../seren-common/src/platform_helper";
+import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
 import { RGBType } from "../shared/scripting_utils";
 import {

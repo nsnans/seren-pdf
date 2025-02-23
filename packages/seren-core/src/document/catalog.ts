@@ -54,7 +54,7 @@ import {
   RefSet,
   RefSetCache,
 } from "seren-common";
-import { Dict } from "packages/seren-common/src/dict";
+import { Dict } from "packages/seren-common/src/document/dict";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
 import { DictImpl, isDict } from "./dict_impl";
