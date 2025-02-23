@@ -21,7 +21,7 @@ export interface Popable<T> {
 }
 
 export function shiftable<T>(obj: unknown): obj is Shiftable<T> {
-  return !!((<any>obj)?.shift);
+  return !!((<{ shift?: unknown }>obj)?.shift);
 }
 
 export interface BoxType {

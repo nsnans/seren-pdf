@@ -77,16 +77,17 @@ import { JpegStream } from "./jpeg_stream";
 import { ObjectLoader } from "./object_loader";
 import { OperatorList } from "./operator_list";
 import { PDFManager } from "./pdf_manager";
-import { Dict, DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
+import { DictKey, isName, isRefsEqual, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { Stream, StringStream } from "./stream";
 import { StructTreeRoot } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { CreateStampImageResult } from "./types";
 
 export interface AnnotationParameters {
-  xref: XRef;
+  xref: XRefImpl;
   ref: Ref | null;
   dict: Dict;
   subtype: string | null;
@@ -115,7 +116,7 @@ interface AnnotationDependency { ref: Ref; data: string | null; }
 export class MarkupAnnotationFactory {
 
   static async createNewFreeTextAnnotation(
-    xref: XRef,
+    xref: XRefImpl,
     annotation: FreeTextEditorSerial,
     dependencies: AnnotationDependency[],
     evaluator: PartialEvaluator,
@@ -150,7 +151,7 @@ export class MarkupAnnotationFactory {
   }
 
   static async createNewHighlightAnnotation(
-    xref: XRef,
+    xref: XRefImpl,
     annotation: HighlightEditorSerial,
     dependencies: AnnotationDependency[]
   ) {
@@ -182,7 +183,7 @@ export class MarkupAnnotationFactory {
   }
 
   static async createNewInkAnnotation(
-    xref: XRef,
+    xref: XRefImpl,
     annotation: InkEditorSerial,
     dependencies: AnnotationDependency[]
   ) {
@@ -215,7 +216,7 @@ export class MarkupAnnotationFactory {
 
 
   static async createNewStampAnnotation(
-    xref: XRef,
+    xref: XRefImpl,
     annotation: StampEditorSerial,
     dependencies: AnnotationDependency[],
     image: CreateStampImageResult
@@ -249,7 +250,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewInkPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
-    xref: XRef,
+    xref: XRefImpl,
     annotation: InkEditorSerial,
     evaluatorOptions: DocumentEvaluatorOptions
   ) {
@@ -278,7 +279,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewHightlightPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
-    xref: XRef,
+    xref: XRefImpl,
     annotation: HighlightEditorSerial,
     evaluatorOptions: DocumentEvaluatorOptions
   ) {
@@ -300,7 +301,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewFreeTextPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
-    xref: XRef,
+    xref: XRefImpl,
     annotation: FreeTextEditorSerial,
     evaluator: PartialEvaluator,
     task: WorkerTask,
@@ -326,7 +327,7 @@ export class MarkupAnnotationFactory {
 
   static async createNewStampPrintAnnotation(
     annotationGlobals: AnnotationGlobals,
-    xref: XRef,
+    xref: XRefImpl,
     annotation: StampEditorSerial,
     image: CreateStampImageResult | null,
     evaluatorOptions: DocumentEvaluatorOptions
@@ -380,7 +381,7 @@ export class AnnotationFactory {
    * to an annotation dictionary. This yields a promise that is resolved when
    * the `Annotation` object is constructed.
    *
-   * @param {XRef} xref
+   * @param {XRefImpl} xref
    * @param {Object} ref
    * @params {Object} annotationGlobals
    * @param {Object} idFactory
@@ -391,7 +392,7 @@ export class AnnotationFactory {
    *   instance.
    */
   static async create(
-    xref: XRef,
+    xref: XRefImpl,
     ref: Ref,
     annotationGlobals: AnnotationGlobals,
     idFactory: LocalIdFactory | null,
@@ -411,7 +412,7 @@ export class AnnotationFactory {
   }
 
   private static _create(
-    xref: XRef, ref: Ref, annotationGlobals: AnnotationGlobals, idFactory: LocalIdFactory,
+    xref: XRefImpl, ref: Ref, annotationGlobals: AnnotationGlobals, idFactory: LocalIdFactory,
     collectFields = false, orphanFields: RefSetCache<Ref, Ref> | null = null, pageIndex: number | null = null,
     pageRef: Ref | null = null
   ): Annotation<AnnotationData> | null {
@@ -522,7 +523,7 @@ export class AnnotationFactory {
     }
   }
 
-  static async _getPageIndex(xref: XRef, ref: Ref, pdfManager: PDFManager) {
+  static async _getPageIndex(xref: XRefImpl, ref: Ref, pdfManager: PDFManager) {
     try {
       const annotDict = await xref.fetchIfRefAsync(ref);
       if (!(annotDict instanceof Dict)) {
@@ -564,7 +565,7 @@ export class AnnotationFactory {
     return -1;
   }
 
-  static generateImages(annotations: Iterable<Record<string, any>>, xref: XRef, isOffscreenCanvasSupported: boolean) {
+  static generateImages(annotations: Iterable<Record<string, any>>, xref: XRefImpl, isOffscreenCanvasSupported: boolean) {
     if (!isOffscreenCanvasSupported) {
       warn(
         "generateImages: OffscreenCanvas is not supported, cannot save or print some annotations with images."
@@ -1937,7 +1938,7 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
   }
 
   _setDefaultAppearance(
-    xref: XRef,
+    xref: XRefImpl,
     extra: string | null,
     strokeColor: number[] | null,
     fillColor: number[] | null,
@@ -2882,7 +2883,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
   /**
    * @private
    */
-  _getSaveFieldResources(xref: XRef) {
+  _getSaveFieldResources(xref: XRefImpl) {
     if (PlatformHelper.isTesting()) {
       assert(
         !!this.data.defaultAppearanceData,
@@ -4342,7 +4343,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     return this._hasAppearance;
   }
 
-  static createNewDict(annotation: FreeTextEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
+  static createNewDict(annotation: FreeTextEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
     const { color, fontSize, oldAnnotation, rect, rotation, user, value } = annotation;
     const freetext = oldAnnotation || new Dict(xref);
     freetext.set(DictKey.Type, Name.get("Annot"));
@@ -4383,7 +4384,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
 
   static async createNewAppearanceStream(
     annotation: FreeTextEditorSerial,
-    xref: XRef,
+    xref: XRefImpl,
     evaluator: PartialEvaluator,
     task: WorkerTask,
     baseFontRef: Ref | null,
@@ -4903,7 +4904,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     }
   }
 
-  static createNewDict(annotation: InkEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
+  static createNewDict(annotation: InkEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
     const { color, opacity, paths, outlines, rect, rotation, thickness } = annotation;
     const ink = new Dict(xref);
     ink.set(DictKey.Type, Name.get("Annot"));
@@ -4948,7 +4949,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     return ink;
   }
 
-  static async createNewAppearanceStream(annotation: InkEditorSerial, xref: XRef) {
+  static async createNewAppearanceStream(annotation: InkEditorSerial, xref: XRefImpl) {
     if (annotation.outlines) {
       return this.createNewAppearanceStreamForHighlight(
         annotation, xref
@@ -5006,7 +5007,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     return ap;
   }
 
-  static async createNewAppearanceStreamForHighlight(annotation: InkEditorSerial, xref: XRef) {
+  static async createNewAppearanceStreamForHighlight(annotation: InkEditorSerial, xref: XRefImpl) {
     const { color, rect, opacity } = annotation;
     const outline = annotation.outlines!.outline!;
     const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs",];
@@ -5116,7 +5117,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     }
   }
 
-  static createNewDict(annotation: HighlightEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
+  static createNewDict(annotation: HighlightEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
 
     const { color, oldAnnotation, opacity, rect, rotation, user, quadPoints } = annotation;
     const highlight = oldAnnotation || new Dict(xref);
@@ -5150,7 +5151,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     return highlight;
   }
 
-  static async createNewAppearanceStream(annotation: HighlightEditorSerial, xref: XRef) {
+  static async createNewAppearanceStream(annotation: HighlightEditorSerial, xref: XRefImpl) {
 
     const { color, rect, outlines, opacity } = annotation;
     const appearanceBuffer = [`${getPdfColor(color!, true)}`, "/R0 gs"];
@@ -5364,7 +5365,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
     return !modifiedIds?.has(this.data.id);
   }
 
-  static async createImage(bitmap: HTMLImageElement, xref: XRef): Promise<CreateStampImageResult> {
+  static async createImage(bitmap: HTMLImageElement, xref: XRefImpl): Promise<CreateStampImageResult> {
     // TODO: when printing, we could have a specific internal colorspace
     // (e.g. something like DeviceRGBA) in order avoid any conversion (i.e. no
     // jpeg, no rgba to rgb conversion, etc...)
@@ -5437,7 +5438,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
     };
   }
 
-  static createNewDict(annotation: StampEditorSerial, xref: XRef, apRef: Ref | null, ap: StringStream | null) {
+  static createNewDict(annotation: StampEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
 
     const { oldAnnotation, rect, rotation, user } = annotation;
     const stamp = oldAnnotation || new Dict(xref);
@@ -5469,7 +5470,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
     return stamp;
   }
 
-  static async createNewAppearanceStream(annotation: StampEditorSerial, xref: XRef, image: CreateStampImageResult) {
+  static async createNewAppearanceStream(annotation: StampEditorSerial, xref: XRefImpl, image: CreateStampImageResult) {
     if (annotation.oldAnnotation) {
       // We'll use the AP we already have.
       return null;

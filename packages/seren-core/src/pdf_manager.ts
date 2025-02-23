@@ -27,7 +27,7 @@ import { MissingDataException } from "./core_utils";
 import { Page, PDFDocument } from "./document";
 import { Stream } from "./stream";
 import { PDFWorkerStream } from "./worker_stream";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 function parseDocBaseUrl(url: string | null) {
   if (url) {
@@ -72,7 +72,7 @@ interface PDFManager {
 
   ensureDoc<T>(fn: (doc: PDFDocument) => T | Promise<T>): Promise<T>;
 
-  ensureXRef<T>(fn: (xref: XRef) => T): Promise<T>;
+  ensureXRef<T>(fn: (xref: XRefImpl) => T): Promise<T>;
 
   ensureCatalog<T>(fn: (catalog: Catalog) => T | Promise<T>): Promise<T>;
 
@@ -151,7 +151,7 @@ abstract class BasePDFManager implements PDFManager {
     return this.ensure(this.getPDFDocument(), fn);
   }
 
-  ensureXRef<T>(fn: (xref: XRef) => T) {
+  ensureXRef<T>(fn: (xref: XRefImpl) => T) {
     return this.ensure(this.getPDFDocument().xref, fn);
   }
 

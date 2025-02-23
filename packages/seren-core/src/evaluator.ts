@@ -55,11 +55,12 @@ import {
 } from "./image_utils";
 import { OperatorList, OperatorListIR } from "./operator_list";
 import { Lexer, Parser } from "./parser";
-import { Cmd, Dict, DictKey, EOF, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
+import { Cmd, DictKey, EOF, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { FontProgramPrivateData } from "./type1_parser";
 import { WorkerTask } from "./worker";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 export interface SeacMapValue {
   baseFontCharCode: number;
@@ -306,7 +307,7 @@ export class EvaluatorOperatorFactory {
  */
 export class EvaluatorContext {
 
-  readonly xref: XRef;
+  readonly xref: XRefImpl;
 
   readonly handler: MessageHandler;
 
@@ -347,7 +348,7 @@ export class EvaluatorContext {
   readonly operatorFactory = new EvaluatorOperatorFactory(this);
 
   constructor(
-    xref: XRef,
+    xref: XRefImpl,
     handler: MessageHandler,
     pageIndex: number,
     idFactory: GlobalIdFactory,
@@ -408,7 +409,7 @@ export class PartialEvaluator {
   protected readonly context: EvaluatorContext;
 
   constructor(
-    xref: XRef,
+    xref: XRefImpl,
     handler: MessageHandler,
     pageIndex: number,
     idFactory: GlobalIdFactory,
@@ -1152,7 +1153,7 @@ export class EvaluatorPreprocessor {
 
   protected _numInvalidPathOPS = 0;
 
-  constructor(stream: BaseStream, xref: XRef | null = null, stateManager = new StateManager()) {
+  constructor(stream: BaseStream, xref: XRefImpl | null = null, stateManager = new StateManager()) {
     // TODO(mduan): pass array of knownCommands rather than this.opMap
     // dictionary
     this.parser = new Parser(new Lexer(stream, EvaluatorPreprocessor.opMap), xref);

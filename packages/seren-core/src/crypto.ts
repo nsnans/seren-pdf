@@ -28,7 +28,8 @@ import {
 } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { DecryptStream } from "./decrypt_stream";
-import { Dict, DictKey, isName, Name } from "../../seren-common/src/primitives";
+import { DictKey, isName, Name } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 
 class ARCFourCipher implements StreamClipher, StringClipher {
 

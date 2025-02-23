@@ -13,16 +13,6 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { PlatformHelper } from "../platform/platform_helper";
-import {
-  assert,
-  bytesToString,
-  FormatError,
-  info,
-  InvalidPDFException,
-  warn,
-} from "../shared/util";
 import { BaseStream } from "./base_stream";
 import {
   MissingDataException,
@@ -33,8 +23,9 @@ import {
 import { CipherTransformFactory } from "./crypto";
 import { Lexer, ParsedType, Parser } from "./parser";
 import { PDFManager } from "./pdf_manager";
-import { CIRCULAR_REF, Cmd, Dict, DictKey, isCmd, Ref, RefSet } from "../../seren-common/src/primitives";
+import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn , XRef} from "seren-common";
 import { Stream } from "./stream";
+import { DictImpl } from "./dict";
 
 
 interface StreamState {
@@ -64,7 +55,7 @@ interface ParsedEntry {
   uncompressed: boolean;
 }
 
-export class XRef {
+export class XRefImpl implements XRef {
 
   protected _firstXRefStmPos: number | null = null;
 
@@ -188,7 +179,7 @@ export class XRef {
       }
       warn(`XRef.parse - Invalid "Encrypt" reference: "${ex}".`);
     }
-    if (encrypt instanceof Dict) {
+    if (encrypt instanceof DictImpl) {
       const ids = trailerDict.getValue(DictKey.ID);
       const fileId = ids?.length ? ids[0] : "";
       // The 'Encrypt' dictionary itself should not be encrypted, and by
@@ -213,7 +204,7 @@ export class XRef {
       }
       warn(`XRef.parse - Invalid "Root" reference: "${ex}".`);
     }
-    if (root instanceof Dict) {
+    if (root instanceof DictImpl) {
       try {
         const pages = root.getValue(DictKey.Pages);
         if (pages instanceof Dict) {

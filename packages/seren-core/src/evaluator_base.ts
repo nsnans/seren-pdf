@@ -8,7 +8,8 @@ import { lookupMatrix, lookupNormalRect } from "./core_utils";
 import { EvaluatorContext, State } from "./evaluator";
 import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Name, Dict, DictKey, Ref, isName } from "../../seren-common/src/primitives";
+import { Name, DictKey, Ref, isName } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
 
 export const SKIP = 1;

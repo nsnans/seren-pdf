@@ -16,7 +16,8 @@
 import { BaseStream } from "./base_stream";
 import { CCITTFaxDecoder } from "./ccitt";
 import { DecodeStream } from "./decode_stream";
-import { Dict, DictKey } from "../../seren-common/src/primitives";
+import { DictKey } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 
 export class CCITTFaxStream extends DecodeStream {
 

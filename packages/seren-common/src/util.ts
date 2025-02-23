@@ -14,10 +14,9 @@
  */
 /* globals process */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { PointType, RectType, TransformType } from "../display/display_utils";
-import { PlatformHelper } from "../../packages/seren-common/src/platform_helper";
-import { TypedArray } from "../../packages/seren-common/src/types";
+import { PlatformHelper } from "./platform_helper";
+import { Uint8TypedArray } from "./typed_array";
+import { PointType, RectType, TransformType, TypedArray } from "./types";
 
 const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];
 const FONT_IDENTITY_MATRIX: TransformType = [0.001, 0, 0, 0.001, 0, 0];

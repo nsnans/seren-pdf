@@ -45,7 +45,6 @@ import { MetadataParser, PDFMetadataInfo } from "./metadata_parser";
 import { NameTree, NumberTree } from "./name_number_tree";
 import { PDFManager } from "./pdf_manager";
 import {
-  Dict,
   DictKey,
   isDict,
   isName,
@@ -55,8 +54,9 @@ import {
   RefSet,
   RefSetCache,
 } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { StructTreeRoot } from "./struct_tree";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 
 export enum ViewerPreferenceKeys {
@@ -255,7 +255,7 @@ export class Catalog {
 
   protected pdfManager: PDFManager;
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   public fontCache = new RefSetCache<string, Promise<TranslatedFont>>();
 
@@ -281,7 +281,7 @@ export class Catalog {
 
   protected _actualNumPages: number | null;
 
-  constructor(pdfManager: PDFManager, xref: XRef) {
+  constructor(pdfManager: PDFManager, xref: XRefImpl) {
     this.pdfManager = pdfManager;
     this.xref = xref;
 

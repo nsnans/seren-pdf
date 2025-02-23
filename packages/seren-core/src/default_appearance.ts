@@ -20,7 +20,8 @@ import {
   numberToString,
   stringToUTF16HexString,
 } from "./core_utils";
-import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
@@ -33,7 +34,7 @@ import { EvaluatorPreprocessor } from "./evaluator";
 import { LocalColorSpaceCache } from "./image_utils";
 import { PDFFunctionFactory } from "./function";
 import { Stream, StringStream } from "./stream";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { PointType, RectType } from "../display/display_utils";
 import { MutableArray } from "../types";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
@@ -102,7 +103,7 @@ function parseDefaultAppearance(str: string) {
 
 class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   protected stream: Stream;
 
@@ -110,7 +111,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
   protected evaluatorOptions: DocumentEvaluatorOptions;
 
-  constructor(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRef) {
+  constructor(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRefImpl) {
     super(stream);
     this.stream = stream;
     this.evaluatorOptions = evaluatorOptions;
@@ -222,7 +223,7 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
 // Parse appearance stream to extract font and color information.
 // It returns the font properties used to render the first text object.
-function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRef) {
+function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRefImpl) {
   return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 
@@ -252,7 +253,7 @@ class FakeUnicodeFont {
 
   protected lastChar: number;
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   protected ctxMeasure: OffscreenCanvasRenderingContext2D;
 
@@ -262,7 +263,7 @@ class FakeUnicodeFont {
 
   protected fontFamily: string;
 
-  constructor(xref: XRef, fontFamily: string) {
+  constructor(xref: XRefImpl, fontFamily: string) {
     this.xref = xref;
     this.widths = null;
     this.firstChar = Infinity;

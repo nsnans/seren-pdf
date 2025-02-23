@@ -37,8 +37,9 @@ import {
 import { ParserConstructFunction, PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { OperatorListIR } from "./operator_list";
-import { Dict, DictKey } from "../../seren-common/src/primitives";
-import { XRef } from "./xref";
+import { DictKey } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
+import { XRefImpl } from "./xref";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -57,7 +58,7 @@ class Pattern {
 
   static parseShading(
     shading: BaseStream | Dict,
-    xref: XRef,
+    xref: XRefImpl,
     res: Dict,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache
@@ -140,7 +141,7 @@ class RadialAxialShading extends BaseShading {
 
   protected colorStops: [number, string][];
 
-  constructor(dict: Dict, xref: XRef, resources: Dict, pdfFunctionFactory: PDFFunctionFactory
+  constructor(dict: Dict, xref: XRefImpl, resources: Dict, pdfFunctionFactory: PDFFunctionFactory
     , localColorSpaceCache: LocalColorSpaceCache) {
     super();
     this.shadingType = dict.getValue(DictKey.ShadingType);
@@ -535,7 +536,7 @@ class MeshShading extends BaseShading {
 
   constructor(
     stream: BaseStream,
-    xref: XRef,
+    xref: XRefImpl,
     resources: Dict,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache

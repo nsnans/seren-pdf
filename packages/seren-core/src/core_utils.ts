@@ -23,10 +23,11 @@ import {
   Util,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "../../seren-common/src/primitives";
+import { DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { BaseStream } from "./base_stream";
 import { PlatformHelper } from "../platform/platform_helper";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { RectType, TransformType } from "../display/display_utils";
 import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
@@ -350,7 +351,7 @@ function escapeString(str: string) {
   });
 }
 
-function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: string[], parents: RefSet) {
+function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRefImpl, list: string[], parents: RefSet) {
   if (!entry) {
     return;
   }
@@ -391,7 +392,7 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRef, list: 
   }
 }
 
-function collectActions(xref: XRef, dict: Dict, eventType: Record<string, string>) {
+function collectActions(xref: XRefImpl, dict: Dict, eventType: Record<string, string>) {
   const actions = new Map<string, string[]>();
   const additionalActionsDicts = getArrayInheritableProperty(
     dict, DictKey.AA, false,

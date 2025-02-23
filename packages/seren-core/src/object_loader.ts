@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-import { Dict, DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
+import { DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { warn } from "../shared/util";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { ChunkedStream } from "./chunked_stream";
 
 function mayHaveChildren(value: unknown) {
@@ -61,11 +62,11 @@ class ObjectLoader {
 
   protected keys: string[]
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   protected refSet: RefSet | null;
 
-  constructor(dict: Dict, keys: string[], xref: XRef) {
+  constructor(dict: Dict, keys: string[], xref: XRefImpl) {
     this.dict = dict;
     this.keys = keys;
     this.xref = xref;

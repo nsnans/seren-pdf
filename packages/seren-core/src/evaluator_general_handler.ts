@@ -12,7 +12,8 @@ import { Font, Glyph } from "./fonts";
 import { isPDFFunction } from "./function";
 import { LocalColorSpaceCache, LocalGStateCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Dict, DictKey, isName, Name, Ref, RefSet } from "../../seren-common/src/primitives";
+import { DictKey, isName, Name, Ref, RefSet } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
 
 /**

@@ -23,9 +23,10 @@ import {
   numberToString
 } from "./core_utils";
 import { calculateMD5, CipherTransform, CipherTransformFactory } from "./crypto";
-import { Dict, DictKey, isName, Name, Ref } from "../../seren-common/src/primitives";
+import { DictKey, isName, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { Stream } from "./stream";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 export async function writeObject(
   ref: Ref, obj: unknown, buffer: string[], encrypt: CipherTransformFactory | null = null
@@ -189,7 +190,7 @@ function computeMD5(filesize: number, xrefInfo: IncrementalXRefInfo) {
 }
 
 async function updateAcroform(
-  xref: XRef | null,
+  xref: XRefImpl | null,
   acroForm: Dict,
   acroFormRef: Ref | null,
   needAppearances: boolean,
@@ -350,7 +351,7 @@ export async function incrementalUpdate(
   originalData: Uint8TypedArray,
   xrefInfo: IncrementalXRefInfo,
   newRefs: { ref: Ref, data: string }[],
-  xref: XRef | null,
+  xref: XRefImpl | null,
   needAppearances: boolean,
   acroFormRef: Ref | null = null,
   acroForm: Dict | null = null,

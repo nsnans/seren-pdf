@@ -39,10 +39,11 @@ import { JpegStream } from "./jpeg_stream";
 import { JpxStream } from "./jpx_stream";
 import { LZWStream } from "./lzw_stream";
 import { PredictorStream } from "./predictor_stream";
-import { Cmd, Dict, DictKey, EOF, isCmd, Name, Ref } from "../../seren-common/src/primitives";
+import { Cmd, DictKey, EOF, isCmd, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { RunLengthStream } from "./run_length_stream";
 import { NullStream, Stream } from "./stream";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -71,7 +72,7 @@ class Parser {
 
   public lexer: Lexer;
 
-  protected xref: XRef | null;
+  protected xref: XRefImpl | null;
 
   protected allowStreams;
 
@@ -85,7 +86,7 @@ class Parser {
 
   public buf2: ParsedType = null;
 
-  constructor(lexer: Lexer, xref: XRef | null = null, allowStreams = false, recoveryMode = false) {
+  constructor(lexer: Lexer, xref: XRefImpl | null = null, allowStreams = false, recoveryMode = false) {
     this.lexer = lexer;
     this.xref = xref;
     this.allowStreams = allowStreams;

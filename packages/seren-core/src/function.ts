@@ -24,9 +24,10 @@ import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
-import { Dict, DictKey, Ref } from "../../seren-common/src/primitives";
+import { DictKey, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { PostScriptLexer, PostScriptParser } from "./ps_parser";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 export type ParserConstructFunction = (src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) => void;
 
@@ -34,9 +35,9 @@ class PDFFunctionFactory {
 
   protected isEvalSupported: boolean;
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
-  constructor(xref: XRef, isEvalSupported = true) {
+  constructor(xref: XRefImpl, isEvalSupported = true) {
     this.xref = xref;
     this.isEvalSupported = isEvalSupported !== false;
   }
@@ -165,7 +166,7 @@ class PDFFunction {
     return array;
   }
 
-  static parse(xref: XRef, isEvalSupported: boolean, fn: BaseStream | Dict): ParserConstructFunction {
+  static parse(xref: XRefImpl, isEvalSupported: boolean, fn: BaseStream | Dict): ParserConstructFunction {
     const dict: Dict = (<BaseStream>fn).dict || <Dict>fn;
     const typeNum = dict.getValue(DictKey.FunctionType);
 
@@ -184,7 +185,7 @@ class PDFFunction {
     throw new FormatError("Unknown type of function");
   }
 
-  static parseArray(xref: XRef, isEvalSupported: boolean, fnObj: (BaseStream | Dict | (BaseStream | Dict)[])) {
+  static parseArray(xref: XRefImpl, isEvalSupported: boolean, fnObj: (BaseStream | Dict | (BaseStream | Dict)[])) {
     if (!Array.isArray(fnObj)) {
       // not an array -- parsing as regular function
       return this.parse(xref, isEvalSupported, fnObj);
@@ -207,7 +208,7 @@ class PDFFunction {
   }
 
   static constructSampled(
-    _xref: XRef, _isEvalSupported: boolean, fn: BaseStream, dict: Dict
+    _xref: XRefImpl, _isEvalSupported: boolean, fn: BaseStream, dict: Dict
   ): ParserConstructFunction {
     function toMultiArray(arr: number[]) {
       const inputLength = arr.length;
@@ -340,7 +341,7 @@ class PDFFunction {
     };
   }
 
-  static constructInterpolated(_xref: XRef, _isEvalSupported: boolean, dict: Dict): ParserConstructFunction {
+  static constructInterpolated(_xref: XRefImpl, _isEvalSupported: boolean, dict: Dict): ParserConstructFunction {
     const c0 = toNumberArray(dict.getArrayValue(DictKey.C0)) || [0];
     const c1 = toNumberArray(dict.getArrayValue(DictKey.C1)) || [1];
     const n = <number>dict.getValue(DictKey.N);
@@ -360,7 +361,7 @@ class PDFFunction {
     };
   }
 
-  static constructStiched(xref: XRef, isEvalSupported: boolean, dict: Dict) {
+  static constructStiched(xref: XRefImpl, isEvalSupported: boolean, dict: Dict) {
     const domain = toNumberArray(dict.getArray(DictKey.Domain));
 
     if (!domain) {
@@ -430,7 +431,7 @@ class PDFFunction {
     };
   }
 
-  static constructPostScript(_xref: XRef, isEvalSupported: boolean, fn: BaseStream, dict: Dict): ParserConstructFunction {
+  static constructPostScript(_xref: XRefImpl, isEvalSupported: boolean, fn: BaseStream, dict: Dict): ParserConstructFunction {
 
     const domain = toNumberArray(dict.getArray(DictKey.Domain));
     const range = toNumberArray(dict.getArray(DictKey.Range));

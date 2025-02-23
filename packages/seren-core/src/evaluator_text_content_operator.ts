@@ -14,9 +14,10 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "./fonts";
 import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
-import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -39,7 +40,7 @@ interface ProcessContext extends ProcessOperation {
   options: DocumentEvaluatorOptions;
   markedContentData: { level: 0; } | null;
   lang: string | null;
-  xref: XRef;
+  xref: XRefImpl;
   xobjs: Dict | null;
   sink: StreamSink<EvaluatorTextContent>;
   viewBox: number[];

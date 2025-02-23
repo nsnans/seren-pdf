@@ -22,12 +22,13 @@ import {
   unreachable,
   warn,
 } from "../shared/util";
-import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
 import { MutableArray, TypedArray } from "../types";
 import { PlatformHelper } from "../platform/platform_helper";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { RectType } from "../display/display_utils";
@@ -301,7 +302,7 @@ class ColorSpace {
   /**
    * @private
    */
-  static _cache(cacheKey: Ref | Name | unknown, xref: XRef, localColorSpaceCache: LocalColorSpaceCache, parsedColorSpace: ColorSpace) {
+  static _cache(cacheKey: Ref | Name | unknown, xref: XRefImpl, localColorSpaceCache: LocalColorSpaceCache, parsedColorSpace: ColorSpace) {
     if (!localColorSpaceCache) {
       throw new Error(
         'ColorSpace._cache - expected "localColorSpaceCache" argument.'
@@ -328,7 +329,7 @@ class ColorSpace {
     }
   }
 
-  static getCached(cacheKey: Ref | Name | unknown, xref: XRef, localColorSpaceCache: LocalColorSpaceCache) {
+  static getCached(cacheKey: Ref | Name | unknown, xref: XRefImpl, localColorSpaceCache: LocalColorSpaceCache) {
     if (!localColorSpaceCache) {
       throw new Error(
         'ColorSpace.getCached - expected "localColorSpaceCache" argument.'
@@ -360,7 +361,7 @@ class ColorSpace {
 
   static async parseAsync(
     cs: Name | Ref | (Ref | Name)[],
-    xref: XRef,
+    xref: XRefImpl,
     resources: Dict | null,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache
@@ -386,7 +387,7 @@ class ColorSpace {
 
   static parse(
     cs: Name | (Ref | Name)[],
-    xref: XRef,
+    xref: XRefImpl,
     resources: Dict | null,
     pdfFunctionFactory: PDFFunctionFactory,
     localColorSpaceCache: LocalColorSpaceCache,
@@ -411,7 +412,7 @@ class ColorSpace {
   /**
    * @private
    */
-  static _parse(cs: Name | Ref | (Ref | Name)[], xref: XRef, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
+  static _parse(cs: Name | Ref | (Ref | Name)[], xref: XRefImpl, resources: Dict | null = null, pdfFunctionFactory: PDFFunctionFactory): ColorSpace {
     cs = <Name | Ref[]>xref.fetchIfRef(cs);
     if (cs instanceof Name) {
       switch (cs.name) {

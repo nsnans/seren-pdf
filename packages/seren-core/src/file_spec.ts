@@ -15,8 +15,9 @@
 
 import { shadow, stringToPDFString, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
-import { Dict, DictKey, Ref } from "../../seren-common/src/primitives";
-import { XRef } from "./xref";
+import { DictKey, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
+import { XRefImpl } from "./xref";
 
 function pickPlatformItem(dict?: Dict) {
   if (!(dict instanceof Dict)) {
@@ -66,13 +67,13 @@ export class FileSpec {
 
   protected root?: Dict;
 
-  protected xref: XRef | null = null;
+  protected xref: XRefImpl | null = null;
 
   protected fs;
 
   protected _contentRef: Ref | null = null;
 
-  constructor(root: Dict, xref: XRef | null, skipContent = false) {
+  constructor(root: Dict, xref: XRefImpl | null, skipContent = false) {
     if (!(root instanceof Dict)) {
       return;
     }

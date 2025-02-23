@@ -69,7 +69,6 @@ import { OperatorList, OpertaorListChunk } from "./operator_list";
 import { Linearization, LinearizationInterface } from "./parser";
 import { PDFManager } from "./pdf_manager";
 import {
-  Dict,
   DictKey,
   isName,
   isRefsEqual,
@@ -78,11 +77,12 @@ import {
   RefSet,
   RefSetCache,
 } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { NullStream, Stream } from "./stream";
 import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_tree";
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX: RectType = [0, 0, 612, 792];
@@ -107,7 +107,7 @@ export class Page {
 
   protected globalImageCache: GlobalImageCache;
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   protected systemFontCache: Map<string, FontSubstitutionInfo | null>;
 
@@ -121,7 +121,7 @@ export class Page {
 
   constructor(
     pdfManager: PDFManager,
-    xref: XRef,
+    xref: XRefImpl,
     pageIndex: number,
     pageDict: Dict,
     ref: Ref | null,
@@ -877,7 +877,7 @@ export class PDFDocument {
 
   protected stream: Stream;
 
-  public xref: XRef;
+  public xref: XRefImpl;
 
   protected _pagePromises: Map<number, Promise<Page>>;
 
@@ -895,7 +895,7 @@ export class PDFDocument {
 
     this.pdfManager = pdfManager;
     this.stream = stream;
-    this.xref = new XRef(stream, pdfManager);
+    this.xref = new XRefImpl(stream, pdfManager);
     this._pagePromises = new Map();
     this._version = null;
 

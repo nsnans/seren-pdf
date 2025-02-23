@@ -19,9 +19,10 @@ import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "./pdf_manager";
-import { Dict, DictKey, isName, Name, Ref, RefSetCache } from "../../seren-common/src/primitives";
+import { DictKey, isName, Name, Ref, RefSetCache } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { writeObject } from "./writer";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 const MAX_DEPTH = 40;
 
@@ -127,7 +128,7 @@ export class StructTreeRoot {
 
   static async createStructureTree(
     newAnnotationsByPage: Map<number, Record<string, any>[]>,
-    xref: XRef,
+    xref: XRefImpl,
     catalogRef: Ref,
     pdfManager: PDFManager,
     newRefs: { ref: Ref; data: string | null; }[],
@@ -175,7 +176,7 @@ export class StructTreeRoot {
   }
 
   async canUpdateStructTree(
-    pdfManager: PDFManager, xref: XRef, newAnnotationsByPage: Map<number, AnnotationEditorSerial[]>
+    pdfManager: PDFManager, xref: XRefImpl, newAnnotationsByPage: Map<number, AnnotationEditorSerial[]>
   ) {
     if (!this.ref) {
       warn("Cannot update the struct tree: no root reference.");
@@ -312,7 +313,7 @@ export class StructTreeRoot {
     structTreeRoot: StructTreeRoot | null,
     kids: Ref[] | null,
     nums: (Ref | number)[],
-    xref: XRef,
+    xref: XRefImpl,
     pdfManager: PDFManager,
     newRefs: { ref: Ref, data: string | null }[],
     cache: RefSetCache<Ref, Dict | (number | Ref)[]>,
@@ -428,7 +429,7 @@ export class StructTreeRoot {
   }
 
   static #collectParents(
-    elements: Record<string, any>[], xref: XRef,
+    elements: Record<string, any>[], xref: XRefImpl,
     pageDict: Dict, numberTree: NumberTree
   ) {
     const idToElements = new Map();
@@ -506,7 +507,7 @@ export class StructTreeRoot {
     newTagRef: Ref,
     structTreeRootRef: Ref,
     fallbackKids: Ref[],
-    xref: XRef,
+    xref: XRefImpl,
     cache: RefSetCache<Ref, Dict | (Ref | number)[]>,
   ) {
     let ref = null;

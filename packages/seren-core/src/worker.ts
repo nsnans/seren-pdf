@@ -42,7 +42,8 @@ import {
   XRefParseException,
 } from "./core_utils";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
-import { Dict, DictKey, isDict, Ref } from "../../seren-common/src/primitives";
+import { DictKey, isDict, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFWorkerStream } from "./worker_stream";
 import { incrementalUpdate } from "./writer";

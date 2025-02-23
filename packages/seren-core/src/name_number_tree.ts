@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-import { Dict, DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
+import { DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { FormatError, unreachable, warn } from "../shared/util";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 import { PlatformHelper } from "../platform/platform_helper";
 
 /**
@@ -27,11 +28,11 @@ class NameOrNumberTree<T extends number | string> {
 
   protected root: Ref | string;
 
-  protected xref: XRef;
+  protected xref: XRefImpl;
 
   protected _type: string;
 
-  constructor(root: Ref | string, xref: XRef, type: string) {
+  constructor(root: Ref | string, xref: XRefImpl, type: string) {
     if (PlatformHelper.isTesting() &&
       this.constructor === NameOrNumberTree
     ) {
@@ -156,13 +157,13 @@ class NameOrNumberTree<T extends number | string> {
 }
 
 export class NameTree extends NameOrNumberTree<string> {
-  constructor(root: Ref | string, xref: XRef) {
+  constructor(root: Ref | string, xref: XRefImpl) {
     super(root, xref, "Names");
   }
 }
 
 export class NumberTree extends NameOrNumberTree<number> {
-  constructor(root: Ref | string, xref: XRef) {
+  constructor(root: Ref | string, xref: XRefImpl) {
     super(root, xref, "Nums");
   }
 }

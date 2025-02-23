@@ -12,9 +12,10 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { Dict, DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
-import { XRef } from "./xref";
+import { XRefImpl } from "./xref";
 
 const MethodMap = new Map<OPS, keyof GeneralOperator>();
 
@@ -36,7 +37,7 @@ export interface ProcessContext extends ProcessOperation {
   task: WorkerTask;
   patterns: Dict;
   options: DocumentEvaluatorOptions;
-  xref: XRef;
+  xref: XRefImpl;
   pageIndex: number;
   xobjs: Dict;
   resources: Dict;
