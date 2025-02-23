@@ -14,7 +14,7 @@
  */
 
 import { BaseStream } from "../../seren-core/src/base_stream";
-import { StringStream } from "../../seren-core/src/stream";
+import { StringStream } from "../../seren-core/src/stream/stream";
 import { PlatformHelper } from "./platform_helper";
 import { DestinationType, PointType, RectType, TypedArray } from "./types";
 import { assert, unreachable } from "./util";

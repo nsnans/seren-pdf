@@ -20,6 +20,9 @@ importers:
 
   packages/seren-viewer:
     dependencies:
+      '@fluent/dom':
+        specifier: ^0.10.0
+        version: 0.10.0
       seren-common:
         specifier: workspace:^
         version: link:../seren-common
