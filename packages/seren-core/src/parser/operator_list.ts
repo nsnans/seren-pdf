@@ -14,8 +14,9 @@
  */
 
 import { ImageKind, OPS, RenderingIntentFlag, warn, MutableArray } from "seren-common";
-import { StreamSink } from "../common/core_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import { OptionalContent } from "../image/image_utils";
+import { OperatorListIR, OpertaorListChunk } from "packages/seren-common/src/types/operator_types";
 
 function addState(parentState: InitialStateFuncTree, pattern: OPS[],
   checkFn: ((context: QueueOptimizerContext) => boolean) | null,
@@ -616,34 +617,6 @@ class QueueOptimizer extends NullOptimizer {
     this.match = null;
     this.lastProcessed = 0;
   }
-}
-
-export interface OperatorListIR {
-
-  fnArray: OPS[];
-
-  argsArray: (any[] | null)[];
-
-  length: number;
-
-  lastChunk: boolean;
-
-  separateAnnots: {
-    form: boolean;
-    canvas: boolean;
-  } | null;
-
-}
-
-export interface OpertaorListChunk {
-  fnArray: OPS[];
-  argsArray: (any[] | null)[];
-  lastChunk: boolean;
-  separateAnnots: {
-    form: boolean;
-    canvas: boolean;
-  } | null;
-  length: number;
 }
 
 export class OperatorList {

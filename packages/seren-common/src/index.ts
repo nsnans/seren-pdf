@@ -5,7 +5,7 @@ export * from './document/dict'
 export * from './document/primitives'
 export * from './document/xref'
 export * from './image/image_types'
-export * from './stream/stream_types'
+export * from './types/stream_types'
 export * from './utils/image_utils'
 export * from './utils/platform_helper';
 export * from './utils/util'

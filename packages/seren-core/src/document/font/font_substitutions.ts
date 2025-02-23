@@ -14,21 +14,10 @@
  */
 
 import { warn } from "seren-common";
-import { validateFontName } from "../../utils/core_utils";
+import { validateFontName } from "../../../../seren-common/src/utils/core_utils";
 import { normalizeFontName } from "./fonts_utils";
 import { GlobalIdFactory } from "../../common/global_id_factory";
-
-export interface FontSubstitutionInfo {
-  css: string;
-  guessFallback: boolean;
-  loadedName: string;
-  baseFontName: string;
-  src: string;
-  style: {
-    style: string;
-    weight: string;
-  } | null;
-}
+import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 
 const NORMAL = {
   style: "normal",

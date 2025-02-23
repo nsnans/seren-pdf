@@ -53,7 +53,9 @@ import {
 import { BaseStream } from "../stream/base_stream";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
-import { EvaluatorTextContent, FieldObject, StreamSink } from "../common/core_types";
+import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { FieldObject } from "packages/seren-common/src/types/annotation_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import {
   collectActions,
   getArrayInheritableProperty,
@@ -64,19 +66,21 @@ import {
   PDF_VERSION_REGEXP,
   XRefEntryException,
   XRefParseException
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import { calculateMD5 } from "../crypto/crypto";
 import { StreamsSequenceStream } from "../stream/decode_stream";
 import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "../parser/evaluator/evaluator";
-import { FontSubstitutionInfo } from "./font/font_substitutions";
+import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 import { GlobalIdFactory, LocalIdFactory } from "../common/global_id_factory";
 import { GlobalImageCache } from "../image/image_utils";
 import { ObjectLoader } from "../common/object_loader";
-import { OperatorList, OpertaorListChunk } from "../parser/operator_list";
+import { OperatorList } from "../parser/operator_list";
+import { OpertaorListChunk } from "packages/seren-common/src/types/operator_types";
 import { Linearization, LinearizationInterface } from "../parser/parser";
 import { PDFManager } from "../worker/pdf_manager";
 import { NullStream, Stream } from "../stream/stream";
-import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_tree";
+import { StructTreePage, StructTreeRoot } from "./struct_tree";
+import { PDFDocumentInfo, StructTreeSerialNode } from "packages/seren-common/src/types/document_types";
 import { WorkerTask } from "../worker/worker";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
@@ -845,26 +849,6 @@ function find(stream: Stream, signature: Uint8Array, limit = 1024, backwards = f
     }
   }
   return false;
-}
-
-export class PDFDocumentInfo {
-  PDFFormatVersion: string | null = null;
-  Language: string | null = null;
-  EncryptFilterName: string | null = null;
-  IsLinearized: boolean = false;
-  IsAcroFormPresent: boolean = false;
-  IsCollectionPresent: boolean = false;
-  IsSignaturesPresent: boolean = false;
-  Title: string | null = null;
-  Author: string | null = null;
-  Subject: string | null = null;
-  Keywords: string | null = null;
-  Creator: string | null = null;
-  Producer: string | null = null;
-  CreationDate: string | null = null;
-  ModDate: string | null = null;
-  Trapped: Name | null = null;
-  Custom: Map<string, string | number | boolean | Name> = new Map();
 }
 
 /**

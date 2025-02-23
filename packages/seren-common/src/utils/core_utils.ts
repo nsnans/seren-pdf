@@ -30,9 +30,9 @@ import {
   DictKey, DictValueTypeMapping, isName, Ref, RefSet,
   Dict
 } from "seren-common";
-import { BaseStream } from "../stream/base_stream";
-import { XRefImpl } from "../document/xref";
-import { DictImpl } from "../document/dict_impl";
+import { BaseStream } from "../../../seren-core/src/stream/base_stream";
+import { XRefImpl } from "../../../seren-core/src/document/xref";
+import { DictImpl } from "../../../seren-core/src/document/dict_impl";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 

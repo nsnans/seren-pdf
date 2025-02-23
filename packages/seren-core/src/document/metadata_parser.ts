@@ -14,11 +14,7 @@
  */
 
 import { SimpleDOMNode, SimpleXMLParser } from "../utils/xml_parser";
-
-export interface PDFMetadataInfo {
-  parsedData: Map<string, string | string[]>;
-  rawData: string;
-}
+import { PDFMetadataInfo } from "packages/seren-common/src/types/document_types";
 
 export class MetadataParser {
 

@@ -29,9 +29,9 @@ import { CMapReaderFactory, DOMCMapReaderFactory } from "../../../../src/display
 import { PDFFetchStream } from "../../../../src/display/fetch_stream";
 import { PDFNetworkStream } from "../../../../src/display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../../../../src/display/standard_fontdata_factory";
-import { PDFStreamReader } from "packages/seren-common/src/stream/stream_types";
-import { PDFStream } from "packages/seren-common/src/stream/stream_types";
-import { PDFStreamSource } from "packages/seren-common/src/stream/stream_types";
+import { PDFStreamReader } from "packages/seren-common/src/types/stream_types";
+import { PDFStream } from "packages/seren-common/src/types/stream_types";
+import { PDFStreamSource } from "packages/seren-common/src/types/stream_types";
 import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
@@ -76,7 +76,7 @@ import {
   StatTimer,
   TransformType
 } from "../../../../src/display/display_utils";
-import { DocumentEvaluatorOptions } from "../../../seren-core/src/parser/evaluator/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
 import { FilterFactory } from "../../../../src/display/filter_factory";
 import { FontFaceObject, FontLoader } from "../../../../src/display/font_loader";
 import { Metadata } from "../../../../src/display/metadata";
@@ -1279,88 +1279,6 @@ export class PDFDocumentProxy {
   }
 }
 
-
-/**
- * Page text content part.
- */
-export interface TextItem {
-
-  /** Text content.*/
-  str: string;
-
-  /** Text direction: 'ttb', 'ltr' or 'rtl'.*/
-  dir: string;
-
-  /** Transformation matrix.*/
-  transform: TransformType | null;
-
-  /** Width in device space.*/
-  width: number;
-
-  /** Height in device space.*/
-  height: number;
-
-  /** Font name used by PDF.js for converted font. */
-  fontName: string;
-
-  /** Indicating if the text content is followed by aline-break.*/
-  hasEOL: boolean;
-}
-
-/**
- * Page text marked content part.
- */
-export interface TextMarkedContent {
-
-  /** Either 'beginMarkedContent', 'beginMarkedContentProps', or 'endMarkedContent'. */
-  type: string;
-
-  /** The marked content identifier. Only used for type 'beginMarkedContentProps'. */
-  id: string | null;
-
-  tag: string | null;
-}
-
-
-/**
- * Text style.
- */
-export interface TextStyle {
-
-  /** Font ascent.*/
-  ascent: number;
-
-  /** Font descent.*/
-  descent: number;
-
-  /** Whether or not the text is in vertical mode.*/
-  vertical: boolean;
-
-  /** The possible font family.*/
-  fontFamily: string;
-
-  fontSubstitution: string | null,
-
-  fontSubstitutionLoadedName: string | null,
-}
-
-
-/**
- * Page text content.
- */
-export interface TextContent {
-  /**
-   * Array of {@link TextItem} and {@link TextMarkedContent} objects. 
-   * TextMarkedContent items are included when includeMarkedContent is true.
-   */
-  items: Array<TextItem | TextMarkedContent>;
-
-  /** {@link TextStyle} objects, indexed by font name. */
-  styles: Map<string, TextStyle>;
-
-  /** The document /Lang attribute. */
-  lang: string | null;
-}
 
 /**
  * Structure tree content.

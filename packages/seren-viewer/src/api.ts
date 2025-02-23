@@ -22,16 +22,15 @@ import { EvaluatorTextContent, ImageMask } from "../core/core_types";
 import { PDFDocumentInfo } from "../core/document";
 import { FontExportData, FontExportExtraData } from "../core/fonts";
 import { OpertaorListChunk } from "../core/operator_list";
-import { Ref } from "../core/primitives";
 import { StructTreeSerialNode } from "../core/struct_tree";
 import { WorkerMessageHandler } from "../core/worker";
 import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
 import { PDFFetchStream } from "../display/fetch_stream";
 import { PDFNetworkStream } from "../display/network";
 import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
-import { PDFStreamReader } from "packages/seren-common/src/stream/stream_types";
-import { PDFStream } from "packages/seren-common/src/stream/stream_types";
-import { PDFStreamSource } from "packages/seren-common/src/stream/stream_types";
+import { PDFStreamReader } from "packages/seren-common/src/types/stream_types";
+import { PDFStream } from "packages/seren-common/src/types/stream_types";
+import { PDFStreamSource } from "packages/seren-common/src/types/stream_types";
 import { PlatformHelper } from "../../seren-common/src/utils/platform_helper";
 import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
@@ -71,7 +70,6 @@ import {
   isDataScheme,
   isValidFetchUrl,
   PageViewport,
-  RectType,
   RenderingCancelledException,
   StatTimer,
   TransformType
@@ -84,6 +82,10 @@ import { OptionalContentConfig } from "./optional_content_config";
 import { TextLayer } from "./text_layer";
 import { PDFDataTransportStream } from "./transport_stream";
 import { GlobalWorkerOptions } from "./worker_options";
+import { DocumentParameter } from "packages/seren-common/src/types/document_types";
+import { PageInfo } from "packages/seren-common/src/types/message_handler_types";
+import { OnProgressParameters } from "packages/seren-common/src/types/message_handler_types";
+import { TextContent } from "packages/seren-common/src/types/evaluator_types";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -285,49 +287,6 @@ export interface DocumentInitParameters {
   enableHWA: boolean;
 }
 
-
-export class DocumentParameter {
-
-  readonly docId: string;
-
-  readonly apiVersion: string | null;
-
-  readonly data: Uint8Array<ArrayBuffer> | null;
-
-  readonly password: string | null;
-
-  readonly disableAutoFetch: boolean;
-
-  readonly rangeChunkSize: number;
-
-  readonly length: number;
-
-  readonly docBaseUrl: string | null;
-
-  readonly evaluatorOptions: DocumentEvaluatorOptions;
-
-  constructor(
-    docId: string,
-    apiVersion: string | null,
-    data: Uint8Array<ArrayBuffer> | null,
-    password: string | null,
-    disableAutoFetch: boolean,
-    rangeChunkSize: number,
-    length: number,
-    docBaseUrl: string | null,
-    evaluatorOptions: DocumentEvaluatorOptions
-  ) {
-    this.docId = docId;
-    this.apiVersion = apiVersion;
-    this.data = data;
-    this.password = password;
-    this.disableAutoFetch = disableAutoFetch;
-    this.rangeChunkSize = rangeChunkSize;
-    this.length = length;
-    this.docBaseUrl = docBaseUrl;
-    this.evaluatorOptions = evaluatorOptions;
-  }
-}
 
 class DocParameterEvaluatorOptionsBuilder {
 
@@ -762,11 +721,6 @@ function isRefProxy(ref: RefProxy) {
     Number.isInteger(ref?.gen) &&
     ref.gen >= 0
   );
-}
-
-export interface OnProgressParameters {
-  loaded: number;
-  total?: number;
 }
 
 /**
@@ -1281,88 +1235,6 @@ export class PDFDocumentProxy {
 
 
 /**
- * Page text content part.
- */
-export interface TextItem {
-
-  /** Text content.*/
-  str: string;
-
-  /** Text direction: 'ttb', 'ltr' or 'rtl'.*/
-  dir: string;
-
-  /** Transformation matrix.*/
-  transform: TransformType | null;
-
-  /** Width in device space.*/
-  width: number;
-
-  /** Height in device space.*/
-  height: number;
-
-  /** Font name used by PDF.js for converted font. */
-  fontName: string;
-
-  /** Indicating if the text content is followed by aline-break.*/
-  hasEOL: boolean;
-}
-
-/**
- * Page text marked content part.
- */
-export interface TextMarkedContent {
-
-  /** Either 'beginMarkedContent', 'beginMarkedContentProps', or 'endMarkedContent'. */
-  type: string;
-
-  /** The marked content identifier. Only used for type 'beginMarkedContentProps'. */
-  id: string | null;
-
-  tag: string | null;
-}
-
-
-/**
- * Text style.
- */
-export interface TextStyle {
-
-  /** Font ascent.*/
-  ascent: number;
-
-  /** Font descent.*/
-  descent: number;
-
-  /** Whether or not the text is in vertical mode.*/
-  vertical: boolean;
-
-  /** The possible font family.*/
-  fontFamily: string;
-
-  fontSubstitution: string | null,
-
-  fontSubstitutionLoadedName: string | null,
-}
-
-
-/**
- * Page text content.
- */
-export interface TextContent {
-  /**
-   * Array of {@link TextItem} and {@link TextMarkedContent} objects. 
-   * TextMarkedContent items are included when includeMarkedContent is true.
-   */
-  items: Array<TextItem | TextMarkedContent>;
-
-  /** {@link TextStyle} objects, indexed by font name. */
-  styles: Map<string, TextStyle>;
-
-  /** The document /Lang attribute. */
-  lang: string | null;
-}
-
-/**
  * Structure tree content.
  */
 interface StructTreeContent {
@@ -1396,14 +1268,6 @@ interface PDFOperatorList {
 
   /* Array containing the arguments of the functions. */
   argsArray: Array<any>;
-}
-
-export interface PageInfo {
-  rotate: number;
-  ref: Ref | null;
-  refStr: string | null;
-  userUnit: number;
-  view: RectType;
 }
 
 export interface IntentStateOperatorList {

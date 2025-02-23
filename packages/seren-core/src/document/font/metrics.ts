@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { getLookupTableFactory } from "../../utils/core_utils";
+import { getLookupTableFactory } from "../../../../seren-common/src/utils/core_utils";
 
 // The Metrics object contains glyph widths (in glyph space units).
 // As per PDF spec, for most fonts (Type 3 being an exception) a glyph

@@ -49,6 +49,7 @@ import { PDFPageProxy } from "../api";
 import { PageViewport, PDFDateString, PointType, RectType, setLayerDimensions } from "../../../../src/display/display_utils";
 import { AnnotationEditorUIManager } from "./editor/tools";
 import { BaseSVGFactory, DOMSVGFactory } from "../../../../src/display/svg_factory";
+import { PopupLine } from "packages/seren-common/src/types/annotation_types";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -2080,36 +2081,6 @@ class PopupAnnotationElement extends AnnotationElement<PopupData> {
     return this.container!;
   }
 }
-
-interface PopupLine {
-  name: string;
-  value: string;
-  attributes: {
-    style: {
-      color: any;
-      fontSize: string;
-    };
-  };
-}
-
-export interface PopupContent {
-  str: string;
-  html: {
-    name: string;
-    attributes: {
-      dir: string;
-      style: {
-        fontSize: number,
-        color: string,
-      } | null
-    };
-    children: {
-      name: string;
-      children: PopupLine[];
-    }[];
-  };
-}
-
 
 class PopupElement {
 

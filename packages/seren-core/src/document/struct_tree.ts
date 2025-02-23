@@ -14,13 +14,14 @@
  */
 
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../utils/core_utils";
+import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../../../seren-common/src/utils/core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";
-import { RectType, Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef } from "seren-common";
+import { Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef } from "seren-common";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
+import { StructTreeSerialNode } from "packages/seren-common/src/types/document_types";
 
 const MAX_DEPTH = 40;
 
@@ -690,28 +691,6 @@ class StructElement {
     this.pageObjId = pageObjId;
     this.refObjId = refObjId;
     this.parentNode = null;
-  }
-}
-
-export interface StructTreeSerialLeaf {
-  type: string;
-  id: string;
-}
-
-export class StructTreeSerialNode {
-
-  public role: string;
-
-  public children: (StructTreeSerialNode | StructTreeSerialLeaf)[] = []
-
-  public alt: string | null = null;
-
-  public bbox: RectType | null = null;
-
-  public lang: string | null = null;
-
-  constructor(role: string) {
-    this.role = role;
   }
 }
 

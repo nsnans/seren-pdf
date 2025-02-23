@@ -19,7 +19,7 @@ import {
   getRotationMatrix,
   numberToString,
   stringToUTF16HexString,
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
@@ -35,7 +35,7 @@ import { LocalColorSpaceCache } from "../image/image_utils";
 import { PDFFunctionFactory } from "../document/function";
 import { Stream, StringStream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
-import { DocumentEvaluatorOptions } from "../parser/evaluator/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
 import { DictImpl } from "../document/dict_impl";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {

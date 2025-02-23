@@ -39,7 +39,7 @@ import {
   arrayBuffersToBytes,
   getNewAnnotationsMap,
   XRefParseException,
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
 import { StructTreeRoot } from "../document/struct_tree";
 import { PDFWorkerStream } from "../stream/worker_stream";

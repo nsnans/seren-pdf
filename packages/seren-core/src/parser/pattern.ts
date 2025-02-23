@@ -37,10 +37,10 @@ import {
   lookupMatrix,
   lookupNormalRect,
   MissingDataException,
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";
-import { OperatorListIR } from "./operator_list";
+import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import { XRefImpl } from "../document/xref";
 import { FigureType, RadialAxialShadingIR } from "packages/seren-common/src/types/shading_types";
 

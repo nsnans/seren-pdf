@@ -1,6 +1,26 @@
-import { FontSubstitutionInfo } from "packages/seren-core/src/document/font/font_substitutions";
 import { RectType, TransformType } from "../common/types";
 import { DictKey } from "../document/primitives";
+import { OperatorListIR } from "./operator_types";
+
+export interface CssFontInfo {
+  fontFamily: string;
+  fontWeight: number;
+  italicAngle: number;
+  lineHeight?: number;
+  metrics: { lineHeight: number; lineGap: number; };
+}
+
+export interface FontSubstitutionInfo {
+  css: string;
+  guessFallback: boolean;
+  loadedName: string;
+  baseFontName: string;
+  src: string;
+  style: {
+    style: string;
+    weight: string;
+  } | null;
+}
 
 export interface FontExportData {
   ascent: number;
@@ -29,3 +49,4 @@ export interface FontExportData {
   type: string;
   vertical: boolean | null;
 }
+

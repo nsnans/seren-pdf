@@ -67,12 +67,13 @@ import { getFontBasicMetrics } from "./metrics";
 import { GlyfTable } from "./glyf";
 import { CMap, IdentityCMap } from "../../cmap/cmap";
 import { OpenTypeFileBuilder } from "../../writer/opentype_file_builder";
-import { readUint32 } from "../../utils/core_utils";
+import { readUint32 } from "../../../../seren-common/src/utils/core_utils";
 import { Stream } from "../../stream/stream";
 import { Type1Font } from "../../parser/type1_font";
-import { OperatorListIR } from "../../parser/operator_list";
-import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "../../parser/evaluator/evaluator";
-import { FontSubstitutionInfo } from "./font_substitutions";
+import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
+import { EvaluatorProperties, SeacMapValue } from "../../parser/evaluator/evaluator";
+import { CssFontInfo, FontExportData } from "packages/seren-common/src/types/font_types";
+import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -1012,7 +1013,7 @@ interface TTContext {
   hintsValid: boolean;
 }
 
-export class FontExportData {
+export class FontExportDataImpl implements FontExportData {
   ascent: number;
   bbox: RectType | null;
   black: boolean | null;
@@ -1068,7 +1069,7 @@ export class FontExportData {
   }
 }
 
-export class FontExportExtraData extends FontExportData {
+export class FontExportExtraData extends FontExportDataImpl {
 
   public cMap: CMap;
 
@@ -1381,7 +1382,7 @@ class Font {
   }
 
   exportData(extraProperties = false) {
-    return extraProperties ? new FontExportExtraData(this) : new FontExportData(this);
+    return extraProperties ? new FontExportExtraData(this) : new FontExportDataImpl(this);
   }
 
   fallbackToSystemFont(properties: EvaluatorProperties) {

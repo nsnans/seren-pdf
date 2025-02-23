@@ -19,7 +19,7 @@ import {
   ParserEOFException,
   XRefEntryException,
   XRefParseException,
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import { CipherTransformFactory } from "../crypto/crypto";
 import { Lexer, ParsedType, Parser } from "../parser/parser";
 import { PDFManager } from "../worker/pdf_manager";

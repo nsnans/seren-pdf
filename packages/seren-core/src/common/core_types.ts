@@ -1,42 +1,10 @@
 import { TransformType, assert, Name, Ref, Dict } from "seren-common";
-import { TextItem, TextMarkedContent, TextStyle } from "../display/api";
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
+import { TextItem, TextMarkedContent } from "../display/api";
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
-import { CssFontInfo } from "../parser/evaluator/evaluator";
-
-export interface StreamGetOperatorListParameters {
-  pageIndex: number;
-  intent: number;
-  cacheKey: string;
-  annotationStorage: Map<string, AnnotationEditorSerial> | null;
-  modifiedIds: Set<string>;
-}
-
-export interface StreamSink<Chunk> {
-
-  ready: Promise<void> | null;
-
-  desiredSize: number;
-
-  sinkCapability: PromiseWithResolvers<void> | null;
-
-  isCancelled: boolean;
-
-  /**
-   * 这是一个非常关键的函数，生产者通过这个函数向Stream队列里传递数据
-   * 而ReadableStream.read()会从这里面来进行数据的调用
-   */
-  enqueue(chunk: Chunk, size: number, transfers?: Transferable[]): void;
-
-  close(): void;
-
-  error(reason: any): void;
-
-  onCancel: ((reason: Error) => void) | null;
-
-  onPull: (() => void) | null;
-
-}
+import { CssFontInfo } from "packages/seren-common/src/types/font_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
+import { FieldObject } from "packages/seren-common/src/types/annotation_types";
+import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
 
 export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
 
@@ -174,12 +142,6 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
   }
 }
 
-export interface FieldObject {
-  id: string;
-  page: number | null;
-  type: string;
-}
-
 export interface GeneralFieldObject extends FieldObject {
   actions: Map<string, string[]> | null;
   name: string | null;
@@ -230,8 +192,4 @@ export function isFullTextContentItem(obj: TextMarkedContent | TextItem): obj is
   return record.str != undefined;
 }
 
-export interface EvaluatorTextContent {
-  items: (TextItem | TextMarkedContent)[];
-  styles: Map<string, TextStyle>;
-  lang: string | null;
-}
+

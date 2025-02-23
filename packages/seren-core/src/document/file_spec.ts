@@ -17,6 +17,7 @@ import { shadow, stringToPDFString, warn, Dict, DictKey, Ref } from "seren-commo
 import { BaseStream } from "../stream/base_stream";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
+import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";
 
 function pickPlatformItem(dict?: Dict) {
   if (!(dict instanceof DictImpl)) {
@@ -40,17 +41,6 @@ function pickPlatformItem(dict?: Dict) {
 
 function stripPath(str: string) {
   return str.substring(str.lastIndexOf("/") + 1);
-}
-
-export interface FileSpecSerializable {
-
-  rawFilename?: string;
-
-  filename: string;
-
-  content: Uint8Array<ArrayBuffer> | null;
-
-  description: string;
 }
 
 /**

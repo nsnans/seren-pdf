@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { getLookupTableFactory } from "../../utils/core_utils";
+import { getLookupTableFactory } from "../../../../seren-common/src/utils/core_utils";
 import { normalizeFontName } from "./fonts_utils";
 
 /**

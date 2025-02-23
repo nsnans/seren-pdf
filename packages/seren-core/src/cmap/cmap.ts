@@ -17,7 +17,7 @@ import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn } from "seren-com
 import { BaseStream } from "../stream/base_stream";
 import { BinaryCMapReader } from "./binary_cmap";
 import { Lexer } from "../parser/parser";
-import { MissingDataException } from "../utils/core_utils";
+import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
 import { Stream } from "../stream/stream";
 
 const BUILT_IN_CMAPS = [

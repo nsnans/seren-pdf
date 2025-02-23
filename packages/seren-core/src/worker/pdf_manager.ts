@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DocumentEvaluatorOptions } from "../parser/evaluator/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AbortException,
@@ -23,7 +23,7 @@ import {
 } from "seren-common";
 import { Catalog } from "../document/catalog";
 import { ChunkedStreamManager } from "../stream/chunked_stream";
-import { MissingDataException } from "../utils/core_utils";
+import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
 import { Page, PDFDocument } from "../document/document";
 import { Stream } from "../stream/stream";
 import { PDFWorkerStream } from "../stream/worker_stream";

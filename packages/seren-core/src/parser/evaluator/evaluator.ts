@@ -14,7 +14,7 @@
  */
 /* eslint-disable no-var */
 
-import { DocumentEvaluatorOptions } from "./document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {
   assert,
@@ -43,14 +43,15 @@ import {
 import { BaseStream } from "../../stream/base_stream";
 import { CMap, IdentityCMap } from "../../cmap/cmap";
 import { ColorSpace } from "../../color/colorspace";
-import { EvaluatorTextContent, StreamSink } from "../../common/core_types";
+import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GetTextContentHandler } from "./evaluator_text_content_operator";
-import { FontSubstitutionInfo } from "../../document/font/font_substitutions";
+import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 import { ErrorFont, Font } from "../../document/font/fonts";
 import { PDFFunctionFactory } from "../../document/function";
 import { GlobalIdFactory } from "../../common/global_id_factory";
@@ -62,12 +63,14 @@ import {
   OptionalContent,
   RegionalImageCache
 } from "../../image/image_utils";
-import { OperatorList, OperatorListIR } from "../operator_list";
+import { OperatorList } from "../operator_list";
+import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import { Lexer, Parser } from "../parser";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "../../document/font/to_unicode_map";
 import { FontProgramPrivateData } from "../type1_parser";
 import { WorkerTask } from "../../worker/worker";
 import { XRefImpl } from "../../document/xref";
+import { CssFontInfo } from "packages/seren-common/src/types/font_types";
 
 export interface SeacMapValue {
   baseFontCharCode: number;
@@ -132,14 +135,6 @@ export interface EvaluatorProperties {
   descent: number | null;
   cssFontInfo: CssFontInfo | null;
   scaleFactors: number[] | null;
-}
-
-export interface CssFontInfo {
-  fontFamily: string,
-  fontWeight: number,
-  italicAngle: number,
-  lineHeight?: number,
-  metrics: { lineHeight: number, lineGap: number }
 }
 
 // 取代原来的Object.freeze，这里可能类型会更明显一点

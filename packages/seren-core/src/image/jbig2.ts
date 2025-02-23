@@ -14,7 +14,7 @@
  */
 
 import { BaseException, shadow, PlatformHelper, Uint8TypedArray } from "seren-common";
-import { log2, readInt8, readUint16, readUint32 } from "../utils/core_utils";
+import { log2, readInt8, readUint16, readUint32 } from "../../../seren-common/src/utils/core_utils";
 import { ArithmeticDecoder } from "../codec/arithmetic_decoder";
 import { CCITTFaxDecoder } from "../codec/ccitt";
 

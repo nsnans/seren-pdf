@@ -16,10 +16,11 @@ import {
 import { BaseStream } from "../../stream/base_stream";
 import { CMapFactory, IdentityCMap } from "../../cmap/cmap";
 import { PreEvaluatedFont } from "../../common/core_types";
-import { isNumberArray, lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
+import { isNumberArray, lookupMatrix, lookupNormalRect } from "../../../../seren-common/src/utils/core_utils";
 import { DecodeStream } from "../../stream/decode_stream";
 import { getEncoding, MacRomanEncoding, StandardEncoding, SymbolSetEncoding, WinAnsiEncoding, ZapfDingbatsEncoding } from "../../tables/encodings";
-import { CssFontInfo, EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
+import { EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
+import { CssFontInfo } from "packages/seren-common/src/types/font_types";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { getFontSubstitution } from "../../document/font/font_substitutions";
 import { ErrorFont, Font } from "../../document/font/fonts";

@@ -25,7 +25,7 @@ import {
 } from "seren-common";
 import { CFFDict, CFFDictKey, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
 import { getGlyphsUnicode } from "./glyphlist";
-import { isNumberArray } from "../../utils/core_utils";
+import { isNumberArray } from "../../../../seren-common/src/utils/core_utils";
 import { StandardEncoding } from "../../tables/encodings";
 import { Stream } from "../../stream/stream";
 import { Font } from "./fonts";

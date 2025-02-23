@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { readUint32 } from "../utils/core_utils";
+import { readUint32 } from "../../../seren-common/src/utils/core_utils";
 import { string32, Uint8TypedArray } from "seren-common";
 
 function writeInt16(dest: Uint8Array, offset: number, num: number) {

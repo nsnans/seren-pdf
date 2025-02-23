@@ -15,7 +15,7 @@
 
 import { PopupContent } from "./display/annotation_layer";
 import { PointType, RectType, TransformType } from "./display/display_utils";
-import { DocumentEvaluatorOptions } from "../parser/evaluator/document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
 import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "./display/editor/state/editor_serializable";
 import {
   AnnotationActionEventType,
@@ -57,7 +57,10 @@ import { BaseStream } from "../stream/base_stream";
 import { bidi } from "../tables/bidi";
 import { Catalog } from "./catalog";
 import { ColorSpace } from "../color/colorspace";
-import { DefaultFieldObject, EvaluatorTextContent, FieldObject, GeneralFieldObject, isFullTextContentItem, StreamSink } from "../common/core_types";
+import { DefaultFieldObject, GeneralFieldObject, isFullTextContentItem } from "../common/core_types";
+import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { AnnotationData, FieldObject, StringObj } from "packages/seren-common/src/types/annotation_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import {
   collectActions,
   escapeString,
@@ -70,7 +73,7 @@ import {
   numberToString,
   stringToAsciiOrUTF16BE,
   stringToUTF16String
-} from "../utils/core_utils";
+} from "../../../seren-common/src/utils/core_utils";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,
@@ -79,7 +82,8 @@ import {
   parseDefaultAppearance,
 } from "../worker/default_appearance";
 import { PartialEvaluator } from "../parser/evaluator/evaluator";
-import { FileSpec, FileSpecSerializable } from "./file_spec";
+import { FileSpec } from "./file_spec";
+import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";
 import { ErrorFont, Font, Glyph } from "./font/fonts";
 import { LocalIdFactory } from "../common/global_id_factory";
 import { JpegStream } from "../stream/jpeg_stream";
@@ -821,47 +825,6 @@ function getTransformMatrix(rect: RectType, bbox: RectType, matrix: TransformTyp
   return [xRatio, 0, 0, yRatio, rect[0] - minX * xRatio, rect[1] - minY * yRatio];
 }
 
-export interface AnnotationData {
-  richText: PopupContent | null;
-  titleObj: StringObj | null;
-  alternativeText: string | null;
-  annotationFlags: number;
-  borderStyle: AnnotationBorderStyle;
-  // TODO 要再推断一下
-  color: Uint8ClampedArray<ArrayBuffer> | null;
-  backgroundColor: Uint8ClampedArray<ArrayBuffer> | null;
-  borderColor: Uint8ClampedArray<ArrayBuffer> | null;
-  rotation: number;
-  contentsObj: StringObj;
-  hasAppearance: boolean;
-  id: string;
-  modificationDate: string | null;
-  rect: RectType | null;
-  subtype: string | null;
-  hasOwnCanvas: boolean;
-  noRotate: boolean;
-  noHTML: boolean;
-  isEditable: boolean;
-  structParent: number;
-  kidIds?: string[]
-  fieldName?: string
-  pageIndex?: number;
-  it?: string;
-  quadPoints?: Float32Array<ArrayBuffer>;
-  defaultAppearanceData?: {
-    fontSize: number;
-    fontName: string;
-    fontColor: Uint8ClampedArray<ArrayBuffer>;
-  };
-  textPosition?: number[];
-  textContent?: string[];
-  actions?: Map<string, string[]>;
-  annotationType?: AnnotationType;
-  popupRef?: string | null;
-  hidden?: boolean;
-}
-
-export interface StringObj { str: string; dir: string; }
 
 interface AnnotationSaveRef {
   ref: Ref | null;
@@ -1670,190 +1633,6 @@ export class Annotation<DATA extends AnnotationData> {
       }
     }
     return fieldName.join(".");
-  }
-}
-
-/**
- * Contains all data regarding an annotation's border style.
- */
-export class AnnotationBorderStyle {
-
-  public width: number;
-
-  public horizontalCornerRadius: number;
-
-  public verticalCornerRadius: number;
-
-  public style: number;
-
-  public rawWidth: number;
-
-  protected dashArray: number[];
-
-  constructor() {
-    this.width = 1;
-    this.rawWidth = 1;
-    this.style = AnnotationBorderStyleType.SOLID;
-    this.dashArray = [3];
-    this.horizontalCornerRadius = 0;
-    this.verticalCornerRadius = 0;
-  }
-
-  noBorder() {
-    this.width = 0;
-    this.rawWidth = 0;
-    this.dashArray = [];
-    return this;
-  }
-
-  /**
-   * Set the width.
-   *
-   * @public
-   * @memberof AnnotationBorderStyle
-   * @param width - The width.
-   * @param rect - The annotation `Rect` entry.
-   */
-  setWidth(width: number | Name, rect: RectType = [0, 0, 0, 0]) {
-    if (PlatformHelper.isTesting()) {
-      assert(
-        isNumberArray(rect, 4),
-        "A valid `rect` parameter must be provided."
-      );
-    }
-
-    // Some corrupt PDF generators may provide the width as a `Name`,
-    // rather than as a number (fixes issue 10385).
-    if (width instanceof Name) {
-      this.width = 0; // This is consistent with the behaviour in Adobe Reader.
-      return;
-    }
-    if (typeof width === "number") {
-      if (width > 0) {
-        this.rawWidth = width;
-        const maxWidth = (rect[2] - rect[0]) / 2;
-        const maxHeight = (rect[3] - rect[1]) / 2;
-
-        // Ignore large `width`s, since they lead to the Annotation overflowing
-        // the size set by the `Rect` entry thus causing the `annotationLayer`
-        // to render it over the surrounding document (fixes bug1552113.pdf).
-        if (
-          maxWidth > 0 &&
-          maxHeight > 0 &&
-          (width > maxWidth || width > maxHeight)
-        ) {
-          warn(`AnnotationBorderStyle.setWidth - ignoring width: ${width}`);
-          width = 1;
-        }
-      }
-      this.width = width;
-    }
-  }
-
-  /**
-   * Set the style.
-   *
-   * @public
-   * @memberof AnnotationBorderStyle
-   * @param {Name} style - The annotation style.
-   * @see {@link shared/util.ts}
-   */
-  setStyle(style: Name) {
-    if (!(style instanceof Name)) {
-      return;
-    }
-    switch (style.name) {
-      case "S":
-        this.style = AnnotationBorderStyleType.SOLID;
-        break;
-
-      case "D":
-        this.style = AnnotationBorderStyleType.DASHED;
-        break;
-
-      case "B":
-        this.style = AnnotationBorderStyleType.BEVELED;
-        break;
-
-      case "I":
-        this.style = AnnotationBorderStyleType.INSET;
-        break;
-
-      case "U":
-        this.style = AnnotationBorderStyleType.UNDERLINE;
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  /**
-   * Set the dash array.
-   *
-   * @public
-   * @memberof AnnotationBorderStyle
-   * @param dashArray - The dash array with at least one element
-   * @param forceStyle
-   */
-  setDashArray(dashArray: number[], forceStyle = false) {
-    // We validate the dash array, but we do not use it because CSS does not
-    // allow us to change spacing of dashes. For more information, visit
-    // http://www.w3.org/TR/css3-background/#the-border-style.
-    if (Array.isArray(dashArray)) {
-      // The PDF specification states that elements in the dash array, if
-      // present, must be non-negative numbers and must not all equal zero.
-      let isValid = true;
-      let allZeros = true;
-      for (const element of dashArray) {
-        const validNumber = +element >= 0;
-        if (!validNumber) {
-          isValid = false;
-          break;
-        } else if (element > 0) {
-          allZeros = false;
-        }
-      }
-      if (dashArray.length === 0 || (isValid && !allZeros)) {
-        this.dashArray = dashArray;
-
-        if (forceStyle) {
-          // Even though we cannot use the dash array in the display layer,
-          // at least ensure that we use the correct border-style.
-          this.setStyle(Name.get("D")!);
-        }
-      } else {
-        this.width = 0; // Adobe behavior when the array is invalid.
-      }
-    } else if (dashArray) {
-      this.width = 0; // Adobe behavior when the array is invalid.
-    }
-  }
-
-  /**
-   * Set the horizontal corner radius (from a Border dictionary).
-   *
-   * @public
-   * @memberof AnnotationBorderStyle
-   * @param {number} radius - The horizontal corner radius.
-   */
-  setHorizontalCornerRadius(radius: number) {
-    if (Number.isInteger(radius)) {
-      this.horizontalCornerRadius = radius;
-    }
-  }
-
-  /**
-   * Set the vertical corner radius (from a Border dictionary).
-   *
-   * @public
-   * @memberof AnnotationBorderStyle
-   * @param {number} radius - The vertical corner radius.
-   */
-  setVerticalCornerRadius(radius: number) {
-    if (Number.isInteger(radius)) {
-      this.verticalCornerRadius = radius;
-    }
   }
 }
 
@@ -4919,7 +4698,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     ink.set(DictKey.Subtype, Name.get("Ink"));
     ink.set(DictKey.CreationDate, `D:${getModificationDate()}`);
     ink.set(DictKey.Rect, rect);
-    ink.set(DictKey.InkList, outlines?.points || paths.map(p => p.points));
+    ink.set(DictKey.InkList, outlines?.points || paths.map((p: { points: any; }) => p.points));
     ink.set(DictKey.F, 4);
     ink.set(DictKey.Rotate, rotation);
 

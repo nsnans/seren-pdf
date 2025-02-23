@@ -1,4 +1,4 @@
-import { DocumentEvaluatorOptions } from "./document_evaluator_options";
+import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
 import {
   AbortException,
   assert,
@@ -19,8 +19,10 @@ import {
 } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
 import { bidi } from "../../tables/bidi";
-import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "../../common/core_types";
-import { lookupMatrix } from "../../utils/core_utils";
+import { DefaultTextContentItem, TextContentSinkProxy } from "../../common/core_types";
+import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
+import { lookupMatrix } from "../../../../seren-common/src/utils/core_utils";
 import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";

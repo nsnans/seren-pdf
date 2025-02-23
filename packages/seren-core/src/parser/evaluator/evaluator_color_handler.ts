@@ -8,7 +8,7 @@ import {
 import { CommonObjType, ObjType } from "../shared/message_handler";
 import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";
-import { lookupMatrix } from "../../utils/core_utils";
+import { lookupMatrix } from "../../../../seren-common/src/utils/core_utils";
 import { EvaluatorContext, PatternType } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "../../image/image_utils";

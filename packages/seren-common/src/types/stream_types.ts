@@ -177,4 +177,37 @@ export interface PDFStreamRangeReader {
    */
   cancel(reason: Error): void;
 }
+export interface StreamSink<Chunk> {
+
+  ready: Promise<void> | null;
+
+  desiredSize: number;
+
+  sinkCapability: PromiseWithResolvers<void> | null;
+
+  isCancelled: boolean;
+
+  /**
+   * 这是一个非常关键的函数，生产者通过这个函数向Stream队列里传递数据
+   * 而ReadableStream.read()会从这里面来进行数据的调用
+   */
+  enqueue(chunk: Chunk, size: number, transfers?: Transferable[]): void;
+
+  close(): void;
+
+  error(reason: any): void;
+
+  onCancel: ((reason: Error) => void) | null;
+
+  onPull: (() => void) | null;
+
+}
+export interface ReaderHeadersReadyResult {
+
+  isStreamingSupported: boolean;
+
+  isRangeSupported: boolean;
+
+  contentLength: number;
+}
 
