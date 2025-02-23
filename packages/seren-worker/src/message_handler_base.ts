@@ -12,66 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { GeneralStreamSink, StreamSink } from "../core/core_types";
 import {
-  AbortException,
   assert,
-  MissingPDFException,
-  PasswordException,
-  UnexpectedResponseException,
-  UnknownErrorException,
-  unreachable,
-} from "../../seren-common/src/utils/util";
+  MessagePoster,
+  StreamKind,
+  StreamSink,
+  wrapReason
+} from "seren-common";
+import { GeneralStreamSink } from "seren-core";
 
 enum CallbackKind {
   UNKNOWN = 0,
   DATA = 1,
   ERROR = 2,
 };
-
-export enum StreamKind {
-  UNKNOWN = 0,
-  CANCEL = 1,
-  CANCEL_COMPLETE = 2,
-  CLOSE = 3,
-  ENQUEUE = 4,
-  ERROR = 5,
-  PULL = 6,
-  PULL_COMPLETE = 7,
-  START_COMPLETE = 8,
-};
-
-export function wrapReason(reason: any) {
-  const valid = !(reason instanceof Error || (typeof reason === "object" && reason !== null));
-  if (valid) {
-    unreachable('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
-  }
-  switch (reason.name) {
-    case "AbortException":
-      return new AbortException(reason.message);
-    case "MissingPDFException":
-      return new MissingPDFException(reason.message);
-    case "PasswordException":
-      return new PasswordException(reason.message, reason.code);
-    case "UnexpectedResponseException":
-      return new UnexpectedResponseException(reason.message, reason.status);
-    case "UnknownErrorException":
-      return new UnknownErrorException(reason.message, reason.details);
-    default:
-      return new UnknownErrorException(reason.message, reason.toString());
-  }
-}
-
-export interface MessagePoster {
-
-  postMessage(message: any, transfer: Transferable[]): void;
-
-  postMessage(message: any, options?: StructuredSerializeOptions): void;
-
-  addEventListener<K extends keyof WorkerEventMap>(type: K, listener: (this: Worker, ev: WorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
-
-}
 
 interface StreamController<T> {
   controller: ReadableStreamController<T>;
@@ -345,7 +299,7 @@ abstract class AbstractMessageHandler {
 
     const streamSink = new GeneralStreamSink(
       this.comObj, sourceName, targetName, streamId, data.desiredSize!,
-      (_id) => self.streamSinks.delete(_id)
+      (id) => self.streamSinks.delete(id)
     );
 
     streamSink.sinkCapability.resolve();

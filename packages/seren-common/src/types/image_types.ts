@@ -1,6 +1,5 @@
 import { Uint8TypedArray } from "../common/typed_array";
 
-
 export interface ImageMask {
   data: Uint8TypedArray | null;
   width: number;

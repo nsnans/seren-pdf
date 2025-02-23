@@ -244,3 +244,14 @@ export interface DataStream {
   makeSubStream(_start: number, _length: number, _dict: Dict | null): DataStream;
   getBaseStreams(): DataStream[] | null
 }
+export enum StreamKind {
+  UNKNOWN = 0,
+  CANCEL = 1,
+  CANCEL_COMPLETE = 2,
+  CLOSE = 3,
+  ENQUEUE = 4,
+  ERROR = 5,
+  PULL = 6,
+  PULL_COMPLETE = 7,
+  START_COMPLETE = 8
+}

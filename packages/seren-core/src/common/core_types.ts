@@ -1,10 +1,4 @@
-import { TransformType, assert, Name, Ref, Dict } from "seren-common";
-import { TextItem, TextMarkedContent } from "../display/api";
-import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
-import { CssFontInfo } from "packages/seren-common/src/types/font_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
-import { FieldObject } from "packages/seren-common/src/types/annotation_types";
-import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { TransformType, assert, Name, Ref, Dict, TextMarkedContent, TextItem, MessagePoster, StreamKind, wrapReason, StreamSink, EvaluatorTextContent, FieldObject, CssFontInfo } from "seren-common";
 
 export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
 

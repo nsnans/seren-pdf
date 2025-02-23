@@ -1,7 +1,6 @@
 import { OPS } from "../utils/util";
 import { AnnotationEditorSerial } from "./annotation_types";
 
-
 export interface OperatorListIR {
 
   fnArray: OPS[];
@@ -17,7 +16,9 @@ export interface OperatorListIR {
     canvas: boolean;
   } | null;
 
-}export interface OpertaorListChunk {
+}
+
+export interface OpertaorListChunk {
   fnArray: OPS[];
   argsArray: (any[] | null)[];
   lastChunk: boolean;
@@ -27,6 +28,7 @@ export interface OperatorListIR {
   } | null;
   length: number;
 }
+
 export interface StreamGetOperatorListParameters {
   pageIndex: number;
   intent: number;
@@ -34,4 +36,3 @@ export interface StreamGetOperatorListParameters {
   annotationStorage: Map<string, AnnotationEditorSerial> | null;
   modifiedIds: Set<string>;
 }
-

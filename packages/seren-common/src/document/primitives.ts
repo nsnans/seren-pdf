@@ -17,7 +17,7 @@ import { PlatformHelper } from "../utils/platform_helper";
 import { DestinationType, PointType, RectType, TypedArray } from "../common/common_types";
 import { assert, unreachable } from "../utils/util";
 import { Dict } from "./dict";
-import { DataStream } from "seren-common";
+import { DataStream } from "../types/stream_types";
 
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
 

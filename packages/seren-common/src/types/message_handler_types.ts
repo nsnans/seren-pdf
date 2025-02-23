@@ -1,5 +1,6 @@
 import { RectType } from "../common/common_types"
 import { Ref } from "../document/primitives"
+import { AbortException, MissingPDFException, PasswordException, UnexpectedResponseException, UnknownErrorException, unreachable } from "../utils/util"
 import { AnnotationEditorSerial } from "./annotation_types"
 import { FontExportData, FontExportExtraData } from "./font_types"
 import { ImageMask } from "./image_types"
@@ -95,5 +96,36 @@ export interface PageInfo {
   refStr: string | null;
   userUnit: number;
   view: RectType;
+}
+export interface MessagePoster {
+
+  postMessage(message: any, transfer: Transferable[]): void;
+
+  postMessage(message: any, options?: StructuredSerializeOptions): void;
+
+  addEventListener<K extends keyof WorkerEventMap>(type: K, listener: (this: Worker, ev: WorkerEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+
+}
+
+
+export function wrapReason(reason: any) {
+  const valid = !(reason instanceof Error || (typeof reason === "object" && reason !== null));
+  if (valid) {
+    unreachable('wrapReason: Expected "reason" to be a (possibly cloned) Error.');
+  }
+  switch (reason.name) {
+    case "AbortException":
+      return new AbortException(reason.message);
+    case "MissingPDFException":
+      return new MissingPDFException(reason.message);
+    case "PasswordException":
+      return new PasswordException(reason.message, reason.code);
+    case "UnexpectedResponseException":
+      return new UnexpectedResponseException(reason.message, reason.status);
+    case "UnknownErrorException":
+      return new UnknownErrorException(reason.message, reason.details);
+    default:
+      return new UnknownErrorException(reason.message, reason.toString());
+  }
 }
 

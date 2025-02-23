@@ -14,46 +14,43 @@
  */
 /* eslint-disable no-var */
 
-import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
+import { CMap } from "packages/seren-common/src/types/cmap_types";
+import { EvaluatorTextContent, SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
+import { CssFontInfo, FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
+import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
+import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import {
   assert,
+  Cmd,
+  Dict,
+  DictKey,
+  EOF,
   FONT_IDENTITY_MATRIX,
   FormatError,
   IDENTITY_MATRIX,
   info,
-  OPS,
-  shadow,
-  TextRenderingMode,
-  Util,
-  warn,
-  RectType,
-  TransformType,
-  PlatformHelper,
   MutableArray,
-  Cmd,
-  DictKey,
-  EOF,
   Name,
+  OPS,
+  PlatformHelper,
+  RectType,
   Ref,
   RefSet,
   RefSetCache,
-  Dict
+  shadow,
+  TextRenderingMode,
+  TransformType,
+  Util,
+  warn, DocumentEvaluatorOptions,
+  MessageHandler,
+  CommonObjType
 } from "seren-common";
-import { BaseStream } from "../../stream/base_stream";
-import { CMapImpl, IdentityCMap } from "../../cmap/cmap";
 import { ColorSpace } from "../../color/colorspace";
-import { EvaluatorTextContent, SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
-import { EvaluatorColorHandler } from "./evaluator_color_handler";
-import { EvaluatorFontHandler } from "./evaluator_font_handler";
-import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
-import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
-import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { GetTextContentHandler } from "./evaluator_text_content_operator";
-import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
-import { ErrorFont, Font } from "../../document/font/fonts";
-import { PDFFunctionFactory } from "../../document/function";
 import { GlobalIdFactory } from "../../common/global_id_factory";
+import { ErrorFont, Font } from "../../document/font/fonts";
+import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
+import { PDFFunctionFactory } from "../../document/function";
+import { XRefImpl } from "../../document/xref";
 import { ImageResizer } from "../../image/image_resizer";
 import {
   GlobalImageCache,
@@ -62,15 +59,17 @@ import {
   OptionalContent,
   RegionalImageCache
 } from "../../image/image_utils";
-import { OperatorList } from "../operator_list";
-import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
-import { Lexer, Parser } from "../parser";
-import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
-import { FontProgramPrivateData } from "../type1_parser";
+import { BaseStream } from "../../stream/base_stream";
 import { WorkerTask } from "../../worker/worker";
-import { XRefImpl } from "../../document/xref";
-import { CssFontInfo } from "packages/seren-common/src/types/font_types";
-import { CMap } from "packages/seren-common/src/types/cmap_types";
+import { OperatorList } from "../operator_list";
+import { Lexer, Parser } from "../parser";
+import { FontProgramPrivateData } from "../type1_parser";
+import { EvaluatorColorHandler } from "./evaluator_color_handler";
+import { EvaluatorFontHandler } from "./evaluator_font_handler";
+import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
+import { GetOperatorListHandler as GeneratorOperatorHandler } from "./evaluator_general_operator";
+import { EvaluatorImageHandler } from "./evaluator_image_handler";
+import { GetTextContentHandler } from "./evaluator_text_content_operator";
 
 export interface EvaluatorProperties {
   privateData: FontProgramPrivateData | null;
@@ -540,7 +539,7 @@ export class TranslatedFont {
     }
     this.sent = true;
     const exportData = this.font.exportData(this._evaluatorOptions.fontExtraProperties);
-    handler.commonobj(this.loadedName, CommonObjType.Font, exportData);
+    handler.commonobj(this.loadedName, CommonObjType.Font, exportData, null);
   }
 
   fallback(handler: MessageHandler) {
