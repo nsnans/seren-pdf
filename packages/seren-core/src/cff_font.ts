@@ -15,7 +15,7 @@
 
 import { CFF, CFFCompiler, CFFParser } from "./cff_parser";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
-import { warn } from "../shared/util";
+import { warn } from "seren-common";
 import { EvaluatorProperties } from "./evaluator";
 import { Stream } from "./stream";
 

@@ -1,12 +1,8 @@
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { Uint8TypedArray, TransformType, assert, Name, Ref, Dict } from "seren-common";
 import { TextItem, TextMarkedContent, TextStyle } from "../display/api";
-import { TransformType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { MessagePoster, StreamKind, wrapReason } from "../shared/message_handler_base";
-import { assert } from "../shared/util";
 import { CssFontInfo } from "./evaluator";
-import { Name, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 
 export interface ImageMask {
   data: Uint8TypedArray | null;

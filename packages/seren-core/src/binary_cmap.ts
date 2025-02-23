@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { FormatError } from "../shared/util";
+import { FormatError } from "seren-common";
 import { CMap } from "./cmap";
 
 function hexToInt(a: Uint8Array, size: number) {
@@ -62,9 +62,9 @@ class BinaryCMapStream {
   protected pos: number = 0;
 
   protected end: number;
-  
+
   protected tmpBuf = new Uint8Array(MAX_ENCODED_NUM_SIZE);
-  
+
   protected buffer: Uint8Array;
 
   constructor(data: Uint8Array) {

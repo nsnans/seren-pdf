@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-import { RectType, TransformType } from "../display/display_utils";
 import {
+  RectType,
+  TransformType,
   bytesToString,
   FormatError,
   info,
@@ -23,7 +24,7 @@ import {
   stringToBytes,
   Util,
   warn,
-} from "../shared/util";
+} from "seren-common";
 import {
   ExpertCharset,
   ExpertSubsetCharset,

@@ -14,11 +14,11 @@
  */
 
 import { clearPatternCaches } from "./pattern";
-import { clearPrimitiveCaches } from "../../seren-common/src/primitives";
+import { clearPrimitiveCaches } from "seren-common";
 import { clearUnicodeCaches } from "./unicode";
 import { JpxImage } from "./jpx";
 
-function clearGlobalCaches() {
+export function clearGlobalCaches() {
   clearPatternCaches();
   clearPrimitiveCaches();
   clearUnicodeCaches();
@@ -27,5 +27,3 @@ function clearGlobalCaches() {
   // the WebAssembly module.
   JpxImage.cleanup();
 }
-
-export { clearGlobalCaches };

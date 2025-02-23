@@ -20,6 +20,7 @@ import { MissingDataException } from "./core_utils";
 import { warn } from "../shared/util";
 import { XRefImpl } from "./xref";
 import { ChunkedStream } from "./chunked_stream";
+import { XRef } from "seren-common";
 
 function mayHaveChildren(value: unknown) {
   return (
@@ -62,11 +63,11 @@ class ObjectLoader {
 
   protected keys: string[]
 
-  protected xref: XRefImpl;
+  protected xref: XRef;
 
   protected refSet: RefSet | null;
 
-  constructor(dict: Dict, keys: string[], xref: XRefImpl) {
+  constructor(dict: Dict, keys: string[], xref: XRef) {
     this.dict = dict;
     this.keys = keys;
     this.xref = xref;
@@ -75,7 +76,7 @@ class ObjectLoader {
 
   async load() {
     // Don't walk the graph if all the data is already loaded.
-    if (this.xref.stream.isDataLoaded) {
+    if ((<XRefImpl>this.xref).stream.isDataLoaded) {
       return undefined;
     }
 

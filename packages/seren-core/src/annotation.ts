@@ -42,11 +42,12 @@ import {
   unreachable,
   Util,
   warn,
-  MutableArray
+  MutableArray,
+  DestinationType
 } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
-import { Catalog, DestinationType } from "./catalog";
+import { Catalog } from "./catalog";
 import { ColorSpace } from "./colorspace";
 import { DefaultFieldObject, EvaluatorTextContent, FieldObject, GeneralFieldObject, isFullTextContentItem, StreamSink } from "./core_types";
 import {
@@ -85,6 +86,7 @@ import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XRefImpl } from "./xref";
 import { CreateStampImageResult } from "./types";
+import { DictImpl } from "./dict_impl";
 
 export interface AnnotationParameters {
   xref: XRefImpl;
@@ -366,7 +368,7 @@ export class AnnotationFactory {
       ([acroForm, structTreeRoot, baseUrl, attachments]) => {
         return {
           pdfManager, structTreeRoot, baseUrl, attachments,
-          acroForm: acroForm instanceof Dict ? acroForm : Dict.empty,
+          acroForm: acroForm instanceof DictImpl ? acroForm : DictImpl.empty,
         };
       },
       reason => {
@@ -417,7 +419,7 @@ export class AnnotationFactory {
     pageRef: Ref | null = null
   ): Annotation<AnnotationData> | null {
     const dict = xref.fetchIfRef(ref);
-    if (!(dict instanceof Dict)) {
+    if (!(dict instanceof DictImpl)) {
       return null;
     }
 
@@ -526,7 +528,7 @@ export class AnnotationFactory {
   static async _getPageIndex(xref: XRefImpl, ref: Ref, pdfManager: PDFManager) {
     try {
       const annotDict = await xref.fetchIfRefAsync(ref);
-      if (!(annotDict instanceof Dict)) {
+      if (!(annotDict instanceof DictImpl)) {
         return -1;
       }
       const pageRef = annotDict.getRaw(DictKey.P);
@@ -604,7 +606,7 @@ export class AnnotationFactory {
       switch (annotation.annotationType) {
         case AnnotationEditorType.FREETEXT:
           if (!baseFontRef) {
-            const baseFont = new Dict(xref);
+            const baseFont = new DictImpl(xref);
             baseFont.set(DictKey.BaseFont, Name.get("Helvetica"));
             baseFont.set(DictKey.Type, Name.get("Font"));
             baseFont.set(DictKey.Subtype, Name.get("Type1"));
@@ -1275,7 +1277,7 @@ export class Annotation<DATA extends AnnotationData> {
 
   setRotation(mk: Dict, dict: Dict) {
     this.rotation = 0;
-    let angle = mk instanceof Dict ? mk.getValue(DictKey.R) || 0 : dict.getValue(DictKey.Rotate) || 0;
+    let angle = mk instanceof DictImpl ? mk.getValue(DictKey.R) || 0 : dict.getValue(DictKey.Rotate) || 0;
     if (Number.isInteger(angle) && angle !== 0) {
       angle %= 360;
       if (angle < 0) {
@@ -1296,7 +1298,7 @@ export class Annotation<DATA extends AnnotationData> {
    * @param {Dict} mk - The MK dictionary
    */
   setBorderAndBackgroundColors(mk: Dict) {
-    if (mk instanceof Dict) {
+    if (mk instanceof DictImpl) {
       this.borderColor = getRgbColor(mk.getArrayValue(DictKey.BC), null);
       this.backgroundColor = getRgbColor(mk.getArrayValue(DictKey.BG), null);
     } else {
@@ -1317,13 +1319,13 @@ export class Annotation<DATA extends AnnotationData> {
     }
 
     this.borderStyle = new AnnotationBorderStyle();
-    if (!(borderStyle instanceof Dict)) {
+    if (!(borderStyle instanceof DictImpl)) {
       return;
     }
     if (borderStyle.has(DictKey.BS)) {
       const dict = borderStyle.getValue(DictKey.BS);
 
-      if (dict instanceof Dict) {
+      if (dict instanceof DictImpl) {
         const dictType = dict.getValue(DictKey.Type);
 
         if (!dictType || isName(dictType, "Border")) {
@@ -1365,7 +1367,7 @@ export class Annotation<DATA extends AnnotationData> {
     this.appearance = null;
 
     const appearanceStates = dict.getValue(DictKey.AP);
-    if (!(appearanceStates instanceof Dict)) {
+    if (!(appearanceStates instanceof DictImpl)) {
       return;
     }
 
@@ -1375,7 +1377,7 @@ export class Annotation<DATA extends AnnotationData> {
       this.appearance = normalAppearanceState;
       return;
     }
-    if (!(normalAppearanceState instanceof Dict)) {
+    if (!(normalAppearanceState instanceof DictImpl)) {
       return;
     }
 
@@ -1397,7 +1399,7 @@ export class Annotation<DATA extends AnnotationData> {
     const oc = dict.getValue(DictKey.OC);
     if (oc instanceof Name) {
       warn("setOptionalContent: Support for /Name-entry is not implemented.");
-    } else if (oc instanceof Dict) {
+    } else if (oc instanceof DictImpl) {
       this.oc = oc;
     }
   }
@@ -1407,7 +1409,7 @@ export class Annotation<DATA extends AnnotationData> {
       if (!resources) {
         return undefined;
       }
-      const objectLoader = new ObjectLoader(resources, keys, resources.xref!);
+      const objectLoader = new ObjectLoader(resources, keys, <XRefImpl>resources.xref);
       return objectLoader.load().then(() => resources);
     });
   }
@@ -1434,7 +1436,7 @@ export class Annotation<DATA extends AnnotationData> {
         return { opList: new OperatorList(), separateForm: false, separateCanvas: false };
       }
       appearance = new StringStream("");
-      appearance.dict = new Dict();
+      appearance.dict = new DictImpl();
     }
 
     const appearanceDict = appearance.dict!;
@@ -1639,10 +1641,10 @@ export class Annotation<DATA extends AnnotationData> {
     if (dict.objId) {
       visited.put(dict.objId);
     }
-    while (loopDict.has(DictKey.Parent)) {
-      loopDict = loopDict.getValue(DictKey.Parent);
+    while ((<Dict>loopDict).has(DictKey.Parent)) {
+      loopDict = (<Dict>loopDict).getValue(DictKey.Parent);
       if (
-        !(loopDict instanceof Dict) ||
+        !(loopDict instanceof DictImpl) ||
         (loopDict.objId && visited.has(loopDict.objId))
       ) {
         // Even though it is not allowed according to the PDF specification,
@@ -1992,15 +1994,15 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
     }
     buffer.push("Q");
 
-    const formDict = new Dict(xref);
-    const appearanceStreamDict = new Dict(xref);
+    const formDict = new DictImpl(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
 
     const appearanceStream = new StringStream(buffer.join(" "));
     appearanceStream.dict = appearanceStreamDict;
     formDict.set(DictKey.Fm0, appearanceStream);
 
-    const gsDict = new Dict(xref);
+    const gsDict = new DictImpl(xref);
     if (blendMode) {
       gsDict.set(DictKey.BM, Name.get(blendMode)!);
     }
@@ -2011,16 +2013,16 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
       gsDict.set(DictKey.ca, fillAlpha);
     }
 
-    const stateDict = new Dict(xref);
+    const stateDict = new DictImpl(xref);
     stateDict.set(DictKey.GS0, gsDict);
 
-    const resources = new Dict(xref);
+    const resources = new DictImpl(xref);
     resources.set(DictKey.ExtGState, stateDict);
     resources.set(DictKey.XObject, formDict);
 
-    const appearanceDict = new Dict(xref);
+    const appearanceDict = new DictImpl(xref);
     appearanceDict.set(DictKey.Resources, resources);
-    const bbox = (this.data.rect = [minX, minY, maxX, maxY]);
+    const bbox: RectType = (this.data.rect = [minX, minY, maxX, maxY]);
     appearanceDict.set(DictKey.BBox, bbox);
 
     this.appearance = new StringStream("/GS0 gs /Fm0 Do");
@@ -2129,7 +2131,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
       localResources,
       acroFormResources,
       appearanceResources,
-      mergedResources: Dict.merge(
+      mergedResources: DictImpl.merge(
         xref, [localResources, appearanceResources, acroFormResources], true,
       ),
     };
@@ -2339,7 +2341,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
   }
 
   _getMKDict(rotation: number) {
-    const mk = new Dict(null);
+    const mk = new DictImpl(null);
     if (rotation) {
       mk.set(DictKey.R, rotation);
     }
@@ -2410,11 +2412,11 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     const { xref } = evaluator;
 
     const originalDict = xref.fetchIfRef(this.ref!);
-    if (!(originalDict instanceof Dict)) {
+    if (!(originalDict instanceof DictImpl)) {
       return null;
     }
 
-    const dict = new Dict(xref);
+    const dict = new DictImpl(xref);
     for (const key of originalDict.getKeys()) {
       if (key !== DictKey.AP) {
         dict.set(key, <unknown>originalDict.getRaw(key));
@@ -2446,13 +2448,13 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     ];
     if (appearance !== null) {
       const newRef = xref.getNewTemporaryRef();
-      const AP = new Dict(xref);
+      const AP = new DictImpl(xref);
       dict.set(DictKey.AP, AP);
       AP.set(DictKey.N, newRef);
 
       const resources = this._getSaveFieldResources(xref);
       const appearanceStream = new StringStream(<string>appearance);
-      const appearanceDict = (appearanceStream.dict = new Dict(xref));
+      const appearanceDict = (appearanceStream.dict = new DictImpl(xref));
       appearanceDict.set(DictKey.Subtype, Name.get("Form"));
       appearanceDict.set(DictKey.Resources, resources);
       appearanceDict.set(DictKey.BBox, [
@@ -2895,30 +2897,30 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
     const fontName = this.data.defaultAppearanceData?.fontName;
     if (!fontName) {
-      return localResources || Dict.empty;
+      return localResources || DictImpl.empty;
     }
 
     for (const resources of [localResources, appearanceResources]) {
-      if (resources instanceof Dict) {
+      if (resources instanceof DictImpl) {
         const localFont = resources.getValue(DictKey.Font);
-        if (localFont instanceof Dict && localFont.has(<DictKey>fontName)) {
+        if (localFont instanceof DictImpl && localFont.has(<DictKey>fontName)) {
           return resources;
         }
       }
     }
-    if (acroFormResources instanceof Dict) {
+    if (acroFormResources instanceof DictImpl) {
       const acroFormFont = acroFormResources.getValue(DictKey.Font);
-      if (acroFormFont instanceof Dict && acroFormFont.has(<DictKey>fontName)) {
-        const subFontDict = new Dict(xref);
+      if (acroFormFont instanceof DictImpl && acroFormFont.has(<DictKey>fontName)) {
+        const subFontDict = new DictImpl(xref);
         subFontDict.set(<DictKey>fontName, <any>acroFormFont.getRaw(<DictKey>fontName));
 
-        const subResourcesDict = new Dict(xref);
+        const subResourcesDict = new DictImpl(xref);
         subResourcesDict.set(DictKey.Font, subFontDict);
 
-        return Dict.merge(xref, [subResourcesDict, localResources], true);
+        return DictImpl.merge(xref, [subResourcesDict, localResources], true);
       }
     }
-    return localResources || Dict.empty;
+    return localResources || DictImpl.empty;
   }
 
   getFieldObject(): FieldObject | null {
@@ -3442,7 +3444,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     }
 
     let dict = <Dict>evaluator.xref.fetchIfRef(this.ref!);
-    if (!(dict instanceof Dict)) {
+    if (!(dict instanceof DictImpl)) {
       return null;
     }
     dict = dict.clone();
@@ -3494,7 +3496,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     }
 
     let dict = <Dict>evaluator.xref.fetchIfRef(this.ref!);
-    if (!(dict instanceof Dict)) {
+    if (!(dict instanceof DictImpl)) {
       return null;
     }
     dict = dict.clone();
@@ -3518,7 +3520,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
         await writeObject(this.parent, parent, buffer, evaluator.xref.encrypt);
         parentData = buffer.join("");
         buffer.length = 0;
-      } else if (this.parent instanceof Dict) {
+      } else if (this.parent instanceof DictImpl) {
         this.parent.set(DictKey.V, name!);
       }
     }
@@ -3585,7 +3587,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
     const appearance = `q BT /PdfJsZaDb ${fontSize} Tf 0 g ${xShift} ${yShift} Td (${char}) Tj ET Q`;
 
-    const appearanceStreamDict = new Dict(params.xref);
+    const appearanceStreamDict = new DictImpl(params.xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
@@ -3593,8 +3595,8 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     appearanceStreamDict.set(DictKey.Matrix, [1, 0, 0, 1, 0, 0]);
     appearanceStreamDict.set(DictKey.Length, appearance.length);
 
-    const resources = new Dict(params.xref);
-    const font = new Dict(params.xref);
+    const resources = new DictImpl(params.xref);
+    const font = new DictImpl(params.xref);
     font.set(DictKey.PdfJsZaDb, this.fallbackFontDict);
     resources.set(DictKey.Font, font);
 
@@ -3608,12 +3610,12 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   _processCheckBox(params: AnnotationParameters) {
     const customAppearance = params.dict.getValue(DictKey.AP);
-    if (!(customAppearance instanceof Dict)) {
+    if (!(customAppearance instanceof DictImpl)) {
       return;
     }
 
     const normalAppearance = customAppearance.getValue(DictKey.N);
-    if (!(normalAppearance instanceof Dict)) {
+    if (!(normalAppearance instanceof DictImpl)) {
       return;
     }
 
@@ -3682,7 +3684,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     // The parent field's `V` entry holds a `Name` object with the appearance
     // state of whichever child field is currently in the "on" state.
     const fieldParent = params.dict.getValue(DictKey.Parent);
-    if (fieldParent instanceof Dict) {
+    if (fieldParent instanceof DictImpl) {
       this.parent = params.dict.getRaw(DictKey.Parent);
       const fieldParentValue = fieldParent.getValue(DictKey.V);
       if (fieldParentValue instanceof Name) {
@@ -3692,11 +3694,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
     // The button's value corresponds to its appearance state.
     const appearanceStates = params.dict.getValue(DictKey.AP);
-    if (!(appearanceStates instanceof Dict)) {
+    if (!(appearanceStates instanceof DictImpl)) {
       return;
     }
     const normalAppearance = appearanceStates.getValue(DictKey.N);
-    if (!(normalAppearance instanceof Dict)) {
+    if (!(normalAppearance instanceof DictImpl)) {
       return;
     }
     for (const key of normalAppearance.getKeys()) {
@@ -3774,7 +3776,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
   }
 
   get fallbackFontDict() {
-    const dict = new Dict();
+    const dict = new DictImpl();
     dict.set(DictKey.BaseFont, Name.get("ZapfDingbats"));
     dict.set(DictKey.Type, Name.get("FallbackType"));
     dict.set(DictKey.Subtype, Name.get("FallbackType"));
@@ -4345,7 +4347,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
 
   static createNewDict(annotation: FreeTextEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
     const { color, fontSize, oldAnnotation, rect, rotation, user, value } = annotation;
-    const freetext = oldAnnotation || new Dict(xref);
+    const freetext = oldAnnotation || new DictImpl(xref);
     freetext.set(DictKey.Type, Name.get("Annot"));
     freetext.set(DictKey.Subtype, Name.get("FreeText"));
     if (oldAnnotation) {
@@ -4369,7 +4371,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     }
 
     if (apRef || ap) {
-      const n = new Dict(xref);
+      const n = new DictImpl(xref);
       freetext.set(DictKey.AP, n);
 
       if (apRef) {
@@ -4392,12 +4394,12 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
 
     const { color, fontSize, rect, rotation, value } = annotation;
 
-    const resources = new Dict(xref);
-    const font = new Dict(xref);
+    const resources = new DictImpl(xref);
+    const font = new DictImpl(xref);
     if (baseFontRef) {
       font.set(DictKey.Helv, baseFontRef);
     } else {
-      const baseFont = new Dict(xref);
+      const baseFont = new DictImpl(xref);
       baseFont.set(DictKey.BaseFont, Name.get("Helvetica"));
       baseFont.set(DictKey.Type, Name.get("Font"));
       baseFont.set(DictKey.Subtype, Name.get("Type1"));
@@ -4495,7 +4497,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     buffer.push("ET", "Q");
     const appearance = buffer.join("\n");
 
-    const appearanceStreamDict = new Dict(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
@@ -4906,7 +4908,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
 
   static createNewDict(annotation: InkEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
     const { color, opacity, paths, outlines, rect, rotation, thickness } = annotation;
-    const ink = new Dict(xref);
+    const ink = new DictImpl(xref);
     ink.set(DictKey.Type, Name.get("Annot"));
     ink.set(DictKey.Subtype, Name.get("Ink"));
     ink.set(DictKey.CreationDate, `D:${getModificationDate()}`);
@@ -4924,7 +4926,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     }
 
     // Line thickness.
-    const bs = new Dict(xref);
+    const bs = new DictImpl(xref);
     ink.set(DictKey.BS, bs);
     bs.set(DictKey.W, thickness);
 
@@ -4937,7 +4939,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     // Opacity.
     ink.set(DictKey.CA, opacity);
 
-    const n = new Dict(xref);
+    const n = new DictImpl(xref);
     ink.set(DictKey.AP, n);
 
     if (apRef) {
@@ -4983,7 +4985,7 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     }
     const appearance = appearanceBuffer.join("\n");
 
-    const appearanceStreamDict = new Dict(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
@@ -4991,9 +4993,9 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     appearanceStreamDict.set(DictKey.Length, appearance.length);
 
     if (opacity !== 1) {
-      const resources = new Dict(xref);
-      const extGState = new Dict(xref);
-      const r0 = new Dict(xref);
+      const resources = new DictImpl(xref);
+      const extGState = new DictImpl(xref);
+      const r0 = new DictImpl(xref);
       r0.set(DictKey.CA, opacity);
       r0.set(DictKey.Type, Name.get("ExtGState"));
       extGState.set(DictKey.R0, r0);
@@ -5031,18 +5033,18 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
     appearanceBuffer.push("h f");
     const appearance = appearanceBuffer.join("\n");
 
-    const appearanceStreamDict = new Dict(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
     appearanceStreamDict.set(DictKey.BBox, rect);
     appearanceStreamDict.set(DictKey.Length, appearance.length);
 
-    const resources = new Dict(xref);
-    const extGState = new Dict(xref);
+    const resources = new DictImpl(xref);
+    const extGState = new DictImpl(xref);
     resources.set(DictKey.ExtGState, extGState);
     appearanceStreamDict.set(DictKey.Resources, resources);
-    const r0 = new Dict(xref);
+    const r0 = new DictImpl(xref);
     extGState.set(DictKey.R0, r0);
     r0.set(DictKey.BM, Name.get("Multiply")!);
 
@@ -5120,7 +5122,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
   static createNewDict(annotation: HighlightEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
 
     const { color, oldAnnotation, opacity, rect, rotation, user, quadPoints } = annotation;
-    const highlight = oldAnnotation || new Dict(xref);
+    const highlight = oldAnnotation || new DictImpl(xref);
 
     highlight.set(DictKey.Type, Name.get("Annot"));
     highlight.set(DictKey.Subtype, Name.get("Highlight"));
@@ -5143,7 +5145,7 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     }
 
     if (apRef || ap) {
-      const n = new Dict(xref);
+      const n = new DictImpl(xref);
       highlight.set(DictKey.AP, n);
       n.set(DictKey.N, apRef || ap!);
     }
@@ -5169,18 +5171,18 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
     appearanceBuffer.push("f*");
     const appearance = appearanceBuffer.join("\n");
 
-    const appearanceStreamDict = new Dict(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
     appearanceStreamDict.set(DictKey.BBox, rect!);
     appearanceStreamDict.set(DictKey.Length, appearance.length);
 
-    const resources = new Dict(xref);
-    const extGState = new Dict(xref);
+    const resources = new DictImpl(xref);
+    const extGState = new DictImpl(xref);
     resources.set(DictKey.ExtGState, extGState);
     appearanceStreamDict.set(DictKey.Resources, resources);
-    const r0 = new Dict(xref);
+    const r0 = new DictImpl(xref);
     extGState.set(DictKey.R0, r0);
     r0.set(DictKey.BM, Name.get("Multiply")!);
 
@@ -5395,7 +5397,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
 
     const xobjectName = Name.get("XObject");
     const imageName = Name.get("Image");
-    const image = new Dict(xref);
+    const image = new DictImpl(xref);
     image.set(DictKey.Type, xobjectName);
     image.set(DictKey.Subtype, imageName);
     image.set(DictKey.BitsPerComponent, 8);
@@ -5418,7 +5420,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
         }
       }
 
-      const smask = new Dict(xref);
+      const smask = new DictImpl(xref);
       smask.set(DictKey.Type, xobjectName);
       smask.set(DictKey.Subtype, imageName);
       smask.set(DictKey.BitsPerComponent, 8);
@@ -5441,7 +5443,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
   static createNewDict(annotation: StampEditorSerial, xref: XRefImpl, apRef: Ref | null, ap: StringStream | null) {
 
     const { oldAnnotation, rect, rotation, user } = annotation;
-    const stamp = oldAnnotation || new Dict(xref);
+    const stamp = oldAnnotation || new DictImpl(xref);
     stamp.set(DictKey.Type, Name.get("Annot"));
     stamp.set(DictKey.Subtype, Name.get("Stamp"));
     stamp.set(oldAnnotation ? DictKey.M : DictKey.CreationDate, `D:${getModificationDate()}`
@@ -5457,7 +5459,7 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
     }
 
     if (apRef || ap) {
-      const n = new Dict(xref);
+      const n = new DictImpl(xref);
       stamp.set(DictKey.AP, n);
 
       if (apRef) {
@@ -5478,13 +5480,13 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
 
     const { rotation } = annotation;
     const { imageRef, width, height } = image;
-    const resources = new Dict(xref);
-    const xobject = new Dict(xref);
+    const resources = new DictImpl(xref);
+    const xobject = new DictImpl(xref);
     resources.set(DictKey.XObject, xobject);
     xobject.set(DictKey.Im0, <Ref>imageRef!);
     const appearance = `q ${width} 0 0 ${height} 0 0 cm /Im0 Do Q`;
 
-    const appearanceStreamDict = new Dict(xref);
+    const appearanceStreamDict = new DictImpl(xref);
     appearanceStreamDict.set(DictKey.FormType, 1);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));

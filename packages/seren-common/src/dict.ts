@@ -1,11 +1,11 @@
-import { XRefImpl } from "packages/seren-core/src/xref";
 import { DictKey, DictValueTypeMapping } from "./primitives";
+import { XRef } from "./xref";
 
 export interface Dict {
 
   suppressEncryption: boolean;
 
-  xref: XRefImpl | null;
+  xref: XRef | null;
 
   objId: string | null;
 
@@ -15,7 +15,7 @@ export interface Dict {
 
   loadedName: string | null;
 
-  assignXref(newXref: XRefImpl | null): void;
+  assignXref(newXref: XRef | null): void;
 
   size: number;
 
@@ -49,6 +49,8 @@ export interface Dict {
   getRaw<T extends DictKey>(key: T): DictValueTypeMapping[T];
 
   getRawValues(): any[]
+
+  getKeys(): DictKey[];
 
   set<T extends DictKey>(key: T, value: DictValueTypeMapping[T]): void
 

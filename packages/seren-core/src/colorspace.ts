@@ -21,18 +21,20 @@ import {
   shadow,
   unreachable,
   warn,
-} from "../shared/util";
+  MutableArray,
+  TypedArray,
+  PlatformHelper,
+  RectType
+} from "seren-common";
 import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
-import { MutableArray, TypedArray } from "../types";
-import { PlatformHelper } from "../platform/platform_helper";
 import { XRefImpl } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
-import { RectType } from "../display/display_utils";
 import { Stream } from "./stream";
+import { DictImpl } from "./dict_impl";
 
 /**
  * Resizes an RGB image with 3 components.
@@ -430,9 +432,9 @@ class ColorSpace {
         case "Pattern":
           return new PatternCS(/* baseCS = */ null);
         default:
-          if (resources instanceof Dict) {
+          if (resources instanceof DictImpl) {
             const colorSpaces = resources.getValue(DictKey.ColorSpace);
-            if (colorSpaces instanceof Dict) {
+            if (colorSpaces instanceof DictImpl) {
               const resourcesCS = colorSpaces.getValue(<DictKey>cs.name);
               if (resourcesCS) {
                 if (resourcesCS instanceof Name) {
@@ -524,7 +526,7 @@ class ColorSpace {
         case "Lab":
           params = <Dict>xref.fetchIfRef(cs[1]);
           whitePoint = params.getArrayValue(DictKey.WhitePoint);
-          blackPoint = params.getArray(DictKey.BlackPoint);
+          blackPoint = params.getArrayValue(DictKey.BlackPoint);
           const range = <RectType>params.getArrayValue(DictKey.Range);
           return new LabCS(whitePoint, blackPoint, range);
         default:

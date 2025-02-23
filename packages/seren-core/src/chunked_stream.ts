@@ -13,11 +13,8 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { PDFStream, ReadResult } from "../interfaces";
-import { PlatformHelper } from "../platform/platform_helper";
+import { AbortException, assert, PlatformHelper, Uint8TypedArray, PDFStream, ReadResult } from "seren-common";
 import { MessageHandler } from "../shared/message_handler";
-import { AbortException, assert } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { arrayBuffersToBytes, MissingDataException } from "./core_utils";
 import { Stream } from "./stream";

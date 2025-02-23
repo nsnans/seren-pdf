@@ -23,9 +23,9 @@ import {
 import { CipherTransformFactory } from "./crypto";
 import { Lexer, ParsedType, Parser } from "./parser";
 import { PDFManager } from "./pdf_manager";
-import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn , XRef} from "seren-common";
+import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn, XRef } from "seren-common";
 import { Stream } from "./stream";
-import { DictImpl } from "./dict";
+import { DictImpl } from "./dict_impl";
 
 
 interface StreamState {
@@ -879,7 +879,7 @@ export class XRefImpl implements XRef {
     if (cacheEntry !== undefined) {
       // In documents with Object Streams, it's possible that cached `Dict`s
       // have not been assigned an `objId` yet (see e.g. issue3115r.pdf).
-      if (cacheEntry instanceof Dict && !cacheEntry.objId) {
+      if (cacheEntry instanceof DictImpl && !cacheEntry.objId) {
         cacheEntry.objId = ref.toString();
       }
       return cacheEntry;
@@ -913,7 +913,7 @@ export class XRefImpl implements XRef {
       this._pendingRefs.remove(ref);
       throw ex;
     }
-    if (parsedXrefEntry instanceof Dict) {
+    if (parsedXrefEntry instanceof DictImpl) {
       parsedXrefEntry.objId = ref.toString();
     } else if (parsedXrefEntry instanceof BaseStream) {
       parsedXrefEntry.dict!.objId = ref.toString();

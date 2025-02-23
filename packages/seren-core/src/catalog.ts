@@ -16,6 +16,7 @@
 import { MessageHandler } from "../shared/message_handler";
 import {
   createValidAbsoluteUrl,
+  DestinationType,
   DocumentActionEventType,
   FormatError,
   info,
@@ -46,17 +47,17 @@ import { NameTree, NumberTree } from "./name_number_tree";
 import { PDFManager } from "./pdf_manager";
 import {
   DictKey,
-  isDict,
   isName,
   isRefsEqual,
   Name,
   Ref,
   RefSet,
   RefSetCache,
-} from "../../seren-common/src/primitives";
+} from "seren-common";
 import { Dict } from "packages/seren-common/src/dict";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
+import { DictImpl, isDict } from "./dict_impl";
 
 
 export enum ViewerPreferenceKeys {
@@ -157,7 +158,7 @@ function isValidExplicitDest(dest: DestinationType | unknown) {
 }
 
 function fetchDest(dest: Dict | DestinationType | unknown) {
-  if (dest instanceof Dict) {
+  if (dest instanceof DictImpl) {
     dest = <DestinationType>dest.getValue(DictKey.D);
   }
   return isValidExplicitDest(dest) ? <DestinationType>dest : null;
@@ -286,7 +287,7 @@ export class Catalog {
     this.xref = xref;
 
     const _catDict = xref.getCatalogObj();
-    if (!(_catDict instanceof Dict)) {
+    if (!(_catDict instanceof DictImpl)) {
       throw new FormatError("Catalog object is not a dictionary.");
     }
     this._catDict = _catDict!;
@@ -338,7 +339,7 @@ export class Catalog {
     let collection = null;
     try {
       const obj = this._catDict.getValue(DictKey.Collection);
-      if (obj instanceof Dict && obj.size > 0) {
+      if (obj instanceof DictImpl && obj.size > 0) {
         collection = obj;
       }
     } catch (ex) {
@@ -354,7 +355,7 @@ export class Catalog {
     let acroForm = null;
     try {
       const obj = this._catDict.getValue(DictKey.AcroForm);
-      if (obj instanceof Dict && obj.size > 0) {
+      if (obj instanceof DictImpl && obj.size > 0) {
         acroForm = obj;
       }
     } catch (ex) {
@@ -382,7 +383,7 @@ export class Catalog {
 
       const stream = this.xref.fetch(streamRef, !this.xref.encrypt?.encryptMetadata);
 
-      if (stream instanceof BaseStream && stream.dict instanceof Dict) {
+      if (stream instanceof BaseStream && stream.dict instanceof DictImpl) {
         const type = stream.dict.getValue(DictKey.Type);
         const subtype = stream.dict.getValue(DictKey.Subtype);
 
@@ -424,7 +425,7 @@ export class Catalog {
    */
   _readMarkInfo(): CatalogMarkInfo | null {
     const obj = this._catDict.getValue(DictKey.MarkInfo);
-    if (!(obj instanceof Dict)) {
+    if (!(obj instanceof DictImpl)) {
       return null;
     }
 
@@ -461,7 +462,7 @@ export class Catalog {
   _readStructTreeRoot() {
     const rawObj = this._catDict.getRaw(DictKey.StructTreeRoot);
     const obj = this.xref.fetchIfRef(rawObj);
-    if (!(obj instanceof Dict)) {
+    if (!(obj instanceof DictImpl)) {
       return null;
     }
 
@@ -472,7 +473,7 @@ export class Catalog {
 
   get toplevelPagesDict() {
     const pagesObj = this._catDict.getValue(DictKey.Pages);
-    if (!(pagesObj instanceof Dict)) {
+    if (!(pagesObj instanceof DictImpl)) {
       throw new FormatError("Invalid top-level pages dictionary.");
     }
     return shadow(this, "toplevelPagesDict", pagesObj);
@@ -493,7 +494,7 @@ export class Catalog {
 
   private _readDocumentOutline() {
     let obj: Dict | Ref | number | string = this._catDict.getValue(DictKey.Outlines);
-    if (!(obj instanceof Dict)) {
+    if (!(obj instanceof DictImpl)) {
       return null;
     }
     obj = <Ref>obj.getRaw(DictKey.First);
@@ -592,7 +593,7 @@ export class Catalog {
    */
   _readPermissions() {
     const encrypt = this.xref.trailer!.getValue(DictKey.Encrypt);
-    if (!(encrypt instanceof Dict)) {
+    if (!(encrypt instanceof DictImpl)) {
       return null;
     }
 
@@ -626,11 +627,11 @@ export class Catalog {
       if (!properties) {
         return shadow(this, "optionalContentConfig", null);
       }
-      const defaultConfig = <Dict>properties.get(DictKey.D);
+      const defaultConfig = <Dict>properties.getValue(DictKey.D);
       if (!defaultConfig) {
         return shadow(this, "optionalContentConfig", null);
       }
-      const groupsData = properties.get(DictKey.OCGs);
+      const groupsData = properties.getValue(DictKey.OCGs);
       if (!Array.isArray(groupsData)) {
         return shadow(this, "optionalContentConfig", null);
       }
@@ -665,7 +666,7 @@ export class Catalog {
       rbGroups: [],
     };
 
-    const name = group.get(DictKey.Name);
+    const name = group.getValue(DictKey.Name);
     if (typeof name === "string") {
       obj.name = stringToPDFString(name);
     }
@@ -678,14 +679,14 @@ export class Catalog {
       obj.intent = intent.map(i => i.name);
     }
 
-    const usage = group.get(DictKey.Usage);
-    if (!(usage instanceof Dict)) {
+    const usage = group.getValue(DictKey.Usage);
+    if (!(usage instanceof DictImpl)) {
       return obj;
     }
     const usageObj = obj.usage;
 
     const print = usage.getValue(DictKey.Print);
-    if (print instanceof Dict) {
+    if (print instanceof DictImpl) {
       const printState = print.getValue(DictKey.PrintState);
       if (printState instanceof Name) {
         switch (printState.name) {
@@ -697,7 +698,7 @@ export class Catalog {
     }
 
     const view = usage.getValue(DictKey.View);
-    if (view instanceof Dict) {
+    if (view instanceof DictImpl) {
       const viewState = view.getValue(DictKey.ViewState);
       if (viewState instanceof Name) {
         switch (viewState.name) {
@@ -822,7 +823,7 @@ export class Catalog {
           ? stringToPDFString(<string>config.getValue(DictKey.Name))
           : null,
       creator:
-        typeof config.get(DictKey.Creator) === "string"
+        typeof config.getValue(DictKey.Creator) === "string"
           ? stringToPDFString(config.getValue(DictKey.Creator))
           : null,
       baseState:
@@ -868,7 +869,7 @@ export class Catalog {
           dests.set(stringToPDFString(key), dest);
         }
       }
-    } else if (obj instanceof Dict) {
+    } else if (obj instanceof DictImpl) {
       obj.forEach(function (key, value) {
         const dest = fetchDest(value);
         if (dest) {
@@ -893,7 +894,7 @@ export class Catalog {
         warn(`Found "${id}" at an incorrect position in the NameTree.`);
         return allDest;
       }
-    } else if (obj instanceof Dict) {
+    } else if (obj instanceof DictImpl) {
       const dest = fetchDest(obj.getValue(<DictKey>id));
       if (dest) {
         return dest;
@@ -951,7 +952,7 @@ export class Catalog {
       const labelDict = nums.get(i);
 
       if (labelDict !== undefined) {
-        if (!(labelDict instanceof Dict)) {
+        if (!(labelDict instanceof DictImpl)) {
           throw new FormatError("PageLabel is not a dictionary.");
         }
 
@@ -1072,7 +1073,7 @@ export class Catalog {
 
     const obj = this._catDict.getValue(DictKey.ViewerPreferences);
 
-    if (!(obj instanceof Dict)) {
+    if (!(obj instanceof DictImpl)) {
       return shadow(this, "viewerPreferences", null);
     }
 
@@ -1205,13 +1206,13 @@ export class Catalog {
     const obj = this._catDict.getValue(DictKey.OpenAction);
     let openAction: CatalogOpenAction | null = null;
 
-    if (obj instanceof Dict) {
+    if (obj instanceof DictImpl) {
       openAction = {
         dest: null, action: null
       }
       // Convert the OpenAction dictionary into a format that works with
       // `parseDestDictionary`, to avoid having to re-implement those checks.
-      const destDict = new Dict(this.xref);
+      const destDict = new DictImpl(this.xref);
       destDict.set(DictKey.A, obj);
 
       const resultObj: ParsedDestDictionary = { url: null, dest: null, action: null };
@@ -1235,7 +1236,7 @@ export class Catalog {
     const obj = this._catDict.getValue(DictKey.Names);
     let attachments: Map<string, FileSpecSerializable> | null = null;
 
-    if (obj instanceof Dict && obj.has(DictKey.EmbeddedFiles)) {
+    if (obj instanceof DictImpl && obj.has(DictKey.EmbeddedFiles)) {
       const nameTree = new NameTree(obj.getRaw(DictKey.EmbeddedFiles), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         const fs = new FileSpec(value, this.xref);
@@ -1254,7 +1255,7 @@ export class Catalog {
     let javaScript: Map<string, string> | null = null;
 
     function appendIfJavaScriptDict(name: string, jsDict: Dict) {
-      if (!(jsDict instanceof Dict)) {
+      if (!(jsDict instanceof DictImpl)) {
         return;
       }
       if (!isName(jsDict.getValue(DictKey.S), "JavaScript")) {
@@ -1274,7 +1275,7 @@ export class Catalog {
       }
     }
 
-    if (obj instanceof Dict && obj.has(DictKey.JavaScript)) {
+    if (obj instanceof DictImpl && obj.has(DictKey.JavaScript)) {
       const nameTree = new NameTree(obj.getRaw(DictKey.JavaScript), this.xref);
       for (const [key, value] of nameTree.getAll()) {
         appendIfJavaScriptDict(stringToPDFString(key), value);
@@ -1370,7 +1371,7 @@ export class Catalog {
 
         const obj = await (pageDictCache.get(currentNode) || xref.fetchAsync(currentNode));
 
-        if (obj instanceof Dict) {
+        if (obj instanceof DictImpl) {
           let type = obj.getRaw(DictKey.Type);
           if (type instanceof Ref) {
             type = <Name>await xref.fetchAsync(type);
@@ -1400,7 +1401,7 @@ export class Catalog {
       }
 
       // Must be a child page dictionary.
-      if (!(currentNode instanceof Dict)) {
+      if (!(currentNode instanceof DictImpl)) {
         throw new FormatError(
           "Page dictionary kid reference points to wrong type of object."
         );
@@ -1501,7 +1502,7 @@ export class Catalog {
       if (recoveryMode && ignoreErrors && pageIndex === 0) {
         // Ensure that the viewer will always load (fixes issue15590.pdf).
         warn(`getAllPageDicts - Skipping invalid first page: "${error}".`);
-        error = Dict.empty;
+        error = DictImpl.empty;
       }
 
       map.set(pageIndex++, [error, null]);
@@ -1556,7 +1557,7 @@ export class Catalog {
         // array, rather than using indirect objects (see issue9540.pdf).
         obj = kidObj;
       }
-      if (!(obj instanceof Dict)) {
+      if (!(obj instanceof DictImpl)) {
         addPageError(
           new FormatError(
             "Page dictionary kid reference points to wrong type of object."
@@ -1602,7 +1603,7 @@ export class Catalog {
       return (<Promise<Dict | Ref>>xref.fetchAsync(kidRef)).then(node => {
         if (
           isRefsEqual(kidRef, pageRef) && !isDict(node, "Page") &&
-          !(node instanceof Dict && !node.has(DictKey.Type) && node.has(DictKey.Contents))
+          !(node instanceof DictImpl && !node.has(DictKey.Type) && node.has(DictKey.Contents))
         ) {
           throw new FormatError(
             "The reference does not point to a /Page dictionary."
@@ -1611,7 +1612,7 @@ export class Catalog {
         if (!node) {
           return null;
         }
-        if (!(node instanceof Dict)) {
+        if (!(node instanceof DictImpl)) {
           throw new FormatError("Node must be a dictionary.");
         }
         parentRef = <Ref>node.getRaw(DictKey.Parent);
@@ -1620,7 +1621,7 @@ export class Catalog {
         if (!parent) {
           return null;
         }
-        if (!(parent instanceof Dict)) {
+        if (!(parent instanceof DictImpl)) {
           throw new FormatError("Parent must be a dictionary.");
         }
         return <Promise<Ref[]>>parent.getAsyncValue(DictKey.Kids);
@@ -1639,7 +1640,7 @@ export class Catalog {
             break;
           }
           kidPromises.push((<Promise<Dict>>xref.fetchAsync(kid)).then(obj => {
-            if (!(obj instanceof Dict)) {
+            if (!(obj instanceof DictImpl)) {
               throw new FormatError("Kid node must be a dictionary.");
             }
             if (obj.has(DictKey.Count)) {
@@ -1674,7 +1675,7 @@ export class Catalog {
 
   get baseUrl() {
     const uri = this._catDict.getValue(DictKey.URI);
-    if (uri instanceof Dict) {
+    if (uri instanceof DictImpl) {
       const base = uri.getValue(DictKey.Base);
       if (typeof base === "string") {
         const absoluteUrl = createValidAbsoluteUrl(base, null, {
@@ -1709,21 +1710,21 @@ export class Catalog {
     docBaseUrl: string | null = null,
     docAttachments: Map<string, FileSpecSerializable> | null = null,
   ) {
-    if (!(destDict instanceof Dict)) {
+    if (!(destDict instanceof DictImpl)) {
       warn("parseDestDictionary: `destDict` must be a dictionary.");
       return;
     }
 
     let action: Dict | Name | DestinationType | string | number[] = destDict.getValue(DictKey.A);
     let url, dest;
-    if (!(action instanceof Dict)) {
+    if (!(action instanceof DictImpl)) {
       if (destDict.has(DictKey.Dest)) {
         // A /Dest entry should *only* contain a Name or an Array, but some bad
         // PDF generators ignore that and treat it as an /A entry.
         action = destDict.getValue(DictKey.Dest);
       } else {
         action = destDict.getValue(DictKey.AA);
-        if (action instanceof Dict) {
+        if (action instanceof DictImpl) {
           if (action.has(DictKey.D)) {
             // MouseDown
             action = action.getValue(DictKey.D);
@@ -1735,7 +1736,7 @@ export class Catalog {
       }
     }
 
-    if (action instanceof Dict) {
+    if (action instanceof DictImpl) {
       const actionType = action.getValue(DictKey.S);
       if (!(actionType instanceof Name)) {
         warn("parseDestDictionary: Invalid type in Action dictionary.");
@@ -1778,7 +1779,7 @@ export class Catalog {
 
         case "GoToR":
           const urlDict = action.getValue(DictKey.F);
-          if (urlDict instanceof Dict) {
+          if (urlDict instanceof DictImpl) {
             const fs = new FileSpec(
               urlDict,
               /* xref = */ null,
@@ -1806,7 +1807,7 @@ export class Catalog {
           const target = action.getValue(DictKey.T);
           let attachment;
 
-          if (docAttachments && target instanceof Dict) {
+          if (docAttachments && target instanceof DictImpl) {
             const relationship = target.getValue(DictKey.R);
             const name = target.getValue(DictKey.N);
 

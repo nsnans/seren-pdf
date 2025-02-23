@@ -1,5 +1,4 @@
-import { Dict, DictKey, DictValueTypeMapping, isName, PlatformHelper, Ref, shadow, unreachable } from "seren-common";
-import { XRefImpl } from "./xref";
+import { Dict, DictKey, DictValueTypeMapping, isName, PlatformHelper, Ref, shadow, unreachable, XRef } from "seren-common";
 
 export class DictImpl implements Dict {
 
@@ -7,7 +6,7 @@ export class DictImpl implements Dict {
 
   protected _map: Map<DictKey, DictValueTypeMapping[DictKey]> = new Map();
 
-  public xref: XRefImpl | null;
+  public xref: XRef | null;
 
   public objId: string | null;
 
@@ -19,14 +18,14 @@ export class DictImpl implements Dict {
 
   public loadedName: string | null = null;
 
-  constructor(xref: XRefImpl | null = null) {
+  constructor(xref: XRef | null = null) {
     // Map should only be used internally, use functions below to access.
     this._map = Object.create(null);
     this.xref = xref;
     this.objId = null;
   }
 
-  assignXref(newXref: XRefImpl | null) {
+  assignXref(newXref: XRef | null) {
     this.xref = newXref;
   }
 
@@ -207,7 +206,7 @@ export class DictImpl implements Dict {
     return shadow(this, "empty", emptyDict);
   }
 
-  static merge(xref: XRefImpl, dictArray: DictImpl[], mergeSubDicts = false) {
+  static merge(xref: XRef, dictArray: Dict[], mergeSubDicts = false) {
     const mergedDict = new DictImpl(xref);
     const properties = new Map();
 
@@ -252,7 +251,7 @@ export class DictImpl implements Dict {
     return mergedDict.size > 0 ? mergedDict : DictImpl.empty;
   }
 
-  clone() {
+  clone(): Dict {
     const dict = new DictImpl(this.xref);
     for (const key of this.getKeys()) {
       dict.set(key, <any>this.getRaw(key));

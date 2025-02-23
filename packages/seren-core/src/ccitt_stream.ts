@@ -18,6 +18,7 @@ import { CCITTFaxDecoder } from "./ccitt";
 import { DecodeStream } from "./decode_stream";
 import { DictKey } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
+import { DictImpl } from "./dict_impl";
 
 export class CCITTFaxStream extends DecodeStream {
 
@@ -31,8 +32,8 @@ export class CCITTFaxStream extends DecodeStream {
     this.stream = str;
     this.dict = str.dict;
 
-    if (!(params instanceof Dict)) {
-      params = Dict.empty;
+    if (!(params instanceof DictImpl)) {
+      params = DictImpl.empty;
     }
 
     const source = {
