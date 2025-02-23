@@ -1,4 +1,4 @@
-import { unreachable } from "../shared/util";
+import { unreachable } from "seren-common";
 import { PDFManager } from "./pdf_manager";
 import { Ref } from "../../seren-common/src/primitives";
 

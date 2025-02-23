@@ -13,11 +13,15 @@
  * limitations under the License.
  */
 
-import { assert, BaseException, warn } from "../shared/util";
-import { grayToRGBA } from "../shared/image_utils";
+import {
+  assert,
+  BaseException,
+  warn,
+  grayToRGBA,
+  PlatformHelper,
+  Uint8TypedArray
+} from "seren-common";
 import { readUint16 } from "./core_utils";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 
 export class JpegError extends BaseException {
   constructor(msg: string) {

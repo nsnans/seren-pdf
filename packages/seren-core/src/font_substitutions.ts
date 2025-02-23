@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { warn } from "../shared/util";
+import { warn } from "seren-common";
 import { validateFontName } from "./core_utils";
 import { normalizeFontName } from "./fonts_utils";
 import { GlobalIdFactory } from "./global_id_factory";

@@ -46,6 +46,13 @@ export interface Dict {
 
   getArrayValue<T extends DictKey>(key: T): DictValueTypeMapping[T];
 
+  getArrayWithFallback<
+    T1 extends DictKey,
+    T2 extends DictKey
+  >(key1: T1, key2: T2):
+    DictValueTypeMapping[T1] |
+    DictValueTypeMapping[T2];
+
   getRaw<T extends DictKey>(key: T): DictValueTypeMapping[T];
 
   getRawValues(): any[]

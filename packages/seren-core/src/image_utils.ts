@@ -13,18 +13,22 @@
  * limitations under the License.
  */
 
-import { RectType, TransformType } from "../display/display_utils";
-import { PlatformHelper } from "../platform/platform_helper";
 import {
   MAX_IMAGE_SIZE_TO_CACHE,
   OPS,
   unreachable,
-  warn
-} from "../shared/util";
+  warn,
+  PlatformHelper,
+  DictKey,
+  Ref,
+  RefSet,
+  RefSetCache,
+  Dict,
+  RectType,
+  TransformType
+} from "seren-common";
 import { ColorSpace } from "./colorspace";
 import { ImageMask, SMaskOptions } from "./core_types";
-import { DictKey, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 
 abstract class BaseLocalCache<T> {
 

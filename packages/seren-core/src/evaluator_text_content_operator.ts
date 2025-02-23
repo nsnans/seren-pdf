@@ -1,7 +1,5 @@
-import { TransformType } from "../display/display_utils";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, IDENTITY_MATRIX, isArrayEqual, normalizeUnicode, OPS, Util, warn } from "../shared/util";
-import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { bidi } from "./bidi";
 import { DefaultTextContentItem, EvaluatorTextContent, StreamSink, TextContentSinkProxy } from "./core_types";
@@ -14,10 +12,10 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "./fonts";
 import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "./image_utils";
-import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { DictKey, Name, Ref, TransformType, Dict, MutableArray } from "seren-common";
 import { WorkerTask } from "./worker";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -875,7 +873,7 @@ export class TextContentOperator {
   paintXObject(ctx: ProcessContext, assist: OperatorAssist) {
     assist.flushTextContentItem();
     if (!ctx.xobjs) {
-      ctx.xobjs = ctx.resources.getValue(DictKey.XObject) || Dict.empty;
+      ctx.xobjs = ctx.resources.getValue(DictKey.XObject) || DictImpl.empty;
     }
 
     var isValidName = ctx.args![0] instanceof Name;
@@ -976,7 +974,7 @@ export class TextContentOperator {
       }
 
       const extGState = ctx.resources.getValue(DictKey.ExtGState);
-      if (!(extGState instanceof Dict)) {
+      if (!(extGState instanceof DictImpl)) {
         throw new FormatError("ExtGState should be a dictionary.");
       }
 
@@ -984,7 +982,7 @@ export class TextContentOperator {
       // TODO: Attempt to lookup cached GStates by reference as well,
       //       if and only if there are PDF documents where doing so
       //       would significantly improve performance.
-      if (!(gState instanceof Dict)) {
+      if (!(gState instanceof DictImpl)) {
         throw new FormatError("GState should be a dictionary.");
       }
 
@@ -1036,7 +1034,7 @@ export class TextContentOperator {
       ctx.markedContentData!.level++;
 
       let mcid = null;
-      if (ctx.args![1] instanceof Dict) {
+      if (ctx.args![1] instanceof DictImpl) {
         mcid = ctx.args![1].getValue(DictKey.MCID);
       }
       ctx.textContent.items.push({
@@ -1137,7 +1135,7 @@ export class GetTextContentHandler implements OperatorListHandler {
   ) {
     this.stream = stream;
     this.task = task;
-    this.resources = resources ?? Dict.empty;
+    this.resources = resources ?? DictImpl.empty;
     this.sink = sink;
     this.viewBox = viewBox;
     this.includeMarkedContent = includeMarkedContent;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { unreachable } from "../shared/util";
+import { unreachable } from "seren-common";
 
 class ToUnicodeMap {
 

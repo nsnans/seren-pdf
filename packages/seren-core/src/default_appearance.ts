@@ -28,16 +28,17 @@ import {
   OPS,
   shadow,
   warn,
-} from "../shared/util";
+  PointType, RectType,
+  MutableArray,
+} from "seren-common";
 import { ColorSpace } from "./colorspace";
 import { EvaluatorPreprocessor } from "./evaluator";
 import { LocalColorSpaceCache } from "./image_utils";
 import { PDFFunctionFactory } from "./function";
 import { Stream, StringStream } from "./stream";
 import { XRefImpl } from "./xref";
-import { PointType, RectType } from "../display/display_utils";
-import { MutableArray } from "../types";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
+import { DictImpl } from "./dict_impl";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
   constructor(str: string) {
@@ -280,7 +281,7 @@ class FakeUnicodeFont {
 
   get fontDescriptorRef() {
     if (!FakeUnicodeFont._fontDescriptorRef) {
-      const fontDescriptor = new Dict(this.xref);
+      const fontDescriptor = new DictImpl(this.xref);
       fontDescriptor.set(DictKey.Type, Name.get("FontDescriptor"));
       fontDescriptor.set(DictKey.FontName, this.fontName);
       fontDescriptor.set(DictKey.FontFamily, "MyriadPro Regular");
@@ -297,7 +298,7 @@ class FakeUnicodeFont {
   }
 
   get descendantFontRef() {
-    const descendantFont = new Dict(this.xref);
+    const descendantFont = new DictImpl(this.xref);
     descendantFont.set(DictKey.BaseFont, this.fontName);
     descendantFont.set(DictKey.Type, Name.get("Font"));
     descendantFont.set(DictKey.Subtype, Name.get("CIDFontType0"));
@@ -332,7 +333,7 @@ class FakeUnicodeFont {
 
     descendantFont.set(DictKey.W, <number | number[]>widths);
 
-    const cidSystemInfo = new Dict(this.xref);
+    const cidSystemInfo = new DictImpl(this.xref);
     cidSystemInfo.set(DictKey.Ordering, "Identity");
     cidSystemInfo.set(DictKey.Registry, "Adobe");
     cidSystemInfo.set(DictKey.Supplement, 0);
@@ -342,7 +343,7 @@ class FakeUnicodeFont {
   }
 
   get baseFontRef() {
-    const baseFont = new Dict(this.xref);
+    const baseFont = new DictImpl(this.xref);
     baseFont.set(DictKey.BaseFont, this.fontName);
     baseFont.set(DictKey.Type, Name.get("Font"));
     baseFont.set(DictKey.Subtype, Name.get("Type0"));
@@ -354,8 +355,8 @@ class FakeUnicodeFont {
   }
 
   get resources() {
-    const resources = new Dict(this.xref);
-    const font = new Dict(this.xref);
+    const resources = new DictImpl(this.xref);
+    const font = new DictImpl(this.xref);
     font.set(<DictKey>this.fontName.name, this.baseFontRef);
     resources.set(DictKey.Font, font);
 
@@ -481,8 +482,8 @@ class FakeUnicodeFont {
 
     if (strokeAlpha !== 1) {
       buffer.push("/R0 gs");
-      const extGState = new Dict(this.xref);
-      const r0 = new Dict(this.xref);
+      const extGState = new DictImpl(this.xref);
+      const r0 = new DictImpl(this.xref);
       r0.set(DictKey.ca, strokeAlpha);
       r0.set(DictKey.CA, strokeAlpha);
       r0.set(DictKey.Type, Name.get("ExtGState"));
@@ -497,7 +498,7 @@ class FakeUnicodeFont {
     buffer.push("ET", "Q");
     const appearance = buffer.join("\n");
 
-    const appearanceStreamDict = new Dict(this.xref);
+    const appearanceStreamDict = new DictImpl(this.xref);
     appearanceStreamDict.set(DictKey.Subtype, Name.get("Form"));
     appearanceStreamDict.set(DictKey.Type, Name.get("XObject"));
     appearanceStreamDict.set(DictKey.BBox, [0, 0, w, h]);

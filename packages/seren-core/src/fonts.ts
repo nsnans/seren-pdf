@@ -22,7 +22,12 @@ import {
   shadow,
   string32,
   warn,
-} from "../shared/util";
+  RectType,
+  TransformType,
+  DictKey,
+  PlatformHelper,
+  Uint8TypedArray,
+} from "seren-common";
 import { CFFCompiler, CFFParser } from "./cff_parser";
 import {
   FontFlags,
@@ -65,13 +70,9 @@ import { OpenTypeFileBuilder } from "./opentype_file_builder";
 import { readUint32 } from "./core_utils";
 import { Stream } from "./stream";
 import { Type1Font } from "./type1_font";
-import { RectType, TransformType } from "../display/display_utils";
 import { OperatorListIR } from "./operator_list";
-import { DictKey } from "../../seren-common/src/primitives";
 import { CssFontInfo, EvaluatorProperties, SeacMapValue } from "./evaluator";
-import { PlatformHelper } from "../platform/platform_helper";
 import { FontSubstitutionInfo } from "./font_substitutions";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [

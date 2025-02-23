@@ -13,16 +13,14 @@
  * limitations under the License.
  */
 
-import { RectType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { AnnotationPrefix, stringToPDFString, warn } from "../shared/util";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "./core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "./pdf_manager";
-import { DictKey, isName, Name, Ref, RefSetCache } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { RectType, Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef } from "seren-common";
 import { writeObject } from "./writer";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 const MAX_DEPTH = 40;
 
@@ -74,7 +72,7 @@ export class StructTreeRoot {
 
   readRoleMap() {
     const roleMapDict = this.dict.getValue(DictKey.RoleMap);
-    if (!(roleMapDict instanceof Dict)) {
+    if (!(roleMapDict instanceof DictImpl)) {
       return;
     }
     roleMapDict.forEach((key, value) => {
@@ -140,7 +138,7 @@ export class StructTreeRoot {
     const structTreeRootRef = xref.getNewTemporaryRef();
     root.set(DictKey.StructTreeRoot, structTreeRootRef);
 
-    const structTreeRoot = new Dict(xref);
+    const structTreeRoot = new DictImpl(xref);
     structTreeRoot.set(DictKey.Type, Name.get("StructTreeRoot"));
     const parentTreeRef = xref.getNewTemporaryRef();
     structTreeRoot.set(DictKey.ParentTree, parentTreeRef);
@@ -148,7 +146,7 @@ export class StructTreeRoot {
     structTreeRoot.set(DictKey.K, kids);
     cache.put(structTreeRootRef, structTreeRoot);
 
-    const parentTree = new Dict(xref);
+    const parentTree = new DictImpl(xref);
     const nums: (Ref | number)[] = [];
     parentTree.set(DictKey.Nums, nums);
 
@@ -190,7 +188,7 @@ export class StructTreeRoot {
     }
 
     const parentTree = this.dict.getValue(DictKey.ParentTree);
-    if (!(parentTree instanceof Dict)) {
+    if (!(parentTree instanceof DictImpl)) {
       warn("Cannot update the struct tree: ParentTree isn't a dict.");
       return false;
     }
@@ -313,7 +311,7 @@ export class StructTreeRoot {
     structTreeRoot: StructTreeRoot | null,
     kids: Ref[] | null,
     nums: (Ref | number)[],
-    xref: XRefImpl,
+    xref: XRef,
     pdfManager: PDFManager,
     newRefs: { ref: Ref, data: string | null }[],
     cache: RefSetCache<Ref, Dict | (number | Ref)[]>,
@@ -370,7 +368,7 @@ export class StructTreeRoot {
         nextKey = Math.max(nextKey, parentTreeId);
 
         const tagRef = xref.getNewTemporaryRef();
-        const tagDict = new Dict(xref);
+        const tagDict = new DictImpl(xref);
 
         StructTreeRoot.#writeProperties(tagDict, accessibilityData);
 
@@ -384,7 +382,7 @@ export class StructTreeRoot {
           cache,
         );
 
-        const objDict = new Dict(xref);
+        const objDict = new DictImpl(xref);
         tagDict.set(DictKey.K, objDict);
         objDict.set(DictKey.Type, objr);
         if (isPageRef) {
@@ -429,7 +427,7 @@ export class StructTreeRoot {
   }
 
   static #collectParents(
-    elements: Record<string, any>[], xref: XRefImpl,
+    elements: Record<string, any>[], xref: XRef,
     pageDict: Dict, numberTree: NumberTree
   ) {
     const idToElements = new Map();
@@ -457,7 +455,7 @@ export class StructTreeRoot {
       if (elems) {
         const parentRef = pageKid.getRaw(DictKey.P);
         const parentDict = xref.fetchIfRef(parentRef);
-        if (parentRef instanceof Ref && parentDict instanceof Dict) {
+        if (parentRef instanceof Ref && parentDict instanceof DictImpl) {
           // It should always the case, but we check just in case.
           const params = { ref: kidRef, dict: pageKid };
           for (const element of elems) {
@@ -487,7 +485,7 @@ export class StructTreeRoot {
         if (Number.isInteger(kid) && updateElement(<number>kidValue, pageKid, kidRef)) {
           break;
         }
-        if (!(kid instanceof Dict)) {
+        if (!(kid instanceof DictImpl)) {
           continue;
         }
         if (!isName(kid.getValue(DictKey.Type), "MCR")) {
@@ -507,7 +505,7 @@ export class StructTreeRoot {
     newTagRef: Ref,
     structTreeRootRef: Ref,
     fallbackKids: Ref[],
-    xref: XRefImpl,
+    xref: XRef,
     cache: RefSetCache<Ref, Dict | (Ref | number)[]>,
   ) {
     let ref = null;
@@ -623,7 +621,7 @@ class StructElementNode {
     let kidDict = null;
     if (kid instanceof Ref) {
       kidDict = <Dict>this.dict.xref!.fetch(kid);
-    } else if (kid instanceof Dict) {
+    } else if (kid instanceof DictImpl) {
       kidDict = kid;
     }
     if (!kidDict) {
@@ -820,7 +818,7 @@ export class StructTreePage {
       warn("StructTree MAX_DEPTH reached.");
       return null;
     }
-    if (!(dict instanceof Dict)) {
+    if (!(dict instanceof DictImpl)) {
       return null;
     }
 
@@ -863,7 +861,7 @@ export class StructTreePage {
       return false;
     }
 
-    if (obj instanceof Dict) {
+    if (obj instanceof DictImpl) {
       if (obj.objId !== dict.objId) {
         return false;
       }
@@ -912,7 +910,7 @@ export class StructTreePage {
       }
 
       const a = node.dict.getValue(DictKey.A);
-      if (a instanceof Dict) {
+      if (a instanceof DictImpl) {
         const bbox = lookupNormalRect(a.getArrayValue(DictKey.BBox), null);
         if (bbox) {
           obj.bbox = bbox;

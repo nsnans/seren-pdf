@@ -19,7 +19,7 @@
  * license.
  */
 
-import { FormatError, info } from "../shared/util";
+import { FormatError, info } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Stream } from "./stream";

@@ -1,7 +1,11 @@
-import { TransformType } from "../display/display_utils";
+import {
+  TransformType,
+  MutableArray,
+  AbortException,
+  FormatError,
+  OPS, warn
+} from "seren-common";
 import { CommonObjType, ObjType } from "../shared/message_handler";
-import { AbortException, FormatError, OPS, warn } from "../shared/util";
-import { MutableArray } from "../types";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { lookupMatrix } from "./core_utils";
@@ -13,6 +17,7 @@ import { getTilingPatternIR, Pattern } from "./pattern";
 import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
+import { DictImpl } from "./dict_impl";
 
 export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 
@@ -55,7 +60,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
       const pattern = <BaseStream | Dict | null>this.context.xref.fetchIfRef(rawPattern);
       if (pattern) {
         const dict = pattern instanceof BaseStream ? pattern.dict! : pattern;
-        const typeNum = dict.get(DictKey.PatternType);
+        const typeNum = dict.getValue(DictKey.PatternType);
 
         if (typeNum === PatternType.TILING) {
           const color = cs.base ? cs.base.getRgb(args, 0) : null;
@@ -129,7 +134,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
     const tilingOpList = new OperatorList();
     // Merge the available resources, to prevent issues when the patternDict
     // is missing some /Resources entries (fixes issue6541.pdf).
-    const patternResources = Dict.merge(
+    const patternResources = DictImpl.merge(
       this.context.xref, [patternDict.getValue(DictKey.Resources), resources], false
     );
 

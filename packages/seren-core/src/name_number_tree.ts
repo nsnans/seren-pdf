@@ -13,12 +13,19 @@
  * limitations under the License.
  */
 
-import { DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
-import { FormatError, unreachable, warn } from "../shared/util";
+import {
+  DictKey,
+  Ref,
+  RefSet,
+  Dict,
+  FormatError,
+  unreachable,
+  warn,
+  PlatformHelper,
+  XRef
+} from "seren-common";
 import { XRefImpl } from "./xref";
-import { PlatformHelper } from "../platform/platform_helper";
-
+import { DictImpl } from "./dict_impl";
 /**
  * A NameTree/NumberTree is like a Dict but has some advantageous properties,
  * see the specification (7.9.6 and 7.9.7) for additional details.
@@ -28,11 +35,11 @@ class NameOrNumberTree<T extends number | string> {
 
   protected root: Ref | string;
 
-  protected xref: XRefImpl;
+  protected xref: XRef;
 
   protected _type: string;
 
-  constructor(root: Ref | string, xref: XRefImpl, type: string) {
+  constructor(root: Ref | string, xref: XRef, type: string) {
     if (PlatformHelper.isTesting() &&
       this.constructor === NameOrNumberTree
     ) {
@@ -55,7 +62,7 @@ class NameOrNumberTree<T extends number | string> {
     const queue = <(Ref | string)[]>[this.root];
     while (queue.length > 0) {
       const obj = xref.fetchIfRef(queue.shift()!);
-      if (!(obj instanceof Dict)) {
+      if (!(obj instanceof DictImpl)) {
         continue;
       }
       if (obj.has(DictKey.Kids)) {
@@ -100,7 +107,7 @@ class NameOrNumberTree<T extends number | string> {
         return null;
       }
 
-      const kids = kidsOrEntries.get(DictKey.Kids);
+      const kids = kidsOrEntries.getValue(DictKey.Kids);
       if (!Array.isArray(kids)) {
         return null;
       }
@@ -157,13 +164,13 @@ class NameOrNumberTree<T extends number | string> {
 }
 
 export class NameTree extends NameOrNumberTree<string> {
-  constructor(root: Ref | string, xref: XRefImpl) {
+  constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Names");
   }
 }
 
 export class NumberTree extends NameOrNumberTree<number> {
-  constructor(root: Ref | string, xref: XRefImpl) {
+  constructor(root: Ref | string, xref: XRef) {
     super(root, xref, "Nums");
   }
 }

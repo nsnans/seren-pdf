@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   FormatError,
   info,
   numberArrayToString,
-  warn
-} from "../shared/util";
+  warn,
+  PlatformHelper,
+  Uint8TypedArray
+} from "seren-common";
 import { Ascii85Stream } from "./ascii_85_stream";
 import { AsciiHexStream } from "./ascii_hex_stream";
 import { BaseStream } from "./base_stream";
@@ -44,6 +44,7 @@ import { Dict } from "packages/seren-common/src/dict";
 import { RunLengthStream } from "./run_length_stream";
 import { NullStream, Stream } from "./stream";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -150,7 +151,7 @@ class Parser {
           this.shift();
           return array;
         case "<<": // dictionary or stream
-          const dict = new Dict(this.xref);
+          const dict = new DictImpl(this.xref);
           while (!isCmd(this.buf1, ">>") && this.buf1 !== EOF) {
             if (!(this.buf1 instanceof Name)) {
               info("Malformed dictionary: key must be a name object");
@@ -610,7 +611,7 @@ class Parser {
       }
     }
 
-    const dict = new Dict(this.xref);
+    const dict = new DictImpl(this.xref);
     for (const key in dictMap) {
       dict.set(<DictKey>key, dictMap[key]);
     }
@@ -1440,7 +1441,7 @@ class Linearization {
         Number.isInteger(obj1) &&
         Number.isInteger(obj2) &&
         isCmd(obj3, "obj") &&
-        linDict instanceof Dict &&
+        linDict instanceof DictImpl &&
         typeof (obj = linDict.getValue(DictKey.Linearized)) === "number" &&
         obj > 0
       )

@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { unreachable } from "../shared/util";
+import { Uint8TypedArray, unreachable } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { JpxDecoderOptions } from "./image";
 import { Dict } from "packages/seren-common/src/dict";

@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { shadow } from "../shared/util";
+import { Uint8TypedArray, shadow, DictKey, Dict } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { Jbig2Image } from "./jbig2";
-import { DictKey } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { DictImpl } from "./dict_impl";
 
 /**
  * For JBIG2's we use a library to decode these images and
@@ -65,7 +63,7 @@ export class Jbig2Stream extends DecodeStream {
     const jbig2Image = new Jbig2Image();
 
     const chunks: { data: Uint8TypedArray, start: number, end: number }[] = [];
-    if (this.params instanceof Dict) {
+    if (this.params instanceof DictImpl) {
       const globalsStream = this.params.getValue(DictKey.JBIG2Globals);
       if (globalsStream instanceof BaseStream) {
         const globals = globalsStream.getBytes();

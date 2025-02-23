@@ -20,7 +20,7 @@ import {
   createValidAbsoluteUrl,
   FeatureTest,
   warn
-} from "../shared/util";
+} from "seren-common";
 import { Catalog } from "./catalog";
 import { ChunkedStreamManager } from "./chunked_stream";
 import { MissingDataException } from "./core_utils";

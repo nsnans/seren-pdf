@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-import { BaseException, shadow } from "../shared/util";
+import { BaseException, shadow, PlatformHelper, Uint8TypedArray } from "seren-common";
 import { log2, readInt8, readUint16, readUint32 } from "./core_utils";
 import { ArithmeticDecoder } from "./arithmetic_decoder";
 import { CCITTFaxDecoder } from "./ccitt";
-import { PlatformHelper } from "../platform/platform_helper";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 
 export class Jbig2Error extends BaseException {
   constructor(msg: string) {

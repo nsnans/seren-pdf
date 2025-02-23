@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { shadow, warn } from "../shared/util";
+import { Uint8TypedArray, shadow, warn, Dict, DictKey } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpegImage } from "./jpg";
-import { DictKey } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { DictImpl } from "./dict_impl";
 
 /**
  * For JPEG's we use a library to decode these images and the stream behaves
@@ -99,7 +97,7 @@ export class JpegStream extends DecodeStream {
       }
     }
     // Fetching the 'ColorTransform' entry, if it exists.
-    if (this.params instanceof Dict) {
+    if (this.params instanceof DictImpl) {
       const colorTransform = this.params.getValue(DictKey.ColorTransform);
       if (Number.isInteger(colorTransform)) {
         jpegOptions.colorTransform = colorTransform;

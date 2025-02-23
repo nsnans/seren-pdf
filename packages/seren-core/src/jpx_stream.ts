@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { shadow } from "../shared/util";
+import { Uint8TypedArray, shadow, Dict } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpxDecoderOptions } from "./image";
 import { JpxImage } from "./jpx";
-import { Dict } from "packages/seren-common/src/dict";
 
 /**
  * For JPEG 2000's we use a library to decode these images and

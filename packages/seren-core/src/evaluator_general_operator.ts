@@ -1,6 +1,5 @@
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
-import { AbortException, FormatError, info, OPS, warn } from "../shared/util";
-import { shiftable } from "../types";
+import { AbortException, FormatError, info, OPS, warn, shiftable, Dict } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { isNumberArray } from "./core_utils";
@@ -13,9 +12,9 @@ import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
 import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 const MethodMap = new Map<OPS, keyof GeneralOperator>();
 
@@ -469,7 +468,7 @@ class GeneralOperator {
       }
 
       const extGState = ctx.resources.getValue(DictKey.ExtGState);
-      if (!(extGState instanceof Dict)) {
+      if (!(extGState instanceof DictImpl)) {
         throw new FormatError("ExtGState should be a dictionary.");
       }
 
@@ -477,7 +476,7 @@ class GeneralOperator {
       // TODO: Attempt to lookup cached GStates by reference as well,
       //       if and only if there are PDF documents where doing so
       //       would significantly improve performance.
-      if (!(gState instanceof Dict)) {
+      if (!(gState instanceof DictImpl)) {
         throw new FormatError("GState should be a dictionary.");
       }
 
@@ -579,7 +578,7 @@ class GeneralOperator {
     if (ctx.args !== null) {
       let i = 0, ii = ctx.args.length;
       for (; i < ii; i++) {
-        if (ctx.args[i] instanceof Dict) {
+        if (ctx.args[i] instanceof DictImpl) {
           break;
         }
       }
@@ -672,11 +671,11 @@ export class GetOperatorListHandler implements OperatorListHandler {
         },
         fallbackFontDict: this.fallbackFontDict,
         task: this.task,
-        patterns: this.resources.getValue(DictKey.Pattern) || Dict.empty,
+        patterns: this.resources.getValue(DictKey.Pattern) || DictImpl.empty,
         options: this.evalCtx.options,
         xref: this.evalCtx.xref,
         pageIndex: this.evalCtx.pageIndex,
-        xobjs: this.resources.getValue(DictKey.XObject) || Dict.empty,
+        xobjs: this.resources.getValue(DictKey.XObject) || DictImpl.empty,
         regionalImageCache: new RegionalImageCache,
         globalImageCache: new GlobalImageCache,
       }

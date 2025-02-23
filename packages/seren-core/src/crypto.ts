@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { PlatformHelper } from "../platform/platform_helper";
 import {
   bytesToString,
   FormatError,
@@ -25,11 +23,14 @@ import {
   unreachable,
   utf8StringToString,
   warn,
-} from "../shared/util";
+  Uint8TypedArray,
+  PlatformHelper
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { DecryptStream } from "./decrypt_stream";
 import { DictKey, isName, Name } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
+import { DictImpl } from "./dict_impl";
 
 class ARCFourCipher implements StreamClipher, StringClipher {
 
@@ -1780,7 +1781,7 @@ class CipherTransformFactory {
         // Trying to find default handler -- it usually has Length.
         const cfDict = dict.getValue(DictKey.CF);
         const streamCryptoName = dict.getValue(DictKey.StmF);
-        if (cfDict instanceof Dict && streamCryptoName instanceof Name) {
+        if (cfDict instanceof DictImpl && streamCryptoName instanceof Name) {
           cfDict.suppressEncryption = true; // See comment below.
           const handlerDict = <Dict>cfDict.getValue(<DictKey>streamCryptoName.name);
           keyLength = handlerDict?.getValue(DictKey.Length) || 128;
@@ -1865,7 +1866,7 @@ class CipherTransformFactory {
 
     if (algorithm >= 4) {
       const cf = dict.getValue(DictKey.CF);
-      if (cf instanceof Dict) {
+      if (cf instanceof DictImpl) {
         // The 'CF' dictionary itself should not be encrypted, and by setting
         // `suppressEncryption` we can prevent an infinite loop inside of
         // `XRef_fetchUncompressed` if the dictionary contains indirect

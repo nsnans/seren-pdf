@@ -12,18 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {
   assert,
   FeatureTest,
   FormatError,
   ImageKind,
   warn,
-} from "../shared/util";
-import {
   convertBlackAndWhiteToRGBA,
   convertToRGBA,
-} from "../shared/image_utils";
+  MutableArray, TypedArray,
+  PlatformHelper, Uint8TypedArray
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { DecodeStream } from "./decode_stream";
@@ -32,13 +31,10 @@ import { JpegStream } from "./jpeg_stream";
 import { JpxImage } from "./jpx";
 import { DictKey, Name } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
-import { MutableArray, TypedArray } from "../types";
 import { XRefImpl } from "./xref";
 import { PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
-import { PlatformHelper } from "../platform/platform_helper";
 import { ImageMask, SingleOpaquePixelImageMask } from "./core_types";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we

@@ -14,9 +14,7 @@
  */
 /* eslint-disable no-var */
 
-import { RectType, TransformType } from "../display/display_utils";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
-import { PlatformHelper } from "../platform/platform_helper";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {
   assert,
@@ -28,9 +26,20 @@ import {
   shadow,
   TextRenderingMode,
   Util,
-  warn
-} from "../shared/util";
-import { MutableArray } from "../types";
+  warn,
+  RectType,
+  TransformType,
+  PlatformHelper,
+  MutableArray,
+  Cmd,
+  DictKey,
+  EOF,
+  Name,
+  Ref,
+  RefSet,
+  RefSetCache,
+  Dict
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { CMap, IdentityCMap } from "./cmap";
 import { ColorSpace } from "./colorspace";
@@ -55,8 +64,6 @@ import {
 } from "./image_utils";
 import { OperatorList, OperatorListIR } from "./operator_list";
 import { Lexer, Parser } from "./parser";
-import { Cmd, DictKey, EOF, Name, Ref, RefSet, RefSetCache } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { FontProgramPrivateData } from "./type1_parser";
 import { WorkerTask } from "./worker";

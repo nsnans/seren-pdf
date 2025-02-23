@@ -1,6 +1,12 @@
-import { TransformType, RectType } from "../display/display_utils";
-import { AbortException, FormatError, OPS, warn } from "../shared/util";
-import { MutableArray } from "../types";
+import {
+  AbortException,
+  FormatError,
+  OPS,
+  warn,
+  MutableArray,
+  TransformType,
+  RectType
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import { SMaskOptions } from "./core_types";
@@ -11,6 +17,7 @@ import { OperatorList } from "./operator_list";
 import { Name, DictKey, Ref, isName } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
+import { DictImpl } from "./dict_impl";
 
 export const SKIP = 1;
 
@@ -37,21 +44,21 @@ export class EvaluatorBaseHandler {
     let optionalContent: Dict;
     if (contentProperties instanceof Name) {
       const properties = resources!.getValue(DictKey.Properties);
-      optionalContent = <Dict>properties.get(<DictKey>contentProperties.name);
-    } else if (contentProperties instanceof Dict) {
+      optionalContent = <Dict>properties.getValue(<DictKey>contentProperties.name);
+    } else if (contentProperties instanceof DictImpl) {
       optionalContent = contentProperties;
     } else {
       throw new FormatError("Optional content properties malformed.");
     }
 
-    const optionalContentType = (<Name>optionalContent.get(DictKey.Type))?.name;
+    const optionalContentType = (<Name>optionalContent.getValue(DictKey.Type))?.name;
     if (optionalContentType === "OCG") {
       return {
         type: optionalContentType,
         id: optionalContent.objId,
       };
     } else if (optionalContentType === "OCMD") {
-      const expression = optionalContent.get(DictKey.VE);
+      const expression = optionalContent.getValue(DictKey.VE);
       if (Array.isArray(expression)) {
         const result = [] as (string | string[])[];
         this._parseVisibilityExpression(expression, 0, result);
@@ -63,10 +70,10 @@ export class EvaluatorBaseHandler {
         }
       }
 
-      const optionalContentGroups = optionalContent.get(DictKey.OCGs);
+      const optionalContentGroups = optionalContent.getValue(DictKey.OCGs);
       if (
         Array.isArray(optionalContentGroups) ||
-        optionalContentGroups instanceof Dict
+        optionalContentGroups instanceof DictImpl
       ) {
         const groupIds: (string | null)[] = [];
         if (Array.isArray(optionalContentGroups)) {
@@ -81,8 +88,8 @@ export class EvaluatorBaseHandler {
         return {
           type: optionalContentType,
           ids: groupIds,
-          policy: optionalContent.get(DictKey.P) instanceof Name
-            ? (<Name>optionalContent.get(DictKey.P)).name : null,
+          policy: optionalContent.getValue(DictKey.P) instanceof Name
+            ? (<Name>optionalContent.getValue(DictKey.P)).name : null,
           expression: null,
         };
       } else if (optionalContentGroups instanceof Ref) {
@@ -157,7 +164,7 @@ export class EvaluatorBaseHandler {
         matrix, bbox, smask, isolated: false, knockout: false,
       };
 
-      const groupSubtype = group.get(DictKey.S);
+      const groupSubtype = group.getValue(DictKey.S);
       let colorSpace = null;
       if (isName(groupSubtype, "Transparency")) {
         groupOptions!.isolated = !!group.getValue(DictKey.I) || false;

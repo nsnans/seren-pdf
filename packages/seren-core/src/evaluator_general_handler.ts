@@ -1,7 +1,18 @@
-import { RectType } from "../display/display_utils";
+import {
+  RectType,
+  info,
+  OPS,
+  TextRenderingMode,
+  warn,
+  Dict,
+  DictKey,
+  isName,
+  Name,
+  Ref,
+  RefSet
+} from "seren-common";
 import { DocumentEvaluatorOptions } from "../display/document_evaluator_options";
 import { CommonObjType, MessageHandler } from "../shared/message_handler";
-import { info, OPS, TextRenderingMode, warn } from "../shared/util";
 import { BaseStream } from "./base_stream";
 import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
@@ -12,9 +23,8 @@ import { Font, Glyph } from "./fonts";
 import { isPDFFunction } from "./function";
 import { LocalColorSpaceCache, LocalGStateCache } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { DictKey, isName, Name, Ref, RefSet } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
+import { DictImpl } from "./dict_impl";
 
 /**
  * {@link EvaluatorFontHandler} 管理了处理字体逻辑相关的方法。
@@ -64,7 +74,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
 
   // 这里应该必须是Dict类型，如果有其它类型可以在这里看看
   hasBlendModes(resources: Dict, nonBlendModesSet: RefSet) {
-    if (!(resources instanceof Dict)) {
+    if (!(resources instanceof DictImpl)) {
       return false;
     }
     if (resources.objId && nonBlendModesSet.has(resources.objId)) {
@@ -82,7 +92,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
       const node = nodes.shift();
       // First check the current resources for blend modes.
       const graphicStates = node!.getValue(DictKey.ExtGState);
-      if (graphicStates instanceof Dict) {
+      if (graphicStates instanceof DictImpl) {
         for (let graphicState of graphicStates.getRawValues()) {
           if (graphicState instanceof Ref) {
             if (processed.has(graphicState)) {
@@ -97,7 +107,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
               continue;
             }
           }
-          if (!(graphicState instanceof Dict)) {
+          if (!(graphicState instanceof DictImpl)) {
             continue;
           }
           if (graphicState.objId) {
@@ -122,7 +132,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
       }
       // Descend into the XObjects to look for more resources and blend modes.
       const xObjects = node!.getValue(DictKey.XObject);
-      if (!(xObjects instanceof Dict)) {
+      if (!(xObjects instanceof DictImpl)) {
         continue;
       }
       for (let xObject of xObjects.getRawValues()) {
@@ -149,7 +159,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
           processed.put(xObject.dict!.objId);
         }
         const xResources = xObject.dict!.getValue(DictKey.Resources);
-        if (!(xResources instanceof Dict)) {
+        if (!(xResources instanceof DictImpl)) {
           continue;
         }
         // Checking objId to detect an infinite loop.
@@ -299,7 +309,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
             gStateObj.push([key, false]);
             break;
           }
-          if (value instanceof Dict) {
+          if (value instanceof DictImpl) {
             isSimpleGState = false;
             promise = promise.then(() =>
               this.context.imageHandler.handleSMask(
@@ -448,7 +458,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
 
   static get fallbackFontDict() {
     if (this._fallbackFontDict === null) {
-      this._fallbackFontDict = new Dict();
+      this._fallbackFontDict = new DictImpl();
       this._fallbackFontDict.set(DictKey.BaseFont, Name.get("Helvetica"));
       this._fallbackFontDict.set(DictKey.Type, Name.get("FallbackType"));
       this._fallbackFontDict.set(DictKey.Subtype, Name.get("FallbackType"));

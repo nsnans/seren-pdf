@@ -15,7 +15,7 @@
 
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { Dict } from "packages/seren-common/src/dict";
+import { Dict } from "seren-common";
 
 export class RunLengthStream extends DecodeStream {
 

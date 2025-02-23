@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, RenderingIntentFlag, warn } from "../shared/util";
-import { MutableArray } from "../types";
+import { ImageKind, OPS, RenderingIntentFlag, warn, MutableArray } from "seren-common";
 import { StreamSink } from "./core_types";
 import { OptionalContent } from "./image_utils";
 

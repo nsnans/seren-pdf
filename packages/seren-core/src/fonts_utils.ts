@@ -17,7 +17,7 @@ import { getEncoding, StandardEncoding } from "./encodings";
 import { getGlyphsUnicode } from "./glyphlist";
 import { getLookupTableFactory } from "./core_utils";
 import { getUnicodeForGlyph } from "./unicode";
-import { info } from "../shared/util";
+import { info } from "seren-common";
 import { EvaluatorProperties } from "./evaluator";
 
 // Accented characters have issues on Windows and Linux. When this flag is

@@ -13,26 +13,25 @@
  * limitations under the License.
  */
 
-import { DictKey, Ref, RefSet } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { DictKey, Ref, RefSet, warn, Dict } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { MissingDataException } from "./core_utils";
-import { warn } from "../shared/util";
 import { XRefImpl } from "./xref";
 import { ChunkedStream } from "./chunked_stream";
 import { XRef } from "seren-common";
+import { DictImpl } from "./dict_impl";
 
 function mayHaveChildren(value: unknown) {
   return (
     value instanceof Ref ||
-    value instanceof Dict ||
+    value instanceof DictImpl ||
     value instanceof BaseStream ||
     Array.isArray(value)
   );
 }
 
 function addChildren(node: Dict | BaseStream | object | object[], nodesToVisit: object[]) {
-  if (node instanceof Dict) {
+  if (node instanceof DictImpl) {
     node = node.getRawValues();
   } else if (node instanceof BaseStream) {
     node = node.dict!.getRawValues();

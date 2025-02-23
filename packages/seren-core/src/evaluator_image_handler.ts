@@ -1,5 +1,5 @@
 import { CommonObjType, ObjType } from "../shared/message_handler";
-import { warn, assert, OPS } from "../shared/util";
+import { warn, assert, OPS, DictKey, Dict } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { ImageMask, SingleOpaquePixelImageMask, SMaskOptions } from "./core_types";
 import { DecodeStream } from "./decode_stream";
@@ -9,8 +9,6 @@ import { isPDFFunction } from "./function";
 import { PDFImage } from "./image";
 import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "./image_utils";
 import { OperatorList } from "./operator_list";
-import { DictKey } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { WorkerTask } from "./worker";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {

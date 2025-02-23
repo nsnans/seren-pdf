@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-import { PointType, RectType, TransformType } from "../display/display_utils";
 import { MeshShadingPatternIR } from "../display/pattern_helper";
-import { PlatformHelper } from "../platform/platform_helper";
 import {
   assert,
   FormatError,
@@ -24,7 +22,13 @@ import {
   unreachable,
   Util,
   warn,
-} from "../shared/util";
+  PointType,
+  RectType,
+  TransformType,
+  PlatformHelper,
+  Dict,
+  DictKey
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { ColorSpace } from "./colorspace";
 import {
@@ -37,8 +41,6 @@ import {
 import { ParserConstructFunction, PDFFunctionFactory } from "./function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { OperatorListIR } from "./operator_list";
-import { DictKey } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { XRefImpl } from "./xref";
 
 const ShadingType = {
@@ -64,7 +66,7 @@ class Pattern {
     localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = shading instanceof BaseStream ? shading.dict! : shading;
-    const type = dict.get(DictKey.ShadingType);
+    const type = dict.getValue(DictKey.ShadingType);
 
     try {
       switch (type) {
@@ -151,7 +153,7 @@ class RadialAxialShading extends BaseShading {
     } else if (this.shadingType === ShadingType.RADIAL) {
       coordsLen = 6;
     }
-    this.coordsArr = dict.getArray(DictKey.Coords);
+    this.coordsArr = dict.getArrayValue(DictKey.Coords);
     if (!isNumberArray(this.coordsArr, coordsLen)) {
       throw new FormatError("RadialAxialShading: Invalid /Coords array.");
     }
@@ -173,7 +175,7 @@ class RadialAxialShading extends BaseShading {
 
     let extendStart = false,
       extendEnd = false;
-    const extendArr = dict.getArray(DictKey.Extend);
+    const extendArr = dict.getArrayValue(DictKey.Extend);
     if (isBooleanArray(extendArr, 2)) {
       [extendStart, extendEnd] = extendArr;
     }

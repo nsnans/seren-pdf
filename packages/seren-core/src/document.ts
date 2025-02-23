@@ -13,10 +13,7 @@
  * limitations under the License.
  */
 
-import { RectType } from "../display/display_utils";
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { PlatformHelper } from "../platform/platform_helper";
-import { CreateStampImageResult } from "../shared/collected_types";
 import { MessageHandler } from "../shared/message_handler";
 import {
   AnnotationEditorPrefix,
@@ -33,8 +30,10 @@ import {
   stringToPDFString,
   toHexUtil,
   Util,
-  warn
-} from "../shared/util";
+  warn,
+  RectType,
+  PlatformHelper
+} from "seren-common";
 import {
   Annotation,
   AnnotationData,
@@ -83,6 +82,8 @@ import { StructTreePage, StructTreeRoot, StructTreeSerialNode } from "./struct_t
 import { WorkerTask } from "./worker";
 import { writeObject } from "./writer";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
+import { CreateStampImageResult } from "./types";
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX: RectType = [0, 0, 612, 792];
@@ -157,10 +158,10 @@ export class Page {
     if (!Array.isArray(value)) {
       return value;
     }
-    if (value.length === 1 || !(value[0] instanceof Dict)) {
+    if (value.length === 1 || !(value[0] instanceof DictImpl)) {
       return value[0];
     }
-    return Dict.merge(this.xref, <Dict[]>value, false);
+    return DictImpl.merge(this.xref, <Dict[]>value, false);
   }
 
   get content() {
@@ -172,7 +173,7 @@ export class Page {
     // present, but can be empty. Some documents still omit it; in this case
     // we return an empty dictionary.
     const resources = this._getInheritableProperty(DictKey.Resources);
-    return shadow(this, "resources", resources instanceof Dict ? resources : Dict.empty);
+    return shadow(this, "resources", resources instanceof DictImpl ? resources : DictImpl.empty);
   }
 
   _getBoundingBox(name: DictKey): RectType | null {
@@ -293,7 +294,7 @@ export class Page {
         promises.push(
           this.xref.fetchAsync(ref).then(
             (obj: Dict | unknown) => {
-              if (obj instanceof Dict) {
+              if (obj instanceof DictImpl) {
                 annotation.oldAnnotation = obj.clone();
               }
             },
@@ -1033,7 +1034,7 @@ export class PDFDocument {
     }
     return fields.every(field => {
       const value = <Dict | unknown>this.xref.fetchIfRef(<Ref | object>field);
-      if (!(value instanceof Dict)) {
+      if (!(value instanceof DictImpl)) {
         return false;
       }
       if (value.has(DictKey.Kids)) {
@@ -1122,7 +1123,7 @@ export class PDFDocument {
       }
       info("The document information dictionary is invalid.");
     }
-    if (!(infoDict instanceof Dict)) {
+    if (!(infoDict instanceof DictImpl)) {
       return shadow(this, "documentInfo", docInfo);
     }
 
@@ -1229,7 +1230,7 @@ export class PDFDocument {
     try {
       const obj = await xref.fetchAsync(ref);
       // Ensure that the object that was found is actually a Page dictionary.
-      if (obj instanceof Dict) {
+      if (obj instanceof DictImpl) {
         let type: Name | unknown = obj.getRaw(DictKey.Type);
         if (type instanceof Ref) {
           type = await xref.fetchAsync(type);
@@ -1400,7 +1401,7 @@ export class PDFDocument {
     }
     visitedRefs.put(fieldRef);
     const field = await xref.fetchAsync(fieldRef);
-    if (!(field instanceof Dict)) {
+    if (!(field instanceof DictImpl)) {
       return;
     }
     if (field.has(DictKey.T)) {
@@ -1416,7 +1417,7 @@ export class PDFDocument {
           }
           obj = await xref.fetchAsync(obj);
         }
-        if (!(obj instanceof Dict)) {
+        if (!(obj instanceof DictImpl)) {
           break;
         }
         if (obj.has(DictKey.T)) {

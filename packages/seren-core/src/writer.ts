@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { bytesToString, info, warn } from "../shared/util";
+import { Uint8TypedArray, DictKey, isName, Name, Ref, Dict, bytesToString, info, warn } from "seren-common";
 import { BaseStream } from "./base_stream";
 import {
   escapePDFName,
@@ -23,17 +22,16 @@ import {
   numberToString
 } from "./core_utils";
 import { calculateMD5, CipherTransform, CipherTransformFactory } from "./crypto";
-import { DictKey, isName, Name, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
-import { Stream } from "./stream";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
+import { Stream } from "./stream";
 
 export async function writeObject(
   ref: Ref, obj: unknown, buffer: string[], encrypt: CipherTransformFactory | null = null
 ) {
   const transform = encrypt?.createCipherTransform(ref.num, ref.gen);
   buffer.push(`${ref.num} ${ref.gen} obj\n`);
-  if (obj instanceof Dict) {
+  if (obj instanceof DictImpl) {
     await writeDict(obj, buffer, transform);
   } else if (obj instanceof BaseStream) {
     await writeStream(obj, buffer, transform);
@@ -143,7 +141,7 @@ async function writeValue(value: any, buffer: string[], transform?: CipherTransf
     buffer.push(numberToString(value));
   } else if (typeof value === "boolean") {
     buffer.push(value.toString());
-  } else if (value instanceof Dict) {
+  } else if (value instanceof DictImpl) {
     await writeDict(value, buffer, transform);
   } else if (value instanceof BaseStream) {
     await writeStream(value, buffer, transform);
@@ -313,7 +311,7 @@ function computeIDs(baseOffset: number, xrefInfo: IncrementalXRefInfo, newXref: 
 function getTrailerDict(xrefInfo: IncrementalXRefInfo,
   newRefs: { ref: Ref; data: string; }[], useXrefStream: boolean) {
 
-  const newXref = new Dict(null);
+  const newXref = new DictImpl(null);
   newXref.set(DictKey.Prev, xrefInfo.startXRef);
   const refForXrefTable = xrefInfo.newRef!;
   if (useXrefStream) {

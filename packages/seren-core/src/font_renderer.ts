@@ -20,14 +20,14 @@ import {
   FormatError,
   unreachable,
   warn,
-} from "../shared/util";
+  PlatformHelper,
+  TransformType
+} from "seren-common";
 import { CFFDict, CFFDictKey, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
 import { getGlyphsUnicode } from "./glyphlist";
 import { isNumberArray } from "./core_utils";
 import { StandardEncoding } from "./encodings";
 import { Stream } from "./stream";
-import { PlatformHelper } from "../platform/platform_helper";
-import { TransformType } from "../display/display_utils";
 import { Font } from "./fonts";
 import { EvaluatorProperties } from "./evaluator";
 

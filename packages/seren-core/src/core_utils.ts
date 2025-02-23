@@ -22,15 +22,17 @@ import {
   stringToPDFString,
   Util,
   warn,
-} from "../shared/util";
+  PlatformHelper,
+  RectType,
+  TransformType,
+  Uint8TypedArray,
+  AnnotationEditorSerial
+} from "seren-common";
 import { DictKey, DictValueTypeMapping, isName, Ref, RefSet } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
 import { BaseStream } from "./base_stream";
-import { PlatformHelper } from "../platform/platform_helper";
 import { XRefImpl } from "./xref";
-import { RectType, TransformType } from "../display/display_utils";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
+import { DictImpl } from "./dict_impl";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -139,7 +141,7 @@ function getInheritableProperty<T extends DictKey>(
   let values = null;
   const visited = new RefSet();
 
-  while (dict instanceof Dict && !(dict.objId && visited.has(dict.objId))) {
+  while (dict instanceof DictImpl && !(dict.objId && visited.has(dict.objId))) {
     if (dict.objId) {
       visited.put(dict.objId);
     }
@@ -370,7 +372,7 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRefImpl, li
     for (const element of entry) {
       _collectJS(element, xref, list, parents);
     }
-  } else if (entry instanceof Dict) {
+  } else if (entry instanceof DictImpl) {
     if (isName(entry.getValue(DictKey.S), DictKey.JavaScript)) {
       const js = entry.getValue(DictKey.JS);
       let code;
@@ -405,7 +407,7 @@ function collectActions(xref: XRefImpl, dict: Dict, eventType: Record<string, st
     // by ones from younger ancestors.
     for (let i = additionalActionsDicts.length - 1; i >= 0; i--) {
       const additionalActions = additionalActionsDicts[i];
-      if (!(additionalActions instanceof Dict)) {
+      if (!(additionalActions instanceof DictImpl)) {
         continue;
       }
       for (const key of additionalActions.getKeys()) {

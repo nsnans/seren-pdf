@@ -1,7 +1,7 @@
-import { Uint8TypedArray } from "../../seren-common/src/typed_array";
+import { Uint8TypedArray, Ref } from "seren-common";
 import { JpxDecoderOptions } from "./image";
 import { JpegStream } from "./jpeg_stream";
-import { Ref } from "../../seren-common/src/primitives";
+import { } from "../../seren-common/src/primitives";
 import { Stream } from "./stream";
 
 export interface OpenJPEGModule {

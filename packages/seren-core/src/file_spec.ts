@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
-import { shadow, stringToPDFString, warn } from "../shared/util";
+import { shadow, stringToPDFString, warn, Dict, DictKey, Ref } from "seren-common";
 import { BaseStream } from "./base_stream";
-import { DictKey, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 function pickPlatformItem(dict?: Dict) {
-  if (!(dict instanceof Dict)) {
+  if (!(dict instanceof DictImpl)) {
     return null;
   }
   // Look for the filename in this order:
@@ -74,7 +73,7 @@ export class FileSpec {
   protected _contentRef: Ref | null = null;
 
   constructor(root: Dict, xref: XRefImpl | null, skipContent = false) {
-    if (!(root instanceof Dict)) {
+    if (!(root instanceof DictImpl)) {
       return;
     }
     this.xref = xref;

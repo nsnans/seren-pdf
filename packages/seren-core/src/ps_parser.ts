@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { FormatError, shadow } from "../shared/util";
-import { EOF } from "../../seren-common/src/primitives";
+import { FormatError, shadow, EOF } from "seren-common";
 import { isWhiteSpace } from "./core_utils";
 import { BaseStream } from "./base_stream";
 

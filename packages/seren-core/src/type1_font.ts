@@ -25,13 +25,12 @@ import {
   CFFStrings,
   CFFTopDict,
 } from "./cff_parser";
-import { FormatError, warn } from "../shared/util";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "./fonts_utils";
 import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
 import { CharStringObjectType, Type1Parser } from "./type1_parser";
 import { EvaluatorProperties } from "./evaluator";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { Uint8TypedArray, FormatError, warn } from "seren-common";
 
 function findBlock(streamBytes: Uint8TypedArray, signature: number[], startIndex: number) {
   const streamBytesLength = streamBytes.length;

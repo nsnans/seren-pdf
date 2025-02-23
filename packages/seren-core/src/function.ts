@@ -19,15 +19,16 @@ import {
   info,
   shadow,
   unreachable,
-} from "../shared/util";
-import { MutableArray } from "../types";
+  MutableArray,
+  Dict,
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { isNumberArray } from "./core_utils";
 import { LocalFunctionCache } from "./image_utils";
 import { DictKey, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { PostScriptLexer, PostScriptParser } from "./ps_parser";
 import { XRefImpl } from "./xref";
+import { DictImpl } from "./dict_impl";
 
 export type ParserConstructFunction = (src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) => void;
 
@@ -80,7 +81,7 @@ class PDFFunctionFactory {
     let fnRef;
     if (cacheKey instanceof Ref) {
       fnRef = cacheKey;
-    } else if (cacheKey instanceof Dict) {
+    } else if (cacheKey instanceof DictImpl) {
       fnRef = cacheKey.objId;
     } else if (cacheKey instanceof BaseStream) {
       fnRef = cacheKey.dict?.objId;
@@ -106,7 +107,7 @@ class PDFFunctionFactory {
     let fnRef;
     if (cacheKey instanceof Ref) {
       fnRef = cacheKey;
-    } else if (cacheKey instanceof Dict) {
+    } else if (cacheKey instanceof DictImpl) {
       fnRef = cacheKey.objId;
     } else if (cacheKey instanceof BaseStream) {
       fnRef = cacheKey.dict?.objId;
@@ -124,7 +125,7 @@ class PDFFunctionFactory {
   }
 }
 
-function toNumberArray(arr: number[]) {
+function toNumberArray(arr: number[] | unknown) {
   if (!Array.isArray(arr)) {
     return null;
   }
@@ -237,7 +238,7 @@ class PDFFunction {
     domain = toMultiArray(domain);
     range = toMultiArray(range);
 
-    const size = toNumberArray(dict.getArray(DictKey.Size));
+    const size = toNumberArray(dict.getArrayValue(DictKey.Size));
     const bps = dict.getValue(DictKey.BitsPerSample);
     const order = <number>dict.getValue(DictKey.Order) || 1;
     if (order !== 1) {
@@ -362,7 +363,7 @@ class PDFFunction {
   }
 
   static constructStiched(xref: XRefImpl, isEvalSupported: boolean, dict: Dict) {
-    const domain = toNumberArray(dict.getArray(DictKey.Domain));
+    const domain = toNumberArray(dict.getArrayValue(DictKey.Domain));
 
     if (!domain) {
       throw new FormatError("No domain");
@@ -433,8 +434,8 @@ class PDFFunction {
 
   static constructPostScript(_xref: XRefImpl, isEvalSupported: boolean, fn: BaseStream, dict: Dict): ParserConstructFunction {
 
-    const domain = toNumberArray(dict.getArray(DictKey.Domain));
-    const range = toNumberArray(dict.getArray(DictKey.Range));
+    const domain = toNumberArray(dict.getArrayValue(DictKey.Domain));
+    const range = toNumberArray(dict.getArrayValue(DictKey.Range));
 
     if (!domain) {
       throw new FormatError("No domain.");
@@ -515,7 +516,7 @@ class PDFFunction {
 
 function isPDFFunction(v: Dict | BaseStream) {
   let fnDict;
-  if (v instanceof Dict) {
+  if (v instanceof DictImpl) {
     fnDict = v;
   } else if (v instanceof BaseStream) {
     fnDict = v.dict;

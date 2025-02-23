@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { FeatureTest, ImageKind, shadow, warn } from "../shared/util";
+import { FeatureTest, ImageKind, shadow, warn } from "seren-common";
 import { PDFImageData } from "./image";
 
 const MIN_IMAGE_DIM = 2048;
@@ -242,7 +242,7 @@ class ImageResizer {
 
       const canvas = new OffscreenCanvas(newWidth, newHeight);
       const ctx = canvas.getContext("2d")!;
-      
+
       ctx.drawImage(bitmap, 0, 0, prevWidth, prevHeight, 0, 0, newWidth, newHeight);
 
       // Release the resources associated with the bitmap.

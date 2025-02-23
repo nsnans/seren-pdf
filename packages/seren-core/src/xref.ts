@@ -23,7 +23,7 @@ import {
 import { CipherTransformFactory } from "./crypto";
 import { Lexer, ParsedType, Parser } from "./parser";
 import { PDFManager } from "./pdf_manager";
-import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn, XRef } from "seren-common";
+import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn, XRef, PlatformHelper, assert, FormatError, InvalidPDFException, Uint8TypedArray, bytesToString, info } from "seren-common";
 import { Stream } from "./stream";
 import { DictImpl } from "./dict_impl";
 
@@ -207,7 +207,7 @@ export class XRefImpl implements XRef {
     if (root instanceof DictImpl) {
       try {
         const pages = root.getValue(DictKey.Pages);
-        if (pages instanceof Dict) {
+        if (pages instanceof DictImpl) {
           this.root = root;
           return;
         }
@@ -260,10 +260,10 @@ export class XRefImpl implements XRef {
     let dict = parser.getObj();
 
     // The pdflib PDF generator can generate a nested trailer dictionary
-    if (!(dict instanceof Dict) && (<{ dict?: Dict }>dict)!.dict) {
+    if (!(dict instanceof DictImpl) && (<{ dict?: Dict }>dict)!.dict) {
       dict = (<{ dict?: Dict }>dict)!.dict!;
     }
-    if (!(dict instanceof Dict)) {
+    if (!(dict instanceof DictImpl)) {
       throw new FormatError(
         "Invalid XRef table: could not parse trailer dictionary"
       );
@@ -382,7 +382,7 @@ export class XRefImpl implements XRef {
       const byteWidths = streamParameters!.getValue(DictKey.W);
       let range = streamParameters!.getValue(DictKey.Index);
       if (!range) {
-        range = [0, streamParameters!.getValue(DictKey.Size)];
+        range = [0, <number>streamParameters!.getValue(DictKey.Size)];
       }
 
       this.streamState = {
@@ -687,7 +687,7 @@ export class XRefImpl implements XRef {
       }
       // read the trailer dictionary
       const dict = parser.getObj();
-      if (!(dict instanceof Dict)) {
+      if (!(dict instanceof DictImpl)) {
         continue;
       }
       trailerDicts.push(dict);
@@ -716,11 +716,11 @@ export class XRefImpl implements XRef {
       let validPagesDict = false;
       try {
         const rootDict = dict.getValue(DictKey.Root);
-        if (!(rootDict instanceof Dict)) {
+        if (!(rootDict instanceof DictImpl)) {
           continue;
         }
         const pagesDict = rootDict.getValue(DictKey.Pages);
-        if (!(pagesDict instanceof Dict)) {
+        if (!(pagesDict instanceof DictImpl)) {
           continue;
         }
         const pagesCount = pagesDict.getValue(DictKey.Count);

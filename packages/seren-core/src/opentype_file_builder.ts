@@ -14,8 +14,7 @@
  */
 
 import { readUint32 } from "./core_utils";
-import { string32 } from "../shared/util";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { string32, Uint8TypedArray } from "seren-common";
 
 function writeInt16(dest: Uint8Array, offset: number, num: number) {
   dest[offset] = (num >> 8) & 0xff;

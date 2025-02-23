@@ -1,7 +1,18 @@
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
-import { TransformType } from "../display/display_utils";
-import { MurmurHash3_64 } from "../shared/murmurhash3";
-import { AbortException, assert, FONT_IDENTITY_MATRIX, FormatError, info, stringToPDFString, warn } from "../shared/util";
+import {
+  Uint8TypedArray,
+  MurmurHash3_64,
+  TransformType,
+  DictKey,
+  Name,
+  Ref,
+  AbortException,
+  assert,
+  FONT_IDENTITY_MATRIX,
+  FormatError,
+  info,
+  stringToPDFString,
+  warn
+} from "seren-common";
 import { BaseStream } from "./base_stream";
 import { CMapFactory, IdentityCMap } from "./cmap";
 import { PreEvaluatedFont } from "./core_types";
@@ -16,13 +27,14 @@ import { FontFlags } from "./fonts_utils";
 import { getGlyphsUnicode } from "./glyphlist";
 import { getMetrics } from "./metrics";
 import { OperatorList } from "./operator_list";
-import { DictKey, Name, Ref } from "../../seren-common/src/primitives";
+import { } from "../../seren-common/src/primitives";
 import { Dict } from "packages/seren-common/src/dict";
 import { getFontNameToFileMap, getSerifFonts, getStandardFontName, getStdFontMap, getSymbolsFonts, isKnownFontName } from "./standard_fonts";
 import { Stream } from "./stream";
 import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
 import { getUnicodeForGlyph } from "./unicode";
 import { WorkerTask } from "./worker";
+import { DictImpl } from "./dict_impl";
 
 export class EvaluatorFontHandler {
 
@@ -147,7 +159,7 @@ export class EvaluatorFontHandler {
     if (properties.composite) {
       // CIDSystemInfo helps to match CID to glyphs
       const cidSystemInfo = dict.getValue(DictKey.CIDSystemInfo);
-      if (cidSystemInfo instanceof Dict) {
+      if (cidSystemInfo instanceof DictImpl) {
         properties.cidSystemInfo = {
           registry: stringToPDFString(cidSystemInfo.getValue(DictKey.Registry)),
           ordering: stringToPDFString(cidSystemInfo.getValue(DictKey.Ordering)),
@@ -179,7 +191,7 @@ export class EvaluatorFontHandler {
     let encoding;
     if (dict.has(DictKey.Encoding)) {
       encoding = dict.getValue(DictKey.Encoding);
-      if (encoding instanceof Dict) {
+      if (encoding instanceof DictImpl) {
         baseEncodingName = encoding.getValue(DictKey.BaseEncoding);
         baseEncodingName =
           baseEncodingName instanceof Name ? baseEncodingName.name : null;
@@ -381,7 +393,7 @@ export class EvaluatorFontHandler {
         const bbox = lookupNormalRect(dict.getArrayValue(DictKey.FontBBox), [0, 0, 0, 0]);
         // FontDescriptor is only required for Type3 fonts when the document
         // is a tagged pdf. Create a barbebones one to get by.
-        descriptor = new Dict(null);
+        descriptor = new DictImpl(null);
         descriptor.set(DictKey.FontName, Name.get(type)!);
         descriptor.set(DictKey.FontBBox, bbox!);
       } else {
@@ -567,7 +579,7 @@ export class EvaluatorFontHandler {
     let systemFontInfo = null;
     if (fontFile) {
       if (fontFile.dict) {
-        const subtypeEntry = fontFile.dict.get(DictKey.Subtype);
+        const subtypeEntry = fontFile.dict.getValue(DictKey.Subtype);
         if (subtypeEntry instanceof Name) {
           subtype = subtypeEntry.name;
         }
@@ -851,7 +863,7 @@ export class EvaluatorFontHandler {
           }
           j++;
         }
-        const missingWidth = descriptor.get(DictKey.MissingWidth);
+        const missingWidth = descriptor.getValue(DictKey.MissingWidth);
         defaultWidth = typeof missingWidth === "number" ? missingWidth : 0;
       } else {
         // Trying get the BaseFont metrics (see comment above).
@@ -1088,7 +1100,7 @@ export class EvaluatorFontHandler {
       }
     }
 
-    if (!(font instanceof Dict)) {
+    if (!(font instanceof DictImpl)) {
       if (!this.context.options.ignoreErrors && !this.context.parsingType3Font) {
         warn(`Font "${fontName}" is not available.`);
         return errorFont();
@@ -1123,7 +1135,7 @@ export class EvaluatorFontHandler {
     const fontRefIsRef = fontRef instanceof Ref;
     let fontID;
 
-    if (hash && descriptor instanceof Dict) {
+    if (hash && descriptor instanceof DictImpl) {
       const fontAliases = (descriptor.fontAliases ||= Object.create(null));
 
       if (fontAliases[hash]) {
@@ -1192,7 +1204,7 @@ export class EvaluatorFontHandler {
 
   preEvaluateFont(dict: Dict): PreEvaluatedFont {
     const baseDict = dict;
-    let type = dict.get(DictKey.Subtype);
+    let type = dict.getValue(DictKey.Subtype);
     if (!(type instanceof Name)) {
       throw new FormatError("invalid font Subtype");
     }
@@ -1210,7 +1222,7 @@ export class EvaluatorFontHandler {
       }
       dict = Array.isArray(df) ? <Dict>this.context.xref.fetchIfRef(df[0]) : df;
 
-      if (!(dict instanceof Dict)) {
+      if (!(dict instanceof DictImpl)) {
         throw new FormatError("Descendant font is not a dictionary.");
       }
       type = dict.getValue(DictKey.Subtype);
@@ -1239,7 +1251,7 @@ export class EvaluatorFontHandler {
         hash.update(encoding.name);
       } else if (encoding instanceof Ref) {
         hash.update(encoding.toString());
-      } else if (encoding instanceof Dict) {
+      } else if (encoding instanceof DictImpl) {
         for (const entry of encoding.getRawValues()) {
           if (entry instanceof Name) {
             hash.update(entry.name);
@@ -1279,7 +1291,7 @@ export class EvaluatorFontHandler {
         hash.update(toUnicode.name);
       }
 
-      const widths = dict.get(DictKey.Widths) || baseDict.get(DictKey.Widths);
+      const widths = dict.getValue(DictKey.Widths) || baseDict.getValue(DictKey.Widths);
       if (Array.isArray(widths)) {
         const widthsBuf = [];
         for (const entry of widths) {
@@ -1293,7 +1305,7 @@ export class EvaluatorFontHandler {
       if (composite) {
         hash.update("compositeFont");
 
-        const compositeWidths = dict.get(DictKey.W) || baseDict.get(DictKey.W);
+        const compositeWidths = dict.getValue(DictKey.W) || baseDict.getValue(DictKey.W);
         if (Array.isArray(compositeWidths)) {
           const widthsBuf = [];
           for (const entry of compositeWidths) {

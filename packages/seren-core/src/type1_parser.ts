@@ -16,10 +16,8 @@
 import { getEncoding } from "./encodings";
 import { isWhiteSpace } from "./core_utils";
 import { Stream } from "./stream";
-import { warn } from "../shared/util";
 import { EvaluatorProperties } from "./evaluator";
-import { TransformType } from "../display/display_utils";
-import { Uint8TypedArray } from "../../packages/seren-common/src/typed_array";
+import { TransformType, warn, Uint8TypedArray } from "seren-common";
 import { CFFDictKey } from "./cff_parser";
 
 // Hinting is currently disabled due to unknown problems on windows

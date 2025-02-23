@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
-import { FormatError } from "../shared/util";
+import { FormatError, DictKey, Dict } from "seren-common";
 import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 import { JpxDecoderOptions } from "./image";
-import { DictKey } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
+import { DictImpl } from "./dict_impl";
 
 export class PredictorStream extends DecodeStream {
 
-
   public static predictIfPossible(stream: BaseStream, maybeLength: number, params: Dict): BaseStream {
-    if (!(params instanceof Dict)) {
+    if (!(params instanceof DictImpl)) {
       return stream; // no prediction
     }
     const predictor = params.getValue(DictKey.Predictor) || 1;

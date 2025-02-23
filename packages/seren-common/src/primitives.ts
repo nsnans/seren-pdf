@@ -536,7 +536,7 @@ export type DictValueTypeMapping = {
   [DictKey.Ordering]: string,
   [DictKey.Outlines]: Dict,
   [DictKey.PMD]: unknown, // 这个值只有一处读取，没有具体的写入，给个unknown吧
-  [DictKey.P]: string | number | Ref | Dict,
+  [DictKey.P]: string | number | Ref | Dict | Name,
   [DictKey.PageLabels]: Dict | Ref,
   [DictKey.PageLayout]: Name,
   [DictKey.PageMode]: Name,
@@ -568,7 +568,7 @@ export type DictValueTypeMapping = {
   [DictKey.ShadingType]: number,
   [DictKey.Shading]: Dict,
   [DictKey.SigFlags]: number,
-  [DictKey.Size]: number,
+  [DictKey.Size]: number | number[],
   [DictKey.St]: number,
   [DictKey.StateModel]: string, // 只有一个值，是在测试环境中发现的
   [DictKey.State]: (Name | Ref)[],
@@ -596,7 +596,7 @@ export type DictValueTypeMapping = {
   [DictKey.ViewState]: Name,
   [DictKey.View]: Dict,
   [DictKey.ViewerPreferences]: Dict,
-  [DictKey.W]: number | number[], // number是推测的
+  [DictKey.W]: number | number[] | number[][] | Ref[] | Ref[][], // number是推测的
   [DictKey.Width]: number,
   [DictKey.XObject]: Dict,
   [DictKey.XRefStm]: number,
@@ -621,7 +621,7 @@ export type DictValueTypeMapping = {
   [DictKey.PatternType]: number,
   [DictKey.Properties]: Dict,
   [DictKey.VE]: any[],
-  [DictKey.OCGs]: "OCGs",
+  [DictKey.OCGs]: Dict | object[],
   [DictKey.Trapped]: "Trapped",
   [DictKey.ModDate]: "ModDate",
   [DictKey.Producer]: "Producer",
@@ -676,7 +676,7 @@ export type DictValueTypeMapping = {
   [DictKey.YStep]: number,
   [DictKey.PaintType]: number,
   [DictKey.TilingType]: number,
-  [DictKey.Widths]: number[],
+  [DictKey.Widths]: number[] | Ref[],
   [DictKey.CapHeight]: number,
   [DictKey.XHeight]: number,
   [DictKey.Ascent]: number,

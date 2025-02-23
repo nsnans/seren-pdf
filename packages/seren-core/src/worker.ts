@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
+import { DictKey, Ref, ReadResult } from "seren-common";
 import { DocumentParameter } from "../display/api";
-import { ReadResult } from "../interfaces";
 import { PlatformHelper } from "../platform/platform_helper";
 import { MessageHandler } from "../shared/message_handler";
 import { MessagePoster } from "../shared/message_handler_base";
@@ -33,7 +33,7 @@ import {
   UnknownErrorException,
   VerbosityLevel,
   warn
-} from "../shared/util";
+} from "seren-common";
 import { AnnotationFactory } from "./annotation";
 import { clearGlobalCaches } from "./cleanup_helper";
 import {
@@ -42,11 +42,10 @@ import {
   XRefParseException,
 } from "./core_utils";
 import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
-import { DictKey, isDict, Ref } from "../../seren-common/src/primitives";
-import { Dict } from "packages/seren-common/src/dict";
 import { StructTreeRoot } from "./struct_tree";
 import { PDFWorkerStream } from "./worker_stream";
 import { incrementalUpdate } from "./writer";
+import { DictImpl, isDict } from "./dict_impl";
 
 class WorkerTask {
 
@@ -584,7 +583,7 @@ class WorkerMessageHandler {
         // Get string info from Info in order to compute fileId.
         const infoObj = Object.create(null) as Record<string, string>;
         const xrefInfo = xref.trailer.getValue(DictKey.Info) || null;
-        if (xrefInfo instanceof Dict) {
+        if (xrefInfo instanceof DictImpl) {
           xrefInfo.forEach((key, value) => {
             if (typeof value === "string") {
               infoObj[key] = stringToPDFString(value);
