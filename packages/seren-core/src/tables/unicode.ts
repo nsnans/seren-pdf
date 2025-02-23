@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { getLookupTableFactory } from "../../../seren-common/src/utils/core_utils";
+import { getLookupTableFactory } from "../utils/core_utils";
 
 // Some characters, e.g. copyrightserif, are mapped to the private use area
 // and might not be displayed using standard fonts. Mapping/hacking well-known

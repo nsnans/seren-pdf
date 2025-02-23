@@ -13,37 +13,29 @@
  * limitations under the License.
  */
 
+import { CMap } from "packages/seren-common/src/types/cmap_types";
+import { SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
+import { CssFontInfo, FontExportData, FontExportExtraData, FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
+import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import {
   assert,
   bytesToString,
+  DictKey,
   FONT_IDENTITY_MATRIX,
   FormatError,
   info,
+  PlatformHelper,
+  RectType,
   shadow,
   string32,
-  warn,
-  RectType,
   TransformType,
-  DictKey,
-  PlatformHelper,
   Uint8TypedArray,
+  warn,
 } from "seren-common";
-import { CFFCompiler, CFFParser } from "./cff_parser";
-import {
-  FontFlags,
-  getVerticalPresentationForm,
-  MacStandardGlyphOrdering,
-  normalizeFontName,
-  recoverGlyphName,
-  SEAC_ANALYSIS_ENABLED,
-} from "./fonts_utils";
-import {
-  getCharUnicodeCategory,
-  getUnicodeForGlyph,
-  getUnicodeRangeFor,
-  mapSpecialUnicodeValues,
-} from "../../tables/unicode";
-import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "./glyphlist";
+import { IdentityCMap } from "../../cmap/cmap";
+import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
+import { Type1Font } from "../../parser/type1_font";
+import { Stream } from "../../stream/stream";
 import {
   getEncoding,
   MacRomanEncoding,
@@ -53,6 +45,28 @@ import {
   ZapfDingbatsEncoding,
 } from "../../tables/encodings";
 import {
+  getCharUnicodeCategory,
+  getUnicodeForGlyph,
+  getUnicodeRangeFor,
+  mapSpecialUnicodeValues,
+} from "../../tables/unicode";
+import { readUint32 } from "../../utils/core_utils";
+import { OpenTypeFileBuilder } from "../../writer/opentype_file_builder";
+import { CFFFont } from "./cff_font";
+import { CFFCompiler, CFFParser } from "./cff_parser";
+import { FontRendererFactory } from "./font_renderer";
+import {
+  FontFlags,
+  getVerticalPresentationForm,
+  MacStandardGlyphOrdering,
+  normalizeFontName,
+  recoverGlyphName,
+  SEAC_ANALYSIS_ENABLED,
+} from "./fonts_utils";
+import { GlyfTable } from "./glyf";
+import { getDingbatsGlyphsUnicode, getGlyphsUnicode } from "./glyphlist";
+import { getFontBasicMetrics } from "./metrics";
+import {
   getGlyphMapForStandardFonts,
   getNonStdFontMap,
   getSerifFonts,
@@ -60,20 +74,8 @@ import {
   getSupplementalGlyphMapForArialBlack,
   getSupplementalGlyphMapForCalibri,
 } from "./standard_fonts";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "./to_unicode_map";
-import { CFFFont } from "./cff_font";
-import { FontRendererFactory } from "./font_renderer";
-import { getFontBasicMetrics } from "./metrics";
-import { GlyfTable } from "./glyf";
-import { CMap, IdentityCMap } from "../../cmap/cmap";
-import { OpenTypeFileBuilder } from "../../writer/opentype_file_builder";
-import { readUint32 } from "../../../../seren-common/src/utils/core_utils";
-import { Stream } from "../../stream/stream";
-import { Type1Font } from "../../parser/type1_font";
-import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
-import { EvaluatorProperties, SeacMapValue } from "../../parser/evaluator/evaluator";
-import { CssFontInfo, FontExportData } from "packages/seren-common/src/types/font_types";
-import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
+import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "./to_unicode_map";
+import { ToUnicodeMap } from "packages/seren-common/src/types/to_unicode_map_types";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -112,7 +114,7 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties
   if (properties.hasEncoding) {
     return; // The font dictionary has an `Encoding` entry.
   }
-  if (properties.toUnicode instanceof IdentityToUnicodeMap) {
+  if (properties.toUnicode instanceof IdentityToUnicodeMapImpl) {
     return;
   }
   if (!isSymbolicFont) {
@@ -147,7 +149,7 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties
     toUnicode[charCode] = String.fromCharCode(unicode);
   }
   if (toUnicode.length > 0) {
-    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
+    (<ToUnicodeMapImpl | IdentityToUnicodeMapImpl>properties.toUnicode).amend(toUnicode);
   }
 }
 
@@ -161,7 +163,7 @@ function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding: 
   if (builtInEncoding === properties.defaultEncoding) {
     return; // No point in trying to adjust `toUnicode` if the encodings match.
   }
-  if (properties.toUnicode instanceof IdentityToUnicodeMap) {
+  if (properties.toUnicode instanceof IdentityToUnicodeMapImpl) {
     return;
   }
   const toUnicode = [];
@@ -183,7 +185,7 @@ function adjustType1ToUnicode(properties: EvaluatorProperties, builtInEncoding: 
     }
   }
   if (toUnicode.length > 0) {
-    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
+    (<ToUnicodeMapImpl | IdentityToUnicodeMapImpl>properties.toUnicode).amend(toUnicode);
   }
 }
 
@@ -195,18 +197,18 @@ function amendFallbackToUnicode(properties: EvaluatorProperties) {
   if (!properties.fallbackToUnicode) {
     return;
   }
-  if (properties.toUnicode instanceof IdentityToUnicodeMap) {
+  if (properties.toUnicode instanceof IdentityToUnicodeMapImpl) {
     return;
   }
   const toUnicode = [];
   for (const charCode in properties.fallbackToUnicode) {
-    if ((<IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode).has(Number.parseInt(charCode))) {
+    if ((<IdentityToUnicodeMapImpl | ToUnicodeMapImpl>properties.toUnicode).has(Number.parseInt(charCode))) {
       continue; // The font dictionary has a `ToUnicode` entry.
     }
     toUnicode[Number.parseInt(charCode)] = properties.fallbackToUnicode[charCode];
   }
   if (toUnicode.length > 0) {
-    (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode).amend(toUnicode);
+    (<ToUnicodeMapImpl | IdentityToUnicodeMapImpl>properties.toUnicode).amend(toUnicode);
   }
 }
 
@@ -481,7 +483,7 @@ function adjustMapping(
   charCodeToGlyphId: Record<number, number>,
   hasGlyph: (id: number) => boolean,
   newGlyphZeroId: number,
-  toUnicode: ToUnicodeMap | IdentityToUnicodeMap
+  toUnicode: ToUnicodeMapImpl | IdentityToUnicodeMapImpl
 ) {
   const newMap: Record<number, number> = Object.create(null);
   const toUnicodeExtraMap = new Map<number, number>();
@@ -524,7 +526,7 @@ function adjustMapping(
     // glyph ids to the correct unicode.
     let unicode = toUnicode.get(originalCharCode);
     if (typeof unicode === "string") {
-      unicode = unicode.codePointAt(0);
+      unicode = unicode.codePointAt(0) ?? null;
     }
     if (unicode && !isInPrivateArea(unicode) && !usedGlyphIds.has(glyphId)) {
       toUnicodeExtraMap.set(unicode, glyphId);
@@ -1069,7 +1071,7 @@ export class FontExportDataImpl implements FontExportData {
   }
 }
 
-export class FontExportExtraData extends FontExportDataImpl {
+export class FontExportExtraDataImpl extends FontExportDataImpl implements FontExportExtraData {
 
   public cMap: CMap;
 
@@ -1087,7 +1089,7 @@ export class FontExportExtraData extends FontExportDataImpl {
 
   public toFontChar: (number | string)[];
 
-  public toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
+  public toUnicode: ToUnicodeMap;
 
   public vmetrics: number[][] | null;
 
@@ -1175,7 +1177,7 @@ class Font {
 
   public defaultEncoding: string[];
 
-  public toUnicode: IdentityToUnicodeMap | ToUnicodeMap;
+  public toUnicode: IdentityToUnicodeMapImpl | ToUnicodeMapImpl;
 
   public toFontChar: (number | string)[];
 
@@ -1280,7 +1282,7 @@ class Font {
     // 这里加了默认值
     this.defaultEncoding = properties.defaultEncoding ?? [];
 
-    this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
+    this.toUnicode = <IdentityToUnicodeMapImpl | ToUnicodeMapImpl>properties.toUnicode;
     this.toFontChar = [];
 
     if (properties.type === "Type3") {
@@ -1372,7 +1374,7 @@ class Font {
     this.fontMatrix = properties.fontMatrix!;
     this.widths = properties.widths;
     this.defaultWidth = properties.defaultWidth;
-    this.toUnicode = <IdentityToUnicodeMap | ToUnicodeMap>properties.toUnicode;
+    this.toUnicode = <IdentityToUnicodeMapImpl | ToUnicodeMapImpl>properties.toUnicode;
     this.seacMap = properties.seacMap ?? new Map();
   }
 
@@ -1382,7 +1384,7 @@ class Font {
   }
 
   exportData(extraProperties = false) {
-    return extraProperties ? new FontExportExtraData(this) : new FontExportDataImpl(this);
+    return extraProperties ? new FontExportExtraDataImpl(this) : new FontExportDataImpl(this);
   }
 
   fallbackToSystemFont(properties: EvaluatorProperties) {
@@ -1465,7 +1467,7 @@ class Font {
         if (
           cidToGidMap.length !== this.toUnicode.length &&
           properties.hasIncludedToUnicodeMap &&
-          this.toUnicode instanceof IdentityToUnicodeMap
+          this.toUnicode instanceof IdentityToUnicodeMapImpl
         ) {
           this.toUnicode.forEach(function (charCode, unicodeCharCode) {
             const cid = map[charCode];
@@ -1476,13 +1478,13 @@ class Font {
         }
       }
 
-      if (!(this.toUnicode instanceof IdentityToUnicodeMap)) {
+      if (!(this.toUnicode instanceof IdentityToUnicodeMapImpl)) {
         this.toUnicode.forEach(function (charCode, unicodeCharCode) {
           map[+charCode] = unicodeCharCode;
         });
       }
       this.toFontChar = map;
-      this.toUnicode = new ToUnicodeMap(map);
+      this.toUnicode = new ToUnicodeMapImpl(map);
     } else if (/Symbol/i.test(fontName)) {
       this.toFontChar = buildToFontChar(
         SymbolSetEncoding,
@@ -1503,7 +1505,7 @@ class Font {
       if (
         type === "CIDFontType2" &&
         !this.cidEncoding!.startsWith("Identity-") &&
-        !(this.toUnicode instanceof IdentityToUnicodeMap)
+        !(this.toUnicode instanceof IdentityToUnicodeMapImpl)
       ) {
         this.toUnicode.forEach(function (charCode, unicodeCharCode) {
           map[+charCode] = unicodeCharCode;
@@ -1527,7 +1529,7 @@ class Font {
 
       // Attempt to improve the glyph mapping for (some) composite fonts that
       // appear to lack meaningful ToUnicode data.
-      if (this.composite && this.toUnicode instanceof IdentityToUnicodeMap) {
+      if (this.composite && this.toUnicode instanceof IdentityToUnicodeMapImpl) {
         if (/Tahoma|Verdana/i.test(name)) {
           // Fixes issue15719.pdf and issue11242_reduced.pdf.
           applyStandardFontGlyphMap(map, getGlyphMapForStandardFonts()!);
@@ -3206,7 +3208,7 @@ class Font {
             if (
               !properties.glyphNames &&
               properties.hasIncludedToUnicodeMap &&
-              !(this.toUnicode instanceof IdentityToUnicodeMap)
+              !(this.toUnicode instanceof IdentityToUnicodeMapImpl)
             ) {
               const unicode = this.toUnicode.get(charCode);
               if (unicode) {
@@ -3804,9 +3806,9 @@ class Font {
     const hasCurrentBufErrors = () => buffers.length % 2 === 1;
 
     const getCharCode =
-      this.toUnicode instanceof IdentityToUnicodeMap
-        ? (unicode: number) => (<IdentityToUnicodeMap>this.toUnicode).charCodeOf(unicode)
-        : (unicode: number) => (<ToUnicodeMap>this.toUnicode).charCodeOf(String.fromCodePoint(unicode));
+      this.toUnicode instanceof IdentityToUnicodeMapImpl
+        ? (unicode: number) => (<IdentityToUnicodeMapImpl>this.toUnicode).charCodeOf(unicode)
+        : (unicode: number) => (<ToUnicodeMapImpl>this.toUnicode).charCodeOf(String.fromCodePoint(unicode));
 
     for (let i = 0, ii = str.length; i < ii; i++) {
       const unicode = str.codePointAt(i)!;

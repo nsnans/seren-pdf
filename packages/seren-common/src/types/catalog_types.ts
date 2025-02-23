@@ -1,4 +1,4 @@
-import { DestinationType } from "../common/types";
+import { DestinationType } from "../common/common_types";
 import { FileSpecSerializable } from "./message_handler_types";
 
 export enum ViewerPreferenceKeys {

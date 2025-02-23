@@ -15,7 +15,7 @@
 
 import { DictKey, Ref, RefSet, warn, Dict } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
-import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
+import { MissingDataException } from "../utils/core_utils";
 import { XRefImpl } from "../document/xref";
 import { ChunkedStream } from "../stream/chunked_stream";
 import { XRef } from "seren-common";

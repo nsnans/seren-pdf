@@ -28,7 +28,7 @@ import {
   Dict
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
-import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
+import { MissingDataException } from "../utils/core_utils";
 import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";

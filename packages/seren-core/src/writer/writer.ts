@@ -20,7 +20,7 @@ import {
   escapeString,
   getSizeInBytes,
   numberToString
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
 import { calculateMD5, CipherTransform, CipherTransformFactory } from "../crypto/crypto";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";

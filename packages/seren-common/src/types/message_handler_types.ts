@@ -1,11 +1,9 @@
-import { MeshShadingPatternIR } from "./shading_types"
-import { ImageMask } from "../image/image_types"
-import { RadialAxialShadingIR } from "./shading_types"
-import { FontExportData } from "./font_types"
-import { RectType } from "../common/types"
+import { RectType } from "../common/common_types"
 import { Ref } from "../document/primitives"
 import { AnnotationEditorSerial } from "./annotation_types"
-import { FontExportExtraData } from "packages/seren-core/src/document/font/fonts"
+import { FontExportData, FontExportExtraData } from "./font_types"
+import { ImageMask } from "./image_types"
+import { MeshShadingPatternIR, RadialAxialShadingIR } from "./shading_types"
 
 export enum ObjType {
   Image = "Image",

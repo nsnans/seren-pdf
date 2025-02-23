@@ -16,7 +16,8 @@ import {
 import { BaseStream } from "../../stream/base_stream";
 import { CMapFactory, IdentityCMap } from "../../cmap/cmap";
 import { PreEvaluatedFont } from "../../common/core_types";
-import { isNumberArray, lookupMatrix, lookupNormalRect } from "../../../../seren-common/src/utils/core_utils";
+import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { DecodeStream } from "../../stream/decode_stream";
 import { getEncoding, MacRomanEncoding, StandardEncoding, SymbolSetEncoding, WinAnsiEncoding, ZapfDingbatsEncoding } from "../../tables/encodings";
 import { EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
@@ -30,7 +31,7 @@ import { getMetrics } from "../../document/font/metrics";
 import { OperatorList } from "../operator_list";
 import { getFontNameToFileMap, getSerifFonts, getStandardFontName, getStdFontMap, getSymbolsFonts, isKnownFontName } from "../../document/font/standard_fonts";
 import { Stream } from "../../stream/stream";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "../../document/font/to_unicode_map";
+import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
 import { getUnicodeForGlyph } from "../../tables/unicode";
 import { WorkerTask } from "../../worker/worker";
 import { DictImpl } from "../../document/dict_impl";
@@ -92,9 +93,9 @@ export class EvaluatorFontHandler {
       );
 
       if (cmap instanceof IdentityCMap) {
-        return new IdentityToUnicodeMap(0, 0xffff);
+        return new IdentityToUnicodeMapImpl(0, 0xffff);
       }
-      return new ToUnicodeMap(<string[]>cmap.getMap());
+      return new ToUnicodeMapImpl(<string[]>cmap.getMap());
     }
     if (cmapObj instanceof BaseStream) {
       try {
@@ -103,7 +104,7 @@ export class EvaluatorFontHandler {
         );
 
         if (cmap instanceof IdentityCMap) {
-          return new IdentityToUnicodeMap(0, 0xffff);
+          return new IdentityToUnicodeMapImpl(0, 0xffff);
         }
         const map = new Array(cmap.length);
         // Convert UTF-16BE
@@ -134,7 +135,7 @@ export class EvaluatorFontHandler {
           }
           map[charCode] = String.fromCodePoint(...str);
         });
-        return new ToUnicodeMap(map);
+        return new ToUnicodeMapImpl(map);
       } catch (reason) {
         if (reason instanceof AbortException) {
           return null;
@@ -294,8 +295,8 @@ export class EvaluatorFontHandler {
    * @returns A Promise that is resolved with a
    *   {ToUnicodeMap|IdentityToUnicodeMap} object.
    */
-  async buildToUnicode(properties: EvaluatorProperties): Promise<ToUnicodeMap | IdentityToUnicodeMap> {
-    properties.hasIncludedToUnicodeMap = (<ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode)?.length > 0;
+  async buildToUnicode(properties: EvaluatorProperties): Promise<ToUnicodeMapImpl | IdentityToUnicodeMapImpl> {
+    properties.hasIncludedToUnicodeMap = (<ToUnicodeMapImpl | IdentityToUnicodeMapImpl>properties.toUnicode)?.length > 0;
 
     // Section 9.10.2 Mapping Character Codes to Unicode Values
     if (properties.hasIncludedToUnicodeMap) {
@@ -305,7 +306,7 @@ export class EvaluatorFontHandler {
       if (!properties.composite && properties.hasEncoding) {
         properties.fallbackToUnicode = this._simpleFontToUnicode(properties);
       }
-      return <ToUnicodeMap | IdentityToUnicodeMap>properties.toUnicode;
+      return <ToUnicodeMapImpl | IdentityToUnicodeMapImpl>properties.toUnicode;
     }
 
     // According to the spec if the font is a simple font we should only map
@@ -314,7 +315,7 @@ export class EvaluatorFontHandler {
     // in pratice it seems better to always try to create a toUnicode map
     // based of the default encoding.
     if (!properties.composite /* is simple font */) {
-      return new ToUnicodeMap(this._simpleFontToUnicode(properties));
+      return new ToUnicodeMapImpl(this._simpleFontToUnicode(properties));
     }
 
     // If the font is a composite font that uses one of the predefined CMaps
@@ -367,11 +368,11 @@ export class EvaluatorFontHandler {
           toUnicode[charcode] = String.fromCharCode(...buf);
         }
       });
-      return new ToUnicodeMap(toUnicode);
+      return new ToUnicodeMapImpl(toUnicode);
     }
 
     // The viewer's choice, just use an identity map.
-    return new IdentityToUnicodeMap(properties.firstChar, properties.lastChar);
+    return new IdentityToUnicodeMapImpl(properties.firstChar, properties.lastChar);
   }
 
   async translateFont({
@@ -751,7 +752,7 @@ export class EvaluatorFontHandler {
     return new Stream(data);
   }
 
-  readCidToGidMap(glyphsData: Uint8TypedArray, toUnicode: ToUnicodeMap | IdentityToUnicodeMap) {
+  readCidToGidMap(glyphsData: Uint8TypedArray, toUnicode: ToUnicodeMapImpl | IdentityToUnicodeMapImpl) {
     // Extract the encoding from the CIDToGIDMap
 
     // Set encoding 0 to later verify the font has an encoding

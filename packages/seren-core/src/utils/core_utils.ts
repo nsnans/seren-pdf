@@ -30,9 +30,10 @@ import {
   DictKey, DictValueTypeMapping, isName, Ref, RefSet,
   Dict
 } from "seren-common";
-import { BaseStream } from "../../../seren-core/src/stream/base_stream";
-import { XRefImpl } from "../../../seren-core/src/document/xref";
-import { DictImpl } from "../../../seren-core/src/document/dict_impl";
+import { BaseStream } from "../stream/base_stream";
+import { XRefImpl } from "../document/xref";
+import { DictImpl } from "../document/dict_impl";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -256,33 +257,6 @@ function isBooleanArray(arr: unknown, len: number | null): boolean {
     (len === null || arr.length === len) &&
     arr.every(x => typeof x === "boolean")
   );
-}
-
-/**
- * Checks if something is an Array containing only numbers,
- * and (optionally) checks its length.
- * @param {any} arr
- * @param {number | null} len
- * @returns {boolean}
- */
-function isNumberArray(arr: unknown, len: number | null): arr is number[] {
-  if (Array.isArray(arr)) {
-    return (
-      (len === null || arr.length === len) &&
-      arr.every(x => typeof x === "number")
-    );
-  }
-
-  // This check allows us to have typed arrays but not the
-  // BigInt64Array/BigUint64Array types (their elements aren't "number").
-
-  if (ArrayBuffer.isView(arr)) {
-    const arrView = arr as unknown as Array<any>;
-    return (arrView.length === 0 || typeof arrView[0] === "number") &&
-      (len === null || arrView.length === len)
-  } else {
-    return !ArrayBuffer.isView(arr);
-  }
 }
 
 // Returns the matrix, or the fallback value if it's invalid.

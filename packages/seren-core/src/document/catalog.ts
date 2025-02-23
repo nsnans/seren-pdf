@@ -31,13 +31,13 @@ import { clearGlobalCaches } from "../utils/cleanup_helper";
 import { ColorSpace } from "../color/colorspace";
 import {
   collectActions,
-  isNumberArray,
   MissingDataException,
   PDF_VERSION_REGEXP,
   recoverJsURL,
   toRomanNumerals,
   XRefEntryException,
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { TranslatedFont } from "../parser/evaluator/evaluator";
 import { FileSpec } from "./file_spec";
 import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";

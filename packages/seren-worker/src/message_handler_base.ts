@@ -23,7 +23,6 @@ import {
   UnknownErrorException,
   unreachable,
 } from "../../seren-common/src/utils/util";
-import { MessageHandler } from "packages/seren-common/src/worker/message_handler";
 
 enum CallbackKind {
   UNKNOWN = 0,

@@ -66,14 +66,14 @@ import {
   escapeString,
   getRotationMatrix,
   getSingleInheritableProperty,
-  isNumberArray,
   lookupMatrix,
   lookupNormalRect,
   lookupRect,
   numberToString,
   stringToAsciiOrUTF16BE,
   stringToUTF16String
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,

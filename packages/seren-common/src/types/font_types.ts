@@ -1,6 +1,9 @@
-import { RectType, TransformType } from "../common/types";
+import { RectType, TransformType } from "../common/common_types";
 import { DictKey } from "../document/primitives";
+import { CMap } from "./cmap_types";
+import { SeacMapValue } from "./evaluator_types";
 import { OperatorListIR } from "./operator_types";
+import { ToUnicodeMap } from "./to_unicode_map_types";
 
 export interface CssFontInfo {
   fontFamily: string;
@@ -48,5 +51,19 @@ export interface FontExportData {
   systemFontInfo: FontSubstitutionInfo | null;
   type: string;
   vertical: boolean | null;
+}
+
+export interface FontExportExtraData extends FontExportData {
+  cMap: CMap;
+  defaultEncoding: string[];
+  differences: string[];
+  isMonospace: boolean;
+  isSerifFont: boolean;
+  isSymbolicFont: boolean;
+  seacMap: Map<number, SeacMapValue>;
+  toFontChar: (string | number)[];
+  toUnicode: ToUnicodeMap;
+  vmetrics: number[][] | null;
+  widths: Record<string | number, number>;
 }
 

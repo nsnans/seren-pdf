@@ -2,7 +2,7 @@ import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/doc
 import { AbortException, FormatError, info, OPS, warn, shiftable, Dict, DictKey, Name, Ref } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";
-import { isNumberArray } from "../../../../seren-common/src/utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";

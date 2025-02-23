@@ -9,7 +9,7 @@ import { GetDocMessage, StartRenderPageMessage, OnProgressParameters, FetchBuilt
 import { OpertaorListChunk, StreamGetOperatorListParameters } from "../types/operator_types";
 import { StreamSink, ReaderHeadersReadyResult } from "../types/stream_types";
 import { PasswordException, BaseException } from "../utils/util";
-import { DestinationType } from "../common/types";
+import { DestinationType } from "../common/common_types";
 
 
 export interface MessageHandler {

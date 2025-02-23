@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+import { ToUnicodeMap } from "packages/seren-common/src/types/to_unicode_map_types";
 import { unreachable } from "seren-common";
 
-export class ToUnicodeMap {
+export class ToUnicodeMapImpl implements ToUnicodeMap {
 
   protected _map: (number | string)[];
 
@@ -69,7 +70,7 @@ export class ToUnicodeMap {
   }
 }
 
-export class IdentityToUnicodeMap {
+export class IdentityToUnicodeMapImpl implements ToUnicodeMap {
 
   protected firstChar: number;
 
@@ -98,13 +99,11 @@ export class IdentityToUnicodeMap {
     if (this.firstChar <= i && i <= this.lastChar) {
       return String.fromCharCode(i);
     }
-    return undefined;
+    return null;
   }
 
   charCodeOf(v: number) {
-    return Number.isInteger(v) && v >= this.firstChar && v <= this.lastChar
-      ? v
-      : -1;
+    return Number.isInteger(v) && v >= this.firstChar && v <= this.lastChar ? v : -1;
   }
 
   amend() {

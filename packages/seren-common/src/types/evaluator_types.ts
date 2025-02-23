@@ -1,4 +1,4 @@
-import { TransformType } from "../common/types";
+import { TransformType } from "../common/common_types";
 
 export interface EvaluatorTextContent {
   items: (TextItem | TextMarkedContent)[];
@@ -84,5 +84,13 @@ export interface TextItem {
 
   /** Indicating if the text content is followed by aline-break.*/
   hasEOL: boolean;
+}
+export interface SeacMapValue {
+  baseFontCharCode: number;
+  accentFontCharCode: number;
+  accentOffset: {
+    x: number;
+    y: number;
+  };
 }
 

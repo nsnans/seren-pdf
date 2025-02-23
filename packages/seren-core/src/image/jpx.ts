@@ -19,7 +19,7 @@ import { BaseException, warn, PlatformHelper, Uint8TypedArray } from "seren-comm
 import OpenJPEG from "../external/openjpeg";
 import { Stream } from "../stream/stream";
 import { BaseStream } from "../stream/base_stream";
-import { JpxDecoderOptions } from "./image";
+import { JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
 import { OpenJPEGModule } from "./image_types";
 
 export class JpxError extends BaseException {

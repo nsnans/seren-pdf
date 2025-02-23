@@ -14,7 +14,7 @@
  */
 
 import { warn } from "seren-common";
-import { validateFontName } from "../../../../seren-common/src/utils/core_utils";
+import { validateFontName } from "../../utils/core_utils";
 import { normalizeFontName } from "./fonts_utils";
 import { GlobalIdFactory } from "../../common/global_id_factory";
 import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";

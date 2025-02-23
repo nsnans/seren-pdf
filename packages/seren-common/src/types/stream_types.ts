@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import { Uint8TypedArray } from "../common/typed_array";
+import { Dict } from "../document/dict";
+import { JpxDecoderOptions } from "./image_types";
+
 export interface PDFStreamSource {
   url: string;
   length: number;
@@ -211,3 +215,32 @@ export interface ReaderHeadersReadyResult {
   contentLength: number;
 }
 
+export interface DataStream {
+  pos: number;
+  dict: Dict | null;
+  start: number;
+  end: number;
+  stream: DataStream | null;
+  bytes: Uint8TypedArray;
+  length: number;
+  isEmpty: boolean;
+  isDataLoaded: boolean;
+  getByte(): number;
+  getBytes(_length?: number, option?: JpxDecoderOptions | null): Uint8TypedArray;
+  getImageData(length: number, decoderOptions: JpxDecoderOptions | null): Promise<Uint8TypedArray>
+  asyncGetBytes(): Promise<Uint8TypedArray | null>
+  isAsync: boolean;
+  canAsyncDecodeImageFromBuffer: boolean;
+  getTransferableImage(): Promise<VideoFrame | null>
+  peekByte(): number;
+  peekBytes(length?: number): Uint8TypedArray;
+  getUint16(): number;
+  getInt32(): number
+  getByteRange(_begin: number, _end: number): Uint8TypedArray;
+  getString(length?: number): string;
+  skip(n?: number): void;
+  reset(): void;
+  moveStart(): void;
+  makeSubStream(_start: number, _length: number, _dict: Dict | null): DataStream;
+  getBaseStreams(): DataStream[] | null
+}

@@ -16,7 +16,7 @@
 import { AbortException, assert, PlatformHelper, Uint8TypedArray, PDFStream, ReadResult } from "seren-common";
 import { MessageHandler } from "../shared/message_handler";
 import { BaseStream } from "./base_stream";
-import { arrayBuffersToBytes, MissingDataException } from "../../../seren-common/src/utils/core_utils";
+import { arrayBuffersToBytes, MissingDataException } from "../utils/core_utils";
 import { Stream } from "./stream";
 
 export class ChunkedStream extends Stream {

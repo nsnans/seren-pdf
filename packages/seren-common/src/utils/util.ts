@@ -1184,4 +1184,29 @@ export {
   VerbosityLevel,
   warn
 };
+/**
+   * Checks if something is an Array containing only numbers,
+   * and (optionally) checks its length.
+   * @param {any} arr
+   * @param {number | null} len
+   * @returns {boolean}
+   */
+  export function isNumberArray(arr: unknown, len: number | null): arr is number[] {
+    if (Array.isArray(arr)) {
+      return (
+        (len === null || arr.length === len) &&
+        arr.every(x => typeof x === "number")
+      );
+    }
+
+    // This check allows us to have typed arrays but not the
+    // BigInt64Array/BigUint64Array types (their elements aren't "number").
+    if (ArrayBuffer.isView(arr)) {
+      const arrView = arr as unknown as Array<any>;
+      return (arrView.length === 0 || typeof arrView[0] === "number") &&
+        (len === null || arrView.length === len);
+    } else {
+      return !ArrayBuffer.isView(arr);
+    }
+  }
 

@@ -15,7 +15,6 @@
 /* eslint-disable no-var */
 
 import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
-import { CommonObjType, MessageHandler } from "../shared/message_handler";
 import {
   assert,
   FONT_IDENTITY_MATRIX,
@@ -41,9 +40,9 @@ import {
   Dict
 } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
-import { CMap, IdentityCMap } from "../../cmap/cmap";
+import { CMapImpl, IdentityCMap } from "../../cmap/cmap";
 import { ColorSpace } from "../../color/colorspace";
-import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
+import { EvaluatorTextContent, SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
 import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
@@ -66,20 +65,12 @@ import {
 import { OperatorList } from "../operator_list";
 import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import { Lexer, Parser } from "../parser";
-import { IdentityToUnicodeMap, ToUnicodeMap } from "../../document/font/to_unicode_map";
+import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
 import { FontProgramPrivateData } from "../type1_parser";
 import { WorkerTask } from "../../worker/worker";
 import { XRefImpl } from "../../document/xref";
 import { CssFontInfo } from "packages/seren-common/src/types/font_types";
-
-export interface SeacMapValue {
-  baseFontCharCode: number;
-  accentFontCharCode: number;
-  accentOffset: {
-    x: number;
-    y: number;
-  };
-}
+import { CMap } from "packages/seren-common/src/types/cmap_types";
 
 export interface EvaluatorProperties {
   privateData: FontProgramPrivateData | null;
@@ -99,7 +90,7 @@ export interface EvaluatorProperties {
   firstChar: number;
   lastChar: number;
   // 应该弄个toUnicodeSource，这种像什么话
-  toUnicode: BaseStream | Name | ToUnicodeMap | IdentityToUnicodeMap | null;
+  toUnicode: BaseStream | Name | ToUnicodeMapImpl | IdentityToUnicodeMapImpl | null;
   xHeight: number;
   capHeight: number;
   italicAngle: number;
@@ -120,7 +111,7 @@ export interface EvaluatorProperties {
   differences: string[];
   cidToGidMap: number[];
   fallbackToUnicode: string[];
-  cMap: IdentityCMap | CMap | null;
+  cMap: CMap | null;
   vertical: boolean;
   cidEncoding: string;
   defaultVMetrics: number[];

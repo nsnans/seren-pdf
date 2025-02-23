@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { BaseStream } from "../../seren-core/src/base_stream";
-import { StringStream } from "../../../seren-core/src/stream/stream";
 import { PlatformHelper } from "../utils/platform_helper";
-import { DestinationType, PointType, RectType, TypedArray } from "../common/types";
+import { DestinationType, PointType, RectType, TypedArray } from "../common/common_types";
 import { assert, unreachable } from "../utils/util";
 import { Dict } from "./dict";
+import { DataStream } from "seren-common";
 
 export const CIRCULAR_REF = Symbol("CIRCULAR_REF");
 
@@ -430,7 +429,7 @@ export type DictValueTypeMapping = {
   [DictKey.CA]: number,
   [DictKey.CF]: Dict,
   [DictKey.CIDSystemInfo]: Dict,
-  [DictKey.CIDToGIDMap]: Name | Ref | BaseStream,
+  [DictKey.CIDToGIDMap]: Name | Ref | DataStream,
   [DictKey.CO]: (string | Ref)[],
   [DictKey.CS]: Name,
   [DictKey.C]: number[],
@@ -469,7 +468,7 @@ export type DictValueTypeMapping = {
   [DictKey.FirstChar]: number,
   [DictKey.First]: Ref | number, // 实际上应该是Ref<number>，但是Ref没有类型，应该加上类型
   [DictKey.Flags]: number,
-  [DictKey.Fm0]: StringStream,
+  [DictKey.Fm0]: DataStream, // 实际上应该是一个StringStream
   [DictKey.FontBBox]: RectType,
   [DictKey.FontDescriptor]: Ref | Dict,
   [DictKey.FontFamily]: string,
@@ -479,9 +478,9 @@ export type DictValueTypeMapping = {
   [DictKey.Font]: Dict | [Ref, number],
   [DictKey.FormType]: number,
   [DictKey.FunctionType]: number,
-  [DictKey.Function]: Ref | Dict | BaseStream | (Ref | Dict | BaseStream)[],
+  [DictKey.Function]: Ref | Dict | DataStream | (Ref | Dict | DataStream)[],
   [DictKey.GS0]: Dict,
-  [DictKey.G]: BaseStream,
+  [DictKey.G]: DataStream,
   [DictKey.Group]: Dict,
   [DictKey.H]: number,
   [DictKey.Height]: number,
@@ -498,8 +497,8 @@ export type DictValueTypeMapping = {
   [DictKey.InkList]: (number | Ref)[][],
   [DictKey.Interpolate]: number[], // 应该和I保持一致
   [DictKey.ItalicAngle]: number,
-  [DictKey.JBIG2Globals]: BaseStream,
-  [DictKey.JS]: BaseStream | string,
+  [DictKey.JBIG2Globals]: DataStream,
+  [DictKey.JS]: DataStream | string,
   [DictKey.JavaScript]: string,
   [DictKey.K]: Dict | number | Ref | Ref[],
   [DictKey.Kids]: (string | Dict | Ref)[], // 某种类型的数组，具体还要仔细分析
@@ -514,10 +513,10 @@ export type DictValueTypeMapping = {
   [DictKey.M]: string,
   [DictKey.Mac]: string | Ref,
   [DictKey.MarkInfo]: Dict,
-  [DictKey.Mask]: BaseStream | number[], // BaseStream或某种类型的数组，猜测是数字数组
+  [DictKey.Mask]: DataStream | number[], // DataStream或某种类型的数组，猜测是数字数组
   [DictKey.Matrix]: number[],
   [DictKey.Metadata]: Ref,
-  [DictKey.N]: Ref | StringStream | number | null,
+  [DictKey.N]: Ref | DataStream | number | null, // 实际上应该是个StringStream
   [DictKey.Name]: Name | string,
   [DictKey.Names]: Dict,
   [DictKey.NeedAppearances]: boolean,
@@ -530,7 +529,7 @@ export type DictValueTypeMapping = {
   [DictKey.OE]: string,
   [DictKey.O]: string,
   [DictKey.Obj]: Ref,
-  [DictKey.Off]: BaseStream,
+  [DictKey.Off]: DataStream,
   [DictKey.OpenAction]: Dict | DestinationType,
   [DictKey.Open]: "Open",
   [DictKey.Ordering]: string,
@@ -563,7 +562,7 @@ export type DictValueTypeMapping = {
   [DictKey.RoleMap]: Dict,
   [DictKey.Root]: Ref,
   [DictKey.Rotate]: number,
-  [DictKey.SMask]: Ref | BaseStream,
+  [DictKey.SMask]: Ref | DataStream,
   [DictKey.S]: Name,
   [DictKey.ShadingType]: number,
   [DictKey.Shading]: Dict,
@@ -578,7 +577,7 @@ export type DictValueTypeMapping = {
   [DictKey.StructTreeRoot]: Name | Ref,
   [DictKey.Subtype]: Name | undefined,
   [DictKey.Supplement]: number,
-  [DictKey.TR]: Dict | BaseStream,
+  [DictKey.TR]: Dict | DataStream,
   [DictKey.TU]: string,
   [DictKey.T]: string | Dict,
   [DictKey.ToUnicode]: Name,
@@ -685,9 +684,9 @@ export type DictValueTypeMapping = {
   [DictKey.DW2]: PointType,
   [DictKey.W2]: (Ref | number)[],
   [DictKey.MissingWidth]: number,
-  [DictKey.FontFile]: BaseStream,
-  [DictKey.FontFile2]: BaseStream,
-  [DictKey.FontFile3]: BaseStream,
+  [DictKey.FontFile]: DataStream,
+  [DictKey.FontFile2]: DataStream,
+  [DictKey.FontFile3]: DataStream,
   [DictKey.Length1]: number,
   [DictKey.Length2]: number,
   [DictKey.Length3]: number,

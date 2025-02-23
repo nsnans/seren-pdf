@@ -1,4 +1,4 @@
-import { PointType, RectType } from "../common/types";
+import { PointType, RectType } from "../common/common_types";
 
 export interface FigureType {
   type: string;

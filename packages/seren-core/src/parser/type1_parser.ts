@@ -14,7 +14,7 @@
  */
 
 import { getEncoding } from "../tables/encodings";
-import { isWhiteSpace } from "../../../seren-common/src/utils/core_utils";
+import { isWhiteSpace } from "../utils/core_utils";
 import { Stream } from "../stream/stream";
 import { EvaluatorProperties } from "./evaluator/evaluator";
 import { TransformType, warn, Uint8TypedArray } from "seren-common";

@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray, bytesToString, unreachable } from "seren-common";
-import { JpxDecoderOptions } from "../image/image";
-import { Dict } from "packages/seren-common/src/document/dict";
+import { DataStream, Dict, Uint8TypedArray, bytesToString, unreachable } from "seren-common";
+import { JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
 
 // Lots of DecodeStreams are created whose buffers are never used.  For these
 // we share a single empty buffer. This is (a) space-efficient and (b) avoids
@@ -25,7 +24,7 @@ export const emptyBuffer = new Uint8Array(0);
 // 不要让别人试图修改这个变量
 emptyBuffer.set = () => unreachable('empty buffer cannot set');
 
-export abstract class BaseStream {
+export abstract class BaseStream implements DataStream {
 
   public pos: number = 0;
 
@@ -110,7 +109,7 @@ export abstract class BaseStream {
     return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
   }
 
-  getByteRange(_begin: number, _end: number) {
+  getByteRange(_begin: number, _end: number): Uint8TypedArray {
     unreachable("Abstract method `getByteRange` called");
   }
 

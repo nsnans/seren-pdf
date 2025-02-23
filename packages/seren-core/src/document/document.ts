@@ -66,7 +66,7 @@ import {
   PDF_VERSION_REGEXP,
   XRefEntryException,
   XRefParseException
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
 import { calculateMD5 } from "../crypto/crypto";
 import { StreamsSequenceStream } from "../stream/decode_stream";
 import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "../parser/evaluator/evaluator";

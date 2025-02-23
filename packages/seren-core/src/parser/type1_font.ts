@@ -26,7 +26,7 @@ import {
   CFFTopDict,
 } from "../document/font/cff_parser";
 import { SEAC_ANALYSIS_ENABLED, type1FontGlyphMapping } from "../document/font/fonts_utils";
-import { isWhiteSpace } from "../../../seren-common/src/utils/core_utils";
+import { isWhiteSpace } from "../utils/core_utils";
 import { Stream } from "../stream/stream";
 import { CharStringObjectType, Type1Parser } from "./type1_parser";
 import { EvaluatorProperties } from "./evaluator/evaluator";

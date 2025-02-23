@@ -19,7 +19,7 @@ import {
   getRotationMatrix,
   numberToString,
   stringToUTF16HexString,
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
 import {
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,

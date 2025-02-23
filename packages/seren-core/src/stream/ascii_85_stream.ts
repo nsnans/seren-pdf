@@ -14,7 +14,7 @@
  */
 
 import { BaseStream } from "./base_stream";
-import { isWhiteSpace } from "../../../seren-common/src/utils/core_utils";
+import { isWhiteSpace } from "../utils/core_utils";
 import { DecodeStream } from "./decode_stream";
 
 export class Ascii85Stream extends DecodeStream {

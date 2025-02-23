@@ -14,7 +14,7 @@
  */
 
 import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../../../seren-common/src/utils/core_utils";
+import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../utils/core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";
 import { Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef } from "seren-common";

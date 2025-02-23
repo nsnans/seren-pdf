@@ -1,4 +1,4 @@
-import { RectType } from "../common/types";
+import { RectType } from "../common/common_types";
 import { Name } from "../document/primitives";
 import { DocumentEvaluatorOptions } from "./document_evaluator_options";
 

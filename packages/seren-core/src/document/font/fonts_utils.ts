@@ -15,7 +15,7 @@
 
 import { getEncoding, StandardEncoding } from "../../tables/encodings";
 import { getGlyphsUnicode } from "./glyphlist";
-import { getLookupTableFactory } from "../../../../seren-common/src/utils/core_utils";
+import { getLookupTableFactory } from "../../utils/core_utils";
 import { getUnicodeForGlyph } from "../../tables/unicode";
 import { info } from "seren-common";
 import { EvaluatorProperties } from "../../parser/evaluator/evaluator";

@@ -34,7 +34,7 @@ import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { SingleOpaquePixelImageMask } from "./image_types";
-import { ImageMask } from "packages/seren-common/src/image/image_types";
+import { ImageMask, JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -91,16 +91,6 @@ function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
     }
   }
   return dest;
-}
-
-export interface JpxDecoderOptions {
-
-  numComponents: number,
-
-  isIndexedColormap: boolean,
-
-  smaskInData?: boolean;
-
 }
 
 export interface PDFImageData {

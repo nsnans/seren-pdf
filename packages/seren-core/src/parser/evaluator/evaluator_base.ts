@@ -15,7 +15,7 @@ import {
 import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";
 import { SMaskOptions } from "../../image/image_types";
-import { lookupMatrix, lookupNormalRect } from "../../../../seren-common/src/utils/core_utils";
+import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
 import { EvaluatorContext, State } from "./evaluator";
 import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";

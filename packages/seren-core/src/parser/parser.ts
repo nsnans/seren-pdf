@@ -37,7 +37,7 @@ import {
   isWhiteSpace,
   MissingDataException,
   ParserEOFException,
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
 import { CipherTransform } from "../crypto/crypto";
 import { EvaluatorOpMap } from "./evaluator/evaluator";
 import { FlateStream } from "../stream/flate_stream";

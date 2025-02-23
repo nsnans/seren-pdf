@@ -14,7 +14,7 @@
  */
 
 import { FormatError } from "seren-common";
-import { CMap } from "./cmap";
+import { CMapImpl } from "./cmap";
 
 function hexToInt(a: Uint8Array, size: number) {
   let n = 0;
@@ -151,7 +151,7 @@ class BinaryCMapStream {
 }
 
 class BinaryCMapReader {
-  async process(data: Uint8Array, cMap: CMap, extend: (useCMap: string) => Promise<CMap>) {
+  async process(data: Uint8Array, cMap: CMapImpl, extend: (useCMap: string) => Promise<CMapImpl>) {
     const stream = new BinaryCMapStream(data);
     const header = stream.readByte();
     cMap.vertical = !!(header & 1);

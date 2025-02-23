@@ -33,11 +33,11 @@ import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
 import {
   isBooleanArray,
-  isNumberArray,
   lookupMatrix,
   lookupNormalRect,
   MissingDataException,
-} from "../../../seren-common/src/utils/core_utils";
+} from "../utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";
 import { OperatorListIR } from "packages/seren-common/src/types/operator_types";

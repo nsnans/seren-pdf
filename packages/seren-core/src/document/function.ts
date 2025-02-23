@@ -23,7 +23,7 @@ import {
   Dict, DictKey, Ref
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
-import { isNumberArray } from "../../../seren-common/src/utils/core_utils";
+import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { LocalFunctionCache } from "../image/image_utils";
 import { PostScriptLexer, PostScriptParser } from "../parser/ps_parser";
 import { XRefImpl } from "./xref";

@@ -1,9 +1,9 @@
-import { RectType } from "../common/types";
+import { RectType } from "../common/common_types";
 import { Dict } from "../document/dict";
 import { Name, Ref } from "../document/primitives";
 import { AnnotationBorderStyleType, AnnotationEditorType, AnnotationType, assert, warn } from "../utils/util";
 import { PlatformHelper } from "../utils/platform_helper";
-import { isNumberArray } from "../utils/core_utils";
+import { isNumberArray } from "../utils/util";
 
 export interface AnnotationEditorSerial {
   annotationType: AnnotationEditorType;

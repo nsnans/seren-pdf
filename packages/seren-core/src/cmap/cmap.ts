@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn } from "seren-common";
+import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn, MissingDataException } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { BinaryCMapReader } from "./binary_cmap";
 import { Lexer } from "../parser/parser";
-import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
 import { Stream } from "../stream/stream";
+import { CMap } from "packages/seren-common/src/types/cmap_types";
 
 const BUILT_IN_CMAPS = [
   // << Start unicode maps.
@@ -198,7 +198,7 @@ const BUILT_IN_CMAPS = [
 const MAX_MAP_RANGE = 2 ** 24 - 1; // = 0xFFFFFF
 
 // CMap, not to be confused with TrueType's cmap.
-class CMap {
+export class CMapImpl implements CMap {
 
   public numCodespaceRanges = 0;
 
@@ -389,7 +389,7 @@ class CMap {
 
 // A special case of CMap, where the _map array implicitly has a length of
 // 65536 and each element is equal to its index.
-class IdentityCMap extends CMap {
+export class IdentityCMap extends CMapImpl {
 
   constructor(vertical: boolean, n: number) {
     super();
@@ -475,7 +475,7 @@ function expectInt(obj: unknown) {
   }
 }
 
-function parseBfChar(cMap: CMap, lexer: Lexer) {
+function parseBfChar(cMap: CMapImpl, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -494,7 +494,7 @@ function parseBfChar(cMap: CMap, lexer: Lexer) {
   }
 }
 
-function parseBfRange(cMap: CMap, lexer: Lexer) {
+function parseBfRange(cMap: CMapImpl, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -527,7 +527,7 @@ function parseBfRange(cMap: CMap, lexer: Lexer) {
   throw new FormatError("Invalid bf range.");
 }
 
-function parseCidChar(cMap: CMap, lexer: Lexer) {
+function parseCidChar(cMap: CMapImpl, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -545,7 +545,7 @@ function parseCidChar(cMap: CMap, lexer: Lexer) {
   }
 }
 
-function parseCidRange(cMap: CMap, lexer: Lexer) {
+function parseCidRange(cMap: CMapImpl, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -566,7 +566,7 @@ function parseCidRange(cMap: CMap, lexer: Lexer) {
   }
 }
 
-function parseCodespaceRange(cMap: CMap, lexer: Lexer) {
+function parseCodespaceRange(cMap: CMapImpl, lexer: Lexer) {
   while (true) {
     let obj = lexer.getObj();
     if (obj === EOF) {
@@ -589,14 +589,14 @@ function parseCodespaceRange(cMap: CMap, lexer: Lexer) {
   throw new FormatError("Invalid codespace range.");
 }
 
-function parseWMode(cMap: CMap, lexer: Lexer) {
+function parseWMode(cMap: CMapImpl, lexer: Lexer) {
   const obj = lexer.getObj();
   if (Number.isInteger(obj)) {
     cMap.vertical = !!obj;
   }
 }
 
-function parseCMapName(cMap: CMap, lexer: Lexer) {
+function parseCMapName(cMap: CMapImpl, lexer: Lexer) {
   const obj = lexer.getObj();
   if (obj instanceof Name) {
     cMap.name = obj.name;
@@ -607,9 +607,9 @@ type FetchBuiltInCMapType = (name: string) => Promise<{
   isCompressed: boolean;
 }>;
 
-async function parseCMap(cMap: CMap, lexer: Lexer, fetchBuiltInCMap: FetchBuiltInCMapType,
+async function parseCMap(cMap: CMapImpl, lexer: Lexer, fetchBuiltInCMap: FetchBuiltInCMapType,
   // 这里根本就不应该是string类型，为了兼容不良的代码做的
-  useCMap: CMap | string | null) {
+  useCMap: CMapImpl | string | null) {
   let previous, embeddedUseCMap;
   objLoop: while (true) {
     try {
@@ -669,7 +669,7 @@ async function parseCMap(cMap: CMap, lexer: Lexer, fetchBuiltInCMap: FetchBuiltI
   return cMap;
 }
 
-async function extendCMap(cMap: CMap, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: string) {
+async function extendCMap(cMap: CMapImpl, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: string) {
   cMap.useCMap = await createBuiltInCMap(useCMap, fetchBuiltInCMap);
   // If there aren't any code space ranges defined clone all the parent ones
   // into this cMap.
@@ -705,7 +705,7 @@ async function createBuiltInCMap(name: string, fetchBuiltInCMap: FetchBuiltInCMa
   }
 
   const { cMapData, isCompressed } = await fetchBuiltInCMap(name);
-  const cMap = new CMap(true);
+  const cMap = new CMapImpl(true);
 
   if (isCompressed) {
     return new BinaryCMapReader().process(cMapData, cMap, useCMap =>
@@ -716,15 +716,15 @@ async function createBuiltInCMap(name: string, fetchBuiltInCMap: FetchBuiltInCMa
   return parseCMap(cMap, lexer, fetchBuiltInCMap, null);
 }
 
-class CMapFactory {
+export class CMapFactory {
   static async create(
-    encoding: Name | BaseStream, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: CMap | null
+    encoding: Name | BaseStream, fetchBuiltInCMap: FetchBuiltInCMapType, useCMap: CMapImpl | null
   ) {
     if (encoding instanceof Name) {
       return createBuiltInCMap(encoding.name, fetchBuiltInCMap);
     } else if (encoding instanceof BaseStream) {
       const parsedCMap = await parseCMap(
-        new CMap(), new Lexer(encoding), fetchBuiltInCMap, useCMap
+        new CMapImpl(), new Lexer(encoding), fetchBuiltInCMap, useCMap
       );
 
       if (parsedCMap.isIdentityCMap) {
@@ -735,5 +735,3 @@ class CMapFactory {
     throw new Error("Encoding required.");
   }
 }
-
-export { CMap, CMapFactory, IdentityCMap };

@@ -23,7 +23,7 @@ import {
 } from "seren-common";
 import { Catalog } from "../document/catalog";
 import { ChunkedStreamManager } from "../stream/chunked_stream";
-import { MissingDataException } from "../../../seren-common/src/utils/core_utils";
+import { MissingDataException } from "../utils/core_utils";
 import { Page, PDFDocument } from "../document/document";
 import { Stream } from "../stream/stream";
 import { PDFWorkerStream } from "../stream/worker_stream";

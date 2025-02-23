@@ -11,3 +11,12 @@ export interface ImageMask {
   bitmap?: ImageBitmap | VideoFrame;
   ref?: string | null;
 }
+export interface JpxDecoderOptions {
+
+  numComponents: number;
+
+  isIndexedColormap: boolean;
+
+  smaskInData?: boolean;
+
+}
