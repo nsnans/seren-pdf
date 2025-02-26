@@ -1,22 +1,27 @@
 import {
-  TransformType,
-  MutableArray,
+  Dict,
   AbortException,
+  CommonObjType,
+  DictKey,
   FormatError,
-  OPS, warn, DictKey, Name, Ref
+  MutableArray,
+  Name,
+  ObjType,
+  OPS,
+  Ref,
+  TransformType,
+  warn,
+  WorkerTask
 } from "seren-common";
-import { CommonObjType, ObjType } from "../shared/message_handler";
-import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";
-import { lookupMatrix } from "../../utils/core_utils";
-import { EvaluatorContext, PatternType } from "./evaluator";
-import { EvaluatorBaseHandler } from "./evaluator_base";
+import { DictImpl } from "../../document/dict_impl";
 import { LocalColorSpaceCache, LocalTilingPatternCache } from "../../image/image_utils";
+import { BaseStream } from "../../stream/base_stream";
+import { lookupMatrix } from "../../utils/core_utils";
 import { OperatorList } from "../operator_list";
 import { getTilingPatternIR, Pattern } from "../pattern";
-import { Dict } from "packages/seren-common/src/document/dict";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
-import { DictImpl } from "../../document/dict_impl";
+import { EvaluatorContext, PatternType } from "./evaluator";
+import { EvaluatorBaseHandler } from "./evaluator_base";
 
 export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 
@@ -31,7 +36,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
     cs: ColorSpace,
     patterns: Dict,
     resources: Dict,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     localColorSpaceCache: LocalColorSpaceCache,
     localTilingPatternCache: LocalTilingPatternCache,
     localShadingPatternCache: Map<Dict, string | null>
@@ -127,7 +132,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 
   async handleTilingType(
     fn: OPS, color: Uint8ClampedArray<ArrayBuffer> | null, resources: Dict, pattern: BaseStream,
-    patternDict: Dict, operatorList: OperatorList, task: DefaultWorkerTask, localTilingPatternCache: LocalTilingPatternCache
+    patternDict: Dict, operatorList: OperatorList, task: WorkerTask, localTilingPatternCache: LocalTilingPatternCache
   ) {
     // Create an IR of the pattern code.
     const tilingOpList = new OperatorList();

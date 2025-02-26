@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { MessageHandler } from "../shared/message_handler";
 import {
+  MessageHandler,
   createValidAbsoluteUrl,
   DestinationType,
   DocumentActionEventType,
@@ -24,7 +24,10 @@ import {
   shadow,
   stringToPDFString,
   stringToUTF8String,
-  warn
+  warn,
+  isNumberArray,
+  FileSpecSerializable, FontSubstitutionInfo, PDFMetadataInfo,
+  Dict
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
@@ -37,14 +40,10 @@ import {
   toRomanNumerals,
   XRefEntryException,
 } from "../utils/core_utils";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { TranslatedFont } from "../parser/evaluator/evaluator";
 import { FileSpec } from "./file_spec";
-import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";
-import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 import { GlobalImageCache } from "../image/image_utils";
 import { MetadataParser } from "./metadata_parser";
-import { PDFMetadataInfo } from "packages/seren-common/src/types/document_types";
 import { NameTree, NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";
 import {
@@ -55,13 +54,18 @@ import {
   Ref,
   RefSet,
   RefSetCache,
+  CatalogMarkInfo,
+  CatalogOpenAction,
+  CatalogOptionalContentConfig,
+  CatalogOutlineItem,
+  OptionalContentDataGroup,
+  OptionalContentOrder,
+  ViewerPreferenceKeys,
+  ViewerPreferenceValueTypes
 } from "seren-common";
-import { Dict } from "packages/seren-common/src/document/dict";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
 import { DictImpl, isDict } from "./dict_impl";
-import { CatalogMarkInfo, CatalogOpenAction, CatalogOptionalContentConfig, CatalogOutlineItem, OptionalContentDataGroup, OptionalContentOrder, ViewerPreferenceKeys, ViewerPreferenceValueTypes } from "packages/seren-common/src/types/catalog_types";
-
 
 // 传进来的值可能是DestinationType，也可能是其它莫名其妙的类型
 function isValidExplicitDest(dest: DestinationType | unknown) {

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
-import { MessageHandler } from "../shared/message_handler";
 import {
+  MessageHandler,
+  DocumentEvaluatorOptions,
   AbortException,
   createValidAbsoluteUrl,
   FeatureTest,

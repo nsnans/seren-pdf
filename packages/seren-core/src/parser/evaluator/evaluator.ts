@@ -12,38 +12,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-disable no-var */
-
-import { CMap } from "packages/seren-common/src/types/cmap_types";
-import { EvaluatorTextContent, SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
-import { CssFontInfo, FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
-import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import {
   assert,
+  CMap,
   Cmd,
+  CommonObjType,
+  CssFontInfo,
   Dict,
   DictKey,
+  DocumentEvaluatorOptions,
   EOF,
+  EvaluatorTextContent,
   FONT_IDENTITY_MATRIX,
+  FontSubstitutionInfo,
   FormatError,
   IDENTITY_MATRIX,
   info,
+  MessageHandler,
   MutableArray,
   Name,
+  OperatorListIR,
   OPS,
   PlatformHelper,
   RectType,
   Ref,
   RefSet,
   RefSetCache,
+  SeacMapValue,
   shadow,
+  StreamSink,
   TextRenderingMode,
   TransformType,
   Util,
-  warn, DocumentEvaluatorOptions,
-  MessageHandler,
-  CommonObjType
+  warn,
+  WorkerTask
 } from "seren-common";
 import { ColorSpace } from "../../color/colorspace";
 import { GlobalIdFactory } from "../../common/global_id_factory";
@@ -60,7 +62,6 @@ import {
   RegionalImageCache
 } from "../../image/image_utils";
 import { BaseStream } from "../../stream/base_stream";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { OperatorList } from "../operator_list";
 import { Lexer, Parser } from "../parser";
 import { FontProgramPrivateData } from "../type1_parser";
@@ -259,7 +260,7 @@ export class EvaluatorOperatorFactory {
 
   createGeneralHandler(
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,
@@ -272,7 +273,7 @@ export class EvaluatorOperatorFactory {
 
   createTextContentHandler(
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],
@@ -449,7 +450,7 @@ export class PartialEvaluator {
     fontArgs: [Name | string, number] | null,
     fontRef: Ref | null,
     operatorList: OperatorList,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
     cssFontInfo: CssFontInfo | null = null
@@ -469,7 +470,7 @@ export class PartialEvaluator {
 
   async getOperatorList(
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,
@@ -482,7 +483,7 @@ export class PartialEvaluator {
 
   async getTextContent(
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],
@@ -563,7 +564,7 @@ export class TranslatedFont {
   }
 
   // 这里这个函数只要做个改写就好了
-  loadType3Data(context: EvaluatorContext, resources: Dict, task: DefaultWorkerTask) {
+  loadType3Data(context: EvaluatorContext, resources: Dict, task: WorkerTask) {
     if (this.type3Loaded) {
       return this.type3Loaded;
     }

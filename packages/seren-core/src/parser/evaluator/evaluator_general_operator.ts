@@ -1,19 +1,16 @@
-import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
-import { AbortException, FormatError, info, OPS, warn, shiftable, Dict, DictKey, Name, Ref } from "seren-common";
-import { BaseStream } from "../../stream/base_stream";
+import { AbortException, Dict, DictKey, DocumentEvaluatorOptions, FormatError, info, isNumberArray, Name, OPS, Ref, shiftable, warn, WorkerTask } from "seren-common";
 import { ColorSpace } from "../../color/colorspace";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
+import { DictImpl } from "../../document/dict_impl";
+import { XRefImpl } from "../../document/xref";
+import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "../../image/image_utils";
+import { BaseStream } from "../../stream/base_stream";
+import { OperatorList } from "../operator_list";
 import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "../../image/image_utils";
-import { OperatorList } from "../operator_list";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
-import { XRefImpl } from "../../document/xref";
-import { DictImpl } from "../../document/dict_impl";
 
 const MethodMap = new Map<OPS, keyof GeneralOperator>();
 
@@ -32,7 +29,7 @@ function handle(ops: OPS) {
 // 所有的处理方法都是静态函数，避免大量的创建对象
 export interface ProcessContext extends ProcessOperation {
   fallbackFontDict: Dict | null;
-  task: DefaultWorkerTask;
+  task: WorkerTask;
   patterns: Dict;
   options: DocumentEvaluatorOptions;
   xref: XRefImpl;
@@ -596,7 +593,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
 
   protected operatorList: OperatorList;
 
-  protected task: DefaultWorkerTask;
+  protected task: WorkerTask;
 
   protected timeSlotManager = new TimeSlotManager();
 
@@ -617,7 +614,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
   constructor(
     evalCtx: EvaluatorContext,
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,

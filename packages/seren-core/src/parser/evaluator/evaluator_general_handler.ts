@@ -1,30 +1,31 @@
 import {
-  RectType,
-  info,
-  OPS,
-  TextRenderingMode,
-  warn,
   Dict,
   DictKey,
+  info,
   isName,
   Name,
+  OPS,
+  RectType,
   Ref,
-  RefSet
+  RefSet,
+  TextRenderingMode,
+  warn,
+  WorkerTask,
+  CommonObjType,
+  MessageHandler,
+  DocumentEvaluatorOptions
 } from "seren-common";
-import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
-import { CommonObjType, MessageHandler } from "../shared/message_handler";
+import { DictImpl } from "../../document/dict_impl";
+import { Font, Glyph } from "../../document/font/fonts";
+import { isPDFFunction } from "../../document/function";
+import { LocalColorSpaceCache, LocalGStateCache } from "../../image/image_utils";
 import { BaseStream } from "../../stream/base_stream";
+import { OperatorList } from "../operator_list";
 import { EvaluatorContext, normalizeBlendMode, State, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { Font, Glyph } from "../../document/font/fonts";
-import { isPDFFunction } from "../../document/function";
-import { LocalColorSpaceCache, LocalGStateCache } from "../../image/image_utils";
-import { OperatorList } from "../operator_list";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
-import { DictImpl } from "../../document/dict_impl";
 
 /**
  * {@link EvaluatorFontHandler} 管理了处理字体逻辑相关的方法。
@@ -263,7 +264,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
     gState: Dict,
     operatorList: OperatorList,
     cacheKey: string | null,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     stateManager: StateManager,
     localGStateCache: LocalGStateCache,
     localColorSpaceCache: LocalColorSpaceCache

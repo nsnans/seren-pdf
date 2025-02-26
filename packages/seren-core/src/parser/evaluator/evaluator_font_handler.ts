@@ -1,40 +1,41 @@
 import {
-  Uint8TypedArray,
-  MurmurHash3_64,
-  TransformType,
-  DictKey,
-  Name,
-  Ref,
+  CssFontInfo,
+  isNumberArray,
   AbortException,
   assert,
+  Dict,
+  DictKey,
   FONT_IDENTITY_MATRIX,
   FormatError,
   info,
+  MurmurHash3_64,
+  Name,
+  Ref,
   stringToPDFString,
-  warn, Dict
+  TransformType,
+  Uint8TypedArray,
+  warn,
+  WorkerTask
 } from "seren-common";
-import { BaseStream } from "../../stream/base_stream";
 import { CMapFactory, IdentityCMap } from "../../cmap/cmap";
 import { PreEvaluatedFont } from "../../common/core_types";
-import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
-import { DecodeStream } from "../../stream/decode_stream";
-import { getEncoding, MacRomanEncoding, StandardEncoding, SymbolSetEncoding, WinAnsiEncoding, ZapfDingbatsEncoding } from "../../tables/encodings";
-import { EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
-import { CssFontInfo } from "packages/seren-common/src/types/font_types";
-import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
+import { DictImpl } from "../../document/dict_impl";
 import { getFontSubstitution } from "../../document/font/font_substitutions";
 import { ErrorFont, Font } from "../../document/font/fonts";
 import { FontFlags } from "../../document/font/fonts_utils";
 import { getGlyphsUnicode } from "../../document/font/glyphlist";
 import { getMetrics } from "../../document/font/metrics";
-import { OperatorList } from "../operator_list";
 import { getFontNameToFileMap, getSerifFonts, getStandardFontName, getStdFontMap, getSymbolsFonts, isKnownFontName } from "../../document/font/standard_fonts";
-import { Stream } from "../../stream/stream";
 import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
+import { BaseStream } from "../../stream/base_stream";
+import { DecodeStream } from "../../stream/decode_stream";
+import { Stream } from "../../stream/stream";
+import { getEncoding, MacRomanEncoding, StandardEncoding, SymbolSetEncoding, WinAnsiEncoding, ZapfDingbatsEncoding } from "../../tables/encodings";
 import { getUnicodeForGlyph } from "../../tables/unicode";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
-import { DictImpl } from "../../document/dict_impl";
+import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
+import { OperatorList } from "../operator_list";
+import { EvaluatorContext, EvaluatorProperties, State, TranslatedFont } from "./evaluator";
+import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 
 export class EvaluatorFontHandler {
 
@@ -49,7 +50,7 @@ export class EvaluatorFontHandler {
     fontArgs: [Name | string, number] | null,
     fontRef: Ref | null,
     operatorList: OperatorList,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
     cssFontInfo: CssFontInfo | null = null

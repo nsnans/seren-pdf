@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-import { MeshShadingPatternIR } from "../display/pattern_helper";
 import {
   assert,
   FormatError,
@@ -27,7 +26,12 @@ import {
   TransformType,
   PlatformHelper,
   Dict,
-  DictKey
+  DictKey,
+  MeshShadingPatternIR,
+  isNumberArray,
+  OperatorListIR,
+  FigureType, 
+  RadialAxialShadingIR
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
@@ -37,12 +41,9 @@ import {
   lookupNormalRect,
   MissingDataException,
 } from "../utils/core_utils";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";
-import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import { XRefImpl } from "../document/xref";
-import { FigureType, RadialAxialShadingIR } from "packages/seren-common/src/types/shading_types";
 
 const ShadingType = {
   FUNCTION_BASED: 1,

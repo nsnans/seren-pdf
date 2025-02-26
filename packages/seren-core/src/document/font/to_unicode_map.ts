@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { ToUnicodeMap } from "packages/seren-common/src/types/to_unicode_map_types";
-import { unreachable } from "seren-common";
+import { ToUnicodeMap, unreachable } from "seren-common";
 
 export class ToUnicodeMapImpl implements ToUnicodeMap {
 

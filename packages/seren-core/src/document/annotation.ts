@@ -56,9 +56,9 @@ import {
   warn,
   DocumentEvaluatorOptions,
   PointType, RectType, TransformType,
-  AnnotationBorderStyle
+  AnnotationBorderStyle,
+  WorkerTask
 } from "seren-common";
-import { DefaultWorkerTask } from "../../../seren-worker/src/worker";
 import { ColorSpace } from "../color/colorspace";
 import { DefaultFieldObject, GeneralFieldObject, isFullTextContentItem } from "../common/core_types";
 import { LocalIdFactory } from "../common/global_id_factory";
@@ -133,7 +133,7 @@ export class MarkupAnnotationFactory {
     annotation: FreeTextEditorSerial,
     dependencies: AnnotationDependency[],
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     baseFontRef: Ref | null,
   ) {
     if (!annotation.ref) {
@@ -317,7 +317,7 @@ export class MarkupAnnotationFactory {
     xref: XRefImpl,
     annotation: FreeTextEditorSerial,
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     evaluatorOptions: DocumentEvaluatorOptions
   ) {
     const ap = await FreeTextAnnotation.createNewAppearanceStream(
@@ -600,7 +600,7 @@ export class AnnotationFactory {
 
   static async saveNewAnnotations(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
@@ -677,7 +677,7 @@ export class AnnotationFactory {
   static async printNewAnnotations(
     annotationGlobals: AnnotationGlobals,
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ): Promise<Annotation<AnnotationData>[] | null> {
@@ -1384,7 +1384,7 @@ export class Annotation<DATA extends AnnotationData> {
     });
   }
 
-  async getOperatorList(evaluator: PartialEvaluator, task: DefaultWorkerTask, intent: number,
+  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number,
     _annotationStorage: Map<string, Record<string, any>> | null): Promise<{
       opList: OperatorList | null;
       separateForm: boolean;
@@ -1445,7 +1445,7 @@ export class Annotation<DATA extends AnnotationData> {
 
   async save(
     _evaluator: PartialEvaluator,
-    _task: DefaultWorkerTask,
+    _task: WorkerTask,
     _annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     return null;
@@ -1455,7 +1455,7 @@ export class Annotation<DATA extends AnnotationData> {
     return false;
   }
 
-  async extractTextContent(evaluator: PartialEvaluator, task: DefaultWorkerTask, viewBox: RectType): Promise<void> {
+  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType): Promise<void> {
     if (!this.appearance) {
       return;
     }
@@ -2044,7 +2044,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async getOperatorList(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -2144,7 +2144,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async save(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     interface MaybeType {
@@ -2270,7 +2270,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async _getAppearance(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -2530,7 +2530,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     );
   }
 
-  static async _getFontData(evaluator: PartialEvaluator, task: DefaultWorkerTask, appearanceData: { fontName: string, fontSize: number }, resources: Dict) {
+  static async _getFontData(evaluator: PartialEvaluator, task: WorkerTask, appearanceData: { fontName: string, fontSize: number }, resources: Dict) {
     const operatorList = new OperatorList();
     const initialState = {
       font: <Font | ErrorFont | null>null,
@@ -2981,7 +2981,7 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
     return chunks;
   }
 
-  async extractTextContent(evaluator: PartialEvaluator, task: DefaultWorkerTask, viewBox: RectType) {
+  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType) {
     await super.extractTextContent(evaluator, task, viewBox);
     const text = this.data.textContent;
     if (!text) {
@@ -3108,7 +3108,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   async getOperatorList(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -3188,7 +3188,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   async save(
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     if (this.data.checkBox) {
@@ -3203,7 +3203,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     return null;
   }
 
-  async _saveCheckbox(evaluator: PartialEvaluator, _task: DefaultWorkerTask, annotationStorage: Map<string, AnnotationEditorSerial> | null) {
+  async _saveCheckbox(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (!annotationStorage) {
       return null;
     }
@@ -3261,7 +3261,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     return [{ ref: this.ref, data: buffer.join("") }];
   }
 
-  async _saveRadioButton(evaluator: PartialEvaluator, _task: DefaultWorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
+  async _saveRadioButton(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
     if (!annotationStorage) {
       return null;
     }
@@ -3712,7 +3712,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
     dict.set(DictKey.I, indices);
   }
 
-  async _getAppearance(evaluator: PartialEvaluator, task: DefaultWorkerTask, intent: number
+  async _getAppearance(evaluator: PartialEvaluator, task: WorkerTask, intent: number
     , annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (this.data.combo) {
       return super._getAppearance(evaluator, task, intent, annotationStorage);
@@ -4174,7 +4174,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     annotation: FreeTextEditorSerial,
     xref: XRefImpl,
     evaluator: PartialEvaluator,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     baseFontRef: Ref | null,
   ) {
 

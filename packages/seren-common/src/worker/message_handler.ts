@@ -184,9 +184,13 @@ export interface MessageHandler {
 
   obj<T extends ObjType>(id: string, page: number, type: T, data: ObjDataType[T], transfers: Transferable[] | null): void;
 
+  obj<T extends ObjType>(id: string, page: number, type: T, data: ObjDataType[T]): void;
+
   onObj<T extends ObjType>(fn: (res: [string, number, T, ObjDataType[T]]) => void): void;
 
   commonobj<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T], transfers: Transferable[] | null): void;
+
+  commonobj<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T]): void;
 
   commonobjPromise<T extends CommonObjType>(id: string, type: T, data: CommonObjDataType[T]): Promise<number>;
 

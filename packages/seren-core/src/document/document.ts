@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
-import { MessageHandler } from "../shared/message_handler";
 import {
   AnnotationEditorPrefix,
   assert,
@@ -40,11 +38,21 @@ import {
   Ref,
   RefSet,
   RefSetCache,
-  Dict
+  Dict,
+  MessageHandler,
+  AnnotationEditorSerial,
+  AnnotationData,
+  EvaluatorTextContent,
+  FieldObject,
+  StreamSink,
+  FontSubstitutionInfo,
+  OpertaorListChunk,
+  PDFDocumentInfo,
+  StructTreeSerialNode,
+  WorkerTask,
 } from "seren-common";
 import {
   Annotation,
-  AnnotationData,
   AnnotationFactory,
   AnnotationGlobals,
   PopupAnnotation,
@@ -53,9 +61,6 @@ import {
 import { BaseStream } from "../stream/base_stream";
 import { Catalog } from "./catalog";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
-import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
-import { FieldObject } from "packages/seren-common/src/types/annotation_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import {
   collectActions,
   getArrayInheritableProperty,
@@ -70,18 +75,14 @@ import {
 import { calculateMD5 } from "../crypto/crypto";
 import { StreamsSequenceStream } from "../stream/decode_stream";
 import { EvaluatorCMapData, PartialEvaluator, TranslatedFont } from "../parser/evaluator/evaluator";
-import { FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
 import { GlobalIdFactory, LocalIdFactory } from "../common/global_id_factory";
 import { GlobalImageCache } from "../image/image_utils";
 import { ObjectLoader } from "../common/object_loader";
 import { OperatorList } from "../parser/operator_list";
-import { OpertaorListChunk } from "packages/seren-common/src/types/operator_types";
 import { Linearization, LinearizationInterface } from "../parser/parser";
 import { PDFManager } from "../worker/pdf_manager";
 import { NullStream, Stream } from "../stream/stream";
 import { StructTreePage, StructTreeRoot } from "./struct_tree";
-import { PDFDocumentInfo, StructTreeSerialNode } from "packages/seren-common/src/types/document_types";
-import { DefaultWorkerTask } from "../../../seren-worker/src/worker";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
@@ -312,7 +313,7 @@ export class Page {
   }
 
   async saveNewAnnotations(
-    handler: MessageHandler, task: DefaultWorkerTask, annotations: AnnotationEditorSerial[],
+    handler: MessageHandler, task: WorkerTask, annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
     const partialEvaluator = new PartialEvaluator(
@@ -372,7 +373,7 @@ export class Page {
 
   async save(
     handler: MessageHandler,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
     const partialEvaluator = new PartialEvaluator(
@@ -418,7 +419,7 @@ export class Page {
   async getOperatorList(
     handler: MessageHandler,
     sink: StreamSink<OpertaorListChunk>,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     intent: number,
     cacheKey: string,
     annotationStorage: Map<string, AnnotationEditorSerial> | null = null,
@@ -611,7 +612,7 @@ export class Page {
 
   async extractTextContent(
     handler: MessageHandler,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     includeMarkedContent: boolean,
     disableNormalization: boolean,
     sink: StreamSink<EvaluatorTextContent>
@@ -669,7 +670,7 @@ export class Page {
     return tree;
   }
 
-  async getAnnotationsData(handler: MessageHandler, task: DefaultWorkerTask, intent: number) {
+  async getAnnotationsData(handler: MessageHandler, task: WorkerTask, intent: number) {
     const annotationsData: AnnotationData[] = [];
     const annotations = await this._parsedAnnotations;
     if (annotations.length === 0) {

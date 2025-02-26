@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-import { shadow, stringToPDFString, warn, Dict, DictKey, Ref } from "seren-common";
+import { shadow, stringToPDFString, warn, Dict, DictKey, Ref, FileSpecSerializable } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
-import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";
 
 function pickPlatformItem(dict?: Dict) {
   if (!(dict instanceof DictImpl)) {

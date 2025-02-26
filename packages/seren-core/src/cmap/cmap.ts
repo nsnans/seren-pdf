@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn } from "seren-common";
+import { Cmd, EOF, isCmd, Name, FormatError, unreachable, warn, CMap } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { BinaryCMapReader } from "./binary_cmap";
 import { Lexer } from "../parser/parser";
 import { Stream } from "../stream/stream";
-import { CMap } from "packages/seren-common/src/types/cmap_types";
 import { MissingDataException } from "../utils/core_utils";
 
 const BUILT_IN_CMAPS = [

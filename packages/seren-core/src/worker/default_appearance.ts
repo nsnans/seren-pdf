@@ -27,7 +27,7 @@ import {
   shadow,
   warn,
   PointType, RectType,
-  MutableArray, DictKey, Name, Ref, Dict
+  MutableArray, DictKey, Name, Ref, Dict, DocumentEvaluatorOptions
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
 import { EvaluatorPreprocessor } from "../parser/evaluator/evaluator";
@@ -35,7 +35,6 @@ import { LocalColorSpaceCache } from "../image/image_utils";
 import { PDFFunctionFactory } from "../document/function";
 import { Stream, StringStream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
-import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
 import { DictImpl } from "../document/dict_impl";
 
 class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {

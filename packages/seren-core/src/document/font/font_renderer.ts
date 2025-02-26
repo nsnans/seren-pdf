@@ -21,11 +21,10 @@ import {
   unreachable,
   warn,
   PlatformHelper,
-  TransformType
+  TransformType, isNumberArray
 } from "seren-common";
 import { CFFDict, CFFDictKey, CFFFDSelect, CFFParser, CFFTopDict } from "./cff_parser";
 import { getGlyphsUnicode } from "./glyphlist";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
 import { StandardEncoding } from "../../tables/encodings";
 import { Stream } from "../../stream/stream";
 import { Font } from "./fonts";

@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorSerial } from "../display/editor/state/editor_serializable";
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../utils/core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";
-import { Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef } from "seren-common";
+import { Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef, AnnotationEditorSerial } from "seren-common";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
-import { StructTreeSerialNode } from "packages/seren-common/src/types/document_types";
+import { StructTreeSerialNode } from "seren-common";
 
 const MAX_DEPTH = 40;
 
@@ -301,7 +300,7 @@ export class StructTreeRoot {
     const buffer: string[] = [];
     for (const [ref, obj] of cache.items()) {
       buffer.length = 0;
-      await writeObject(ref, obj, buffer, xref.encrypt);
+      await writeObject(ref, obj, buffer, (<XRefImpl>xref).encrypt);
       newRefs.push({ ref, data: buffer.join("") });
     }
   }

@@ -1,8 +1,6 @@
-import { CommonObjType, ObjType } from "../shared/message_handler";
-import { warn, assert, OPS, DictKey, Dict } from "seren-common";
+import { warn, assert, OPS, DictKey, Dict, WorkerTask, ImageMask, CommonObjType, ObjType } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
 import { SingleOpaquePixelImageMask, SMaskOptions } from "../../image/image_types";
-import { ImageMask } from "packages/seren-common/src/types/image_types";
 import { DecodeStream } from "../../stream/decode_stream";
 import { EvaluatorContext, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
@@ -10,7 +8,6 @@ import { isPDFFunction } from "../../document/function";
 import { PDFImage } from "../../image/image";
 import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {
 
@@ -273,7 +270,7 @@ export class EvaluatorImageHandler extends EvaluatorBaseHandler {
   }
 
   handleSMask(
-    smask: Dict, resources: Dict, operatorList: OperatorList, task: DefaultWorkerTask,
+    smask: Dict, resources: Dict, operatorList: OperatorList, task: WorkerTask,
     stateManager: StateManager, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const smaskContent = smask.getValue(DictKey.G);

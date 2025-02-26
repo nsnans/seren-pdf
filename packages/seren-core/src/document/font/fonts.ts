@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-import { CMap } from "packages/seren-common/src/types/cmap_types";
-import { SeacMapValue } from "packages/seren-common/src/types/evaluator_types";
-import { CssFontInfo, FontExportData, FontExportExtraData, FontSubstitutionInfo } from "packages/seren-common/src/types/font_types";
-import { OperatorListIR } from "packages/seren-common/src/types/operator_types";
 import {
+  CMap,
+  SeacMapValue,
+  CssFontInfo,
+  FontExportData, FontExportExtraData, FontSubstitutionInfo, OperatorListIR,
   assert,
   bytesToString,
   DictKey,
@@ -31,6 +31,7 @@ import {
   TransformType,
   Uint8TypedArray,
   warn,
+  ToUnicodeMap,
 } from "seren-common";
 import { IdentityCMap } from "../../cmap/cmap";
 import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
@@ -75,7 +76,6 @@ import {
   getSupplementalGlyphMapForCalibri,
 } from "./standard_fonts";
 import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "./to_unicode_map";
-import { ToUnicodeMap } from "packages/seren-common/src/types/to_unicode_map_types";
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [

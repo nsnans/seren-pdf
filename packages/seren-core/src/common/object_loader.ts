@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-import { DictKey, Ref, RefSet, warn, Dict } from "seren-common";
+import { DictKey, Ref, RefSet, warn, Dict, XRef } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { MissingDataException } from "../utils/core_utils";
 import { XRefImpl } from "../document/xref";
 import { ChunkedStream } from "../stream/chunked_stream";
-import { XRef } from "seren-common";
 import { DictImpl } from "../document/dict_impl";
 
 function mayHaveChildren(value: unknown) {
@@ -142,7 +141,7 @@ class ObjectLoader {
     }
 
     if (pendingRequests.length) {
-      await (<ChunkedStream>this.xref.stream).manager.requestRanges(pendingRequests);
+      await (<ChunkedStream>(<XRefImpl>this.xref).stream).manager.requestRanges(pendingRequests);
 
       for (const node of nodesToRevisit) {
         // Remove any reference nodes from the current `RefSet` so they

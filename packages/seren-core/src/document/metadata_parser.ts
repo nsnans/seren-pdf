@@ -14,7 +14,7 @@
  */
 
 import { SimpleDOMNode, SimpleXMLParser } from "../utils/xml_parser";
-import { PDFMetadataInfo } from "packages/seren-common/src/types/document_types";
+import { PDFMetadataInfo } from "seren-common";
 
 export class MetadataParser {
 

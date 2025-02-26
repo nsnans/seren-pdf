@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult, assert } from "seren-common";
-import { MessageHandler } from "../shared/message_handler";
+import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult, assert, MessageHandler } from "seren-common";
 
 class PDFWorkerStream implements PDFStream {
 

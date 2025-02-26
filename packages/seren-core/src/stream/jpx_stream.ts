@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray, shadow, Dict } from "seren-common";
+import { Uint8TypedArray, shadow, Dict, JpxDecoderOptions } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
-import { JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
 import { JpxImage } from "../image/jpx";
 
 /**

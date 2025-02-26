@@ -1,5 +1,4 @@
-import { Uint8TypedArray, Ref } from "seren-common";
-import { JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
+import { Uint8TypedArray, Ref, JpxDecoderOptions } from "seren-common";
 import { JpegStream } from "../stream/jpeg_stream";
 import { Stream } from "../stream/stream";
 

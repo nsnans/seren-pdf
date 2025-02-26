@@ -22,7 +22,9 @@ import {
   convertToRGBA,
   MutableArray, TypedArray,
   PlatformHelper, Uint8TypedArray, DictKey, Name,
-  Dict
+  Dict,
+  ImageMask,
+  JpxDecoderOptions
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
@@ -34,7 +36,6 @@ import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "./image_utils";
 import { SingleOpaquePixelImageMask } from "./image_types";
-import { ImageMask, JpxDecoderOptions } from "packages/seren-common/src/types/image_types";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we

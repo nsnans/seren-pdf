@@ -1,26 +1,26 @@
 import {
   AbortException,
-  FormatError,
-  OPS,
-  warn,
-  MutableArray,
-  TransformType,
-  RectType,
-  Name,
+  Dict,
   DictKey,
+  FormatError,
+  MutableArray,
+  Name,
+  OPS,
+  RectType,
   Ref,
+  TransformType,
+  WorkerTask,
   isName,
-  Dict
+  warn
 } from "seren-common";
-import { BaseStream } from "../../stream/base_stream";
 import { ColorSpace } from "../../color/colorspace";
-import { SMaskOptions } from "../../image/image_types";
-import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
-import { EvaluatorContext, State } from "./evaluator";
-import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
-import { OperatorList } from "../operator_list";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { DictImpl } from "../../document/dict_impl";
+import { SMaskOptions } from "../../image/image_types";
+import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
+import { BaseStream } from "../../stream/base_stream";
+import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
+import { OperatorList } from "../operator_list";
+import { EvaluatorContext, State } from "./evaluator";
 
 export const SKIP = 1;
 
@@ -146,7 +146,7 @@ export class EvaluatorBaseHandler {
 
   async buildFormXObject(
     resources: Dict, xobj: BaseStream, smask: SMaskOptions | null, operatorList: OperatorList,
-    task: DefaultWorkerTask, initialState: State, localColorSpaceCache: LocalColorSpaceCache
+    task: WorkerTask, initialState: State, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
     const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);

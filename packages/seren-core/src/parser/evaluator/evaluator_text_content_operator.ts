@@ -1,27 +1,32 @@
-import { DocumentEvaluatorOptions } from "../../../../seren-common/src/types/document_evaluator_options";
 import {
   AbortException,
   assert,
+  Dict,
+  DictKey,
+  DocumentEvaluatorOptions,
+  EvaluatorTextContent,
   FONT_IDENTITY_MATRIX,
   FormatError,
   IDENTITY_MATRIX,
   isArrayEqual,
+  MutableArray,
+  Name,
   normalizeUnicode,
   OPS,
+  Ref,
+  StreamSink,
+  TransformType,
   Util,
   warn,
-  DictKey,
-  Name,
-  Ref,
-  TransformType,
-  Dict,
-  MutableArray
+  WorkerTask
 } from "seren-common";
+import { DefaultTextContentItem, TextContentSinkProxy } from "../../common/core_types";
+import { DictImpl } from "../../document/dict_impl";
+import { Font } from "../../document/font/fonts";
+import { XRefImpl } from "../../document/xref";
+import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "../../image/image_utils";
 import { BaseStream } from "../../stream/base_stream";
 import { bidi } from "../../tables/bidi";
-import { DefaultTextContentItem, TextContentSinkProxy } from "../../common/core_types";
-import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
 import { lookupMatrix } from "../../utils/core_utils";
 import { EvaluatorContext, EvaluatorPreprocessor, StateManager, TextState, TimeSlotManager } from "./evaluator";
 import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
@@ -29,11 +34,6 @@ import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
-import { Font } from "../../document/font/fonts";
-import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "../../image/image_utils";
-import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
-import { XRefImpl } from "../../document/xref";
-import { DictImpl } from "../../document/dict_impl";
 
 const MethodMap = new Map<OPS, keyof TextContentOperator>();
 
@@ -60,7 +60,7 @@ interface ProcessContext extends ProcessOperation {
   xobjs: Dict | null;
   sink: StreamSink<EvaluatorTextContent>;
   viewBox: number[];
-  task: DefaultWorkerTask;
+  task: WorkerTask;
   textContent: EvaluatorTextContent;
   textContentItem: DefaultTextContentItem;
   globalImageCache: GlobalImageCache;
@@ -1108,7 +1108,7 @@ export class GetTextContentHandler implements OperatorListHandler {
 
   protected stream: BaseStream;
 
-  protected task: DefaultWorkerTask;
+  protected task: WorkerTask;
 
   protected resources: Dict;
 
@@ -1139,7 +1139,7 @@ export class GetTextContentHandler implements OperatorListHandler {
   constructor(
     evalCtx: EvaluatorContext,
     stream: BaseStream,
-    task: DefaultWorkerTask,
+    task: WorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],

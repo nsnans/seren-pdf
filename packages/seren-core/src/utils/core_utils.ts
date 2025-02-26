@@ -28,12 +28,11 @@ import {
   Uint8TypedArray,
   AnnotationEditorSerial,
   DictKey, DictValueTypeMapping, isName, Ref, RefSet,
-  Dict
+  Dict, isNumberArray
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
 
 const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
