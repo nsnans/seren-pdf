@@ -13,13 +13,9 @@
  * limitations under the License.
  */
 
-import { OperatorListIR } from "../core/operator_list";
-import { FigureType, RadialAxialShadingIR, TilingPatternIR } from "../core/pattern";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { FormatError, info, unreachable, Util } from "../shared/util";
+import { FigureType, FormatError, info, MeshShadingPatternIR, OperatorListIR, PlatformHelper, PointType, RadialAxialShadingIR, RectType, TilingPatternIR, TransformType, unreachable, Util } from "seren-common";
 import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
-import { getCurrentTransform, PointType, RectType, TransformType } from "./display_utils";
-import { MeshShadingPatternIR } from "packages/seren-common/src/types/shading_types";
+import { getCurrentTransform } from "./display_utils";
 
 const PathType = {
   FILL: "Fill",

@@ -45,7 +45,6 @@ import {
   PixelsPerInch,
   PointType,
   RectType,
-  TransformType,
 } from "../../../../src/display/display_utils";
 import { FilterFactory } from "../../../../src/display/filter_factory";
 import { FontFaceObject } from "../../../../src/display/font_loader";

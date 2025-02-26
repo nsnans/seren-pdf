@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { DrawLayer } from "../../../../src/display/draw_layer";
+import { DrawLayer } from "./draw_layer";
 
 export class DrawLayerBuilder {
 

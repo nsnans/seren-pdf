@@ -16,10 +16,9 @@
 import { BaseException, warn, PlatformHelper, Uint8TypedArray, JpxDecoderOptions } from "seren-common";
 // 这里仔细研究一下，如何引入外部的部件
 // openjpeg这个组件，最后还是会被打到worker文件里的，而非单独一个文件
-import OpenJPEG from "../external/openjpeg";
 import { Stream } from "../stream/stream";
 import { BaseStream } from "../stream/base_stream";
-import { OpenJPEGModule } from "./image_types";
+import { OpenJPEG, OpenJPEGModule } from "seren-openjpeg"
 
 export class JpxError extends BaseException {
   constructor(msg: string) {
@@ -28,12 +27,15 @@ export class JpxError extends BaseException {
 }
 
 export class JpxImage {
+  
   static #module: OpenJPEGModule | null = null;
 
   static decode(data: Uint8TypedArray, decoderOptions: JpxDecoderOptions | null) {
     const options = decoderOptions ?? {};
-    this.#module ||= <OpenJPEGModule>OpenJPEG({ warn });
-    const imageData = this.#module!.decode(data, options);
+    this.#module ||= OpenJPEG({ warn });
+    const imageData = this.#module!.decode(
+      <Uint8Array<ArrayBuffer> | Uint8ClampedArray<ArrayBuffer>>data, options
+    );
     if (typeof imageData === "string") {
       throw new JpxError(imageData);
     }

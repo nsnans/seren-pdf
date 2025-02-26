@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
+import { PlatformHelper, unreachable } from "seren-common";
 import { SVG_NS } from "./display_utils";
-import { unreachable } from "../shared/util";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 
-abstract class BaseSVGFactory {
+export abstract class BaseSVGFactory {
 
   constructor() {
     if (PlatformHelper.isTesting() && this.constructor === BaseSVGFactory) {
@@ -53,7 +52,7 @@ abstract class BaseSVGFactory {
   abstract _createSVG(type: string) : SVGElement;
 }
 
-class DOMSVGFactory extends BaseSVGFactory {
+export class DOMSVGFactory extends BaseSVGFactory {
   /**
    * @ignore
    */
@@ -61,5 +60,3 @@ class DOMSVGFactory extends BaseSVGFactory {
     return document.createElementNS(SVG_NS, type);
   }
 }
-
-export { BaseSVGFactory, DOMSVGFactory };

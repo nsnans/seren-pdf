@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import {
   assert,
   BaseException,
   MissingPDFException,
+  PlatformHelper,
   UnexpectedResponseException,
-} from "../shared/util";
+} from "seren-common";
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
 

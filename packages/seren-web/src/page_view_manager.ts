@@ -46,7 +46,7 @@ import {
   VERTICAL_PADDING
 } from "../common/ui_utils";
 import { AltTextManager } from "./alt_text_manager";
-import { BrowserUtil } from './browser_util';
+import { BrowserUtil } from '../../seren-viewer/src/browser_util';
 import { DownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";

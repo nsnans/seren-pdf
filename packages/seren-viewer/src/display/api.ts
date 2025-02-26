@@ -83,7 +83,7 @@ import { Metadata } from "../../../../src/display/metadata";
 import { OptionalContentConfig } from "../../../../src/display/optional_content_config";
 import { TextLayer } from "../../../../src/display/text_layer";
 import { PDFDataTransportStream } from "../../../../src/display/transport_stream";
-import { GlobalWorkerOptions } from "./worker_options";
+import { GlobalWorkerOptions } from "../../../seren-worker/src/worker_options";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms

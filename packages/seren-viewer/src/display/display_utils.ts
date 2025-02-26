@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import {
   BaseException,
   FeatureTest,
+  PlatformHelper,
   RectType,
   shadow,
   TransformType,

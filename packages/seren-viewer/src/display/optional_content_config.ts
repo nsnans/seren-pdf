@@ -19,8 +19,8 @@ import {
   RenderingIntentFlag,
   unreachable,
   warn,
-} from "../shared/util";
-import { MurmurHash3_64 } from "../shared/murmurhash3";
+  MurmurHash3_64,
+} from "seren-common";
 import { CatalogOptionalContentConfig, OptionalContentDataGroup, OptionalContentOrder } from "../core/catalog";
 import { OptionalContent } from "../core/image_utils";
 

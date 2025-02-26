@@ -12,30 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// eslint-disable-next-line max-len
-/** @typedef {import("./tools.js").AnnotationEditorUIManager} AnnotationEditorUIManager */
-/** @typedef {import("../display_utils.js").PageViewport} PageViewport */
-// eslint-disable-next-line max-len
-/** @typedef {import("../../../web/text_accessibility.js").TextAccessibilityManager} TextAccessibilityManager */
-/** @typedef {import("../../../web/interfaces").IL10n} IL10n */
-// eslint-disable-next-line max-len
-/** @typedef {import("../annotation_layer.js").AnnotationLayer} AnnotationLayer */
-/** @typedef {import("../draw_layer.js").DrawLayer} DrawLayer */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
-
-import { AnnotationEditorType, FeatureTest } from "../../shared/util";
-import { TextAccessibilityManager } from "../../viewer/common/text_accessibility";
-import { L10n } from "../../viewer/web/l10n";
-import { StructTreeLayerBuilder } from "../../viewer/web/struct_tree_layer_builder";
-import { TextLayerBuilder } from "../../viewer/web/text_layer_builder";
+import { TextLayerBuilder } from "packages/seren-web/src/text_layer_builder";
+import { TextAccessibilityManager } from "../../text_accessibility";
 import { AnnotationLayer } from "../annotation_layer";
 import { PageViewport, setLayerDimensions } from "../display_utils";
 import { DrawLayer } from "../draw_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorRegistry } from "./editor_manager";
 import { AnnotationEditorUIManager } from "./tools";
+import { StructTreeLayerBuilder } from "packages/seren-web/src/struct_tree_layer_builder";
+import { L10n } from "../../l10n/l10n";
+import { AnnotationEditorType } from "seren-common";
 
 /**
  * Manage all the different editors on a page.

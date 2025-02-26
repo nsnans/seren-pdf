@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { RectType } from "../../display/display_utils";
+import { RectType } from "seren-common";
 
 const DEFAULT_SCALE_VALUE = "auto";
 const DEFAULT_SCALE = 1.0;
@@ -320,8 +320,6 @@ function floorToDivide(x: number, div: number) {
 
 /**
  * Gets the size of the specified page, converted from PDF units to inches.
- * @param {GetPageSizeInchesParameters} params
- * @returns {PageSize}
  */
 function getPageSizeInches(view: RectType, userUnit: number, rotate: number) {
   const [x1, y1, x2, y2] = view;

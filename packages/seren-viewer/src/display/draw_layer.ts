@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-import { shadow } from "../shared/util";
-import { BoxType } from "../../../seren-common/src/types";
+import { BoxType, shadow } from "seren-common";
 import { Outline } from "./editor/drawers/outline";
-import { DOMSVGFactory } from "../../../../src/display/svg_factory";
+import { DOMSVGFactory } from "./svg_factory";
 
 /**
  * Manage the SVGs drawn on top of the page canvas.

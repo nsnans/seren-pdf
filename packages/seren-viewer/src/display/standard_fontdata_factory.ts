@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
+import { PlatformHelper, unreachable } from "seren-common";
 import { fetchData } from "./display_utils";
-import { unreachable } from "../shared/util";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 
 export interface StandardFontDataFactory {
 

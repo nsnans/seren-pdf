@@ -30,7 +30,7 @@ import {
   MeshShadingPatternIR,
   isNumberArray,
   OperatorListIR,
-  FigureType, 
+  FigureType,
   RadialAxialShadingIR
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
@@ -44,6 +44,7 @@ import {
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";
 import { XRefImpl } from "../document/xref";
+import { TilingPatternIR } from "packages/seren-common/src/types/shading_types";
 
 const ShadingType = {
   FUNCTION_BASED: 1,
@@ -1068,16 +1069,6 @@ class DummyShading extends BaseShading {
     return ["Dummy"];
   }
 }
-
-export type TilingPatternIR = [
-  "TilingPattern",
-  Uint8ClampedArray<ArrayBuffer> | null,
-  OperatorListIR,
-  TransformType,
-  RectType,
-  number, number,
-  number, number,
-]
 
 function getTilingPatternIR(operatorList: OperatorListIR, dict: Dict, color: Uint8ClampedArray<ArrayBuffer> | null): TilingPatternIR {
   const matrix = <TransformType>lookupMatrix(dict.getArrayValue(DictKey.Matrix), IDENTITY_MATRIX);

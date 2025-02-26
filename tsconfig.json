@@ -30,6 +30,9 @@
       ],
       "seren-core": [
         "packages/seren-core/src"
+      ],
+      "seren-openjpeg": [
+        "packages/seren-openjpeg/src"
       ]
     }
   },

@@ -11,6 +11,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
-    "seren-common": "workspace:^"
+    "seren-common": "workspace:^",
+    "seren-openjpeg": "workspace:^"
   }
 }

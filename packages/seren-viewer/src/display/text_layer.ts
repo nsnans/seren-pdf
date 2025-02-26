@@ -13,20 +13,21 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./display_utils").PageViewport} PageViewport */
-/** @typedef {import("./api").TextContent} TextContent */
-
-import { EvaluatorTextContent } from "../core/core_types";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
 import {
   AbortException,
+  EvaluatorTextContent,
   FeatureTest,
+  PlatformHelper,
   shadow,
+  TextContent,
+  TextItem,
+  TextMarkedContent,
+  TextStyle,
+  TransformType,
   Util,
   warn,
-} from "../shared/util";
-import { TextContent, TextItem, TextMarkedContent, TextStyle } from "./api";
-import { PageViewport, setLayerDimensions, TransformType } from "./display_utils";
+} from "seren-common";
+import { PageViewport, setLayerDimensions } from "./display_utils";
 
 /**
  * @typedef {Object} TextLayerParameters
@@ -204,7 +205,6 @@ export class TextLayer {
 
   /**
    * Render the textLayer.
-   * @returns {Promise}
    */
   render() {
     const pump = () => {

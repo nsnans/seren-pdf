@@ -26,7 +26,7 @@ import { TextLayer } from "../../display/text_layer";
 import { PDFPageProxy } from "../../display/api";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PageViewport } from "../../display/display_utils";
-import { BrowserUtil } from "./browser_util";
+import { BrowserUtil } from "../../seren-viewer/src/browser_util";
 
 /**
  * The text layer builder provides text selection functionality for the PDF.

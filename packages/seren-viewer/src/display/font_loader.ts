@@ -13,20 +13,9 @@
  * limitations under the License.
  */
 
-import { FontSubstitutionInfo } from "../core/font_substitutions";
-import { FontExportData, FontExportExtraData } from "../core/fonts";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import {
-  assert,
-  FontRenderOps,
-  shadow,
-  string32,
-  toBase64Util,
-  unreachable,
-  warn
-} from "../shared/util";
-import { BrowserUtil } from "../viewer/web/browser_util";
+import { assert, FontExportData, FontExportExtraData, FontRenderOps, FontSubstitutionInfo, PlatformHelper, shadow, string32, toBase64Util, unreachable, warn } from "seren-common";
 import { PDFObjects } from "./api";
+import { BrowserUtil } from "../browser_util";
 
 class FontLoader {
 

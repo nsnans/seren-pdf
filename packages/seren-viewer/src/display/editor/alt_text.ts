@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { L10n } from "../../viewer/web/l10n";
+import { L10n } from "../../l10n/l10n";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-class GlobalWorkerOptions {
+class WorkerOptions {
 
   static #port: Worker | null = null;
 
@@ -58,4 +58,4 @@ class GlobalWorkerOptions {
   }
 }
 
-export { GlobalWorkerOptions };
+export { WorkerOptions as GlobalWorkerOptions };

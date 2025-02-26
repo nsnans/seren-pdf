@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { objectFromMap } from "../shared/util";
+import { objectFromMap } from "seren-common";
+
 
 export class Metadata {
 

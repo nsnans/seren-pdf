@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { stringToBytes } from "../shared/util";
+import { stringToBytes } from "seren-common";
 
 // This getFilenameFromContentDispositionHeader function is adapted from
 // https://github.com/Rob--W/open-in-browser/blob/7e2e35a38b8b4e981b11da7b2f01df0149049e92/extension/content-disposition.js
@@ -25,8 +25,8 @@ import { stringToBytes } from "../shared/util";
 /**
  * Extract file name from the Content-Disposition HTTP response header.
  *
- * @param {string} contentDisposition
- * @returns {string} Filename, if found in the Content-Disposition header.
+ * @param contentDisposition
+ * @returns Filename, if found in the Content-Disposition header.
  */
 function getFilenameFromContentDispositionHeader(contentDisposition: string): string {
   let needsEncodingFixup = true;

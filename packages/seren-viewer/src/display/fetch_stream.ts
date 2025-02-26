@@ -13,19 +13,14 @@
  * limitations under the License.
  */
 
-import { PDFStreamRangeReader } from "packages/seren-common/src/types/stream_types";
-import { PDFStreamReader } from "packages/seren-common/src/types/stream_types";
-import { PDFStream } from "packages/seren-common/src/types/stream_types";
-import { PDFStreamSource } from "packages/seren-common/src/types/stream_types";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { AbortException, assert, warn } from "../shared/util";
+import { AbortException, assert, PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource, PlatformHelper, warn } from "seren-common";
 import {
   createHeaders,
   createResponseStatusError,
   extractFilenameFromHeader,
   validateRangeRequestCapabilities,
   validateResponseStatus,
-} from "../../../../src/display/network_utils";
+} from "./network_utils";
 
 if (PlatformHelper.isMozCental()) {
   throw new Error(
