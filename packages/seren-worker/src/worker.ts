@@ -12,13 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { DictKey, Ref, ReadResult, PlatformHelper } from "seren-common";
-import { DocumentParameter } from "../display/api";
-import { MessageHandler } from "../shared/message_handler";
-import { MessagePoster } from "../shared/message_handler_base";
-import { GetDocMessage } from "../shared/message_handler_types";
+import { GenericMessageHandler } from "./general_message_handler";
 import {
+  DictKey,
+  Ref,
+  ReadResult,
+  PlatformHelper,
+  DocumentParameter,
+  MessagePoster,
+  GetDocMessage,
   AbortException,
   assert,
   getVerbosityLevel,
@@ -31,24 +33,29 @@ import {
   UnexpectedResponseException,
   UnknownErrorException,
   VerbosityLevel,
+  WorkerTask,
   warn
 } from "seren-common";
-import { AnnotationFactory } from "../document/annotation";
-import { clearGlobalCaches } from "../utils/cleanup_helper";
 import {
+  AnnotationFactory,
+  clearGlobalCaches,
   arrayBuffersToBytes,
   getNewAnnotationsMap,
   XRefParseException,
-} from "../utils/core_utils";
-import { LocalPDFManager, NetworkPDFManager, PDFManager, PDFManagerArgs } from "./pdf_manager";
-import { StructTreeRoot } from "../document/struct_tree";
-import { PDFWorkerStream } from "../stream/worker_stream";
-import { incrementalUpdate } from "../writer/writer";
-import { DictImpl, isDict } from "../document/dict_impl";
+  LocalPDFManager,
+  NetworkPDFManager,
+  PDFManager,
+  PDFManagerArgs,
+  StructTreeRoot,
+  PDFWorkerStream,
+  incrementalUpdate,
+  DictImpl,
+  isDict
+} from "seren-core";
 
-class WorkerTask {
+export class DefaultWorkerTask implements WorkerTask {
 
-  protected _capability = Promise.withResolvers();
+  protected _capability = Promise.withResolvers<void>();
 
   public terminated = false;
 
@@ -63,7 +70,7 @@ class WorkerTask {
   }
 
   finish() {
-    this._capability.resolve(null);
+    this._capability.resolve();
   }
 
   terminate() {
@@ -77,8 +84,8 @@ class WorkerTask {
   }
 }
 
-class WorkerMessageHandler {
-  static setup(handler: MessageHandler, port: MessagePoster) {
+export class WorkerMessageHandler {
+  static setup(handler: GenericMessageHandler, port: MessagePoster) {
     let testMessageProcessed = false;
     handler.onTest((data) => {
       if (testMessageProcessed) {
@@ -101,7 +108,7 @@ class WorkerMessageHandler {
     let pdfManager: PDFManager | null;
     let terminated = false;
     let cancelXHRs: ((reason: any) => void) | null = null;
-    const WorkerTasks = new Set<WorkerTask>();
+    const WorkerTasks = new Set<DefaultWorkerTask>();
     const verbosity = getVerbosityLevel();
 
     const { docId, apiVersion } = docParams!;
@@ -133,7 +140,7 @@ class WorkerMessageHandler {
     }
     const workerHandlerName = docId + "_worker";
 
-    let handler: MessageHandler | null = new MessageHandler(workerHandlerName, docId, port);
+    let handler: GenericMessageHandler | null = new GenericMessageHandler(workerHandlerName, docId, port);
 
     function ensureNotTerminated() {
       if (terminated) {
@@ -141,11 +148,11 @@ class WorkerMessageHandler {
       }
     }
 
-    function startWorkerTask(task: WorkerTask) {
+    function startWorkerTask(task: DefaultWorkerTask) {
       WorkerTasks.add(task);
     }
 
-    function finishWorkerTask(task: WorkerTask) {
+    function finishWorkerTask(task: DefaultWorkerTask) {
       task.finish();
       WorkerTasks.delete(task);
     }
@@ -304,7 +311,7 @@ class WorkerMessageHandler {
       function onFailure(ex: any) {
         ensureNotTerminated();
         if (ex instanceof PasswordException) {
-          const task = new WorkerTask(`PasswordException: response ${ex.code}`);
+          const task = new DefaultWorkerTask(`PasswordException: response ${ex.code}`);
           startWorkerTask(task);
 
           handler!.PasswordRequest(ex).then(({ password }) => {
@@ -454,7 +461,7 @@ class WorkerMessageHandler {
     handler.onGetAnnotations(async data => {
       const { pageIndex, intent } = data;
       return pdfManager!.getPage(pageIndex).then(function (page) {
-        const task = new WorkerTask(`GetAnnotations: page ${pageIndex}`);
+        const task = new DefaultWorkerTask(`GetAnnotations: page ${pageIndex}`);
         startWorkerTask(task);
         return page.getAnnotationsData(handler!, task, intent).then(
           data => {
@@ -535,7 +542,7 @@ class WorkerMessageHandler {
         const newAnnotationPromises = structTreeRoot === undefined ? promises : [];
         for (const [pageIndex, annotations] of newAnnotationsByPage) {
           newAnnotationPromises.push(pdfManager!.getPage(pageIndex).then(async page => {
-            const task = new WorkerTask(`Save (editor): page ${pageIndex}`);
+            const task = new DefaultWorkerTask(`Save (editor): page ${pageIndex}`);
             return page.saveNewAnnotations(handler!, task, annotations, imagePromises).finally(() => {
               finishWorkerTask(task);
             });
@@ -561,7 +568,7 @@ class WorkerMessageHandler {
 
       for (let pageIndex = 0; pageIndex < numPages!; pageIndex++) {
         promises.push(pdfManager!.getPage(pageIndex).then(async page => {
-          const task = new WorkerTask(`Save: page ${pageIndex}`);
+          const task = new DefaultWorkerTask(`Save: page ${pageIndex}`);
           return page.save(handler!, task, annotationStorage).finally(() => finishWorkerTask(task));
         }));
       }
@@ -574,7 +581,7 @@ class WorkerMessageHandler {
       }
 
       // 这类加了 双感叹号，判断Ref状况
-      const needAppearances: boolean = !!acroFormRef && acroForm instanceof Dict
+      const needAppearances: boolean = !!acroFormRef && acroForm instanceof DictImpl
         && newRefs.some(ref => ref.needAppearances);
 
       let newXrefInfo = Object.create(null);
@@ -613,7 +620,7 @@ class WorkerMessageHandler {
     handler.onGetOperatorList((data, sink) => {
       const pageIndex = data.pageIndex;
       pdfManager!.getPage(pageIndex).then(page => {
-        const task = new WorkerTask(`GetOperatorList: page ${pageIndex}`);
+        const task = new DefaultWorkerTask(`GetOperatorList: page ${pageIndex}`);
         startWorkerTask(task);
 
         // NOTE: Keep this condition in sync with the `info` helper function.
@@ -649,7 +656,7 @@ class WorkerMessageHandler {
       const { pageIndex, includeMarkedContent, disableNormalization } = data;
 
       pdfManager!.getPage(pageIndex).then(page => {
-        const task = new WorkerTask("GetTextContent: page " + pageIndex);
+        const task = new DefaultWorkerTask("GetTextContent: page " + pageIndex);
         startWorkerTask(task);
 
         // NOTE: Keep this condition in sync with the `info` helper function.
@@ -723,21 +730,24 @@ class WorkerMessageHandler {
   }
 
   static initializeFromPort(port: MessagePoster) {
-    const handler = new MessageHandler("worker", "main", port);
+    const handler = new GenericMessageHandler("worker", "main", port);
     WorkerMessageHandler.setup(handler, port);
     handler.ready();
   }
 }
 
-function isMessagePort(maybePort: typeof self) {
+function isMessagePort(maybePort: any): maybePort is MessagePoster {
   return (
     typeof maybePort.postMessage === "function" && "onmessage" in maybePort
   );
 }
 
-// Worker thread (and not Node.js)?
-if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
-  WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
+function main() {
+  if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
+    WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
+  } else {
+    throw new Error('worker中的代码只无法在非Worker环境下运行！')
+  }
 }
 
-export { WorkerMessageHandler, WorkerTask };
+main();

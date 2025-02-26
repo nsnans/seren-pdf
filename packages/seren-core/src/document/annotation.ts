@@ -13,54 +13,63 @@
  * limitations under the License.
  */
 
-import { PopupContent } from "./display/annotation_layer";
-import { PointType, RectType, TransformType } from "./display/display_utils";
-import { DocumentEvaluatorOptions } from "../../../seren-common/src/types/document_evaluator_options";
-import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "./display/editor/state/editor_serializable";
 import {
+  AnnotationData,
+  FieldObject,
+  StringObj,
+  EvaluatorTextContent,
+  FileSpecSerializable,
+  StreamSink,
+  isNumberArray,
   AnnotationActionEventType,
-  AnnotationBorderStyleType,
   AnnotationEditorType,
   AnnotationFieldFlag,
   AnnotationFlag,
   AnnotationReplyType,
   AnnotationType,
-  PlatformHelper,
   assert,
   BASELINE_FACTOR,
+  DestinationType,
+  Dict,
+  DictKey,
   FeatureTest,
   getModificationDate,
   IDENTITY_MATRIX,
   info,
   isArrayEqual,
+  isName,
+  isRefsEqual,
   LINE_DESCENT_FACTOR,
   LINE_FACTOR,
+  MutableArray,
+  Name,
   OPS,
+  PlatformHelper,
+  Ref,
+  RefSet,
+  RefSetCache,
   RenderingIntentFlag,
   shadow,
   stringToPDFString,
   unreachable,
   Util,
   warn,
-  MutableArray,
-  DestinationType,
-  DictKey,
-  isName,
-  isRefsEqual,
-  Name,
-  Ref,
-  RefSet,
-  RefSetCache,
-  Dict
+  DocumentEvaluatorOptions,
+  PointType, RectType, TransformType,
+  AnnotationBorderStyle
 } from "seren-common";
-import { BaseStream } from "../stream/base_stream";
-import { bidi } from "../tables/bidi";
-import { Catalog } from "./catalog";
+import { DefaultWorkerTask } from "../../../seren-worker/src/worker";
 import { ColorSpace } from "../color/colorspace";
 import { DefaultFieldObject, GeneralFieldObject, isFullTextContentItem } from "../common/core_types";
-import { EvaluatorTextContent } from "packages/seren-common/src/types/evaluator_types";
-import { AnnotationData, FieldObject, StringObj } from "packages/seren-common/src/types/annotation_types";
-import { StreamSink } from "packages/seren-common/src/types/stream_types";
+import { LocalIdFactory } from "../common/global_id_factory";
+import { ObjectLoader } from "../common/object_loader";
+import { CreateStampImageResult } from "../image/image_types";
+import { PartialEvaluator } from "../parser/evaluator/evaluator";
+import { OperatorList } from "../parser/operator_list";
+import { BaseStream } from "../stream/base_stream";
+import { JpegStream } from "../stream/jpeg_stream";
+import { Stream, StringStream } from "../stream/stream";
+import { bidi } from "../tables/bidi";
 import {
   collectActions,
   escapeString,
@@ -73,7 +82,6 @@ import {
   stringToAsciiOrUTF16BE,
   stringToUTF16String
 } from "../utils/core_utils";
-import { isNumberArray } from "packages/seren-common/src/utils/util";
 import {
   createDefaultAppearance,
   FakeUnicodeFont,
@@ -81,22 +89,15 @@ import {
   parseAppearanceStream,
   parseDefaultAppearance,
 } from "../worker/default_appearance";
-import { PartialEvaluator } from "../parser/evaluator/evaluator";
-import { FileSpec } from "./file_spec";
-import { FileSpecSerializable } from "packages/seren-common/src/types/message_handler_types";
-import { ErrorFont, Font, Glyph } from "./font/fonts";
-import { LocalIdFactory } from "../common/global_id_factory";
-import { JpegStream } from "../stream/jpeg_stream";
-import { ObjectLoader } from "../common/object_loader";
-import { OperatorList } from "../parser/operator_list";
 import { PDFManager } from "../worker/pdf_manager";
-import { Stream, StringStream } from "../stream/stream";
-import { StructTreeRoot } from "./struct_tree";
-import { WorkerTask } from "../worker/worker";
 import { writeObject } from "../writer/writer";
-import { XRefImpl } from "./xref";
-import { CreateStampImageResult } from "../image/image_types";
+import { Catalog } from "./catalog";
 import { DictImpl } from "./dict_impl";
+import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "seren-common";
+import { FileSpec } from "./file_spec";
+import { ErrorFont, Font, Glyph } from "./font/fonts";
+import { StructTreeRoot } from "./struct_tree";
+import { XRefImpl } from "./xref";
 
 export interface AnnotationParameters {
   xref: XRefImpl;
@@ -132,7 +133,7 @@ export class MarkupAnnotationFactory {
     annotation: FreeTextEditorSerial,
     dependencies: AnnotationDependency[],
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     baseFontRef: Ref | null,
   ) {
     if (!annotation.ref) {
@@ -316,7 +317,7 @@ export class MarkupAnnotationFactory {
     xref: XRefImpl,
     annotation: FreeTextEditorSerial,
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     evaluatorOptions: DocumentEvaluatorOptions
   ) {
     const ap = await FreeTextAnnotation.createNewAppearanceStream(
@@ -599,7 +600,7 @@ export class AnnotationFactory {
 
   static async saveNewAnnotations(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
@@ -676,7 +677,7 @@ export class AnnotationFactory {
   static async printNewAnnotations(
     annotationGlobals: AnnotationGlobals,
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ): Promise<Annotation<AnnotationData>[] | null> {
@@ -1383,7 +1384,7 @@ export class Annotation<DATA extends AnnotationData> {
     });
   }
 
-  async getOperatorList(evaluator: PartialEvaluator, task: WorkerTask, intent: number,
+  async getOperatorList(evaluator: PartialEvaluator, task: DefaultWorkerTask, intent: number,
     _annotationStorage: Map<string, Record<string, any>> | null): Promise<{
       opList: OperatorList | null;
       separateForm: boolean;
@@ -1444,7 +1445,7 @@ export class Annotation<DATA extends AnnotationData> {
 
   async save(
     _evaluator: PartialEvaluator,
-    _task: WorkerTask,
+    _task: DefaultWorkerTask,
     _annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     return null;
@@ -1454,7 +1455,7 @@ export class Annotation<DATA extends AnnotationData> {
     return false;
   }
 
-  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType): Promise<void> {
+  async extractTextContent(evaluator: PartialEvaluator, task: DefaultWorkerTask, viewBox: RectType): Promise<void> {
     if (!this.appearance) {
       return;
     }
@@ -2043,7 +2044,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async getOperatorList(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -2143,7 +2144,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async save(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     interface MaybeType {
@@ -2269,7 +2270,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   async _getAppearance(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -2529,7 +2530,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     );
   }
 
-  static async _getFontData(evaluator: PartialEvaluator, task: WorkerTask, appearanceData: { fontName: string, fontSize: number }, resources: Dict) {
+  static async _getFontData(evaluator: PartialEvaluator, task: DefaultWorkerTask, appearanceData: { fontName: string, fontSize: number }, resources: Dict) {
     const operatorList = new OperatorList();
     const initialState = {
       font: <Font | ErrorFont | null>null,
@@ -2980,7 +2981,7 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
     return chunks;
   }
 
-  async extractTextContent(evaluator: PartialEvaluator, task: WorkerTask, viewBox: RectType) {
+  async extractTextContent(evaluator: PartialEvaluator, task: DefaultWorkerTask, viewBox: RectType) {
     await super.extractTextContent(evaluator, task, viewBox);
     const text = this.data.textContent;
     if (!text) {
@@ -3107,7 +3108,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   async getOperatorList(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     intent: number,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
@@ -3187,7 +3188,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
 
   async save(
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ): Promise<AnnotationSaveRef[] | null> {
     if (this.data.checkBox) {
@@ -3202,7 +3203,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     return null;
   }
 
-  async _saveCheckbox(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, AnnotationEditorSerial> | null) {
+  async _saveCheckbox(evaluator: PartialEvaluator, _task: DefaultWorkerTask, annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (!annotationStorage) {
       return null;
     }
@@ -3260,7 +3261,7 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     return [{ ref: this.ref, data: buffer.join("") }];
   }
 
-  async _saveRadioButton(evaluator: PartialEvaluator, _task: WorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
+  async _saveRadioButton(evaluator: PartialEvaluator, _task: DefaultWorkerTask, annotationStorage: Map<string, Record<string, any>> | null) {
     if (!annotationStorage) {
       return null;
     }
@@ -3711,7 +3712,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
     dict.set(DictKey.I, indices);
   }
 
-  async _getAppearance(evaluator: PartialEvaluator, task: WorkerTask, intent: number
+  async _getAppearance(evaluator: PartialEvaluator, task: DefaultWorkerTask, intent: number
     , annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     if (this.data.combo) {
       return super._getAppearance(evaluator, task, intent, annotationStorage);
@@ -4173,7 +4174,7 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
     annotation: FreeTextEditorSerial,
     xref: XRefImpl,
     evaluator: PartialEvaluator,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     baseFontRef: Ref | null,
   ) {
 

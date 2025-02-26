@@ -81,7 +81,7 @@ import { PDFManager } from "../worker/pdf_manager";
 import { NullStream, Stream } from "../stream/stream";
 import { StructTreePage, StructTreeRoot } from "./struct_tree";
 import { PDFDocumentInfo, StructTreeSerialNode } from "packages/seren-common/src/types/document_types";
-import { WorkerTask } from "../worker/worker";
+import { DefaultWorkerTask } from "../../../seren-worker/src/worker";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
@@ -312,7 +312,7 @@ export class Page {
   }
 
   async saveNewAnnotations(
-    handler: MessageHandler, task: WorkerTask, annotations: AnnotationEditorSerial[],
+    handler: MessageHandler, task: DefaultWorkerTask, annotations: AnnotationEditorSerial[],
     imagePromises: Map<string, Promise<CreateStampImageResult>> | null
   ) {
     const partialEvaluator = new PartialEvaluator(
@@ -372,7 +372,7 @@ export class Page {
 
   async save(
     handler: MessageHandler,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     annotationStorage: Map<string, AnnotationEditorSerial> | null
   ) {
     const partialEvaluator = new PartialEvaluator(
@@ -418,7 +418,7 @@ export class Page {
   async getOperatorList(
     handler: MessageHandler,
     sink: StreamSink<OpertaorListChunk>,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     intent: number,
     cacheKey: string,
     annotationStorage: Map<string, AnnotationEditorSerial> | null = null,
@@ -611,7 +611,7 @@ export class Page {
 
   async extractTextContent(
     handler: MessageHandler,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     includeMarkedContent: boolean,
     disableNormalization: boolean,
     sink: StreamSink<EvaluatorTextContent>
@@ -669,7 +669,7 @@ export class Page {
     return tree;
   }
 
-  async getAnnotationsData(handler: MessageHandler, task: WorkerTask, intent: number) {
+  async getAnnotationsData(handler: MessageHandler, task: DefaultWorkerTask, intent: number) {
     const annotationsData: AnnotationData[] = [];
     const annotations = await this._parsedAnnotations;
     if (annotations.length === 0) {

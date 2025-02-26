@@ -15,7 +15,7 @@ import { LocalColorSpaceCache, LocalTilingPatternCache } from "../../image/image
 import { OperatorList } from "../operator_list";
 import { getTilingPatternIR, Pattern } from "../pattern";
 import { Dict } from "packages/seren-common/src/document/dict";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { DictImpl } from "../../document/dict_impl";
 
 export class EvaluatorColorHandler extends EvaluatorBaseHandler {
@@ -31,7 +31,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
     cs: ColorSpace,
     patterns: Dict,
     resources: Dict,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     localColorSpaceCache: LocalColorSpaceCache,
     localTilingPatternCache: LocalTilingPatternCache,
     localShadingPatternCache: Map<Dict, string | null>
@@ -127,7 +127,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
 
   async handleTilingType(
     fn: OPS, color: Uint8ClampedArray<ArrayBuffer> | null, resources: Dict, pattern: BaseStream,
-    patternDict: Dict, operatorList: OperatorList, task: WorkerTask, localTilingPatternCache: LocalTilingPatternCache
+    patternDict: Dict, operatorList: OperatorList, task: DefaultWorkerTask, localTilingPatternCache: LocalTilingPatternCache
   ) {
     // Create an IR of the pattern code.
     const tilingOpList = new OperatorList();

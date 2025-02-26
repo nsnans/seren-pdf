@@ -31,7 +31,7 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { Font } from "../../document/font/fonts";
 import { GlobalImageCache, LocalConditionCache, LocalGStateCache } from "../../image/image_utils";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { XRefImpl } from "../../document/xref";
 import { DictImpl } from "../../document/dict_impl";
 
@@ -60,7 +60,7 @@ interface ProcessContext extends ProcessOperation {
   xobjs: Dict | null;
   sink: StreamSink<EvaluatorTextContent>;
   viewBox: number[];
-  task: WorkerTask;
+  task: DefaultWorkerTask;
   textContent: EvaluatorTextContent;
   textContentItem: DefaultTextContentItem;
   globalImageCache: GlobalImageCache;
@@ -1108,7 +1108,7 @@ export class GetTextContentHandler implements OperatorListHandler {
 
   protected stream: BaseStream;
 
-  protected task: WorkerTask;
+  protected task: DefaultWorkerTask;
 
   protected resources: Dict;
 
@@ -1139,7 +1139,7 @@ export class GetTextContentHandler implements OperatorListHandler {
   constructor(
     evalCtx: EvaluatorContext,
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],

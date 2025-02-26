@@ -1,6 +1,6 @@
 import { AnnotationData, AnnotationEditorSerial, BaseException, CatalogMarkInfo, CatalogOpenAction, CatalogOptionalContentConfig, CatalogOutlineItem, CommonObjDataType, CommonObjType, DestinationType, DocumentParameter, EvaluatorTextContent, FetchBuiltInCMapMessage, FieldObject, FileSpecSerializable, GetAnnotationsMessage, GetDocMessage, GetTextContentMessage, ObjDataType, ObjType, OnProgressParameters, OpertaorListChunk, PageInfo, PasswordException, PDFDocumentInfo, PDFMetadataInfo, ReaderHeadersReadyResult, SaveDocumentMessage, StartRenderPageMessage, StreamGetOperatorListParameters, StreamSink, StructTreeSerialNode, Uint8TypedArray, ViewerPreferenceKeys } from "seren-common";
 import { AbstractMessageHandler } from "./message_handler_base";
-import { MessagePoster } from "packages/seren-common/src/types/message_handler_types";
+import { MessagePoster } from "seren-common";
 
 /**
  * 通过具体的类型，将sender和recevier串联起来。
@@ -62,7 +62,7 @@ export const MessageHandlerAction = {
  * 这在开发过程中给我带来了太多的困扰，不知道参数，也不知道返回类型，对于后续的处理那更是无从谈起。
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
-export class MessageHandler extends AbstractMessageHandler implements MessageHandler {
+export class GenericMessageHandler extends AbstractMessageHandler implements GenericMessageHandler {
 
   constructor(sourceName: string, targetName: string, comObj: MessagePoster) {
     super(sourceName, targetName, comObj);

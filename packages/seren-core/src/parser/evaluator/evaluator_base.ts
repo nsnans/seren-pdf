@@ -19,7 +19,7 @@ import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
 import { EvaluatorContext, State } from "./evaluator";
 import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { DictImpl } from "../../document/dict_impl";
 
 export const SKIP = 1;
@@ -146,7 +146,7 @@ export class EvaluatorBaseHandler {
 
   async buildFormXObject(
     resources: Dict, xobj: BaseStream, smask: SMaskOptions | null, operatorList: OperatorList,
-    task: WorkerTask, initialState: State, localColorSpaceCache: LocalColorSpaceCache
+    task: DefaultWorkerTask, initialState: State, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const dict = xobj.dict!;
     const matrix = <TransformType | null>lookupMatrix(dict.getArrayValue(DictKey.Matrix), null);

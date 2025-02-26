@@ -60,7 +60,7 @@ import {
   RegionalImageCache
 } from "../../image/image_utils";
 import { BaseStream } from "../../stream/base_stream";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { OperatorList } from "../operator_list";
 import { Lexer, Parser } from "../parser";
 import { FontProgramPrivateData } from "../type1_parser";
@@ -259,7 +259,7 @@ export class EvaluatorOperatorFactory {
 
   createGeneralHandler(
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,
@@ -272,7 +272,7 @@ export class EvaluatorOperatorFactory {
 
   createTextContentHandler(
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],
@@ -449,7 +449,7 @@ export class PartialEvaluator {
     fontArgs: [Name | string, number] | null,
     fontRef: Ref | null,
     operatorList: OperatorList,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
     cssFontInfo: CssFontInfo | null = null
@@ -469,7 +469,7 @@ export class PartialEvaluator {
 
   async getOperatorList(
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,
@@ -482,7 +482,7 @@ export class PartialEvaluator {
 
   async getTextContent(
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict | null,
     sink: StreamSink<EvaluatorTextContent>,
     viewBox: number[],
@@ -563,7 +563,7 @@ export class TranslatedFont {
   }
 
   // 这里这个函数只要做个改写就好了
-  loadType3Data(context: EvaluatorContext, resources: Dict, task: WorkerTask) {
+  loadType3Data(context: EvaluatorContext, resources: Dict, task: DefaultWorkerTask) {
     if (this.type3Loaded) {
       return this.type3Loaded;
     }

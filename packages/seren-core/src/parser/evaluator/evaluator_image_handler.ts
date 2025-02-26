@@ -10,7 +10,7 @@ import { isPDFFunction } from "../../document/function";
 import { PDFImage } from "../../image/image";
 import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {
 
@@ -273,7 +273,7 @@ export class EvaluatorImageHandler extends EvaluatorBaseHandler {
   }
 
   handleSMask(
-    smask: Dict, resources: Dict, operatorList: OperatorList, task: WorkerTask,
+    smask: Dict, resources: Dict, operatorList: OperatorList, task: DefaultWorkerTask,
     stateManager: StateManager, localColorSpaceCache: LocalColorSpaceCache
   ) {
     const smaskContent = smask.getValue(DictKey.G);

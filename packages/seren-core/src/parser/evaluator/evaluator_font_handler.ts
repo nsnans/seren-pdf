@@ -33,7 +33,7 @@ import { getFontNameToFileMap, getSerifFonts, getStandardFontName, getStdFontMap
 import { Stream } from "../../stream/stream";
 import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "../../document/font/to_unicode_map";
 import { getUnicodeForGlyph } from "../../tables/unicode";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { DictImpl } from "../../document/dict_impl";
 
 export class EvaluatorFontHandler {
@@ -49,7 +49,7 @@ export class EvaluatorFontHandler {
     fontArgs: [Name | string, number] | null,
     fontRef: Ref | null,
     operatorList: OperatorList,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     state: { font: Font | ErrorFont | null },
     fallbackFontDict: Dict | null = null,
     cssFontInfo: CssFontInfo | null = null

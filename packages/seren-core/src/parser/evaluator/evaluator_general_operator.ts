@@ -11,7 +11,7 @@ import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
 import { EvaluatorImageHandler } from "./evaluator_image_handler";
 import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCache, LocalTilingPatternCache, RegionalImageCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { XRefImpl } from "../../document/xref";
 import { DictImpl } from "../../document/dict_impl";
 
@@ -32,7 +32,7 @@ function handle(ops: OPS) {
 // 所有的处理方法都是静态函数，避免大量的创建对象
 export interface ProcessContext extends ProcessOperation {
   fallbackFontDict: Dict | null;
-  task: WorkerTask;
+  task: DefaultWorkerTask;
   patterns: Dict;
   options: DocumentEvaluatorOptions;
   xref: XRefImpl;
@@ -596,7 +596,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
 
   protected operatorList: OperatorList;
 
-  protected task: WorkerTask;
+  protected task: DefaultWorkerTask;
 
   protected timeSlotManager = new TimeSlotManager();
 
@@ -617,7 +617,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
   constructor(
     evalCtx: EvaluatorContext,
     stream: BaseStream,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     resources: Dict,
     operatorList: OperatorList,
     initialState: State | null = null,

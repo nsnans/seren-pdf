@@ -23,7 +23,7 @@ import { Font, Glyph } from "../../document/font/fonts";
 import { isPDFFunction } from "../../document/function";
 import { LocalColorSpaceCache, LocalGStateCache } from "../../image/image_utils";
 import { OperatorList } from "../operator_list";
-import { WorkerTask } from "../../worker/worker";
+import { DefaultWorkerTask } from "../../../../seren-worker/src/worker";
 import { DictImpl } from "../../document/dict_impl";
 
 /**
@@ -263,7 +263,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
     gState: Dict,
     operatorList: OperatorList,
     cacheKey: string | null,
-    task: WorkerTask,
+    task: DefaultWorkerTask,
     stateManager: StateManager,
     localGStateCache: LocalGStateCache,
     localColorSpaceCache: LocalColorSpaceCache

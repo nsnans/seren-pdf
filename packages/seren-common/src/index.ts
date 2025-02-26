@@ -17,6 +17,7 @@ export * from './types/operator_types'
 export * from './types/shading_types'
 export * from './types/stream_types'
 export * from './types/to_unicode_map_types'
+export * from './types/worker_types'
 export * from './utils/image_utils'
 export * from './utils/platform_helper';
 export * from './utils/scripting_utils'
