@@ -1,5 +1,4 @@
 import { DestinationType } from "../common/common_types";
-import { FileSpecSerializable } from "./message_handler_types";
 
 export enum ViewerPreferenceKeys {
   HideToolbar = "HideToolbar",
@@ -43,35 +42,6 @@ export type ViewerPreferenceValueTypes = {
 export interface CatalogOpenAction {
   dest: string | DestinationType | null;
   action: string | null;
-}
-/**
- * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
- */
-
-
-export class CatalogMarkInfo {
-  Marked = false;
-  UserProperties = false;
-  Suspects = false;
-}
-
-export interface CatalogOutlineItem {
-  action: string | null;
-  attachment: FileSpecSerializable | null;
-  dest: string | DestinationType | null;
-  url: string | null;
-  unsafeUrl: string | null;
-  newWindow: boolean | null;
-  setOCGState: {
-    state: string[];
-    preserveRB: boolean;
-  } | null;
-  title: string;
-  color: Uint8ClampedArray<ArrayBuffer>;
-  count: number | null;
-  bold: boolean;
-  italic: boolean;
-  items: CatalogOutlineItem[];
 }
 export interface CatalogOptionalContentConfig {
   name: string | null;

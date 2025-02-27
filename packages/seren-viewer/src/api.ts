@@ -13,28 +13,24 @@
  * limitations under the License.
  */
 
-/**
- * @module pdfjsLib
- */
-
-import { CatalogMarkInfo, CatalogOutlineItem } from "../core/catalog";
-import { EvaluatorTextContent, ImageMask } from "../core/core_types";
-import { PDFDocumentInfo } from "../core/document";
-import { FontExportData, FontExportExtraData } from "../core/fonts";
-import { OpertaorListChunk } from "../core/operator_list";
-import { StructTreeSerialNode } from "../core/struct_tree";
+import { CatalogMarkInfo, CatalogOutlineItem, TransformType, TypedArray } from "seren-common";
+import { EvaluatorTextContent, ImageMask } from "seren-common";
+import { PDFDocumentInfo } from "seren-common";
+import { FontExportData, FontExportExtraData } from "seren-common";
+import { OpertaorListChunk } from "seren-common";
+import { StructTreeSerialNode } from "seren-common";
 import { WorkerMessageHandler } from "../core/worker";
-import { CMapReaderFactory, DOMCMapReaderFactory } from "../display/cmap_reader_factory";
-import { PDFFetchStream } from "../display/fetch_stream";
-import { PDFNetworkStream } from "../display/network";
-import { DOMStandardFontDataFactory, StandardFontDataFactory } from "../display/standard_fontdata_factory";
-import { PDFStreamReader } from "packages/seren-common/src/types/stream_types";
-import { PDFStream } from "packages/seren-common/src/types/stream_types";
-import { PDFStreamSource } from "packages/seren-common/src/types/stream_types";
-import { PlatformHelper } from "../../seren-common/src/utils/platform_helper";
-import { CommonObjType, MessageHandler, ObjType } from "../shared/message_handler";
-import { MessagePoster } from "../shared/message_handler_base";
-import { MessageHandlerAction } from "../shared/message_handler_utils";
+import { CMapReaderFactory, DOMCMapReaderFactory } from "./display/cmap_reader_factory";
+import { PDFFetchStream } from "./display/fetch_stream";
+import { PDFNetworkStream } from "./display/network";
+import { DOMStandardFontDataFactory, StandardFontDataFactory } from "./display/standard_fontdata_factory";
+import { PDFStreamReader } from "seren-common";
+import { PDFStream } from "seren-common";
+import { PDFStreamSource } from "seren-common";
+import { PlatformHelper } from "seren-common";
+import { CommonObjType, MessageHandler, ObjType } from "seren-common";
+import { MessagePoster } from "seren-common";
+import { MessageHandlerAction } from "seren-common";
 import {
   AbortException,
   AnnotationMode,
@@ -63,28 +59,28 @@ import {
   PrintAnnotationStorage,
   SerializableEmpty,
 } from "./display/annotation_storage";
-import { CanvasGraphics } from "./canvas";
-import { CanvasFactory } from "./canvas_factory";
+import { CanvasGraphics } from "./display/canvas";
+import { CanvasFactory } from "./display/canvas_factory";
 import {
   isDataScheme,
   isValidFetchUrl,
   PageViewport,
   RenderingCancelledException,
   StatTimer,
-  TransformType
-} from "./display_utils";
-import { DocumentEvaluatorOptions } from "./document_evaluator_options";
-import { FilterFactory } from "./filter_factory";
-import { FontFaceObject, FontLoader } from "./font_loader";
-import { Metadata } from "./metadata";
+} from "./display/display_utils";
+import { DocumentEvaluatorOptions } from "seren-common";
+import { FilterFactory } from "./display/filter_factory";
+import { FontFaceObject, FontLoader } from "./display/font_loader";
+import { Metadata } from "./display/metadata";
 import { OptionalContentConfig } from "./optional_content_config";
-import { TextLayer } from "./text_layer";
-import { PDFDataTransportStream } from "./transport_stream";
-import { GlobalWorkerOptions } from "./worker_options";
-import { DocumentParameter } from "packages/seren-common/src/types/document_types";
-import { PageInfo } from "packages/seren-common/src/types/message_handler_types";
-import { OnProgressParameters } from "packages/seren-common/src/types/message_handler_types";
-import { TextContent } from "packages/seren-common/src/types/evaluator_types";
+import { TextLayer } from "./display/text_layer";
+import { PDFDataTransportStream } from "./display/transport_stream";
+import { WorkerOptions as GlobalWorkerOptions } from "./display/worker_options";
+import { DocumentParameter } from "seren-common";
+import { PageInfo } from "seren-common";
+import { OnProgressParameters } from "seren-common";
+import { TextContent } from "seren-common";
+import { GenericMessageHandler } from "packages/seren-worker/src/general_message_handler";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -659,7 +655,7 @@ export function getDocument(src: DocumentInitParameters) {
         throw new Error("Worker was destroyed");
       }
 
-      const messageHandler = new MessageHandler(docId, workerId, worker.port!);
+      const messageHandler = new GenericMessageHandler(docId, workerId, worker.port!);
       const transport = new WorkerTransport(
         messageHandler, task, networkStream, transportParams, transportFactory
       );
@@ -2140,7 +2136,7 @@ export class PDFWorker {
       throw new Error("Not implemented: _initializeFromPort");
     }
     this._port = port;
-    this._messageHandler = new MessageHandler("main", "worker", port);
+    this._messageHandler = new GenericMessageHandler("main", "worker", port);
     this._messageHandler.onready(() => {
       // Ignoring "ready" event -- MessageHandler should already be initialized
       // and ready to accept messages.
@@ -2173,7 +2169,7 @@ export class PDFWorker {
       }
 
       const worker = new Worker(workerSrc, { type: "module" });
-      const messageHandler = new MessageHandler("main", "worker", worker);
+      const messageHandler = new GenericMessageHandler("main", "worker", worker);
       const terminateEarly = () => {
         ac.abort();
         messageHandler.destroy();
@@ -2266,10 +2262,10 @@ export class PDFWorker {
 
         // If the main thread is our worker, setup the handling for the
         // messages -- the main thread sends to it self.
-        const workerHandler = new MessageHandler(id + "_worker", id, port);
+        const workerHandler = new GenericMessageHandler(id + "_worker", id, port);
         WorkerMessageHandler.setup(workerHandler, port);
 
-        this._messageHandler = new MessageHandler(id, id + "_worker", port);
+        this._messageHandler = new GenericMessageHandler(id, id + "_worker", port);
         this.#resolve();
       })
       .catch((reason: Error) => {

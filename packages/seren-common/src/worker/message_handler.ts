@@ -2,7 +2,9 @@
 import { PDFMetadataInfo } from "../types/document_types";
 import { Uint8TypedArray } from "../common/typed_array";
 import { GetAnnotationsMessage, FieldObject, AnnotationEditorSerial, AnnotationData } from "../types/annotation_types";
-import { ViewerPreferenceKeys, CatalogOpenAction, CatalogMarkInfo, CatalogOutlineItem, CatalogOptionalContentConfig } from "../types/catalog_types";
+import { ViewerPreferenceKeys, CatalogOpenAction, CatalogOptionalContentConfig } from "../types/catalog_types";
+import { CatalogOutlineItem } from "../types/document_types";
+import { CatalogMarkInfo } from "../types/document_types";
 import { DocumentParameter, StructTreeSerialNode, PDFDocumentInfo } from "../types/document_types";
 import { EvaluatorTextContent } from "../types/evaluator_types";
 import { GetDocMessage, StartRenderPageMessage, OnProgressParameters, FetchBuiltInCMapMessage, PageInfo, FileSpecSerializable, ObjType, ObjDataType, CommonObjType, CommonObjDataType, GetTextContentMessage, SaveDocumentMessage } from "../types/message_handler_types";
@@ -225,4 +227,7 @@ export interface MessageHandler {
   ready(): void;
 
   onready(fn: () => void): void;
+
+  destroy(): void;
+
 }
