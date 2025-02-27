@@ -12,11 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotationData } from "../../core/annotation";
-import { AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, shadow, unreachable } from "../../shared/util";
-import { L10n } from "../../viewer/web/l10n";
+import { AnnotationData, AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, RectType, shadow, unreachable } from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
-import { noContextMenu, RectType } from "../display_utils";
+import { noContextMenu } from "../display_utils";
 import { AltText } from "./alt_text";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { EditorToolbar } from "./toolbar";
@@ -26,6 +24,7 @@ import {
   ColorManager,
   KeyboardManager,
 } from "./tools";
+import { L10n } from "../../l10n/l10n";
 
 /**
  * @typedef {Object} AnnotationEditorParameters

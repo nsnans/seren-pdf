@@ -47,13 +47,13 @@ import {
 } from "../common/ui_utils";
 import { AltTextManager } from "./alt_text_manager";
 import { BrowserUtil } from '../../seren-viewer/src/browser_util';
-import { DownloadManager } from "./download_manager";
+import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
 import { DocumentOwner } from "./interface";
 import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { WebPDFPageView } from './page_view';
-import { PDFLinkService } from "./pdf_link_service";
+import { WebPDFLinkService } from "./pdf_link_service";
 import { PDFRenderingManager } from "./rendering_manager";
 import { WebPDFViewerOptions } from './viewer_options';
 
@@ -190,11 +190,11 @@ export interface WebPDFViewLayerProperties {
 
   readonly annotationStorage: AnnotationStorage | null
 
-  readonly downloadManager: DownloadManager;
+  readonly downloadManager: WebDownloadManager;
 
   readonly enableScripting: boolean;
 
-  readonly linkService: PDFLinkService;
+  readonly linkService: WebPDFLinkService;
 
   readonly findService: PDFContentFindService;
 
@@ -298,9 +298,9 @@ export class WebPageViewManager {
 
   protected viewer: HTMLDivElement;
 
-  protected linkService: PDFLinkService;
+  protected linkService: WebPDFLinkService;
 
-  protected downloadManager: DownloadManager;
+  protected downloadManager: WebDownloadManager;
 
   protected findService: PDFContentFindService;
 
@@ -365,8 +365,8 @@ export class WebPageViewManager {
 
   constructor(
     container: HTMLDivElement,
-    linkService: PDFLinkService,
-    downloadManager: DownloadManager,
+    linkService: WebPDFLinkService,
+    downloadManager: WebDownloadManager,
     findService: PDFContentFindService,
     altTextManager: AltTextManager,
     renderingManager: PDFRenderingManager,

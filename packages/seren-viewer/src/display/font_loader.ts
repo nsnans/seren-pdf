@@ -14,7 +14,7 @@
  */
 
 import { assert, FontExportData, FontExportExtraData, FontRenderOps, FontSubstitutionInfo, PlatformHelper, shadow, string32, toBase64Util, unreachable, warn } from "seren-common";
-import { PDFObjects } from "./api";
+import { PDFObjects } from "../api";
 import { BrowserUtil } from "../browser_util";
 
 class FontLoader {

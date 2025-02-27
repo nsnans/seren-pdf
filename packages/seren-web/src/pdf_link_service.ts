@@ -29,7 +29,7 @@ export enum LinkTarget {
  * Performs navigation functions inside PDF, such as opening specified page,
  * or destination.
  */
-export class PDFLinkService {
+export class WebPDFLinkService {
   executeNamedAction(_action: string) {
     console.warn('暂未实现，需要参考原版PDFjs')
   }

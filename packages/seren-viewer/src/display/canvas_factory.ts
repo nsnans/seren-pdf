@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { unreachable } from "../shared/util";
+import { unreachable, PlatformHelper } from "seren-common";
 
 export interface CanvasAndContext {
   savedCtx?: CanvasRenderingContext2D;

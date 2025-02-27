@@ -12,21 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/** @typedef {import("../src/display/api").PDFPageProxy} PDFPageProxy */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/display_utils").PageViewport} PageViewport */
-/** @typedef {import("./text_highlighter").TextHighlighter} TextHighlighter */
-// eslint-disable-next-line max-len
-/** @typedef {import("./text_accessibility.js").TextAccessibilityManager} TextAccessibilityManager */
-
-import { removeNullCharacters } from "../common/ui_utils";
-import { normalizeUnicode } from "../../shared/util";
-import { TextLayer } from "../../display/text_layer";
-import { PDFPageProxy } from "../../display/api";
-import { TextAccessibilityManager } from "../common/text_accessibility";
-import { PageViewport } from "../../display/display_utils";
-import { BrowserUtil } from "../../seren-viewer/src/browser_util";
+import { normalizeUnicode } from "seren-common";
+import { BrowserUtil } from "../browser_util";
+import { TextAccessibilityManager } from "../text_accessibility";
+import { removeNullCharacters } from "../ui_utils";
+import { PageViewport } from "./display_utils";
+import { TextLayer } from "./text_layer";
+import { PDFPageProxy } from "../api";
 
 /**
  * The text layer builder provides text selection functionality for the PDF.

@@ -20,8 +20,8 @@ import { PageViewport } from "../../display/display_utils";
 import { AnnotationEditorUIManager } from "../../display/editor/tools";
 import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PresentationModeState } from "../common/ui_utils";
-import { DownloadManager } from "./download_manager";
-import { PDFLinkService } from "./pdf_link_service";
+import { WebDownloadManager } from "./download_manager";
+import { WebPDFLinkService } from "./pdf_link_service";
 import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 
 export class AnnotationLayerBuilder {
@@ -32,9 +32,9 @@ export class AnnotationLayerBuilder {
 
   protected pdfPage: PDFPageProxy;
 
-  protected linkService: PDFLinkService;
+  protected linkService: WebPDFLinkService;
 
-  protected downloadManager: DownloadManager;
+  protected downloadManager: WebDownloadManager;
 
   protected imageResourcesPath: string;
 
@@ -62,8 +62,8 @@ export class AnnotationLayerBuilder {
 
   constructor(
     pdfPage: PDFPageProxy,
-    linkService: PDFLinkService,
-    downloadManager: DownloadManager,
+    linkService: WebPDFLinkService,
+    downloadManager: WebDownloadManager,
     annotationStorage: AnnotationStorage,
     imageResourcesPath = "",
     renderForms = true,

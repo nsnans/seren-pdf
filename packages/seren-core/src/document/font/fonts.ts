@@ -219,6 +219,7 @@ export class Glyph {
   public fontChar: string;
 
   public unicode: string;
+  
   public accent: {
     fontChar: string;
     offset: {

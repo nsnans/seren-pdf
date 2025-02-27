@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-import { AnnotationData } from "../../core/annotation";
-import { PlatformHelper } from "../../../packages/seren-common/src/platform_helper";
 import {
+  AnnotationData,
   AnnotationEditorParamsType,
   AnnotationEditorType,
   assert,
   LINE_FACTOR,
+  PlatformHelper,
   shadow
-} from "../../shared/util";
-import { L10n } from "../../viewer/web/l10n";
+} from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import {
@@ -30,6 +29,7 @@ import {
   bindEvents,
   KeyboardManager,
 } from "./tools";
+import { L10n } from "../../l10n/l10n";
 
 const EOL_PATTERN = /\r\n?|\n/g;
 

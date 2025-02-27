@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { objectFromMap, shadow, unreachable } from "../shared/util";
+import { objectFromMap, shadow, unreachable, AnnotationEditorSerial } from "seren-common";
 import { AnnotationEditor } from "./editor/editor";
-import { AnnotationEditorSerial } from "./editor/state/editor_serializable";
 
 const SerializableEmpty: AnnotationStorageSerializable = Object.freeze({
   map: null,

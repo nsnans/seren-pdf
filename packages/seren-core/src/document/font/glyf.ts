@@ -49,7 +49,7 @@ const WE_HAVE_INSTRUCTIONS = 1 << 8;
  * A full description of glyf table can be found here
  * https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6glyf.html
  */
-class GlyfTable {
+export class GlyfTable {
 
   protected glyphs: Glyph[];
 
@@ -750,5 +750,3 @@ class CompositeGlyph {
 
   scale(_x: number, _factor: number) { }
 }
-
-export { GlyfTable };

@@ -14,7 +14,7 @@
  */
 
 import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult, assert } from "seren-common";
-import { PDFDataRangeTransport } from "./api";
+import { PDFDataRangeTransport } from "../api";
 import { isPdfFile } from "./display_utils";
 
 class PDFDataTransportStream implements PDFStream {

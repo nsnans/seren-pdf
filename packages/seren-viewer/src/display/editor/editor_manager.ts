@@ -1,10 +1,10 @@
-import { AnnotationEditorType } from "../../shared/util";
-import { L10n } from "../../viewer/web/l10n";
+import { AnnotationEditorType } from "seren-common";
 import { FreeTextEditor, FreeTextEditorParameter } from "./freetext";
 import { HighlightEditor, HighlightEditorParameter } from "./highlight";
 import { InkEditor, InkEditorParameter } from "./ink";
 import { StampEditor, StampEditorParameter } from "./stamp";
 import { AnnotationEditorUIManager } from "./tools";
+import { L10n } from "../../l10n/l10n";
 
 interface AnnotationEditorDescriptor<P, T> {
   initialize: (l10n: L10n, uiManager: AnnotationEditorUIManager) => void;

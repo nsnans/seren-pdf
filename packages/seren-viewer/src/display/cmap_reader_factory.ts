@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { fetchData } from "../../../../src/display/display_utils";
-import { stringToBytes, unreachable } from "seren-common";
+import { fetchData } from "./display_utils";
+import { stringToBytes, unreachable, PlatformHelper } from "seren-common";
 
 export interface CMapReaderFactory {
 

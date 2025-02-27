@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { AnnotationEditor } from "../../display/editor/editor";
-import { AnnotationEditorUIManager } from "../../display/editor/tools";
+import { AnnotationEditor } from "packages/seren-viewer/src/display/editor/editor";
 
 export class AltTextManager {
 

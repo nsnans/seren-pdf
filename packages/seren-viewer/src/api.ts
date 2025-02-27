@@ -56,8 +56,7 @@ import {
   unreachable,
   VerbosityLevel,
   warn
-} from "../shared/util";
-import { TypedArray } from "../../seren-common/src/types";
+} from "seren-common";
 import {
   AnnotationStorage,
   AnnotationStorageSerializable,

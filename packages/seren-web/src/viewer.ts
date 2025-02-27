@@ -8,7 +8,7 @@ import { PlatformHelper } from "../../seren-common/src/utils/platform_helper";
 import { VerbosityLevel } from "../../shared/util";
 import { AltTextManager } from "./alt_text_manager";
 import { BrowserUtil } from "../../seren-viewer/src/browser_util";
-import { DownloadManager } from "./download_manager";
+import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from "./find_service";
 import { GenericL10n } from "./genericl10n";
 import { GenericWebViewOutlineManager as DefaultWebViewOutlineManager } from "./outline_manager";
@@ -16,7 +16,7 @@ import { OverlayManager } from "./overlay_manager";
 import { WebPageViewManager } from "./page_view_manager";
 import { DefaultWebViewerPDFAttachmentManager } from "./pdf_attachment_manager";
 import { GenericWebViewPDFLayerManager as DefaultWebViewPDFLayerManager } from "./pdf_layer_manager";
-import { PDFLinkService } from "./pdf_link_service";
+import { WebPDFLinkService } from "./pdf_link_service";
 import { PDFScriptingManager } from "./pdf_scripting_manager";
 import { PDFRenderingManager } from "./rendering_manager";
 import { GenericWebThumbnailViewService, WebThumbnailViewService } from './thumbnail_view_service';
@@ -64,7 +64,7 @@ export class WebPDFViewer {
 
   protected renderingManager = new PDFRenderingManager();
 
-  protected linkService: PDFLinkService;
+  protected linkService: WebPDFLinkService;
 
   protected findService: PDFContentFindService;
 
@@ -76,7 +76,7 @@ export class WebPDFViewer {
 
   protected pdfScriptingManager = new PDFScriptingManager();
 
-  protected downloadManager = new DownloadManager();
+  protected downloadManager = new WebDownloadManager();
 
   protected overlayManager = new OverlayManager();
 
@@ -126,7 +126,7 @@ export class WebPDFViewer {
     this.pageViewManager = this.initPageViewManager();
     this.cursorManager = new WebViewerCursorManager(this.viewerContainer);
 
-    const pdfLinkService = new PDFLinkService(
+    const pdfLinkService = new WebPDFLinkService(
       options.externalLinkTarget,
       options.externalLinkRel,
       options.ignoreDestinationZoom,

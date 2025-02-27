@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorParamsType, shadow } from "../../shared/util";
+import { AnnotationEditorParamsType, shadow } from "seren-common";
 import { noContextMenu } from "../display_utils";
 import { AnnotationEditor } from "./editor";
 import { AnnotationEditorUIManager, KeyboardManager } from "./tools";

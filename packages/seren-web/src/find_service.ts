@@ -15,7 +15,7 @@
 import { PDFDocumentProxy } from "../../display/api";
 import { DocumentOwner } from "./interface";
 import { getNormalizeWithNFKC } from "./pdf_find_utils";
-import { PDFLinkService } from "./pdf_link_service";
+import { WebPDFLinkService } from "./pdf_link_service";
 
 export enum FindState {
   FOUND = 0,
@@ -352,7 +352,7 @@ export class PDFContentFindService implements DocumentOwner {
 
   protected _resumePageIdx: number | null = null;
 
-  protected _linkService: PDFLinkService;
+  protected _linkService: WebPDFLinkService;
 
   protected _pdfDocument: PDFDocumentProxy | null = null;
 
@@ -376,7 +376,7 @@ export class PDFContentFindService implements DocumentOwner {
    *   count must be updated on progress or only when the last page is reached.
    *   The default value is `true`.
    */
-  constructor(linkService: PDFLinkService, _updateMatchesCountOnProgress = true) {
+  constructor(linkService: WebPDFLinkService, _updateMatchesCountOnProgress = true) {
     this._linkService = linkService;
     this.#reset();
   }

@@ -39,7 +39,7 @@ function download(blobUrl: string, filename: string) {
 /**
  * @implements {IDownloadManager}
  */
-export class DownloadManager {
+export class WebDownloadManager {
 
   #openBlobUrls = new WeakMap();
 

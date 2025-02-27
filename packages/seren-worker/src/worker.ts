@@ -742,7 +742,7 @@ function isMessagePort(maybePort: any): maybePort is MessagePoster {
   );
 }
 
-function main() {
+export function startDocumentHandlerWorker() {
   if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
     WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
   } else {
@@ -750,4 +750,3 @@ function main() {
   }
 }
 
-main();

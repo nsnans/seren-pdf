@@ -55,6 +55,7 @@ import {
   PathType,
   TilingPattern,
 } from "../../../../src/display/pattern_helper";
+import { TransformType } from "seren-common";
 
 // <canvas> contexts store most of the state we need natively.
 // However, PDF needs a bit more state, which we store here.
@@ -2554,7 +2555,7 @@ export class CanvasGraphics {
         baseTransform
       );
     } else {
-      if(1 === 1){
+      if (1 === 1) {
         // 因为有些参数不准确，我也分不清到底是写错了还是我理解错了
         // 实际测试的时候跑跑看就知道了
         throw new Error("IR的参数到底是2还是3")

@@ -13,43 +13,36 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./api").PDFPageProxy} PDFPageProxy */
-// eslint-disable-next-line max-len
-/** @typedef {import("../../web/text_accessibility.js").TextAccessibilityManager} TextAccessibilityManager */
-// eslint-disable-next-line max-len
-/** @typedef {import("../../web/interfaces").IDownloadManager} IDownloadManager */
-/** @typedef {import("../../web/interfaces").IPDFLinkService} IPDFLinkService */
-// eslint-disable-next-line max-len
-/** @typedef AnnotationEditorUIManager */
-// eslint-disable-next-line max-len
-/** @typedef {import("../../web/struct_tree_layer_builder.js").StructTreeLayerBuilder} StructTreeLayerBuilder */
-
 import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
-import { FieldObject } from "../core/core_types";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { ColorConverters, RGBType } from "../shared/scripting_utils";
 import {
+  Util,
+  shadow,
+  RGBType,
+  FieldObject,
+  ColorConverters,
   AnnotationBorderStyleType,
   AnnotationEditorType,
   AnnotationPrefix,
   AnnotationType,
   FeatureTest,
   LINE_FACTOR,
-  shadow,
   unreachable,
-  Util,
   warn,
-} from "../shared/util";
-import { TextAccessibilityManager } from "../viewer/common/text_accessibility";
-import { DownloadManager } from "../viewer/web/download_manager";
-import { PDFLinkService } from "../viewer/web/pdf_link_service";
-import { StructTreeLayerBuilder } from "../viewer/web/struct_tree_layer_builder";
-import { AnnotationStorage } from "../../../../src/display/annotation_storage";
+  PlatformHelper,
+  RectType,
+  PointType,
+  PopupLine
+} from "seren-common";
 import { PDFPageProxy } from "../api";
-import { PageViewport, PDFDateString, PointType, RectType, setLayerDimensions } from "../../../../src/display/display_utils";
 import { AnnotationEditorUIManager } from "./editor/tools";
-import { BaseSVGFactory, DOMSVGFactory } from "../../../../src/display/svg_factory";
-import { PopupLine } from "packages/seren-common/src/types/annotation_types";
+import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
+import { PopupContent } from "seren-common";
+import { WebPDFLinkService } from "packages/seren-web/src/pdf_link_service";
+import { WebDownloadManager } from "packages/seren-web/src/download_manager";
+import { AnnotationStorage } from "./annotation_storage";
+import { PageViewport, PDFDateString, setLayerDimensions } from "./display_utils";
+import { TextAccessibilityManager } from "../text_accessibility";
+import { StructTreeLayerBuilder } from "packages/seren-web/src/struct_tree_layer_builder";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -66,8 +59,8 @@ function getRectDims(rect: RectType) {
  * @typedef {Object} AnnotationElementParameters
  * @property {Object} data
  * @property {HTMLDivElement} layer
- * @property {PDFLinkService} linkService
- * @property {DownloadManager} [downloadManager]
+ * @property {WebPDFLinkService} linkService
+ * @property {WebDownloadManager} [downloadManager]
  * @property {AnnotationStorage} [annotationStorage]
  * @property {string} [imageResourcesPath] - Path for image resources, mainly
  *   for annotation icons. Include trailing slash.
@@ -81,8 +74,8 @@ function getRectDims(rect: RectType) {
 export interface AnnotationElementParameters<DATA> {
   data: DATA;
   layer: HTMLDivElement;
-  linkService: PDFLinkService;
-  downloadManager: DownloadManager;
+  linkService: WebPDFLinkService;
+  downloadManager: WebDownloadManager;
   annotationStorage: AnnotationStorage;
   imageResourcesPath: string;
   renderForms: boolean;
@@ -195,9 +188,9 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   protected layer: HTMLDivElement;
 
-  protected linkService: PDFLinkService;
+  protected linkService: WebPDFLinkService;
 
-  protected downloadManager: DownloadManager;
+  protected downloadManager: WebDownloadManager;
 
   protected imageResourcesPath: string;
 
@@ -3011,8 +3004,8 @@ class FileAttachmentAnnotationElement extends AnnotationElement<FileAttachmentDa
  * @property {HTMLDivElement} div
  * @property {Array} annotations
  * @property {PDFPageProxy} page
- * @property {PDFLinkService} linkService
- * @property {DownloadManager} [downloadManager]
+ * @property {WebPDFLinkService} linkService
+ * @property {WebDownloadManager} [downloadManager]
  * @property {AnnotationStorage} [annotationStorage]
  * @property {string} [imageResourcesPath] - Path for image resources, mainly
  *   for annotation icons. Include trailing slash.
@@ -3099,8 +3092,8 @@ export class AnnotationLayer {
     annotations: AnnotationData[],
     imageResourcesPath: string,
     renderForms: boolean,
-    linkService: PDFLinkService,
-    downloadManager: DownloadManager,
+    linkService: WebPDFLinkService,
+    downloadManager: WebDownloadManager,
     annotationStorage: AnnotationStorage,
     enableScripting: boolean,
     hasJSActions: boolean,
