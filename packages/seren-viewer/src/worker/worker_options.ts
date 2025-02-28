@@ -13,7 +13,15 @@
  * limitations under the License.
  */
 
-class WorkerOptions {
+import { WEB_WORKER_URL } from "./worker_loader";
+
+export function defaultWorkerOption() {
+  return {
+    workerSrc: WEB_WORKER_URL
+  }
+}
+
+export class WorkerOptions {
 
   static #port: Worker | null = null;
 
@@ -57,5 +65,3 @@ class WorkerOptions {
     this.#src = workerSrc;
   }
 }
-
-export { WorkerOptions as GlobalWorkerOptions };

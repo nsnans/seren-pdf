@@ -12,10 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { StructTreeSerialLeaf, StructTreeSerialNode } from "../../core/struct_tree";
-import { PDFPageProxy } from "../../display/api";
-import { removeNullCharacters } from "../common/ui_utils";
+import { StructTreeSerialLeaf, StructTreeSerialNode } from "seren-common";
+import { PDFPageProxy } from "../api";
+import { removeNullCharacters } from "../ui_utils";
 
 const PDF_ROLE_TO_HTML_ROLE = {
   // Document level structure types

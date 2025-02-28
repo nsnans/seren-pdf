@@ -33,6 +33,12 @@
       ],
       "seren-openjpeg": [
         "packages/seren-openjpeg/src"
+      ],
+      "seren-viewer": [
+        "packages/seren-viewer/src"
+      ],
+      "seren-web": [
+        "packages/seren-web/src"
       ]
     }
   },

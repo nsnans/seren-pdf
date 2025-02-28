@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-import { AnnotationData } from "../../core/annotation";
-import { PlatformHelper } from "../../../packages/seren-common/src/platform_helper";
-import { AnnotationEditorType, shadow } from "../../shared/util";
-import { L10n } from "../../viewer/web/l10n";
+import { AnnotationData, AnnotationEditorType, PlatformHelper, shadow } from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
 import { OutputScale } from "../display_utils";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, CacheImage } from "./tools";
+import { L10n } from "../../l10n/l10n";
 
 export interface StampEditorParameter extends AnnotationEditorParameters {
   bitmapFile: File | null;

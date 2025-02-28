@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-import { PlatformHelper } from "../../../packages/seren-common/src/platform_helper";
 import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
   assert,
-  Util,
-} from "../../shared/util";
-import { L10n } from "../../viewer/web/l10n";
-import { noContextMenu, PointType } from "../display_utils";
+  Util, 
+  PointType, 
+  PlatformHelper
+} from "seren-common";
+import { noContextMenu, } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
 import { AnnotationEditorUIManager, opacityToHex } from "./tools";
+import { L10n } from "../../l10n/l10n";
 
 type BezierType = [PointType, PointType, PointType, PointType][];
 

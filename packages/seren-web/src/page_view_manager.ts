@@ -45,7 +45,7 @@ import {
   UNKNOWN_SCALE,
   VERTICAL_PADDING
 } from "../common/ui_utils";
-import { AltTextManager } from "./alt_text_manager";
+import { AltTextManager } from "../../seren-viewer/src/display/alt_text_manager";
 import { BrowserUtil } from '../../seren-viewer/src/browser_util';
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';

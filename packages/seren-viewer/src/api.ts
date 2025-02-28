@@ -72,15 +72,16 @@ import { DocumentEvaluatorOptions } from "seren-common";
 import { FilterFactory } from "./display/filter_factory";
 import { FontFaceObject, FontLoader } from "./display/font_loader";
 import { Metadata } from "./display/metadata";
-import { OptionalContentConfig } from "./optional_content_config";
+import { OptionalContentConfig } from "seren-common";
 import { TextLayer } from "./display/text_layer";
 import { PDFDataTransportStream } from "./display/transport_stream";
-import { WorkerOptions as GlobalWorkerOptions } from "./display/worker_options";
+import { WorkerOptions } from "./display/worker_options";
 import { DocumentParameter } from "seren-common";
 import { PageInfo } from "seren-common";
 import { OnProgressParameters } from "seren-common";
 import { TextContent } from "seren-common";
 import { GenericMessageHandler } from "packages/seren-worker/src/general_message_handler";
+import { defaultWorkerOption as defaultWorkerOptions } from "./worker/worker_options";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -280,6 +281,11 @@ export interface DocumentInitParameters {
 
   /* Enables hardware acceleration for rendering. The default value is `false`.*/
   enableHWA: boolean;
+
+  workerOptions: {
+    workerPort: Worker;
+    workerSrc: string;
+  };
 }
 
 
@@ -552,6 +558,8 @@ export function getDocument(src: DocumentInitParameters) {
       isValidFetchUrl(cMapUrl, document.baseURI) &&
       isValidFetchUrl(standardFontDataUrl, document.baseURI));
 
+  const workerOptions = src.workerOptions ?? defaultWorkerOptions();
+
   const useWorkerFetch = isSetWorkerFetch ? !!src.useWorkerFetch : calcWorkerFetch;
 
   // Set the main-thread verbosity level.
@@ -563,14 +571,12 @@ export function getDocument(src: DocumentInitParameters) {
   const transportFactory = new TransportFactory(
     new CanvasFactory(document, enableHWA),
     new FilterFactory(document, docId),
-    useWorkerFetch ?
-      null : new CMapReaderFactory(cMapUrl, cMapPacked),
-    PlatformHelper.isMozCental() || useWorkerFetch ?
-      null : new StandardFontDataFactory(standardFontDataUrl),
+    useWorkerFetch ? null : new CMapReaderFactory(cMapUrl, cMapPacked),
+    PlatformHelper.isMozCental() || useWorkerFetch ? null : new StandardFontDataFactory(standardFontDataUrl)
   );
 
   if (!worker) {
-    const port = GlobalWorkerOptions.workerPort;
+    const port = workerOptions.workerPort;
     // Worker was not provided -- creating and owning our own. If message port
     // is specified in global worker options, using it.
     worker = !!port ? PDFWorker.fromPort(null, port, verbosity || undefined) : new PDFWorker(null, port, verbosity || undefined);
@@ -2325,8 +2331,8 @@ export class PDFWorker {
    * @type {string}
    */
   static get workerSrc() {
-    if (GlobalWorkerOptions.workerSrc) {
-      return GlobalWorkerOptions.workerSrc;
+    if (WorkerOptions.workerSrc) {
+      return WorkerOptions.workerSrc;
     }
     throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
   }

@@ -38,6 +38,9 @@ importers:
       '@fluent/dom':
         specifier: ^0.10.0
         version: 0.10.0
+      seren-viewer:
+        specifier: workspace:^
+        version: link:../seren-viewer
 
   packages/seren-worker:
     dependencies:

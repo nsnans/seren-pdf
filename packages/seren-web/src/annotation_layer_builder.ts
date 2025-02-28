@@ -22,7 +22,7 @@ import { TextAccessibilityManager } from "../common/text_accessibility";
 import { PresentationModeState } from "../common/ui_utils";
 import { WebDownloadManager } from "./download_manager";
 import { WebPDFLinkService } from "./pdf_link_service";
-import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
+import { StructTreeLayerBuilder } from "../../seren-viewer/src/display/struct_tree_layer_builder";
 
 export class AnnotationLayerBuilder {
 

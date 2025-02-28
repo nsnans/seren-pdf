@@ -13,25 +13,22 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-
-import { AnnotationData } from "../../core/annotation";
-import { PlatformHelper } from "../../../packages/seren-common/src/platform_helper";
-import { RGBType } from "../../shared/scripting_utils";
+import { PDFDocumentProxy } from "../../api";
 import {
+  AnnotationData,
   AnnotationEditorParamsType,
   AnnotationEditorPrefix,
   AnnotationEditorType,
   FeatureTest,
   getUuid,
+  PlatformHelper,
+  RGBType,
   shadow,
-  Util
-} from "../../shared/util";
-import { EventBus, MLManager } from "../../viewer/common/component_types";
+  Util,
+} from "seren-common";
 import { AltTextManager } from "../../viewer/web/alt_text_manager";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationStorage } from "../annotation_storage";
-import { PDFDocumentProxy } from "../api";
 import {
   fetchData,
   getColorValues,
@@ -42,8 +39,8 @@ import { FilterFactory } from "../filter_factory";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { ColorPicker } from "./color_picker";
 import { AnnotationEditor } from "./editor";
-import { InkEditor } from "./ink";
 import { HighlightToolbar } from "./toolbar";
+import { EventBus, MLManager } from '../../component_types';
 
 function bindEvents<T extends AnnotationEditor>(
   obj: T,
@@ -107,6 +104,7 @@ export interface CacheImage {
  * or an url one.
  */
 class ImageManager {
+  
   #baseId = getUuid();
 
   #id = 0;

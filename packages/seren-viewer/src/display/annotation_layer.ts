@@ -42,7 +42,7 @@ import { WebDownloadManager } from "packages/seren-web/src/download_manager";
 import { AnnotationStorage } from "./annotation_storage";
 import { PageViewport, PDFDateString, setLayerDimensions } from "./display_utils";
 import { TextAccessibilityManager } from "../text_accessibility";
-import { StructTreeLayerBuilder } from "packages/seren-web/src/struct_tree_layer_builder";
+import { StructTreeLayerBuilder } from "packages/seren-viewer/src/display/struct_tree_layer_builder";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
