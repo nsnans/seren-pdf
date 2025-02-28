@@ -1,3 +1,5 @@
+import { SMaskOptions } from "packages/seren-core/src/image/image_types";
+import { TransformType, RectType } from "../common/common_types";
 import { Uint8TypedArray } from "../common/typed_array";
 
 export interface ImageMask {
@@ -19,6 +21,20 @@ export interface JpxDecoderOptions {
 
   smaskInData?: boolean;
 
+}
+export interface OptionalContent {
+  type: string;
+  id?: string | null;
+  ids?: (string | null)[];
+  expression?: (string | string[])[] | null;
+  policy?: string | null;
+}
+export interface GroupOptions {
+  matrix: TransformType | null;
+  bbox: RectType | null;
+  smask: SMaskOptions | null;
+  isolated: boolean;
+  knockout: boolean;
 }
 
 

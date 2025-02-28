@@ -6,7 +6,8 @@ import { EvaluatorContext, StateManager } from "./evaluator";
 import { EvaluatorBaseHandler } from "./evaluator_base";
 import { isPDFFunction } from "../../document/function";
 import { PDFImage } from "../../image/image";
-import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache, OptionalContent } from "../../image/image_utils";
+import { GlobalImageCacheData, ImageCacheData, LocalColorSpaceCache, LocalImageCache } from "../../image/image_utils";
+import { OptionalContent } from "packages/seren-common/src/types/image_types";
 import { OperatorList } from "../operator_list";
 
 export class EvaluatorImageHandler extends EvaluatorBaseHandler {

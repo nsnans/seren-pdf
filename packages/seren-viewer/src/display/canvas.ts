@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "../../../seren-common/src/common/typed_array";
-import { ImageMask } from "../core/core_types";
+import { Uint8TypedArray } from "seren-common";
+import { ImageMask } from "seren-common";
 import { Glyph } from "../core/fonts";
-import { GroupOptions, OptionalContent } from "../core/image_utils";
-import { TilingPatternIR } from "../core/pattern";
-import { DictKey } from "../core/primitives";
-import { PlatformHelper } from "../../../seren-common/src/utils/platform_helper";
-import { convertBlackAndWhiteToRGBA } from "../shared/image_utils";
-import { RGBType } from "../shared/scripting_utils";
+import {
+  GroupOptions,
+  OptionalContent,
+  TilingPatternIR
+} from "seren-common";
+import { PlatformHelper, DictKey, convertBlackAndWhiteToRGBA, RGBType } from "seren-common";
 import {
   assert,
   FeatureTest,
@@ -34,27 +34,27 @@ import {
   TextRenderingMode,
   unreachable,
   Util,
-  warn
-} from "../shared/util";
-import { IntentStateOperatorList, PDFObjects } from "./api";
+  warn,
+  PointType,
+  RectType,
+} from "seren-common";
+import { IntentStateOperatorList, PDFObjects } from "../api";
 import { CanvasAndContext, CanvasFactory } from "./canvas_factory";
 import {
   getCurrentTransform,
   getCurrentTransformInverse,
   PageViewport,
   PixelsPerInch,
-  PointType,
-  RectType,
-} from "../../../../src/display/display_utils";
-import { FilterFactory } from "../../../../src/display/filter_factory";
-import { FontFaceObject } from "../../../../src/display/font_loader";
-import { OptionalContentConfig } from "../../../../src/display/optional_content_config";
+} from "./display_utils";
+import { FilterFactory } from "./filter_factory";
+import { FontFaceObject } from "./font_loader";
+import { OptionalContentConfig } from "./optional_content_config";
 import {
   BaseShadingPattern,
   getShadingPattern,
   PathType,
   TilingPattern,
-} from "../../../../src/display/pattern_helper";
+} from "./pattern_helper";
 import { TransformType } from "seren-common";
 
 // <canvas> contexts store most of the state we need natively.

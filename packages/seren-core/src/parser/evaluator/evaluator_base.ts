@@ -16,7 +16,9 @@ import {
 import { ColorSpace } from "../../color/colorspace";
 import { DictImpl } from "../../document/dict_impl";
 import { SMaskOptions } from "../../image/image_types";
-import { GroupOptions, LocalColorSpaceCache, OptionalContent } from "../../image/image_utils";
+import { LocalColorSpaceCache } from "../../image/image_utils";
+import { GroupOptions } from "packages/seren-common/src/types/image_types";
+import { OptionalContent } from "packages/seren-common/src/types/image_types";
 import { BaseStream } from "../../stream/base_stream";
 import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
 import { OperatorList } from "../operator_list";

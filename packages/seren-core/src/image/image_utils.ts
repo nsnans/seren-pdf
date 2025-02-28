@@ -24,12 +24,10 @@ import {
   RefSet,
   RefSetCache,
   Dict,
-  RectType,
-  TransformType,
   ImageMask
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
-import { SMaskOptions } from "./image_types";
+import { OptionalContent } from "packages/seren-common/src/types/image_types";
 
 abstract class BaseLocalCache<T> {
 
@@ -61,22 +59,6 @@ abstract class NameLocalCache<DATA> extends BaseLocalCache<DATA> {
     }
     return this._imageMap.get(name) || null;
   }
-}
-
-export interface OptionalContent {
-  type: string;
-  id?: string | null;
-  ids?: (string | null)[];
-  expression?: (string | string[])[] | null;
-  policy?: string | null;
-}
-
-export interface GroupOptions {
-  matrix: TransformType | null,
-  bbox: RectType | null,
-  smask: SMaskOptions | null,
-  isolated: boolean,
-  knockout: boolean,
 }
 
 export interface ImageMaskXObject {

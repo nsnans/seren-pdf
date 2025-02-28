@@ -58,9 +58,9 @@ import {
   GlobalImageCache,
   ImageCacheData,
   ImageMaskXObject,
-  OptionalContent,
   RegionalImageCache
 } from "../../image/image_utils";
+import { OptionalContent } from "packages/seren-common/src/types/image_types";
 import { BaseStream } from "../../stream/base_stream";
 import { OperatorList } from "../operator_list";
 import { Lexer, Parser } from "../parser";
