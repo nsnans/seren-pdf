@@ -10,11 +10,6 @@ export interface CreateStampImageResult {
   smaskStream: Stream | null;
   imageRef?: JpegStream | Ref;
 }
-export interface SMaskOptions {
-  transferMap?: Uint8Array<ArrayBuffer>;
-  subtype: string;
-  backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;
-}
 export interface SingleOpaquePixelImageMask {
   isSingleOpaquePixel: boolean;
 }

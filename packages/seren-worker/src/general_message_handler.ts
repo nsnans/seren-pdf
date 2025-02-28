@@ -10,6 +10,10 @@ import { MessageHandlerAction } from "seren-common";
  * */
 export class GenericMessageHandler extends AbstractMessageHandler implements GenericMessageHandler {
 
+  /**
+   * 为什么comObj的类型是MessagePoster，而不是Worker呢？
+   * 因为某些情况下不能够创建worker，只能创建一个FakerWorker
+   */
   constructor(sourceName: string, targetName: string, comObj: MessagePoster) {
     super(sourceName, targetName, comObj);
   }

@@ -13,7 +13,21 @@
  * limitations under the License.
  */
 
-import { FigureType, FormatError, info, MeshShadingPatternIR, OperatorListIR, PlatformHelper, PointType, RadialAxialShadingIR, RectType, TilingPatternIR, TransformType, unreachable, Util } from "seren-common";
+import {
+  FigureType,
+  FormatError,
+  info,
+  MeshShadingPatternIR,
+  OperatorListIR,
+  PlatformHelper,
+  PointType,
+  RadialAxialShadingIR,
+  RectType,
+  TilingPatternIR,
+  TransformType,
+  unreachable,
+  Util
+} from "seren-common";
 import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
 import { getCurrentTransform } from "./display_utils";
 

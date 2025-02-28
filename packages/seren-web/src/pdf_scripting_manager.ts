@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./event_utils").EventBus} EventBus */
-
-import { PDFDocumentProxy } from "../../display/api";
-import { shadow } from "../../shared/util";
+import { PDFDocumentProxy } from "seren-viewer";
+import { shadow } from "seren-common";
 
 /**
  * @typedef {Object} PDFScriptingManagerOptions

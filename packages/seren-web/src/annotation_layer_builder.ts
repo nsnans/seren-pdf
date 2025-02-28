@@ -12,17 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { FieldObject } from "../../core/core_types";
-import { AnnotationLayer } from "../../display/annotation_layer";
-import { AnnotationStorage } from "../../display/annotation_storage";
-import { PDFPageProxy } from "../../display/api";
-import { PageViewport } from "../../display/display_utils";
-import { AnnotationEditorUIManager } from "../../display/editor/tools";
-import { TextAccessibilityManager } from "../common/text_accessibility";
-import { PresentationModeState } from "../common/ui_utils";
+import { FieldObject } from "seren-common";
+import {
+  AnnotationLayer,
+  AnnotationStorage,
+  PDFPageProxy,
+  PageViewport,
+  StructTreeLayerBuilder,
+  TextAccessibilityManager,
+  AnnotationEditorUIManager,
+  PresentationModeState
+} from "seren-viewer";
 import { WebDownloadManager } from "./download_manager";
 import { WebPDFLinkService } from "./pdf_link_service";
-import { StructTreeLayerBuilder } from "../../seren-viewer/src/display/struct_tree_layer_builder";
 
 export class AnnotationLayerBuilder {
 
@@ -54,7 +56,7 @@ export class AnnotationLayerBuilder {
 
   protected _hasJSActionsPromise: Promise<boolean>;
 
-  protected _fieldObjectsPromise:  Promise<Map<string, FieldObject[]> | null>;
+  protected _fieldObjectsPromise: Promise<Map<string, FieldObject[]> | null>;
 
   public annotationLayer: AnnotationLayer | null;
 

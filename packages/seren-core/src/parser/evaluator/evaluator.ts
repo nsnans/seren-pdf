@@ -60,7 +60,7 @@ import {
   ImageMaskXObject,
   RegionalImageCache
 } from "../../image/image_utils";
-import { OptionalContent } from "packages/seren-common/src/types/image_types";
+import { OptionalContent } from "seren-common";
 import { BaseStream } from "../../stream/base_stream";
 import { OperatorList } from "../operator_list";
 import { Lexer, Parser } from "../parser";

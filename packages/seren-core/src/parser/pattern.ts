@@ -31,7 +31,8 @@ import {
   isNumberArray,
   OperatorListIR,
   FigureType,
-  RadialAxialShadingIR
+  RadialAxialShadingIR, 
+  TilingPatternIR
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
@@ -44,7 +45,6 @@ import {
 import { ParserConstructFunction, PDFFunctionFactory } from "../document/function";
 import { LocalColorSpaceCache } from "../image/image_utils";
 import { XRefImpl } from "../document/xref";
-import { TilingPatternIR } from "packages/seren-common/src/types/shading_types";
 
 const ShadingType = {
   FUNCTION_BASED: 1,

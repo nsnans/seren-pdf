@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-import { PDFLinkService } from "packages/seren-viewer/src/service/pdf_link_service";
-import { PDFDocumentProxy } from "seren-viewer";
+import { PDFLinkService, PDFDocumentProxy } from "seren-viewer";
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 

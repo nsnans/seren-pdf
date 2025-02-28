@@ -13,7 +13,16 @@
  * limitations under the License.
  */
 
-import { AbortException, assert, PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource, PlatformHelper, warn } from "seren-common";
+import {
+  AbortException,
+  assert,
+  PDFStream,
+  PDFStreamRangeReader,
+  PDFStreamReader,
+  PDFStreamSource,
+  PlatformHelper,
+  warn
+} from "seren-common";
 import {
   createHeaders,
   createResponseStatusError,
@@ -28,7 +37,11 @@ if (PlatformHelper.isMozCental()) {
   );
 }
 
-function createFetchOptions(headers: Headers, withCredentials: boolean, abortController: AbortController) {
+function createFetchOptions(
+  headers: Headers,
+  withCredentials: boolean,
+  abortController: AbortController
+) {
   return {
     method: "GET",
     headers,

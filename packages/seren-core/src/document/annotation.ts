@@ -123,6 +123,7 @@ import {
   UnderlineData,
   WidgetData
 } from "seren-common";
+import { MarkupData } from "packages/seren-common/src/types/annotation_types";
 
 export interface AnnotationParameters {
   xref: XRefImpl;
@@ -1660,13 +1661,6 @@ export class Annotation<DATA extends AnnotationData> {
     }
     return fieldName.join(".");
   }
-}
-
-export interface MarkupData extends AnnotationData {
-  replyType: string;
-  inReplyTo: string | null;
-  titleObj: StringObj;
-  creationDate: string | null;
 }
 
 export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {

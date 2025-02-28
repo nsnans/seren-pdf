@@ -13,13 +13,7 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./interfaces").IRenderableView} IRenderableView */
-/** @typedef {import("./pdf_viewer").PDFViewer} PDFViewer */
-// eslint-disable-next-line max-len
-/** @typedef {import("./pdf_thumbnail_viewer").PDFThumbnailViewer} PDFThumbnailViewer */
-
-import { RenderingCancelledException } from "../../display/display_utils";
-import { RenderingStates } from "../common/ui_utils";
+import { RenderingCancelledException, RenderingStates } from "seren-viewer";
 import { WebPDFPageView } from "./page_view";
 import { WebPageViewManager } from './page_view_manager';
 import { WebThumbnailViewService } from "./thumbnail_view_service";

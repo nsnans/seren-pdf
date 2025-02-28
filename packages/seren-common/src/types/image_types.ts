@@ -1,4 +1,3 @@
-import { SMaskOptions } from "packages/seren-core/src/image/image_types";
 import { TransformType, RectType } from "../common/common_types";
 import { Uint8TypedArray } from "../common/typed_array";
 
@@ -35,6 +34,11 @@ export interface GroupOptions {
   smask: SMaskOptions | null;
   isolated: boolean;
   knockout: boolean;
+}
+export interface SMaskOptions {
+  transferMap?: Uint8Array<ArrayBuffer>;
+  subtype: string;
+  backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;
 }
 
 

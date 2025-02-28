@@ -24,10 +24,10 @@ import {
   RefSet,
   RefSetCache,
   Dict,
-  ImageMask
+  ImageMask,
+  OptionalContent
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
-import { OptionalContent } from "packages/seren-common/src/types/image_types";
 
 abstract class BaseLocalCache<T> {
 

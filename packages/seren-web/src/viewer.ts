@@ -1,13 +1,18 @@
-import { DEFAULT_RANGE_CHUNK_SIZE, DocumentInitParameters, getDocument, PDFDocumentLoadingTask, PDFDocumentProxy } from "../../display/api";
-import { DOMCanvasFactory } from "../../display/canvas_factory";
-import { DOMCMapReaderFactory } from "../../display/cmap_reader_factory";
-import { isDataScheme } from "../../display/display_utils";
-import { DOMFilterFactory } from "../../display/filter_factory";
-import { DOMStandardFontDataFactory } from "../../display/standard_fontdata_factory";
-import { PlatformHelper } from "../../seren-common/src/utils/platform_helper";
-import { VerbosityLevel } from "../../shared/util";
-import { AltTextManager } from "../../seren-viewer/src/display/alt_text_manager";
-import { BrowserUtil } from "../../seren-viewer/src/browser_util";
+import {
+  AltTextManager,
+  BrowserUtil,
+  DEFAULT_RANGE_CHUNK_SIZE,
+  DocumentInitParameters,
+  DOMCanvasFactory,
+  DOMCMapReaderFactory,
+  DOMFilterFactory,
+  DOMStandardFontDataFactory,
+  getDocument,
+  isDataScheme,
+  PDFDocumentLoadingTask,
+  PDFDocumentProxy,
+} from "seren-viewer";
+import { VerbosityLevel } from "seren-common";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from "./find_service";
 import { GenericL10n } from "./genericl10n";

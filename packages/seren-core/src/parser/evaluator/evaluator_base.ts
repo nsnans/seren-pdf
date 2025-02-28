@@ -11,14 +11,14 @@ import {
   TransformType,
   WorkerTask,
   isName,
-  warn
+  warn,
+  SMaskOptions,
+  GroupOptions,
+  OptionalContent
 } from "seren-common";
 import { ColorSpace } from "../../color/colorspace";
 import { DictImpl } from "../../document/dict_impl";
-import { SMaskOptions } from "../../image/image_types";
 import { LocalColorSpaceCache } from "../../image/image_utils";
-import { GroupOptions } from "packages/seren-common/src/types/image_types";
-import { OptionalContent } from "packages/seren-common/src/types/image_types";
 import { BaseStream } from "../../stream/base_stream";
 import { lookupMatrix, lookupNormalRect } from "../../utils/core_utils";
 import { OperatorList } from "../operator_list";

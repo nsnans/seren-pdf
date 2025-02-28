@@ -4,9 +4,7 @@ import { Name, Ref } from "../document/primitives";
 import { AnnotationBorderStyleType, AnnotationEditorType, AnnotationType, assert, warn } from "../utils/util";
 import { PlatformHelper } from "../utils/platform_helper";
 import { isNumberArray } from "../utils/util";
-import { MarkupData } from "packages/seren-core/src/document/annotation";
 import { FileSpecSerializable } from "./message_handler_types";
-import { AnnotationData, StringObj } from "./annotation_types";
 
 export interface AnnotationEditorSerial {
   annotationType: AnnotationEditorType;
@@ -463,5 +461,11 @@ export interface WidgetData extends AnnotationData {
   hidden: boolean;
   required: boolean;
   readOnly: boolean;
+}
+export interface MarkupData extends AnnotationData {
+  replyType: string;
+  inReplyTo: string | null;
+  titleObj: StringObj;
+  creationDate: string | null;
 }
 

@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-import { ThemeMode } from "../../shared/theme";
-import { AnnotationMode } from "../../shared/util";
-
+import { ThemeMode, AnnotationMode } from "seren-common";
 
 enum OptionKind {
   BROWSER = 0x01,

@@ -14,7 +14,17 @@
  */
 
 
-import { assert, BaseException, PDFStream, PDFStreamRangeReader, PDFStreamReader, PDFStreamSource, PlatformHelper, ReadResult, stringToBytes } from "seren-common";
+import {
+  assert,
+  BaseException,
+  PDFStream,
+  PDFStreamRangeReader,
+  PDFStreamReader,
+  PDFStreamSource,
+  PlatformHelper,
+  ReadResult,
+  stringToBytes
+} from "seren-common";
 import {
   createHeaders,
   createResponseStatusError,

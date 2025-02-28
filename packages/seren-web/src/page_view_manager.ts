@@ -14,15 +14,23 @@
  */
 
 
-import { FieldObject } from "../../core/core_types";
-import { AnnotationStorage } from "../../display/annotation_storage";
-import { PDFDocumentProxy, PDFPageProxy, TextItem } from "../../display/api";
-import { PixelsPerInch, PointType } from '../../display/display_utils';
-import { AnnotationEditorUIManager } from "../../display/editor/tools";
-import { OptionalContentConfig } from "../../display/optional_content_config";
-import { AnnotationEditorType, AnnotationMode, PermissionFlag, shadow } from "../../shared/util";
-import { EventBus } from "../common/component_types";
 import {
+  FieldObject,
+  TextItem,
+  PointType,
+  AnnotationEditorType,
+  AnnotationMode,
+  PermissionFlag,
+  shadow
+} from "seren-common";
+import {
+  AnnotationStorage,
+  PDFDocumentProxy,
+  PDFPageProxy,
+  PixelsPerInch,
+  AnnotationEditorUIManager,
+  OptionalContentConfig,
+  EventBus,
   DEFAULT_SCALE,
   DEFAULT_SCALE_DELTA,
   docStyle,
@@ -43,15 +51,15 @@ import {
   SpreadMode,
   TextLayerMode,
   UNKNOWN_SCALE,
-  VERTICAL_PADDING
-} from "../common/ui_utils";
-import { AltTextManager } from "../../seren-viewer/src/display/alt_text_manager";
-import { BrowserUtil } from '../../seren-viewer/src/browser_util';
+  VERTICAL_PADDING,
+  AltTextManager,
+  BrowserUtil,
+  L10n
+} from "seren-viewer";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
 import { DocumentOwner } from "./interface";
-import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { WebPDFPageView } from './page_view';
 import { WebPDFLinkService } from "./pdf_link_service";
 import { PDFRenderingManager } from "./rendering_manager";

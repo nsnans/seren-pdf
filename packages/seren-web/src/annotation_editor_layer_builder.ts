@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-import { AnnotationLayer } from "../../display/annotation_layer";
-import { PDFPageProxy } from "../../display/api";
-import { PageViewport } from "../../display/display_utils";
-import { DrawLayer } from "../../display/draw_layer";
-import { AnnotationEditorLayer } from '../../display/editor/annotation_editor_layer';
-import { AnnotationEditorUIManager } from "../../display/editor/tools";
-import { TextAccessibilityManager } from "../common/text_accessibility";
+import {
+  AnnotationLayer,
+  PDFPageProxy,
+  DrawLayer,
+  AnnotationEditorLayer,
+  AnnotationEditorUIManager,
+  TextAccessibilityManager,
+  L10n,
+  StructTreeLayerBuilder,
+  TextLayerBuilder,
+  PageViewport
+} from "seren-viewer";
 import { GenericL10n } from "./genericl10n";
-import { L10n } from "../../seren-viewer/src/l10n/l10n";
-import { StructTreeLayerBuilder } from "../../seren-viewer/src/display/struct_tree_layer_builder";
-import { TextLayerBuilder } from "../../seren-viewer/src/display/text_layer_builder";
 
 export class AnnotationEditorLayerBuilder {
 

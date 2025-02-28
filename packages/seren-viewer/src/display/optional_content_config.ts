@@ -20,9 +20,11 @@ import {
   unreachable,
   warn,
   MurmurHash3_64,
+  OptionalContent,
+  CatalogOptionalContentConfig,
+  OptionalContentDataGroup,
+  OptionalContentOrder
 } from "seren-common";
-import { CatalogOptionalContentConfig, OptionalContentDataGroup, OptionalContentOrder } from "../core/catalog";
-import { OptionalContent } from "../core/image_utils";
 
 const INTERNAL = Symbol("INTERNAL");
 

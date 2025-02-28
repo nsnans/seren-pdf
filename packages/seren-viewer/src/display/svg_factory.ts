@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
-import { PlatformHelper, unreachable } from "seren-common";
+import {
+  PlatformHelper,
+  unreachable
+} from "seren-common";
 import { SVG_NS } from "./display_utils";
 
 export abstract class BaseSVGFactory {
@@ -49,7 +52,7 @@ export abstract class BaseSVGFactory {
     return this._createSVG(type);
   }
 
-  abstract _createSVG(type: string) : SVGElement;
+  abstract _createSVG(type: string): SVGElement;
 }
 
 export class DOMSVGFactory extends BaseSVGFactory {

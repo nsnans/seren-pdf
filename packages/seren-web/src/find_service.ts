@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PDFDocumentProxy } from "../../display/api";
+import { PDFDocumentProxy } from "seren-viewer";
 import { DocumentOwner } from "./interface";
 import { getNormalizeWithNFKC } from "./pdf_find_utils";
 import { WebPDFLinkService } from "./pdf_link_service";

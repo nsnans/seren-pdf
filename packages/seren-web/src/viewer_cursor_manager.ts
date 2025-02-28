@@ -13,11 +13,9 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./event_utils.js").EventBus} EventBus */
-
-import { shadow } from "../../shared/util";
-import { CursorTool } from "../common/ui_utils";
+import { shadow, } from "seren-common";
 import { GrabToPan } from "./grab_to_pan";
+import { CursorTool } from "seren-viewer";
 
 export interface ViewerCursorCallbacks {
 

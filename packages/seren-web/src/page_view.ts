@@ -13,30 +13,32 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/display_utils").PageViewport} PageViewport */
-// eslint-disable-next-line max-len
-/** @typedef {import("../src/display/optional_content_config").OptionalContentConfig} OptionalContentConfig */
-/** @typedef {import("./event_utils").EventBus} EventBus */
-/** @typedef {import("./interfaces").IL10n} IL10n */
-/** @typedef {import("./interfaces").IRenderableView} IRenderableView */
-// eslint-disable-next-line max-len
-/** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
-
-import { PDFPageProxy, RenderTask } from "../../display/api";
-import { OutputScale, PageViewport, PixelsPerInch, RenderingCancelledException, setLayerDimensions, TransformType } from "../../display/display_utils";
-import { DrawLayerBuilder } from "../../display/draw_layer_builder";
-import { OptionalContentConfig } from "../../display/optional_content_config";
-import { AbortException, AnnotationMode } from "../../shared/util";
-import { TextAccessibilityManager } from "../common/text_accessibility";
-import { approximateFraction, calcRound, DEFAULT_SCALE, floorToDivide, RenderingStates, TextLayerMode } from "../common/ui_utils";
+import {
+  PDFPageProxy,
+  RenderTask,
+  OutputScale,
+  PageViewport,
+  PixelsPerInch,
+  RenderingCancelledException,
+  setLayerDimensions,
+  DrawLayerBuilder,
+  OptionalContentConfig,
+  TextAccessibilityManager,
+  approximateFraction,
+  calcRound,
+  DEFAULT_SCALE,
+  floorToDivide,
+  RenderingStates,
+  TextLayerMode,
+  L10n,
+  StructTreeLayerBuilder,
+  TextLayerBuilder
+} from "seren-viewer";
+import { AbortException, AnnotationMode, TransformType } from "seren-common";
 import { AnnotationEditorLayerBuilder } from "./annotation_editor_layer_builder";
 import { AnnotationLayerBuilder } from "./annotation_layer_builder";
 import { GenericL10n } from "./genericl10n";
-import { L10n } from "../../seren-viewer/src/l10n/l10n";
 import { WebPDFViewLayerProperties } from "./page_view_manager";
-import { StructTreeLayerBuilder } from "../../seren-viewer/src/display/struct_tree_layer_builder";
-import { TextLayerBuilder } from "../../seren-viewer/src/display/text_layer_builder";
 
 const LAYERS_ORDER = new Map([
   ["canvasWrapper", 0],
@@ -256,7 +258,7 @@ export class WebPDFPageView {
     this.callback = callback;
   }
 
-  get id(){
+  get id() {
     return this.pageNum;
   }
 

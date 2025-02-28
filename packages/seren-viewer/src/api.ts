@@ -72,7 +72,6 @@ import { DocumentEvaluatorOptions } from "seren-common";
 import { FilterFactory } from "./display/filter_factory";
 import { FontFaceObject, FontLoader } from "./display/font_loader";
 import { Metadata } from "./display/metadata";
-import { OptionalContentConfig } from "seren-common";
 import { TextLayer } from "./display/text_layer";
 import { PDFDataTransportStream } from "./display/transport_stream";
 import { WorkerOptions } from "./display/worker_options";
@@ -82,6 +81,7 @@ import { OnProgressParameters } from "seren-common";
 import { TextContent } from "seren-common";
 import { GenericMessageHandler } from "packages/seren-worker/src/general_message_handler";
 import { defaultWorkerOption as defaultWorkerOptions } from "./worker/worker_options";
+import { OptionalContentConfig } from "./display/optional_content_config";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms

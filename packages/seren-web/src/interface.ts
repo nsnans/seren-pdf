@@ -1,4 +1,4 @@
-import { PDFDocumentProxy } from "../../display/api";
+import { PDFDocumentProxy } from "seren-viewer";
 
 export interface DocumentOwner {
   setDocument(pdfDocument: PDFDocumentProxy | null): void;

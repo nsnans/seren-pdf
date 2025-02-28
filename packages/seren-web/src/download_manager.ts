@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-import { DownloadManager } from "packages/seren-viewer/src/service/download_manager";
-import { isPdfFile } from "../../display/display_utils";
-import { createValidAbsoluteUrl } from "../../shared/util";
-
+import { DownloadManager, isPdfFile } from "seren-viewer";
+import { createValidAbsoluteUrl } from "seren-common";
 
 function download(blobUrl: string, filename: string) {
   const a = document.createElement("a");

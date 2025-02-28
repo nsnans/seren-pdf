@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-/** @typedef {import("./interfaces").IL10n} IL10n */
-
 import { FluentBundle, FluentResource } from "@fluent/bundle";
 import { DOMLocalization } from "@fluent/dom";
-import { L10n } from "../../seren-viewer/src/l10n/l10n";
-import { fetchData } from "../../display/display_utils";
+import { L10n, fetchData } from "seren-viewer";
 
 function createBundle(lang: string, text: string) {
   const resource = new FluentResource(text);
