@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { PDFDocumentProxy } from "../../display/api";
+import { PDFLinkService } from "packages/seren-viewer/src/service/pdf_link_service";
+import { PDFDocumentProxy } from "seren-viewer";
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
 
@@ -29,10 +30,7 @@ export enum LinkTarget {
  * Performs navigation functions inside PDF, such as opening specified page,
  * or destination.
  */
-export class WebPDFLinkService {
-  executeNamedAction(_action: string) {
-    console.warn('暂未实现，需要参考原版PDFjs')
-  }
+export class WebPDFLinkService implements PDFLinkService {
 
   protected externalLinkEnabled = true;
 
@@ -135,7 +133,7 @@ export class WebPDFLinkService {
 
   /**
    * @param {string|Array} dest - The PDF destination object.
-   * @returns {string} The hyperlink to the PDF object.
+   * @returns The hyperlink to the PDF object.
    */
   getDestinationHash(dest: string) {
     if (typeof dest === "string") {
@@ -161,10 +159,11 @@ export class WebPDFLinkService {
     return this.baseUrl ? this.baseUrl + anchor : anchor;
   }
 
-  /**
-   * @param {Object} action
-   */
   async executeSetOCGState(_action: { state: string[], preserveRB: boolean; }) {
 
+  }
+
+  executeNamedAction(_action: string) {
+    console.warn('暂未实现，需要参考原版PDFjs')
   }
 }

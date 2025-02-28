@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BoxType } from "../../../packages/seren-common/src/types";
+import { BoxType } from "seren-common";
 import { noContextMenu } from "../display_utils";
 import { AltText } from "./alt_text";
 import { ColorPicker } from "./color_picker";

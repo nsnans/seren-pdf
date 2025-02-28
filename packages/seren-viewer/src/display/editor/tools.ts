@@ -26,7 +26,6 @@ import {
   shadow,
   Util,
 } from "seren-common";
-import { AltTextManager } from "../../viewer/web/alt_text_manager";
 import { AnnotationElement } from "../annotation_layer";
 import { AnnotationStorage } from "../annotation_storage";
 import {
@@ -41,8 +40,9 @@ import { ColorPicker } from "./color_picker";
 import { AnnotationEditor } from "./editor";
 import { HighlightToolbar } from "./toolbar";
 import { EventBus, MLManager } from '../../component_types';
+import { AltTextManager } from "../alt_text_manager";
 
-function bindEvents<T extends AnnotationEditor>(
+export function bindEvents<T extends AnnotationEditor>(
   obj: T,
   element: HTMLDivElement,
   names: (keyof T)[]
@@ -54,9 +54,9 @@ function bindEvents<T extends AnnotationEditor>(
 
 /**
  * Convert a number between 0 and 100 into an hex number between 0 and 255.
- * @param {number} opacity
+ * @param opacity
  */
-function opacityToHex(opacity: number) {
+export function opacityToHex(opacity: number) {
   return Math.round(Math.min(255, Math.max(1, 255 * opacity)))
     .toString(16).padStart(2, "0");
 }
@@ -104,7 +104,7 @@ export interface CacheImage {
  * or an url one.
  */
 class ImageManager {
-  
+
   #baseId = getUuid();
 
   #id = 0;
@@ -315,7 +315,7 @@ interface Command {
  * If we hit some memory issues we could likely use a circular buffer.
  * It has to be used as a singleton.
  */
-class CommandManager {
+export class CommandManager {
   #commands: Command[] = [];
 
   #locked = false;
@@ -456,7 +456,7 @@ class CommandManager {
  * Class to handle the different keyboards shortcuts we can have on mac or
  * non-mac OSes.
  */
-class KeyboardManager<T> {
+export class KeyboardManager<T> {
 
   protected callbacks;
 
@@ -547,7 +547,7 @@ class KeyboardManager<T> {
   }
 }
 
-class ColorManager {
+export class ColorManager {
   static _colorsMapping = new Map([
     ["CanvasText", [0, 0, 0]],
     ["Canvas", [255, 255, 255]],
@@ -624,7 +624,7 @@ interface ScaleChangableEditor {
  * This class is used to manage all the different layers, editors and
  * some action like copy/paste, undo/redo, ...
  */
-class AnnotationEditorUIManager {
+export class AnnotationEditorUIManager {
 
   static TRANSLATE_SMALL = 1; // page units.
 
@@ -2347,13 +2347,4 @@ class AnnotationEditorUIManager {
     editor.renderAnnotationElement(annotation);
   }
 }
-
-export {
-  AnnotationEditorUIManager,
-  bindEvents,
-  ColorManager,
-  CommandManager,
-  KeyboardManager,
-  opacityToHex
-};
 

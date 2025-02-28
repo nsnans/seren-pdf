@@ -13,8 +13,30 @@
  * limitations under the License.
  */
 
-import { AnnotationBorderStyle, AnnotationData, ButtonWidgetData, CaretData, CircleData, FileAttachmentData, FreeTextData, HighlightData, InkAnnotationData, LineData, LinkData, PolylineData, PopupData, SquareData, SquigglyData, StampData, StrikeOutData, StringObj, TextData, UnderlineData, WidgetData } from "../core/annotation";
 import {
+  ButtonWidgetData,
+  CaretData,
+  CircleData,
+  FileAttachmentData,
+  FreeTextData,
+  HighlightData,
+  InkAnnotationData,
+  LineData,
+  LinkData,
+  PolylineData,
+  PopupData,
+  SquareData,
+  SquigglyData,
+  StampData,
+  StrikeOutData,
+  StringObj,
+  TextData,
+  UnderlineData,
+  WidgetData
+} from "seren-common";
+import {
+  AnnotationBorderStyle,
+  AnnotationData,
   Util,
   shadow,
   RGBType,
@@ -37,12 +59,12 @@ import { PDFPageProxy } from "../api";
 import { AnnotationEditorUIManager } from "./editor/tools";
 import { BaseSVGFactory, DOMSVGFactory } from "./svg_factory";
 import { PopupContent } from "seren-common";
-import { WebPDFLinkService } from "packages/seren-web/src/pdf_link_service";
-import { WebDownloadManager } from "packages/seren-web/src/download_manager";
+import { PDFLinkService } from "../service/pdf_link_service";
+import { DownloadManager } from "../service/download_manager";
 import { AnnotationStorage } from "./annotation_storage";
 import { PageViewport, PDFDateString, setLayerDimensions } from "./display_utils";
 import { TextAccessibilityManager } from "../text_accessibility";
-import { StructTreeLayerBuilder } from "packages/seren-viewer/src/display/struct_tree_layer_builder";
+import { StructTreeLayerBuilder } from "./struct_tree_layer_builder";
 
 const DEFAULT_TAB_INDEX = 1000;
 const DEFAULT_FONT_SIZE = 9;
@@ -59,8 +81,8 @@ function getRectDims(rect: RectType) {
  * @typedef {Object} AnnotationElementParameters
  * @property {Object} data
  * @property {HTMLDivElement} layer
- * @property {WebPDFLinkService} linkService
- * @property {WebDownloadManager} [downloadManager]
+ * @property {PDFLinkService} linkService
+ * @property {DownloadManager} [downloadManager]
  * @property {AnnotationStorage} [annotationStorage]
  * @property {string} [imageResourcesPath] - Path for image resources, mainly
  *   for annotation icons. Include trailing slash.
@@ -74,8 +96,8 @@ function getRectDims(rect: RectType) {
 export interface AnnotationElementParameters<DATA> {
   data: DATA;
   layer: HTMLDivElement;
-  linkService: WebPDFLinkService;
-  downloadManager: WebDownloadManager;
+  linkService: PDFLinkService;
+  downloadManager: DownloadManager;
   annotationStorage: AnnotationStorage;
   imageResourcesPath: string;
   renderForms: boolean;
@@ -188,9 +210,9 @@ export class AnnotationElement<DATA extends AnnotationData> {
 
   protected layer: HTMLDivElement;
 
-  protected linkService: WebPDFLinkService;
+  protected linkService: PDFLinkService;
 
-  protected downloadManager: WebDownloadManager;
+  protected downloadManager: DownloadManager;
 
   protected imageResourcesPath: string;
 
@@ -3004,8 +3026,8 @@ class FileAttachmentAnnotationElement extends AnnotationElement<FileAttachmentDa
  * @property {HTMLDivElement} div
  * @property {Array} annotations
  * @property {PDFPageProxy} page
- * @property {WebPDFLinkService} linkService
- * @property {WebDownloadManager} [downloadManager]
+ * @property {PDFLinkService} linkService
+ * @property {DownloadManager} [downloadManager]
  * @property {AnnotationStorage} [annotationStorage]
  * @property {string} [imageResourcesPath] - Path for image resources, mainly
  *   for annotation icons. Include trailing slash.
@@ -3092,8 +3114,8 @@ export class AnnotationLayer {
     annotations: AnnotationData[],
     imageResourcesPath: string,
     renderForms: boolean,
-    linkService: WebPDFLinkService,
-    downloadManager: WebDownloadManager,
+    linkService: PDFLinkService,
+    downloadManager: DownloadManager,
     annotationStorage: AnnotationStorage,
     enableScripting: boolean,
     hasJSActions: boolean,

@@ -29,7 +29,6 @@ import {
   AnnotationType,
   assert,
   BASELINE_FACTOR,
-  DestinationType,
   Dict,
   DictKey,
   FeatureTest,
@@ -93,11 +92,37 @@ import { PDFManager } from "../worker/pdf_manager";
 import { writeObject } from "../writer/writer";
 import { Catalog } from "./catalog";
 import { DictImpl } from "./dict_impl";
-import { AnnotationEditorSerial, FreeTextEditorSerial, HighlightEditorSerial, InkEditorSerial, StampEditorSerial } from "seren-common";
+import {
+  AnnotationEditorSerial,
+  FreeTextEditorSerial,
+  HighlightEditorSerial,
+  InkEditorSerial,
+  StampEditorSerial
+} from "seren-common";
 import { FileSpec } from "./file_spec";
 import { ErrorFont, Font, Glyph } from "./font/fonts";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
+import {
+  ButtonWidgetData,
+  CaretData,
+  CircleData,
+  FileAttachmentData,
+  FreeTextData,
+  HighlightData,
+  InkAnnotationData,
+  LineData,
+  LinkData,
+  PolylineData,
+  PopupData,
+  SquareData,
+  SquigglyData,
+  StampData,
+  StrikeOutData,
+  TextData,
+  UnderlineData,
+  WidgetData
+} from "seren-common";
 
 export interface AnnotationParameters {
   xref: XRefImpl;
@@ -1820,29 +1845,6 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
   }
 }
 
-export interface WidgetData extends AnnotationData {
-  doNotScroll: boolean;
-  maxLen: number;
-  textAlignment: number | null;
-  comb: boolean;
-  multiLine: boolean;
-  options: {
-    // 这两个值从静态代码分析的角度来看，是有可能是string[]的
-    // 但根据代码的具体值来看，发现他们应该还是string类型的。
-    exportValue: string | null,
-    displayValue: string | null,
-  }[] | null;
-  combo: boolean | string | null;
-  fieldValue: string | string[] | null;
-  annotationType: AnnotationType;
-  defaultFieldValue: string | string[] | null;
-  fieldType: string | null;
-  fieldFlags: number;
-  hidden: boolean;
-  required: boolean;
-  readOnly: boolean;
-}
-
 interface CacheLine {
   line: string;
   glyphs: Glyph[];
@@ -3026,37 +3028,6 @@ class TextWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   }
 }
 
-export interface ButtonWidgetData extends WidgetData {
-  multiSelect: boolean;
-  buttonValue: string | null;
-  exportValue: string | null;
-  checkBox: boolean;
-  radioButton: boolean;
-  pushButton: boolean;
-  isTooltipOnly: boolean;
-  action: string;
-  url: string;
-  dest: string | DestinationType | null;
-  annotationType: AnnotationType;
-  setOCGState: {
-    state: string[],
-    preserveRB: boolean;
-  };
-  resetForm: {
-    fields: string[];
-    refs: string[];
-    include: boolean;
-  };
-  actions: Map<string, string[]>;
-  attachment: {
-    content: Uint8Array<ArrayBuffer>;
-    filename: string;
-    description: string;
-  };
-  attachmentDest: string | null;
-  newWindow: boolean;
-}
-
 export interface ButtonWidgetFieldObject extends GeneralFieldObject {
   id: string;
   value: string | string[];
@@ -3891,15 +3862,6 @@ class SignatureWidgetAnnotation extends WidgetAnnotation<WidgetData> {
   }
 }
 
-export interface TextData extends MarkupData, WidgetData {
-  stateModel: string | null;
-  state: Name[] | null;
-  annotationType: AnnotationType;
-  name: string;
-  hidden: boolean;
-  titleObj: StringObj;
-}
-
 class TextAnnotation extends MarkupAnnotation<TextData> {
   constructor(params: AnnotationParameters) {
     const DEFAULT_ICON_SIZE = 22; // px
@@ -3932,31 +3894,6 @@ class TextAnnotation extends MarkupAnnotation<TextData> {
   }
 }
 
-export interface LinkData extends AnnotationData {
-  annotationType: AnnotationType;
-  setOCGState: {
-    state: string[],
-    preserveRB: boolean;
-  };
-  resetForm: {
-    fields: string[];
-    refs: string[];
-    include: boolean;
-  };
-  actions: Map<string, string[]>;
-  dest: string | DestinationType | null;
-  attachment: {
-    content: Uint8Array<ArrayBuffer>;
-    filename: string;
-    description: string;
-  };
-  attachmentDest: string | null;
-  action: string;
-  isTooltipOnly: boolean;
-  url: string;
-  newWindow: boolean;
-}
-
 class LinkAnnotation extends Annotation<LinkData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -3983,12 +3920,6 @@ class LinkAnnotation extends Annotation<LinkData> {
       annotationGlobals.attachments,
     );
   }
-}
-
-export interface PopupData extends AnnotationData {
-  open: boolean;
-  annotationType: AnnotationType;
-  parentRect: RectType;
 }
 
 export class PopupAnnotation extends Annotation<PopupData> {
@@ -4056,11 +3987,6 @@ export class PopupAnnotation extends Annotation<PopupData> {
 
     this.data.open = !!dict.getValue(DictKey.Open);
   }
-}
-
-export interface FreeTextData extends MarkupData {
-  annotationType: AnnotationType;
-
 }
 
 class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
@@ -4298,12 +4224,6 @@ class FreeTextAnnotation extends MarkupAnnotation<FreeTextData> {
   }
 }
 
-export interface LineData extends MarkupData {
-  lineEndings: string[];
-  lineCoordinates: RectType;
-  annotationType: AnnotationType;
-}
-
 class LineAnnotation extends MarkupAnnotation<LineData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -4373,10 +4293,6 @@ class LineAnnotation extends MarkupAnnotation<LineData> {
   }
 }
 
-export interface SquareData extends MarkupData {
-  annotationType: AnnotationType;
-}
-
 class SquareAnnotation extends MarkupAnnotation<SquareData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -4425,10 +4341,6 @@ class SquareAnnotation extends MarkupAnnotation<SquareData> {
       );
     }
   }
-}
-
-export interface CircleData extends MarkupData {
-  annotationType: AnnotationType;
 }
 
 class CircleAnnotation extends MarkupAnnotation<CircleData> {
@@ -4495,12 +4407,6 @@ class CircleAnnotation extends MarkupAnnotation<CircleData> {
       );
     }
   }
-}
-
-export interface PolylineData extends MarkupData {
-  annotationType: AnnotationType;
-  vertices: Float32Array<ArrayBuffer> | null;
-  lineEndings: string[];
 }
 
 class PolylineAnnotation extends MarkupAnnotation<PolylineData> {
@@ -4583,22 +4489,12 @@ class PolygonAnnotation extends PolylineAnnotation {
   }
 }
 
-export interface CaretData extends MarkupData {
-  annotationType: AnnotationType;
-}
-
 class CaretAnnotation extends MarkupAnnotation<CaretData> {
   constructor(params: AnnotationParameters) {
     super(params);
 
     this.data.annotationType = AnnotationType.CARET;
   }
-}
-
-export interface InkAnnotationData extends MarkupData {
-  annotationType: AnnotationType;
-  inkLists: Float32Array[];
-  opacity: number;
 }
 
 class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
@@ -4846,11 +4742,6 @@ class InkAnnotation extends MarkupAnnotation<InkAnnotationData> {
   }
 }
 
-export interface HighlightData extends MarkupData {
-  annotationType: AnnotationType;
-  opacity: number;
-}
-
 class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
 
   constructor(params: Partial<AnnotationParameters>) {
@@ -4984,10 +4875,6 @@ class HighlightAnnotation extends MarkupAnnotation<HighlightData> {
   }
 }
 
-export interface UnderlineData extends MarkupData {
-  annotationType: AnnotationType;
-}
-
 class UnderlineAnnotation extends MarkupAnnotation<UnderlineData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -5025,10 +4912,6 @@ class UnderlineAnnotation extends MarkupAnnotation<UnderlineData> {
       this.data.popupRef = null;
     }
   }
-}
-
-export interface SquigglyData extends MarkupData {
-  annotationType: AnnotationType;
 }
 
 class SquigglyAnnotation extends MarkupAnnotation<SquigglyData> {
@@ -5077,10 +4960,6 @@ class SquigglyAnnotation extends MarkupAnnotation<SquigglyData> {
   }
 }
 
-export interface StrikeOutData extends MarkupData {
-  annotationType: AnnotationType;
-}
-
 class StrikeOutAnnotation extends MarkupAnnotation<StrikeOutData> {
   constructor(params: AnnotationParameters) {
     super(params);
@@ -5112,10 +4991,6 @@ class StrikeOutAnnotation extends MarkupAnnotation<StrikeOutData> {
       this.data.popupRef = null;
     }
   }
-}
-
-export interface StampData extends MarkupData {
-  annotationType: AnnotationType;
 }
 
 class StampAnnotation extends MarkupAnnotation<StampData> {
@@ -5289,13 +5164,6 @@ class StampAnnotation extends MarkupAnnotation<StampData> {
 
     return ap;
   }
-}
-
-export interface FileAttachmentData extends MarkupData {
-  fillAlpha: number | null;
-  name: string;
-  file: FileSpecSerializable;
-  annotationType: AnnotationType;
 }
 
 class FileAttachmentAnnotation extends MarkupAnnotation<FileAttachmentData> {

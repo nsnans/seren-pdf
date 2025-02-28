@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { DownloadManager } from "packages/seren-viewer/src/service/download_manager";
 import { isPdfFile } from "../../display/display_utils";
 import { createValidAbsoluteUrl } from "../../shared/util";
 
@@ -36,10 +37,7 @@ function download(blobUrl: string, filename: string) {
   a.remove();
 }
 
-/**
- * @implements {IDownloadManager}
- */
-export class WebDownloadManager {
+export class WebDownloadManager implements DownloadManager {
 
   #openBlobUrls = new WeakMap();
 

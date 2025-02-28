@@ -1,9 +1,12 @@
-import { RectType } from "../common/common_types";
+import { DestinationType, RectType } from "../common/common_types";
 import { Dict } from "../document/dict";
 import { Name, Ref } from "../document/primitives";
 import { AnnotationBorderStyleType, AnnotationEditorType, AnnotationType, assert, warn } from "../utils/util";
 import { PlatformHelper } from "../utils/platform_helper";
 import { isNumberArray } from "../utils/util";
+import { MarkupData } from "packages/seren-core/src/document/annotation";
+import { FileSpecSerializable } from "./message_handler_types";
+import { AnnotationData, StringObj } from "./annotation_types";
 
 export interface AnnotationEditorSerial {
   annotationType: AnnotationEditorType;
@@ -320,5 +323,145 @@ export interface HighlightEditorSerial extends AnnotationEditorSerial {
   user: string;
   quadPoints: number[];
   outlines: number[][];
+}
+export interface ButtonWidgetData extends WidgetData {
+  multiSelect: boolean;
+  buttonValue: string | null;
+  exportValue: string | null;
+  checkBox: boolean;
+  radioButton: boolean;
+  pushButton: boolean;
+  isTooltipOnly: boolean;
+  action: string;
+  url: string;
+  dest: string | DestinationType | null;
+  annotationType: AnnotationType;
+  setOCGState: {
+    state: string[];
+    preserveRB: boolean;
+  };
+  resetForm: {
+    fields: string[];
+    refs: string[];
+    include: boolean;
+  };
+  actions: Map<string, string[]>;
+  attachment: {
+    content: Uint8Array<ArrayBuffer>;
+    filename: string;
+    description: string;
+  };
+  attachmentDest: string | null;
+  newWindow: boolean;
+}
+export interface CaretData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface CircleData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface FileAttachmentData extends MarkupData {
+  fillAlpha: number | null;
+  name: string;
+  file: FileSpecSerializable;
+  annotationType: AnnotationType;
+}
+export interface FreeTextData extends MarkupData {
+  annotationType: AnnotationType;
+
+}
+export interface HighlightData extends MarkupData {
+  annotationType: AnnotationType;
+  opacity: number;
+}
+export interface InkAnnotationData extends MarkupData {
+  annotationType: AnnotationType;
+  inkLists: Float32Array[];
+  opacity: number;
+}
+export interface LineData extends MarkupData {
+  lineEndings: string[];
+  lineCoordinates: RectType;
+  annotationType: AnnotationType;
+}
+export interface LinkData extends AnnotationData {
+  annotationType: AnnotationType;
+  setOCGState: {
+    state: string[];
+    preserveRB: boolean;
+  };
+  resetForm: {
+    fields: string[];
+    refs: string[];
+    include: boolean;
+  };
+  actions: Map<string, string[]>;
+  dest: string | DestinationType | null;
+  attachment: {
+    content: Uint8Array<ArrayBuffer>;
+    filename: string;
+    description: string;
+  };
+  attachmentDest: string | null;
+  action: string;
+  isTooltipOnly: boolean;
+  url: string;
+  newWindow: boolean;
+}
+
+export interface PolylineData extends MarkupData {
+  annotationType: AnnotationType;
+  vertices: Float32Array<ArrayBuffer> | null;
+  lineEndings: string[];
+}
+export interface PopupData extends AnnotationData {
+  open: boolean;
+  annotationType: AnnotationType;
+  parentRect: RectType;
+}
+export interface SquareData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface SquigglyData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface StampData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface StrikeOutData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface TextData extends MarkupData, WidgetData {
+  stateModel: string | null;
+  state: Name[] | null;
+  annotationType: AnnotationType;
+  name: string;
+  hidden: boolean;
+  titleObj: StringObj;
+}
+export interface UnderlineData extends MarkupData {
+  annotationType: AnnotationType;
+}
+export interface WidgetData extends AnnotationData {
+  doNotScroll: boolean;
+  maxLen: number;
+  textAlignment: number | null;
+  comb: boolean;
+  multiLine: boolean;
+  options: {
+    // 这两个值从静态代码分析的角度来看，是有可能是string[]的
+    // 但根据代码的具体值来看，发现他们应该还是string类型的。
+    exportValue: string | null;
+    displayValue: string | null;
+  }[] | null;
+  combo: boolean | string | null;
+  fieldValue: string | string[] | null;
+  annotationType: AnnotationType;
+  defaultFieldValue: string | string[] | null;
+  fieldType: string | null;
+  fieldFlags: number;
+  hidden: boolean;
+  required: boolean;
+  readOnly: boolean;
 }
 
