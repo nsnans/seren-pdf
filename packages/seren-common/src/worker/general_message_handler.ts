@@ -1,7 +1,15 @@
-import { AnnotationData, AnnotationEditorSerial, BaseException, CatalogMarkInfo, CatalogOpenAction, CatalogOptionalContentConfig, CatalogOutlineItem, CommonObjDataType, CommonObjType, DestinationType, DocumentParameter, EvaluatorTextContent, FetchBuiltInCMapMessage, FieldObject, FileSpecSerializable, GetAnnotationsMessage, GetDocMessage, GetTextContentMessage, ObjDataType, ObjType, OnProgressParameters, OpertaorListChunk, PageInfo, PasswordException, PDFDocumentInfo, PDFMetadataInfo, ReaderHeadersReadyResult, SaveDocumentMessage, StartRenderPageMessage, StreamGetOperatorListParameters, StreamSink, StructTreeSerialNode, Uint8TypedArray, ViewerPreferenceKeys } from "seren-common";
 import { AbstractMessageHandler } from "./message_handler_base";
-import { MessagePoster } from "../types/message_handler_types";
+import { CommonObjDataType, CommonObjType, FetchBuiltInCMapMessage, FileSpecSerializable, GetDocMessage, GetTextContentMessage, MessagePoster, ObjDataType, ObjType, OnProgressParameters, PageInfo, SaveDocumentMessage, StartRenderPageMessage } from "../types/message_handler_types";
 import { MessageHandlerAction } from "../types/worker_types";
+import { CatalogMarkInfo, CatalogOutlineItem, DocumentParameter, PDFDocumentInfo, PDFMetadataInfo, StructTreeSerialNode } from '../types/document_types';
+import { ReaderHeadersReadyResult, StreamSink } from "../types/stream_types";
+import { DestinationType } from "../common/common_types";
+import { Uint8TypedArray } from "../common/typed_array";
+import { AnnotationData, GetAnnotationsMessage, FieldObject, AnnotationEditorSerial } from "../types/annotation_types";
+import { EvaluatorTextContent } from "../types/evaluator_types";
+import { OpertaorListChunk, StreamGetOperatorListParameters } from "../types/operator_types";
+import { CatalogOpenAction, CatalogOptionalContentConfig, ViewerPreferenceKeys } from "../types/catalog_types";
+import { BaseException, PasswordException } from "../utils/util";
 
 /**
  * 因为MessageHandler处理了约五六十种异步请求，但是对于这些异步请求，却全都缺乏了具体的类型。

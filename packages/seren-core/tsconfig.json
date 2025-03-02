@@ -26,10 +26,10 @@
   },
   "paths": {
     "seren-common": [
-      "packages/seren-common/src"
+      "../seren-common/src"
     ],
     "seren-openjpeg": [
-      "packages/seren-openjpeg/src"
+      "../seren-openjpeg/src"
     ]
   },
   "include": [
