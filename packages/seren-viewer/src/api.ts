@@ -13,41 +13,16 @@
  * limitations under the License.
  */
 
-import { CatalogMarkInfo, CatalogOutlineItem, TransformType, TypedArray } from "seren-common";
-import { EvaluatorTextContent, ImageMask } from "seren-common";
-import { PDFDocumentInfo } from "seren-common";
-import { FontExportData, FontExportExtraData } from "seren-common";
-import { OpertaorListChunk } from "seren-common";
-import { StructTreeSerialNode } from "seren-common";
-import { WorkerMessageHandler } from "../core/worker";
-import { CMapReaderFactory, DOMCMapReaderFactory } from "./display/cmap_reader_factory";
-import { PDFFetchStream } from "./display/fetch_stream";
-import { PDFNetworkStream } from "./display/network";
-import { DOMStandardFontDataFactory, StandardFontDataFactory } from "./display/standard_fontdata_factory";
-import { PDFStreamReader } from "seren-common";
-import { PDFStream } from "seren-common";
-import { PDFStreamSource } from "seren-common";
-import { PlatformHelper } from "seren-common";
-import { CommonObjType, MessageHandler, ObjType } from "seren-common";
-import { MessagePoster } from "seren-common";
-import { MessageHandlerAction } from "seren-common";
+import { GenericMessageHandler } from "packages/seren-common/src/worker/general_message_handler";
 import {
   AbortException,
   AnnotationMode,
-  assert,
-  FeatureTest,
-  getVerbosityLevel,
-  info,
+  assert, CatalogMarkInfo, CatalogOutlineItem, CommonObjType, DocumentEvaluatorOptions, DocumentParameter, EvaluatorTextContent, FeatureTest, FontExportData, FontExportExtraData, getVerbosityLevel, ImageMask, info,
   InvalidPDFException,
-  MAX_IMAGE_SIZE_TO_CACHE,
-  MissingPDFException,
-  OPS,
-  PasswordException,
-  RenderingIntentFlag,
+  MAX_IMAGE_SIZE_TO_CACHE, MessageHandler, MessageHandlerAction, MessagePoster, MissingPDFException, ObjType, OnProgressParameters, OpertaorListChunk, OPS, PageInfo, PasswordException, PDFDocumentInfo, PDFStream, PDFStreamReader, PDFStreamSource, PlatformHelper, RenderingIntentFlag,
   setVerbosityLevel,
   shadow,
-  stringToBytes,
-  UnexpectedResponseException,
+  stringToBytes, StructTreeSerialNode, TextContent, TransformType, TypedArray, UnexpectedResponseException,
   UnknownErrorException,
   unreachable,
   VerbosityLevel,
@@ -61,6 +36,7 @@ import {
 } from "./display/annotation_storage";
 import { CanvasGraphics } from "./display/canvas";
 import { CanvasFactory } from "./display/canvas_factory";
+import { CMapReaderFactory, DOMCMapReaderFactory } from "./display/cmap_reader_factory";
 import {
   isDataScheme,
   isValidFetchUrl,
@@ -68,20 +44,16 @@ import {
   RenderingCancelledException,
   StatTimer,
 } from "./display/display_utils";
-import { DocumentEvaluatorOptions } from "seren-common";
+import { PDFFetchStream } from "./display/fetch_stream";
 import { FilterFactory } from "./display/filter_factory";
 import { FontFaceObject, FontLoader } from "./display/font_loader";
 import { Metadata } from "./display/metadata";
+import { PDFNetworkStream } from "./display/network";
+import { OptionalContentConfig } from "./display/optional_content_config";
+import { DOMStandardFontDataFactory, StandardFontDataFactory } from "./display/standard_fontdata_factory";
 import { TextLayer } from "./display/text_layer";
 import { PDFDataTransportStream } from "./display/transport_stream";
-import { WorkerOptions } from "./display/worker_options";
-import { DocumentParameter } from "seren-common";
-import { PageInfo } from "seren-common";
-import { OnProgressParameters } from "seren-common";
-import { TextContent } from "seren-common";
-import { GenericMessageHandler } from "packages/seren-worker/src/general_message_handler";
-import { defaultWorkerOption as defaultWorkerOptions } from "./worker/worker_options";
-import { OptionalContentConfig } from "./display/optional_content_config";
+import { defaultWorkerOptions } from "./worker/worker_options";
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -506,7 +478,7 @@ export function getDocument(src: DocumentInitParameters) {
 
   let worker = src.worker instanceof PDFWorker ? src.worker : null;
 
-  const verbosity = src.verbosity || null;
+  const verbosity = src.verbosity || getVerbosityLevel();
 
   // Ignore "data:"-URLs, since they can't be used to recover valid absolute
   // URLs anyway. We want to avoid sending them to the worker-thread, since
@@ -577,9 +549,12 @@ export function getDocument(src: DocumentInitParameters) {
 
   if (!worker) {
     const port = workerOptions.workerPort;
+    const workerSrc = workerOptions.workerSrc;
     // Worker was not provided -- creating and owning our own. If message port
     // is specified in global worker options, using it.
-    worker = !!port ? PDFWorker.fromPort(null, port, verbosity || undefined) : new PDFWorker(null, port, verbosity || undefined);
+    worker = !!port ? PDFWorker.fromPort(
+      null, port, workerSrc, verbosity
+    ) : new PDFWorker(null, port, workerSrc, verbosity);
     task._worker = worker;
   }
 
@@ -2041,11 +2016,13 @@ export class LoopbackPort implements MessagePoster {
  */
 export class PDFWorker {
 
-  private static FAKE_WORKER_ID = 0;
+  // private static FAKE_WORKER_ID = 0;
 
   private static IS_WORKER_DISABLED = false;
 
   private static WORKER_PORTS: WeakMap<MessagePoster, PDFWorker> | null;
+
+  protected readonly workerSrc: string;
 
   static _isSameOrigin(baseUrl: string, otherUrl: string) {
     let base;
@@ -2090,11 +2067,13 @@ export class PDFWorker {
   constructor(
     name: string | null = null,
     port: Worker | null = null,
+    workerSrc: string,
     verbosity = getVerbosityLevel()
   ) {
 
     this.name = name;
     this.verbosity = verbosity;
+    this.workerSrc = workerSrc;
 
     if (PlatformHelper.isMozCental() && port) {
       if (PDFWorker.WORKER_PORTS?.has(port)) {
@@ -2131,7 +2110,6 @@ export class PDFWorker {
 
   /**
    * The current MessageHandler-instance.
-   * @type {MessageHandler}
    */
   get messageHandler() {
     return this._messageHandler!;
@@ -2156,14 +2134,11 @@ export class PDFWorker {
     // all requirements to run parts of pdf.js in a web worker.
     // Right now, the requirement is, that an Uint8Array is still an
     // Uint8Array as it arrives on the worker.
-    if (
-      PDFWorker.IS_WORKER_DISABLED ||
-      PDFWorker.#mainThreadWorkerMessageHandler
-    ) {
+    if (PDFWorker.IS_WORKER_DISABLED) {
       this._setupFakeWorker();
       return;
     }
-    let { workerSrc } = PDFWorker;
+    let { workerSrc } = this;
 
     try {
       // Wraps workerSrc path into blob URL, if the former does not belong
@@ -2249,36 +2224,7 @@ export class PDFWorker {
   }
 
   _setupFakeWorker() {
-    if (!PDFWorker.IS_WORKER_DISABLED) {
-      warn("Setting up fake worker.");
-      PDFWorker.IS_WORKER_DISABLED = true;
-    }
-
-    PDFWorker._setupFakeWorkerGlobal
-      .then(WorkerMessageHandler => {
-        if (this.destroyed) {
-          this._readyCapability.reject(new Error("Worker was destroyed"));
-          return;
-        }
-        const port = new LoopbackPort();
-        this._port = port;
-
-        // All fake workers use the same port, making id unique.
-        const id = `fake${PDFWorker.FAKE_WORKER_ID++}`;
-
-        // If the main thread is our worker, setup the handling for the
-        // messages -- the main thread sends to it self.
-        const workerHandler = new GenericMessageHandler(id + "_worker", id, port);
-        WorkerMessageHandler.setup(workerHandler, port);
-
-        this._messageHandler = new GenericMessageHandler(id, id + "_worker", port);
-        this.#resolve();
-      })
-      .catch((reason: Error) => {
-        this._readyCapability.reject(
-          new Error(`Setting up fake worker failed: "${reason.message}".`)
-        );
-      });
+    throw new Error("Fake Worker暂时先不支持了，考虑后面更好的FakerWorker实现方式，关键是在避免耦合。")
   }
 
   /**
@@ -2299,12 +2245,10 @@ export class PDFWorker {
     }
   }
 
-  /**
-   * @param {PDFWorkerParameters} params - The worker initialization parameters.
-   */
   static fromPort(
-    name: string | null = null,
-    port: Worker | null = null,
+    name: string | null,
+    port: Worker | null,
+    workerSrc: string,
     verbosity = getVerbosityLevel()
   ) {
     if (PlatformHelper.isMozCental()) {
@@ -2323,41 +2267,7 @@ export class PDFWorker {
       }
       return cachedPort;
     }
-    return new PDFWorker(name, port, verbosity);
-  }
-
-  /**
-   * The current `workerSrc`, when it exists.
-   * @type {string}
-   */
-  static get workerSrc() {
-    if (WorkerOptions.workerSrc) {
-      return WorkerOptions.workerSrc;
-    }
-    throw new Error('No "GlobalWorkerOptions.workerSrc" specified.');
-  }
-
-  static get #mainThreadWorkerMessageHandler() {
-    try {
-      return (globalThis as any).pdfjsWorker?.WorkerMessageHandler || null;
-    } catch {
-      return null;
-    }
-  }
-
-  // Loads worker code into the main-thread.
-  static get _setupFakeWorkerGlobal() {
-    const loader = async () => {
-      if (this.#mainThreadWorkerMessageHandler) {
-        // The worker was already loaded using e.g. a `<script>` tag.
-        return this.#mainThreadWorkerMessageHandler;
-      }
-      // 根据测试和正式环境，决定使用不同的WorkerMessageHandler
-      // 此处去掉了判断，直接去正式环境的
-      return WorkerMessageHandler;
-    };
-
-    return shadow(this, "_setupFakeWorkerGlobal", loader());
+    return new PDFWorker(name, port, workerSrc, verbosity);
   }
 }
 

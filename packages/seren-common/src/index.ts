@@ -23,4 +23,5 @@ export * from './utils/platform_helper';
 export * from './utils/scripting_utils'
 export * from './utils/util'
 export * from './viewer/theme'
+export * from './worker/general_message_handler'
 export * from './worker/message_handler'

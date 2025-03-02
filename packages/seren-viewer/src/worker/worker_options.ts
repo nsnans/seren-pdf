@@ -15,7 +15,7 @@
 
 import { WEB_WORKER_URL } from "./worker_loader";
 
-export function defaultWorkerOption() {
+export function defaultWorkerOptions() {
   return {
     workerSrc: WEB_WORKER_URL
   }
