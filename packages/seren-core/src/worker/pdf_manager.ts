@@ -52,7 +52,7 @@ export interface PDFManagerArgs {
   rangeChunkSize: number;
 }
 
-interface PDFManager {
+export interface PDFManager {
 
   docId: string;
 
@@ -184,7 +184,7 @@ abstract class BasePDFManager implements PDFManager {
 
 }
 
-class LocalPDFManager extends BasePDFManager {
+export class LocalPDFManager extends BasePDFManager {
 
   public pdfDocument: PDFDocument;
 
@@ -222,7 +222,7 @@ class LocalPDFManager extends BasePDFManager {
   }
 }
 
-class NetworkPDFManager extends BasePDFManager {
+export class NetworkPDFManager extends BasePDFManager {
 
   public pdfDocument: PDFDocument;
 
@@ -277,7 +277,3 @@ class NetworkPDFManager extends BasePDFManager {
     return this.pdfDocument;
   }
 }
-
-export { LocalPDFManager, NetworkPDFManager };
-export type { PDFManager };
-

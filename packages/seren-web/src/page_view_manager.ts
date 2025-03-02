@@ -1907,17 +1907,8 @@ export class WebPageViewManager {
   }
 
   /**
-   * @typedef {Object} ChangeScaleOptions
-   * @property {number} [drawingDelay]
-   * @property {number} [scaleFactor]
-   * @property {number} [steps]
-   * @property {Array} [origin] x and y coordinates of the scale
-   *                            transformation origin.
-   */
-
-  /**
    * Changes the current zoom level by the specified amount.
-   * @param {ChangeScaleOptions} [options]
+   * @param origin x and y coordinates of the scale transformation origin
    */
   updateScale(
     drawingDelay: number | null,

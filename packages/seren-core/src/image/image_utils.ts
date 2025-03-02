@@ -80,7 +80,7 @@ export interface GlobalImageCacheData extends ImageCacheData {
   byteSize: number;
 }
 
-class LocalImageCache extends NameLocalCache<ImageCacheData> {
+export class LocalImageCache extends NameLocalCache<ImageCacheData> {
 
   set(name: string, ref: string | null, data: ImageCacheData) {
     if (typeof name !== "string") {
@@ -124,7 +124,7 @@ export class LocalConditionCache extends NameLocalCache<Boolean> {
   }
 }
 
-class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
+export class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
 
   set(name: string | null, ref: Ref | null, data: ColorSpace) {
     if (typeof name !== "string" && !ref) {
@@ -151,7 +151,7 @@ class LocalColorSpaceCache extends NameLocalCache<ColorSpace> {
   }
 }
 
-class LocalFunctionCache<Function> extends BaseLocalCache<Function> {
+export class LocalFunctionCache<Function> extends BaseLocalCache<Function> {
 
   set(_name: string | null, ref: Ref | string, data: Function) {
     if (!ref) {
@@ -164,7 +164,7 @@ class LocalFunctionCache<Function> extends BaseLocalCache<Function> {
   }
 }
 
-class LocalGStateCache extends NameLocalCache<[DictKey, any][] | boolean> {
+export class LocalGStateCache extends NameLocalCache<[DictKey, any][] | boolean> {
   set(name: string, ref: string, data: [DictKey, any][] | boolean) {
     if (typeof name !== "string") {
       throw new Error('LocalGStateCache.set - expected "name" argument.');
@@ -203,7 +203,7 @@ export interface LocalTilingPatternData {
   dict: Dict
 }
 
-class LocalTilingPatternCache extends BaseLocalCache<LocalTilingPatternData> {
+export class LocalTilingPatternCache extends BaseLocalCache<LocalTilingPatternData> {
 
   set(_name: string | null, ref: Ref | string, data: LocalTilingPatternData) {
     if (!ref) {
@@ -218,7 +218,7 @@ class LocalTilingPatternCache extends BaseLocalCache<LocalTilingPatternData> {
 
 
 
-class RegionalImageCache extends BaseLocalCache<ImageCacheData> {
+export class RegionalImageCache extends BaseLocalCache<ImageCacheData> {
 
   set(_name: string | null, ref: Ref | string, data: ImageCacheData) {
     if (!ref) {
@@ -231,7 +231,7 @@ class RegionalImageCache extends BaseLocalCache<ImageCacheData> {
   }
 }
 
-class GlobalImageCache {
+export class GlobalImageCache {
 
   static NUM_PAGES_THRESHOLD = 2;
 
@@ -344,13 +344,3 @@ class GlobalImageCache {
     this._imageCache.clear();
   }
 }
-
-export {
-  GlobalImageCache,
-  LocalColorSpaceCache,
-  LocalFunctionCache,
-  LocalGStateCache,
-  LocalImageCache,
-  LocalTilingPatternCache,
-  RegionalImageCache
-};

@@ -32,6 +32,7 @@ import {
   Uint8TypedArray,
   warn,
   ToUnicodeMap,
+  Glyph,
 } from "seren-common";
 import { IdentityCMap } from "../../cmap/cmap";
 import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
@@ -212,14 +213,14 @@ function amendFallbackToUnicode(properties: EvaluatorProperties) {
   }
 }
 
-export class Glyph {
+export class GlyphImpl implements Glyph {
 
   protected originalCharCode: number;
 
   public fontChar: string;
 
   public unicode: string;
-  
+
   public accent: {
     fontChar: string;
     offset: {
@@ -232,7 +233,7 @@ export class Glyph {
 
   public vmetric: number[] | null;
 
-  public operatorListId;
+  public operatorListId: number | null;
 
   public isSpace: boolean;
 
@@ -1116,7 +1117,7 @@ export class FontExportExtraDataImpl extends FontExportDataImpl implements FontE
  * 'Font' is the class the outside world should use, it encapsulate all the font
  * decoding logics whatever type it is (assuming the font type is supported).
  */
-class Font {
+export class Font {
 
   public cMap: CMap;
 
@@ -1136,9 +1137,9 @@ class Font {
 
   public cssFontInfo: CssFontInfo | null;
 
-  protected _charsCache: Record<string, Glyph[]>;
+  protected _charsCache: Record<string, GlyphImpl[]>;
 
-  protected _glyphCache: Record<number, Glyph>;
+  protected _glyphCache: Record<number, GlyphImpl>;
 
   public isSerifFont: boolean;
 
@@ -3706,7 +3707,7 @@ class Font {
       }
     }
 
-    glyph = new Glyph(
+    glyph = new GlyphImpl(
       charcode,
       fontChar,
       unicode,
@@ -3848,7 +3849,7 @@ class Font {
   }
 }
 
-class ErrorFont {
+export class ErrorFont {
 
   // 单纯做占位用
   readonly data: null = null;
@@ -3889,5 +3890,3 @@ class ErrorFont {
     return { error: this.error };
   }
 }
-
-export { ErrorFont, Font };

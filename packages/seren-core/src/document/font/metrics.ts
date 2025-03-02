@@ -18,7 +18,7 @@ import { getLookupTableFactory } from "../../utils/core_utils";
 // The Metrics object contains glyph widths (in glyph space units).
 // As per PDF spec, for most fonts (Type 3 being an exception) a glyph
 // space unit corresponds to 1/1000th of text space unit.
-const getMetrics = getLookupTableFactory(() => {
+export const getMetrics = getLookupTableFactory(() => {
 
   return {
     Courier: 600 as const,
@@ -2990,7 +2990,7 @@ const getMetrics = getLookupTableFactory(() => {
   }
 });
 
-const getFontBasicMetrics = getLookupTableFactory(() => {
+export const getFontBasicMetrics = getLookupTableFactory(() => {
   return {
     Courier: {
       ascent: 629 as const,
@@ -3078,5 +3078,3 @@ const getFontBasicMetrics = getLookupTableFactory(() => {
     }
   };
 });
-
-export { getFontBasicMetrics, getMetrics };

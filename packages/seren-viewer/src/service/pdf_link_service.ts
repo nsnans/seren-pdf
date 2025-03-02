@@ -1,6 +1,5 @@
 import { PDFDocumentProxy } from "seren-viewer";
 
-
 export interface PDFLinkService {
 
   isInPresentationMode: boolean;

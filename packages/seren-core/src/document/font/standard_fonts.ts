@@ -20,7 +20,7 @@ import { normalizeFontName } from "./fonts_utils";
  * Hold a map of decoded fonts and of the standard fourteen Type1
  * fonts and their acronyms.
  */
-const getStdFontMap = getLookupTableFactory(() => {
+export const getStdFontMap = getLookupTableFactory(() => {
   // The standard 14 fonts:
   return {
     "Times-Roman": "Times-Roman" as const,
@@ -100,7 +100,7 @@ const getStdFontMap = getLookupTableFactory(() => {
 });
 
 // Contains mapping for standard fonts and xfa fonts.
-const getFontNameToFileMap = getLookupTableFactory(() => {
+export const getFontNameToFileMap = getLookupTableFactory(() => {
   return {
     "Courier": "FoxitFixed.pfb" as const,
     "Courier-Bold": "FoxitFixedBold.pfb" as const,
@@ -127,7 +127,7 @@ const getFontNameToFileMap = getLookupTableFactory(() => {
  * Holds the map of the non-standard fonts that might be included as
  * a standard fonts without glyph data.
  */
-const getNonStdFontMap = getLookupTableFactory(() => {
+export const getNonStdFontMap = getLookupTableFactory(() => {
   return {
     "Calibri": "Helvetica" as const,
     "Calibri-Bold": "Helvetica-Bold" as const,
@@ -178,7 +178,7 @@ const getNonStdFontMap = getLookupTableFactory(() => {
   }
 });
 
-const getSerifFonts = getLookupTableFactory(() => {
+export const getSerifFonts = getLookupTableFactory(() => {
   return {
     "Adobe Jenson": true as const,
     "Adobe Text": true as const,
@@ -317,7 +317,7 @@ const getSerifFonts = getLookupTableFactory(() => {
   }
 });
 
-const getSymbolsFonts = getLookupTableFactory(() => {
+export const getSymbolsFonts = getLookupTableFactory(() => {
   return {
     "Dingbats": true as const,
     "Symbol": true as const,
@@ -331,7 +331,7 @@ const getSymbolsFonts = getLookupTableFactory(() => {
 // Glyph map for well-known standard fonts. Sometimes Ghostscript uses CID
 // fonts, but does not embed the CID to GID mapping. The mapping is incomplete
 // for all glyphs, but common for some set of the standard fonts.
-const getGlyphMapForStandardFonts = getLookupTableFactory(() => {
+export const getGlyphMapForStandardFonts = getLookupTableFactory(() => {
   return {
     2: 10 as const,
     3: 32 as const,
@@ -771,7 +771,7 @@ const getGlyphMapForStandardFonts = getLookupTableFactory(() => {
 // The glyph map for ArialBlack differs slightly from the glyph map used for
 // other well-known standard fonts. Hence we use this (incomplete) CID to GID
 // mapping to adjust the glyph map for non-embedded ArialBlack fonts.
-const getSupplementalGlyphMapForArialBlack = getLookupTableFactory(() => {
+export const getSupplementalGlyphMapForArialBlack = getLookupTableFactory(() => {
   return {
     227: 322 as const,
     264: 261 as const,
@@ -782,7 +782,7 @@ const getSupplementalGlyphMapForArialBlack = getLookupTableFactory(() => {
 // The glyph map for Calibri (a Windows font) differs from the glyph map used
 // in the standard fonts. Hence we use this (incomplete) CID to GID mapping to
 // adjust the glyph map for non-embedded Calibri fonts.
-const getSupplementalGlyphMapForCalibri = getLookupTableFactory(() => {
+export const getSupplementalGlyphMapForCalibri = getLookupTableFactory(() => {
   return {
     1: 32 as const,
     4: 65 as const,
@@ -903,13 +903,13 @@ const getSupplementalGlyphMapForCalibri = getLookupTableFactory(() => {
   }
 });
 
-function getStandardFontName(name: string) {
+export function getStandardFontName(name: string) {
   const fontName = normalizeFontName(name);
   const stdFontMap = getStdFontMap() as Record<string, string>;
   return stdFontMap[fontName];
 }
 
-function isKnownFontName(name: string) {
+export function isKnownFontName(name: string) {
   const fontName = normalizeFontName(name);
   // 这里不是反复创建对象了吗？ 后面可能考虑要优化
   return !!(
@@ -919,16 +919,3 @@ function isKnownFontName(name: string) {
     (<Record<string, boolean>>getSymbolsFonts())[fontName]
   );
 }
-
-export {
-  getFontNameToFileMap,
-  getGlyphMapForStandardFonts,
-  getNonStdFontMap,
-  getSerifFonts,
-  getStandardFontName,
-  getStdFontMap,
-  getSupplementalGlyphMapForArialBlack,
-  getSupplementalGlyphMapForCalibri,
-  getSymbolsFonts,
-  isKnownFontName,
-};

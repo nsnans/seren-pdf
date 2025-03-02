@@ -22,14 +22,17 @@ const NORMAL = {
   style: "normal",
   weight: "normal",
 };
+
 const BOLD = {
   style: "normal",
   weight: "bold",
 };
+
 const ITALIC = {
   style: "italic",
   weight: "normal",
 };
+
 const BOLDITALIC = {
   style: "italic",
   weight: "bold",
@@ -465,16 +468,16 @@ function generateFont(
  *   }
  * or use the FontFace API.
  *
- * @param {Map} systemFontCache The cache of local fonts.
- * @param {Object} idFactory The ids factory.
- * @param {String} localFontPath Path to the fonts directory.
- * @param {String} baseFontName The font name to be substituted.
- * @param {String|undefined} standardFontName The standard font name to use
+ * @param systemFontCache The cache of local fonts.
+ * @param idFactory The ids factory.
+ * @param localFontPath Path to the fonts directory.
+ * @param baseFontName The font name to be substituted.
+ * @param standardFontName The standard font name to use
  *   if the base font is not available.
- * @param {String} type The font type.
+ * @param type The font type.
  * @returns an Object with the CSS, the loaded name, the src and the style.
  */
-function getFontSubstitution(
+export function getFontSubstitution(
   systemFontCache: Map<string, FontSubstitutionInfo | null>,
   idFactory: GlobalIdFactory,
   localFontPath: string,
@@ -575,5 +578,3 @@ function getFontSubstitution(
 
   return substitutionInfo;
 }
-
-export { getFontSubstitution };

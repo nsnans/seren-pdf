@@ -66,6 +66,7 @@ export interface StructTreeSerialLeaf {
   type: string;
   id: string;
 }
+
 export class PDFDocumentInfo {
   PDFFormatVersion: string | null = null;
   Language: string | null = null;
@@ -90,6 +91,7 @@ export interface PDFMetadataInfo {
   parsedData: Map<string, string | string[]>;
   rawData: string;
 }
+
 /**
  * Properties correspond to Table 321 of the PDF 32000-1:2008 spec.
  */

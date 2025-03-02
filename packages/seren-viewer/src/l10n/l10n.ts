@@ -26,7 +26,6 @@ interface MessgaeFormatter {
 /**
  * NOTE: The L10n-implementations should use lowercase language-codes
  *       internally.
- * @implements {IL10n}
  */
 export class L10n {
   #dir;
@@ -38,26 +37,23 @@ export class L10n {
   #l10n: DOMLocalization | null;
 
   constructor(lang: string | null, isRTL = false, l10n = null) {
-    this.#lang = L10n.#fixupLangCode(lang);
+    this.#lang = L10n.fixupLangCode(lang);
     this.#l10n = l10n;
-    this.#dir = (isRTL ?? L10n.#isRTL(this.#lang)) ? "rtl" : "ltr";
+    this.#dir = (isRTL ?? L10n.isRTL(this.#lang)) ? "rtl" : "ltr";
   }
 
   _setL10n(l10n: DOMLocalization) {
     this.#l10n = l10n;
   }
 
-  /** @inheritdoc */
   getLanguage() {
     return this.#lang;
   }
 
-  /** @inheritdoc */
   getDirection() {
     return this.#dir;
   }
 
-  /** @inheritdoc */
   async get(
     ids: string | string[],
     args: { generatedAltText?: string | null } | null = null,
@@ -70,16 +66,10 @@ export class L10n {
       return messages.map(message => message.value);
     }
 
-    const messages = await l10n!.formatMessages([
-      {
-        id: ids,
-        args,
-      },
-    ]);
+    const messages = await l10n!.formatMessages([{ id: ids, args }]);
     return messages[0]?.value || fallback;
   }
 
-  /** @inheritdoc */
   async translate(element: HTMLDivElement) {
     (this.#elements ||= new Set()).add(element);
     try {
@@ -90,7 +80,6 @@ export class L10n {
     }
   }
 
-  /** @inheritdoc */
   async translateOnce(element: Element) {
     try {
       await this.#l10n!.translateElements([element]);
@@ -99,7 +88,6 @@ export class L10n {
     }
   }
 
-  /** @inheritdoc */
   async destroy() {
     if (this.#elements) {
       for (const element of this.#elements) {
@@ -111,17 +99,15 @@ export class L10n {
     this.#l10n!.pauseObserving();
   }
 
-  /** @inheritdoc */
   pause() {
     this.#l10n!.pauseObserving();
   }
 
-  /** @inheritdoc */
   resume() {
     this.#l10n!.resumeObserving();
   }
 
-  static #fixupLangCode(langCode: string | null) {
+  protected static fixupLangCode(langCode: string | null) {
     // Use only lowercase language-codes internally, and fallback to English.
     langCode = langCode?.toLowerCase() || "en-us";
 
@@ -145,7 +131,7 @@ export class L10n {
     return PARTIAL_LANG_CODES[<keyof typeof PARTIAL_LANG_CODES>langCode] || langCode;
   }
 
-  static #isRTL(lang: string) {
+  protected static isRTL(lang: string) {
     const shortCode = lang.split("-", 1)[0];
     return ["ar", "he", "fa", "ps", "ur"].includes(shortCode);
   }

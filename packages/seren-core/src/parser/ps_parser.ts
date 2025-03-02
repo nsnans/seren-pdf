@@ -17,7 +17,7 @@ import { FormatError, shadow, EOF } from "seren-common";
 import { isWhiteSpace } from "../utils/core_utils";
 import { BaseStream } from "../stream/base_stream";
 
-class PostScriptParser {
+export class PostScriptParser {
 
   protected lexer: PostScriptLexer;
 
@@ -176,7 +176,7 @@ class PostScriptToken {
   }
 }
 
-class PostScriptLexer {
+export class PostScriptLexer {
 
   protected stream;
 
@@ -287,5 +287,3 @@ class PostScriptLexer {
     return value;
   }
 }
-
-export { PostScriptLexer, PostScriptParser };

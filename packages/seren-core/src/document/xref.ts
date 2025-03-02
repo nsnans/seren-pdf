@@ -21,9 +21,28 @@ import {
   XRefParseException,
 } from "../utils/core_utils";
 import { CipherTransformFactory } from "../crypto/crypto";
-import { Lexer, ParsedType, Parser } from "../parser/parser";
+import { Lexer, Parser } from "../parser/parser";
+import { DataStream, FetchResultType, ParsedEntry, ParsedType } from "seren-common";
 import { PDFManager } from "../worker/pdf_manager";
-import { CIRCULAR_REF, Cmd, DictKey, isCmd, Ref, RefSet, Dict, warn, XRef, PlatformHelper, assert, FormatError, InvalidPDFException, Uint8TypedArray, bytesToString, info } from "seren-common";
+import {
+  CIRCULAR_REF,
+  Cmd,
+  DictKey,
+  isCmd,
+  Ref,
+  RefSet,
+  Dict,
+  warn,
+  XRef,
+  PlatformHelper,
+  assert,
+  FormatError,
+  InvalidPDFException,
+  Uint8TypedArray,
+  bytesToString,
+  info,
+  Name
+} from "seren-common";
 import { Stream } from "../stream/stream";
 import { DictImpl } from "./dict_impl";
 
@@ -48,13 +67,6 @@ interface TableState {
   firstEntryNum: number | null;
 };
 
-interface ParsedEntry {
-  offset: number;
-  gen: number;
-  free: boolean;
-  uncompressed: boolean;
-}
-
 export class XRefImpl implements XRef {
 
   protected _firstXRefStmPos: number | null = null;
@@ -65,7 +77,7 @@ export class XRefImpl implements XRef {
 
   protected _xrefStms = new Set<number>();
 
-  protected _cacheMap = new Map<number, unknown>();
+  protected _cacheMap = new Map<number, string | number | boolean | Dict | Ref | Name | Cmd | Symbol | ParsedType[] | DataStream | null>();
 
   protected _pendingRefs = new RefSet();
 
@@ -73,7 +85,7 @@ export class XRefImpl implements XRef {
 
   protected _newTemporaryRefNum: number | null;
 
-  protected _persistentRefsCache: Map<number, any> | null;
+  protected _persistentRefsCache: Map<number, string | number | boolean | Ref | Name | Dict | Cmd | Symbol | ParsedType[] | DataStream | null> | null;
 
   protected entries: ParsedEntry[];
 
@@ -137,7 +149,7 @@ export class XRefImpl implements XRef {
         ) {
           // We *temporarily* clear the cache, see `resetNewTemporaryRef` below,
           // to avoid any conflict with the refs created during saving.
-          this._persistentRefsCache.set(i, this._cacheMap.get(i));
+          this._persistentRefsCache.set(i, this._cacheMap.get(i)!);
           this._cacheMap.delete(i);
         }
       }
@@ -1035,14 +1047,14 @@ export class XRefImpl implements XRef {
     return xrefEntry;
   }
 
-  async fetchIfRefAsync(obj: Ref | object, suppressEncryption = false) {
+  async fetchIfRefAsync<T>(obj: Ref | T, suppressEncryption = false) {
     if (obj instanceof Ref) {
       return this.fetchAsync(obj, suppressEncryption);
     }
     return obj;
   }
 
-  async fetchAsync(ref: Ref, suppressEncryption?: boolean): Promise<unknown> {
+  async fetchAsync(ref: Ref, suppressEncryption?: boolean): Promise<FetchResultType> {
     try {
       return this.fetch(ref, suppressEncryption);
     } catch (ex) {

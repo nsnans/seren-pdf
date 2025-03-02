@@ -54,16 +54,22 @@ function decodeAndClamp(value: number, addend: number, coefficient: number, max:
 
 /**
  * Resizes an image mask with 1 component.
- * @param {TypedArray} src - The source buffer.
- * @param {number} bpc - Number of bits per component.
- * @param {number} w1 - Original width.
- * @param {number} h1 - Original height.
- * @param {number} w2 - New width.
- * @param {number} h2 - New height.
- * @returns {TypedArray} The resized image mask buffer.
+ * @param src - The source buffer.
+ * @param bpc - Number of bits per component.
+ * @param w1 - Original width.
+ * @param h1 - Original height.
+ * @param w2 - New width.
+ * @param h2 - New height.
+ * @returns The resized image mask buffer.
  */
-function resizeImageMask(src: TypedArray, bpc: number, w1: number, h1: number
-  , w2: number, h2: number): Uint8Array | Uint16Array | Uint32Array {
+function resizeImageMask(
+  src: TypedArray,
+  bpc: number,
+  w1: number,
+  h1: number,
+  w2: number,
+  h2: number
+): Uint8Array<ArrayBuffer> | Uint16Array<ArrayBuffer> | Uint32Array<ArrayBuffer> {
 
   const length = w2 * h2;
   let dest;

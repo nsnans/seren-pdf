@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray } from "seren-common";
+import { Uint8TypedArray, Glyph } from "seren-common";
 import { ImageMask } from "seren-common";
-import { Glyph } from "../core/fonts";
 import {
   GroupOptions,
   OptionalContent,

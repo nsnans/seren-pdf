@@ -63,9 +63,6 @@ class OptionalContentGroup {
     this.rbGroups = rbGroups;
   }
 
-  /**
-   * @type {boolean}
-   */
   get visible() {
     if (this.#userSet) {
       return this.#visible;
@@ -95,7 +92,7 @@ class OptionalContentGroup {
   }
 }
 
-class OptionalContentConfig {
+export class OptionalContentConfig {
 
   protected _cachedGetHash: string | null = null;
 
@@ -348,5 +345,3 @@ class OptionalContentConfig {
     return (this._cachedGetHash = hash.hexdigest());
   }
 }
-
-export { OptionalContentConfig };

@@ -14,7 +14,7 @@
  */
 
 // prettier-ignore
-const ExpertEncoding = [
+export const ExpertEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "exclamsmall", "Hungarumlautsmall", "", "dollaroldstyle",
@@ -101,7 +101,7 @@ const MacExpertEncoding = [
   "periodsuperior", "Dotaccentsmall", "Ringsmall", "", "", "", ""];
 
 // prettier-ignore
-const MacRomanEncoding = [
+export const MacRomanEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "exclam", "quotedbl", "numbersign", "dollar", "percent",
@@ -138,7 +138,7 @@ const MacRomanEncoding = [
   "ogonek", "caron"];
 
 // prettier-ignore
-const StandardEncoding = [
+export const StandardEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "exclam", "quotedbl", "numbersign", "dollar", "percent",
@@ -167,7 +167,7 @@ const StandardEncoding = [
   "", "", ""];
 
 // prettier-ignore
-const WinAnsiEncoding = [
+export const WinAnsiEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "exclam", "quotedbl", "numbersign", "dollar", "percent",
@@ -204,7 +204,7 @@ const WinAnsiEncoding = [
   "ydieresis"];
 
 // prettier-ignore
-const SymbolSetEncoding = [
+export const SymbolSetEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "exclam", "universal", "numbersign", "existential", "percent",
@@ -243,7 +243,7 @@ const SymbolSetEncoding = [
   "bracerightbt", ""];
 
 // prettier-ignore
-const ZapfDingbatsEncoding = [
+export const ZapfDingbatsEncoding = [
   "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
   "space", "a1", "a2", "a202", "a3", "a4", "a5", "a119", "a118", "a117",
@@ -269,7 +269,7 @@ const ZapfDingbatsEncoding = [
   "a199", "a181", "a200", "a182", "", "a201", "a183", "a184", "a197", "a185",
   "a194", "a198", "a186", "a195", "a187", "a188", "a189", "a190", "a191", ""];
 
-function getEncoding(encodingName: string | null) {
+export function getEncoding(encodingName: string | null) {
   switch (encodingName) {
     case "WinAnsiEncoding":
       return WinAnsiEncoding;
@@ -289,13 +289,3 @@ function getEncoding(encodingName: string | null) {
       return null;
   }
 }
-
-export {
-  ExpertEncoding,
-  getEncoding,
-  MacRomanEncoding,
-  StandardEncoding,
-  SymbolSetEncoding,
-  WinAnsiEncoding,
-  ZapfDingbatsEncoding,
-};

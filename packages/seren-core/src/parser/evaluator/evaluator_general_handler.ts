@@ -16,7 +16,7 @@ import {
   DocumentEvaluatorOptions
 } from "seren-common";
 import { DictImpl } from "../../document/dict_impl";
-import { Font, Glyph } from "../../document/font/fonts";
+import { Font, GlyphImpl } from "../../document/font/fonts";
 import { isPDFFunction } from "../../document/function";
 import { LocalColorSpaceCache, LocalGStateCache } from "../../image/image_utils";
 import { BaseStream } from "../../stream/base_stream";
@@ -426,7 +426,7 @@ export class EvaluatorGeneralHandler extends EvaluatorBaseHandler {
   }
 
   static buildFontPaths(
-    font: Font, glyphs: Glyph[], handler: MessageHandler, evaluatorOptions: DocumentEvaluatorOptions
+    font: Font, glyphs: GlyphImpl[], handler: MessageHandler, evaluatorOptions: DocumentEvaluatorOptions
   ) {
     function buildPath(fontChar: string) {
       const glyphName = `${font.loadedName}_path_${fontChar}`;

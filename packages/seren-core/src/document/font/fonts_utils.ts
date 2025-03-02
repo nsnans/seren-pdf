@@ -27,9 +27,9 @@ import { EvaluatorProperties } from "../../parser/evaluator/evaluator";
 // Linux (freetype) requires that when a seac style endchar is used
 // that the charset must be a predefined one, however we build a
 // custom one. Windows just refuses to draw glyphs with seac operators.
-const SEAC_ANALYSIS_ENABLED = true;
+export const SEAC_ANALYSIS_ENABLED = true;
 
-const FontFlags = {
+export const FontFlags = {
   FixedPitch: 1,
   Serif: 2,
   Symbolic: 4,
@@ -42,7 +42,7 @@ const FontFlags = {
 };
 
 // prettier-ignore
-const MacStandardGlyphOrdering = [
+export const MacStandardGlyphOrdering = [
   ".notdef", ".null", "nonmarkingreturn", "space", "exclam", "quotedbl",
   "numbersign", "dollar", "percent", "ampersand", "quotesingle", "parenleft",
   "parenright", "asterisk", "plus", "comma", "hyphen", "period", "slash",
@@ -82,7 +82,7 @@ const MacStandardGlyphOrdering = [
 
 // Some bad PDF generators, e.g. Scribus PDF, include glyph names
 // in a 'uniXXXX' format -- attempting to recover proper ones.
-function recoverGlyphName(name: string, glyphsUnicodeMap: Record<string, number>) {
+export function recoverGlyphName(name: string, glyphsUnicodeMap: Record<string, number>) {
   if (glyphsUnicodeMap[name] !== undefined) {
     return name;
   }
@@ -102,14 +102,14 @@ function recoverGlyphName(name: string, glyphsUnicodeMap: Record<string, number>
 /**
  * Shared logic for building a char code to glyph id mapping for Type1 and
  * simple CFF fonts. See section 9.6.6.2 of the spec.
- * @param {Object} properties Font properties object.
- * @param {Object} builtInEncoding The encoding contained within the actual font
+ * @param properties Font properties object.
+ * @param builtInEncoding The encoding contained within the actual font
  *   data.
- * @param {Array} glyphNames Array of glyph names where the index is the
+ * @param glyphNames Array of glyph names where the index is the
  *   glyph ID.
- * @returns {Object} A char code to glyph ID map.
+ * @returns A char code to glyph ID map.
  */
-function type1FontGlyphMapping(properties: EvaluatorProperties
+export function type1FontGlyphMapping(properties: EvaluatorProperties
   , builtInEncoding: (string | number)[]
   , glyphNames: (string | number)[]): Record<number, number> {
   const charCodeToGlyphId: Record<number, number> = Object.create(null);
@@ -168,11 +168,11 @@ function type1FontGlyphMapping(properties: EvaluatorProperties
   return charCodeToGlyphId;
 }
 
-function normalizeFontName(name: string) {
+export function normalizeFontName(name: string) {
   return name.replaceAll(/[,_]/g, "-").replaceAll(/\s/g, "");
 }
 
-const getVerticalPresentationForm = getLookupTableFactory(() => {
+export const getVerticalPresentationForm = getLookupTableFactory(() => {
   // This table has been found at
   // https://searchfox.org/mozilla-central/rev/cbdfa503a87597b20719aae5f6a1efccd6cb3b7b/gfx/thebes/gfxHarfBuzzShaper.cpp#251-294
   return {
@@ -211,13 +211,3 @@ const getVerticalPresentationForm = getLookupTableFactory(() => {
     0xff5d: 0xfe38 as const, // FULLWIDTH RIGHT CURLY BRACKET
   }
 });
-
-export {
-  FontFlags,
-  getVerticalPresentationForm,
-  MacStandardGlyphOrdering,
-  normalizeFontName,
-  recoverGlyphName,
-  SEAC_ANALYSIS_ENABLED,
-  type1FontGlyphMapping,
-};

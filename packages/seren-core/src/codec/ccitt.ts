@@ -469,7 +469,7 @@ const blackTable3 = [
  * @param {CCITTFaxDecoderSource} source - The data which should be decoded.
  * @param {Object} [options] - Decoding options.
  */
-class CCITTFaxDecoder {
+export class CCITTFaxDecoder {
 
   protected source: CCITTFaxDecoderSource;
 
@@ -1095,5 +1095,3 @@ class CCITTFaxDecoder {
     }
   }
 }
-
-export { CCITTFaxDecoder };

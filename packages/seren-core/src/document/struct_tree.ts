@@ -16,7 +16,19 @@
 import { lookupNormalRect, stringToAsciiOrUTF16BE } from "../utils/core_utils";
 import { NumberTree } from "./name_number_tree";
 import { PDFManager } from "../worker/pdf_manager";
-import { Dict, DictKey, isName, Name, Ref, RefSetCache, AnnotationPrefix, stringToPDFString, warn, XRef, AnnotationEditorSerial } from "seren-common";
+import {
+  Dict,
+  DictKey,
+  isName,
+  Name,
+  Ref,
+  RefSetCache,
+  AnnotationPrefix,
+  stringToPDFString,
+  warn,
+  XRef,
+  AnnotationEditorSerial
+} from "seren-common";
 import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
@@ -360,7 +372,7 @@ export class StructTreeRoot {
             const tagDict = (<Dict>xref.fetch(objRef)).clone();
             StructTreeRoot.#writeProperties(tagDict, accessibilityData);
             buffer.length = 0;
-            await writeObject(objRef, tagDict, buffer, xref.encrypt);
+            await writeObject(objRef, tagDict, buffer, (<XRefImpl>xref).encrypt);
             newRefs.push({ ref: objRef, data: buffer.join("") });
             continue;
           }

@@ -100,7 +100,7 @@ import {
   StampEditorSerial
 } from "seren-common";
 import { FileSpec } from "./file_spec";
-import { ErrorFont, Font, Glyph } from "./font/fonts";
+import { ErrorFont, Font, GlyphImpl } from "./font/fonts";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
 import {
@@ -121,9 +121,9 @@ import {
   StrikeOutData,
   TextData,
   UnderlineData,
-  WidgetData
+  WidgetData,
+  MarkupData
 } from "seren-common";
-import { MarkupData } from "packages/seren-common/src/types/annotation_types";
 
 export interface AnnotationParameters {
   xref: XRefImpl;
@@ -1841,7 +1841,7 @@ export class MarkupAnnotation<T extends MarkupData> extends Annotation<T> {
 
 interface CacheLine {
   line: string;
-  glyphs: Glyph[];
+  glyphs: GlyphImpl[];
   positions: [number, number][];
 }
 

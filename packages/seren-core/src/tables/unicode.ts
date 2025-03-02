@@ -47,7 +47,7 @@ const getSpecialPUASymbols = getLookupTableFactory(() => {
   }
 });
 
-function mapSpecialUnicodeValues(code: number): number {
+export function mapSpecialUnicodeValues(code: number): number {
   if (code >= 0xfff0 && code <= 0xffff) {
     // Specials unicode block.
     return 0;
@@ -59,7 +59,7 @@ function mapSpecialUnicodeValues(code: number): number {
   return code;
 }
 
-function getUnicodeForGlyph(name: string, glyphsUnicodeMap: Record<string, number>): number {
+export function getUnicodeForGlyph(name: string, glyphsUnicodeMap: Record<string, number>): number {
   let unicode = glyphsUnicodeMap[name];
   if (unicode !== undefined) {
     return unicode;
@@ -222,7 +222,7 @@ const UnicodeRanges = [
   [0x1f030, 0x1f09f, 0x1f000, 0x1f02f], // 122 - Domino Tiles - Mahjong Tiles
 ];
 
-function getUnicodeRangeFor(value: number, lastPosition = -1) {
+export function getUnicodeRangeFor(value: number, lastPosition = -1) {
   // TODO: create a map range => position, sort the ranges and cache it.
   // Then we can make a binary search for finding a range for a given unicode.
   if (lastPosition !== -1) {
@@ -251,7 +251,7 @@ const CategoryCache = new Map<string, {
   isInvisibleFormatMark: boolean,
 }>();
 
-function getCharUnicodeCategory(char: string) {
+export function getCharUnicodeCategory(char: string) {
   const cachedCategory = CategoryCache.get(char);
   if (cachedCategory) {
     return cachedCategory;
@@ -266,14 +266,6 @@ function getCharUnicodeCategory(char: string) {
   return category;
 }
 
-function clearUnicodeCaches() {
+export function clearUnicodeCaches() {
   CategoryCache.clear();
 }
-
-export {
-  clearUnicodeCaches,
-  getCharUnicodeCategory,
-  getUnicodeForGlyph,
-  getUnicodeRangeFor,
-  mapSpecialUnicodeValues,
-};

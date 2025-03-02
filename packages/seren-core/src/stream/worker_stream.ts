@@ -13,9 +13,16 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult, assert, MessageHandler } from "seren-common";
+import {
+  PDFStream,
+  PDFStreamRangeReader,
+  PDFStreamReader,
+  ReadResult,
+  assert,
+  MessageHandler
+} from "seren-common";
 
-class PDFWorkerStream implements PDFStream {
+export class PDFWorkerStream implements PDFStream {
 
   protected _msgHandler: MessageHandler;
 
@@ -158,5 +165,3 @@ class PDFWorkerStreamRangeReader implements PDFStreamRangeReader {
     this._reader.cancel(reason);
   }
 }
-
-export { PDFWorkerStream };

@@ -15,7 +15,7 @@
 
 // Factors to rescale LiberationSans-Bold.ttf to have the same
 // metrics as segoeuib.ttf.
-const SegoeuiBoldFactors = [
+export const SegoeuiBoldFactors = [
   1.76738, 1, 1, 0.99297, 0.9824, 1.04016, 1.06497, 1.03424, 0.97529, 1.17647,
   1.23203, 1.1085, 1.1085, 1.16939, 1.2107, 0.9754, 1.21408, 0.9754, 1.59578,
   1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424, 1.03424,
@@ -81,11 +81,11 @@ const SegoeuiBoldFactors = [
   1.04315, 1.15296, 1.34163, 1, 1, 1, 1.09193, 1.09193, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const SegoeuiBoldMetrics = { lineHeight: 1.33008, lineGap: 0 };
+export const SegoeuiBoldMetrics = { lineHeight: 1.33008, lineGap: 0 };
 
 // Factors to rescale LiberationSans-BoldItalic.ttf to have the same
 // metrics as segoeuiz.ttf.
-const SegoeuiBoldItalicFactors = [
+export const SegoeuiBoldItalicFactors = [
   1.76738, 1, 1, 0.98946, 1.03959, 1.04016, 1.02809, 1.036, 0.97639, 1.10953,
   1.23203, 1.11144, 1.11144, 1.16939, 1.21237, 0.9754, 1.21261, 0.9754, 1.59754,
   1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 1.036, 0.81378,
@@ -152,11 +152,11 @@ const SegoeuiBoldItalicFactors = [
   1.04315, 1.15296, 1.34163, 1, 1, 1, 1.13269, 1.13269, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const SegoeuiBoldItalicMetrics = { lineHeight: 1.33008, lineGap: 0 };
+export const SegoeuiBoldItalicMetrics = { lineHeight: 1.33008, lineGap: 0 };
 
 // Factors to rescale LiberationSans-Italic.ttf to have the same
 // metrics as segoeuii.ttf.
-const SegoeuiItalicFactors = [
+export const SegoeuiItalicFactors = [
   1.76738, 1, 1, 0.98946, 1.14763, 1.05365, 1.06234, 0.96927, 0.92586, 1.15373,
   1.18414, 0.91349, 0.91349, 1.07403, 1.17308, 0.78383, 1.20088, 0.78383,
   1.42531, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927,
@@ -223,11 +223,11 @@ const SegoeuiItalicFactors = [
   1.42603, 0.99862, 1, 1, 1, 1, 1, 1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1,
   1.10742, 1.10742, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const SegoeuiItalicMetrics = { lineHeight: 1.33008, lineGap: 0 };
+export const SegoeuiItalicMetrics = { lineHeight: 1.33008, lineGap: 0 };
 
 // Factors to rescale LiberationSans-Regular.ttf to have the same
 // metrics as segoeui.ttf.
-const SegoeuiRegularFactors = [
+export const SegoeuiRegularFactors = [
   1.76738, 1, 1, 0.98594, 1.02285, 1.10454, 1.06234, 0.96927, 0.92037, 1.19985,
   1.2046, 0.90616, 0.90616, 1.07152, 1.1714, 0.78032, 1.20088, 0.78032, 1.40246,
   0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927, 0.96927,
@@ -294,15 +294,4 @@ const SegoeuiRegularFactors = [
   1.2886, 1.04315, 1.15296, 1.34163, 1, 1, 1, 1.10938, 1.10938, 1, 1, 1,
   1.05425, 1.09971, 1.09971, 1.09971, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const SegoeuiRegularMetrics = { lineHeight: 1.33008, lineGap: 0 };
-
-export {
-  SegoeuiBoldFactors,
-  SegoeuiBoldItalicFactors,
-  SegoeuiBoldItalicMetrics,
-  SegoeuiBoldMetrics,
-  SegoeuiItalicFactors,
-  SegoeuiItalicMetrics,
-  SegoeuiRegularFactors,
-  SegoeuiRegularMetrics,
-};
+export const SegoeuiRegularMetrics = { lineHeight: 1.33008, lineGap: 0 };

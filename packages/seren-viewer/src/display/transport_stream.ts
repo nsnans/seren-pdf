@@ -13,11 +13,17 @@
  * limitations under the License.
  */
 
-import { PDFStream, PDFStreamRangeReader, PDFStreamReader, ReadResult, assert } from "seren-common";
+import {
+  PDFStream,
+  PDFStreamRangeReader,
+  PDFStreamReader,
+  ReadResult,
+  assert
+} from "seren-common";
 import { PDFDataRangeTransport } from "../api";
 import { isPdfFile } from "./display_utils";
 
-class PDFDataTransportStream implements PDFStream {
+export class PDFDataTransportStream implements PDFStream {
 
   protected _queuedChunks: ArrayBuffer[] | null;
 
@@ -175,7 +181,6 @@ class PDFDataTransportStream implements PDFStream {
   }
 }
 
-/** @implements {PDFStreamReader} */
 class PDFDataTransportStreamReader implements PDFStreamReader {
 
   public _loaded = 0;
@@ -347,5 +352,3 @@ class PDFDataTransportStreamRangeReader implements PDFStreamRangeReader {
     this._stream._removeRangeReader(this);
   }
 }
-
-export { PDFDataTransportStream };

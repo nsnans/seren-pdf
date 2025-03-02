@@ -24,10 +24,10 @@ export class OverlayManager {
   }
 
   /**
-   * @param {HTMLDialogElement} dialog - The overlay's DOM element.
-   * @param {boolean} [canForceClose] - Indicates if opening the overlay closes
-   *                  an active overlay. The default is `false`.
-   * @returns {Promise} A promise that is resolved when the overlay has been
+   * @param dialog - The overlay's DOM element.
+   * @param canForceClose - Indicates if opening the overlay closes
+   *   an active overlay. The default is `false`.
+   * @returns A promise that is resolved when the overlay has been
    *                    registered.
    */
   async register(dialog: HTMLDialogElement, canForceClose = false) {
@@ -44,9 +44,8 @@ export class OverlayManager {
   }
 
   /**
-   * @param {HTMLDialogElement} dialog - The overlay's DOM element.
-   * @returns {Promise} A promise that is resolved when the overlay has been
-   *                    opened.
+   * @param dialog - The overlay's DOM element.
+   * @returns A promise that is resolved when the overlay has been opened.
    */
   async open(dialog: HTMLDialogElement) {
     if (!this.#overlays.has(dialog)) {
@@ -65,8 +64,8 @@ export class OverlayManager {
   }
 
   /**
-   * @param {HTMLDialogElement} dialog - The overlay's DOM element.
-   * @returns {Promise} A promise that is resolved when the overlay has been
+   * @param dialog - The overlay's DOM element.
+   * @returns A promise that is resolved when the overlay has been
    *                    closed.
    */
   async close(dialog = this.#active) {

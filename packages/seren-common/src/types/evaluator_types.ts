@@ -18,10 +18,12 @@ export interface TextMarkedContent {
   id: string | null;
 
   tag: string | null;
-}/**
+}
+
+
+/**
  * Text style.
  */
-
 export interface TextStyle {
 
   /** Font ascent.*/
@@ -40,10 +42,10 @@ export interface TextStyle {
 
   fontSubstitutionLoadedName: string | null;
 }
+
 /**
  * Page text content.
  */
-
 export interface TextContent {
   /**
    * Array of {@link TextItem} and {@link TextMarkedContent} objects.
@@ -57,11 +59,10 @@ export interface TextContent {
   /** The document /Lang attribute. */
   lang: string | null;
 }
+
 /**
  * Page text content part.
  */
-
-
 export interface TextItem {
 
   /** Text content.*/
@@ -85,6 +86,7 @@ export interface TextItem {
   /** Indicating if the text content is followed by aline-break.*/
   hasEOL: boolean;
 }
+
 export interface SeacMapValue {
   baseFontCharCode: number;
   accentFontCharCode: number;

@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-import { objectFromMap, shadow, unreachable, AnnotationEditorSerial } from "seren-common";
+import {
+  objectFromMap,
+  shadow,
+  unreachable,
+  AnnotationEditorSerial
+} from "seren-common";
 import { AnnotationEditor } from "./editor/editor";
 
-const SerializableEmpty: AnnotationStorageSerializable = Object.freeze({
+export const SerializableEmpty: AnnotationStorageSerializable = Object.freeze({
   map: null,
   hash: "",
   transfer: null,
@@ -31,7 +36,7 @@ export interface AnnotationStorageSerializable {
 /**
  * Key/value storage for annotation data in forms.
  */
-class AnnotationStorage {
+export class AnnotationStorage {
 
   #modified = false;
 
@@ -57,9 +62,6 @@ class AnnotationStorage {
 
   /**
    * Get the value for a given key if it exists, or return the default value.
-   * @param {string} key
-   * @param {Object} defaultValue
-   * @returns {Object}
    */
   getValue(key: string, defaultValue: Record<string, any>) {
     const value = this.#storage.get(key);
@@ -72,8 +74,6 @@ class AnnotationStorage {
 
   /**
    * Get the value for a given key.
-   * @param {string} key
-   * @returns {Object}
    */
   getRawValue(key: string) {
     return this.#storage.get(key);
@@ -81,7 +81,6 @@ class AnnotationStorage {
 
   /**
    * Remove a value from the storage.
-   * @param {string} key
    */
   remove(key: string) {
     this.#storage.delete(key);
@@ -102,8 +101,6 @@ class AnnotationStorage {
 
   /**
    * Set the value for a given key
-   * @param {string} key
-   * @param {Object} value
    */
   setValue(key: string, value: Record<string, any>) {
     const obj = this.#storage.get(key);
@@ -138,23 +135,15 @@ class AnnotationStorage {
 
   /**
    * Check if the storage contains the given key.
-   * @param {string} key
-   * @returns {boolean}
    */
   has(key: string) {
     return this.#storage.has(key);
   }
 
-  /**
-   * @returns {Object | null}
-   */
   getAll() {
     return this.#storage.size > 0 ? objectFromMap(this.#storage) : null;
   }
 
-  /**
-   * @param {Object} obj
-   */
   setAll(obj: object) {
     for (const [key, val] of Object.entries(obj)) {
       this.setValue(key, val);
@@ -189,7 +178,6 @@ class AnnotationStorage {
 
   /**
    * PLEASE NOTE: Only intended for usage within the API itself.
-   * @ignore
    */
   get serializable(): AnnotationStorageSerializable {
     return SerializableEmpty;
@@ -235,9 +223,6 @@ class AnnotationStorage {
     this.#modifiedIds = null;
   }
 
-  /**
-   * @returns {{ids: Set<string>, hash: string}}
-   */
   get modifiedIds() {
     if (this.#modifiedIds) {
       return this.#modifiedIds;
@@ -264,7 +249,7 @@ class AnnotationStorage {
  * data is *frozen* upon initialization, to prevent scripting from modifying its
  * contents. (Necessary since printing is triggered synchronously in browsers.)
  */
-class PrintAnnotationStorage extends AnnotationStorage {
+export class PrintAnnotationStorage extends AnnotationStorage {
   #serializable;
 
   constructor(parent: AnnotationStorage) {
@@ -276,10 +261,6 @@ class PrintAnnotationStorage extends AnnotationStorage {
     this.#serializable = { map: clone, hash, transfer };
   }
 
-  /**
-   * @returns {PrintAnnotationStorage}
-   */
-  // eslint-disable-next-line getter-return
   get print() {
     unreachable("Should not call PrintAnnotationStorage.print");
     return super.print;
@@ -300,5 +281,3 @@ class PrintAnnotationStorage extends AnnotationStorage {
     });
   }
 }
-
-export { AnnotationStorage, PrintAnnotationStorage, SerializableEmpty };

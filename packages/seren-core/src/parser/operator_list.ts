@@ -13,7 +13,17 @@
  * limitations under the License.
  */
 
-import { ImageKind, OPS, RenderingIntentFlag, warn, MutableArray, StreamSink, OperatorListIR, OpertaorListChunk,OptionalContent} from "seren-common";
+import {
+  ImageKind,
+  OPS,
+  RenderingIntentFlag,
+  warn,
+  MutableArray,
+  StreamSink,
+  OperatorListIR,
+  OpertaorListChunk,
+  OptionalContent
+} from "seren-common";
 
 function addState(parentState: InitialStateFuncTree, pattern: OPS[],
   checkFn: ((context: QueueOptimizerContext) => boolean) | null,

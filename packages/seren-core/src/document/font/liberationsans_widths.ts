@@ -14,7 +14,7 @@
  */
 
 // Widths of glyphs in LiberationSans-Bold.ttf.
-const LiberationSansBoldWidths = [
+export const LiberationSansBoldWidths = [
   365, 0, 333, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278,
   333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333,
   584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556,
@@ -64,7 +64,7 @@ const LiberationSansBoldWidths = [
 ];
 
 // Char code of glyphs in LiberationSans-Bold.ttf.
-const LiberationSansBoldMapping = [
+export const LiberationSansBoldMapping = [
   -1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
   67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
@@ -115,7 +115,7 @@ const LiberationSansBoldMapping = [
 ];
 
 // Widths of glyphs in LiberationSans-BoldItalic.ttf.
-const LiberationSansBoldItalicWidths = [
+export const LiberationSansBoldItalicWidths = [
   365, 0, 333, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278,
   333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333,
   584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556,
@@ -165,7 +165,7 @@ const LiberationSansBoldItalicWidths = [
 ];
 
 // Char code of glyphs in LiberationSans-BoldItalic.ttf.
-const LiberationSansBoldItalicMapping = [
+export const LiberationSansBoldItalicMapping = [
   -1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
   67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
@@ -216,7 +216,7 @@ const LiberationSansBoldItalicMapping = [
 ];
 
 // Widths of glyphs in LiberationSans-Italic.ttf.
-const LiberationSansItalicWidths = [
+export const LiberationSansItalicWidths = [
   365, 0, 333, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278,
   333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278,
   584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500,
@@ -266,7 +266,7 @@ const LiberationSansItalicWidths = [
 ];
 
 // Char code of glyphs in LiberationSans-Italic.ttf.
-const LiberationSansItalicMapping = [
+export const LiberationSansItalicMapping = [
   -1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
   67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
@@ -317,7 +317,7 @@ const LiberationSansItalicMapping = [
 ];
 
 // Widths of glyphs in LiberationSans-Regular.ttf.
-const LiberationSansRegularWidths = [
+export const LiberationSansRegularWidths = [
   365, 0, 333, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278,
   333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278,
   584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500,
@@ -367,7 +367,7 @@ const LiberationSansRegularWidths = [
 ];
 
 // Char code of glyphs in LiberationSans-Regular.ttf.
-const LiberationSansRegularMapping = [
+export const LiberationSansRegularMapping = [
   -1, -1, -1, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
   48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
   67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
@@ -416,14 +416,3 @@ const LiberationSansRegularMapping = [
   9794, 9824, 9827, 9829, 9830, 9834, 9835, 9836, 61441, 61442, 61445, -1, -1,
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 ];
-
-export {
-  LiberationSansBoldItalicMapping,
-  LiberationSansBoldItalicWidths,
-  LiberationSansBoldMapping,
-  LiberationSansBoldWidths,
-  LiberationSansItalicMapping,
-  LiberationSansItalicWidths,
-  LiberationSansRegularMapping,
-  LiberationSansRegularWidths,
-};

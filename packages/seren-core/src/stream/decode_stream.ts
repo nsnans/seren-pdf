@@ -18,7 +18,7 @@ import { BaseStream, emptyBuffer } from "./base_stream";
 import { Stream } from "./stream";
 
 // Super class for the decoding streams.
-abstract class DecodeStream extends BaseStream {
+export abstract class DecodeStream extends BaseStream {
 
   public bufferLength: number = 0;
 
@@ -145,7 +145,7 @@ abstract class DecodeStream extends BaseStream {
   abstract readBlock(options: JpxDecoderOptions | null): void;
 }
 
-class StreamsSequenceStream extends DecodeStream {
+export class StreamsSequenceStream extends DecodeStream {
 
   protected _onError: (reason: unknown, objId: string | null) => void;
 
@@ -198,5 +198,3 @@ class StreamsSequenceStream extends DecodeStream {
     return baseStreamsBuf.length > 0 ? baseStreamsBuf : null;
   }
 }
-
-export { DecodeStream, StreamsSequenceStream };

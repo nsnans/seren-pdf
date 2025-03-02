@@ -13,7 +13,17 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray, DictKey, isName, Name, Ref, Dict, bytesToString, info, warn } from "seren-common";
+import {
+  Uint8TypedArray,
+  DictKey,
+  isName,
+  Name,
+  Ref,
+  Dict,
+  bytesToString,
+  info,
+  warn
+} from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import {
   escapePDFName,

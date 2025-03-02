@@ -32,7 +32,7 @@ const MAX_ERROR = 128;
 // When bug 1759728 is fixed we can remove the BMP workaround and at least it
 // should be a way faster to create the bitmap.
 
-class ImageResizer {
+export class ImageResizer {
 
   protected static _goodSquareLength = MIN_IMAGE_DIM;
 
@@ -424,5 +424,3 @@ class ImageResizer {
     return bmpData;
   }
 }
-
-export { ImageResizer };

@@ -23,7 +23,7 @@ import {
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
 
-function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
+export function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
   const headers = new Headers();
 
   if (!isHttp || !httpHeaders || typeof httpHeaders !== "object") {
@@ -38,17 +38,12 @@ function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
   return headers;
 }
 
-function validateRangeRequestCapabilities({
-  responseHeaders,
-  isHttp,
-  rangeChunkSize,
-  disableRange,
-}: {
+export function validateRangeRequestCapabilities(
   responseHeaders: Headers,
   isHttp: boolean,
   rangeChunkSize: number,
   disableRange: boolean
-}) {
+) {
   if (PlatformHelper.isTesting()) {
     assert(
       Number.isInteger(rangeChunkSize) && rangeChunkSize > 0,
@@ -92,7 +87,7 @@ function validateRangeRequestCapabilities({
   return returnValues;
 }
 
-function extractFilenameFromHeader(responseHeaders: Headers) {
+export function extractFilenameFromHeader(responseHeaders: Headers) {
   const contentDisposition = responseHeaders.get("Content-Disposition");
   if (contentDisposition) {
     let filename = getFilenameFromContentDispositionHeader(contentDisposition);
@@ -108,7 +103,7 @@ function extractFilenameFromHeader(responseHeaders: Headers) {
   return null;
 }
 
-function createResponseStatusError(status: number, url: string): BaseException {
+export function createResponseStatusError(status: number, url: string): BaseException {
   if (status === 404 || (status === 0 && url.startsWith("file:"))) {
     return new MissingPDFException('Missing PDF "' + url + '".');
   }
@@ -118,14 +113,6 @@ function createResponseStatusError(status: number, url: string): BaseException {
   );
 }
 
-function validateResponseStatus(status: number) {
+export function validateResponseStatus(status: number) {
   return status === 200 || status === 206;
 }
-
-export {
-  createHeaders,
-  createResponseStatusError,
-  extractFilenameFromHeader,
-  validateRangeRequestCapabilities,
-  validateResponseStatus,
-};

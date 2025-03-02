@@ -1015,7 +1015,7 @@ class Type2Compiled extends CompiledFont {
   }
 }
 
-class FontRendererFactory {
+export class FontRendererFactory {
   static create(font: Font, seacAnalysisEnabled: boolean) {
     const data = new Uint8Array(font.data!);
     let cmap, glyf, loca, cff, indexToLocFormat, unitsPerEm;
@@ -1057,5 +1057,3 @@ class FontRendererFactory {
     return new Type2Compiled(cff!, cmap!, font.fontMatrix, font.glyphNameMap);
   }
 }
-
-export { FontRendererFactory };

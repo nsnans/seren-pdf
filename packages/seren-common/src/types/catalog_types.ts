@@ -39,10 +39,12 @@ export type ViewerPreferenceValueTypes = {
   [ViewerPreferenceKeys.PrintPageRange]: number[];
   [ViewerPreferenceKeys.NumCopies]: number;
 };
+
 export interface CatalogOpenAction {
   dest: string | DestinationType | null;
   action: string | null;
 }
+
 export interface CatalogOptionalContentConfig {
   name: string | null;
   creator: string | null;
@@ -52,6 +54,7 @@ export interface CatalogOptionalContentConfig {
   order: (string | OptionalContentOrder)[] | null;
   groups: OptionalContentDataGroup[];
 }
+
 export interface OptionalContentOrder {
   name: string | null;
   order: (string | OptionalContentOrder)[];

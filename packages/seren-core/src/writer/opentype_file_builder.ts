@@ -46,7 +46,7 @@ function writeData(dest: Uint8TypedArray, offset: number, data: Uint8TypedArray 
 const OTF_HEADER_SIZE = 12;
 const OTF_TABLE_ENTRY_SIZE = 16;
 
-class OpenTypeFileBuilder {
+export class OpenTypeFileBuilder {
 
   protected readonly sfnt: string;
 
@@ -156,5 +156,3 @@ class OpenTypeFileBuilder {
     this.tables.set(tag, data);
   }
 }
-
-export { OpenTypeFileBuilder };

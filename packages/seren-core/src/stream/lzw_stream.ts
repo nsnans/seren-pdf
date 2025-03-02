@@ -17,15 +17,25 @@ import { BaseStream } from "./base_stream";
 import { DecodeStream } from "./decode_stream";
 
 interface LZWState {
+
   prevCode: number | null;
+  
   earlyChange: number;
+  
   codeLength: number;
+  
   nextCode: number;
+  
   dictionaryValues: Uint8Array<ArrayBuffer>;
+  
   dictionaryLengths: Uint16Array<ArrayBuffer>;
+  
   dictionaryPrevCodes: Uint16Array<ArrayBuffer>;
+  
   currentSequence: Uint8Array<ArrayBuffer>;
+  
   currentSequenceLength: number;
+
 }
 
 export class LZWStream extends DecodeStream {

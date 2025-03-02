@@ -27,12 +27,12 @@ export interface PDFStreamSource {
   rangeChunkSize: number;
   disableRange: boolean;
   disableStream: boolean;
-}/**
+}
+
+/**
  * Interface that represents PDF data transport. If possible, it allows
  * progressively load entire or fragment of the PDF binary data.
- *
- * @interface
- */
+ * */
 export interface PDFStream {
   /**
    * Gets a reader for the entire PDF data.
@@ -144,12 +144,12 @@ export interface PDFStreamReader {
    */
   cancel(reason?: Error): void;
 }
+
 /**
  * Interface for a PDF binary data fragment reader.
  *
  * @interface
  */
-
 export interface PDFStreamRangeReader {
   /**
    * Sets or gets the progress callback. The callback can be useful when the
@@ -181,6 +181,7 @@ export interface PDFStreamRangeReader {
    */
   cancel(reason: Error): void;
 }
+
 export interface StreamSink<Chunk> {
 
   ready: Promise<void> | null;
@@ -206,6 +207,7 @@ export interface StreamSink<Chunk> {
   onPull: (() => void) | null;
 
 }
+
 export interface ReaderHeadersReadyResult {
 
   isStreamingSupported: boolean;
@@ -244,6 +246,7 @@ export interface DataStream {
   makeSubStream(_start: number, _length: number, _dict: Dict | null): DataStream;
   getBaseStreams(): DataStream[] | null
 }
+
 export enum StreamKind {
   UNKNOWN = 0,
   CANCEL = 1,

@@ -25,6 +25,7 @@ import {
   XRef
 } from "seren-common";
 import { DictImpl } from "./dict_impl";
+
 /**
  * A NameTree/NumberTree is like a Dict but has some advantageous properties,
  * see the specification (7.9.6 and 7.9.7) for additional details.

@@ -55,7 +55,7 @@ function addChildren(node: Dict | BaseStream | object | object[], nodesToVisit: 
  * that have references to the catalog or other pages since that will cause the
  * entire PDF document object graph to be traversed.
  */
-class ObjectLoader {
+export class ObjectLoader {
 
   protected dict: Dict;
 
@@ -113,7 +113,7 @@ class ObjectLoader {
             warn(`ObjectLoader._walk - requesting all data: "${ex}".`);
             this.refSet = null;
 
-            const { manager } = <ChunkedStream>this.xref.stream;
+            const { manager } = <ChunkedStream>(<XRefImpl>this.xref).stream;
             return manager.requestAllChunks();
           }
           nodesToRevisit.push(currentNode!);
@@ -157,5 +157,3 @@ class ObjectLoader {
     return undefined;
   }
 }
-
-export { ObjectLoader };

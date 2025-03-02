@@ -23,7 +23,11 @@ import {
   shadow
 } from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
-import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
+import {
+  AnnotationEditor,
+  AnnotationEditorHelper,
+  AnnotationEditorParameters
+} from "./editor";
 import {
   AnnotationEditorUIManager,
   bindEvents,

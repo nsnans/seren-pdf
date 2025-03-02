@@ -10,7 +10,7 @@ export interface CreateStampImageResult {
   smaskStream: Stream | null;
   imageRef?: JpegStream | Ref;
 }
+
 export interface SingleOpaquePixelImageMask {
   isSingleOpaquePixel: boolean;
 }
-

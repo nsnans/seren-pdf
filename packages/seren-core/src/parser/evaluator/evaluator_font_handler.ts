@@ -208,7 +208,7 @@ export class EvaluatorFontHandler {
               differences[index++] = data.name;
             } else {
               throw new FormatError(
-                `Invalid entry in 'Differences' array: ${data}`
+                `Invalid entry in 'Differences' array: ${<object>data}`
               );
             }
           }

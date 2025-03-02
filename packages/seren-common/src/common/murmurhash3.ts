@@ -20,6 +20,7 @@
 import { Uint8TypedArray } from "./typed_array";
 
 const SEED = 0xc3d2e1f0;
+
 // Workaround for missing math precision in JS.
 const MASK_HIGH = 0xffff0000;
 const MASK_LOW = 0xffff;
@@ -60,14 +61,11 @@ export class MurmurHash3_64 {
     const tailLength = length - blockCounts * 4;
     // We don't care about endianness here.
     const dataUint32 = new Uint32Array(data.buffer, 0, blockCounts);
-    let k1 = 0,
-      k2 = 0;
-    let h1 = this.h1,
-      h2 = this.h2;
-    const C1 = 0xcc9e2d51,
-      C2 = 0x1b873593;
-    const C1_LOW = C1 & MASK_LOW,
-      C2_LOW = C2 & MASK_LOW;
+    let k1 = 0, k2 = 0;
+    let h1 = this.h1, h2 = this.h2;
+    const C1 = 0xcc9e2d51, C2 = 0x1b873593;
+    const C1_LOW = C1 & MASK_LOW;
+    const C2_LOW = C2 & MASK_LOW;
 
     for (let i = 0; i < blockCounts; i++) {
       if (i & 1) {

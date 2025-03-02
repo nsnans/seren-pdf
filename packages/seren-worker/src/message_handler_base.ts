@@ -52,7 +52,7 @@ interface HandlerMessage {
   reason?: unknown;
 }
 
-abstract class AbstractMessageHandler {
+export abstract class AbstractMessageHandler {
 
   protected _messageAC: AbortController | null = new AbortController();
 
@@ -444,5 +444,3 @@ abstract class AbstractMessageHandler {
     this._messageAC = null;
   }
 }
-
-export { AbstractMessageHandler };

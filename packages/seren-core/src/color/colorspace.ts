@@ -45,14 +45,22 @@ import { DictImpl } from "../document/dict_impl";
  * @param h2 - New height.
  * @param alpha01 - Size reserved for the alpha channel.
  */
-function resizeRgbImage(src: MutableArray<number>, dest: MutableArray<number>, w1: number, h1: number,
-  w2: number, h2: number, alpha01: number) {
+function resizeRgbImage(
+  src: MutableArray<number>,
+  dest: MutableArray<number>,
+  w1: number,
+  h1: number,
+  w2: number,
+  h2: number,
+  alpha01: number
+) {
+
   const COMPONENTS = 3;
   alpha01 = alpha01 !== 1 ? 0 : alpha01;
   const xRatio = w1 / w2;
   const yRatio = h1 / h2;
-  let newIndex = 0,
-    oldIndex;
+  let newIndex = 0;
+  let oldIndex;
   const xScaled = new Uint16Array(w2);
   const w1Scanline = w1 * COMPONENTS;
 
@@ -73,8 +81,13 @@ function resizeRgbImage(src: MutableArray<number>, dest: MutableArray<number>, w
 
 // 专用的函数，可以考虑不要用MutableArray<number>
 function resizeRgbaImage(
-  src: MutableArray<number>, dest: MutableArray<number>,
-  w1: number, h1: number, w2: number, h2: number, alpha01: number
+  src: MutableArray<number>,
+  dest: MutableArray<number>,
+  w1: number,
+  h1: number,
+  w2: number,
+  h2: number,
+  alpha01: number
 ) {
   const xRatio = w1 / w2;
   const yRatio = h1 / h2;
@@ -130,7 +143,7 @@ function copyRgbaImage(src: TypedArray, dest: TypedArray, alpha01: number) {
   }
 }
 
-class ColorSpace {
+export class ColorSpace {
 
   readonly name: string;
 
@@ -1599,5 +1612,3 @@ class LabCS extends ColorSpace {
     return shadow(this, "usesZeroToOneRange", false);
   }
 }
-
-export { ColorSpace };

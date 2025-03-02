@@ -283,7 +283,7 @@ export interface DocumentInitParameters {
   enableHWA: boolean;
 
   workerOptions: {
-    workerPort: Worker;
+    workerPort: Worker | null;
     workerSrc: string;
   };
 }

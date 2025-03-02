@@ -246,7 +246,11 @@ export class WebPDFViewer {
       disableAutoFetch: false,
       CanvasFactory: DOMCanvasFactory,
       FilterFactory: DOMFilterFactory,
-      enableHWA: false
+      enableHWA: false,
+      workerOptions: {
+        workerPort: null,
+        workerSrc: ""
+      }
     }
     return params;
   }

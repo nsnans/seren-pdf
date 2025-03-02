@@ -17,14 +17,21 @@ import {
   AnnotationEditorParamsType,
   AnnotationEditorType,
   assert,
-  Util, 
-  PointType, 
+  Util,
+  PointType,
   PlatformHelper
 } from "seren-common";
 import { noContextMenu, } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
-import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
-import { AnnotationEditorUIManager, opacityToHex } from "./tools";
+import {
+  AnnotationEditor,
+  AnnotationEditorHelper,
+  AnnotationEditorParameters
+} from "./editor";
+import {
+  AnnotationEditorUIManager,
+  opacityToHex
+} from "./tools";
 import { L10n } from "../../l10n/l10n";
 
 type BezierType = [PointType, PointType, PointType, PointType][];

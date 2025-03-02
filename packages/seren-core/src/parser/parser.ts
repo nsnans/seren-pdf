@@ -50,11 +50,9 @@ import { RunLengthStream } from "../stream/run_length_stream";
 import { NullStream, Stream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
+import { ParsedType } from "seren-common";
 
 const MAX_LENGTH_TO_CACHE = 1000;
-
-export type ParsedType = string | number | boolean | Ref | Name | Dict | Cmd | BaseStream | null | Symbol;
-
 
 function getInlineImageCacheKey(bytes: Uint8TypedArray) {
   const strBuf = [];
@@ -74,7 +72,7 @@ function getInlineImageCacheKey(bytes: Uint8TypedArray) {
   return ii + "_" + String.fromCharCode.apply(null, strBuf);
 }
 
-class Parser {
+export class Parser {
 
   public lexer: Lexer;
 
@@ -891,7 +889,7 @@ function toHexDigit(ch: number) {
   return -1;
 }
 
-class Lexer {
+export class Lexer {
 
   public stream: BaseStream;
 
@@ -1401,7 +1399,7 @@ export interface LinearizationInterface {
 
 }
 
-class Linearization {
+export class Linearization {
   static create(stream: Stream): LinearizationInterface | null {
     function getInt(linDict: Dict, name: string, allowZeroValue = false): number {
       const obj = <number>linDict.getValue(<DictKey>name);
@@ -1471,5 +1469,3 @@ class Linearization {
     };
   }
 }
-
-export { Lexer, Linearization, Parser };

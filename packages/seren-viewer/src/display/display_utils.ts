@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {
   BaseException,
   FeatureTest,
@@ -25,7 +24,6 @@ import {
 } from "seren-common";
 
 export const SVG_NS = "http://www.w3.org/2000/svg";
-
 
 export interface AvailableSpace {
   width: number,
@@ -41,7 +39,10 @@ export class PixelsPerInch {
   static PDF_TO_CSS_UNITS = this.CSS / this.PDF;
 }
 
-export async function fetchData(url: string | URL, type: XMLHttpRequestResponseType = "text") {
+export async function fetchData(
+  url: string | URL,
+  type: XMLHttpRequestResponseType = "text"
+) {
   if (PlatformHelper.isMozCental() || isValidFetchUrl(url, document.baseURI)) {
     const response = await fetch(url);
     if (!response.ok) {
@@ -86,53 +87,57 @@ export async function fetchData(url: string | URL, type: XMLHttpRequestResponseT
   });
 }
 
-/**
- * @typedef {Object} PageViewportParameters
- * @property {Array<number>} viewBox - The xMin, yMin, xMax and
- *   yMax coordinates.
- * @property {number} scale - The scale of the viewport.
- * @property {number} rotation - The rotation, in degrees, of the viewport.
- * @property {number} [offsetX] - The horizontal, i.e. x-axis, offset. The
- *   default value is `0`.
- * @property {number} [offsetY] - The vertical, i.e. y-axis, offset. The
- *   default value is `0`.
- * @property {boolean} [dontFlip] - If true, the y-axis will not be flipped.
- *   The default value is `false`.
- */
-
 export interface PageViewportParameters {
+
+  /** The xMin, yMin, xMax and yMax coordinates. */
   viewBox: RectType;
+
+  /** The scale of the viewport. */
   scale: number;
+
+  /** The rotation, in degrees, of the viewport. */
   rotation: number;
+
+  /** The horizontal, i.e. x-axis, offset. The default value is `0`. */
   offsetX: number;
+
+  /** The vertical, i.e. y-axis, offset. The default value is `0`. */
   offsetY: number;
+
+  /** If true, the y-axis will not be flipped.The default value is `false`. */
   dontFlip: boolean;
 }
 
-/**
- * @typedef {Object} PageViewportCloneParameters
- * @property {number} [scale] - The scale, overriding the one in the cloned
- *   viewport. The default value is `this.scale`.
- * @property {number} [rotation] - The rotation, in degrees, overriding the one
- *   in the cloned viewport. The default value is `this.rotation`.
- * @property {number} [offsetX] - The horizontal, i.e. x-axis, offset.
- *   The default value is `this.offsetX`.
- * @property {number} [offsetY] - The vertical, i.e. y-axis, offset.
- *   The default value is `this.offsetY`.
- * @property {boolean} [dontFlip] - If true, the x-axis will not be flipped.
- *   The default value is `false`.
- */
-
 export interface PageViewportCloneParameters {
 
+  /**
+   * The scale, overriding the one in the cloned viewport.
+   * @default this.scale
+   */
   scale: number;
 
+  /** 
+   * The rotation, in degrees, overriding the one in the cloned viewport.
+   * @default this.rotation
+   * */
   rotation: number;
 
+  /**
+   * The horizontal, i.e. x-axis, offset. 
+   * @default this.offsetX
+   */
   offsetX: number;
 
+  /** 
+   * The vertical, i.e. y-axis, offset.
+   * @default this.offsetY
+   * */
   offsetY: number;
 
+  /**
+   * If true, the x-axis will not be flipped.
+   * @default false
+   */
   dontFlip: boolean;
 }
 

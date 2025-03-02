@@ -52,14 +52,14 @@ export abstract class BaseSVGFactory {
     return this._createSVG(type);
   }
 
-  abstract _createSVG(type: string): SVGElement;
+  protected abstract _createSVG(type: string): SVGElement;
+
 }
 
 export class DOMSVGFactory extends BaseSVGFactory {
-  /**
-   * @ignore
-   */
-  _createSVG(type: string): SVGElement {
+  
+  protected _createSVG(type: string): SVGElement {
     return document.createElementNS(SVG_NS, type);
   }
+  
 }

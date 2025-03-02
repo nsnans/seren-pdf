@@ -1,7 +1,13 @@
 import { DestinationType, RectType } from "../common/common_types";
 import { Dict } from "../document/dict";
 import { Name, Ref } from "../document/primitives";
-import { AnnotationBorderStyleType, AnnotationEditorType, AnnotationType, assert, warn } from "../utils/util";
+import {
+  AnnotationBorderStyleType,
+  AnnotationEditorType,
+  AnnotationType,
+  assert,
+  warn
+} from "../utils/util";
 import { PlatformHelper } from "../utils/platform_helper";
 import { isNumberArray } from "../utils/util";
 import { FileSpecSerializable } from "./message_handler_types";
@@ -277,7 +283,12 @@ export interface AnnotationData {
   popupRef?: string | null;
   hidden?: boolean;
 }
-export interface StringObj { str: string; dir: string; }
+
+export interface StringObj {
+  str: string;
+  dir: string;
+}
+
 export interface PopupLine {
   name: string;
   value: string;
@@ -288,6 +299,7 @@ export interface PopupLine {
     };
   };
 }
+
 export interface FreeTextEditorSerial extends AnnotationEditorSerial {
   color: Uint8ClampedArray<ArrayBuffer>;
   fontSize: number;
@@ -296,6 +308,7 @@ export interface FreeTextEditorSerial extends AnnotationEditorSerial {
   user: string;
   value: string;
 }
+
 export interface InkEditorSerial extends AnnotationEditorSerial {
   color: Uint8ClampedArray<ArrayBuffer>;
   opacity: number;
@@ -308,11 +321,13 @@ export interface InkEditorSerial extends AnnotationEditorSerial {
     points: number[][];
   } | null;
 }
+
 export interface StampEditorSerial extends AnnotationEditorSerial {
   rect: RectType;
   rotation: number;
   user: string;
 }
+
 export interface HighlightEditorSerial extends AnnotationEditorSerial {
   color: Uint8ClampedArray<ArrayBuffer>;
   opacity: number;
@@ -322,6 +337,7 @@ export interface HighlightEditorSerial extends AnnotationEditorSerial {
   quadPoints: number[];
   outlines: number[][];
 }
+
 export interface ButtonWidgetData extends WidgetData {
   multiSelect: boolean;
   buttonValue: string | null;
@@ -352,36 +368,44 @@ export interface ButtonWidgetData extends WidgetData {
   attachmentDest: string | null;
   newWindow: boolean;
 }
+
 export interface CaretData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface CircleData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface FileAttachmentData extends MarkupData {
   fillAlpha: number | null;
   name: string;
   file: FileSpecSerializable;
   annotationType: AnnotationType;
 }
+
 export interface FreeTextData extends MarkupData {
   annotationType: AnnotationType;
 
 }
+
 export interface HighlightData extends MarkupData {
   annotationType: AnnotationType;
   opacity: number;
 }
+
 export interface InkAnnotationData extends MarkupData {
   annotationType: AnnotationType;
   inkLists: Float32Array[];
   opacity: number;
 }
+
 export interface LineData extends MarkupData {
   lineEndings: string[];
   lineCoordinates: RectType;
   annotationType: AnnotationType;
 }
+
 export interface LinkData extends AnnotationData {
   annotationType: AnnotationType;
   setOCGState: {
@@ -412,23 +436,29 @@ export interface PolylineData extends MarkupData {
   vertices: Float32Array<ArrayBuffer> | null;
   lineEndings: string[];
 }
+
 export interface PopupData extends AnnotationData {
   open: boolean;
   annotationType: AnnotationType;
   parentRect: RectType;
 }
+
 export interface SquareData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface SquigglyData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface StampData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface StrikeOutData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface TextData extends MarkupData, WidgetData {
   stateModel: string | null;
   state: Name[] | null;
@@ -437,9 +467,11 @@ export interface TextData extends MarkupData, WidgetData {
   hidden: boolean;
   titleObj: StringObj;
 }
+
 export interface UnderlineData extends MarkupData {
   annotationType: AnnotationType;
 }
+
 export interface WidgetData extends AnnotationData {
   doNotScroll: boolean;
   maxLen: number;
@@ -462,6 +494,7 @@ export interface WidgetData extends AnnotationData {
   required: boolean;
   readOnly: boolean;
 }
+
 export interface MarkupData extends AnnotationData {
   replyType: string;
   inReplyTo: string | null;

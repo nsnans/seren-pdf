@@ -29,7 +29,7 @@ import {
 import { PDFObjects } from "../api";
 import { BrowserUtil } from "../browser_util";
 
-class FontLoader {
+export class FontLoader {
 
   protected _systemFonts = new Set();
 
@@ -380,7 +380,7 @@ class FontLoader {
   }
 }
 
-class FontFaceObject {
+export class FontFaceObject {
 
   public disableFontFace: boolean;
 
@@ -544,5 +544,3 @@ class FontFaceObject {
     return glyphDrawer;
   }
 }
-
-export { FontFaceObject, FontLoader };

@@ -27,7 +27,9 @@ import { shadow } from "seren-common";
  * @property {function} [docProperties] - The function that is used to lookup
  *   the necessary document properties.
  */
-
+/**
+ * 这个类涉及到安全问题，要格外小心。
+ */
 export class PDFScriptingManager {
 
   #destroyCapability: PromiseWithResolvers<void> | null = null;

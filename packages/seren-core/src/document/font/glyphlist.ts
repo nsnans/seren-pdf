@@ -15,7 +15,7 @@
 
 import { getLookupTableFactory } from "../../utils/core_utils";
 
-const getGlyphsUnicode = getLookupTableFactory(() => {
+export const getGlyphsUnicode = getLookupTableFactory(() => {
   return {
     A: 0x0041 as const,
     AE: 0x00c6 as const,
@@ -4350,7 +4350,7 @@ const getGlyphsUnicode = getLookupTableFactory(() => {
   }
 });
 
-const getDingbatsGlyphsUnicode = getLookupTableFactory(() => {
+export const getDingbatsGlyphsUnicode = getLookupTableFactory(() => {
   return {
     space: 0x0020 as const,
     a1: 0x2701 as const,
@@ -4557,5 +4557,3 @@ const getDingbatsGlyphsUnicode = getLookupTableFactory(() => {
     ".notdef": 0x0000 as const,
   }
 });
-
-export { getDingbatsGlyphsUnicode, getGlyphsUnicode };

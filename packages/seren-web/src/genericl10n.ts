@@ -27,9 +27,6 @@ function createBundle(lang: string, text: string) {
   return bundle;
 }
 
-/**
- * @implements {IL10n}
- */
 export class GenericL10n extends L10n {
   constructor(lang: string | null = null) {
     super(lang);

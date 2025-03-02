@@ -150,7 +150,7 @@ class BinaryCMapStream {
   }
 }
 
-class BinaryCMapReader {
+export class BinaryCMapReader {
   async process(data: Uint8Array, cMap: CMapImpl, extend: (useCMap: string) => Promise<CMapImpl>) {
     const stream = new BinaryCMapStream(data);
     const header = stream.readByte();
@@ -330,5 +330,3 @@ class BinaryCMapReader {
     return cMap;
   }
 }
-
-export { BinaryCMapReader };

@@ -16,6 +16,6 @@ export interface OpenJPEGModule {
 export type OpenJPEGType = (options: Partial<{
   warn: (msg: unknown) => void
 }>) => OpenJPEGModule;
-const OpenJPEG = <OpenJPEGType>_OpenJPEG;
-export { OpenJPEG };
+
+export const OpenJPEG = <OpenJPEGType>_OpenJPEG;
 

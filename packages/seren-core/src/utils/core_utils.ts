@@ -34,9 +34,9 @@ import { BaseStream } from "../stream/base_stream";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
 
-const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
+export const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
-function getLookupTableFactory<V>(initializer: (() => V) | null) {
+export function getLookupTableFactory<V>(initializer: (() => V) | null) {
   return () => {
     let v: V | null = null;
     if (initializer) {
@@ -47,7 +47,7 @@ function getLookupTableFactory<V>(initializer: (() => V) | null) {
   };
 }
 
-class MissingDataException extends BaseException {
+export class MissingDataException extends BaseException {
 
   public begin: number;
   public end: number;
@@ -59,19 +59,19 @@ class MissingDataException extends BaseException {
   }
 }
 
-class ParserEOFException extends BaseException {
+export class ParserEOFException extends BaseException {
   constructor(msg = "") {
     super(msg, "ParserEOFException");
   }
 }
 
-class XRefEntryException extends BaseException {
+export class XRefEntryException extends BaseException {
   constructor(msg = "") {
     super(msg, "XRefEntryException");
   }
 }
 
-class XRefParseException extends BaseException {
+export class XRefParseException extends BaseException {
   constructor(msg = "") {
     super(msg, "XRefParseException");
   }
@@ -82,7 +82,7 @@ class XRefParseException extends BaseException {
  * @param {Array<ArrayBuffer>} arr - An array of ArrayBuffers.
  * @returns {Uint8Array}
  */
-function arrayBuffersToBytes(arr: ArrayBuffer[]): Uint8Array<ArrayBuffer> {
+export function arrayBuffersToBytes(arr: ArrayBuffer[]): Uint8Array<ArrayBuffer> {
   if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     for (const item of arr) {
       assert(
@@ -183,7 +183,7 @@ const ROMAN_NUMBER_MAP = [
  *   to lower case letters. The default value is `false`.
  * @returns {string} The resulting Roman number.
  */
-function toRomanNumerals(number: number, lowerCase = false) {
+export function toRomanNumerals(number: number, lowerCase = false) {
   assert(
     Number.isInteger(number) && number > 0,
     "The number should be a positive integer."
@@ -213,22 +213,22 @@ function toRomanNumerals(number: number, lowerCase = false) {
 // Calculate the base 2 logarithm of the number `x`. This differs from the
 // native function in the sense that it returns the ceiling value and that it
 // returns 0 instead of `Infinity`/`NaN` for `x` values smaller than/equal to 0.
-function log2(x: number) {
+export function log2(x: number) {
   if (x <= 0) {
     return 0;
   }
   return Math.ceil(Math.log2(x));
 }
 
-function readInt8(data: Uint8TypedArray, offset: number) {
+export function readInt8(data: Uint8TypedArray, offset: number) {
   return (data[offset] << 24) >> 24;
 }
 
-function readUint16(data: Uint8TypedArray, offset: number) {
+export function readUint16(data: Uint8TypedArray, offset: number) {
   return (data[offset] << 8) | data[offset + 1];
 }
 
-function readUint32(data: Uint8TypedArray, offset: number) {
+export function readUint32(data: Uint8TypedArray, offset: number) {
   return (
     ((data[offset] << 24) |
       (data[offset + 1] << 16) |
@@ -239,7 +239,7 @@ function readUint32(data: Uint8TypedArray, offset: number) {
 }
 
 // Checks if ch is one of the following characters: SPACE, TAB, CR or LF.
-function isWhiteSpace(ch: number) {
+export function isWhiteSpace(ch: number) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0d || ch === 0x0a;
 }
 
@@ -250,7 +250,7 @@ function isWhiteSpace(ch: number) {
  * @param {number | null} len
  * @returns {boolean}
  */
-function isBooleanArray(arr: unknown, len: number | null): boolean {
+export function isBooleanArray(arr: unknown, len: number | null): boolean {
   return (
     Array.isArray(arr) &&
     (len === null || arr.length === len) &&
@@ -259,21 +259,21 @@ function isBooleanArray(arr: unknown, len: number | null): boolean {
 }
 
 // Returns the matrix, or the fallback value if it's invalid.
-function lookupMatrix(arr: unknown, fallback: TransformType | null): TransformType | null {
+export function lookupMatrix(arr: unknown, fallback: TransformType | null): TransformType | null {
   return isNumberArray(arr, 6) ? <TransformType>arr : fallback;
 }
 
 // Returns the rectangle, or the fallback value if it's invalid.
-function lookupRect(arr: unknown, fallback: RectType | null): RectType | null {
+export function lookupRect(arr: unknown, fallback: RectType | null): RectType | null {
   return isNumberArray(arr, 4) ? <RectType>arr : fallback;
 }
 
 // Returns the normalized rectangle, or the fallback value if it's invalid.
-function lookupNormalRect(arr: RectType, fallback: RectType | null): RectType | null {
+export function lookupNormalRect(arr: RectType, fallback: RectType | null): RectType | null {
   return isNumberArray(arr, 4) ? Util.normalizeRect(arr) : fallback;
 }
 
-function escapePDFName(str: string) {
+export function escapePDFName(str: string) {
   const buffer = [];
   let start = 0;
   for (let i = 0, ii = str.length; i < ii; i++) {
@@ -315,7 +315,7 @@ function escapePDFName(str: string) {
 
 // Replace "(", ")", "\n", "\r" and "\" by "\(", "\)", "\\n", "\\r" and "\\"
 // in order to write it in a PDF file.
-function escapeString(str: string) {
+export function escapeString(str: string) {
   return str.replaceAll(/([()\\\n\r])/g, match => {
     if (match === "\n") {
       return "\\n";
@@ -367,7 +367,7 @@ function _collectJS(entry: Ref | Array<any> | Dict | unknown, xref: XRefImpl, li
   }
 }
 
-function collectActions(xref: XRefImpl, dict: Dict, eventType: Record<string, string>) {
+export function collectActions(xref: XRefImpl, dict: Dict, eventType: Record<string, string>) {
   const actions = new Map<string, string[]>();
   const additionalActionsDicts = getArrayInheritableProperty(
     dict, DictKey.AA, false,
@@ -419,7 +419,7 @@ const XMLEntities = {
   /* ' */ 0x27: "&apos;",
 } as const;
 
-function* codePointIter(str: string) {
+export function* codePointIter(str: string) {
   for (let i = 0, ii = str.length; i < ii; i++) {
     const char = str.codePointAt(i)!;
     if (char > 0xd7ff && (char < 0xe000 || char > 0xfffd)) {
@@ -430,7 +430,7 @@ function* codePointIter(str: string) {
   }
 }
 
-function encodeToXmlString(str: string) {
+export function encodeToXmlString(str: string) {
   const buffer = [];
   let start = 0;
   for (let i = 0, ii = str.length; i < ii; i++) {
@@ -467,7 +467,7 @@ function encodeToXmlString(str: string) {
   return buffer.join("");
 }
 
-function validateFontName(fontFamily: string, mustWarn = false) {
+export function validateFontName(fontFamily: string, mustWarn = false) {
   // See https://developer.mozilla.org/en-US/docs/Web/CSS/string.
   const m = /^("|').*("|')$/.exec(fontFamily);
   if (m && m[1] === m[2]) {
@@ -492,7 +492,7 @@ function validateFontName(fontFamily: string, mustWarn = false) {
   return true;
 }
 
-function recoverJsURL(str: string) {
+export function recoverJsURL(str: string) {
   // Attempt to recover valid URLs from `JS` entries with certain
   // white-listed formats:
   //  - window.open('http://example.com')
@@ -520,7 +520,7 @@ function recoverJsURL(str: string) {
   return null;
 }
 
-function numberToString(value: number) {
+export function numberToString(value: number) {
   if (Number.isInteger(value)) {
     return value.toString();
   }
@@ -537,7 +537,7 @@ function numberToString(value: number) {
   return value.toFixed(2);
 }
 
-function getNewAnnotationsMap(annotationStorage: Map<string, AnnotationEditorSerial> | null) {
+export function getNewAnnotationsMap(annotationStorage: Map<string, AnnotationEditorSerial> | null) {
   if (!annotationStorage) {
     return null;
   }
@@ -558,15 +558,15 @@ function getNewAnnotationsMap(annotationStorage: Map<string, AnnotationEditorSer
   return newAnnotationsByPage.size > 0 ? newAnnotationsByPage : null;
 }
 
-function stringToAsciiOrUTF16BE(str: string) {
+export function stringToAsciiOrUTF16BE(str: string) {
   return isAscii(str) ? str : stringToUTF16String(str, /* bigEndian = */ true);
 }
 
-function isAscii(str: string) {
+export function isAscii(str: string) {
   return /^[\x00-\x7F]*$/.test(str);
 }
 
-function stringToUTF16HexString(str: string) {
+export function stringToUTF16HexString(str: string) {
   const buf = [];
   for (let i = 0, ii = str.length; i < ii; i++) {
     const char = str.charCodeAt(i);
@@ -575,7 +575,7 @@ function stringToUTF16HexString(str: string) {
   return buf.join("");
 }
 
-function stringToUTF16String(str: string, bigEndian = false) {
+export function stringToUTF16String(str: string, bigEndian = false) {
   const buf = [];
   if (bigEndian) {
     buf.push("\xFE\xFF");
@@ -590,7 +590,7 @@ function stringToUTF16String(str: string, bigEndian = false) {
   return buf.join("");
 }
 
-function getRotationMatrix(rotation: number, width: number, height: number): TransformType {
+export function getRotationMatrix(rotation: number, width: number, height: number): TransformType {
   switch (rotation) {
     case 90:
       return [0, 1, -1, 0, width, 0];
@@ -610,44 +610,8 @@ function getRotationMatrix(rotation: number, width: number, height: number): Tra
  * @param {number} x - a positive integer.
  * @returns {number}
  */
-function getSizeInBytes(x: number) {
+export function getSizeInBytes(x: number) {
   // n bits are required for numbers up to 2^n - 1.
   // So for a number x, we need ceil(log2(1 + x)) bits.
   return Math.ceil(Math.ceil(Math.log2(1 + x)) / 8);
 }
-
-export {
-  arrayBuffersToBytes,
-  codePointIter,
-  collectActions,
-  encodeToXmlString,
-  escapePDFName,
-  escapeString,
-  getLookupTableFactory,
-  getNewAnnotationsMap,
-  getRotationMatrix,
-  getSizeInBytes,
-  isAscii,
-  isBooleanArray,
-  isNumberArray,
-  isWhiteSpace,
-  log2,
-  lookupMatrix,
-  lookupNormalRect,
-  lookupRect,
-  MissingDataException,
-  numberToString,
-  ParserEOFException,
-  PDF_VERSION_REGEXP,
-  readInt8,
-  readUint16,
-  readUint32,
-  recoverJsURL,
-  stringToAsciiOrUTF16BE,
-  stringToUTF16HexString,
-  stringToUTF16String,
-  toRomanNumerals,
-  validateFontName,
-  XRefEntryException,
-  XRefParseException,
-};

@@ -67,3 +67,30 @@ export interface FontExportExtraData extends FontExportData {
   widths: Record<string | number, number>;
 }
 
+export interface Glyph {
+
+  fontChar: string;
+
+  unicode: string;
+
+  accent: {
+    fontChar: string;
+    offset: {
+      x: number;
+      y: number;
+    };
+  } | null;
+
+  width: number;
+
+  vmetric: number[] | null;
+
+  operatorListId: number | null;
+
+  isSpace: boolean;
+
+  isInFont: boolean;
+
+  compiled: ((c: CanvasRenderingContext2D) => void) | null;
+
+}

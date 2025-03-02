@@ -1,10 +1,23 @@
 import { RectType } from "../common/common_types"
 import { Ref } from "../document/primitives"
-import { AbortException, MissingPDFException, PasswordException, UnexpectedResponseException, UnknownErrorException, unreachable } from "../utils/util"
+import {
+  AbortException,
+  MissingPDFException,
+  PasswordException,
+  UnexpectedResponseException,
+  UnknownErrorException,
+  unreachable
+} from "../utils/util"
 import { AnnotationEditorSerial } from "./annotation_types"
-import { FontExportData, FontExportExtraData } from "./font_types"
+import {
+  FontExportData,
+  FontExportExtraData
+} from "./font_types"
 import { ImageMask } from "./image_types"
-import { MeshShadingPatternIR, RadialAxialShadingIR } from "./shading_types"
+import {
+  MeshShadingPatternIR,
+  RadialAxialShadingIR
+} from "./shading_types"
 
 export enum ObjType {
   Image = "Image",

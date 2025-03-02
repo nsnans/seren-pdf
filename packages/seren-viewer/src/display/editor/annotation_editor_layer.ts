@@ -15,14 +15,24 @@
 import { TextLayerBuilder } from "../text_layer_builder";
 import { TextAccessibilityManager } from "../../text_accessibility";
 import { AnnotationLayer } from "../annotation_layer";
-import { PageViewport, setLayerDimensions } from "../display_utils";
+import {
+  PageViewport,
+  setLayerDimensions
+} from "../display_utils";
 import { DrawLayer } from "../draw_layer";
-import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
+import {
+  AnnotationEditor,
+  AnnotationEditorHelper,
+  AnnotationEditorParameters
+} from "./editor";
 import { AnnotationEditorRegistry } from "./editor_manager";
 import { AnnotationEditorUIManager } from "./tools";
 import { StructTreeLayerBuilder } from "../struct_tree_layer_builder";
 import { L10n } from "../../l10n/l10n";
-import { AnnotationEditorType, FeatureTest } from "seren-common";
+import {
+  AnnotationEditorType,
+  FeatureTest
+} from "seren-common";
 
 /**
  * Manage all the different editors on a page.

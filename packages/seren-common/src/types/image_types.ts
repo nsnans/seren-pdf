@@ -21,6 +21,7 @@ export interface JpxDecoderOptions {
   smaskInData?: boolean;
 
 }
+
 export interface OptionalContent {
   type: string;
   id?: string | null;
@@ -28,6 +29,7 @@ export interface OptionalContent {
   expression?: (string | string[])[] | null;
   policy?: string | null;
 }
+
 export interface GroupOptions {
   matrix: TransformType | null;
   bbox: RectType | null;
@@ -35,10 +37,9 @@ export interface GroupOptions {
   isolated: boolean;
   knockout: boolean;
 }
+
 export interface SMaskOptions {
   transferMap?: Uint8Array<ArrayBuffer>;
   subtype: string;
   backdrop: number[] | Uint8ClampedArray<ArrayBuffer>;
 }
-
-

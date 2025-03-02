@@ -12,7 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { AnnotationData, AnnotationEditorParamsType, AnnotationEditorType, FeatureTest, RectType, shadow, unreachable } from "seren-common";
+import {
+  AnnotationData,
+  AnnotationEditorParamsType,
+  AnnotationEditorType,
+  FeatureTest,
+  RectType,
+  shadow,
+  unreachable
+} from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
 import { noContextMenu } from "../display_utils";
 import { AltText } from "./alt_text";
@@ -27,12 +35,12 @@ import {
 import { L10n } from "../../l10n/l10n";
 
 /**
- * @typedef {Object} AnnotationEditorParameters
- * @property {AnnotationEditorUIManager} uiManager - the global manager
- * @property {AnnotationEditorLayer} parent - the layer containing this editor
- * @property {string} id - editor id
- * @property {number} x - x-coordinate
- * @property {number} y - y-coordinate
+ * @typedef AnnotationEditorParameters
+ * @property uiManager - the global manager
+ * @property parent - the layer containing this editor
+ * @property id - editor id
+ * @property x - x-coordinate
+ * @property y - y-coordinate
  */
 export interface AnnotationEditorParameters {
   uiManager: AnnotationEditorUIManager;

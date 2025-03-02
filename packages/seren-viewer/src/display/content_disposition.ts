@@ -28,7 +28,7 @@ import { stringToBytes } from "seren-common";
  * @param contentDisposition
  * @returns Filename, if found in the Content-Disposition header.
  */
-function getFilenameFromContentDispositionHeader(contentDisposition: string): string {
+export function getFilenameFromContentDispositionHeader(contentDisposition: string): string {
   let needsEncodingFixup = true;
 
   // filename*=ext-value ("ext-value" from RFC 5987, referenced by RFC 6266).
@@ -215,5 +215,3 @@ function getFilenameFromContentDispositionHeader(contentDisposition: string): st
 
   return "";
 }
-
-export { getFilenameFromContentDispositionHeader };

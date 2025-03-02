@@ -42,7 +42,7 @@ const MAX_SUBR_NESTING = 10;
  * 'Compact Font Format' which itself embed Type2 charstrings.
  */
 // prettier-ignore
-const CFFStandardStrings = [
+export const CFFStandardStrings = [
   ".notdef", "space", "exclam", "quotedbl", "numbersign", "dollar", "percent",
   "ampersand", "quoteright", "parenleft", "parenright", "asterisk", "plus",
   "comma", "hyphen", "period", "slash", "zero", "one", "two", "three", "four",
@@ -252,7 +252,7 @@ export interface CharStringsParserState {
   hasVStems: boolean;
 }
 
-class CFFParser {
+export class CFFParser {
 
   protected properties: EvaluatorProperties;
 
@@ -1038,7 +1038,7 @@ class CFFParser {
 }
 
 // Compact Font Format
-class CFF {
+export class CFF {
 
   public strings = new CFFStrings();
 
@@ -1106,7 +1106,7 @@ class CFF {
   }
 }
 
-class CFFHeader {
+export class CFFHeader {
 
   public hdrSize: number;
 
@@ -1124,7 +1124,7 @@ class CFFHeader {
   }
 }
 
-class CFFStrings {
+export class CFFStrings {
 
   public strings: string[];
 
@@ -1163,7 +1163,7 @@ class CFFStrings {
   }
 }
 
-class CFFIndex {
+export class CFFIndex {
 
   protected length = 0;
 
@@ -1459,7 +1459,7 @@ const CFFTopDictLayout: CFFDictLayoutType = [
   [[12, 38], CFFDictKey.FontName, "sid", null],
 ];
 
-class CFFTopDict extends CFFDict {
+export class CFFTopDict extends CFFDict {
 
   public privateDict: CFFPrivateDict | null;
 
@@ -1494,7 +1494,7 @@ const CFFPrivateDictLayout: CFFDictLayoutType = [
   [19, CFFDictKey.Subrs, "offset", null],
 ];
 
-class CFFPrivateDict extends CFFDict {
+export class CFFPrivateDict extends CFFDict {
 
   static get tables() {
     return shadow(this, "tables", this.createTables(CFFPrivateDictLayout));
@@ -1514,7 +1514,7 @@ const CFFCharsetPredefinedTypes = {
   EXPERT_SUBSET: 2,
 };
 
-class CFFCharset {
+export class CFFCharset {
 
   protected predefined: boolean;
 
@@ -1552,7 +1552,7 @@ class CFFEncoding {
   }
 }
 
-class CFFFDSelect {
+export class CFFFDSelect {
 
   readonly format;
 
@@ -1632,7 +1632,7 @@ class CFFOffsetTracker {
 }
 
 // Takes a CFF and converts it to the binary representation.
-class CFFCompiler {
+export class CFFCompiler {
 
   protected cff: CFF;
 
@@ -2188,18 +2188,3 @@ class CFFCompiler {
     return data;
   }
 }
-
-export {
-  CFF,
-  CFFCharset,
-  CFFCompiler,
-  CFFFDSelect,
-  CFFHeader,
-  CFFIndex,
-  CFFParser,
-  CFFPrivateDict,
-  CFFStandardStrings,
-  CFFStrings,
-  CFFTopDict
-};
-

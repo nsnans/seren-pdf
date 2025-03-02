@@ -20,7 +20,7 @@ import {
   shadow,
   unreachable,
   MutableArray,
-  Dict, DictKey, Ref,isNumberArray
+  Dict, DictKey, Ref, isNumberArray
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { LocalFunctionCache } from "../image/image_utils";
@@ -28,9 +28,14 @@ import { PostScriptLexer, PostScriptParser } from "../parser/ps_parser";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 
-export type ParserConstructFunction = (src: MutableArray<number>, srcOffset: number, dest: MutableArray<number>, destOffset: number) => void;
+export type ParserConstructFunction = (
+  src: MutableArray<number>,
+  srcOffset: number,
+  dest: MutableArray<number>,
+  destOffset: number
+) => void;
 
-class PDFFunctionFactory {
+export class PDFFunctionFactory {
 
   protected isEvalSupported: boolean;
 
@@ -512,7 +517,7 @@ class PDFFunction {
   }
 }
 
-function isPDFFunction(v: Dict | BaseStream) {
+export function isPDFFunction(v: Dict | BaseStream) {
   let fnDict;
   if (v instanceof DictImpl) {
     fnDict = v;
@@ -587,7 +592,7 @@ class PostScriptStack {
   }
 }
 
-class PostScriptEvaluator {
+export class PostScriptEvaluator {
 
   protected operators: (string | number | null)[];
 
@@ -1107,7 +1112,7 @@ function buildMinOperation(num1: MinMaxNode, max: number) {
 // We can compile most of such programs, and at the same moment, we can
 // optimize some expressions using basic math properties. Keeping track of
 // min/max values will allow us to avoid extra Math.min/Math.max calls.
-class PostScriptCompiler {
+export class PostScriptCompiler {
 
   compile(code: (string | number | null)[], domain: number[], range: number[]) {
     const stack = <MinMaxNode[]>[];
@@ -1288,11 +1293,4 @@ class PostScriptCompiler {
     return result.join("\n");
   }
 }
-
-export {
-  isPDFFunction,
-  PDFFunctionFactory,
-  PostScriptCompiler,
-  PostScriptEvaluator
-};
 

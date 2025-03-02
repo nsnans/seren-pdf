@@ -1,8 +1,20 @@
 import { AnnotationEditorType } from "seren-common";
-import { FreeTextEditor, FreeTextEditorParameter } from "./freetext";
-import { HighlightEditor, HighlightEditorParameter } from "./highlight";
-import { InkEditor, InkEditorParameter } from "./ink";
-import { StampEditor, StampEditorParameter } from "./stamp";
+import {
+  FreeTextEditor,
+  FreeTextEditorParameter
+} from "./freetext";
+import {
+  HighlightEditor,
+  HighlightEditorParameter
+} from "./highlight";
+import {
+  InkEditor,
+  InkEditorParameter
+} from "./ink";
+import {
+  StampEditor,
+  StampEditorParameter
+} from "./stamp";
 import { AnnotationEditorUIManager } from "./tools";
 import { L10n } from "../../l10n/l10n";
 

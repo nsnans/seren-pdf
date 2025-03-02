@@ -16,6 +16,7 @@ export type RadialAxialShadingIR = [
   "RadialAxial", string, RectType | null, [number, string][],
   number[], number[], number | null, number | null
 ];
+
 export type TilingPatternIR = [
   "TilingPattern",
   Uint8ClampedArray<ArrayBuffer> | null,
@@ -25,4 +26,3 @@ export type TilingPatternIR = [
   number, number,
   number, number
 ];
-

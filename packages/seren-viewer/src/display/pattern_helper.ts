@@ -28,10 +28,14 @@ import {
   unreachable,
   Util
 } from "seren-common";
-import { CachedCanvases, CanvasGraphics, CanvasGraphicsFactory } from "./canvas";
+import {
+  CachedCanvases,
+  CanvasGraphics,
+  CanvasGraphicsFactory
+} from "./canvas";
 import { getCurrentTransform } from "./display_utils";
 
-const PathType = {
+export const PathType = {
   FILL: "Fill",
   STROKE: "Stroke",
   SHADING: "Shading",
@@ -491,7 +495,7 @@ class DummyShadingPattern extends BaseShadingPattern {
   }
 }
 
-function getShadingPattern(IR: RadialAxialShadingIR | MeshShadingPatternIR | ["Dummy"]): BaseShadingPattern {
+export function getShadingPattern(IR: RadialAxialShadingIR | MeshShadingPatternIR | ["Dummy"]): BaseShadingPattern {
   switch (IR[0]) {
     case "RadialAxial":
       return new RadialAxialShadingPattern(<RadialAxialShadingIR>IR);
@@ -508,7 +512,7 @@ const PaintType = {
   UNCOLORED: 2,
 };
 
-class TilingPattern {
+export class TilingPattern {
   // 10in @ 300dpi shall be enough.
   static MAX_PATTERN_SIZE = 3000;
 
@@ -823,5 +827,3 @@ class TilingPattern {
     return pattern;
   }
 }
-
-export { getShadingPattern, PathType, TilingPattern };

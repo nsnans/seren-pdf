@@ -18,7 +18,7 @@
 
 import { encodeToXmlString } from "./core_utils";
 
-const XMLParserErrorCode = {
+export const XMLParserErrorCode = {
   NoError: 0,
   EndOfDocument: -1,
   UnterminatedCdat: -2,
@@ -54,7 +54,7 @@ interface XMLTagProperty {
 
 }
 
-abstract class XMLParserBase {
+export abstract class XMLParserBase {
   _resolveEntities(s: string) {
     return s.replaceAll(/&([^;]+);/g, (_all, entity) => {
       if (entity.substring(0, 2) === "#x") {
@@ -301,7 +301,7 @@ abstract class XMLParserBase {
   abstract onError(_code: number): void;
 }
 
-class SimpleDOMNode {
+export class SimpleDOMNode {
 
   public nodeName: string;
 
@@ -457,7 +457,7 @@ class SimpleDOMNode {
   }
 }
 
-class SimpleXMLParser extends XMLParserBase {
+export class SimpleXMLParser extends XMLParserBase {
 
   protected _stack: SimpleDOMNode[][] | null;
 
@@ -543,5 +543,3 @@ class SimpleXMLParser extends XMLParserBase {
   }
 
 }
-
-export { SimpleDOMNode, SimpleXMLParser, XMLParserBase, XMLParserErrorCode };

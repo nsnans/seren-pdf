@@ -15,7 +15,7 @@
 
 // Factors to rescale LiberationSans-Bold.ttf to have the same
 // metrics as NimbusSans-Bold.otf.
-const HelveticaBoldFactors = [
+export const HelveticaBoldFactors = [
   0.76116, 1, 1, 1.0006, 0.99998, 0.99974, 0.99973, 0.99973, 0.99982, 0.99977,
   1.00087, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006,
   0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973,
@@ -94,11 +94,12 @@ const HelveticaBoldFactors = [
   0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998,
   0.99998, 0.99998, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const HelveticaBoldMetrics = { lineHeight: 1.2, lineGap: 0.2 };
+
+export const HelveticaBoldMetrics = { lineHeight: 1.2, lineGap: 0.2 };
 
 // Factors to rescale LiberationSans-BoldItalic.ttf to have the same
 // metrics as NimbusSans-BoldItalic.otf.
-const HelveticaBoldItalicFactors = [
+export const HelveticaBoldItalicFactors = [
   0.76116, 1, 1, 1.0006, 0.99998, 0.99974, 0.99973, 0.99973, 0.99982, 0.99977,
   1.00087, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006,
   0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973,
@@ -177,11 +178,12 @@ const HelveticaBoldItalicFactors = [
   0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998,
   0.99998, 0.99998, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const HelveticaBoldItalicMetrics = { lineHeight: 1.35, lineGap: 0.2 };
+
+export const HelveticaBoldItalicMetrics = { lineHeight: 1.35, lineGap: 0.2 };
 
 // Factors to rescale LiberationSans-Italic.ttf to have the same
 // metrics as NimbusSans-Italic.otf.
-const HelveticaItalicFactors = [
+export const HelveticaItalicFactors = [
   0.76116, 1, 1, 1.0006, 1.0006, 1.00006, 0.99973, 0.99973, 0.99982, 1.00001,
   1.00043, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006,
   0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973,
@@ -258,11 +260,12 @@ const HelveticaItalicFactors = [
   1.00042, 0.9995, 1, 1, 1, 1, 1, 1, 1, 1, 0.99998, 0.99998, 0.99998, 0.99998,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const HelveticaItalicMetrics = { lineHeight: 1.35, lineGap: 0.2 };
+
+export const HelveticaItalicMetrics = { lineHeight: 1.35, lineGap: 0.2 };
 
 // Factors to rescale LiberationSans-Regular.ttf to have the same
 // metrics as NimbusSans-Regular.otf.
-const HelveticaRegularFactors = [
+export const HelveticaRegularFactors = [
   0.76116, 1, 1, 1.0006, 1.0006, 1.00006, 0.99973, 0.99973, 0.99982, 1.00001,
   1.00043, 0.99998, 0.99998, 0.99959, 1.00003, 1.0006, 0.99998, 1.0006, 1.0006,
   0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973, 0.99973,
@@ -338,15 +341,5 @@ const HelveticaRegularFactors = [
   0.99977, 1.00054, 1, 1, 0.99953, 0.99962, 1.00042, 0.9995, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
-const HelveticaRegularMetrics = { lineHeight: 1.2, lineGap: 0.2 };
 
-export {
-  HelveticaBoldFactors,
-  HelveticaBoldItalicFactors,
-  HelveticaBoldItalicMetrics,
-  HelveticaBoldMetrics,
-  HelveticaItalicFactors,
-  HelveticaItalicMetrics,
-  HelveticaRegularFactors,
-  HelveticaRegularMetrics,
-};
+export const HelveticaRegularMetrics = { lineHeight: 1.2, lineGap: 0.2 };

@@ -16,15 +16,14 @@
 import { fetchData } from "./display_utils";
 import { stringToBytes, unreachable, PlatformHelper } from "seren-common";
 
+interface CMapReaderFactoryResult {
+  cMapData: Uint8Array<ArrayBuffer>;
+  isCompressed: boolean;
+}
 export interface CMapReaderFactory {
 
-  // 这个接口应该删掉
-  _fetch(url: string): Promise<Uint8Array>;
+  fetch(name: string): Promise<CMapReaderFactoryResult>;
 
-  fetch(name: string): Promise<{
-    cMapData: Uint8Array<ArrayBuffer>;
-    isCompressed: boolean;
-  }>;
 }
 
 export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
@@ -62,7 +61,7 @@ export abstract class BaseCMapReaderFactory implements CMapReaderFactory {
       });
   }
 
-  abstract _fetch(url: string): Promise<Uint8Array<ArrayBuffer>>;
+  protected abstract _fetch(url: string): Promise<Uint8Array<ArrayBuffer>>;
 }
 
 export class DOMCMapReaderFactory extends BaseCMapReaderFactory {
@@ -71,17 +70,8 @@ export class DOMCMapReaderFactory extends BaseCMapReaderFactory {
     super(baseUrl, isCompressed);
   }
 
-  /**
-   * @ignore
-   */
-  async _fetch(url: string) {
-    const data = await fetchData(
-      url,
-      /* type = */ this.isCompressed ? "arraybuffer" : "text"
-    );
-    return data instanceof ArrayBuffer
-      ? new Uint8Array(data)
-      : stringToBytes(data);
+  protected async _fetch(url: string) {
+    const data = await fetchData(url, this.isCompressed ? "arraybuffer" : "text");
+    return data instanceof ArrayBuffer ? new Uint8Array(data) : stringToBytes(data);
   }
 }
-

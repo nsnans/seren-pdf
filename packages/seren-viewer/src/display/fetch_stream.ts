@@ -179,12 +179,12 @@ class PDFFetchStreamReader implements PDFStreamReader {
       const responseHeaders = response.headers;
 
       const { allowRangeRequests, suggestedLength } =
-        validateRangeRequestCapabilities({
+        validateRangeRequestCapabilities(
           responseHeaders,
-          isHttp: stream.isHttp,
-          rangeChunkSize: this._rangeChunkSize,
-          disableRange: this._disableRange,
-        });
+          stream.isHttp,
+          this._rangeChunkSize,
+          this._disableRange,
+        );
 
       this._isRangeSupported = allowRangeRequests;
       // Setting right content length.

@@ -15,7 +15,7 @@
 
 import { FeatureTest, ImageKind } from "../utils/util";
 
-function convertToRGBA(
+export function convertToRGBA(
   kind: number,
   src: Uint8ClampedArray,
   dest: Uint32Array,
@@ -33,7 +33,7 @@ function convertToRGBA(
   return null;
 }
 
-function convertBlackAndWhiteToRGBA(
+export function convertBlackAndWhiteToRGBA(
   src: Uint8Array | Uint8ClampedArray,
   dest: Uint32Array | Uint8ClampedArray,
   width: number,
@@ -122,7 +122,7 @@ function convertRGBToRGBA(
   return { srcPos, destPos };
 }
 
-function grayToRGBA(src: Uint8ClampedArray, dest: Uint32Array) {
+export function grayToRGBA(src: Uint8ClampedArray, dest: Uint32Array) {
   if (FeatureTest.isLittleEndian) {
     for (let i = 0, ii = src.length; i < ii; i++) {
       dest[i] = (src[i] * 0x10101) | 0xff000000;
@@ -133,5 +133,3 @@ function grayToRGBA(src: Uint8ClampedArray, dest: Uint32Array) {
     }
   }
 }
-
-export { convertBlackAndWhiteToRGBA, convertToRGBA, grayToRGBA };

@@ -18,16 +18,16 @@ import { PlatformHelper } from "./platform_helper";
 import { Uint8TypedArray } from "../common/typed_array";
 import { PointType, RectType, TransformType, TypedArray } from "../common/common_types";
 
-const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];
-const FONT_IDENTITY_MATRIX: TransformType = [0.001, 0, 0, 0.001, 0, 0];
+export const IDENTITY_MATRIX: TransformType = [1, 0, 0, 1, 0, 0];
+export const FONT_IDENTITY_MATRIX: TransformType = [0.001, 0, 0, 0.001, 0, 0];
 
-const MAX_IMAGE_SIZE_TO_CACHE = 10e6; // Ten megabytes.
+export const MAX_IMAGE_SIZE_TO_CACHE = 10e6; // Ten megabytes.
 
 // Represent the percentage of the height of a single-line field over
 // the font size. Acrobat seems to use this value.
-const LINE_FACTOR = 1.35;
-const LINE_DESCENT_FACTOR = 0.35;
-const BASELINE_FACTOR = LINE_DESCENT_FACTOR / LINE_FACTOR;
+export const LINE_FACTOR = 1.35;
+export const LINE_DESCENT_FACTOR = 0.35;
+export const BASELINE_FACTOR = LINE_DESCENT_FACTOR / LINE_FACTOR;
 
 /**
  * Refer to the `WorkerTransport.getRenderingIntent`-method in the API, to see
@@ -43,7 +43,7 @@ const BASELINE_FACTOR = LINE_DESCENT_FACTOR / LINE_FACTOR;
  *  - OPLIST is used with the `PDFPageProxy.getOperatorList`-method, note the
  *    `OperatorList`-constructor (on the worker-thread).
  */
-const RenderingIntentFlag = {
+export const RenderingIntentFlag = {
   ANY: 0x01,
   DISPLAY: 0x02,
   PRINT: 0x04,
@@ -55,16 +55,16 @@ const RenderingIntentFlag = {
   OPLIST: 0x100,
 };
 
-enum AnnotationMode {
+export enum AnnotationMode {
   DISABLE = 0,
   ENABLE = 1,
   ENABLE_FORMS = 2,
   ENABLE_STORAGE = 3,
 };
 
-const AnnotationEditorPrefix = "pdfjs_internal_editor_";
+export const AnnotationEditorPrefix = "pdfjs_internal_editor_";
 
-enum AnnotationEditorType {
+export enum AnnotationEditorType {
   DISABLE = -1,
   NONE = 0,
   FREETEXT = 3,
@@ -73,7 +73,7 @@ enum AnnotationEditorType {
   INK = 15,
 };
 
-enum AnnotationEditorParamsType {
+export enum AnnotationEditorParamsType {
   RESIZE = 1,
   CREATE = 2,
   FREETEXT_SIZE = 11,
@@ -90,7 +90,7 @@ enum AnnotationEditorParamsType {
 };
 
 // Permission flags from Table 22, Section 7.6.3.2 of the PDF specification.
-enum PermissionFlag {
+export enum PermissionFlag {
   PRINT = 0x04,
   MODIFY_CONTENTS = 0x08,
   COPY = 0x10,
@@ -101,7 +101,7 @@ enum PermissionFlag {
   PRINT_HIGH_QUALITY = 0x800,
 };
 
-const TextRenderingMode = {
+export const TextRenderingMode = {
   FILL: 0,
   STROKE: 1,
   FILL_STROKE: 2,
@@ -114,7 +114,7 @@ const TextRenderingMode = {
   ADD_TO_PATH_FLAG: 4,
 };
 
-enum ImageKind {
+export enum ImageKind {
   /* NONE是添加了用来解决ImageKind和数字混用的问题*/
   NONE = 0,
   GRAYSCALE_1BPP = 1,
@@ -122,7 +122,7 @@ enum ImageKind {
   RGBA_32BPP = 3,
 };
 
-enum AnnotationType {
+export enum AnnotationType {
   TEXT = 1,
   LINK = 2,
   FREETEXT = 3,
@@ -151,12 +151,12 @@ enum AnnotationType {
   REDACT = 26
 };
 
-const AnnotationReplyType = {
+export const AnnotationReplyType = {
   GROUP: "Group",
   REPLY: "R",
 };
 
-const AnnotationFlag = {
+export const AnnotationFlag = {
   INVISIBLE: 0x01,
   HIDDEN: 0x02,
   PRINT: 0x04,
@@ -169,7 +169,7 @@ const AnnotationFlag = {
   LOCKEDCONTENTS: 0x200,
 };
 
-const AnnotationFieldFlag = {
+export const AnnotationFieldFlag = {
   READONLY: 0x0000001,
   REQUIRED: 0x0000002,
   NOEXPORT: 0x0000004,
@@ -191,7 +191,7 @@ const AnnotationFieldFlag = {
   COMMITONSELCHANGE: 0x4000000,
 };
 
-const AnnotationBorderStyleType = {
+export const AnnotationBorderStyleType = {
   SOLID: 1,
   DASHED: 2,
   BEVELED: 3,
@@ -199,7 +199,7 @@ const AnnotationBorderStyleType = {
   UNDERLINE: 5,
 };
 
-const AnnotationActionEventType = {
+export const AnnotationActionEventType = {
   E: "Mouse Enter",
   X: "Mouse Exit",
   D: "Mouse Down",
@@ -216,7 +216,7 @@ const AnnotationActionEventType = {
   C: "Calculate",
 } as const;
 
-const DocumentActionEventType = {
+export const DocumentActionEventType = {
   WC: "WillClose",
   WS: "WillSave",
   DS: "DidSave",
@@ -224,12 +224,12 @@ const DocumentActionEventType = {
   DP: "DidPrint",
 } as const;
 
-const PageActionEventType = {
+export const PageActionEventType = {
   O: "PageOpen",
   C: "PageClose",
 } as const;
 
-enum VerbosityLevel {
+export enum VerbosityLevel {
   ERRORS = 0,
   WARNINGS = 1,
   INFOS = 5,
@@ -336,44 +336,44 @@ export enum OPS {
   setFillTransparent = 93,
 };
 
-const PasswordResponses = {
+export const PasswordResponses = {
   NEED_PASSWORD: 1,
   INCORRECT_PASSWORD: 2,
 };
 
 let verbosity = VerbosityLevel.WARNINGS;
 
-function setVerbosityLevel(level: number | null) {
+export function setVerbosityLevel(level: number | null) {
   if (level != undefined && Number.isInteger(level)) {
     verbosity = level;
   }
 }
 
-function getVerbosityLevel() {
+export function getVerbosityLevel() {
   return verbosity;
 }
 
 // A notice for devs. These are good for things that are helpful to devs, such
 // as warning that Workers were disabled, which is important to devs but not
 // end users.
-function info(msg: any) {
+export function info(msg: any) {
   if (verbosity >= VerbosityLevel.INFOS) {
     console.log(`Info: ${msg}`);
   }
 }
 
 // Non-fatal warnings.
-function warn(msg: any) {
+export function warn(msg: any) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log(`Warning: ${msg}`);
   }
 }
 
-function unreachable(msg: string): never {
+export function unreachable(msg: string): never {
   throw new Error(msg);
 }
 
-function assert(cond: boolean, msg: string): asserts cond {
+export function assert(cond: boolean, msg: string): asserts cond {
   if (!cond) {
     unreachable(msg);
   }
@@ -408,7 +408,7 @@ interface CreateValidAbsoluteUrlOptions {
   tryConvertEncoding: boolean,
 }
 
-function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null = null
+export function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null = null
   , options?: CreateValidAbsoluteUrlOptions): URL | null {
   if (!url) {
     return null;
@@ -453,7 +453,7 @@ function createValidAbsoluteUrl(url: URL | string, baseUrl: URL | string | null 
  * shadow方法实现的其实并不完美，因为它的prop是用的字符串形式，它会将代码与代码之间的关联断开掉
  * 不小心误触或者大小写错误或者字母顺序出错了，都会导致问题。
  */
-function shadow<T>(obj: object, prop: string, value: T, nonSerializable = false): T {
+export function shadow<T>(obj: object, prop: string, value: T, nonSerializable = false): T {
   if (PlatformHelper.isTesting()) {
     assert(
       prop in obj,
@@ -470,7 +470,7 @@ function shadow<T>(obj: object, prop: string, value: T, nonSerializable = false)
 }
 
 
-class BaseException extends Error {
+export class BaseException extends Error {
   constructor(message: string, name: string) {
     super(message);
     this.name = name;
@@ -478,7 +478,7 @@ class BaseException extends Error {
 }
 
 
-class PasswordException extends BaseException {
+export class PasswordException extends BaseException {
 
   readonly code: number;
 
@@ -488,7 +488,7 @@ class PasswordException extends BaseException {
   }
 }
 
-class UnknownErrorException extends BaseException {
+export class UnknownErrorException extends BaseException {
 
   readonly details: unknown;
 
@@ -498,19 +498,19 @@ class UnknownErrorException extends BaseException {
   }
 }
 
-class InvalidPDFException extends BaseException {
+export class InvalidPDFException extends BaseException {
   constructor(msg: string) {
     super(msg, "InvalidPDFException");
   }
 }
 
-class MissingPDFException extends BaseException {
+export class MissingPDFException extends BaseException {
   constructor(msg: string) {
     super(msg, "MissingPDFException");
   }
 }
 
-class UnexpectedResponseException extends BaseException {
+export class UnexpectedResponseException extends BaseException {
 
   readonly status: number;
 
@@ -523,7 +523,7 @@ class UnexpectedResponseException extends BaseException {
 /**
  * Error caused during parsing PDF data.
  */
-class FormatError extends BaseException {
+export class FormatError extends BaseException {
   constructor(msg: string) {
     super(msg, "FormatError");
   }
@@ -532,7 +532,7 @@ class FormatError extends BaseException {
 /**
  * Error used to indicate task cancellation.
  */
-class AbortException extends BaseException {
+export class AbortException extends BaseException {
   constructor(msg: string) {
     super(msg, "AbortException");
   }
@@ -544,7 +544,7 @@ export function numberArrayToString(bytes: number[]) {
 
 // 调用的地方很多，可能参数不止Uint8Array类型
 // 目前看到的都是Uint8Array
-function bytesToString(bytes: Uint8TypedArray) {
+export function bytesToString(bytes: Uint8TypedArray) {
   if (typeof bytes !== "object" || bytes?.length === undefined) {
     unreachable("Invalid argument for bytesToString");
   }
@@ -564,7 +564,7 @@ function bytesToString(bytes: Uint8TypedArray) {
   return strBuf.join("");
 }
 
-function stringToBytes(str: string): Uint8Array<ArrayBuffer> {
+export function stringToBytes(str: string): Uint8Array<ArrayBuffer> {
   if (typeof str !== "string") {
     unreachable("Invalid argument for stringToBytes");
   }
@@ -576,7 +576,7 @@ function stringToBytes(str: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-function string32(value: number) {
+export function string32(value: number) {
   if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
     assert(
       typeof value === "number" && Math.abs(value) < 2 ** 32,
@@ -591,13 +591,13 @@ function string32(value: number) {
   );
 }
 
-function objectSize(obj: Record<string, any>) {
+export function objectSize(obj: Record<string, any>) {
   return Object.keys(obj).length;
 }
 
 // Ensure that the returned Object has a `null` prototype; hence why
 // `Object.fromEntries(...)` is not used.
-function objectFromMap(map: Map<string, any>) {
+export function objectFromMap(map: Map<string, any>) {
   const obj = Object.create(null);
   for (const [key, value] of map) {
     obj[key] = value;
@@ -623,7 +623,7 @@ function isEvalSupported() {
   }
 }
 
-class FeatureTest {
+export class FeatureTest {
 
   static get isLittleEndian() {
     return shadow(this, "isLittleEndian", isLittleEndian());
@@ -668,11 +668,11 @@ class FeatureTest {
   }
 }
 
-const hexNumbers = Array.from(Array(256).keys(), n =>
+export const hexNumbers = Array.from(Array(256).keys(), n =>
   n.toString(16).padStart(2, "0")
 );
 
-class Util {
+export class Util {
 
   static makeHexColor(r: number, g: number, b: number): string {
     return `#${hexNumbers[r]}${hexNumbers[g]}${hexNumbers[b]}`;
@@ -962,7 +962,7 @@ const PDFStringTranslateTable = [
   0x131, 0x142, 0x153, 0x161, 0x17e, 0, 0x20ac,
 ];
 
-function stringToPDFString(str: string) {
+export function stringToPDFString(str: string) {
   // See section 7.9.2.2 Text String Type.
   // The string can contain some language codes bracketed with 0x0b,
   // so we must remove them.
@@ -1011,15 +1011,15 @@ function stringToPDFString(str: string) {
   return strBuf.join("");
 }
 
-function stringToUTF8String(str: string) {
+export function stringToUTF8String(str: string) {
   return decodeURIComponent(escape(str));
 }
 
-function utf8StringToString(str: string) {
+export function utf8StringToString(str: string) {
   return unescape(encodeURIComponent(str));
 }
 
-function isArrayEqual<T>(arr1: ArrayLike<T>, arr2: ArrayLike<T>) {
+export function isArrayEqual<T>(arr1: ArrayLike<T>, arr2: ArrayLike<T>) {
   if (arr1.length !== arr2.length) {
     return false;
   }
@@ -1031,7 +1031,7 @@ function isArrayEqual<T>(arr1: ArrayLike<T>, arr2: ArrayLike<T>) {
   return true;
 }
 
-function getModificationDate(date = new Date()) {
+export function getModificationDate(date = new Date()) {
   const buffer = [
     date.getUTCFullYear().toString(),
     (date.getUTCMonth() + 1).toString().padStart(2, "0"),
@@ -1046,7 +1046,7 @@ function getModificationDate(date = new Date()) {
 
 let NormalizeRegex: RegExp | null = null;
 let NormalizationMap: Map<string, string> | null = null;
-function normalizeUnicode(str: string) {
+export function normalizeUnicode(str: string) {
   if (!NormalizeRegex) {
     // In order to generate the following regex:
     //  - create a PDF containing all the chars in the range 0000-FFFF with
@@ -1063,7 +1063,7 @@ function normalizeUnicode(str: string) {
   );
 }
 
-function getUuid() {
+export function getUuid() {
   if (
     (PlatformHelper.isMozCental()) ||
     (typeof crypto !== "undefined" && typeof crypto?.randomUUID === "function")
@@ -1084,9 +1084,9 @@ function getUuid() {
   return bytesToString(buf);
 }
 
-const AnnotationPrefix = "pdfjs_internal_id_";
+export const AnnotationPrefix = "pdfjs_internal_id_";
 
-const FontRenderOps = {
+export const FontRenderOps = {
   BEZIER_CURVE_TO: 0,
   MOVE_TO: 1,
   LINE_TO: 2,
@@ -1099,7 +1099,7 @@ const FontRenderOps = {
 };
 
 // TODO: Remove this once `Uint8Array.prototype.toHex` is generally available.
-function toHexUtil(arr: Uint8Array): string {
+export function toHexUtil(arr: Uint8Array): string {
   if ((Uint8Array as any).prototype.toHex) {
     return (arr as any).toHex();
   }
@@ -1107,7 +1107,7 @@ function toHexUtil(arr: Uint8Array): string {
 }
 
 // TODO: Remove this once `Uint8Array.prototype.toBase64` is generally available.
-function toBase64Util(arr: Uint8Array<ArrayBuffer>) {
+export function toBase64Util(arr: Uint8Array<ArrayBuffer>) {
   if ((Uint8Array as any).prototype.toBase64) {
     return (arr as any).toBase64();
   }
@@ -1115,82 +1115,21 @@ function toBase64Util(arr: Uint8Array<ArrayBuffer>) {
 }
 
 // TODO: Remove this once `Uint8Array.fromBase64` is generally available.
-function fromBase64Util(str: string) {
+export function fromBase64Util(str: string) {
   if ((Uint8Array as any).fromBase64) {
     return (Uint8Array as any).fromBase64(str);
   }
   return stringToBytes(atob(str));
 }
 
-export {
-  AbortException,
-  AnnotationActionEventType,
-  AnnotationBorderStyleType,
-  AnnotationEditorParamsType,
-  AnnotationEditorPrefix,
-  AnnotationEditorType,
-  AnnotationFieldFlag,
-  AnnotationFlag,
-  AnnotationMode,
-  AnnotationPrefix,
-  AnnotationReplyType,
-  AnnotationType,
-  assert,
-  BaseException,
-  BASELINE_FACTOR,
-  bytesToString,
-  createValidAbsoluteUrl,
-  DocumentActionEventType,
-  FeatureTest,
-  FONT_IDENTITY_MATRIX,
-  FontRenderOps,
-  FormatError,
-  fromBase64Util,
-  getModificationDate,
-  getUuid,
-  getVerbosityLevel,
-  hexNumbers,
-  IDENTITY_MATRIX,
-  ImageKind,
-  info,
-  InvalidPDFException,
-  isArrayEqual,
-  LINE_DESCENT_FACTOR,
-  LINE_FACTOR,
-  MAX_IMAGE_SIZE_TO_CACHE,
-  MissingPDFException,
-  normalizeUnicode,
-  objectFromMap,
-  objectSize,
-  PageActionEventType,
-  PasswordException,
-  PasswordResponses,
-  PermissionFlag,
-  RenderingIntentFlag,
-  setVerbosityLevel,
-  shadow,
-  string32,
-  stringToBytes,
-  stringToPDFString,
-  stringToUTF8String,
-  TextRenderingMode,
-  toBase64Util,
-  toHexUtil,
-  UnexpectedResponseException,
-  UnknownErrorException,
-  unreachable,
-  utf8StringToString,
-  Util,
-  VerbosityLevel,
-  warn
-};
 /**
-   * Checks if something is an Array containing only numbers,
-   * and (optionally) checks its length.
-   * @param {any} arr
-   * @param {number | null} len
-   * @returns {boolean}
-   */
+ * Checks if something is an Array containing only numbers,
+ * 
+ * and (optionally) checks its length.
+ * @param arr
+ * @param {number | null} len
+ * @returns {boolean}
+ * */
 export function isNumberArray(arr: unknown, len: number | null): arr is number[] {
   if (Array.isArray(arr)) {
     return (

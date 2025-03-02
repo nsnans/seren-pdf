@@ -95,7 +95,7 @@ class DefaultAppearanceEvaluator extends EvaluatorPreprocessor {
 }
 
 // Parse DA to extract font and color information.
-function parseDefaultAppearance(str: string) {
+export function parseDefaultAppearance(str: string) {
   return new DefaultAppearanceEvaluator(str).parse();
 }
 
@@ -221,11 +221,11 @@ class AppearanceStreamEvaluator extends EvaluatorPreprocessor {
 
 // Parse appearance stream to extract font and color information.
 // It returns the font properties used to render the first text object.
-function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRefImpl) {
+export function parseAppearanceStream(stream: Stream, evaluatorOptions: DocumentEvaluatorOptions, xref: XRefImpl) {
   return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 
-function getPdfColor(color: Uint8ClampedArray<ArrayBuffer>, isFill: boolean) {
+export function getPdfColor(color: Uint8ClampedArray<ArrayBuffer>, isFill: boolean) {
   if (color[0] === color[1] && color[1] === color[2]) {
     const gray = color[0] / 255;
     return `${numberToString(gray)} ${isFill ? "g" : "G"}`;
@@ -237,11 +237,11 @@ function getPdfColor(color: Uint8ClampedArray<ArrayBuffer>, isFill: boolean) {
 }
 
 // Create default appearance string from some information.
-function createDefaultAppearance(fontSize: number, fontName: string, fontColor: Uint8ClampedArray<ArrayBuffer>) {
+export function createDefaultAppearance(fontSize: number, fontName: string, fontColor: Uint8ClampedArray<ArrayBuffer>) {
   return `/${escapePDFName(fontName)} ${fontSize} Tf ${getPdfColor(fontColor, true)}`;
 }
 
-class FakeUnicodeFont {
+export class FakeUnicodeFont {
 
   public static _fontNameId = 1;
 
@@ -513,11 +513,3 @@ class FakeUnicodeFont {
     return ap;
   }
 }
-
-export {
-  createDefaultAppearance,
-  FakeUnicodeFont,
-  getPdfColor,
-  parseAppearanceStream,
-  parseDefaultAppearance,
-};

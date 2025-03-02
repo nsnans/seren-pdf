@@ -13,15 +13,33 @@
  * limitations under the License.
  */
 
-import { AnnotationEditorParamsType, AnnotationEditorType, PointType, AnnotationData, BoxType, shadow } from "seren-common";
+import {
+  AnnotationEditorParamsType,
+  AnnotationEditorType,
+  PointType,
+  AnnotationData,
+  BoxType,
+  shadow
+} from "seren-common";
 import { AnnotationElement } from "../annotation_layer";
-import { } from "../display_utils";
 import { AnnotationEditorLayer } from "./annotation_editor_layer";
 import { ColorPicker } from "./color_picker";
 import { FreeDrawOutline } from "./drawers/freedraw";
-import { FreeHighlightOutliner, HighlightOutline, HighlightOutliner } from "./drawers/highlight";
-import { AnnotationEditor, AnnotationEditorHelper, AnnotationEditorParameters } from "./editor";
-import { AnnotationEditorUIManager, bindEvents, KeyboardManager } from "./tools";
+import {
+  FreeHighlightOutliner,
+  HighlightOutline,
+  HighlightOutliner
+} from "./drawers/highlight";
+import {
+  AnnotationEditor,
+  AnnotationEditorHelper,
+  AnnotationEditorParameters
+} from "./editor";
+import {
+  AnnotationEditorUIManager,
+  bindEvents,
+  KeyboardManager
+} from "./tools";
 import { L10n } from "../../l10n/l10n";
 
 export interface HighlightEditorParameter extends AnnotationEditorParameters {

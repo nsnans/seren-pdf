@@ -217,8 +217,7 @@ class NetworkManager {
   }
 }
 
-/** @implements {PDFStream} */
-class PDFNetworkStream implements PDFStream {
+export class PDFNetworkStream implements PDFStream {
 
   protected _source: PDFStreamSource;
 
@@ -361,12 +360,12 @@ class PDFNetworkStreamFullRequestReader implements PDFStreamReader {
     );
 
     const { allowRangeRequests, suggestedLength } =
-      validateRangeRequestCapabilities({
+      validateRangeRequestCapabilities(
         responseHeaders,
-        isHttp: this._manager.isHttp,
-        rangeChunkSize: this._rangeChunkSize,
-        disableRange: this._disableRange,
-      });
+        this._manager.isHttp,
+        this._rangeChunkSize,
+        this._disableRange,
+      );
 
     if (allowRangeRequests) {
       this._isRangeSupported = true;
@@ -578,5 +577,3 @@ class PDFNetworkStreamRangeRequestReader implements PDFStreamRangeReader {
     this._close();
   }
 }
-
-export { PDFNetworkStream };

@@ -13,7 +13,13 @@
  * limitations under the License.
  */
 
-import { BaseException, warn, PlatformHelper, Uint8TypedArray, JpxDecoderOptions } from "seren-common";
+import {
+  BaseException,
+  warn,
+  PlatformHelper,
+  Uint8TypedArray,
+  JpxDecoderOptions
+} from "seren-common";
 // 这里仔细研究一下，如何引入外部的部件
 // openjpeg这个组件，最后还是会被打到worker文件里的，而非单独一个文件
 import { Stream } from "../stream/stream";
@@ -27,7 +33,7 @@ export class JpxError extends BaseException {
 }
 
 export class JpxImage {
-  
+
   static #module: OpenJPEGModule | null = null;
 
   static decode(data: Uint8TypedArray, decoderOptions: JpxDecoderOptions | null) {

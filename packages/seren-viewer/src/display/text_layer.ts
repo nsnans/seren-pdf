@@ -27,21 +27,27 @@ import {
   Util,
   warn,
 } from "seren-common";
-import { PageViewport, setLayerDimensions } from "./display_utils";
+import {
+  PageViewport,
+  setLayerDimensions
+} from "./display_utils";
 
-/**
- * @typedef {Object} TextLayerParameters
- * @property {ReadableStream | TextContent} textContentSource - Text content to
- *   render, i.e. the value returned by the page's `streamTextContent` or
- *   `getTextContent` method.
- * @property {HTMLElement} container - The DOM node that will contain the text
- *   runs.
- * @property {PageViewport} viewport - The target viewport to properly layout
- *   the text runs.
- */
 export interface TextLayerParameters {
+
+  /**
+   * Text content to render, i.e. the value returned by the page's `streamTextContent` or
+   * `getTextContent` method.
+   */
   textContentSource: ReadableStream | TextContent;
+
+  /**
+   * The DOM node that will contain the text runs.
+   */
   container: HTMLElement;
+
+  /**
+   * The target viewport to properly layout the text runs.
+   */
   viewport: PageViewport;
 }
 
@@ -230,8 +236,6 @@ export class TextLayer {
 
   /**
    * Update a previously rendered textLayer, if necessary.
-   * @param {TextLayerUpdateParameters} options
-   * @returns {undefined}
    */
   update(viewport: PageViewport, onBefore: (() => void) | null) {
     const scale = viewport.scale * (globalThis.devicePixelRatio || 1);
@@ -261,7 +265,6 @@ export class TextLayer {
 
   /**
    * Cancel rendering of the textLayer.
-   * @returns {undefined}
    */
   cancel() {
     const abortEx = new AbortException("TextLayer task cancelled.");
@@ -275,18 +278,16 @@ export class TextLayer {
   }
 
   /**
-   * @type {Array<HTMLElement>} HTML elements that correspond to the text items
-   *   of the textContent input.
-   *   This is output and will initially be set to an empty array.
+   * HTML elements that correspond to the text items of the textContent input.
+   * This is output and will initially be set to an empty array.
    */
   get textDivs() {
     return this.#textDivs;
   }
 
   /**
-   * @type {Array<string>} Strings that correspond to the `str` property of
-   *   the text items of the textContent input.
-   *   This is output and will initially be set to an empty array
+   * Strings that correspond to the `str` property of the text items of the textContent input.
+   * This is output and will initially be set to an empty array
    */
   get textContentItemsStr() {
     return this.#textContentItemsStr;
@@ -478,7 +479,6 @@ export class TextLayer {
 
   /**
    * Clean-up global textLayer data.
-   * @returns {undefined}
    */
   static cleanup() {
     if (this.#pendingTextLayers.size > 0) {

@@ -31,7 +31,7 @@ import { BaseStream } from "../stream/base_stream";
 import { DecryptStream } from "../stream/decrypt_stream";
 import { DictImpl } from "../document/dict_impl";
 
-class ARCFourCipher implements StreamClipher, StringClipher {
+export class ARCFourCipher implements StreamClipher, StringClipher {
 
   protected a = 0;
 
@@ -84,7 +84,7 @@ class ARCFourCipher implements StreamClipher, StringClipher {
   }
 }
 
-const calculateMD5 = (function calculateMD5Closure() {
+export const calculateMD5 = (function calculateMD5Closure() {
 
   const r = new Uint8Array([
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5,
@@ -275,7 +275,7 @@ class Word64 {
   }
 }
 
-const calculateSHA256 = (function calculateSHA256Closure() {
+export const calculateSHA256 = (function calculateSHA256Closure() {
   function rotr(x: number, n: number) {
     return (x >>> n) | (x << (32 - n));
   }
@@ -410,7 +410,7 @@ const calculateSHA256 = (function calculateSHA256Closure() {
   return hash;
 })();
 
-const calculateSHA512 = (function calculateSHA512Closure() {
+export const calculateSHA512 = (function calculateSHA512Closure() {
   function ch(result: Word64, x: Word64, y: Word64, z: Word64, tmp: Word64) {
     result.assign(x);
     result.and(y);
@@ -682,7 +682,7 @@ const calculateSHA512 = (function calculateSHA512Closure() {
   return hash;
 })();
 
-function calculateSHA384(data: Uint8Array<ArrayBuffer>, offset: number, length: number) {
+export function calculateSHA384(data: Uint8Array<ArrayBuffer>, offset: number, length: number) {
   return calculateSHA512(data, offset, length, true);
 }
 
@@ -1151,7 +1151,7 @@ abstract class AESBaseCipher implements StreamClipher {
   }
 }
 
-class AES128Cipher extends AESBaseCipher {
+export class AES128Cipher extends AESBaseCipher {
 
   protected _cyclesOfRepetition = 10;
 
@@ -1228,7 +1228,7 @@ class AES128Cipher extends AESBaseCipher {
   }
 }
 
-class AES256Cipher extends AESBaseCipher {
+export class AES256Cipher extends AESBaseCipher {
 
   protected _cyclesOfRepetition = 14;
 
@@ -1292,7 +1292,8 @@ class AES256Cipher extends AESBaseCipher {
   }
 }
 
-class PDF17 {
+export class PDF17 {
+
   checkOwnerPassword(password: Uint8Array, ownerValidationSalt: Uint8Array, userBytes: Uint8Array, ownerPassword: Uint8Array) {
     const hashData = new Uint8Array(password.length + 56);
     hashData.set(password, 0);
@@ -1340,7 +1341,7 @@ class PDF17 {
   }
 }
 
-class PDF20 {
+export class PDF20 {
   _hash(password: Uint8TypedArray, input: Uint8TypedArray, userBytes: Uint8TypedArray) {
     // This refers to Algorithm 2.B as defined in ISO 32000-2.
     let k = calculateSHA256(input, 0, input.length).subarray(0, 32);
@@ -1518,7 +1519,7 @@ export class CipherTransform {
   }
 }
 
-class CipherTransformFactory {
+export class CipherTransformFactory {
 
   protected static defaultPasswordBytes = new Uint8Array([
     0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56,
@@ -1908,16 +1909,3 @@ class CipherTransformFactory {
     return new CipherTransform(cipherConstructor, cipherConstructor);
   }
 }
-
-export {
-  AES128Cipher,
-  AES256Cipher,
-  ARCFourCipher,
-  calculateMD5,
-  calculateSHA256,
-  calculateSHA384,
-  calculateSHA512,
-  CipherTransformFactory,
-  PDF17,
-  PDF20
-};
