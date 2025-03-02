@@ -1,3 +1,9 @@
 packages:
-  - 'packages/*'
+  - 'packages/seren-common'
+  - 'packages/seren-core'
+  - 'packages/seren-openjpeg'
+  - 'packages/seren-viewer'
+  - 'packages/seren-web'
+  - 'packages/seren-worker'
+  - 'packages-private/seren-viewer-develop'
   

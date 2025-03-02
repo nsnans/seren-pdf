@@ -13,7 +13,6 @@
     /* Bundler mode */
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
-    "allowJs": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
@@ -25,25 +24,15 @@
     "noUncheckedSideEffectImports": true,
     "experimentalDecorators": true,
     "paths": {
-      "seren-common": [
-        "packages/seren-common/src"
-      ],
-      "seren-core": [
-        "packages/seren-core/src"
-      ],
-      "seren-openjpeg": [
-        "packages/seren-openjpeg/src"
-      ],
-      "seren-viewer": [
-        "packages/seren-viewer/src"
-      ],
       "seren-web": [
-        "packages/seren-web/src"
+        "../packages/seren-web/src"
+      ],
+      "seren-worker": [
+        "../packages/seren-worker/src"
       ]
-    }
+    },
   },
   "include": [
-    "packages/global.d.ts",
-    "packages/*/src"
+    "src/**/*.ts",
   ]
 }

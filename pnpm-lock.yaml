@@ -6,7 +6,23 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+
+  packages-private/seren-viewer-develop:
+    dependencies:
+      seren-web:
+        specifier: workspace:^
+        version: link:../../packages/seren-web
+      seren-worker:
+        specifier: workspace:^
+        version: link:../../packages/seren-worker
+      vite:
+        specifier: ^6.2.0
+        version: 6.2.0
 
   packages/seren-common:
     dependencies:
@@ -52,6 +68,9 @@ importers:
       '@fluent/dom':
         specifier: ^0.10.0
         version: 0.10.0
+      seren-common:
+        specifier: workspace:^
+        version: link:../seren-common
       seren-viewer:
         specifier: workspace:^
         version: link:../seren-viewer
@@ -374,6 +393,11 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
+  typescript@5.8.2:
+    resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   vite@6.2.0:
     resolution: {integrity: sha512-7dPxoo+WsT/64rDcwoOjk76XHj+TqNTIvHKcuMQ1k4/SeHDaQt5GFAeLYzrimZrMpn/O6DtdI03WUjdxuPM0oQ==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
@@ -625,6 +649,8 @@ snapshots:
       fsevents: 2.3.3
 
   source-map-js@1.2.1: {}
+
+  typescript@5.8.2: {}
 
   vite@6.2.0:
     dependencies:

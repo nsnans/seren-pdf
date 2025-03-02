@@ -23,14 +23,14 @@
     "noFallthroughCasesInSwitch": false,
     "noUncheckedSideEffectImports": true,
     "experimentalDecorators": true,
-  },
-  "paths": {
-    "seren-common": [
-      "../seren-common/src"
-    ],
-    "seren-openjpeg": [
-      "../seren-openjpeg/src"
-    ]
+    "paths": {
+      "seren-common": [
+        "../seren-common/src"
+      ],
+      "seren-openjpeg": [
+        "../seren-openjpeg/src"
+      ]
+    },
   },
   "include": [
     "src/core.d.ts",

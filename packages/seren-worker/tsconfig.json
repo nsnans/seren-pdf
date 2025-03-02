@@ -23,14 +23,14 @@
     "noFallthroughCasesInSwitch": false,
     "noUncheckedSideEffectImports": true,
     "experimentalDecorators": true,
-  },
-  "paths": {
-    "seren-common": [
-      "packages/seren-common/src"
-    ],
-    "seren-core": [
-      "packages/seren-core/src"
-    ]
+    "paths": {
+      "seren-common": [
+        "../seren-common/src"
+      ],
+      "seren-core": [
+        "../seren-core/src"
+      ]
+    },
   },
   "include": [
     "src/**/*.ts",

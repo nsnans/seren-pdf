@@ -59,7 +59,6 @@ export class AltText {
   constructor(editor: AnnotationEditor) {
     this.#editor = editor;
     this.#useNewAltTextFlow = editor._uiManager.useNewAltTextFlow;
-
     AltText.#l10nNewButton ||= Object.freeze({
       added: "pdfjs-editor-new-alt-text-added-button",
       "added-label": "pdfjs-editor-new-alt-text-added-button-label",

@@ -26,7 +26,7 @@ import {
   UnknownErrorException,
   unreachable,
   VerbosityLevel,
-  warn
+  warn,
 } from "seren-common";
 import {
   AnnotationStorage,
