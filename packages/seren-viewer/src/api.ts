@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-import { GenericMessageHandler } from "packages/seren-common/src/worker/general_message_handler";
 import {
+  GenericMessageHandler,
   AbortException,
   AnnotationMode,
   assert, CatalogMarkInfo, CatalogOutlineItem, CommonObjType, DocumentEvaluatorOptions, DocumentParameter, EvaluatorTextContent, FeatureTest, FontExportData, FontExportExtraData, getVerbosityLevel, ImageMask, info,
