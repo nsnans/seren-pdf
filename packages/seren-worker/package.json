@@ -2,15 +2,24 @@
   "name": "seren-worker",
   "version": "1.0.0",
   "description": "",
-  "main": "main.ts",
+  "main": "dist/seren-worker.umd.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/seren-worker.mjs",
+      "require": "./dist/seren-worker.umd.js"
+    }
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
-    "seren-core": "workspace:^"
+    "seren-common": "workspace:^",
+    "seren-core": "workspace:^",
+    "vite": "^6.2.0"
   }
 }

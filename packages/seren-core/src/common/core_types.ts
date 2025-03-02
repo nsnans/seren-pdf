@@ -1,4 +1,4 @@
-import { TransformType, assert, Name, Ref, Dict, TextMarkedContent, TextItem, MessagePoster, StreamKind, wrapReason, StreamSink, EvaluatorTextContent, FieldObject, CssFontInfo } from "seren-common";
+import { TransformType, Name, Ref, Dict, TextMarkedContent, TextItem, StreamSink, EvaluatorTextContent, FieldObject, CssFontInfo } from "seren-common";
 
 export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
 
@@ -43,97 +43,6 @@ export class TextContentSinkProxy implements StreamSink<EvaluatorTextContent> {
 
   error(_reason: any) { }
 
-}
-
-export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
-
-  public sinkCapability: PromiseWithResolvers<void>;
-
-  public ready: Promise<void> | null = null;
-
-  public isCancelled: boolean = false;
-
-  public desiredSize: number;
-
-  readonly comObj: MessagePoster;
-
-  readonly sourceName: string;
-
-  readonly targetName: string;
-
-  readonly streamId: number;
-
-  public onPull: (() => void) | null = null;
-
-  public onCancel: ((reason: Error) => void) | null = null;
-
-  readonly onClose: (streamId: number) => void;
-
-  constructor(comObj: MessagePoster, sourceName: string, targetName: string,
-    streamId: number, desiredSize: number, onClose: (id: number) => void) {
-    this.comObj = comObj;
-    this.sinkCapability = Promise.withResolvers();
-    this.sourceName = sourceName;
-    this.targetName = targetName;
-    this.streamId = streamId;
-    this.desiredSize = desiredSize;
-    this.onClose = onClose;
-  }
-
-  enqueue(chunk: Chunk, size = 1, transfers?: Transferable[]) {
-    if (this.isCancelled) {
-      return;
-    }
-    const lastDesiredSize = this.desiredSize;
-    this.desiredSize -= size;
-    // Enqueue decreases the desiredSize property of sink,
-    // so when it changes from positive to negative,
-    // set ready as unresolved promise.
-    if (lastDesiredSize > 0 && this.desiredSize <= 0) {
-      this.sinkCapability = Promise.withResolvers();
-      this.ready = this.sinkCapability.promise;
-    }
-    const msg = {
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      stream: StreamKind.ENQUEUE,
-      streamId: this.streamId,
-      chunk,
-    }
-    const post = this.comObj.postMessage;
-    // 兼容性写法，主要针对TypeScript报错
-    !!transfers ? post(msg, transfers) : post(msg);
-  }
-
-  close() {
-    if (this.isCancelled) {
-      return;
-    }
-    this.isCancelled = true;
-    const msg = {
-      sourceName: this.sourceName,
-      targetName: this.streamId,
-      stream: StreamKind.CLOSE,
-      streamId: this.streamId,
-    };
-    this.comObj.postMessage(msg);
-    this.onClose(this.streamId);
-  }
-
-  error(reason: Error) {
-    assert(reason instanceof Error, "error must have a valid reason");
-    if (this.isCancelled) {
-      return;
-    }
-    this.isCancelled = true;
-    this.comObj.postMessage({
-      sourceName: this.sourceName,
-      targetName: this.targetName,
-      stream: StreamKind.ERROR,
-      streamId: this.streamId,
-      reason: wrapReason(reason),
-    });
-  }
 }
 
 export interface GeneralFieldObject extends FieldObject {

@@ -2,9 +2,16 @@
   "name": "seren-core",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/seren-core.umd.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".":{
+      "import": "./dist/seren-core.mjs",
+      "require": "./dist/seren-core.umd.js"
+    }
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build" : "vite build"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +19,7 @@
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
     "seren-common": "workspace:^",
-    "seren-openjpeg": "workspace:^"
+    "seren-openjpeg": "workspace:^",
+    "vite": "^6.2.0"
   }
 }

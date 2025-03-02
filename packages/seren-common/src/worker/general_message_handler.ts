@@ -1,7 +1,7 @@
 import { AnnotationData, AnnotationEditorSerial, BaseException, CatalogMarkInfo, CatalogOpenAction, CatalogOptionalContentConfig, CatalogOutlineItem, CommonObjDataType, CommonObjType, DestinationType, DocumentParameter, EvaluatorTextContent, FetchBuiltInCMapMessage, FieldObject, FileSpecSerializable, GetAnnotationsMessage, GetDocMessage, GetTextContentMessage, ObjDataType, ObjType, OnProgressParameters, OpertaorListChunk, PageInfo, PasswordException, PDFDocumentInfo, PDFMetadataInfo, ReaderHeadersReadyResult, SaveDocumentMessage, StartRenderPageMessage, StreamGetOperatorListParameters, StreamSink, StructTreeSerialNode, Uint8TypedArray, ViewerPreferenceKeys } from "seren-common";
 import { AbstractMessageHandler } from "./message_handler_base";
-import { MessagePoster } from "seren-common";
-import { MessageHandlerAction } from "seren-common";
+import { MessagePoster } from "../types/message_handler_types";
+import { MessageHandlerAction } from "../types/worker_types";
 
 /**
  * 因为MessageHandler处理了约五六十种异步请求，但是对于这些异步请求，却全都缺乏了具体的类型。

@@ -12,14 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  assert,
-  MessagePoster,
-  StreamKind,
-  StreamSink,
-  wrapReason
-} from "seren-common";
-import { GeneralStreamSink } from "seren-core";
+
+import { GeneralStreamSink, StreamKind, StreamSink } from "../types/stream_types";
+import { MessagePoster, wrapReason } from "../types/message_handler_types";
+import { assert } from "../utils/util";
 
 enum CallbackKind {
   UNKNOWN = 0,
