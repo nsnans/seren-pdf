@@ -21,5 +21,8 @@
     "@fluent/dom": "^0.10.0",
     "seren-common": "workspace:^",
     "vite": "^6.2.0"
+  },
+  "devDependencies": {
+    "vite-plugin-static-copy": "^2.3.0"
   }
 }

@@ -24,5 +24,8 @@
     "seren-common": "workspace:^",
     "seren-viewer": "workspace:^",
     "vite": "^6.2.0"
+  },
+  "devDependencies": {
+    "vite-plugin-static-copy": "^2.3.0"
   }
 }

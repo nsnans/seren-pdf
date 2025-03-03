@@ -1,7 +1,13 @@
+import path from 'path';
 import { defineConfig } from 'vite';
-import path from 'path'
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+  plugins: [
+    viteStaticCopy({
+      targets: [{ src: 'l10n/', dest: './' }]
+    })
+  ],
   build: {
     lib: {
       entry: path.resolve(__dirname, './src/index.ts'),
