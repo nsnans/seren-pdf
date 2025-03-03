@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/seren-web.umd.js",
   "types": "dist/index.d.ts",
+  "source": "src/index.ts",
   "exports": {
     ".": {
       "import": "./dist/seren-web.mjs",

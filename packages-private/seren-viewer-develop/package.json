@@ -2,7 +2,7 @@
   "name": "seren-worker",
   "version": "1.0.0",
   "description": "",
-  "main": "main.ts",
+  "main": "index.html",
   "scripts": {
     "build": "vite build"
   },

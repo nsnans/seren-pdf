@@ -25,14 +25,15 @@
     "experimentalDecorators": true,
     "paths": {
       "seren-web": [
-        "../packages/seren-web/src"
+        "../../packages/seren-web/src"
       ],
       "seren-worker": [
-        "../packages/seren-worker/src"
+        "../../packages/seren-worker/src"
       ]
     },
   },
   "include": [
-    "src/**/*.ts",
-  ]
+    "src/**/*.ts","index.html"
+  ],
+  "exclude": ["node_modules", "dist"]
 }
