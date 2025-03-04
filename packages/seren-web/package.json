@@ -7,9 +7,7 @@
   "source": "src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/seren-web.mjs",
-      "require": "./dist/seren-web.umd.js",
-      "develop": "./src/index.ts"
+      "broswer": "./src/main.ts"
     }
   },
   "scripts": {

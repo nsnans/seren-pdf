@@ -1,7 +1,8 @@
 {
-  "name": "seren-worker",
+  "name": "seren-viewer-develop",
   "version": "1.0.0",
-  "description": "",
+  "description": "seren-viewer开发调试模块",
+  "private": true,
   "main": "index.html",
   "scripts": {
     "build": "vite build",
