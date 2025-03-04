@@ -8,7 +8,8 @@
   "exports": {
     ".": {
       "import": "./dist/seren-web.mjs",
-      "require": "./dist/seren-web.umd.js"
+      "require": "./dist/seren-web.umd.js",
+      "develop": "./src/index.ts"
     }
   },
   "scripts": {

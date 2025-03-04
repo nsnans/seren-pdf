@@ -5,15 +5,15 @@
   "main": "index.html",
   "scripts": {
     "build": "vite build",
-    "dev": "vite dev"
+    "dev": "vite"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.4.1",
   "dependencies": {
-    "seren-worker": "workspace:^",
     "seren-web": "workspace:^",
+    "seren-worker": "workspace:^",
     "vite": "^6.2.0"
   }
 }

@@ -577,6 +577,7 @@ export function getDocument(src: DocumentInitParameters) {
   parameterBuilder.apiVersion = PlatformHelper.isTesting() ? PlatformHelper.bundleVersion() : null;
   parameterBuilder.data = data;
   parameterBuilder.password = password;
+  parameterBuilder.disableAutoFetch = disableAutoFetch;
   parameterBuilder.rangeChunkSize = rangeChunkSize!;
   parameterBuilder.length = length;
   parameterBuilder.docBaseUrl = docBaseUrl!;

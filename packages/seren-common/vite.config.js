@@ -1,13 +1,12 @@
 import { defineConfig } from 'vite';
-import path from 'path'
 
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, './src/index.ts'),
+      entry: './src/index.ts',
       name: 'seren-common',
       fileName: 'seren-common',
-      formats: ['es', 'umd']
+      formats: ['es']
     }
   },
 });

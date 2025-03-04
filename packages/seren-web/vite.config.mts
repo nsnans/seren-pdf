@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import path from 'path'
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
@@ -10,7 +9,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: path.resolve(__dirname, './src/index.ts'),
+      entry: './src/index.ts',
       name: 'seren-web',
       fileName: 'seren-web',
       formats: ['es', 'umd']
