@@ -7,11 +7,12 @@
   "exports": {
     ".": {
       "import": "./dist/seren-openjpeg.mjs",
-      "require": "./dist/seren-openjpeg.umd.js"
+      "require": "./dist/seren-openjpeg.umd.js",
+      "development": "./src/index.ts"
     }
   },
   "scripts": {
-    "build" : "vite build"
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",

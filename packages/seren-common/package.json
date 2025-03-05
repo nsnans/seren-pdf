@@ -5,7 +5,7 @@
   "main": "index.js",
   "exports": {
     ".": {
-      "import": "./dist/seren-common.mjs"
+      "development": "./src/index.ts"
     }
   },
   "scripts": {

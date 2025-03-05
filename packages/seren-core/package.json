@@ -5,13 +5,14 @@
   "main": "dist/seren-core.umd.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".":{
+    ".": {
       "import": "./dist/seren-core.mjs",
-      "require": "./dist/seren-core.umd.js"
+      "require": "./dist/seren-core.umd.js",
+      "development": "./src/index.ts"
     }
   },
   "scripts": {
-    "build" : "vite build"
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",

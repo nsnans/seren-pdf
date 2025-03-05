@@ -7,7 +7,7 @@
   "source": "src/index.ts",
   "exports": {
     ".": {
-      "broswer": "./src/main.ts"
+      "development": "./src/index.ts"
     }
   },
   "scripts": {
