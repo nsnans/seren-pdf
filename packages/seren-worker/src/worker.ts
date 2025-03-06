@@ -742,11 +742,13 @@ function isMessagePort(maybePort: any): maybePort is MessagePoster {
   );
 }
 
-export function startDocumentHandlerWorker() {
+function main() {
   if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
     WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
   } else {
     throw new Error('worker中的代码只无法在非Worker环境下运行！')
   }
 }
+
+main();
 

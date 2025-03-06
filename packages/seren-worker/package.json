@@ -8,7 +8,7 @@
     ".": {
       "import": "./dist/seren-worker.mjs",
       "require": "./dist/seren-worker.umd.js",
-      "development": "./src/main.ts"
+      "development": "./src/index.ts"
     }
   },
   "scripts": {
