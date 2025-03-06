@@ -2150,6 +2150,7 @@ export class PDFWorker {
         );
       }
 
+      // TODO 解决掉workerSrc的问题，包含开发过程中和编译后的结果
       const worker = new Worker(workerSrc, { type: "module" });
       const messageHandler = new GenericMessageHandler("main", "worker", worker);
       const terminateEarly = () => {
