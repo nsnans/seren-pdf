@@ -17,9 +17,6 @@ importers:
       seren-web:
         specifier: workspace:^
         version: link:../../packages/seren-web
-      seren-worker:
-        specifier: workspace:^
-        version: link:../../packages/seren-worker
       vite:
         specifier: ^6.2.0
         version: 6.2.0
@@ -56,6 +53,9 @@ importers:
       seren-common:
         specifier: workspace:^
         version: link:../seren-common
+      seren-worker:
+        specifier: workspace:^
+        version: link:../seren-worker
       vite:
         specifier: ^6.2.0
         version: 6.2.0

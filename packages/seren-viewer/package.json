@@ -19,6 +19,7 @@
   "dependencies": {
     "@fluent/dom": "^0.10.0",
     "seren-common": "workspace:^",
+    "seren-worker": "workspace:^",
     "vite": "^6.2.0"
   }
 }

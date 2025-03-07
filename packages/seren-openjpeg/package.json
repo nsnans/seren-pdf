@@ -6,9 +6,9 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "development": "./src/index.ts",
       "import": "./dist/seren-openjpeg.mjs",
-      "require": "./dist/seren-openjpeg.umd.js",
-      "development": "./src/index.ts"
+      "require": "./dist/seren-openjpeg.umd.js"
     }
   },
   "scripts": {

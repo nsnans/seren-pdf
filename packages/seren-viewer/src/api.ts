@@ -54,6 +54,7 @@ import { DOMStandardFontDataFactory, StandardFontDataFactory } from "./display/s
 import { TextLayer } from "./display/text_layer";
 import { PDFDataTransportStream } from "./display/transport_stream";
 import { defaultWorkerOptions } from "./worker/worker_options";
+import Worker from "seren-worker"
 
 export const DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
 const RENDERING_CANCELLED_TIMEOUT = 100; // ms
@@ -2151,7 +2152,7 @@ export class PDFWorker {
       }
 
       // TODO 解决掉workerSrc的问题，包含开发过程中和编译后的结果
-      const worker = new Worker(workerSrc, { type: "module" });
+      const worker = new Worker();
       const messageHandler = new GenericMessageHandler("main", "worker", worker);
       const terminateEarly = () => {
         ac.abort();
@@ -2169,7 +2170,8 @@ export class PDFWorker {
       const ac = new AbortController();
       worker.addEventListener(
         "error",
-        () => {
+        (e: any) => {
+          console.log(e)
           if (!this._webWorker) {
             // Worker failed to initialize due to an error. Clean up and fall
             // back to the fake worker.

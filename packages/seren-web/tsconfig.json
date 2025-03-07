@@ -29,7 +29,7 @@
       ],
       "seren-common": [
         "../seren-common/src"
-      ]
+      ],
     },
   },
   "include": [

@@ -6,9 +6,9 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "development": "./src/index.ts",
       "import": "./dist/seren-worker.mjs",
-      "require": "./dist/seren-worker.umd.js",
-      "development": "./src/index.ts"
+      "require": "./dist/seren-worker.umd.js"
     }
   },
   "scripts": {

@@ -26,6 +26,9 @@
     "paths": {
       "seren-common": [
         "../seren-common/src"
+      ],
+      "seren-worker": [
+        "../seren-worker/src"
       ]
     },
   },
