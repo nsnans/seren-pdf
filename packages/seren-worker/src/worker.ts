@@ -92,7 +92,6 @@ export class WorkerMessageHandler {
         return; // we already processed 'test' message once
       }
       testMessageProcessed = true;
-
       // Ensure that `TypedArray`s can be sent to the worker.
       handler.test(data instanceof Uint8Array);
     });
@@ -111,14 +110,7 @@ export class WorkerMessageHandler {
     const WorkerTasks = new Set<DefaultWorkerTask>();
     const verbosity = getVerbosityLevel();
 
-    const { docId, apiVersion } = docParams!;
-    const workerVersion = PlatformHelper.bundleVersion();
-    if (apiVersion !== workerVersion) {
-      throw new Error(
-        `The API version "${apiVersion}" does not match ` +
-        `the Worker version "${workerVersion}".`
-      );
-    }
+    const { docId } = docParams!;
 
     if (PlatformHelper.isGeneric()) {
       // Fail early, and predictably, rather than having (some) fonts fail to
@@ -354,14 +346,14 @@ export class WorkerMessageHandler {
 
       ensureNotTerminated();
 
-      getPdfManager(data).then(function (newPdfManager: PDFManager) {
+      getPdfManager(data).then(manager => {
         if (terminated) {
           // We were in a process of setting up the manager, but it got
           // terminated in the middle.
-          newPdfManager!.terminate(new AbortException("Worker was terminated."));
+          manager!.terminate(new AbortException("Worker was terminated."));
           throw new Error("Worker was terminated");
         }
-        pdfManager = newPdfManager;
+        pdfManager = manager;
 
         pdfManager.requestLoadedStream(true).then(
           stream => handler!.DataLoaded(stream.bytes.byteLength)

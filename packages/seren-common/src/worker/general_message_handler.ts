@@ -1,22 +1,23 @@
-import { AbstractMessageHandler } from "./message_handler_base";
-import { CommonObjDataType, CommonObjType, FetchBuiltInCMapMessage, FileSpecSerializable, GetDocMessage, GetTextContentMessage, MessagePoster, ObjDataType, ObjType, OnProgressParameters, PageInfo, SaveDocumentMessage, StartRenderPageMessage } from "../types/message_handler_types";
-import { MessageHandlerAction } from "../types/worker_types";
-import { CatalogMarkInfo, CatalogOutlineItem, DocumentParameter, PDFDocumentInfo, PDFMetadataInfo, StructTreeSerialNode } from '../types/document_types';
-import { ReaderHeadersReadyResult, StreamSink } from "../types/stream_types";
 import { DestinationType } from "../common/common_types";
 import { Uint8TypedArray } from "../common/typed_array";
-import { AnnotationData, GetAnnotationsMessage, FieldObject, AnnotationEditorSerial } from "../types/annotation_types";
-import { EvaluatorTextContent } from "../types/evaluator_types";
-import { OpertaorListChunk, StreamGetOperatorListParameters } from "../types/operator_types";
+import { AnnotationData, AnnotationEditorSerial, FieldObject, GetAnnotationsMessage } from "../types/annotation_types";
 import { CatalogOpenAction, CatalogOptionalContentConfig, ViewerPreferenceKeys } from "../types/catalog_types";
+import { CatalogMarkInfo, CatalogOutlineItem, DocumentParameter, PDFDocumentInfo, PDFMetadataInfo, StructTreeSerialNode } from '../types/document_types';
+import { EvaluatorTextContent } from "../types/evaluator_types";
+import { CommonObjDataType, CommonObjType, FetchBuiltInCMapMessage, FileSpecSerializable, GetDocMessage, GetTextContentMessage, MessagePoster, ObjDataType, ObjType, OnProgressParameters, PageInfo, SaveDocumentMessage, StartRenderPageMessage } from "../types/message_handler_types";
+import { OpertaorListChunk, StreamGetOperatorListParameters } from "../types/operator_types";
+import { ReaderHeadersReadyResult, StreamSink } from "../types/stream_types";
+import { MessageHandlerAction } from "../types/worker_types";
 import { BaseException, PasswordException } from "../utils/util";
+import { MessageHandler } from "./message_handler";
+import { AbstractMessageHandler } from "./message_handler_base";
 
 /**
  * 因为MessageHandler处理了约五六十种异步请求，但是对于这些异步请求，却全都缺乏了具体的类型。
  * 这在开发过程中给我带来了太多的困扰，不知道参数，也不知道返回类型，对于后续的处理那更是无从谈起。
  * 因此需要对MessageHandler中的数十种异步请求，做一个统一的整理，确保它们能够正确的处理好参数和返回值。
  * */
-export class GenericMessageHandler extends AbstractMessageHandler implements GenericMessageHandler {
+export class GenericMessageHandler extends AbstractMessageHandler implements MessageHandler {
 
   /**
    * 为什么comObj的类型是MessagePoster，而不是Worker呢？
@@ -303,12 +304,12 @@ export class GenericMessageHandler extends AbstractMessageHandler implements Gen
   }
 
   GetMarkInfo(): Promise<CatalogMarkInfo | null> {
-    const action = MessageHandlerAction.GetPermissions;
+    const action = MessageHandlerAction.GetMarkInfo;
     return this.sendWithPromise(action, null);
   }
 
   onGetMarkInfo(fn: () => Promise<CatalogMarkInfo | null>) {
-    const action = MessageHandlerAction.GetPermissions;
+    const action = MessageHandlerAction.GetMarkInfo;
     this.on(action, fn);
   }
 

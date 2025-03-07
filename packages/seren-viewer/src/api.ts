@@ -645,7 +645,7 @@ export function getDocument(src: DocumentInitParameters) {
 
       task._transport = transport;
       messageHandler.Ready();
-    });
+    }, (reason: unknown) => console.log(reason));
   }).catch(task._capability.reject);
 
   return task;
