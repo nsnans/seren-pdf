@@ -281,7 +281,7 @@ export class WorkerMessageHandler {
           }
         };
         fullRequest.read().then(readChunk, reject);
-      }).catch(function (e) {
+      }).catch(e => {
         pdfManagerCapability.reject(e);
         cancelXHRs = null;
       });
@@ -734,7 +734,6 @@ function isMessagePort(maybePort: any): maybePort is MessagePoster {
 }
 
 function main() {
-  console.log("worker is here")
   if (typeof window === "undefined" && typeof self !== "undefined" && isMessagePort(self)) {
     WorkerMessageHandler.initializeFromPort(<MessagePoster>self);
   } else {

@@ -14,14 +14,13 @@
  */
 
 import {
-  assert,
   BaseException,
   MissingPDFException,
-  PlatformHelper,
-  UnexpectedResponseException,
+  UnexpectedResponseException
 } from "seren-common";
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 export function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
   const headers = new Headers();
@@ -44,18 +43,13 @@ export function validateRangeRequestCapabilities(
   rangeChunkSize: number,
   disableRange: boolean
 ) {
-  if (PlatformHelper.isTesting()) {
-    assert(
-      Number.isInteger(rangeChunkSize) && rangeChunkSize > 0,
-      "rangeChunkSize must be an integer larger than zero."
-    );
-  }
-  const returnValues = {
-    allowRangeRequests: false,
-    suggestedLength: undefined,
-  } as {
+  type ReturnValueType = {
     allowRangeRequests: boolean,
-    suggestedLength: number | undefined;
+    suggestedLength: number | null;
+  }
+  const returnValues: ReturnValueType = {
+    allowRangeRequests: false,
+    suggestedLength: null,
   };
 
   const length = parseInt(responseHeaders.get("Content-Length")!, 10);
@@ -65,6 +59,7 @@ export function validateRangeRequestCapabilities(
 
   returnValues.suggestedLength = length;
 
+  // 这种优化应该去除掉
   if (length <= 2 * rangeChunkSize) {
     // The file size is smaller than the size of two chunks, so it does not
     // make any sense to abort the request and retry with a range request.
@@ -74,7 +69,11 @@ export function validateRangeRequestCapabilities(
   if (disableRange || !isHttp) {
     return returnValues;
   }
-  if (responseHeaders.get("Accept-Ranges") !== "bytes") {
+  const acceptRanges = responseHeaders.get("Accept-Ranges");
+  if (acceptRanges !== "bytes") {
+    if (isNull(acceptRanges)) {
+      console.warn("Accept-Ranges不应当为空，请检查服务器是否正确处理了AcceptRanges！")
+    }
     return returnValues;
   }
 
