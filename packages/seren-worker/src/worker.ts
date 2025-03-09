@@ -213,33 +213,32 @@ export class WorkerMessageHandler {
       }
 
       const fullRequest = pdfStream.getFullReader();
-      fullRequest.headersReady
-        .then(function () {
-          if (!fullRequest.isRangeSupported) {
-            return;
-          }
-          pdfManagerArgs.source = pdfStream;
-          pdfManagerArgs.length = fullRequest.contentLength!;
-          // We don't need auto-fetch when streaming is enabled.
-          pdfManagerArgs.disableAutoFetch ||= fullRequest.isStreamingSupported;
+      fullRequest.headersReady.then(() => {
+        if (!fullRequest.isRangeSupported) {
+          return;
+        }
+        pdfManagerArgs.source = pdfStream;
+        pdfManagerArgs.length = fullRequest.contentLength!;
+        // We don't need auto-fetch when streaming is enabled.
+        pdfManagerArgs.disableAutoFetch ||= fullRequest.isStreamingSupported;
 
-          newPdfManager = new NetworkPDFManager(pdfManagerArgs);
-          // There may be a chance that `newPdfManager` is not initialized for
-          // the first few runs of `readchunk` block of code. Be sure to send
-          // all cached chunks, if any, to chunked_stream via pdf_manager.
-          for (const chunk of cachedChunks) {
-            newPdfManager!.sendProgressiveData(chunk);
-          }
+        newPdfManager = new NetworkPDFManager(pdfManagerArgs);
+        // There may be a chance that `newPdfManager` is not initialized for
+        // the first few runs of `readchunk` block of code. Be sure to send
+        // all cached chunks, if any, to chunked_stream via pdf_manager.
+        for (const chunk of cachedChunks) {
+          newPdfManager!.sendProgressiveData(chunk);
+        }
 
-          cachedChunks = [];
-          pdfManagerCapability.resolve(newPdfManager);
-          cancelXHRs = null;
-        }).catch(function (reason) {
-          pdfManagerCapability.reject(reason);
-          cancelXHRs = null;
-        });
+        cachedChunks = [];
+        pdfManagerCapability.resolve(newPdfManager);
+        cancelXHRs = null;
+      }).catch(function (reason) {
+        pdfManagerCapability.reject(reason);
+        cancelXHRs = null;
+      });
 
-      new Promise(function (_resolve, reject) {
+      new Promise((_resolve, reject) => {
         const readChunk = ({ value, done }: ReadResult) => {
           try {
             ensureNotTerminated();
@@ -329,7 +328,7 @@ export class WorkerMessageHandler {
       function pdfManagerReady() {
         ensureNotTerminated();
 
-        loadDocument(false).then(onSuccess, function (reason) {
+        loadDocument(false).then(onSuccess, reason => {
           ensureNotTerminated();
 
           // Try again with recoveryMode == true
@@ -337,7 +336,7 @@ export class WorkerMessageHandler {
             onFailure(reason);
             return;
           }
-          pdfManager!.requestLoadedStream(false).then(function () {
+          pdfManager!.requestLoadedStream(false).then(() => {
             ensureNotTerminated();
             loadDocument(true).then(onSuccess, onFailure);
           });

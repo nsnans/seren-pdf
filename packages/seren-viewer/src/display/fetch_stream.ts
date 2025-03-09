@@ -122,7 +122,7 @@ class PDFFetchStreamReader implements PDFStreamReader {
 
   protected _stream: PDFFetchStream;
 
-  protected _reader: ReadableStreamDefaultReader<Uint8Array> | null;
+  protected _reader: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>> | null;
 
   protected _filename: string | null = null;
 
@@ -167,14 +167,13 @@ class PDFFetchStreamReader implements PDFStreamReader {
 
     const url = source.url;
     fetch(
-      url,
-      createFetchOptions(headers, this._withCredentials, this._abortController) as RequestInit
+      url, <RequestInit>createFetchOptions(headers, this._withCredentials, this._abortController)
     ).then(response => {
       if (!validateResponseStatus(response.status)) {
         throw createResponseStatusError(response.status, url);
       }
-      this._reader = response.body!.getReader();
-      this._headersCapability.resolve(undefined);
+      this._reader = <ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>>response.body!.getReader();
+      this._headersCapability.resolve();
 
       const responseHeaders = response.headers;
 
@@ -197,8 +196,7 @@ class PDFFetchStreamReader implements PDFStreamReader {
       if (!this._isStreamingSupported && this._isRangeSupported) {
         this.cancel(new AbortException("Streaming is disabled."));
       }
-    })
-      .catch(this._headersCapability.reject);
+    }).catch(this._headersCapability.reject);
 
     this.onProgress = null;
   }
@@ -228,7 +226,7 @@ class PDFFetchStreamReader implements PDFStreamReader {
     await this._headersCapability.promise;
     const { value, done } = await this._reader!.read();
     if (done) {
-      return { value: <ArrayBuffer>value!.buffer, done };
+      return { value: value ? value.buffer : null, done };
     }
     this._loaded += value.byteLength;
     this.onProgress?.(this._loaded, this._contentLength);
