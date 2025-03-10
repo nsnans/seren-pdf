@@ -1259,7 +1259,6 @@ export class PDFDocument {
       promise = catalog.getPageDict(pageIndex);
     }
     // 这种promise最好不要复用，因为类型都变了
-    // eslint-disable-next-line arrow-body-style
     const pagePromise = promise.then(([pageDict, ref]: [Dict, Ref | null]) => {
       return new Page(
         this.pdfManager, this.xref, pageIndex, pageDict, ref, this._globalIdFactory, catalog

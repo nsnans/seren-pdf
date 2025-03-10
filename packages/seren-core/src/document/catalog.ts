@@ -27,7 +27,8 @@ import {
   warn,
   isNumberArray,
   FileSpecSerializable, FontSubstitutionInfo, PDFMetadataInfo,
-  Dict
+  Dict,
+  isNull
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { clearGlobalCaches } from "../utils/cleanup_helper";
@@ -1263,7 +1264,7 @@ export class Catalog {
       if (currentNode instanceof Ref) {
         const count = pageKidsCountCache.get(currentNode)!;
         // Skip nodes where the page can't be.
-        if (count >= 0 && currentPageIndex + count <= pageIndex) {
+        if (!isNull(count) && count >= 0 && currentPageIndex + count <= pageIndex) {
           currentPageIndex += count;
           continue;
         }
@@ -1316,7 +1317,7 @@ export class Catalog {
       if (count instanceof Ref) {
         count = <number>await xref.fetchAsync(count);
       }
-      if (Number.isInteger(count) && <number>count >= 0) {
+      if (!isNull(count) && Number.isInteger(count) && <number>count >= 0) {
         // Cache the Kids count, since it can reduce redundant lookups in
         // documents where all nodes are found at *one* level of the tree.
         if (objId && !pageKidsCountCache.has(objId)) {
