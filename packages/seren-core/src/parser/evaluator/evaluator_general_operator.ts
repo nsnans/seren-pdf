@@ -74,7 +74,7 @@ class GeneralOperator {
       if (fn == null || typeof fn !== 'function') {
         throw new Error("操作符和操作方法不匹配");
       }
-      this.operator.set(k, <(context: ProcessContext) => void | 1 | 2>fn);
+      this.operator.set(k, <(context: ProcessContext) => void | 1 | 2>fn.bind(this));
     }
   }
 
@@ -183,6 +183,8 @@ class GeneralOperator {
     ).then(loadedName => {
       ctx.operatorList.addDependency(loadedName);
       ctx.operatorList.addOp(OPS.setFont, [loadedName, fontSize])
+    }, reason=>{
+      console.error((reason));
     }));
   }
 
@@ -690,7 +692,11 @@ export class GetOperatorListHandler implements OperatorListHandler {
     });
   }
 
-  process(resolve: (value: void | PromiseLike<void>) => void, _reject: (reason?: any) => void, context: ProcessContext) {
+  process(
+    resolve: (value: void | PromiseLike<void>) => void,
+    _reject: (reason?: any) => void,
+    context: ProcessContext
+  ) {
     this.task.ensureNotTerminated();
     context.tsm.reset();
     // 尽量减少变量的定义，不然会多耗费很多时间

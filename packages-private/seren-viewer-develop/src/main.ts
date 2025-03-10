@@ -1,5 +1,4 @@
-import { WebSerenViewer } from "seren-web";
-import { VerbosityLevel } from '../../../packages/seren-common/src/utils/util';
+import { WebSerenViewer, VerbosityLevel } from "seren-web";
 
 const viewer = WebSerenViewer.init('app');
 viewer.open({

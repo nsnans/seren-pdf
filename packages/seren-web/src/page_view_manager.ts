@@ -829,9 +829,6 @@ export class WebPageViewManager {
     }
   }
 
-  /**
-   * @param {PDFDocumentProxy} pdfDocument
-   */
   setDocument(pdfDocument: PDFDocumentProxy) {
     if (this.pdfDocument) {
       this.callbacks?.afterDestoryPages();
@@ -1069,6 +1066,7 @@ export class WebPageViewManager {
         }
       });
 
+      this.renderPageViews();
       this.update();
     }).catch(reason => {
       console.error("Unable to initialize viewer", reason);
@@ -1469,6 +1467,10 @@ export class WebPageViewManager {
       rotation: this._pagesRotation,
       pdfOpenParams,
     };
+  }
+
+  renderPageViews() {
+    this._pages[0].draw();
   }
 
   update() {
