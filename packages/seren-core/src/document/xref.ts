@@ -22,7 +22,7 @@ import {
 } from "../utils/core_utils";
 import { CipherTransformFactory } from "../crypto/crypto";
 import { Lexer, Parser } from "../parser/parser";
-import { DataStream, FetchResultType, ParsedEntry, ParsedType } from "seren-common";
+import { assertNotNull, DataStream, FetchResultType, ParsedEntry, ParsedType } from "seren-common";
 import { PDFManager } from "../worker/pdf_manager";
 import {
   CIRCULAR_REF,
@@ -175,10 +175,14 @@ export class XRefImpl implements XRef {
   }
 
   parse(recoveryMode = false) {
-    let trailerDict = !recoveryMode ? this.readXRef()! : this.indexObjects();
+    let trailerDict: Dict | null;
     if (!recoveryMode) {
+      trailerDict = this.readXRef();
+    } else {
       warn("Indexing all PDF objects");
+      trailerDict = this.indexObjects();
     }
+    assertNotNull(trailerDict);
     trailerDict.assignXref(this);
     this.trailer = trailerDict;
 
@@ -850,7 +854,7 @@ export class XRefImpl implements XRef {
       return this.topDict;
     }
     if (recoveryMode) {
-      return undefined;
+      return null;
     }
     throw new XRefParseException();
   }

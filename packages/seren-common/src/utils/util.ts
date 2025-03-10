@@ -1150,6 +1150,11 @@ export function isNumberArray(arr: unknown, len: number | null): arr is number[]
   }
 }
 
+export function assertNotNull<T>(value: T, message?: string): asserts value is NonNullable<T> {
+  if (value === null || value === undefined) {
+    throw new Error(message || "Value is null or undefined");
+  }
+}
 
 export function isNull(obj: unknown): obj is null | undefined {
   return obj === null || obj === undefined;
