@@ -917,7 +917,7 @@ export class WebPageViewManager {
             this.#enableUpdatedAddImage,
             this.#enableNewAltTextWhenAddingImage,
           );
-          this.callbacks!.afterAnnotationEditorUIManagerInit(this.#annotationEditorUIManager);
+          this.callbacks?.afterAnnotationEditorUIManagerInit(this.#annotationEditorUIManager);
           if (mode !== AnnotationEditorType.NONE) {
             this.#annotationEditorUIManager.updateMode(mode);
           }
@@ -1011,7 +1011,7 @@ export class WebPageViewManager {
 
         if (this.#annotationEditorUIManager) {
           // Ensure that the Editor buttons, in the toolbar, are updated.
-          this.callbacks!.afterAnnotationEditorModeChanged(this.#annotationEditorMode);
+          this.callbacks?.afterAnnotationEditorModeChanged(this.#annotationEditorMode);
         }
 
         // In addition to 'disableAutoFetch' being set, also attempt to reduce
@@ -1473,8 +1473,8 @@ export class WebPageViewManager {
 
   update() {
     const visible = this._getVisiblePages();
-    const visiblePages = visible.views,
-      numVisiblePages = visiblePages.length;
+    const visiblePages = visible.views;
+    const numVisiblePages = visiblePages.length;
 
     if (numVisiblePages === 0) {
       return;

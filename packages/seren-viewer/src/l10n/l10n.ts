@@ -73,8 +73,9 @@ export class L10n {
   async translate(element: HTMLDivElement) {
     (this.#elements ||= new Set()).add(element);
     try {
-      this.#l10n!.connectRoot(element);
-      await this.#l10n!.translateRoots();
+      // 考虑用i18next或自己写一个简易的翻译器吧，它这个翻译器，其实不大合适
+      // this.#l10n!.connectRoot(element);
+      // await this.#l10n!.translateRoots();
     } catch {
       // Element is under an existing root, so there is no need to add it again.
     }

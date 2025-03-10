@@ -22,6 +22,7 @@ import {
   DictKey, DictValueTypeMapping,
   hexNumbers,
   isName,
+  isNull,
   isNumberArray,
   objectSize,
   RectType,
@@ -140,7 +141,7 @@ function getInheritableProperty<T extends DictKey>(
       visited.put(dict.objId);
     }
     const value = getArray ? dict.getArrayValue(key) : dict.getValue(key);
-    if (value !== null) {
+    if (!isNull(value)) {
       if (stopWhenFound) {
         return value;
       }

@@ -1142,11 +1142,11 @@ export function isNumberArray(arr: unknown, len: number | null): arr is number[]
   // This check allows us to have typed arrays but not the
   // BigInt64Array/BigUint64Array types (their elements aren't "number").
   if (ArrayBuffer.isView(arr)) {
-    const arrView = arr as unknown as Array<any>;
+    const arrView = <TypedArray>arr;
     return (arrView.length === 0 || typeof arrView[0] === "number") &&
       (len === null || arrView.length === len);
   } else {
-    return !ArrayBuffer.isView(arr);
+    return false;
   }
 }
 
