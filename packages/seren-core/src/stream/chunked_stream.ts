@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-import { AbortException, assert, PlatformHelper, Uint8TypedArray, PDFStream, ReadResult, MessageHandler } from "seren-common";
-import { BaseStream } from "./base_stream";
+import { AbortException, MessageHandler, PDFStream, ReadResult, Uint8TypedArray } from "seren-common";
 import { arrayBuffersToBytes, MissingDataException } from "../utils/core_utils";
+import { BaseStream } from "./base_stream";
 import { Stream } from "./stream";
 
 export class ChunkedStream extends Stream {
@@ -316,7 +316,7 @@ export class ChunkedStreamManager {
 
   protected _requestsByChunk = new Map<number, number[]>();
 
-  protected _promisesByRequest = new Map();
+  protected _promisesByRequest = new Map<number, PromiseWithResolvers<void>>();
 
   protected progressiveDataLength = 0;
 
@@ -357,12 +357,7 @@ export class ChunkedStreamManager {
             resolve(chunkData);
             return;
           }
-          if (PlatformHelper.isTesting()) {
-            assert(
-              value instanceof ArrayBuffer,
-              "readChunk (sendRequest) - expected an ArrayBuffer."
-            );
-          }
+
           loaded += value!.byteLength;
 
           if (rangeReader.isStreamingSupported) {
@@ -578,7 +573,7 @@ export class ChunkedStreamManager {
     }
 
     for (const requestId of loadedRequests) {
-      const capability = this._promisesByRequest.get(requestId);
+      const capability = this._promisesByRequest.get(requestId)!;
       this._promisesByRequest.delete(requestId);
       capability.resolve();
     }

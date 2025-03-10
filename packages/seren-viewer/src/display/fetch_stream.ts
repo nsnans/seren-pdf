@@ -296,7 +296,7 @@ class PDFFetchStreamRangeReader implements PDFStreamRangeReader {
     await this._readCapability.promise;
     const { value, done } = await this._reader!.read();
     if (done) {
-      return { value: <ArrayBuffer>value!.buffer, done };
+      return { value: !!value ? <ArrayBuffer>value.buffer : null, done };
     }
     this._loaded += value.byteLength;
     this.onProgress?.(this._loaded);

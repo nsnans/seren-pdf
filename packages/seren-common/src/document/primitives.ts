@@ -73,7 +73,7 @@ export class Cmd {
     if (!cache) {
       CmdCache.set(this.name, new Cmd(cmd))
     }
-    return CmdCache.get(this.name);
+    return CmdCache.get(this.name) ?? null;
   }
 }
 

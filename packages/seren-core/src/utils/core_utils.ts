@@ -15,24 +15,26 @@
 
 import {
   AnnotationEditorPrefix,
+  AnnotationEditorSerial,
   assert,
   BaseException,
+  Dict,
+  DictKey, DictValueTypeMapping,
   hexNumbers,
+  isName,
+  isNumberArray,
   objectSize,
-  stringToPDFString,
-  Util,
-  warn,
-  PlatformHelper,
   RectType,
+  Ref, RefSet,
+  stringToPDFString,
   TransformType,
   Uint8TypedArray,
-  AnnotationEditorSerial,
-  DictKey, DictValueTypeMapping, isName, Ref, RefSet,
-  Dict, isNumberArray
+  Util,
+  warn
 } from "seren-common";
-import { BaseStream } from "../stream/base_stream";
-import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
+import { XRefImpl } from "../document/xref";
+import { BaseStream } from "../stream/base_stream";
 
 export const PDF_VERSION_REGEXP = /^[1-9]\.\d$/;
 
@@ -83,14 +85,6 @@ export class XRefParseException extends BaseException {
  * @returns {Uint8Array}
  */
 export function arrayBuffersToBytes(arr: ArrayBuffer[]): Uint8Array<ArrayBuffer> {
-  if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-    for (const item of arr) {
-      assert(
-        item instanceof ArrayBuffer,
-        "arrayBuffersToBytes - expected an ArrayBuffer."
-      );
-    }
-  }
   const length = arr.length;
   if (length === 0) {
     return new Uint8Array(0);

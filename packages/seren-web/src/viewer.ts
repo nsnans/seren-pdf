@@ -36,6 +36,7 @@ export interface OpenDocumentArgs {
   data: string | Uint8Array<ArrayBuffer>;
   filename: string;
   httpHeaders: Record<string, string>;
+  verbosity: VerbosityLevel;
 }
 
 enum PDFSource {
@@ -223,7 +224,7 @@ export class WebPDFViewer {
       range: null,
       rangeChunkSize: DEFAULT_RANGE_CHUNK_SIZE,
       worker: null,
-      verbosity: VerbosityLevel.ERRORS,
+      verbosity: args.verbosity ?? VerbosityLevel.ERRORS,
       docBaseUrl: null,
       cMapUrl: null,
       cMapPacked: true,

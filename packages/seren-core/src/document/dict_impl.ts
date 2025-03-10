@@ -2,9 +2,9 @@ import { Dict, DictKey, DictValueTypeMapping, isName, PlatformHelper, Ref, shado
 
 export class DictImpl implements Dict {
 
-  public suppressEncryption = false;
-
   protected _map: Map<DictKey, DictValueTypeMapping[DictKey]> = new Map();
+
+  public suppressEncryption = false;
 
   public xref: XRef | null;
 
@@ -20,7 +20,7 @@ export class DictImpl implements Dict {
 
   constructor(xref: XRef | null = null) {
     // Map should only be used internally, use functions below to access.
-    this._map = Object.create(null);
+    this._map = new Map();
     this.xref = xref;
     this.objId = null;
   }
@@ -30,7 +30,7 @@ export class DictImpl implements Dict {
   }
 
   get size() {
-    return Object.keys(this._map).length;
+    return this._map.size;
   }
 
   getValue<T extends DictKey>(key: T): DictValueTypeMapping[T] {
@@ -166,23 +166,15 @@ export class DictImpl implements Dict {
   }
 
   getKeys(): DictKey[] {
-    return <DictKey[]>Object.keys(this._map);
+    return Array.from(this._map.keys());
   }
 
   // No dereferencing.
   getRawValues(): any[] {
-    return Object.values(this._map);
+    return Array.from(this._map.values());
   }
 
   set<T extends DictKey>(key: T, value: DictValueTypeMapping[T]) {
-    if (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) {
-      if (typeof key !== "string") {
-        unreachable('Dict.set: The "key" must be a string.');
-      } else if (value === undefined) {
-        unreachable('Dict.set: The "value" cannot be undefined.');
-      }
-    }
-
     this._map.set(key, value);
   }
 

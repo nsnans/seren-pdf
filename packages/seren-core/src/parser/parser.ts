@@ -101,8 +101,8 @@ export class Parser {
   }
 
   refill() {
-    this.buf1 = this.lexer.getObj() || null;
-    this.buf2 = this.lexer.getObj() || null;
+    this.buf1 = this.lexer.getObj();
+    this.buf2 = this.lexer.getObj();
   }
 
   shift() {
@@ -111,7 +111,7 @@ export class Parser {
       this.buf2 = null;
     } else {
       this.buf1 = this.buf2;
-      this.buf2 = this.lexer.getObj() || null;
+      this.buf2 = this.lexer.getObj();
     }
   }
 

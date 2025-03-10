@@ -343,10 +343,11 @@ export const PasswordResponses = {
 
 let verbosity = VerbosityLevel.WARNINGS;
 
-export function setVerbosityLevel(level: number | null) {
-  if (level != undefined && Number.isInteger(level)) {
-    verbosity = level;
+export function setVerbosityLevel(level: VerbosityLevel) {
+  if (isNull(level)) {
+    throw new Error("日志级别不可以为空");
   }
+  verbosity = level;
 }
 
 export function getVerbosityLevel() {
