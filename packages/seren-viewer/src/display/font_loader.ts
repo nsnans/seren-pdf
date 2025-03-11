@@ -399,7 +399,7 @@ export class FontFaceObject {
     this.compiledGlyphs = new Map();
     // importing translated data
     // 这里应该用深拷贝，不用深拷贝，可能会出现问题
-    this.translated = translatedData;
+    this.translated = { ...translatedData };
     this.disableFontFace = disableFontFace === true;
   }
 
