@@ -183,9 +183,10 @@ class GeneralOperator {
     ).then(loadedName => {
       ctx.operatorList.addDependency(loadedName);
       ctx.operatorList.addOp(OPS.setFont, [loadedName, fontSize])
-    }, reason=>{
+    }, reason => {
       console.error((reason));
     }));
+    return OVER;
   }
 
   @handle(OPS.beginText)

@@ -313,7 +313,7 @@ export class CFFParser {
 
     let charset, encoding;
     if (cff.isCIDFont) {
-      const fdArrayIndex = this.parseIndex(topDict.getByName(CFFDictKey.FDArray)).obj;
+      const fdArrayIndex = this.parseIndex(topDict.getByName(CFFDictKey.FDArray)!).obj;
       for (let i = 0, ii = fdArrayIndex.count; i < ii; ++i) {
         const dictRaw = fdArrayIndex.get(i);
         const fontDict = this.createDict(new CFFTopDict(cff.strings), this.parseDict(dictRaw));
@@ -323,24 +323,24 @@ export class CFFParser {
       // cid fonts don't have an encoding
       encoding = null;
       charset = this.parseCharsets(
-        topDict.getByName(CFFDictKey.charset),
+        topDict.getByName(CFFDictKey.charset)!,
         charStringIndex.count,
         cff.strings,
         true
       );
       cff.fdSelect = this.parseFDSelect(
-        topDict.getByName(CFFDictKey.FDSelect),
+        topDict.getByName(CFFDictKey.FDSelect)!,
         charStringIndex.count
       );
     } else {
       charset = this.parseCharsets(
-        topDict.getByName(CFFDictKey.charset),
+        topDict.getByName(CFFDictKey.charset)!,
         charStringIndex.count,
         cff.strings,
         false
       );
       encoding = this.parseEncoding(
-        topDict.getByName(CFFDictKey.Encoding),
+        topDict.getByName(CFFDictKey.Encoding)!,
         properties,
         cff.strings,
         charset.charset
@@ -787,10 +787,10 @@ export class CFFParser {
         );
       }
       if (state.width !== null) {
-        const nominalWidth = privateDictToUse.getByName(CFFDictKey.nominalWidthX);
+        const nominalWidth = privateDictToUse.getByName(CFFDictKey.nominalWidthX)!;
         widths[i] = nominalWidth + state.width;
       } else {
-        const defaultWidth = privateDictToUse.getByName(CFFDictKey.defaultWidthX);
+        const defaultWidth = privateDictToUse.getByName(CFFDictKey.defaultWidthX)!;
         widths[i] = defaultWidth;
       }
       if (state.seac !== null) {
@@ -847,7 +847,7 @@ export class CFFParser {
     if (!privateDict.getByName(CFFDictKey.Subrs)) {
       return;
     }
-    const subrsOffset = privateDict.getByName(CFFDictKey.Subrs);
+    const subrsOffset = privateDict.getByName(CFFDictKey.Subrs)!;
     const relativeOffset = offset + subrsOffset;
     // Validate the offset.
     if (subrsOffset === 0 || relativeOffset >= this.bytes.length) {
@@ -1380,8 +1380,8 @@ export class CFFDict {
     return this.values.has(this.nameToKeyMap.get(name)!);
   }
 
-  getByName<T extends CFFDictKey>(name: T): CFFDictValueMapping[T] {
-    if (!(name in this.nameToKeyMap)) {
+  getByName<T extends CFFDictKey>(name: T): CFFDictValueMapping[T] | null{
+    if (!(this.nameToKeyMap.has(name))) {
       throw new FormatError(`Invalid dictionary name ${name}"`);
     }
     const key = this.nameToKeyMap.get(name)!;
@@ -1679,12 +1679,12 @@ export class CFFCompiler {
       // To make this work on all platforms we move the top matrix into each
       // sub top dict and concat if necessary.
       if (cff.topDict!.hasName(CFFDictKey.FontMatrix)) {
-        const base = cff.topDict!.getByName(CFFDictKey.FontMatrix);
+        const base = cff.topDict!.getByName(CFFDictKey.FontMatrix)!;
         cff.topDict!.removeByName(CFFDictKey.FontMatrix);
         for (const subDict of cff.fdArray) {
           let matrix = base.slice(0);
           if (subDict.hasName(CFFDictKey.FontMatrix)) {
-            matrix = Util.transform(matrix, subDict.getByName(CFFDictKey.FontMatrix));
+            matrix = Util.transform(matrix, subDict.getByName(CFFDictKey.FontMatrix)!);
           }
           subDict.setByName(CFFDictKey.FontMatrix, <TransformType>matrix);
         }
@@ -1952,7 +1952,7 @@ export class CFFCompiler {
     const out: number[] = [];
     // The dictionary keys must be in a certain order.
     for (const key of dict.order) {
-      if (!(key in dict.values)) {
+      if (!dict.values.has(key)) {
         continue;
       }
       let values = <number | number[]>dict.values.get(key)!;

@@ -77,6 +77,7 @@ import {
   getSupplementalGlyphMapForCalibri,
 } from "./standard_fonts";
 import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "./to_unicode_map";
+import { isNull } from '../../../../seren-common/src/utils/util';
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [
@@ -1248,7 +1249,7 @@ export class Font {
 
     let { type, subtype } = properties;
     this.type = type;
-    this.subtype = subtype;
+    this.subtype = !isNull(subtype) ? subtype : null;
     this.systemFontInfo = properties.systemFontInfo;
 
     const matches = name.match(/^InvalidPDFjsFont_(.*)_\d+$/);

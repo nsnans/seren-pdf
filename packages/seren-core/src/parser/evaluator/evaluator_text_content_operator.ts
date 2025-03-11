@@ -1,6 +1,7 @@
 import {
   AbortException,
   assert,
+  assertNotNull,
   Dict,
   DictKey,
   DocumentEvaluatorOptions,
@@ -314,9 +315,11 @@ class OperatorAssist {
       }
     }
 
-    this.ctx.textState!.loadedName = translated.loadedName;
-    this.ctx.textState!.font = translated.font!;
-    this.ctx.textState!.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
+    assertNotNull(this.ctx.textState);
+
+    this.ctx.textState.loadedName = translated.loadedName;
+    this.ctx.textState.font = translated.font!;
+    this.ctx.textState.fontMatrix = translated.font.fontMatrix || FONT_IDENTITY_MATRIX;
   }
 
   applyInverseRotation(x: number, y: number, matrix: TransformType) {
