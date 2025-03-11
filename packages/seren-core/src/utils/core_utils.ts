@@ -44,7 +44,9 @@ export function getLookupTableFactory<V>(initializer: (() => V) | null) {
     let v: V | null = null;
     if (initializer) {
       v = initializer()!;
-      initializer = null;
+      // 无需置空，因为这个东西只要需要用到，那么就必须要存在内存当中
+      // 常驻内存，可能会占据一些空间，当这个空间如果太大时，则需要优化
+      // initializer = null;
     }
     return v!;
   };
