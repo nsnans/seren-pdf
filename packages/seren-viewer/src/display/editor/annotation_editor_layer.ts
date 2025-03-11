@@ -87,12 +87,12 @@ export class AnnotationEditorLayer {
     drawLayer: DrawLayer,
     textLayer: TextLayerBuilder,
     viewport: PageViewport,
-    l10n: L10n,
+    _l10n: L10n,
   ) {
     const editorInitalizers = AnnotationEditorRegistry.getL10nInitializer();
     if (!AnnotationEditorLayer._initialized) {
       AnnotationEditorLayer._initialized = true;
-      for (const initializer of editorInitalizers) {
+      for (const _initializer of editorInitalizers) {
         // initializer(l10n, uiManager);
       }
     }

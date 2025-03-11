@@ -1470,7 +1470,9 @@ export class WebPageViewManager {
   }
 
   renderPageViews() {
-    this._pages[0].draw();
+    this._pages[0].draw().then(()=>{
+      this.container.append(this._pages[0].div);
+    });
   }
 
   update() {
