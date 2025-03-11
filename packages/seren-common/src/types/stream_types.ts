@@ -315,6 +315,7 @@ export class GeneralStreamSink<Chunk> implements StreamSink<Chunk> {
       stream: StreamKind.ENQUEUE,
       streamId: this.streamId,
       chunk,
+      test: true,
     };
     const post = this.comObj.postMessage.bind(this.comObj);
     // 兼容性写法，主要针对TypeScript报错

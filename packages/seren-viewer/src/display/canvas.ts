@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray, Glyph } from "seren-common";
+import { Uint8TypedArray, Glyph, isNull } from "seren-common";
 import { ImageMask } from "seren-common";
 import {
   GroupOptions,
@@ -1088,11 +1088,11 @@ export class CanvasGraphics {
 
   protected initOperatorMap() {
     for (const [ops, func] of MethodMap) {
-      if (typeof func === 'function') {
+      if (typeof this[func] === 'function') {
         if (this.operatorMap.has(ops)) {
           throw new Error(ops + '操作设置了多个处理方法');
         }
-        this.operatorMap.set(ops, func);
+        this.operatorMap.set(ops, this[func]);
       }
     }
   }
@@ -2055,7 +2055,7 @@ export class CanvasGraphics {
   endText() {
     const paths = this.pendingTextPaths!;
     const ctx = this.ctx;
-    if (paths === undefined) {
+    if (isNull(paths)) {
       ctx.beginPath();
       return;
     }

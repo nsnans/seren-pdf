@@ -24,7 +24,7 @@ enum CallbackKind {
 };
 
 interface StreamController<T> {
-  controller: ReadableStreamController<T>;
+  controller: ReadableStreamDefaultController<T>;
   startCall: PromiseWithResolvers<void> | null;
   cancelCall: PromiseWithResolvers<void> | null;
   pullCall: PromiseWithResolvers<void> | null;
@@ -277,9 +277,7 @@ export abstract class AbstractMessageHandler {
         });
         // Return Promise to signal success or failure.
         return cancelCapability.promise;
-      },
-
-      type: "bytes"
+      }
     }, queueingStrategy);
   }
 
@@ -375,7 +373,7 @@ export abstract class AbstractMessageHandler {
           break;
         }
         // 通向sendWithStream.read的关键
-        streamController.controller.enqueue(<Uint8Array<ArrayBuffer>>data.chunk);
+        streamController.controller.enqueue(data.chunk);
         break;
       case StreamKind.CLOSE:
         assert(!!streamController, "close should have stream controller");

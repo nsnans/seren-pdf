@@ -93,7 +93,7 @@ export class AnnotationEditorLayer {
     if (!AnnotationEditorLayer._initialized) {
       AnnotationEditorLayer._initialized = true;
       for (const initializer of editorInitalizers) {
-        initializer(l10n, uiManager);
+        // initializer(l10n, uiManager);
       }
     }
     // uiManager.registerEditorTypes(AnnotationEditorRegistry.getEditorBasicInfo());
