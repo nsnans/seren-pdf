@@ -2096,13 +2096,14 @@ export class CanvasGraphics {
 
   @handle(OPS.setFont)
   setFont(fontRefName: string, size: number) {
-    const fontObj = this.commonObjs.get(fontRefName);
+    const fontObj = <FontFaceObject>this.commonObjs.get(fontRefName);
+    const fontProps = fontObj.getProps();
     const current = this.current;
 
     if (!fontObj) {
       throw new Error(`Can't find font for ${fontRefName}`);
     }
-    current.fontMatrix = fontObj.fontMatrix || FONT_IDENTITY_MATRIX;
+    current.fontMatrix = fontProps.fontMatrix || FONT_IDENTITY_MATRIX;
 
     // A valid matrix needs all main diagonal elements to be non-zero
     // This also ensures we bypass FF bugzilla bug #719844.
@@ -2122,20 +2123,20 @@ export class CanvasGraphics {
     this.current.font = fontObj;
     this.current.fontSize = size;
 
-    if (fontObj.isType3Font) {
+    if (fontProps.isType3Font) {
       return; // we don't need ctx.font for Type3 fonts
     }
 
-    const name = fontObj.loadedName || "sans-serif";
-    const typeface = fontObj.systemFontInfo?.css || `"${name}", ${fontObj.fallbackName}`;
+    const name = fontProps.loadedName || "sans-serif";
+    const typeface = fontObj.systemFontInfo?.css || `"${name}", ${fontProps.fallbackName}`;
 
     let bold = "normal";
-    if (fontObj.black) {
+    if (fontProps.black) {
       bold = "900";
-    } else if (fontObj.bold) {
+    } else if (fontProps.bold) {
       bold = "bold";
     }
-    const italic = fontObj.italic ? "italic" : "normal";
+    const italic = fontProps.italic ? "italic" : "normal";
 
     // Some font backends cannot handle fonts below certain size.
     // Keeping the font at minimal size and using the fontSizeScale to change

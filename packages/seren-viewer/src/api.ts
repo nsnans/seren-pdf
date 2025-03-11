@@ -3071,7 +3071,6 @@ export class PDFObjects {
    *
    * @param {string} objId
    * @param {function} [callback]
-   * @returns {any}
    */
   get(objId: string, callback: ((data: any) => void) | null = null) {
     // If there is a callback, then the get can be async and the object is
