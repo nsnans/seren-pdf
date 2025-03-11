@@ -388,8 +388,6 @@ export class FontFaceObject {
 
   public attached = false;
 
-  systemFontInfo: any;
-
   readonly translated: FontExportData | FontExportExtraData;
 
   constructor(

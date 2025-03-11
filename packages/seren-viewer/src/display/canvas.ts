@@ -2128,7 +2128,7 @@ export class CanvasGraphics {
     }
 
     const name = fontProps.loadedName || "sans-serif";
-    const typeface = fontObj.systemFontInfo?.css || `"${name}", ${fontProps.fallbackName}`;
+    const typeface = fontProps.systemFontInfo?.css || `"${name}", ${fontProps.fallbackName}`;
 
     let bold = "normal";
     if (fontProps.black) {
