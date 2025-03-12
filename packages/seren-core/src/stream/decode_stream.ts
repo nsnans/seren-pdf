@@ -16,6 +16,7 @@
 import { Uint8TypedArray, unreachable, JpxDecoderOptions, Dict } from "seren-common";
 import { BaseStream, emptyBuffer } from "./base_stream";
 import { Stream } from "./stream";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 // Super class for the decoding streams.
 export abstract class DecodeStream extends BaseStream {
@@ -121,7 +122,7 @@ export abstract class DecodeStream extends BaseStream {
   }
 
   makeSubStream(start: number, length: number, dict: Dict | null = null) {
-    if (length === undefined) {
+    if (isNull(length)) {
       while (!this.eof) {
         this.readBlock(null);
       }

@@ -19,6 +19,7 @@ import { Stream } from "../stream/stream";
 import { EvaluatorProperties } from "./evaluator/evaluator";
 import { TransformType, warn, Uint8TypedArray } from "seren-common";
 import { CFFDictKey } from "../document/font/cff_parser";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.
@@ -739,7 +740,7 @@ export class Type1Parser {
         const index = properties.builtInEncoding.indexOf(glyph!);
         if (
           index > -1 &&
-          properties.widths[index] === undefined &&
+          isNull(properties.widths[index]) &&
           index >= properties.firstChar &&
           index <= properties.lastChar
         ) {

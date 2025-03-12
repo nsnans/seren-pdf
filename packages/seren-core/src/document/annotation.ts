@@ -103,6 +103,7 @@ import { FileSpec } from "./file_spec";
 import { ErrorFont, Font, GlyphImpl } from "./font/fonts";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
+import { isNull } from '../../../seren-common/src/utils/util';
 import {
   ButtonWidgetData,
   CaretData,
@@ -1010,8 +1011,8 @@ export class Annotation<DATA extends AnnotationData> {
 
   _buildFlags(noView?: boolean, noPrint?: boolean) {
     let { flags } = this;
-    if (noView === undefined) {
-      if (noPrint === undefined) {
+    if (isNull(noView)) {
+      if (isNull(noPrint)) {
         return null;
       }
       if (noPrint) {
@@ -1874,11 +1875,11 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     this._needAppearances = params.needAppearances;
 
     data.annotationType = AnnotationType.WIDGET;
-    if (data.fieldName === undefined) {
+    if (isNull(data.fieldName)) {
       data.fieldName = this._constructFieldName(dict);
     }
 
-    if (data.actions === undefined) {
+    if (isNull(data.actions)) {
       data.actions = collectActions(xref, dict, AnnotationActionEventType) ?? undefined;
     }
 
@@ -1891,7 +1892,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
     // When no "V" entry exists, let the fieldValue fallback to the "DV" entry
     // (fixes issue13823.pdf).
-    if (fieldValue === undefined && data.defaultFieldValue !== null) {
+    if (isNull(fieldValue) && data.defaultFieldValue !== null) {
       data.fieldValue = data.defaultFieldValue;
     }
 
@@ -1990,7 +1991,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   getRotationMatrix(annotationStorage: Map<string, Record<string, any>> | null) {
     let rotation = annotationStorage?.get(this.data.id)?.rotation;
-    if (rotation === undefined) {
+    if (isNull(rotation)) {
       rotation = this.rotation;
     }
 
@@ -2006,7 +2007,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
 
   getBorderAndBackgroundAppearances(annotationStorage: Map<string, AnnotationEditorSerial> | null) {
     let rotation = (<{ rotation?: number }>annotationStorage?.get(this.data.id))?.rotation;
-    if (rotation === undefined) {
+    if (isNull(rotation)) {
       rotation = this.rotation;
     }
 
@@ -2286,7 +2287,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
       rotation = storageEntry.rotation;
     }
 
-    if (rotation === undefined && value === undefined && !this._needAppearances) {
+    if (isNull(rotation) && isNull(value) && !this._needAppearances) {
       if (this.appearance) {
         // The annotation hasn't been rendered so use the appearance.
         return null;
@@ -2296,7 +2297,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
     // Empty or it has a trailing whitespace.
     const colors = this.getBorderAndBackgroundAppearances(annotationStorage);
 
-    if (value === undefined) {
+    if (isNull(value)) {
       // The annotation has its value in XFA datasets but not in the V field.
       value = this.data.fieldValue;
       if (!value) {
@@ -2324,7 +2325,7 @@ export class WidgetAnnotation<T extends WidgetData> extends Annotation<T> {
       return `/Tx BMC q ${colors}Q EMC`;
     }
 
-    if (rotation === undefined) {
+    if (isNull(rotation)) {
       rotation = this.rotation;
     }
 
@@ -3102,13 +3103,13 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
       rotation = storageEntry ? storageEntry.rotation : null;
     }
 
-    if (value === null && this.appearance) {
+    if (isNull(value) && this.appearance) {
       // Nothing in the annotationStorage.
       // But we've a default appearance so use it.
       return super.getOperatorList(evaluator, task, intent, annotationStorage);
     }
 
-    if (value === null || value === undefined) {
+    if (isNull(value)) {
       // There is no default appearance so use the one derived
       // from the field value.
       value = this.data.checkBox ? this.data.fieldValue === this.data.exportValue
@@ -3183,8 +3184,8 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     let rotation = storageEntry?.rotation;
     let value = storageEntry?.value;
 
-    if (rotation === undefined && flags === undefined) {
-      if (value === undefined) {
+    if (isNull(rotation) && isNull(flags)) {
+      if (isNull(value)) {
         return null;
       }
 
@@ -3200,10 +3201,10 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     }
     dict = dict.clone();
 
-    if (rotation === undefined) {
+    if (isNull(rotation)) {
       rotation = this.rotation;
     }
-    if (value === undefined) {
+    if (isNull(value)) {
       value = this.data.fieldValue === this.data.exportValue;
     }
 
@@ -3235,8 +3236,8 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     let rotation = storageEntry?.rotation,
       value = storageEntry?.value;
 
-    if (rotation === undefined && flags === undefined) {
-      if (value === undefined) {
+    if (isNull(rotation) && isNull(flags)) {
+      if (isNull(value)) {
         return null;
       }
 
@@ -3252,11 +3253,11 @@ class ButtonWidgetAnnotation extends WidgetAnnotation<ButtonWidgetData> {
     }
     dict = dict.clone();
 
-    if (value === undefined) {
+    if (isNull(value)) {
       value = this.data.fieldValue === this.data.buttonValue;
     }
 
-    if (rotation === undefined) {
+    if (isNull(rotation)) {
       rotation = this.rotation;
     }
 
@@ -3700,7 +3701,7 @@ class ChoiceWidgetAnnotation extends WidgetAnnotation<ChoiceWidgetData> {
       return null;
     }
 
-    if (exportedValue === undefined) {
+    if (isNull(exportedValue)) {
       exportedValue = this.data.fieldValue;
     } else if (!Array.isArray(exportedValue)) {
       exportedValue = [<string>exportedValue];

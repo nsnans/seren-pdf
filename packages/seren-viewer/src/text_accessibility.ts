@@ -14,6 +14,7 @@
  */
 
 import { binarySearchFirstItem } from "./ui_utils";
+import { isNull } from '../../seren-common/src/utils/util';
 
 /**
  * This class aims to provide some methods:
@@ -141,7 +142,7 @@ export class TextAccessibilityManager {
 
     const { id } = element;
     const nodeIndex = this.#textNodes.get(id);
-    if (nodeIndex === undefined) {
+    if (isNull(nodeIndex)) {
       return;
     }
 

@@ -33,6 +33,7 @@ import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 import { StructTreeSerialNode } from "seren-common";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 const MAX_DEPTH = 40;
 
@@ -357,7 +358,7 @@ export class StructTreeRoot {
           structParent >= 0
         ) {
           let objs = (structTreePageObjs ||= new Map()).get(pageIndex);
-          if (objs === undefined) {
+          if (isNull(objs)) {
             // We need to collect the objects for the page.
             const structTreePage = new StructTreePage(
               structTreeRoot,

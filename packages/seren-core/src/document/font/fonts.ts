@@ -145,7 +145,7 @@ function adjustTrueTypeToUnicode(properties: EvaluatorProperties
       continue;
     }
     const unicode = glyphsUnicodeMap[glyphName];
-    if (unicode === undefined) {
+    if (isNull(unicode)) {
       continue;
     }
     toUnicode[charCode] = String.fromCharCode(unicode);
@@ -1474,7 +1474,7 @@ export class Font {
         ) {
           this.toUnicode.forEach(function (charCode, unicodeCharCode) {
             const cid = map[charCode];
-            if (cidToGidMap[cid] === undefined) {
+            if (isNull(cidToGidMap[cid])) {
               map[+charCode] = unicodeCharCode;
             }
           });
@@ -3204,7 +3204,7 @@ export class Font {
             unicodeOrCharCode = MacRomanEncoding.indexOf(standardGlyphName);
           }
 
-          if (unicodeOrCharCode === undefined) {
+          if (isNull(unicodeOrCharCode)) {
             // Not a valid glyph name, fallback to using the /ToUnicode map
             // when no post-table exists (fixes issue13316_reduced.pdf).
             if (
@@ -3218,7 +3218,7 @@ export class Font {
               }
             }
 
-            if (unicodeOrCharCode === undefined) {
+            if (isNull(unicodeOrCharCode)) {
               continue; // No valid glyph mapping found.
             }
           }

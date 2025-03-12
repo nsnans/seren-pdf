@@ -1,3 +1,4 @@
+import { isNull } from '../../seren-common/src/utils/util';
 /* Copyright 2012 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -530,7 +531,7 @@ export class WorkerMessageHandler {
           xref,
           pdfManager!.evaluatorOptions.isOffscreenCanvasSupported
         );
-        const newAnnotationPromises = structTreeRoot === undefined ? promises : [];
+        const newAnnotationPromises = isNull(structTreeRoot) ? promises : [];
         for (const [pageIndex, annotations] of newAnnotationsByPage) {
           newAnnotationPromises.push(pdfManager!.getPage(pageIndex).then(async page => {
             const task = new DefaultWorkerTask(`Save (editor): page ${pageIndex}`);

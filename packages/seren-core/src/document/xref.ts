@@ -45,6 +45,7 @@ import {
 } from "seren-common";
 import { Stream } from "../stream/stream";
 import { DictImpl } from "./dict_impl";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 
 interface StreamState {
@@ -1045,7 +1046,7 @@ export class XRefImpl implements XRef {
       }
     }
     xrefEntry = entries[xrefEntry.gen];
-    if (xrefEntry === undefined) {
+    if (isNull(xrefEntry)) {
       throw new XRefEntryException(`Bad (compressed) XRef entry: ${ref}`);
     }
     return xrefEntry;

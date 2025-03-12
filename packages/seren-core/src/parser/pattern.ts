@@ -32,7 +32,8 @@ import {
   OperatorListIR,
   FigureType,
   RadialAxialShadingIR, 
-  TilingPatternIR
+  TilingPatternIR,
+  isNull
 } from "seren-common";
 import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
@@ -490,7 +491,7 @@ function buildB(count: number) {
 
 function getB(count: number) {
   let ret = bCache.get(count);
-  if (ret === undefined) {
+  if (isNull(ret)) {
     ret = buildB(count)
     bCache.set(count, ret);
   }

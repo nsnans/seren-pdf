@@ -1094,7 +1094,7 @@ export class Catalog {
           continue;
       }
 
-      if (prefValue === undefined) {
+      if (isNull(prefValue)) {
         warn(`Bad value, for key "${key}", in ViewerPreferences: ${value}.`);
         continue;
       }

@@ -51,6 +51,7 @@ import { NullStream, Stream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
 import { ParsedType } from "seren-common";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 const MAX_LENGTH_TO_CACHE = 1000;
 
@@ -1332,7 +1333,7 @@ export class Lexer {
       // Stop if a known command is found and next character does not make
       // the string a command.
       const possibleCommand = str + String.fromCharCode(ch);
-      if (knownCommandFound && knownCommands![possibleCommand] === undefined) {
+      if (knownCommandFound && isNull(knownCommands![possibleCommand])) {
         break;
       }
       if (str.length === 128) {

@@ -15,7 +15,7 @@
 
 import { PlatformHelper } from "../utils/platform_helper";
 import { DestinationType, PointType, RectType, TypedArray } from "../common/common_types";
-import { assert, unreachable } from "../utils/util";
+import { assert, unreachable, isNull } from '../utils/util';
 import { Dict } from "./dict";
 import { DataStream } from "../types/stream_types";
 
@@ -848,11 +848,11 @@ export class RefSetCache<K extends { toString(): string }, V> {
 }
 
 export function isName(v: unknown, name: string) {
-  return v instanceof Name && (name === undefined || v.name === name);
+  return v instanceof Name && (isNull(name) || v.name === name);
 }
 
 export function isCmd(v: unknown, cmd: string) {
-  return v instanceof Cmd && (cmd === undefined || v.cmd === cmd);
+  return v instanceof Cmd && (isNull(cmd) || v.cmd === cmd);
 }
 
 export function isRefsEqual(v1: Ref, v2: Ref) {

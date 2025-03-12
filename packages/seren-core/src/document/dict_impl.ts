@@ -1,4 +1,4 @@
-import { Dict, DictKey, DictValueTypeMapping, isName, PlatformHelper, Ref, shadow, unreachable, XRef } from "seren-common";
+import { Dict, DictKey, DictValueTypeMapping, isName, isNull, PlatformHelper, Ref, shadow, unreachable, XRef } from "seren-common";
 
 export class DictImpl implements Dict {
 
@@ -50,7 +50,7 @@ export class DictImpl implements Dict {
   // 自动将Ref对象解引用
   protected get(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map.get(key1);
-    if (value === undefined && key2 !== undefined) {
+    if (isNull(value) && !isNull(key2)) {
       if (
         (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
@@ -58,7 +58,7 @@ export class DictImpl implements Dict {
         unreachable("Dict.get: Expected keys to be ordered by length.");
       }
       value = this._map.get(key2);
-      if (value === undefined && key3 !== undefined) {
+      if (isNull(value) && !isNull(key3)) {
         if (
           (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
@@ -88,7 +88,7 @@ export class DictImpl implements Dict {
   // Same as get(), but returns a promise and uses fetchIfRefAsync().
   protected async getAsync(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value = this._map.get(key1);
-    if (value === undefined && key2 !== undefined) {
+    if (isNull(value) && !isNull(key2)) {
       if (
         (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
@@ -96,7 +96,7 @@ export class DictImpl implements Dict {
         unreachable("Dict.getAsync: Expected keys to be ordered by length.");
       }
       value = this._map.get(key2);
-      if (value === undefined && key3 !== undefined) {
+      if (isNull(value) && !isNull(key3)) {
         if (
           (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
@@ -127,7 +127,7 @@ export class DictImpl implements Dict {
   // 这里的值其实不应当细究，不然会带来很多麻烦
   protected getArray(key1: DictKey, key2?: DictKey, key3?: DictKey) {
     let value: any = this._map.get(key1);
-    if (value === undefined && key2 !== undefined) {
+    if (isNull(value) && !isNull(key2)) {
       if (
         (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
         key2.length < key1.length
@@ -135,7 +135,7 @@ export class DictImpl implements Dict {
         unreachable("Dict.getArray: Expected keys to be ordered by length.");
       }
       value = this._map.get(key2);
-      if (value === undefined && key3 !== undefined) {
+      if (isNull(value) && !isNull(key3)) {
         if (
           (!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) &&
           key3.length < key2.length
@@ -208,7 +208,7 @@ export class DictImpl implements Dict {
       }
       for (const [key, value] of Object.entries(dict._map)) {
         let property = properties.get(key);
-        if (property === undefined) {
+        if (isNull(property)) {
           property = [];
           properties.set(key, property);
         } else if (!mergeSubDicts || !(value instanceof DictImpl)) {
@@ -258,6 +258,6 @@ export class DictImpl implements Dict {
 
 export function isDict(v: unknown, type: string) {
   return (
-    v instanceof DictImpl && (type === undefined || isName(v.getValue(DictKey.Type), type))
+    v instanceof DictImpl && (isNull(type) || isName(v.getValue(DictKey.Type), type))
   );
 }

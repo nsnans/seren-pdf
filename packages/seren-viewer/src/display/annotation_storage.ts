@@ -17,7 +17,8 @@ import {
   objectFromMap,
   shadow,
   unreachable,
-  AnnotationEditorSerial
+  AnnotationEditorSerial,
+  isNull
 } from "seren-common";
 import { AnnotationEditor } from "./editor/editor";
 
@@ -65,7 +66,7 @@ export class AnnotationStorage {
    */
   getValue(key: string, defaultValue: Record<string, any>) {
     const value = this.#storage.get(key);
-    if (value === undefined) {
+    if (isNull(value)) {
       return defaultValue;
     }
 

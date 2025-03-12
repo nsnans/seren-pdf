@@ -22,6 +22,7 @@ import {
 } from "seren-common";
 import { PDFDataRangeTransport } from "../api";
 import { isPdfFile } from "./display_utils";
+import { isNull } from '../../../seren-common/src/utils/util';
 
 export class PDFDataTransportStream implements PDFStream {
 
@@ -100,7 +101,7 @@ export class PDFDataTransportStream implements PDFStream {
     const buffer = chunk instanceof Uint8Array && chunk.byteLength === chunk.buffer.byteLength
       ? <ArrayBuffer>chunk.buffer : new Uint8Array(chunk!).buffer;
 
-    if (begin === undefined) {
+    if (isNull(begin)) {
       if (this._fullRequestReader) {
         this._fullRequestReader._enqueue(buffer);
       } else {
@@ -126,7 +127,7 @@ export class PDFDataTransportStream implements PDFStream {
   }
 
   _onProgress(loaded: number, total?: number) {
-    if (total === undefined) {
+    if (isNull(total)) {
       // Reporting to first range reader, if it exists.
       this._rangeReaders[0]?.onProgress?.(loaded);
     } else {

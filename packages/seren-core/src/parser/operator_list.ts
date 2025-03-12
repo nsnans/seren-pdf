@@ -22,7 +22,8 @@ import {
   StreamSink,
   OperatorListIR,
   OpertaorListChunk,
-  OptionalContent
+  OptionalContent,
+  isNull
 } from "seren-common";
 
 function addState(parentState: InitialStateFuncTree, pattern: OPS[],
@@ -704,13 +705,13 @@ export class OperatorList {
   }
 
   addImageOps(fn: OPS, args: any[], optionalContent: OptionalContent | null) {
-    if (optionalContent !== undefined) {
+    if (!isNull(optionalContent)) {
       this.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
 
     this.addOp(fn, args);
 
-    if (optionalContent !== undefined) {
+    if (!isNull(optionalContent)) {
       this.addOp(OPS.endMarkedContent, []);
     }
   }
@@ -791,3 +792,4 @@ export class OperatorList {
     this.optimizer.reset();
   }
 }
+

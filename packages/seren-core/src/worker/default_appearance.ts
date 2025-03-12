@@ -27,7 +27,8 @@ import {
   shadow,
   warn,
   PointType, RectType,
-  MutableArray, DictKey, Name, Ref, Dict, DocumentEvaluatorOptions
+  MutableArray, DictKey, Name, Ref, Dict, DocumentEvaluatorOptions,
+  isNull
 } from "seren-common";
 import { ColorSpace } from "../color/colorspace";
 import { EvaluatorPreprocessor } from "../parser/evaluator/evaluator";
@@ -427,7 +428,7 @@ export class FakeUnicodeFont {
       for (const code of codePointIter(line)) {
         const char = String.fromCodePoint(code);
         let width = this.widths!.get(code);
-        if (width === undefined) {
+        if (isNull(width)) {
           const metrics = ctx.measureText(char);
           width = Math.ceil(metrics.width);
           this.widths!.set(code, width);

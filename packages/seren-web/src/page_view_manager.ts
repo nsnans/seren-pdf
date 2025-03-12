@@ -1473,16 +1473,16 @@ export class WebPageViewManager {
   }
 
   renderPageViews() {
-    for (const div of this._pageDivs) {
-      this.container.append(div);
-    }
+    // for (const div of this._pageDivs) {
+    //   this.container.append(div);
+    // }
     for (const pageView of this._pages) {
       this._ensurePdfPageLoaded(pageView).then(pageView => {
         const pageNumber = pageView?.pdfPage?.pageNumber;
-        if (pageNumber && pageNumber >= 9 && pageNumber <= 11) {
-          // this.container.append(this._pageDivs[pageNumber - 1]);
+        if (pageNumber && pageNumber >= 11 && pageNumber <= 11) {
+          this.container.append(this._pageDivs[pageNumber - 1]);
+          pageView!.draw();
         }
-        pageView!.draw();
       })
     }
   }
