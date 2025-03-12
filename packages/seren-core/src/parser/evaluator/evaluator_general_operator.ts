@@ -105,7 +105,8 @@ class GeneralOperator extends EvaluatorBaseHandler {
       }
       let xobj = ctx.xobjs.getRaw(<DictKey>name!);
       if (xobj instanceof Ref) {
-        const localImage = ctx.localImageCache.getByRef(xobj) || ctx.regionalImageCache.getByRef(xobj);
+        const localImage = ctx.localImageCache.getByRef(xobj)
+          || ctx.regionalImageCache.getByRef(xobj);
         if (localImage) {
           addLocallyCachedImageOps(ctx.operatorList, localImage);
           resolve();

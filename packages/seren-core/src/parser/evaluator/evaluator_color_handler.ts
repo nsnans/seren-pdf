@@ -54,7 +54,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
           const tilingPatternIR = getTilingPatternIR(
             localTilingPattern.operatorListIR, localTilingPattern.dict, color
           );
-          operatorList.addOp(fn, <any>tilingPatternIR);
+          operatorList.addOp(fn, [tilingPatternIR]);
           return undefined;
         } catch {
           // Handle any errors during normal TilingPattern parsing.
@@ -153,7 +153,7 @@ export class EvaluatorColorHandler extends EvaluatorBaseHandler {
       // Add the dependencies to the parent operator list so they are
       // resolved before the sub operator list is executed synchronously.
       operatorList.addDependencies(tilingOpList.dependencies);
-      operatorList.addOp(fn, tilingPatternIR);
+      operatorList.addOp(fn, [tilingPatternIR]);
 
       if (patternDict.objId) {
         localTilingPatternCache.set(null, patternDict.objId, {

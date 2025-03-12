@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { Uint8TypedArray, Glyph, isNull } from "seren-common";
+import { Uint8TypedArray, Glyph, isNull, assertNotNull } from "seren-common";
 import { ImageMask } from "seren-common";
 import {
   GroupOptions,
@@ -546,8 +546,7 @@ class CanvasExtraState {
 
   public fontDirection: number | null = null;
 
-  // TODO 除了FontFaceObjet之外，还有其它可能，需要做验证
-  public font: any;
+  public font: FontFaceObject | null = null;
 
   constructor(width: number, height: number) {
     // Are soft masks and alpha values shapes or opacities?
@@ -2279,7 +2278,9 @@ export class CanvasGraphics {
   showText(glyphs: (number | Glyph)[]) {
     const current = this.current;
     const font = current.font;
-    if (font.isType3Font) {
+    assertNotNull(font);
+    const fontProps = font.getProps();
+    if (fontProps.isType3Font) {
       return this.showType3Text(<Glyph[]>glyphs);
     }
 
@@ -2295,9 +2296,9 @@ export class CanvasGraphics {
     const fontDirection = current.fontDirection!;
     const textHScale = current.textHScale * fontDirection;
     const glyphsLength = glyphs.length;
-    const vertical = font.vertical;
+    const vertical = fontProps.vertical;
     const spacingDir = vertical ? 1 : -1;
-    const defaultVMetrics = font.defaultVMetrics;
+    const defaultVMetrics = fontProps.defaultVMetrics!;
     const widthAdvanceScale = fontSize * current.fontMatrix[0];
 
     const simpleFillText =
@@ -2348,7 +2349,7 @@ export class CanvasGraphics {
 
     ctx.lineWidth = lineWidth;
 
-    if (font.isInvalidPDFjsFont) {
+    if (fontProps.isInvalidPDFjsFont) {
       const chars = [];
       let width = 0;
       for (const glyph of glyphs) {
@@ -2391,7 +2392,7 @@ export class CanvasGraphics {
         scaledY = 0;
       }
 
-      if (font.remeasure && width > 0) {
+      if (fontProps.remeasure && width > 0) {
         // Some standard fonts may not have the exact width: rescale per
         // character if measured width is greater than expected glyph width
         // and subpixel-aa is enabled, otherwise just center the glyph.
@@ -2412,7 +2413,7 @@ export class CanvasGraphics {
 
       // Only attempt to draw the glyph if it is actually in the embedded font
       // file or if there isn't a font file so the fallback font is shown.
-      if (this.contentVisible && (glyph.isInFont || font.missingFile)) {
+      if (this.contentVisible && (glyph.isInFont || fontProps.missingFile)) {
         if (simpleFillText && !accent) {
           // common case
           ctx.fillText(character, scaledX, scaledY);
@@ -2457,9 +2458,11 @@ export class CanvasGraphics {
     const ctx = this.ctx;
     const current = this.current;
     const font = current.font;
+    assertNotNull(font);
+    const fontProp = font.getProps();
     const fontSize = current.fontSize;
     const fontDirection = current.fontDirection!;
-    const spacingDir = font.vertical ? 1 : -1;
+    const spacingDir = fontProp.vertical ? 1 : -1;
     const charSpacing = current.charSpacing;
     const wordSpacing = current.wordSpacing;
     const textHScale = current.textHScale * fontDirection;
@@ -2491,7 +2494,8 @@ export class CanvasGraphics {
       }
 
       const spacing = (glyph.isSpace ? wordSpacing : 0) + charSpacing;
-      const operatorList = font.charProcOperatorList[glyph.operatorListId!];
+      // 此处代码可能有BUG，因为charProcOpertorList的参数都是string，此处却用number来取，可能存在问题。
+      const operatorList = fontProp.charProcOperatorList!.get(<DictKey><unknown>glyph.operatorListId);
       if (!operatorList) {
         warn(`Type3 character "${glyph.operatorListId}" is not available.`);
         continue;
@@ -2555,11 +2559,6 @@ export class CanvasGraphics {
         baseTransform
       );
     } else {
-      if (1 === 1) {
-        // 因为有些参数不准确，我也分不清到底是写错了还是我理解错了
-        // 实际测试的时候跑跑看就知道了
-        throw new Error("IR的参数到底是2还是3")
-      }
       pattern = this._getPattern(IR[1]!, IR[3]);
     }
     return pattern;

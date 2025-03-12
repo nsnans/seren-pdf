@@ -1791,7 +1791,6 @@ export class PDFPageProxy {
       intentState.operatorList!.fnArray.push(operatorListChunk.fnArray[i]);
       intentState.operatorList!.argsArray.push(operatorListChunk.argsArray[i]);
     }
-    console.log(intentState.operatorList!.fnArray.length)
     intentState.operatorList!.lastChunk = operatorListChunk.lastChunk;
     intentState.operatorList!.separateAnnots = operatorListChunk.separateAnnots;
 

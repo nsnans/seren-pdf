@@ -897,8 +897,8 @@ export class TextContentOperator {
       ctx.xobjs = ctx.resources.getValue(DictKey.XObject) || DictImpl.empty;
     }
 
-    var isValidName = ctx.args![0] instanceof Name;
-    var name = ctx.args![0].name;
+    const isValidName = ctx.args![0] instanceof Name;
+    const name = ctx.args![0].name;
 
     if (isValidName && ctx.emptyXObjectCache.getByName(name)) {
       return
@@ -1267,7 +1267,8 @@ export class GetTextContentHandler implements OperatorListHandler {
 
   process(
     resolve: (value: void | PromiseLike<void>) => void,
-    _reject: (reason?: any) => void, ctx: ProcessContext, assist: OperatorAssist
+    _reject: (reason?: any) => void, ctx: ProcessContext,
+    assist: OperatorAssist
   ): void {
     this.task.ensureNotTerminated();
     ctx.timeSlotManager.reset();
