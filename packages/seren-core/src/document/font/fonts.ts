@@ -999,7 +999,7 @@ interface ValidTableInfo {
   fpgm: TablePropType<Uint8TypedArray> | null;
   prep: TablePropType<Uint8TypedArray> | null;
   "cvt ": TablePropType<Uint8TypedArray> | null;
-  "CFF ": TablePropType<Uint8TypedArray | number[]> | null;
+  "CFF "?: TablePropType<Uint8TypedArray | number[]> | null;
 }
 
 interface TablePropType<T> {
@@ -1579,8 +1579,7 @@ export class Font {
         glyf: null,
         fpgm: null,
         prep: null,
-        "cvt ": null,
-        "CFF ": null,
+        "cvt ": null
       };
 
       for (let i = 0; i < numTables; i++) {

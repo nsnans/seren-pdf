@@ -1,4 +1,4 @@
-import { AbortException, Dict, DictKey, DocumentEvaluatorOptions, FormatError, info, isNumberArray, Name, OPS, Ref, shiftable, warn, WorkerTask } from "seren-common";
+import { AbortException, assertNotNull, Dict, DictKey, DocumentEvaluatorOptions, FormatError, info, isNumberArray, Name, OPS, Ref, shiftable, warn, WorkerTask } from "seren-common";
 import { ColorSpace } from "../../color/colorspace";
 import { DictImpl } from "../../document/dict_impl";
 import { XRefImpl } from "../../document/xref";
@@ -6,7 +6,7 @@ import { GlobalImageCache, LocalColorSpaceCache, LocalGStateCache, LocalImageCac
 import { BaseStream } from "../../stream/base_stream";
 import { OperatorList } from "../operator_list";
 import { addLocallyCachedImageOps, EvalState, EvaluatorContext, EvaluatorPreprocessor, State, StateManager, TimeSlotManager } from "./evaluator";
-import { OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
+import { EvaluatorBaseHandler, OperatorListHandler, OVER, ProcessOperation, SKIP } from "./evaluator_base";
 import { EvaluatorColorHandler } from "./evaluator_color_handler";
 import { EvaluatorFontHandler } from "./evaluator_font_handler";
 import { EvaluatorGeneralHandler } from "./evaluator_general_handler";
@@ -52,7 +52,7 @@ export interface ProcessContext extends ProcessOperation {
   next: (promise: Promise<unknown> | undefined) => void;
 }
 
-class GeneralOperator {
+class GeneralOperator extends EvaluatorBaseHandler {
 
   protected generalHandler: EvaluatorGeneralHandler;
 
@@ -65,6 +65,7 @@ class GeneralOperator {
   protected operator = new Map<OPS, (context: ProcessContext) => void | /* SKIP */1 | /* OVER */2>();
 
   constructor(context: EvaluatorContext) {
+    super(context);
     this.generalHandler = context.generalHandler;
     this.fontHandler = context.fontHandler;
     this.imageHandler = context.imageHandler;
@@ -206,7 +207,7 @@ class GeneralOperator {
       const localImage = ctx.localImageCache.getByName(cacheKey);
       if (localImage) {
         addLocallyCachedImageOps(ctx.operatorList, localImage);
-        return
+        return SKIP
       }
     }
     ctx.next(this.imageHandler.buildPaintImageXObject(
@@ -308,7 +309,7 @@ class GeneralOperator {
     ).then(colorSpace => {
       ctx.stateManager.state.strokeColorSpace = colorSpace || ColorSpace.singletons.gray;
     }));
-    return;
+    return OVER;
   }
 
   @handle(OPS.setFillColor)
@@ -493,42 +494,49 @@ class GeneralOperator {
       }
       throw reason;
     }));
-    return;
+    return OVER;
   }
 
   @handle(OPS.moveTo)
   moveTo(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args!, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.lineTo)
   lineTo(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.curveTo)
   curveTo(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.curveTo2)
   curveTo2(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.curveTo3)
   curveTo3(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.closePath)
   closePath(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
   @handle(OPS.rectangle)
   rectangle(ctx: ProcessContext) {
     this.generalHandler.buildPath(ctx.operatorList, ctx.fn!, <number[]>ctx.args, ctx.parsingText);
+    return SKIP;
   }
 
 
@@ -542,32 +550,75 @@ class GeneralOperator {
    */
   @handle(OPS.markPoint)
   markPoint(_ctx: ProcessContext) {
+    return SKIP
   }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.markPointProps)
-  markPointProps(_ctx: ProcessContext) { }
+  markPointProps(_ctx: ProcessContext) {
+    return SKIP
+  }
 
   /** 
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginCompat)
-  beginCompat(_ctx: ProcessContext) { }
+  beginCompat(_ctx: ProcessContext) {
+    return SKIP
+  }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.endCompat)
-  endCompat(_ctx: ProcessContext) { }
+  endCompat(_ctx: ProcessContext) {
+    return SKIP
+  }
 
   /**
    * @see {@link GeneralOperator.markPoint}
    */
   @handle(OPS.beginMarkedContentProps)
-  beginMarkedContentProps(_ctx: ProcessContext) {
+  beginMarkedContentProps(ctx: ProcessContext) {
+    assertNotNull(ctx.args);
+    if (!(ctx.args[0] instanceof Name)) {
+      warn(`Expected name for beginMarkedContentProps arg0=${ctx.args[0]}`);
+      ctx.operatorList.addOp(OPS.beginMarkedContentProps, ["OC", null]);
+      return SKIP
+    }
+    if (ctx.args![0].name === "OC") {
+      ctx.next(this.parseMarkedContentProps(ctx.args[1], ctx.resources).then(data => {
+        ctx.operatorList.addOp(OPS.beginMarkedContentProps, ["OC", data,]);
+      }).catch(reason => {
+        if (reason instanceof AbortException) {
+          return;
+        }
+        if (ctx.ignoreErrors) {
+          warn(`getOperatorList - ignoring beginMarkedContentProps: "${reason}".`);
+          ctx.operatorList.addOp(OPS.beginMarkedContentProps, ["OC", null,
+          ]);
+          return;
+        }
+        throw reason;
+      }))
+      return OVER;
+    }
+    ctx.args = [
+      ctx.args[0].name,
+      ctx.args[1] instanceof DictImpl ? ctx.args[1].getValue(DictKey.MCID) : null,
+    ];
+  }
 
+  @handle(OPS.beginMarkedContent)
+  beginMarkedContent(ctx: ProcessContext) {
+    return this.handleDefault(ctx);
+  }
+
+  @handle(OPS.endMarkedContent)
+  endMarkedContent(ctx: ProcessContext) {
+    return this.handleDefault(ctx);
   }
 
   handleDefault(ctx: ProcessContext) {
@@ -584,7 +635,7 @@ class GeneralOperator {
       if (i < ii) {
         // 这里可以优化一下，报错只是一个数字，不太好
         warn("getOperatorList - ignoring operator: " + ctx.fn);
-        return
+        return SKIP;
       }
     }
   }

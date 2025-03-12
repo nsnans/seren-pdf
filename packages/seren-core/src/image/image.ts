@@ -14,28 +14,32 @@
  */
 import {
   assert,
+  convertBlackAndWhiteToRGBA,
+  convertToRGBA,
+  Dict,
+  DictKey,
   FeatureTest,
   FormatError,
   ImageKind,
-  warn,
-  convertBlackAndWhiteToRGBA,
-  convertToRGBA,
-  MutableArray, TypedArray,
-  PlatformHelper, Uint8TypedArray, DictKey, Name,
-  Dict,
   ImageMask,
-  JpxDecoderOptions
+  JpxDecoderOptions,
+  MutableArray,
+  Name,
+  PlatformHelper,
+  TypedArray,
+  Uint8TypedArray,
+  warn
 } from "seren-common";
-import { BaseStream } from "../stream/base_stream";
 import { ColorSpace } from "../color/colorspace";
-import { DecodeStream } from "../stream/decode_stream";
-import { ImageResizer } from "./image_resizer";
-import { JpegStream } from "../stream/jpeg_stream";
-import { JpxImage } from "./jpx";
-import { XRefImpl } from "../document/xref";
 import { PDFFunctionFactory } from "../document/function";
-import { LocalColorSpaceCache } from "./image_utils";
+import { XRefImpl } from "../document/xref";
+import { BaseStream } from "../stream/base_stream";
+import { DecodeStream } from "../stream/decode_stream";
+import { JpegStream } from "../stream/jpeg_stream";
+import { ImageResizer } from "./image_resizer";
 import { SingleOpaquePixelImageMask } from "./image_types";
+import { LocalColorSpaceCache } from "./image_utils";
+import { JpxImage } from "./jpx";
 
 /**
  * Decode and clamp a value. The formula is different from the spec because we
@@ -1059,13 +1063,13 @@ export class PDFImage {
     internal = false,
   ) {
     this.image.reset();
+    // 当image的类型为FlatStream的时候，下面的值，可能是用不上的。
+    // 但是这里留一个标记，表示和原来的代码是有区别的
     if (this.image instanceof JpegStream) {
       this.image.drawWidth = drawWidth || this.width;
       this.image.drawHeight = drawHeight || this.height;
       this.image.forceRGBA = !!forceRGBA;
       this.image.forceRGB = !!forceRGB;
-    } else {
-      throw new Error("除了JpegStream之外，还有别的Stream有配置的需要吗？")
     }
     const imageBytes = await this.image.getImageData(
       length, this.jpxDecoderOptions

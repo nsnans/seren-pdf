@@ -314,6 +314,8 @@ export class WebPageViewManager {
 
   protected _pages: WebPDFPageView[] = [];
 
+  protected _pageDivs: HTMLDivElement[] = [];
+
   protected pdfDocument: PDFDocumentProxy | null = null;
 
   protected _currentPageNumber: number | null = null;
@@ -975,6 +977,7 @@ export class WebPageViewManager {
           null
         );
         this._pages.push(pageView);
+        this._pageDivs.push(pageView.div);
       }
       // Set the first `pdfPage` immediately, since it's already loaded,
       // rather than having to repeat the `PDFDocumentProxy.getPage` call in
@@ -1470,9 +1473,33 @@ export class WebPageViewManager {
   }
 
   renderPageViews() {
-    this._pages[0].draw().then(()=>{
-      this.container.append(this._pages[0].div);
-    });
+    for (const div of this._pageDivs) {
+      this.container.append(div);
+    }
+    for (const pageView of this._pages) {
+      this._ensurePdfPageLoaded(pageView).then(pageView => {
+        const pageNumber = pageView?.pdfPage?.pageNumber;
+        if (pageNumber && pageNumber >= 1 && pageNumber <= 2) {
+          pageView.draw();
+        }
+      })
+    }
+  }
+
+  protected async _ensurePdfPageLoaded(pageView: WebPDFPageView) {
+    if (pageView.pdfPage) {
+      return pageView;
+    }
+    try {
+      const pdfPage = await this.pdfDocument!.getPage(pageView.id);
+      if (!pageView.pdfPage) {
+        pageView.setPdfPage(pdfPage);
+      }
+      return pageView;
+    } catch (reason) {
+      console.error("Unable to get page for page view", reason);
+      return null; // Page error -- there is nothing that can be done.
+    }
   }
 
   update() {
