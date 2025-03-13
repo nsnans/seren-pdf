@@ -58,7 +58,7 @@ export class Name {
 
 export class Cmd {
 
-  public cmd: string;
+  readonly cmd: string;
 
   constructor(cmd: string) {
     if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) && typeof cmd !== "string") {

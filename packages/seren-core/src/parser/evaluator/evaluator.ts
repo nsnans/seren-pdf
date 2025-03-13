@@ -883,7 +883,15 @@ export class EvalState implements State {
   }
 
   clone() {
-    return Object.create(this);
+    const state = new EvalState();
+    state.ctm = this.ctm;
+    state.textRenderingMode = this.textRenderingMode;
+    state.font = this.font;
+    state._fillColorSpace = this._fillColorSpace;
+    state._strokeColorSpace = this._strokeColorSpace;
+    state.patternFillColorSpace = this.patternFillColorSpace;
+    state.patternStrokeColorSpace = this.patternStrokeColorSpace;
+    return state;
   }
 }
 

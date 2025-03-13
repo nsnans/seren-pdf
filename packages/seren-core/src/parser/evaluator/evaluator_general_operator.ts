@@ -771,6 +771,9 @@ export class GetOperatorListHandler implements OperatorListHandler {
     if (stop) {
       // 直接递归执行
       context.next(deferred);
+      // 当时少写了一个return，导致多执行了一个resolve
+      // 出现了很多奇怪的问题，
+      return;
     }
     this.closePendingRestoreOPS();
     resolve();
