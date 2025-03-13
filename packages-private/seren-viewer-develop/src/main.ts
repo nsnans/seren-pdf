@@ -13,7 +13,7 @@ const viewer = WebSerenViewer.init('app');
 let controller;
 viewer.open({
   url: 'compressed.tracemonkey-pldi-09.pdf',
-  verbosity: VerbosityLevel.INFOS
+  verbosity: VerbosityLevel.WARNINGS
 }, {
   afterPageDivInit: (_pageNum, _div) => {
   }

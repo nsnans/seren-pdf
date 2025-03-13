@@ -40,9 +40,7 @@ export class Name {
   public name: string;
 
   constructor(name: string) {
-    if ((!PlatformHelper.hasDefined() || PlatformHelper.isTesting()) && typeof name !== "string") {
-      unreachable('Name: The "name" must be a string.');
-    }
+    assert(typeof name === 'string', 'Name: The "name" must be a string.');
     this.name = name;
   }
 

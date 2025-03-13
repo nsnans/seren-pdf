@@ -644,6 +644,8 @@ class GeneralOperator extends EvaluatorBaseHandler {
 
 const deferred = Promise.resolve();
 
+const FNS = []
+
 export class GetOperatorListHandler implements OperatorListHandler {
 
   protected operatorList: OperatorList;
@@ -760,6 +762,7 @@ export class GetOperatorListHandler implements OperatorListHandler {
         break;
       }
       let fn = context.fn!;
+      FNS.push(fn);
       const ret = this.operator.execute(fn, context);
       if (ret === SKIP) {
         continue;

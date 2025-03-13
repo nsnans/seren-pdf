@@ -206,7 +206,7 @@ export class DictImpl implements Dict {
       if (!(dict instanceof DictImpl)) {
         continue;
       }
-      for (const [key, value] of Object.entries(dict._map)) {
+      for (const [key, value] of dict._map.entries()) {
         let property = properties.get(key);
         if (isNull(property)) {
           property = [];
@@ -228,7 +228,7 @@ export class DictImpl implements Dict {
       const subDict = new DictImpl(xref);
 
       for (const dict of values) {
-        for (const [key, value] of Object.entries(dict._map)) {
+        for (const [key, value] of dict._map.entries()) {
           if (subDict._map.has(<DictKey>key)) {
             subDict._map.set(<DictKey>key, <any>value);
           }

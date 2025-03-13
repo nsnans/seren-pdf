@@ -15,33 +15,36 @@
 
 
 import {
-  FieldObject,
-  TextItem,
-  PointType,
   AnnotationEditorType,
   AnnotationMode,
+  FieldObject,
   PermissionFlag,
-  shadow
+  PointType,
+  shadow,
+  TextItem
 } from "seren-common";
 import {
-  AnnotationStorage,
-  PDFDocumentProxy,
-  PDFPageProxy,
-  PixelsPerInch,
+  AltTextManager,
   AnnotationEditorUIManager,
-  OptionalContentConfig,
-  EventBus,
+  AnnotationStorage,
+  BrowserUtil,
   DEFAULT_SCALE,
   DEFAULT_SCALE_DELTA,
   docStyle,
+  EventBus,
   getVisibleElements,
   isPortraitOrientation,
   isValidRotation,
   isValidScrollMode,
   isValidSpreadMode,
+  L10n,
   MAX_AUTO_SCALE,
   MAX_SCALE,
   MIN_SCALE,
+  OptionalContentConfig,
+  PDFDocumentProxy,
+  PDFPageProxy,
+  PixelsPerInch,
   PresentationModeState,
   removeNullCharacters,
   RenderingStates,
@@ -51,11 +54,9 @@ import {
   SpreadMode,
   TextLayerMode,
   UNKNOWN_SCALE,
-  VERTICAL_PADDING,
-  AltTextManager,
-  BrowserUtil,
-  L10n
+  VERTICAL_PADDING
 } from "seren-viewer";
+import { PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
@@ -64,9 +65,8 @@ import { WebPDFPageView } from './page_view';
 import { WebPDFLinkService } from "./pdf_link_service";
 import { PDFRenderingManager } from "./rendering_manager";
 import { WebPDFViewerOptions } from './viewer_options';
-import { ViewingPDFLifecycle } from "./viewing/viewing_pdf_lifecycle";
 import { ViewingPDFContext } from "./viewing/viewing_pdf_context";
-import { FlipViewArrange, PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
+import { ViewingPDFLifecycle } from "./viewing/viewing_pdf_lifecycle";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -444,7 +444,7 @@ export class WebPageViewManager {
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n.translate(this.container);
     this.callbacks = callbacks;
-    this.viewArrange = new FlipViewArrange(this.container)
+    this.viewArrange = new ScrollViewArrange(this.container)
   }
 
   get pagesCount() {
@@ -1488,15 +1488,18 @@ export class WebPageViewManager {
 
   renderPageViews() {
     const pages = []
-    for (const [pageNum] of this._pageDivMap.entries()) {
-      pages.push(pageNum);
-    }
+    // for (const [pageNum] of this._pageDivMap.entries()) {
+    const pageNum = 13;
+    pages.push(pageNum);
+    // }
     for (const page of pages) {
       this.viewArrange.appendPage(page, this._pageDivMap.get(page)!);
     }
     for (const pageView of this._pages) {
       this._ensurePdfPageLoaded(pageView).then(pageView => {
-        pageView!.draw();
+        // if (pageView?.pdfPage?.pageNumber === pagenum) {
+          pageView!.draw();
+        // }
       })
     }
   }
