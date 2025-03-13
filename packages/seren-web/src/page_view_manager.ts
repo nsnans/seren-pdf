@@ -56,7 +56,7 @@ import {
   UNKNOWN_SCALE,
   VERTICAL_PADDING
 } from "seren-viewer";
-import { PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
+import { FlipViewArrange, PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
@@ -444,7 +444,7 @@ export class WebPageViewManager {
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n.translate(this.container);
     this.callbacks = callbacks;
-    this.viewArrange = new ScrollViewArrange(this.container)
+    this.viewArrange = new FlipViewArrange(this.container)
   }
 
   get pagesCount() {
@@ -1488,18 +1488,15 @@ export class WebPageViewManager {
 
   renderPageViews() {
     const pages = []
-    // for (const [pageNum] of this._pageDivMap.entries()) {
-    const pageNum = 13;
-    pages.push(pageNum);
-    // }
+    for (const [pageNum] of this._pageDivMap.entries()) {
+      pages.push(pageNum);
+    }
     for (const page of pages) {
       this.viewArrange.appendPage(page, this._pageDivMap.get(page)!);
     }
     for (const pageView of this._pages) {
       this._ensurePdfPageLoaded(pageView).then(pageView => {
-        // if (pageView?.pdfPage?.pageNumber === pagenum) {
-          pageView!.draw();
-        // }
+        pageView!.draw();
       })
     }
   }
