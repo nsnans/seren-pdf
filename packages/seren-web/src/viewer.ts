@@ -29,6 +29,10 @@ import { WebViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebViewerCursorManager } from "./viewer_cursor_manager";
 import { WebPDFViewerOptions } from "./viewer_options";
+import { PDFViewerContext } from '../../seren-viewer/src/viewer_context';
+import { ViewingPDFContext } from "./viewing/viewing_pdf_context";
+import { ViewingPDFLifecycle } from "./viewing/viewing_pdf_lifecycle";
+import { WebViewerController } from "./viewer_controller";
 
 export interface OpenDocumentArgs {
   url: string;
@@ -46,6 +50,18 @@ enum PDFSource {
   LOCAL = 1,
   /**  通过网络加载的PDF */
   NETWORK = 2
+}
+
+
+/**
+ * 用于管理一个要被打开的PDF的全生命周期的回调。
+ * 在{@link WebPDFViewer.open }函数执行时，创建并绑定到PDF实例。
+ * 在{@link WebPDFViewer.close }函数执行时，随当前PDF实例一起销毁。
+ */
+export interface ViewingPDFLifecycleCallback {
+
+  afterPageDivInit: (pageNum: number, divWrapper: HTMLDivElement) => void;
+
 }
 
 export class WebPDFViewer {
@@ -120,6 +136,10 @@ export class WebPDFViewer {
 
   protected _contentLength: number = -1;
 
+  protected viewingContext: ViewingPDFContext | null = null;
+
+  protected viewingLifecycle: ViewingPDFLifecycle | null = null;
+
   constructor(
     viewerContext: WebPDFViewerContext,
     viewerContainer: HTMLDivElement,
@@ -144,7 +164,7 @@ export class WebPDFViewer {
     this.thumbnailService = options.enableThumbnailView ? new GenericWebThumbnailViewService() : null;
   }
 
-  initPageViewManager() {
+  protected initPageViewManager() {
     const pageViewManager = new WebPageViewManager(
       this.viewerContainer,
       this.linkService,
@@ -158,11 +178,17 @@ export class WebPDFViewer {
     return pageViewManager;
   }
 
-  async open(args: Partial<OpenDocumentArgs>) {
+  async open(args: Partial<OpenDocumentArgs>, callbacks: Partial<ViewingPDFLifecycleCallback> = {}) {
     // 如果已经打开了一个pdf文件，那么需要先关闭这个PDF文件
     if (this.pdfLoadingTask) {
       await this.close();
     }
+    const lifecycle = new ViewingPDFLifecycle(callbacks);
+
+    this.viewingLifecycle = lifecycle;
+    this.viewingContext = lifecycle.getViewingContext();
+
+    this.pageViewManager.setViewingLifecycle(lifecycle);
 
     const params = this.initDocumentParameters(args);
 
@@ -185,7 +211,7 @@ export class WebPDFViewer {
     )
   }
 
-  load(pdfDocument: PDFDocumentProxy) {
+  protected load(pdfDocument: PDFDocumentProxy) {
     this.pdfDocument = pdfDocument;
     pdfDocument.getDownloadInfo().then(({ length }) => {
       this._contentLength = length; // Ensure that the correct length is used.
@@ -211,6 +237,10 @@ export class WebPDFViewer {
   // 关闭当前的pdf页面
   async close() {
 
+  }
+
+  getViewController() {
+    return new WebViewerController(this.pageViewManager.getViewArrange());
   }
 
   protected initDocumentParameters(args: Partial<OpenDocumentArgs>): DocumentInitParameters {

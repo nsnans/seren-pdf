@@ -1,4 +1,4 @@
-import { PDFDocumentProxy } from "seren-viewer";
+import { PDFDocumentProxy } from "../api";
 
 export interface PDFLinkService {
 

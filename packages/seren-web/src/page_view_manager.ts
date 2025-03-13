@@ -64,6 +64,9 @@ import { WebPDFPageView } from './page_view';
 import { WebPDFLinkService } from "./pdf_link_service";
 import { PDFRenderingManager } from "./rendering_manager";
 import { WebPDFViewerOptions } from './viewer_options';
+import { ViewingPDFLifecycle } from "./viewing/viewing_pdf_lifecycle";
+import { ViewingPDFContext } from "./viewing/viewing_pdf_context";
+import { FlipViewArrange, PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
 
 const DEFAULT_CACHE_SIZE = 10;
 
@@ -314,7 +317,7 @@ export class WebPageViewManager {
 
   protected _pages: WebPDFPageView[] = [];
 
-  protected _pageDivs: HTMLDivElement[] = [];
+  protected _pageDivMap: Map<number, HTMLDivElement> = new Map();
 
   protected pdfDocument: PDFDocumentProxy | null = null;
 
@@ -372,6 +375,12 @@ export class WebPageViewManager {
   } | null = null;
 
   protected disableAutoFetch: boolean;
+
+  protected viewingLifecycle: ViewingPDFLifecycle | null = null;
+
+  protected viewingContext: ViewingPDFContext | null = null;
+
+  protected viewArrange: PageViewArrange;
 
   constructor(
     container: HTMLDivElement,
@@ -435,6 +444,7 @@ export class WebPageViewManager {
     // Ensure that Fluent is connected in e.g. the COMPONENTS build.
     this.l10n.translate(this.container);
     this.callbacks = callbacks;
+    this.viewArrange = new FlipViewArrange(this.container)
   }
 
   get pagesCount() {
@@ -449,18 +459,13 @@ export class WebPageViewManager {
     return new Set(this.#buffer);
   }
 
-  /**
-   * @type {boolean} - True if all {PDFPageView} objects are initialized.
-   */
+  /** True if all {PDFPageView} objects are initialized.*/
   get pageViewsReady() {
     // Prevent printing errors when 'disableAutoFetch' is set, by ensuring
     // that *all* pages have in fact been completely loaded.
     return this._pages.every(pageView => pageView?.pdfPage);
   }
 
-  /**
-   * @type {boolean}
-   */
   get renderForms() {
     return this.#annotationMode === AnnotationMode.ENABLE_FORMS;
   }
@@ -486,11 +491,15 @@ export class WebPageViewManager {
     }
   }
 
+  setViewingLifecycle(lifecycle: ViewingPDFLifecycle) {
+    this.viewingLifecycle = lifecycle;
+    this.viewingContext = lifecycle.getViewingContext();
+  }
+
   /**
-   * @returns Whether the pageNumber is valid (within bounds).
-   * @private
+   * Whether the pageNumber is valid (within bounds).
    */
-  _setCurrentPageNumber(val: number, resetCurrentPageView = false) {
+  private _setCurrentPageNumber(val: number, resetCurrentPageView = false) {
     if (this._currentPageNumber === val) {
       if (resetCurrentPageView) {
         this.#resetCurrentPageView();
@@ -659,6 +668,10 @@ export class WebPageViewManager {
         return self.linkService;
       },
     });
+  }
+
+  getViewArrange() {
+    return this.viewArrange;
   }
 
   /**
@@ -977,7 +990,8 @@ export class WebPageViewManager {
           null
         );
         this._pages.push(pageView);
-        this._pageDivs.push(pageView.div);
+        this._pageDivMap.set(pageNum, pageView.div);
+        this.viewingLifecycle?.afterPageDivInit(pageNum, pageView.div);
       }
       // Set the first `pdfPage` immediately, since it's already loaded,
       // rather than having to repeat the `PDFDocumentProxy.getPage` call in
@@ -1294,7 +1308,7 @@ export class WebPageViewManager {
     this._currentScale = newScale;
 
     if (!noScroll) {
-      this.goPageToView();
+      this.turnToPage();
       if (Array.isArray(origin)) {
         // If the origin of the scaling transform is specified, preserve its
         // location on screen. If not specified, scaling will fix the top-left
@@ -1436,7 +1450,7 @@ export class WebPageViewManager {
   /**
    * jump page into view.
    */
-  goPageToView() {
+  turnToPage() {
   }
 
   _updateLocation(firstPage: VisiableView) {
@@ -1473,13 +1487,15 @@ export class WebPageViewManager {
   }
 
   renderPageViews() {
-    // for (const div of this._pageDivs) {
-    //   this.container.append(div);
-    // }
+    const pages = []
+    for (const [pageNum] of this._pageDivMap.entries()) {
+      pages.push(pageNum);
+    }
+    for (const page of pages) {
+      this.viewArrange.appendPage(page, this._pageDivMap.get(page)!);
+    }
     for (const pageView of this._pages) {
       this._ensurePdfPageLoaded(pageView).then(pageView => {
-        const pageNumber = pageView?.pdfPage?.pageNumber;
-        this.container.append(this._pageDivs[pageNumber! - 1]);
         pageView!.draw();
       })
     }

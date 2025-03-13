@@ -17,6 +17,10 @@ export class WebPDFViewerContext {
     this.l10n = new GenericL10n();
   }
 
+  initCallbacks() {
+
+  }
+
   getCallbackManager() {
     return this.callbackManager;
   }

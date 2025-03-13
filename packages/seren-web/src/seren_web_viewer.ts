@@ -5,7 +5,10 @@ import { isNull } from 'seren-common';
 
 export class WebSerenViewer {
 
-  static init(containerId: string, options: Partial<WebPDFViewerOptions> = {}): WebPDFViewer {
+  static init(
+    containerId: string, 
+    options: Partial<WebPDFViewerOptions> = {}
+  ): WebPDFViewer {
     if (isNull(containerId)) {
       throw new Error('请指定一个div元素作为container！')
     }
