@@ -14,7 +14,7 @@
  */
 
 import { binarySearchFirstItem } from "./ui_utils";
-import { isNull } from '../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 /**
  * This class aims to provide some methods:

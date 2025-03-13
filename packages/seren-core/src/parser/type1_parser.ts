@@ -19,7 +19,7 @@ import { Stream } from "../stream/stream";
 import { EvaluatorProperties } from "./evaluator/evaluator";
 import { TransformType, warn, Uint8TypedArray } from "seren-common";
 import { CFFDictKey } from "../document/font/cff_parser";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 // Hinting is currently disabled due to unknown problems on windows
 // in tracemonkey and various other pdfs with type1 fonts.

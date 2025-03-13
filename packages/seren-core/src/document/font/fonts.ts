@@ -77,7 +77,7 @@ import {
   getSupplementalGlyphMapForCalibri,
 } from "./standard_fonts";
 import { IdentityToUnicodeMapImpl, ToUnicodeMapImpl } from "./to_unicode_map";
-import { isNull } from '../../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 // Unicode Private Use Areas:
 const PRIVATE_USE_AREAS = [

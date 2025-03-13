@@ -22,7 +22,7 @@ import {
 } from "seren-common";
 import { PDFDataRangeTransport } from "../api";
 import { isPdfFile } from "./display_utils";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 export class PDFDataTransportStream implements PDFStream {
 

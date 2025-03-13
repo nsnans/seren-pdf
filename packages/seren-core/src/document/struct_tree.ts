@@ -33,7 +33,7 @@ import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 import { StructTreeSerialNode } from "seren-common";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 const MAX_DEPTH = 40;
 

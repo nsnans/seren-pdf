@@ -50,8 +50,7 @@ import { RunLengthStream } from "../stream/run_length_stream";
 import { NullStream, Stream } from "../stream/stream";
 import { XRefImpl } from "../document/xref";
 import { DictImpl } from "../document/dict_impl";
-import { ParsedType } from "seren-common";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { ParsedType, isNull } from "seren-common";
 
 const MAX_LENGTH_TO_CACHE = 1000;
 

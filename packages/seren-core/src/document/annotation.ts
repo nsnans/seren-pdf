@@ -103,7 +103,7 @@ import { FileSpec } from "./file_spec";
 import { ErrorFont, Font, GlyphImpl } from "./font/fonts";
 import { StructTreeRoot } from "./struct_tree";
 import { XRefImpl } from "./xref";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 import {
   ButtonWidgetData,
   CaretData,

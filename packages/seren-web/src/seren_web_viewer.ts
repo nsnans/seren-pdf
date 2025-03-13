@@ -1,7 +1,7 @@
 import { WebPDFViewer } from "./viewer";
 import { WebPDFViewerContext } from "./viewer_context";
 import { WebPDFViewerGeneralOptions, WebPDFViewerOptions } from "./viewer_options";
-import { isNull } from '../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 export class WebSerenViewer {
 

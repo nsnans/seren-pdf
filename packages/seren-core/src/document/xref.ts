@@ -45,7 +45,7 @@ import {
 } from "seren-common";
 import { Stream } from "../stream/stream";
 import { DictImpl } from "./dict_impl";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 
 interface StreamState {

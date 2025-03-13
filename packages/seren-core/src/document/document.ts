@@ -87,7 +87,7 @@ import { writeObject } from "../writer/writer";
 import { XRefImpl } from "./xref";
 import { DictImpl } from "./dict_impl";
 import { CreateStampImageResult } from "../image/image_types";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 const DEFAULT_USER_UNIT = 1.0;
 const LETTER_SIZE_MEDIABOX: RectType = [0, 0, 612, 792];

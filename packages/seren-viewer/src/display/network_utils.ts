@@ -20,7 +20,7 @@ import {
 } from "seren-common";
 import { getFilenameFromContentDispositionHeader } from "./content_disposition";
 import { isPdfFile } from "./display_utils";
-import { isNull } from '../../../seren-common/src/utils/util';
+import { isNull } from 'seren-common';
 
 export function createHeaders(isHttp: boolean, httpHeaders: Record<string, string>) {
   const headers = new Headers();
