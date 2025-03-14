@@ -56,7 +56,7 @@ import {
   UNKNOWN_SCALE,
   VERTICAL_PADDING
 } from "seren-viewer";
-import { FlipViewArrange, PageViewArrange, ScrollViewArrange } from "./arrange/view_arrange";
+import { FlipViewArrange, PageViewArrange } from "./arrange/view_arrange";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from './find_service';
 import { GenericL10n } from "./genericl10n";
@@ -522,15 +522,14 @@ export class WebPageViewManager {
   }
 
   /**
-   * @type {string|null} Returns the current page label, or `null` if no page
-   *   labels exist.
+   * Returns the current page label, or `null` if no page labels exist.
    */
   get currentPageLabel(): string | null {
     return this._pageLabels?.[this._currentPageNumber! - 1] ?? null;
   }
 
   /**
-   * @param {string} val - The page label.
+   * The page label.
    */
   set currentPageLabel(val: string) {
     if (!this.pdfDocument) {
@@ -549,15 +548,12 @@ export class WebPageViewManager {
     }
   }
 
-  /**
-   * @type {number}
-   */
   get currentScale(): number {
     return this._currentScale !== UNKNOWN_SCALE ? this._currentScale : DEFAULT_SCALE;
   }
 
   /**
-   * @param val - Scale of the pages in percents.
+   * Scale of the pages in percents.
    */
   set currentScale(val: number) {
     if (isNaN(val)) {
@@ -569,15 +565,12 @@ export class WebPageViewManager {
     this.#setScale(val, { noScroll: false });
   }
 
-  /**
-   * @type {string}
-   */
   get currentScaleValue() {
     return this._currentScaleValue;
   }
 
   /**
-   * @param val - The scale of the pages (in percent or predefined value).
+   * The scale of the pages (in percent or predefined value).
    */
   set currentScaleValue(val) {
     if (!this.pdfDocument) {
@@ -586,15 +579,12 @@ export class WebPageViewManager {
     this.#setScale(val!, { noScroll: false });
   }
 
-  /**
-   * @type {number}
-   */
   get pagesRotation() {
     return this._pagesRotation!;
   }
 
   /**
-   * @param {number} rotation - The rotation of the pages (0, 90, 180, 270).
+   * rotation - The rotation of the pages (0, 90, 180, 270).
    */
   set pagesRotation(rotation: number) {
     if (!isValidRotation(rotation)) {
@@ -821,23 +811,20 @@ export class WebPageViewManager {
         { signal: ac.signal }
       );
 
-      this.getAllText()
-        .then(async text => {
-          if (text !== null) {
-            await navigator.clipboard.writeText(text);
-          }
-        })
-        .catch(reason => {
-          console.warn(
-            `Something goes wrong when extracting the text: ${reason.message}`
-          );
-        })
-        .finally(() => {
-          this.#getAllTextInProgress = false;
-          this.#interruptCopyCondition = false;
-          ac.abort();
-          classList.remove("copyAll");
-        });
+      this.getAllText().then(async text => {
+        if (text !== null) {
+          await navigator.clipboard.writeText(text);
+        }
+      }).catch(reason => {
+        console.warn(
+          `Something goes wrong when extracting the text: ${reason.message}`
+        );
+      }).finally(() => {
+        this.#getAllTextInProgress = false;
+        this.#interruptCopyCondition = false;
+        ac.abort();
+        classList.remove("copyAll");
+      });
 
       event.preventDefault();
       event.stopPropagation();
