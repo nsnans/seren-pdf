@@ -368,7 +368,7 @@ export class WorkerMessageHandler {
           pdfManager!.ensure(page, page => page.ref),
           pdfManager!.ensure(page, page => page.userUnit),
           pdfManager!.ensure(page, page => page.view),
-        ]).then(function ([rotate, ref, userUnit, view]) {
+        ]).then(([rotate, ref, userUnit, view]) => {
           return { rotate, ref, refStr: ref?.toString() ?? null, userUnit, view };
         });
       });

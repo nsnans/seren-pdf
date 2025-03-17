@@ -16,9 +16,6 @@ let controller;
 viewer.open({
   url: 'compressed.tracemonkey-pldi-09.pdf',
   verbosity: VerbosityLevel.WARNINGS
-}, {
-  afterPageDivInit: (_pageNum, _div) => {
-  }
 }).then(() => {
   controller = viewer.getViewController();
   bindEvents(controller);
