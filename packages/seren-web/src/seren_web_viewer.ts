@@ -22,7 +22,7 @@ export class WebSerenViewer {
     if (content.trim().length !== 0) {
       throw new Error(`无法初始化PDF容器，因为容器的内部不为空！`);
     }
-    container.style.position = 'absolute';
+    // container.style.position = 'absolute';
     return new WebPDFViewer(context, container);
   }
 }

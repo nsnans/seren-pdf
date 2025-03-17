@@ -9,7 +9,9 @@ function bindEvents(controller: WebViewerController) {
   })
 }
 
-const viewer = WebSerenViewer.init('app');
+const viewer = WebSerenViewer.init('app', {
+  viewerScale: 0.7
+});
 let controller;
 viewer.open({
   url: 'compressed.tracemonkey-pldi-09.pdf',

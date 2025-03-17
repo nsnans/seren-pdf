@@ -18,6 +18,7 @@ import {
   AnnotationEditorType,
   AnnotationMode,
   FieldObject,
+  info,
   PermissionFlag,
   PointType,
   shadow,
@@ -400,7 +401,7 @@ export class WebPageViewManager {
     this.container = container;
     this.viewer = <HTMLDivElement>viewer;
     if (container.offsetParent && getComputedStyle(container).position !== "absolute") {
-      throw new Error("container必须是绝对定位元素。");
+      info('父容器绝对订先得限制已经去除。')
     }
     this.#resizeObserver!.observe(this.container);
 
@@ -434,6 +435,7 @@ export class WebPageViewManager {
 
     this.presentationModeState = PresentationModeState.UNKNOWN;
     this._resetView();
+    this._currentScale = options.viewerScale;
 
     if (this.removePageBorders) {
       this.viewer.classList.add("removePageBorders");
@@ -1381,8 +1383,7 @@ export class WebPageViewManager {
           // For pages in landscape mode, fit the page height to the viewer
           // *unless* the page would thus become too wide to fit horizontally.
           const horizontalScale = isPortraitOrientation(currentPage)
-            ? pageWidthScale
-            : Math.min(pageHeightScale, pageWidthScale);
+            ? pageWidthScale : Math.min(pageHeightScale, pageWidthScale);
           scale = Math.min(MAX_AUTO_SCALE, horizontalScale);
           break;
         default:

@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-import { ThemeMode, AnnotationMode } from "seren-common";
+import { ThemeMode, AnnotationMode, isNull } from "seren-common";
+import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "seren-viewer";
 
 enum OptionKind {
   BROWSER = 0x01,
@@ -38,6 +39,7 @@ const Type = {
  * 应该给每个对象都加上详细的说明 
  */
 export interface WebPDFViewerOptions {
+  viewerScale: number;
   allowedGlobalEvents: string[];
   canvasMaxAreaInBytes: number;
   isInAutomation: boolean;
@@ -107,6 +109,7 @@ export interface WebPDFViewerOptions {
 }
 export function defaultWebViewerOptions(): WebPDFViewerOptions {
   return {
+    viewerScale: DEFAULT_SCALE,
     allowedGlobalEvents: [],
     canvasMaxAreaInBytes: -1,
     isInAutomation: false,
@@ -312,14 +315,26 @@ export class WebPDFViewerGeneralOptions implements WebPDFViewerOptions {
 
   protected readonly _disablePreferences = { value: <boolean | null>null, kind: OptionKind.VIEWER }
 
+  protected readonly _viewerScale = { value: DEFAULT_SCALE, kind: OptionKind.VIEWER };
+
   constructor(options: Partial<WebPDFViewerOptions>) {
-    const overrideOptions: WebPDFViewerOptions = { ...options, ...defaultWebViewerOptions() };
+    const overrideOptions: WebPDFViewerOptions = { ...defaultWebViewerOptions(), ...options };
     for (const [key, value] of Object.entries(overrideOptions)) {
       if (key.startsWith("_")) {
         throw new Error("无法将属性值赋给受保护的变量");
       }
       (<Record<string, unknown>>this)[key] = value;
     }
+  }
+  get viewerScale(): number {
+    return this._viewerScale.value;
+  }
+
+  set viewerScale(newScale: number) {
+    if (isNull(newScale) || newScale > MAX_SCALE || newScale < MIN_SCALE) {
+      throw new Error("PDF阅读器的缩放，应当在[" + MIN_SCALE + "," + MAX_SCALE + "]范围之内。")
+    }
+    this._viewerScale.value = newScale;
   }
 
   get allowedGlobalEvents(): string[] {

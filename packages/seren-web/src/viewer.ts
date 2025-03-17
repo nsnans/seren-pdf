@@ -1,3 +1,4 @@
+import { VerbosityLevel } from "seren-common";
 import {
   AltTextManager,
   BrowserUtil,
@@ -12,7 +13,6 @@ import {
   PDFDocumentLoadingTask,
   PDFDocumentProxy,
 } from "seren-viewer";
-import { VerbosityLevel } from "seren-common";
 import { WebDownloadManager } from "./download_manager";
 import { PDFContentFindService } from "./find_service";
 import { GenericL10n } from "./genericl10n";
@@ -27,12 +27,11 @@ import { PDFRenderingManager } from "./rendering_manager";
 import { GenericWebThumbnailViewService, WebThumbnailViewService } from './thumbnail_view_service';
 import { WebViewerCallbackManager } from "./viewer_callback_manager";
 import { WebPDFViewerContext } from "./viewer_context";
+import { WebViewerController } from "./viewer_controller";
 import { WebViewerCursorManager } from "./viewer_cursor_manager";
 import { WebPDFViewerOptions } from "./viewer_options";
-import { PDFViewerContext } from '../../seren-viewer/src/viewer_context';
 import { ViewingPDFContext } from "./viewing/viewing_pdf_context";
 import { ViewingPDFLifecycle } from "./viewing/viewing_pdf_lifecycle";
-import { WebViewerController } from "./viewer_controller";
 
 export interface OpenDocumentArgs {
   url: string;

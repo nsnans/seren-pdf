@@ -16,7 +16,7 @@
 import { RectType } from "seren-common";
 
 export const DEFAULT_SCALE_VALUE = "auto";
-export const DEFAULT_SCALE = 1.0;
+export const DEFAULT_SCALE = 1;
 export const DEFAULT_SCALE_DELTA = 1.1;
 export const MIN_SCALE = 0.1;
 export const MAX_SCALE = 10.0;

@@ -46,9 +46,9 @@ export class FlipViewArrange implements PageViewArrange {
   protected container: HTMLDivElement;
 
   // 从第一页开始
-  protected currPageNumBegin = 1;
+  protected currPageNumLeft = 1;
 
-  protected currPageNumEnd = 2;
+  protected currPageNumRight = 2;
 
   protected pageMap = new Map<number, HTMLDivElement>();
 
@@ -90,30 +90,40 @@ export class FlipViewArrange implements PageViewArrange {
       throw new Error("不能够重复添加同一个页面");
     }
     this.pageMap.set(pageNum, div);
-    if (pageNum == this.currPageNumBegin) {
+    if (pageNum == this.currPageNumLeft) {
       this.leftContainer.append(div);
     }
-    if (pageNum == this.currPageNumEnd) {
+    if (pageNum == this.currPageNumRight) {
       this.rightContainer.append(div);
     }
   }
 
   pageUp(): void {
-    this.currPageNumBegin -= 2;
-    this.currPageNumEnd -= 2;
-    console.log(this.minPage, this.maxPage, this.currPageNumBegin, this.currPageNumEnd)
-    this.switchPage();
+    if (this.adjustPage(-2)) {
+      this.switchPage();
+    }
   }
 
   pageDown(): void {
-    this.currPageNumBegin += 2;
-    this.currPageNumEnd += 2;
-    console.log(this.minPage, this.maxPage, this.currPageNumBegin, this.currPageNumEnd)
-    this.switchPage();
+    if (this.adjustPage(2)) {
+      this.switchPage();
+    }
+  }
+
+  protected adjustPage(delta: number) {
+    const newLeft = this.currPageNumLeft + delta;
+    if (newLeft > this.maxPage || newLeft < this.minPage) {
+      return false;
+    }
+    this.currPageNumLeft = newLeft;
+    if(newLeft + 1 <= this.maxPage){
+      this.currPageNumRight = newLeft + 1;
+    }
+    return true;
   }
 
   switchPage() {
-    if (this.currPageNumBegin < this.minPage || this.currPageNumEnd > this.maxPage) {
+    if (this.currPageNumLeft < this.minPage || this.currPageNumRight > this.maxPage) {
       return;
     }
     const left = this.leftContainer;
@@ -124,7 +134,7 @@ export class FlipViewArrange implements PageViewArrange {
     if (right.firstChild) {
       right.removeChild(right.firstChild);
     }
-    left.append(this.pageMap.get(this.currPageNumBegin)!);
-    right.append(this.pageMap.get(this.currPageNumEnd)!);
+    left.append(this.pageMap.get(this.currPageNumLeft)!);
+    right.append(this.pageMap.get(this.currPageNumRight)!);
   }
 }

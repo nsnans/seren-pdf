@@ -6,20 +6,25 @@
   <script type="module" src="./src/main.ts"></script>
   <style type="text/css">
     #app {
-      width: 1656px;
+      width: auto;
       height: auto;
-      position: absolute;
-      /* border: 1px solid black;
-      background-color: rgb(82, 86, 89); */
-      left: 20px;
+      text-align: center;
+    }
+
+    #operator-panel{
+      margin-top: 20px;
+      width: auto;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
   <div id="app"></div>
-  <div><button id="pdf-page-up" style="position:relative;left: 1688px;">上一页</button></div>
-  <div><button id="pdf-page-down" style="position:relative;left: 1688px;">下一页</button></div>
+  <div id="operator-panel">
+    <button id="pdf-page-up">上一页</button>
+    <button id="pdf-page-down" style="margin-left: 20px;">下一页</button>
+  </div>
 </body>
 
 </html>
