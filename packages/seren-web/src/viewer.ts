@@ -61,6 +61,10 @@ export interface ViewingPDFLifecycleCallback {
 
   afterPageDivInit: (pageNum: number, divWrapper: HTMLDivElement) => void;
 
+  beforeViewerClose: () => void;
+
+  afterViewerClose: () => void;
+
 }
 
 export class WebPDFViewer {
@@ -182,6 +186,7 @@ export class WebPDFViewer {
     if (this.pdfLoadingTask) {
       await this.close();
     }
+
     const lifecycle = new ViewingPDFLifecycle(callbacks);
 
     this.viewingLifecycle = lifecycle;
@@ -236,6 +241,20 @@ export class WebPDFViewer {
   // 关闭当前的pdf页面
   async close() {
 
+    if (!this.pdfLoadingTask) {
+      return;
+    }
+
+    const promises = []
+    promises.push(this.pdfLoadingTask.destroy());
+
+    this.pdfLoadingTask = null;
+    if (this.pdfDocument) {
+      this.pdfDocument = null;
+    }
+
+    this.pageViewManager._resetView();
+    await Promise.all(promises);
   }
 
   getViewController() {

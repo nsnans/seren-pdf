@@ -234,6 +234,7 @@ export interface WebPageViewManagerCallback {
   afterAnnotationEditorModeChanged(annotationEditorType: AnnotationEditorType): void;
 
   afterPageInit(): void;
+  
 }
 
 interface ViewRefreshParameter {

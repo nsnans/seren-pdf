@@ -5,10 +5,16 @@ class ViewingPDFCallbacker {
 
   protected afterPageDivInit: ((pageNum: number, divWrapper: HTMLDivElement) => void) | null;
 
+  protected beforeViewerClose: (() => void) | null;
+
+  protected afterViewerClose: (() => void) | null;
+
   // 早期回调先不考虑数组的问题，这个问题后面需要解决，解决起来也很容易
   // 也不要使用Map来存，因为Map会丢类型
   constructor(callbacks: Partial<ViewingPDFLifecycleCallback>) {
     this.afterPageDivInit = callbacks.afterPageDivInit ?? null;
+    this.beforeViewerClose = callbacks.beforeViewerClose ?? null;
+    this.afterViewerClose = callbacks.afterViewerClose ?? null;
   }
 
   runAfterPageDivInit(pageNum: number, divWrapper: HTMLDivElement) {
